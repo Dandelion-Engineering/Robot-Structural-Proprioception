@@ -17,6 +17,11 @@ here and is imported rather than copy-pasted. Modules:
     integral (schema Slot 7 / §G).
   * ``stats``        -- paired crossed pair-id/train-seed bootstrap intervals for the
     S-vs-C1 headline comparisons.
+  * ``estimator``    -- the diagnosis-estimator lane (schema §D): the estimator-output
+    contract, the past-only windowed front-end (the concrete W/stride realization), the
+    detection/calibrated-abstention rung, the allowlisted oracle interface, and the
+    online-seam command-policy adapter. The learned attribution/RMA rungs share this
+    front-end and are trained post-config-freeze.
 """
 
 from utils.schema_types import SCHEMA_VERSION

@@ -20,6 +20,7 @@ sys.path.insert(0, str(SCRIPTS_DIR))
 from utils.metrics import (  # noqa: E402
     ABSTAIN,
     brier_score,
+    coverage_at_risk,
     expected_calibration_error,
     false_abstention_rate,
     j_5s,
@@ -250,6 +251,21 @@ def test_j_5s_rejects_a_truncated_five_second_window() -> None:
     output = np.zeros((3, 2))
     with pytest.raises(ValueError, match="truncated"):
         j_5s(t_s, reference, output, onset_time_s=1.0, window_s=5.0)
+
+
+def test_coverage_at_risk_pre_registered_ceiling() -> None:
+    """Max coverage whose selective risk stays at/below the ceiling (Claim Sheet)."""
+
+    # Top three confident samples correct, least-confident one wrong (distinct confs).
+    y_true = np.array([0, 1, 2, 3])
+    y_pred = np.array([0, 1, 2, 0])  # last one wrong
+    confidence = np.array([0.9, 0.8, 0.7, 0.6])
+    # risk is 0 up to 75% coverage, 0.25 at full coverage.
+    assert coverage_at_risk(y_true, y_pred, confidence, risk_ceiling=0.05) == pytest.approx(0.75)
+    assert coverage_at_risk(y_true, y_pred, confidence, risk_ceiling=0.3) == pytest.approx(1.0)
+    # If even the most-confident sample is wrong, no coverage meets a tight ceiling.
+    y_pred_bad = np.array([1, 1, 2, 0])  # top-confidence sample now wrong
+    assert coverage_at_risk(y_true, y_pred_bad, confidence, risk_ceiling=0.05) == pytest.approx(0.0)
 
 
 # --------------------------------------------------------------------------- #

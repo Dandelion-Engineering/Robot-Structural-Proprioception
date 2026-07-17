@@ -290,6 +290,25 @@ def selective_risk_at_coverage(
     return float(risk[idx])
 
 
+def coverage_at_risk(
+    y_true: np.ndarray, y_pred_class: np.ndarray, confidence: np.ndarray, risk_ceiling: float
+) -> float:
+    """Max coverage whose selective risk stays at or below ``risk_ceiling``.
+
+    The Claim Sheet pre-registers a 5% selective-error ceiling and asks how much of the
+    data can be covered while holding the error rate at or below it (the dual of
+    `selective_risk_at_coverage`). Returns the largest coverage among the realizable
+    (tie-group-endpoint) operating points with risk ``<= risk_ceiling``; 0.0 when even
+    the most-confident operating point already exceeds the ceiling.
+    """
+
+    if not 0.0 <= risk_ceiling <= 1.0:
+        raise ValueError("risk_ceiling must be in [0, 1]")
+    cov, risk = risk_coverage_curve(y_true, y_pred_class, confidence)
+    admissible = cov[risk <= risk_ceiling + 1.0e-12]
+    return float(admissible.max()) if admissible.size else 0.0
+
+
 def false_abstention_rate(abstain_decision: np.ndarray, ood_flag: np.ndarray) -> float:
     """Fraction of in-distribution (non-OOD) samples on which the model abstained.
 
