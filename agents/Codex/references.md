@@ -216,11 +216,11 @@ Citation: Murooka, M., Fukumitsu, K., Hamze, M., Morisawa, M., Kaminaga, H., Kan
 
 ### MuJoCo paper, repository, and deformable-object documentation
 
-MuJoCo is an Apache-2.0 articulated dynamics engine with maintained Windows/Python releases. Current 3.x documentation includes 1D/2D/3D deformable flexes, Saint Venant–Kirchhoff elasticity, Young’s modulus, Poisson ratio, damping, and strain-related constraints.
+MuJoCo is an Apache-2.0 articulated dynamics engine with maintained Windows/Python releases. Current documentation distinguishes generic 1D flexes (stretchable line elements with edge stiffness) from the cable/elastic-rod route for bending and twisting, while 3D flexes support Saint Venant–Kirchhoff solid elasticity for large displacement and small strain. The documentation does not make a generic 1D flex synonymous with a bending beam or a built-in strain sensor.
 
-*How it informed the project:* makes a single-engine small articulated/deformable prototype plausible on the specified desktop and venv; also identifies a validation obligation because a simulator’s internal deformation representation is not automatically a validated virtual sensor.
+*How it informed the project:* makes a bounded single-engine articulated/deformable spike plausible, but corrected the Claim Sheet's implementation assumption: the spike must test cable/rod mechanics and, if needed, a slender 3D flex rather than assume any native flex is a beam. Virtual gauges must be derived from the simulator's independent deformation coordinates and validated against a beam/Cosserat calculation.
 
-Links: https://github.com/google-deepmind/mujoco and https://mujoco.readthedocs.io/en/latest/XMLreference.html#deformable-flex-elasticity
+Links: https://github.com/google-deepmind/mujoco, https://mujoco.readthedocs.io/en/stable/modeling.html#deformable-objects, and https://mujoco.readthedocs.io/en/latest/XMLreference.html#deformable-flex-elasticity
 
 Citation: Todorov, E., Erez, T., & Tassa, Y. (2012). MuJoCo: A physics engine for model-based control. *2012 IEEE/RSJ International Conference on Intelligent Robots and Systems*, 5026–5033. https://doi.org/10.1109/IROS.2012.6386109
 
@@ -263,3 +263,15 @@ The Menagerie is a curated collection of MuJoCo robot models with licenses recor
 Link: https://github.com/google-deepmind/mujoco_menagerie
 
 Citation: Google DeepMind. (2026). *MuJoCo Menagerie* [Model collection]. https://github.com/google-deepmind/mujoco_menagerie
+
+## Phase 1 — Claim Sheet review
+
+### Traub et al. (2024) — evaluation of selective classifiers
+
+Separates ordinary probability calibration from selective-classification evaluation and formalizes risk/coverage working points; it also documents why a single aggregate rejection metric can hide the trade between accepted-case error and coverage.
+
+*How it informed the project:* tightened Slot 7 so abstention cannot inflate the primary four-way score. The Claim Sheet now scores abstentions as errors in the known-class headline metric and separately reports risk-coverage behavior, fixed working points, false abstention on known cases, and held-out-compound unknown detection.
+
+Link: https://papers.nips.cc/paper_files/paper/2024/hash/047c84ec50bd8ea29349b996fc64af4b-Abstract-Conference.html
+
+Citation: Traub, J., Bungert, T. J., Lüth, C. T., Baumgartner, M., Maier-Hein, K. H., Maier-Hein, L., & Jaeger, P. F. (2024). Overcoming common flaws in the evaluation of selective classification systems. *Advances in Neural Information Processing Systems 37*.

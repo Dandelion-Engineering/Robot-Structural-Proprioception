@@ -22,10 +22,10 @@ Most robots run on a fixed factory model of their own body. But real bodies chan
 
 | | |
 |---|---|
-| **Target** | A small simulated **compliant two-link manipulator** (flexible links modeled as deformable beams) with a few embedded **strain/curvature virtual gauges**, plus conventional proprioception. All in simulation on one desktop. |
-| **Inputs (the controlled variable)** | Nested **sensor suites**: **C0** = joint encoders + commanded actuation · **C1** = C0 + motor current/torque + a body IMU/endpoint measurement (the richest suite an affordable robot plausibly already carries) · **S** = C1 + a small fixed set of local strain/curvature channels · **O** = privileged simulator state (oracle ceiling, never deployable). |
+| **Target** | A small simulated **compliant two-link manipulator** (flexible links modeled as deformable beams) with four fixed **strain/curvature virtual-gauge stations**, plus conventional proprioception. All in simulation on one desktop. |
+| **Inputs (the controlled variable)** | Nested **sensor suites**: **C0** = joint encoders + commanded actuation · **C1** = C0 + a noisy motor-current measurement converted to a nominal torque estimate + one six-axis IMU on the distal link (the richest fixed onboard suite an affordable robot plausibly already carries) · **S** = C1 + four fixed local bending-strain/curvature stations (two per link) · **O** = privileged simulator state (oracle ceiling, never deployable). External pose/vision and direct delivered-torque sensing are excluded from deployable suites. |
 | **Baselines** | The **matched conventional suites C0 and C1** (same estimator/controller, structural channels removed); a **simple residual/linear system-ID** estimator (interpretable floor); an **RMA-style recurrent latent** adapter (strong control baseline); an **oracle-fault controller** (ceiling). IT&E/behavior-repertoire recovery is a *reference*, not a matched baseline. |
-| **Success bar** | **S** beats the strongest conventional suite **C1** on held-out four-way (healthy/structure/actuator/sensor) attribution by a statistically stable margin, **and** yields a practically meaningful downstream control gain (post-change tracking error / recovery), under realistic drift, thermal, and held-out-severity confounds. Both layers required. |
+| **Success bar** | **S** improves held-out four-way macro-F1 over **C1** by ≥0.05 absolute (paired 95% interval excludes zero; every source-class recall difference has a lower 95% bound above −0.02) **and** reduces five-second post-change absolute tracking-error integral by ≥10% (paired 95% interval excludes zero; no safety regression), under realistic drift, thermal, and held-out-severity confounds. Both layers required. |
 | **Failure bar** | Matched **C1** with temporal adaptation recovers the same attribution and the same control performance — **S** adds no stable margin. (A clean, publishable negative.) |
 
 With the on-ramp in place, the fifteen slots below make each of these commitments exact.
@@ -38,9 +38,9 @@ The project sits in **simulated articulated robotics with structural compliance*
 
 The signals the robot can access come from four physical sources, all synthesized inside the simulator with credible noise and drift (Slot 7 details the sensor-realism model):
 - **Joint encoders** — measured joint position and velocity.
-- **Actuator channels** — commanded torque, and (in the richer suites) measured motor current/torque.
-- **A body inertial/endpoint measurement** — a body-mounted IMU or an endpoint pose measurement a conventional research robot could carry.
-- **Distributed structural "virtual gauges"** — a small fixed set of local strain and curvature readings taken at points along the links, representing what an embedded fiber-Bragg-grating array or bonded strain-gauge set could plausibly measure on a future physical robot.
+- **Actuator channels** — commanded actuation in every suite and, in C1/S, a noisy motor-current measurement converted with the nominal factory motor constant into an estimated joint torque. The actuator-gain fault acts *after* this measurement, so C1 is not handed the true delivered torque.
+- **A body inertial measurement** — one six-axis IMU (specific force and angular rate) mounted on the distal link. External vision/pose and direct delivered-torque sensing are reserved for labels or the oracle suite, never silently included online.
+- **Distributed structural "virtual gauges"** — four fixed stations, two per link, providing local in-plane bending strain/curvature. Their exact normalized locations are fixed from the mechanics-only feasibility work before any learned estimator is trained and then held fixed for the matched comparison; placement sweeps are sensitivity analyses, not opportunities to tune on the confirmatory test set. The stations represent what an embedded fiber-Bragg-grating array or bonded strain-gauge set could plausibly measure on a future physical robot.
 
 The data is **self-generated.** A finding from both Phase 0 surveys is that **no openly-licensed dataset exists that simultaneously carries robot commands, joint sensing, distributed structural measurements, multiple body/actuator/sensor faults, and downstream control** — so the project generates its own simulated benchmark and publishes the generation code. This is a resource gap the work partly fills, and a reason the project is naturally simulation-first.
 
@@ -75,9 +75,9 @@ The bounds the work lives inside:
 
 The method is a **matched sensor-suite ablation**: the same estimator and controller are run on each of the nested suites C0 ⊂ C1 ⊂ S (with O as an oracle ceiling), and the question is what the added structural channels in S buy over the strongest conventional suite C1. Holding the algorithm fixed and varying only the sensors is what makes a measured advantage attributable to *information* rather than to model capacity.
 
-**Fault families (mapping one-to-one onto the three source classes):**
+**Fault families (mapping onto the three source classes):**
 - **Structure** — localized link-stiffness reduction (a section of a link goes soft).
-- **Actuator** — actuator torque/gain loss (a joint's drive weakens).
+- **Actuator** — multiplicative delivered-torque/gain loss downstream of the measured motor-current proxy (a joint's drive weakens without C1 receiving the true delivered torque).
 - **Sensor** — encoder bias / drift / dropout (a joint sensor lies).
 
 Each is applied one at a time first; then at least one **held-out compound case** (two simultaneous changes) is reserved as an unknown/generalization test. A **healthy** class is always present, and a calibrated **abstain/"unknown"** option is part of the task — forcing every run into a known class would overstate what was learned.
@@ -110,22 +110,24 @@ This slot is the **team's** confidence path: how *we* will know whether the clai
 **Two metric layers, reported separately** (never collapsed into one aggregate reward, so a diagnosis result is not mistaken for a control result):
 
 *Information / diagnosis layer*
-- Four-way (healthy / structure / actuator / sensor) **macro-F1** and **balanced accuracy**.
+- Four-way (healthy / structure / actuator / sensor) **macro-F1** (primary) and **balanced accuracy**. On known-class confirmatory runs, an abstention is scored as an error in these headline metrics; selective performance is reported separately so rejection cannot inflate the primary score.
 - **Per-class precision/recall and confusion matrices**, with special attention to structure-vs-actuator and structure-vs-sensor.
 - **Detection delay** after a change, in control cycles and seconds.
 - **Localization error** where more than one link/actuator/sensor location is possible.
-- **Calibration** of fault probabilities — Brier score, negative log-likelihood, and reliability diagrams — **including the abstain/unknown option**.
+- **Probability calibration** — Brier score, negative log-likelihood, expected calibration error, and reliability diagrams on the four known classes.
+- **Abstention / unknown behavior** — risk-coverage curves; coverage at a pre-registered 5% selective-error ceiling; selective error at 80% coverage; and false-abstention rate on known-class runs. The held-out compound fault is evaluated as unknown/OOD with AUROC, AUPRC, and false-acceptance rate at 95% unknown-detection sensitivity. This keeps class calibration, selective prediction, and unknown detection distinct.
 - **Held-out generalization**: performance on held-out severities, trajectories, payloads, noise draws, and at least one held-out fault combination.
 
 *Control layer*
+- **Five-second post-change integral of absolute tracking error** (primary control metric).
 - **Tracking RMSE and peak error** before the change, immediately after, and after adaptation.
 - **Recovery time** and **recovered-performance ratio** relative to the healthy controller.
 - **Control effort, saturation time, constraint violations, unsafe excursions.**
 - The **paired difference between S and C1** over identical seeds and faults, with uncertainty intervals.
 
-**Splitting and statistics.** Split by whole trajectories and fault settings, not by time samples from the same run (guards against the estimator learning simulator fingerprints). Report paired comparisons with uncertainty intervals over matched seeds.
+**Splitting and statistics.** Development/pilot, validation, and confirmatory-test partitions are separated by whole trajectories **and** fault settings, never by time samples from the same run. The pilot may size the confirmatory sample and expose method failures, but it may not set the effect-size bars below. Gauge placement, model/hyperparameters, class and abstention thresholds, the post-change analysis window, and the full seed/scenario manifest are frozen in a versioned configuration before confirmatory data are generated. Use at least five independent training seeds and report **paired 95% hierarchical-bootstrap confidence intervals**, resampling whole scenario/trajectory units and training seeds while preserving the C1-vs-S pairing.
 
-**Where the bars come from.** "Better than chance" (0.25 balanced accuracy for four classes) is far too weak a bar. Exact numeric success thresholds are **set after a pilot** estimates the overlap of the fault signatures — pre-declared *before* the confirmatory runs, then locked (Slots 11–13). A defensible advantage requires **both** a statistically stable diagnosis improvement over the strongest conventional suite **and** a practically meaningful downstream control gain; diagnosis-without-control is explicitly a Slot-13 outcome, not success.
+**Pre-declared effect-size bars.** "Better than chance" (0.25 balanced accuracy for four classes) is far too weak. For the full success claim, S must improve four-way macro-F1 over C1 by **at least 0.05 absolute**, with the paired 95% interval excluding zero; for every source class, the lower 95% bound on the S-minus-C1 recall difference must also remain above the **−0.02 non-inferiority margin**. S must reduce the **five-second post-change integral of absolute tracking error by at least 10%**, with the paired 95% interval excluding zero, without increasing unsafe excursions or constraint violations. These are project design minima fixed before the pilot; the pilot determines sample size, not what size of result will be called success. Diagnosis-without-control and fault-specific benefits remain Slot-13 outcomes.
 
 ## Slot 8 — Director's verification path
 
@@ -139,9 +141,11 @@ What the director does: trigger a few changes, watch which robot correctly says 
 
 Start with the smallest version that could plausibly work, and pre-commit to escalating **two** ladders — model capacity and physical fidelity — rather than a single fixed design.
 
-**Feasibility spike first (the gate before committing the runtime).** Build the two-link compliant manipulator in **MuJoCo** using its native **flex/deformable** elements and test whether the flex outputs expose **stable, auditable virtual-gauge strain/curvature signals** that show **differential fault signatures at credible signal-to-noise** — i.e. a link-stiffness loss, an actuator-gain loss, and an encoder bias must produce *distinguishable* gauge responses under matched excitation, at strain magnitudes that survive a realistic noise floor (fiber-Bragg-grating scale: ~1 µε resolution, ~10 µε/°C thermal cross-sensitivity), and — importantly — at realistic (metal-ish) link stiffness, not just exaggerated compliance. Native flex is preferred not only for being one engine: its deformation degrees of freedom are integrated from applied forces and are therefore **physically independent** of the joint coordinates the baseline already sees, which lowers the risk that "strain" is a circular re-encoding of the baseline's own inputs. If native flex cannot clear that gate, fall back to a **PyElastica Cosserat-rod** reduced-order model (also independent, force-driven DOFs); full FEM stays offline validation only. **No dependency is committed until the spike passes.**
+**Feasibility spike first (the gate before committing the runtime).** Build the two-link compliant manipulator in **MuJoCo** and test the native mechanics that can actually represent beam bending: the cable/rod elasticity path and, if necessary, a slender 3-D flex with solid elasticity. MuJoCo's generic 1-D flex is primarily an extensible line, so the spike must not assume that "native flex" automatically supplies a bending beam or a strain sensor. Virtual gauges are derived from integrated deformable/rod coordinates and checked against an independent small-deflection beam or Cosserat calculation; they are not copied from a fault parameter or algebraically reconstructed from the corrupted encoder.
 
-**Physical-fidelity ladder:** native MuJoCo flex → PyElastica reduced-order bridge (fallback) → offline FEM / independent beam calculation (ground-truth and validation, never in the control loop).
+The spike passes only if the derived signals are stable under timestep/mesh refinement and the **joint command + conventional signal + gauge histories** contain differential signatures at credible signal-to-noise at realistic (metal-ish) stiffness, not just exaggerated compliance. For structural and actuator faults, at least one fixed gauge channel must show a repeatable fault-minus-healthy response above the modeled measurement-noise floor. An encoder bias is different by construction: it need not physically change the structure under matched open-loop excitation; it must instead be identifiable through a repeatable disagreement between the corrupted encoder and the independently evolved physical/gauge history. This relational signature—not a fictitious encoder-induced strain change—is the gate. The signals must survive a realistic fiber-Bragg-grating-scale floor (~1 µε resolution, ~10 µε/°C thermal cross-sensitivity). Native mechanics are preferred because they add simulator-integrated deformation coordinates rather than an algebraic copy of joint state, reducing (but not eliminating) circularity risk. If the native candidates cannot clear the gate, fall back to a **PyElastica Cosserat-rod** reduced-order model; full FEM stays offline validation only. **No dependency is committed until the spike passes.**
+
+**Physical-fidelity ladder:** native MuJoCo cable/rod or slender-3D-flex candidate → PyElastica reduced-order bridge (fallback) → offline FEM / independent beam calculation (ground-truth and validation, never in the control loop).
 
 **Model-capacity ladder:** (rung 1) a compact recurrent/temporal-convolutional estimator (~10⁴–10⁵ parameters) plus the linear/residual baseline; (rung 2) a larger/deeper recurrent-plus-attention estimator; (rung 3) a probabilistic/ensemble head (e.g. deep ensembles or evidential output) for *calibrated* attribution and honest abstention. Escalate a rung when **(a)** there is partial signal worth strengthening, **or (b)** there is no signal yet but a larger-capacity model could plausibly capture one the smaller model cannot. Stop climbing only when the result **holds across the ladder**, the **hardware ceiling** is genuinely reached, or there is a stated **scientific** reason (not a budget reflex) that a bigger model would not help — and record that reason, because "a bigger model wouldn't help" is itself a claim.
 
@@ -157,9 +161,9 @@ Start with the smallest version that could plausibly work, and pre-commit to esc
 
 ## Slot 11 — What would count as success
 
-**Pre-declared, before any confirmatory result is observed** (exact numeric thresholds fixed after the Slot-7 pilot, then locked):
+**Pre-declared before pilot or confirmatory results are observed:**
 
-> The **structural suite S** beats the **strongest conventional suite C1** on held-out four-way (healthy/structure/actuator/sensor) attribution by a **statistically stable margin** (paired over matched seeds, with uncertainty intervals excluding no-effect), **and** S yields a **practically meaningful downstream control gain** over C1 — lower post-change tracking error and/or faster recovery by the pre-registered margin — **and** both hold **under realistic confounds** (sensor drift, thermal cross-sensitivity, held-out severities/trajectories/payloads). All three conditions are required. A win on diagnosis alone, or a win only under idealized sensors, or a win only in-distribution, is **not** success — it is a Slot-13 outcome.
+> The **structural suite S** improves held-out four-way macro-F1 over the **strongest conventional suite C1** by **≥0.05 absolute**, with the paired 95% hierarchical-bootstrap interval excluding zero and the lower 95% bound on every source-class recall difference above the **−0.02 non-inferiority margin**; **and** S reduces the **five-second post-change integral of absolute tracking error by ≥10%**, with its paired 95% interval excluding zero and no increase in unsafe excursions or constraint violations; **and** both results hold **under realistic confounds** (sensor drift, thermal cross-sensitivity, held-out severities/trajectories/payloads). All three conditions are required. A win on diagnosis alone, only for one fault family, only under idealized sensors, or only in-distribution is **not** full success — it is a Slot-13 outcome.
 
 ## Slot 12 — What would count as failure
 
@@ -195,7 +199,3 @@ Forward-looking and honest.
 - **Succeeds-as-scoped:** no *direct* revenue — the immediate value is a research signal (a validated open reference implementation + benchmark for cheap structural self-sensing) that de-risks a larger program and can seed a reusable, MIT-licensed self-monitoring library other builders adopt. Honest entry: **none identified directly** for the small sim project itself.
 - **Succeeds-and-scaled:** a licensable or supported **"structural proprioception" self-monitoring layer** for low-cost robot arms — an estimation module that extends safe service life by detecting and attributing wear/damage/sensor-drift on affordable hardware, consistent with Dandelion's affordable-technology mission.
 - **Clean negative:** no monetization path from the result itself, but real value in the negative preventing wasted hardware spend downstream — reputational/credibility value for Dandelion as a team that publishes honest negatives, not a revenue line.
-
----
-
-*This Claim Sheet is a Phase-1 draft handed to Codex for review (Claude is the default writer; Codex is the required reviewer). It synthesizes both agents' Phase 0 Literature Foundations against the five convergence points settled in `chats/Claude-Codex/Phase 0 Coordination/Summary.md`. The companion **Accessible Claim Sheet** and **Study Guide Pass 1** are produced in the Phase-1-close window, once this technical sheet is agreed, so they translate the settled contract rather than a draft in review.*
