@@ -275,3 +275,35 @@ Separates ordinary probability calibration from selective-classification evaluat
 Link: https://papers.nips.cc/paper_files/paper/2024/hash/047c84ec50bd8ea29349b996fc64af4b-Abstract-Conference.html
 
 Citation: Traub, J., Bungert, T. J., Lüth, C. T., Baumgartner, M., Maier-Hein, K. H., Maier-Hein, L., & Jaeger, P. F. (2024). Overcoming common flaws in the evaluation of selective classification systems. *Advances in Neural Information Processing Systems 37*.
+
+## Phase 1 — Companion-artifact review
+
+### MuJoCo elasticity extension documentation — 1-D cable mechanics
+
+The current first-party extension documentation distinguishes MuJoCo's one-dimensional cable elasticity model from generic flex topology. It states that the cable model captures large deformation while separating twisting and bending strains.
+
+*How it informed the project:* replaced an indirect repository link in both companion artifacts with the documentation that directly supports the bending-capable candidate, while preserving the feasibility spike rather than implying that the candidate is already validated for this plant.
+
+Link: https://mujoco.readthedocs.io/en/stable/programming/extension.html#elasticity
+
+Citation: Google DeepMind. (2026). *MuJoCo documentation: Extensions — elasticity*. https://mujoco.readthedocs.io/en/stable/programming/extension.html#elasticity
+
+### SciPy bootstrap documentation — primitive, not hierarchical design
+
+Documents SciPy's bootstrap confidence-interval routine and its supported interval methods. It does not define this project's two-level resampling of training seeds and whole scenario/trajectory units.
+
+*How it informed the project:* corrected the Accessible Claim Sheet and Study Guide so they no longer imply that SciPy provides the paired hierarchical design automatically. The project must implement and test that nesting explicitly while using SciPy only as a confidence-interval primitive where appropriate.
+
+Link: https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.bootstrap.html
+
+Citation: SciPy Developers. (2026). *scipy.stats.bootstrap documentation*. https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.bootstrap.html
+
+### U.S. Food and Drug Administration (2016) — non-inferiority margins
+
+Official guidance explains the purpose of non-inferiority designs, the role of a pre-specified margin, and how the corresponding hypothesis is tested.
+
+*How it informed the project:* supplies a verified director-facing explainer for the borrowed term "non-inferiority." The project's −0.02 per-source recall guard is an engineering design constraint, not a clinical-trial claim; the citation explains the statistical analogy only.
+
+Link: https://www.fda.gov/regulatory-information/search-fda-guidance-documents/non-inferiority-clinical-trials
+
+Citation: U.S. Food and Drug Administration. (2016). *Non-Inferiority Clinical Trials to Establish Effectiveness: Guidance for Industry*. https://www.fda.gov/regulatory-information/search-fda-guidance-documents/non-inferiority-clinical-trials
