@@ -265,3 +265,21 @@ Documents that contact gradients are discontinuous at impact and zero when separ
 ---
 
 *Living-bibliography pointer:* `github.com/linchangyi1/Awesome-Touch` — curated, maintained index of tactile sensors/datasets/simulators (surfaced during Phase 0; useful for Phase 1 tactile scoping).
+
+---
+
+## Phase 1 — Claim Sheet companion artifacts (Session 3)
+
+*Sources used while writing the Accessible Claim Sheet and Study Guide Pass 1. The evaluation/stats tool docs below are logged now (per the "cite when fresh" standard) because they are both reader-facing concept explainers in those artifacts and the implementations the Slot-7 metrics will use; their canonical software-paper citations (scikit-learn: Pedregosa et al., JMLR 2011; SciPy: Virtanen et al., Nature Methods 2020) are the bibliography targets, to be finalized at the Phase-2 references reconciliation. Doc-page URLs below were fetched/verified this session.*
+
+**Traub, J., Bungert, T. J., Lüth, C. T., Baumgartner, M., Maier-Hein, K. H., Maier-Hein, L. & Jaeger, P. F. 2024 — "Overcoming common flaws in the evaluation of selective classification systems." *NeurIPS 37*.** https://papers.nips.cc/paper_files/paper/2024/hash/047c84ec50bd8ea29349b996fc64af4b-Abstract-Conference.html
+Separates probability calibration from selective-classification evaluation, formalizes risk/coverage working points, and shows a single aggregate rejection metric can hide the accepted-error-vs-coverage trade (proposes AUGRC). *Informs:* my angle here is director-facing framing — it grounded how I explained, in both the Accessible Claim Sheet (Slot 7) and Study Guide Pass 1, *why* calibration, selective prediction, and unknown detection are reported as three separate things and why known-class abstention is scored as an error in the headline macro-F1. (Codex's ledger holds the same source from the contract-editing angle; the divergence is intended.) Title/authors independently re-verified this session via the NeurIPS page.
+
+**scikit-learn — `f1_score` / macro-averaging documentation.** https://scikit-learn.org/stable/modules/generated/sklearn.metrics.f1_score.html
+Precise, runnable definition of F1 (harmonic mean of precision and recall) and macro-averaging (unweighted mean across classes, so rare classes count equally). *Informs:* the verified plain-language explainer link for the headline diagnosis metric (four-way macro-F1) in both companion artifacts; the implementation the Slot-7 diagnosis layer will use. Bibliography target: Pedregosa et al. 2011 (confirm at reconciliation).
+
+**scikit-learn — probability calibration / reliability diagrams documentation.** https://scikit-learn.org/stable/modules/calibration.html
+Defines calibration operationally (a well-calibrated classifier's stated confidence matches its empirical accuracy) and reliability diagrams. *Informs:* the verified explainer for the calibration metrics (Brier/NLL/ECE + reliability diagrams) in Slot 7; the tooling reference for that metric family.
+
+**SciPy — `scipy.stats.bootstrap` documentation.** https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.bootstrap.html
+Bootstrap confidence intervals (percentile / basic / BCa), one- and two-sided. *Informs:* the verified explainer for the paired hierarchical-bootstrap 95% intervals the confirmatory analysis relies on (Slot 7 / Slot 11); the implementation reference for the "interval excludes zero" success criterion. Bibliography target: Virtanen et al. 2020 (confirm at reconciliation).
