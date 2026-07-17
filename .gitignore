@@ -1,0 +1,77 @@
+# Virtual environments
+venv/
+.venv/
+
+# Python bytecode, caches, and build outputs
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Local datasets, generated runs, and scratch work
+/data/
+/datasets/
+/downloads/
+/derived/
+/models/
+/checkpoints/
+/runs/
+/outputs/
+/scratch/
+/tmp/
+
+# Large rebuildable arrays and model files
+*.npy
+*.npz
+*.h5
+*.hdf5
+*.pt
+*.pth
+*.ckpt
+*.onnx
+
+# Local secrets and machine-specific configuration
+.env
+.env.*
+!.env.example
+.claude/
+
+# Agent coordination lock files
+.claude-session.lock
+.codex-session.lock
+
+# Logs and background-process files
+*.log
+*.pid
+
+# LaTeX build artifacts; final PDFs remain tracked
+*.aux
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.bbl
+*.blg
+*.run.xml
+*.bcf
+.miktex/
+
+# OS and editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+*~
+.vscode/
+.idea/
+*.swp
+*.swo
