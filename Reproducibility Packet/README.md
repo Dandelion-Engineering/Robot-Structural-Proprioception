@@ -1,6 +1,6 @@
 # Reproducibility Packet
 
-This is the self-contained working packet for the Robot Structural Proprioception project. The current runnable surface reproduces the mechanics feasibility gate; later pipeline stages will be added here as they become final.
+This is the self-contained working packet for the Robot Structural Proprioception project. The current runnable surface reproduces the mechanics feasibility gate and the sensor-realism + fault-injection model that turns privileged plant state into a deployable sensor suite's noisy observations. Later pipeline stages will be added here as they become final.
 
 ## Requirements
 
@@ -60,6 +60,41 @@ if ($ordinaryGateExit -ne 2) { throw "Expected BLOCK exit code 2; received $ordi
 
 Produces the same five artifact types under `results/feasibility_spike_ordinary_excitation_blocked/`.
 
+## Step 5 — Run the sensor-model tests
+
+Checks the sensor-realism + fault-injection model: the privileged/observed leakage boundary, the common-random-number substreams that keep the matched C1-vs-S comparison fair, suite channel masking, the sensor-fault relational signature, thermal apparent strain, dropout validity, latency causality, and deterministic reproducibility.
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests\test_sensor_model.py -q
+```
+
+Produces: terminal test results.
+
+## Step 6 — Generate a synthetic plant trace (development fixture)
+
+Writes a schema-conforming privileged plant record built from analytic signals. This is a **development stand-in** used to exercise the sensor model on its own; it is not integrated mechanics and makes no physical claim (the real privileged trace comes from the plant model). The `--thermal-ramp-c` option adds a temperature rise so the gauge channel's thermal apparent-strain pathology is visible.
+
+```powershell
+.\.venv\Scripts\python.exe scripts\make_synthetic_plant_trace.py --output-npz results\synthetic_plant\healthy.npz --thermal-ramp-c 5
+```
+
+Produces: `results/synthetic_plant/healthy.npz`
+
+## Step 7 — Apply the sensor-realism + fault-injection model
+
+Maps a privileged plant trace to one deployable sensor suite's observed record: encoder/IMU/current-proxy/gauge channels with additive noise, thermal apparent strain, bias, drift, hysteresis, quantization, dropout, and latency, plus optional injection of a sensor-class encoder fault into the observation path only. Channels a suite does not carry are written as `NaN` and masked off, so the suites differ only by available information.
+
+```powershell
+.\.venv\Scripts\python.exe scripts\run_sensor_model.py --plant-npz results\synthetic_plant\healthy.npz --suite S --run-id demo_S --pair-id 1 --sensor-seed 7 --split dev
+```
+
+Produces:
+
+- `results/sensor_model/observations/S/demo_S.npz` — the observed record for suite `S`.
+- `results/sensor_model/observations/S/index.csv` — the per-suite index row (`run_id, schema_version, config_hash, npz_path, sha256, split`).
+
+Use `--suite C0` or `--suite C1` for the leaner conventional suites, and `--fault-class sensor --fault-subtype encoder_bias --fault-location 0 --fault-severity 0.05 --fault-onset 750` to inject a sensor fault.
+
 ## Data
 
 No external dataset is required. The simulator generates every value used by the spike. See [`DATA.md`](DATA.md) for the data and licensing boundary.
@@ -77,4 +112,4 @@ All are free and commercial-use-permitting. Project-owned code and configuration
 
 ## Current boundary
 
-This packet reproduces only the mechanics gate. It does not yet implement the full frozen plant→signals→estimator→controller schema, the sensor-realism model, learned attribution, recovery control, confirmatory statistics, or the interactive verification artifact. Those capabilities must not be inferred from this PASS.
+This packet reproduces the mechanics gate and the sensor-realism + fault-injection model (schema section C). The sensor model is currently exercised against a **synthetic** privileged trace (Step 6), not yet the plant model's real output; the two lanes are integrated once the plant emits its persisted privileged trace. The packet does not yet implement the online closed-loop plant→sensor→estimator→controller integration, learned attribution, recovery control, confirmatory statistics, or the interactive verification artifact. Those capabilities must not be inferred from what runs here.
