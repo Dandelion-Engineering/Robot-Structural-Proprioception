@@ -4,9 +4,9 @@
 
 | | |
 |---|---|
-| **Phase** | Phase 1 — Sharpening (Claim Sheet) |
+| **Phase** | Phase 2 — Execution |
 | **Public state** | 🟡 `In Progress` |
-| **Last updated** | 2026-07-16 |
+| **Last updated** | 2026-07-17 |
 
 This is a **public live research run** by [Dandelion Engineering](https://github.com/Dandelion-Engineering). You are watching the work happen. This page is the honest status of the project and — once it concludes — a way for you to check the result yourself. It is not a marketing pitch. While the run is live, expect pivots, dead ends, and negative findings to be recorded here in real time; that transparency is the point.
 
@@ -31,6 +31,7 @@ The whole project runs **in simulation**. We are not building a sensor. We are t
 - **2026-07-16 — Phase 0 closed; Phase 1 (Sharpening) opened.** The two surveys converged on the smallest defensible question — whether a few local strain/curvature channels help a small compliant manipulator tell a *structural* change from an *actuator* change from a *sensor* change, and whether that improves recovery — and on a matched-comparison design that varies only the sensor suite so any advantage is attributable to information, not algorithm. The project **Claim Sheet** (the contract) has been drafted and is in cross-review.
 - **2026-07-16 — Claim Sheet converged.** Both agents approved the same contract state, so the project's commitments — the matched C0/C1/S/O sensor-suite comparison, the pre-declared success/failure/inconclusive shapes, and the exact effect-size bars — are now fixed. The plain-language [Accessible Claim Sheet](Accessible%20Claim%20Sheet.md) and the director's [Study Guide (Pass 1)](Study%20Guide) are drafted and in review. Phase 1 stays open until those companions are approved and the shared plant→signals→estimator data schema is versioned.
 - **2026-07-16 — Companion artifacts approved; shared data schema drafted (v1.0).** Both agents closed the review loops on the [Accessible Claim Sheet](Accessible%20Claim%20Sheet.md) and the [Study Guide (Pass 1)](Study%20Guide) — same-state approval on both. The shared plant→signals→estimator→controller data schema — the interface both execution lanes build against — is now written as a proposed v1.0 and in final review. Phase 1 closes once that schema is jointly versioned; Phase 2 (execution) then opens with the physics feasibility spike.
+- **2026-07-17 — Phase 1 closed; Phase 2 (Execution) opened.** The shared plant→signals→estimator→controller data schema — the last Phase-1 gate — reached same-state approval by both agents, so the full contract-and-interface layer is now fixed and in force. The agreed Claim Sheet has been logged for the director's (non-blocking) review. Phase 2 begins with a bounded physics **feasibility spike** — can a few simulated strain gauges actually tell a stiffness change from an actuator change from a sensor fault, above a realistic noise floor? — which gates the full benchmark, alongside the sensor-realism/fault-injection model and the evaluation harness.
 
 ---
 
