@@ -1,12 +1,12 @@
 """Paired hierarchical-bootstrap confidence intervals for the S-vs-C1 headline.
 
 The confirmatory comparison is *paired* (each `pair_id` yields a matched C1 and S
-rollout, schema §A) and *hierarchical* (each pair is evaluated under several
-estimator `train_seed`s, Slot 7 requires >= 5). A flat bootstrap over runs would
-ignore both structures and understate the interval. This module resamples the two
-levels in the right order — pair units first, then the seed replicates within each
-resampled pair — and returns a percentile interval and the "excludes zero" decision
-the success bars turn on.
+rollout, schema §A) and *crossed* with estimator `train_seed` (each trained seed is
+evaluated across the pair units; Slot 7 requires >= 5). A flat bootstrap over runs
+would ignore both structures and understate the interval. This module independently
+resamples the pair and global seed axes, then evaluates their sampled Cartesian grid;
+that preserves both the C1/S pair and the fact that one seed realization is shared
+across all pair units.
 
 `scipy` is intentionally not used: the nested/paired resampling is the project's
 own, and a percentile interval needs only `numpy`. The *statistic* (Δmacro-F1 on
@@ -15,11 +15,10 @@ supplied by the caller as a pure function of the resampled subunits, so this
 primitive never has to know which headline it is serving. See `utils.metrics` for
 the point statistics themselves.
 
-Terminology: a **cluster** is one top-level unit (a `pair_id`); a **subunit** is one
-lower-level replicate within it (one `train_seed`'s evaluation of that pair, carrying
-whatever the statistic needs — e.g. the matched C1 and S predictions). Pairing is
-preserved because a subunit carries *both* suites' data, so resampling never splits a
-C1 from its S.
+The input is a rectangular `pair_id x train_seed` grid. Each cell carries whatever
+the statistic needs for both suites (for example, matched C1 and S predictions).
+Pairing is preserved because a cell carries both suites, and seed dependence is
+preserved because the same sampled seed columns are used for every sampled pair row.
 """
 
 from __future__ import annotations
@@ -78,8 +77,8 @@ def hierarchical_bootstrap_ci(
     """Two-level cluster bootstrap CI for a statistic over paired, seeded data.
 
     Args:
-        clusters: one entry per `pair_id`; each entry is that pair's subunits (its
-            `train_seed` replicates). Every cluster must be non-empty.
+        clusters: rectangular grid with one row per `pair_id` and one consistently
+            ordered column per global `train_seed`. Every cell carries both suites.
         statistic_fn: pure function mapping a flat list of resampled subunits to a
             scalar (e.g. pooled Δmacro-F1). Must return a finite value; it is the
             caller's job to make it robust to resampling (e.g. `zero_division=0`).
@@ -100,7 +99,10 @@ def hierarchical_bootstrap_ci(
     if not materialized:
         raise ValueError("at least one cluster (pair unit) is required")
     if any(len(cluster) == 0 for cluster in materialized):
-        raise ValueError("every cluster must contain at least one subunit")
+        raise ValueError("every pair row must contain at least one train-seed cell")
+    n_seeds = len(materialized[0])
+    if any(len(cluster) != n_seeds for cluster in materialized):
+        raise ValueError("clusters must form a rectangular pair_id x train_seed grid")
 
     point = float(statistic_fn([sub for cluster in materialized for sub in cluster]))
     if not np.isfinite(point):
@@ -109,13 +111,13 @@ def hierarchical_bootstrap_ci(
     n_clusters = len(materialized)
     replicates = np.empty(n_boot, dtype=float)
     for b in range(n_boot):
-        chosen = rng.integers(0, n_clusters, size=n_clusters)
-        resample: list[Subunit] = []
-        for cluster_index in chosen:
-            cluster = materialized[cluster_index]
-            size = len(cluster)
-            picks = rng.integers(0, size, size=size)
-            resample.extend(cluster[j] for j in picks)
+        chosen_pairs = rng.integers(0, n_clusters, size=n_clusters)
+        chosen_seeds = rng.integers(0, n_seeds, size=n_seeds)
+        resample = [
+            materialized[pair_index][seed_index]
+            for pair_index in chosen_pairs
+            for seed_index in chosen_seeds
+        ]
         value = float(statistic_fn(resample))
         if not np.isfinite(value):
             raise ValueError(

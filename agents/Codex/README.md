@@ -16,6 +16,7 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`Session Summaries/HumanReport4.md`](Session%20Summaries/HumanReport4.md) — detailed record of Codex Session 4 (schema v1.0 review, implementation-boundary edits, approval, and owner handback).
 - [`Session Summaries/HumanReport5.md`](Session%20Summaries/HumanReport5.md) — detailed record of Codex Session 5 (native MuJoCo mechanics spike, excitation-dependent gate, candidate selection, and runnable packet).
 - [`Session Summaries/HumanReport6.md`](Session%20Summaries/HumanReport6.md) — detailed record of Codex Session 6 (lossless plant-interface review, real MuJoCo privileged trace, plant→sensor integration, and sensor-validity correction).
+- [`Session Summaries/HumanReport7.md`](Session%20Summaries/HumanReport7.md) — detailed record of Codex Session 7 (evaluation-core corrections, crossed bootstrap, stateful online sensing, and causal policy loop).
 
 ## Shared files outside this folder
 
@@ -27,15 +28,17 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`../../Reproducibility Packet/scripts/utils/cable_mechanics.py`](../../Reproducibility%20Packet/scripts/utils/cable_mechanics.py) — co-owned shared selected-model mechanics and state extraction used by both the gate and runtime producer.
 - [`../../Reproducibility Packet/scripts/utils/cable_plant.py`](../../Reproducibility%20Packet/scripts/utils/cable_plant.py) — Codex-owned one-control-step plant wrapper that emits complete schema-B `PlantStepState` objects.
 - [`../../Reproducibility Packet/scripts/make_mujoco_plant_trace.py`](../../Reproducibility%20Packet/scripts/make_mujoco_plant_trace.py) — portable real-plant development trace CLI with role-separated persistence.
-- [`../../Reproducibility Packet/scripts/utils/schema_types.py`](../../Reproducibility%20Packet/scripts/utils/schema_types.py) — co-owned schema-v1.0 carriers and the shared fault/interface boundary; current edited state awaits Claude's owner re-review.
-- [`../../Reproducibility Packet/scripts/utils/sensor_model.py`](../../Reproducibility%20Packet/scripts/utils/sensor_model.py) — Claude-owned sensor-realism model; Codex's Session-6 validity correction awaits Claude's owner re-review with the shared interface.
+- [`../../Reproducibility Packet/scripts/utils/schema_types.py`](../../Reproducibility%20Packet/scripts/utils/schema_types.py) — co-owned schema-v1.0 carriers and strict record/step observable adapters; the Session-7 one-step adapter awaits Claude's owner re-review.
+- [`../../Reproducibility Packet/scripts/utils/sensor_model.py`](../../Reproducibility%20Packet/scripts/utils/sensor_model.py) — Claude-owned sensor-realism model, now with Codex's stateful per-step session and delivered-history masking; current edited state awaits Claude's owner re-review.
+- [`../../Reproducibility Packet/scripts/utils/online_loop.py`](../../Reproducibility%20Packet/scripts/utils/online_loop.py) — Codex-owned causal policy→plant→sensor orchestration for inserting the matched estimator/controller online.
+- [`../../Reproducibility Packet/scripts/utils/metrics.py`](../../Reproducibility%20Packet/scripts/utils/metrics.py) and [`stats.py`](../../Reproducibility%20Packet/scripts/utils/stats.py) — Claude-owned evaluation core with Codex Session-7 corrections for complete `J_5s` windows, tie-safe selective metrics, validation-frozen OOD thresholds, and crossed pair/seed resampling; owner re-review pending.
 - [`../../Reproducibility Packet/results/feasibility_spike/feasibility_spike_report.md`](../../Reproducibility%20Packet/results/feasibility_spike/feasibility_spike_report.md) — qualified-PASS report; native cable/rod selected under bounded diagnostic excitation.
 - [`../../Reproducibility Packet/results/feasibility_spike_ordinary_excitation_blocked/feasibility_spike_report.md`](../../Reproducibility%20Packet/results/feasibility_spike_ordinary_excitation_blocked/feasibility_spike_report.md) — preserved torque-only BLOCK showing the selection's excitation boundary.
 - [`../../chats/Claude-Codex/Claim Sheet Review and Division of Labor/Summary.md`](../../chats/Claude-Codex/Claim%20Sheet%20Review%20and%20Division%20of%20Labor/Summary.md) — concluded Phase-1 review/labor summary.
-- [`../../chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`](../../chats/Claude-Codex/Phase%202%20Integration%20and%20Config%20Freeze/Phase%202%20Integration%20and%20Config%20Freeze%20-%20Active.md) — authoritative active interface-integration/config-freeze thread; current producer/sensor edited state is handed back for Claude re-review.
+- [`../../chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`](../../chats/Claude-Codex/Phase%202%20Integration%20and%20Config%20Freeze/Phase%202%20Integration%20and%20Config%20Freeze%20-%20Active.md) — authoritative active interface/config thread; evaluation-core and online-sensor edited states are handed back for Claude's genuine owner re-review.
 - [`../../chats/Claude-Codex-Human/Chat Appends/Summary.md`](../../chats/Claude-Codex-Human/Chat%20Appends/Summary.md) — concluded director coordination record for the transcript-tail failure mode and recovery rule.
 - [`../../chats/Claude-Codex/Phase 0 Coordination/Summary.md`](../../chats/Claude-Codex/Phase%200%20Coordination/Summary.md) — concluded Phase-0 convergence record that feeds the Claim Sheet.
-- [`../../README.md`](../../README.md) — public live-run status, now Phase 2 / `In Progress`, including the mechanics gate's excitation-dependent heartbeat.
+- [`../../README.md`](../../README.md) — public live-run status, now Phase 2 / `In Progress`, including the excitation-dependent gate and causal-online-execution heartbeats.
 
 ## Structure
 
@@ -51,5 +54,6 @@ agents/Codex/
     ├── HumanReport3.md
     ├── HumanReport4.md
     ├── HumanReport5.md
-    └── HumanReport6.md
+    ├── HumanReport6.md
+    └── HumanReport7.md
 ```

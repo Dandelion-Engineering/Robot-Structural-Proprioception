@@ -22,17 +22,18 @@ from utils.metrics import (  # noqa: E402
     brier_score,
     expected_calibration_error,
     false_abstention_rate,
-    false_accept_at_id_acceptance,
     j_5s,
     macro_f1,
     nll,
     ood_auprc,
     ood_auroc,
+    ood_false_acceptance_rate,
     per_class_recall,
     resolve_predictions,
     risk_coverage_curve,
     selective_risk_at_coverage,
     tracking_reduction_pct,
+    unknown_threshold_at_sensitivity,
 )
 
 
@@ -134,6 +135,23 @@ def test_risk_coverage_orders_by_confidence() -> None:
     assert selective_risk_at_coverage(y_true, y_pred, confidence, 2 / 3) == pytest.approx(0.0)
 
 
+def test_risk_coverage_does_not_split_confidence_ties() -> None:
+    """A threshold accepts a whole tie group, so tied ordering cannot change the curve."""
+
+    y_true = np.array([0, 1, 2])
+    y_pred = np.array([0, 0, 3])
+    confidence = np.array([0.9, 0.9, 0.4])
+    coverage_a, risk_a = risk_coverage_curve(y_true, y_pred, confidence)
+    order = np.array([1, 0, 2])
+    coverage_b, risk_b = risk_coverage_curve(
+        y_true[order], y_pred[order], confidence[order]
+    )
+    np.testing.assert_allclose(coverage_a, [2 / 3, 1.0])
+    np.testing.assert_allclose(risk_a, [0.5, 2 / 3])
+    np.testing.assert_allclose(coverage_b, coverage_a)
+    np.testing.assert_allclose(risk_b, risk_a)
+
+
 def test_false_abstention_rate_excludes_ood() -> None:
     """Only in-distribution abstentions count; an OOD abstention is not 'false'."""
 
@@ -155,14 +173,16 @@ def test_ood_auroc_and_auprc_perfect_separation() -> None:
     assert ood_auprc(ood, score) == pytest.approx(1.0)
 
 
-def test_false_accept_at_id_acceptance_hand_example() -> None:
-    """At a threshold accepting 100% of ID, count the OOD that slip under it."""
+def test_false_accept_uses_validation_threshold_then_held_out_ood() -> None:
+    """Freeze the sensitivity threshold on validation, then score held-out OOD."""
 
-    ood = np.array([False, False, False, False, True, True, True, True])
-    # ID scores 0..0.3; OOD scores 0.25,0.4,0.6,0.9. Threshold at 100% ID acceptance
-    # is max ID score = 0.3; OOD with score <= 0.3 is just the 0.25 one -> 1/4.
-    score = np.array([0.0, 0.1, 0.2, 0.3, 0.25, 0.4, 0.6, 0.9])
-    assert false_accept_at_id_acceptance(ood, score, id_acceptance=1.0) == pytest.approx(0.25)
+    calibration_ood = np.array([0.1, 0.2, 0.3, 0.4])
+    threshold = unknown_threshold_at_sensitivity(calibration_ood, sensitivity=0.75)
+    assert threshold == pytest.approx(0.2)  # scores >= .2 detect 3/4 calibration OOD
+    ood = np.array([False, False, True, True, True, True])
+    score = np.array([0.0, 0.9, 0.1, 0.2, 0.5, 0.8])
+    # Only held-out OOD score .1 falls below the frozen threshold -> 1/4 false accept.
+    assert ood_false_acceptance_rate(ood, score, threshold=threshold) == pytest.approx(0.25)
 
 
 def test_ood_metrics_need_both_populations() -> None:
@@ -182,17 +202,17 @@ def test_j_5s_constant_error_is_norm_times_window() -> None:
     reference = np.tile([0.1, 0.0], (3, 1))
     output = np.zeros((3, 2))  # error = [0.1, 0] -> norm 0.1
     # trapezoid of constant 0.1 over t in [1,3] = 0.1 * 2 = 0.2
-    assert j_5s(t_s, reference, output, onset_time_s=1.0) == pytest.approx(0.2)
+    assert j_5s(t_s, reference, output, onset_time_s=1.0, window_s=2.0) == pytest.approx(0.2)
 
 
 def test_j_5s_excludes_samples_outside_the_window() -> None:
     """Samples before onset or past onset+window are dropped before integration."""
 
-    t_s = np.array([0.5, 1.0, 2.0, 3.0, 7.0])  # 0.5 pre-onset, 7.0 past 6.0
-    reference = np.tile([0.1, 0.0], (5, 1))
-    output = np.zeros((5, 2))
-    # Only t in [1.0, 6.0] -> [1,2,3]; trapezoid of 0.1 over [1,3] = 0.2.
-    assert j_5s(t_s, reference, output, onset_time_s=1.0, window_s=5.0) == pytest.approx(0.2)
+    t_s = np.arange(0.0, 8.0)  # includes pre-onset and one sample past the end
+    reference = np.tile([0.1, 0.0], (8, 1))
+    output = np.zeros((8, 2))
+    # Only t in [1.0, 6.0] contributes: constant 0.1 over five seconds = 0.5.
+    assert j_5s(t_s, reference, output, onset_time_s=1.0, window_s=5.0) == pytest.approx(0.5)
 
 
 def test_j_5s_uses_the_deformed_tip_it_is_given() -> None:
@@ -202,8 +222,8 @@ def test_j_5s_uses_the_deformed_tip_it_is_given() -> None:
     reference = np.tile([0.4, 0.0], (2, 1))
     rigid_tip = np.tile([0.4, 0.0], (2, 1))  # perfect -> J 0
     deformed_tip = np.tile([0.4, 0.05], (2, 1))  # 5 cm of flex in y
-    assert j_5s(t_s, reference, rigid_tip, onset_time_s=1.0) == pytest.approx(0.0)
-    assert j_5s(t_s, reference, deformed_tip, onset_time_s=1.0) == pytest.approx(0.05)
+    assert j_5s(t_s, reference, rigid_tip, onset_time_s=1.0, window_s=1.0) == pytest.approx(0.0)
+    assert j_5s(t_s, reference, deformed_tip, onset_time_s=1.0, window_s=1.0) == pytest.approx(0.05)
 
 
 def test_tracking_reduction_pct() -> None:
@@ -220,6 +240,16 @@ def test_j_5s_needs_two_samples_in_window() -> None:
     output = np.zeros((2, 2))
     with pytest.raises(ValueError):
         j_5s(t_s, reference, output, onset_time_s=1.0, window_s=0.5)
+
+
+def test_j_5s_rejects_a_truncated_five_second_window() -> None:
+    """A short trace must not be mislabeled as the frozen five-second integral."""
+
+    t_s = np.array([1.0, 2.0, 3.0])
+    reference = np.tile([0.1, 0.0], (3, 1))
+    output = np.zeros((3, 2))
+    with pytest.raises(ValueError, match="truncated"):
+        j_5s(t_s, reference, output, onset_time_s=1.0, window_s=5.0)
 
 
 # --------------------------------------------------------------------------- #

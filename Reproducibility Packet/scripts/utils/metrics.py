@@ -17,7 +17,8 @@ conflated with a control result (schema §D):
       - calibration: `brier_score`, `nll`, `expected_calibration_error`.
       - selective prediction: `risk_coverage_curve`, `selective_risk_at_coverage`,
         `false_abstention_rate`.
-      - OOD: `ood_auroc`, `ood_auprc`, `false_accept_at_id_acceptance`.
+      - OOD: `ood_auroc`, `ood_auprc`, validation-set threshold selection at a
+        fixed unknown-detection sensitivity, and held-out false acceptance.
 
   * **Layer 2 — control** (reads §B privileged metric arrays + §D controller logs):
       - `j_5s` : the headline post-change tracking integral (schema §G).
@@ -74,6 +75,27 @@ def _check_labels(y_true: np.ndarray) -> np.ndarray:
     return labels
 
 
+def _check_predictions(
+    y_pred: np.ndarray, n_expected: int, *, allow_abstain: bool
+) -> np.ndarray:
+    """Validate hard source-class predictions, optionally allowing `ABSTAIN`."""
+
+    pred = np.asarray(y_pred)
+    if pred.shape != (n_expected,):
+        raise ValueError(f"y_pred must be a length-{n_expected} vector")
+    if not np.issubdtype(pred.dtype, np.integer):
+        raise ValueError("y_pred must contain integer source-class indices")
+    allowed_low = ABSTAIN if allow_abstain else 0
+    if pred.size and (pred.min() < allowed_low or pred.max() >= N_SOURCE_CLASSES):
+        allowed = (
+            f"{ABSTAIN} or [0, {N_SOURCE_CLASSES})"
+            if allow_abstain
+            else f"[0, {N_SOURCE_CLASSES})"
+        )
+        raise ValueError(f"y_pred entries must lie in {allowed}")
+    return pred
+
+
 def _check_probabilities(p_class: np.ndarray, n_expected: int | None = None) -> np.ndarray:
     """Validate a `[N,4]` known-class probability block sums to one and is in `[0,1]`."""
 
@@ -102,9 +124,11 @@ def resolve_predictions(p_class: np.ndarray, abstain_decision: np.ndarray) -> np
     """
 
     probs = _check_probabilities(p_class)
-    abstain = np.asarray(abstain_decision, dtype=bool)
+    abstain = np.asarray(abstain_decision)
     if abstain.shape != (probs.shape[0],):
         raise ValueError("abstain_decision must be a length-N boolean vector")
+    if abstain.dtype != np.bool_:
+        raise ValueError("abstain_decision must be boolean")
     predicted = np.argmax(probs, axis=1)
     return np.where(abstain, ABSTAIN, predicted)
 
@@ -122,9 +146,7 @@ def macro_f1(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """
 
     labels = _check_labels(y_true)
-    pred = np.asarray(y_pred)
-    if pred.shape != labels.shape:
-        raise ValueError("y_true and y_pred must have the same shape")
+    pred = _check_predictions(y_pred, labels.shape[0], allow_abstain=True)
     return float(
         f1_score(labels, pred, labels=list(CLASS_INDICES), average="macro", zero_division=0.0)
     )
@@ -138,9 +160,7 @@ def per_class_recall(y_true: np.ndarray, y_pred: np.ndarray) -> dict[str, float]
     """
 
     labels = _check_labels(y_true)
-    pred = np.asarray(y_pred)
-    if pred.shape != labels.shape:
-        raise ValueError("y_true and y_pred must have the same shape")
+    pred = _check_predictions(y_pred, labels.shape[0], allow_abstain=True)
     recalls = recall_score(
         labels, pred, labels=list(CLASS_INDICES), average=None, zero_division=0.0
     )
@@ -236,17 +256,24 @@ def risk_coverage_curve(
     """
 
     labels = _check_labels(y_true)
-    pred = np.asarray(y_pred_class)
+    pred = _check_predictions(y_pred_class, labels.shape[0], allow_abstain=False)
     conf = np.asarray(confidence, dtype=float)
     if not (labels.shape == pred.shape == conf.shape):
         raise ValueError("y_true, y_pred_class, confidence must share shape")
     if labels.size == 0:
         raise ValueError("risk_coverage_curve needs at least one sample")
+    if not np.all(np.isfinite(conf)):
+        raise ValueError("confidence contains non-finite values")
     order = np.argsort(-conf, kind="stable")  # most confident first
+    sorted_conf = conf[order]
     wrong = (pred[order] != labels[order]).astype(float)
     n = labels.shape[0]
-    coverage = np.arange(1, n + 1) / n
-    risk = np.cumsum(wrong) / np.arange(1, n + 1)
+    # A threshold cannot split equal-confidence samples. Report only the end of each
+    # tie group so the curve is invariant to input order within a tied score.
+    group_end = np.r_[sorted_conf[1:] != sorted_conf[:-1], True]
+    accepted = np.flatnonzero(group_end) + 1
+    coverage = accepted / n
+    risk = np.cumsum(wrong)[accepted - 1] / accepted
     return coverage, risk
 
 
@@ -272,10 +299,12 @@ def false_abstention_rate(abstain_decision: np.ndarray, ood_flag: np.ndarray) ->
     no in-distribution samples.
     """
 
-    abstain = np.asarray(abstain_decision, dtype=bool)
-    ood = np.asarray(ood_flag, dtype=bool)
+    abstain = np.asarray(abstain_decision)
+    ood = np.asarray(ood_flag)
     if abstain.shape != ood.shape or abstain.ndim != 1:
         raise ValueError("abstain_decision and ood_flag must be 1-D and the same length")
+    if abstain.dtype != np.bool_ or ood.dtype != np.bool_:
+        raise ValueError("abstain_decision and ood_flag must be boolean")
     in_dist = ~ood
     if not np.any(in_dist):
         return 0.0
@@ -288,12 +317,14 @@ def false_abstention_rate(abstain_decision: np.ndarray, ood_flag: np.ndarray) ->
 def _check_ood_inputs(ood_flag: np.ndarray, unknown_score: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """Validate OOD detection inputs: a boolean label and a real-valued score."""
 
-    ood = np.asarray(ood_flag, dtype=bool)
+    ood = np.asarray(ood_flag)
     score = np.asarray(unknown_score, dtype=float)
     if ood.shape != score.shape or ood.ndim != 1:
         raise ValueError("ood_flag and unknown_score must be 1-D and the same length")
     if not np.all(np.isfinite(score)):
         raise ValueError("unknown_score contains non-finite values")
+    if ood.dtype != np.bool_:
+        raise ValueError("ood_flag must be boolean")
     if ood.all() or (~ood).all():
         raise ValueError("OOD metrics need both in-distribution and OOD samples present")
     return ood, score
@@ -313,26 +344,51 @@ def ood_auprc(ood_flag: np.ndarray, unknown_score: np.ndarray) -> float:
     return float(average_precision_score(ood, score))
 
 
-def false_accept_at_id_acceptance(
-    ood_flag: np.ndarray, unknown_score: np.ndarray, *, id_acceptance: float = 0.95
+def unknown_threshold_at_sensitivity(
+    calibration_ood_scores: np.ndarray, *, sensitivity: float = 0.95
 ) -> float:
-    """OOD false-accept rate at a fixed in-distribution acceptance operating point.
+    """Choose an unknown-score threshold on validation OOD at fixed sensitivity.
 
-    The threshold is set so a fraction ``id_acceptance`` of in-distribution samples
-    are "accepted" (``unknown_score`` at or below threshold). The returned value is
-    the fraction of OOD samples that slip through as accepted at that threshold —
-    lower is better. This operating-point convention (95% ID accepted by default) is
-    documented here and is a config-freeze-time decision; the point estimate itself is
-    convention-independent apart from ``id_acceptance``.
+    Higher scores mean more likely OOD and scores at or above the threshold are
+    detected as unknown. The returned threshold detects at least ``sensitivity`` of
+    the supplied *calibration/validation* OOD cases. It must be frozen before use on
+    confirmatory data; selecting and evaluating it on the same cases would leak the
+    operating point into the held-out result.
     """
 
-    ood, score = _check_ood_inputs(ood_flag, unknown_score)
-    if not 0.0 < id_acceptance <= 1.0:
-        raise ValueError("id_acceptance must be in (0, 1]")
-    id_scores = score[~ood]
-    threshold = float(np.quantile(id_scores, id_acceptance))
-    ood_scores = score[ood]
-    return float(np.mean(ood_scores <= threshold))
+    scores = np.asarray(calibration_ood_scores, dtype=float)
+    if scores.ndim != 1 or scores.size == 0:
+        raise ValueError("calibration_ood_scores must be a non-empty 1-D vector")
+    if not np.all(np.isfinite(scores)):
+        raise ValueError("calibration_ood_scores contains non-finite values")
+    if not 0.0 < sensitivity <= 1.0:
+        raise ValueError("sensitivity must be in (0, 1]")
+    required_detected = int(np.ceil(sensitivity * scores.size))
+    descending = np.sort(scores)[::-1]
+    return float(descending[required_detected - 1])
+
+
+def ood_false_acceptance_rate(
+    ood_flag: np.ndarray, unknown_score: np.ndarray, *, threshold: float
+) -> float:
+    """Held-out OOD false-acceptance rate at a pre-frozen unknown threshold.
+
+    An OOD case is falsely accepted as known when its score is below ``threshold``.
+    The threshold should come from `unknown_threshold_at_sensitivity` on validation
+    data, matching the Claim Sheet's 95% unknown-detection-sensitivity operating point.
+    """
+
+    ood = np.asarray(ood_flag)
+    score = np.asarray(unknown_score, dtype=float)
+    if ood.shape != score.shape or ood.ndim != 1:
+        raise ValueError("ood_flag and unknown_score must be 1-D and the same length")
+    if ood.dtype != np.bool_:
+        raise ValueError("ood_flag must be boolean")
+    if not np.all(np.isfinite(score)) or not np.isfinite(threshold):
+        raise ValueError("unknown scores and threshold must be finite")
+    if not np.any(ood):
+        raise ValueError("at least one held-out OOD sample is required")
+    return float(np.mean(score[ood] < threshold))
 
 
 # --------------------------------------------------------------------------- #
@@ -369,13 +425,30 @@ def j_5s(
         raise ValueError("task_reference and true_task_output must be [T,2] planar")
     if window_s <= 0.0:
         raise ValueError("window_s must be positive")
+    if not (
+        np.all(np.isfinite(times))
+        and np.all(np.isfinite(reference))
+        and np.all(np.isfinite(output))
+    ):
+        raise ValueError("tracking inputs must be finite")
+    if times.shape[0] < 2 or np.any(np.diff(times) <= 0.0):
+        raise ValueError("t_s must be strictly increasing with at least two samples")
+    steps = np.diff(times)
+    if not np.allclose(steps, steps[0], rtol=1.0e-7, atol=1.0e-12):
+        raise ValueError("t_s must lie on one uniform control grid")
     tol = 1.0e-9
-    in_window = (times >= onset_time_s - tol) & (times <= onset_time_s + window_s + tol)
+    window_end = onset_time_s + window_s
+    in_window = (times >= onset_time_s - tol) & (times <= window_end + tol)
     if np.count_nonzero(in_window) < 2:
         raise ValueError("the analysis window contains fewer than two control samples")
+    selected_times = times[in_window]
+    if not np.isclose(selected_times[0], onset_time_s, rtol=0.0, atol=tol):
+        raise ValueError("the analysis window is missing the onset control sample")
+    if not np.isclose(selected_times[-1], window_end, rtol=0.0, atol=tol):
+        raise ValueError("the analysis window is truncated before onset + window_s")
     error = reference[in_window] - output[in_window]
     error_norm = np.linalg.norm(error, axis=1)  # L2 over planar (x, y)
-    return float(np.trapezoid(error_norm, times[in_window]))
+    return float(np.trapezoid(error_norm, selected_times))
 
 
 def tracking_reduction_pct(j_c1: float, j_s: float) -> float:

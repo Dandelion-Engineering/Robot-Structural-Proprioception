@@ -96,11 +96,44 @@ def test_empty_and_degenerate_inputs_fail_loud() -> None:
         hierarchical_bootstrap_ci([], stat, n_boot=10, rng=np.random.default_rng(0))
     with pytest.raises(ValueError):
         hierarchical_bootstrap_ci([[]], stat, n_boot=10, rng=np.random.default_rng(0))
+    with pytest.raises(ValueError, match="rectangular"):
+        hierarchical_bootstrap_ci(
+            [
+                [{"c1": 0.0, "s": 0.1}],
+                [{"c1": 0.0, "s": 0.1}, {"c1": 0.0, "s": 0.2}],
+            ],
+            stat,
+            n_boot=10,
+            rng=np.random.default_rng(0),
+        )
     with pytest.raises(ValueError):
         hierarchical_bootstrap_ci(
             _paired_clusters([0.1]), lambda subs: float("nan"),
             n_boot=10, rng=np.random.default_rng(0),
         )
+
+
+def test_global_train_seed_axis_is_resampled_consistently_across_pairs() -> None:
+    """One sampled seed column must stay aligned across every sampled pair row."""
+
+    n_pairs = 4
+    n_seeds = 3
+    grid = [
+        [{"pair": pair, "seed": seed} for seed in range(n_seeds)]
+        for pair in range(n_pairs)
+    ]
+
+    def aligned_seed_statistic(subunits: list) -> float:
+        sampled = np.array([sub["seed"] for sub in subunits]).reshape(n_pairs, n_seeds)
+        if not np.all(sampled == sampled[0]):
+            return float("nan")
+        return float(np.mean(sampled))
+
+    result = hierarchical_bootstrap_ci(
+        grid, aligned_seed_statistic, n_boot=100, rng=np.random.default_rng(11)
+    )
+    assert np.isfinite(result.ci_low)
+    assert np.isfinite(result.ci_high)
 
 
 def test_end_to_end_delta_macro_f1_over_paired_clusters() -> None:

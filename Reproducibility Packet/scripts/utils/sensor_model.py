@@ -41,12 +41,13 @@ from utils.schema_types import (
     N_GAUGES,
     N_JOINTS,
     OBSERVED_CHANNELS,
+    ObservableStepSources,
     SUITE_CHANNELS,
-    ObservableSources,
     ObservedRecord,
+    PlantStepState,
     PrivilegedRecord,
     SCHEMA_VERSION,
-    observable_sources,
+    observable_step_sources,
 )
 
 
@@ -86,6 +87,40 @@ class SensorConfig:
     gauge_latency_s: float = 2.0e-3
     # Baseline dropout probability applied to every measured channel
     dropout_prob: float = 0.01
+
+    def validate(self) -> None:
+        """Fail loudly on non-physical noise, timing, quantization, or dropout values."""
+
+        non_negative = (
+            "encoder_noise_rad",
+            "encoder_quant_rad",
+            "encoder_latency_s",
+            "current_noise_floor_nm",
+            "current_noise_frac",
+            "current_bias_nm",
+            "current_latency_s",
+            "imu_accel_noise",
+            "imu_gyro_noise",
+            "imu_accel_bias",
+            "imu_gyro_bias",
+            "imu_latency_s",
+            "gauge_noise_microstrain",
+            "thermal_microstrain_per_c",
+            "gauge_bias_microstrain",
+            "gauge_drift_microstrain_per_rt_s",
+            "gauge_quant_microstrain",
+            "gauge_latency_s",
+        )
+        for name in non_negative:
+            value = float(getattr(self, name))
+            if not np.isfinite(value) or value < 0.0:
+                raise ValueError(f"{name} must be finite and non-negative")
+        if not 0.0 <= self.gauge_hysteresis_alpha < 1.0:
+            raise ValueError("gauge_hysteresis_alpha must be in [0, 1)")
+        if not 0.0 <= self.dropout_prob <= 1.0:
+            raise ValueError("dropout_prob must be in [0, 1]")
+        if not np.isfinite(self.reference_temperature_c):
+            raise ValueError("reference_temperature_c must be finite")
 
     def channel_latency_s(self, channel: str) -> float:
         """Return the delivery latency for a registry channel (seconds)."""
@@ -162,6 +197,400 @@ def validity_from_dropout(generator: np.random.Generator, prob: np.ndarray) -> n
     return generator.random(prob.shape) >= prob
 
 
+@dataclass(frozen=True)
+class ObservedStep:
+    """One causal schema-C observation emitted during an online rollout."""
+
+    step: int
+    t_s: float
+    suite: str
+    values: dict[str, np.ndarray]
+    valid_mask: dict[str, np.ndarray]
+    measurement_time_s: dict[str, float]
+    availability_time_s: dict[str, float]
+    latency_age_s: dict[str, float]
+    suite_available_mask: dict[str, bool]
+
+
+class OnlineSensorSession:
+    """Stateful one-control-step sensor path for a single deployable rollout.
+
+    The session owns each CRN generator and every causal pathology state (previous
+    encoder sample, gauge lag, and gauge drift). `observe_step` therefore consumes
+    only the current `PlantStepState` and never replays a completed privileged trace.
+    `to_record` stacks the emitted steps into the same role-separated `ObservedRecord`
+    used by the persistence layer.
+    """
+
+    def __init__(
+        self,
+        suite: str,
+        *,
+        pair_id: int | str,
+        sensor_seed: int,
+        control_dt_s: float,
+        config: SensorConfig | None = None,
+        fault: FaultSpec | None = None,
+        run_id: str = "run",
+        config_hash: str = "",
+        split: str | None = None,
+    ) -> None:
+        """Initialize one causal sensor rollout and its independent CRN substreams."""
+
+        if suite not in SUITE_CHANNELS:
+            raise ValueError(f"suite must be one of {sorted(SUITE_CHANNELS)}; got {suite!r}")
+        if not np.isfinite(control_dt_s) or control_dt_s <= 0.0:
+            raise ValueError("control_dt_s must be finite and positive")
+        self.config = config or SensorConfig()
+        self.config.validate()
+        self.suite = suite
+        self.pair_id = pair_id
+        self.sensor_seed = int(sensor_seed)
+        self.control_dt_s = float(control_dt_s)
+        self.fault = fault or FaultSpec()
+        self.fault.validate()
+        self.run_id = str(run_id)
+        self.config_hash = str(config_hash)
+        self.split = split
+
+        self._generators = {
+            (channel, stream): channel_generator(self.sensor_seed, pair_id, channel, stream)
+            for channel in ("q_obs", "current_proxy_obs", "imu_obs", "gauge_obs")
+            for stream in ("value", "dropout")
+        }
+        self._generators[("current_proxy_obs", "bias")] = channel_generator(
+            self.sensor_seed, pair_id, "current_proxy_obs", "bias"
+        )
+        self._generators[("imu_obs", "bias")] = channel_generator(
+            self.sensor_seed, pair_id, "imu_obs", "bias"
+        )
+        self._generators[("gauge_obs", "bias")] = channel_generator(
+            self.sensor_seed, pair_id, "gauge_obs", "bias"
+        )
+        self._generators[("gauge_obs", "drift")] = channel_generator(
+            self.sensor_seed, pair_id, "gauge_obs", "drift"
+        )
+
+        cfg = self.config
+        self._current_bias = self._generators[("current_proxy_obs", "bias")].normal(
+            0.0, cfg.current_bias_nm, size=N_JOINTS
+        )
+        imu_bias_std = np.concatenate(
+            (np.full(3, cfg.imu_accel_bias), np.full(3, cfg.imu_gyro_bias))
+        )
+        self._imu_bias = self._generators[("imu_obs", "bias")].normal(0.0, imu_bias_std)
+        self._gauge_bias = self._generators[("gauge_obs", "bias")].normal(
+            0.0, cfg.gauge_bias_microstrain, size=N_GAUGES
+        )
+
+        self._expected_step = 0
+        self._previous_time_s: float | None = None
+        self._previous_q_obs: np.ndarray | None = None
+        self._previous_q_valid: np.ndarray | None = None
+        self._sensor_fault_onset_time_s: float | None = None
+        self._gauge_lag: np.ndarray | None = None
+        self._gauge_drift = np.zeros(N_GAUGES, dtype=float)
+        self._history: list[ObservedStep] = []
+
+    def _generator(self, channel: str, stream: str) -> np.random.Generator:
+        """Return one persistent per-channel CRN generator."""
+
+        return self._generators[(channel, stream)]
+
+    def _validate_sources(self, sources: ObservableStepSources) -> None:
+        """Enforce sequential control-grid input and fixed schema-C source widths."""
+
+        if sources.step != self._expected_step:
+            raise ValueError(
+                f"expected plant step {self._expected_step}, got {sources.step}"
+            )
+        if self._previous_time_s is not None and not np.isclose(
+            sources.t_s - self._previous_time_s,
+            self.control_dt_s,
+            rtol=1.0e-7,
+            atol=1.0e-12,
+        ):
+            raise ValueError("plant steps must arrive on the configured control grid")
+        expected = (
+            (sources.q_true, (N_JOINTS,), "q_true"),
+            (sources.tau_cmd, (N_JOINTS,), "tau_cmd"),
+            (sources.control_effort, (N_JOINTS,), "control_effort"),
+            (sources.imu_true, (IMU_DIM,), "imu_true"),
+            (sources.gauge_true, (N_GAUGES,), "gauge_true"),
+            (sources.temperature_true, (N_GAUGES,), "temperature_true"),
+        )
+        if not np.isfinite(sources.t_s):
+            raise ValueError("plant observation time must be finite")
+        for value, shape, name in expected:
+            if np.asarray(value).shape != shape or not np.all(np.isfinite(value)):
+                raise ValueError(f"{name} must be a finite shape-{shape} vector")
+
+    def _encoder(self, sources: ObservableStepSources) -> tuple[np.ndarray, np.ndarray]:
+        """Emit corrupted encoder angle and its dropout mask for one step."""
+
+        cfg = self.config
+        q_obs = sources.q_true + self._generator("q_obs", "value").normal(
+            0.0, cfg.encoder_noise_rad, size=N_JOINTS
+        )
+        dropout_prob = np.full(N_JOINTS, cfg.dropout_prob)
+        onset = max(int(self.fault.onset_index), 0)
+        if self.fault.source_class == "sensor" and sources.step >= onset:
+            if self._sensor_fault_onset_time_s is None:
+                self._sensor_fault_onset_time_s = sources.t_s
+            joint = self.fault.location
+            if self.fault.subtype == "encoder_bias":
+                q_obs[joint] += self.fault.severity
+            elif self.fault.subtype == "encoder_drift":
+                elapsed = sources.t_s - self._sensor_fault_onset_time_s
+                q_obs[joint] += self.fault.severity * elapsed
+            elif self.fault.subtype == "encoder_dropout":
+                dropout_prob[joint] = np.clip(
+                    dropout_prob[joint] + self.fault.severity, 0.0, 1.0
+                )
+        q_obs = quantize(q_obs, cfg.encoder_quant_rad)
+        valid = validity_from_dropout(
+            self._generator("q_obs", "dropout"), dropout_prob
+        )
+        return np.where(valid, q_obs, np.nan), valid
+
+    def _encoder_velocity(
+        self, q_obs: np.ndarray, q_valid: np.ndarray, current_time_s: float
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Emit the past-only backward-difference encoder velocity."""
+
+        if self._previous_q_obs is None:
+            qd_obs = np.zeros(N_JOINTS, dtype=float)
+            qd_valid = q_valid.copy()
+        else:
+            assert self._previous_q_valid is not None
+            assert self._previous_time_s is not None
+            qd_valid = q_valid & self._previous_q_valid
+            qd_obs = (q_obs - self._previous_q_obs) / (
+                current_time_s - self._previous_time_s
+            )
+        return np.where(qd_valid, qd_obs, np.nan), qd_valid
+
+    def _current_proxy(self, sources: ObservableStepSources) -> tuple[np.ndarray, np.ndarray]:
+        """Emit the upstream nominal-Kt current proxy and dropout mask."""
+
+        cfg = self.config
+        std = cfg.current_noise_floor_nm + cfg.current_noise_frac * np.abs(
+            sources.control_effort
+        )
+        value = sources.control_effort + self._generator(
+            "current_proxy_obs", "value"
+        ).normal(0.0, std) + self._current_bias
+        valid = validity_from_dropout(
+            self._generator("current_proxy_obs", "dropout"),
+            np.full(N_JOINTS, cfg.dropout_prob),
+        )
+        return np.where(valid, value, np.nan), valid
+
+    def _imu(self, sources: ObservableStepSources) -> tuple[np.ndarray, np.ndarray]:
+        """Emit the biased/noisy distal IMU and dropout mask."""
+
+        cfg = self.config
+        std = np.concatenate(
+            (np.full(3, cfg.imu_accel_noise), np.full(3, cfg.imu_gyro_noise))
+        )
+        value = sources.imu_true + self._generator("imu_obs", "value").normal(
+            0.0, std
+        ) + self._imu_bias
+        valid = validity_from_dropout(
+            self._generator("imu_obs", "dropout"),
+            np.full(IMU_DIM, cfg.dropout_prob),
+        )
+        return np.where(valid, value, np.nan), valid
+
+    def _gauge(self, sources: ObservableStepSources) -> tuple[np.ndarray, np.ndarray]:
+        """Emit causal lag/thermal/drift/noise gauge values and dropout mask."""
+
+        cfg = self.config
+        if self._gauge_lag is None:
+            self._gauge_lag = sources.gauge_true.copy()
+        else:
+            self._gauge_lag = (
+                cfg.gauge_hysteresis_alpha * self._gauge_lag
+                + (1.0 - cfg.gauge_hysteresis_alpha) * sources.gauge_true
+            )
+        drift_increment = self._generator("gauge_obs", "drift").normal(
+            0.0,
+            cfg.gauge_drift_microstrain_per_rt_s * np.sqrt(self.control_dt_s),
+            size=N_GAUGES,
+        )
+        if sources.step > 0:
+            self._gauge_drift += drift_increment
+        thermal = cfg.thermal_microstrain_per_c * (
+            sources.temperature_true - cfg.reference_temperature_c
+        )
+        noise = self._generator("gauge_obs", "value").normal(
+            0.0, cfg.gauge_noise_microstrain, size=N_GAUGES
+        )
+        value = quantize(
+            self._gauge_lag + thermal + self._gauge_bias + self._gauge_drift + noise,
+            cfg.gauge_quant_microstrain,
+        )
+        valid = validity_from_dropout(
+            self._generator("gauge_obs", "dropout"),
+            np.full(N_GAUGES, cfg.dropout_prob),
+        )
+        return np.where(valid, value, np.nan), valid
+
+    def observe_step(self, state: PlantStepState) -> ObservedStep:
+        """Map one current plant state to one causal observation and advance state."""
+
+        sources = observable_step_sources(state)
+        self._validate_sources(sources)
+        q_obs, q_valid = self._encoder(sources)
+        qd_obs, qd_valid = self._encoder_velocity(q_obs, q_valid, sources.t_s)
+        current, current_valid = self._current_proxy(sources)
+        imu, imu_valid = self._imu(sources)
+        gauge, gauge_valid = self._gauge(sources)
+        measured = {
+            "q_obs": (q_obs, q_valid),
+            "qd_obs": (qd_obs, qd_valid),
+            "tau_cmd": (sources.tau_cmd.copy(), np.ones(N_JOINTS, dtype=bool)),
+            "current_proxy_obs": (current, current_valid),
+            "imu_obs": (imu, imu_valid),
+            "gauge_obs": (gauge, gauge_valid),
+        }
+
+        values: dict[str, np.ndarray] = {}
+        valid_mask: dict[str, np.ndarray] = {}
+        measurement_time_s: dict[str, float] = {}
+        availability_time_s: dict[str, float] = {}
+        latency_age_s: dict[str, float] = {}
+        suite_available_mask: dict[str, bool] = {}
+        available = SUITE_CHANNELS[self.suite]
+        for name, width in OBSERVED_CHANNELS:
+            present = name in available
+            suite_available_mask[name] = present
+            if present:
+                values[name], valid_mask[name] = measured[name]
+                latency = self.config.channel_latency_s(name)
+                measurement_time_s[name] = sources.t_s
+                availability_time_s[name] = sources.t_s + latency
+                latency_age_s[name] = latency
+            else:
+                values[name] = np.full(width, np.nan)
+                valid_mask[name] = np.zeros(width, dtype=bool)
+                measurement_time_s[name] = np.nan
+                availability_time_s[name] = np.nan
+                latency_age_s[name] = np.nan
+
+        observed = ObservedStep(
+            step=sources.step,
+            t_s=sources.t_s,
+            suite=self.suite,
+            values=values,
+            valid_mask=valid_mask,
+            measurement_time_s=measurement_time_s,
+            availability_time_s=availability_time_s,
+            latency_age_s=latency_age_s,
+            suite_available_mask=suite_available_mask,
+        )
+        self._history.append(observed)
+        self._previous_q_obs = q_obs.copy()
+        self._previous_q_valid = q_valid.copy()
+        self._previous_time_s = sources.t_s
+        self._expected_step += 1
+        return observed
+
+    def to_record(self, *, max_steps: int | None = None) -> ObservedRecord:
+        """Stack emitted steps into a persisted record, optionally keeping a tail window."""
+
+        if not self._history:
+            raise ValueError("cannot build an ObservedRecord before any step is observed")
+        if max_steps is not None and max_steps <= 0:
+            raise ValueError("max_steps must be positive when provided")
+        history = self._history if max_steps is None else self._history[-max_steps:]
+        first = history[0]
+        return ObservedRecord(
+            suite=self.suite,
+            run_id=self.run_id,
+            pair_id=str(self.pair_id),
+            config_hash=self.config_hash,
+            values={
+                name: np.stack([step.values[name] for step in history])
+                for name, _ in OBSERVED_CHANNELS
+            },
+            valid_mask={
+                name: np.stack([step.valid_mask[name] for step in history])
+                for name, _ in OBSERVED_CHANNELS
+            },
+            measurement_time_s={
+                name: np.asarray(
+                    [step.measurement_time_s[name] for step in history], dtype=float
+                )
+                for name, _ in OBSERVED_CHANNELS
+            },
+            availability_time_s={
+                name: np.asarray(
+                    [step.availability_time_s[name] for step in history], dtype=float
+                )
+                for name, _ in OBSERVED_CHANNELS
+            },
+            latency_age_s={
+                name: np.asarray(
+                    [step.latency_age_s[name] for step in history], dtype=float
+                )
+                for name, _ in OBSERVED_CHANNELS
+            },
+            suite_available_mask=first.suite_available_mask.copy(),
+            schema_version=SCHEMA_VERSION,
+            split=self.split,
+        )
+
+    def available_record(
+        self, decision_time_s: float, *, history_steps: int
+    ) -> ObservedRecord | None:
+        """Return history masked to values delivered by `decision_time_s`.
+
+        The persisted record retains measured values plus their availability times;
+        this controller-facing view keeps only the latest ``history_steps`` rows and
+        masks any channel row whose latency has not elapsed. The explicit bound is the
+        estimator's past-only `W` once frozen and avoids rebuilding an ever-growing
+        history at 500 Hz. Returning ``None`` before the first plant step gives a
+        policy an initialization state without inventing an observation.
+        """
+
+        if not np.isfinite(decision_time_s):
+            raise ValueError("decision_time_s must be finite")
+        if history_steps <= 0:
+            raise ValueError("history_steps must be positive")
+        if not self._history:
+            return None
+        record = self.to_record(max_steps=history_steps)
+        values: dict[str, np.ndarray] = {}
+        valid_mask: dict[str, np.ndarray] = {}
+        for name, _ in OBSERVED_CHANNELS:
+            availability = record.availability_time_s[name]
+            delivered = np.isfinite(availability) & (availability <= decision_time_s + 1.0e-12)
+            channel_valid = record.valid_mask[name] & delivered[:, None]
+            valid_mask[name] = channel_valid
+            values[name] = np.where(channel_valid, record.values[name], np.nan)
+        return ObservedRecord(
+            suite=record.suite,
+            run_id=record.run_id,
+            pair_id=record.pair_id,
+            config_hash=record.config_hash,
+            values=values,
+            valid_mask=valid_mask,
+            measurement_time_s={
+                name: values.copy() for name, values in record.measurement_time_s.items()
+            },
+            availability_time_s={
+                name: values.copy() for name, values in record.availability_time_s.items()
+            },
+            latency_age_s={
+                name: values.copy() for name, values in record.latency_age_s.items()
+            },
+            suite_available_mask=record.suite_available_mask.copy(),
+            schema_version=record.schema_version,
+            split=record.split,
+        )
+
+
 class SensorModel:
     """Map privileged plant state to one suite's observed record (schema C)."""
 
@@ -169,6 +598,7 @@ class SensorModel:
         """Store the pathology configuration (defaults if none supplied)."""
 
         self.config = config or SensorConfig()
+        self.config.validate()
 
     def observe(
         self,
@@ -195,234 +625,22 @@ class SensorModel:
             run_id/config_hash/split: provenance carried into the observed record.
         """
 
-        if suite not in SUITE_CHANNELS:
-            raise ValueError(f"suite must be one of {sorted(SUITE_CHANNELS)}; got {suite!r}")
-        fault = fault or FaultSpec()
-        fault.validate()
-        sources = observable_sources(record)  # the ONLY doorway from privileged truth
-        available = SUITE_CHANNELS[suite]
-
-        measured = self._build_measured_channels(sources, fault, pair_id, sensor_seed)
-
-        values: dict[str, np.ndarray] = {}
-        valid_mask: dict[str, np.ndarray] = {}
-        measurement_time_s: dict[str, np.ndarray] = {}
-        availability_time_s: dict[str, np.ndarray] = {}
-        latency_age_s: dict[str, np.ndarray] = {}
-        suite_available_mask: dict[str, bool] = {}
-        n_steps = sources.t_s.shape[0]
-
-        for name, width in OBSERVED_CHANNELS:
-            present = name in available
-            suite_available_mask[name] = present
-            if present:
-                channel_values, channel_valid = measured[name]
-                latency = self.config.channel_latency_s(name)
-                values[name] = channel_values
-                valid_mask[name] = channel_valid
-                measurement_time_s[name] = sources.t_s.copy()
-                latency_age_s[name] = np.full(n_steps, latency)
-                availability_time_s[name] = sources.t_s + latency
-            else:
-                # Channel absent in this suite: all-NaN, masked off (invariant 2).
-                values[name] = np.full((n_steps, width), np.nan)
-                valid_mask[name] = np.zeros((n_steps, width), dtype=bool)
-                measurement_time_s[name] = np.full(n_steps, np.nan)
-                latency_age_s[name] = np.full(n_steps, np.nan)
-                availability_time_s[name] = np.full(n_steps, np.nan)
-
-        return ObservedRecord(
-            suite=suite,
-            run_id=str(run_id),
-            pair_id=str(pair_id),
+        record.validate()
+        if record.n_steps > 1:
+            control_dt_s = float(np.median(np.diff(record.t_s)))
+        else:
+            control_dt_s = 1.0
+        session = OnlineSensorSession(
+            suite,
+            pair_id=pair_id,
+            sensor_seed=sensor_seed,
+            control_dt_s=control_dt_s,
+            config=self.config,
+            fault=fault,
+            run_id=run_id,
             config_hash=config_hash,
-            values=values,
-            valid_mask=valid_mask,
-            measurement_time_s=measurement_time_s,
-            availability_time_s=availability_time_s,
-            latency_age_s=latency_age_s,
-            suite_available_mask=suite_available_mask,
-            schema_version=SCHEMA_VERSION,
             split=split,
         )
-
-    # ----------------------------------------------------------------------- #
-    # Per-channel construction. Each measured channel is (values, valid_mask).
-    # ----------------------------------------------------------------------- #
-    def _build_measured_channels(
-        self,
-        sources: ObservableSources,
-        fault: FaultSpec,
-        pair_id: int | str,
-        sensor_seed: int,
-    ) -> dict[str, tuple[np.ndarray, np.ndarray]]:
-        """Build every measurable channel; downstream masks decide suite membership."""
-
-        cfg = self.config
-        t_s = sources.t_s
-        n_steps = t_s.shape[0]
-        dt = float(np.median(np.diff(t_s))) if n_steps > 1 else 1.0
-
-        q_obs, q_valid = self._encoder_channel(sources, fault, pair_id, sensor_seed, dt)
-        qd_obs = causal_derivative(q_obs, t_s)
-        # A backward difference needs both the current and previous encoder
-        # samples. Do not mark a finite-looking derivative as valid immediately
-        # after a dropped sample; the previous NaN makes that derivative unknown.
-        qd_valid = q_valid.copy()
-        if n_steps > 1:
-            qd_valid[1:] &= q_valid[:-1]
-        qd_obs = np.where(qd_valid, qd_obs, np.nan)
-
-        tau_cmd = sources.tau_cmd.copy()  # known command; passes through cleanly
-        tau_valid = np.ones((n_steps, N_JOINTS), dtype=bool)
-
-        current = self._current_proxy_channel(sources, pair_id, sensor_seed)
-        current_valid = self._dropout_only(pair_id, sensor_seed, "current_proxy_obs", (n_steps, N_JOINTS))
-        current = np.where(current_valid, current, np.nan)
-
-        imu = self._imu_channel(sources, pair_id, sensor_seed)
-        imu_valid = self._dropout_only(pair_id, sensor_seed, "imu_obs", (n_steps, IMU_DIM))
-        imu = np.where(imu_valid, imu, np.nan)
-
-        gauge = self._gauge_channel(sources, pair_id, sensor_seed, dt)
-        gauge_valid = self._dropout_only(pair_id, sensor_seed, "gauge_obs", (n_steps, N_GAUGES))
-        gauge = np.where(gauge_valid, gauge, np.nan)
-
-        return {
-            "q_obs": (q_obs, q_valid),
-            "qd_obs": (qd_obs, qd_valid),
-            "tau_cmd": (tau_cmd, tau_valid),
-            "current_proxy_obs": (current, current_valid),
-            "imu_obs": (imu, imu_valid),
-            "gauge_obs": (gauge, gauge_valid),
-        }
-
-    def _encoder_channel(
-        self,
-        sources: ObservableSources,
-        fault: FaultSpec,
-        pair_id: int | str,
-        sensor_seed: int,
-        dt: float,
-    ) -> tuple[np.ndarray, np.ndarray]:
-        """Corrupted encoder: noise + optional sensor fault + quantization + dropout."""
-
-        cfg = self.config
-        n_steps = sources.t_s.shape[0]
-        shape = (n_steps, N_JOINTS)
-        noise = channel_generator(sensor_seed, pair_id, "q_obs", "value").normal(
-            0.0, cfg.encoder_noise_rad, size=shape
-        )
-        q_obs = sources.q_true + noise
-
-        dropout_prob = np.full(shape, cfg.dropout_prob)
-        if fault.source_class == "sensor":
-            q_obs, dropout_prob = self._apply_encoder_fault(
-                q_obs, dropout_prob, fault, sources.t_s, sensor_seed, pair_id
-            )
-
-        q_obs = quantize(q_obs, cfg.encoder_quant_rad)
-        valid = validity_from_dropout(
-            channel_generator(sensor_seed, pair_id, "q_obs", "dropout"), dropout_prob
-        )
-        q_obs = np.where(valid, q_obs, np.nan)
-        return q_obs, valid
-
-    def _apply_encoder_fault(
-        self,
-        q_obs: np.ndarray,
-        dropout_prob: np.ndarray,
-        fault: FaultSpec,
-        t_s: np.ndarray,
-        sensor_seed: int,
-        pair_id: int | str,
-    ) -> tuple[np.ndarray, np.ndarray]:
-        """Inject an encoder fault into the observation path only (schema C boundary).
-
-        The gauge/IMU/physical histories are untouched, so the fault is identified
-        by a *disagreement* between the corrupted encoder and the independently
-        evolved physical channels — the project's analytical-redundancy mechanism.
-        """
-
-        onset = fault.onset_index if fault.onset_index >= 0 else 0
-        joint = fault.location
-        active = np.zeros(t_s.shape[0], dtype=bool)
-        active[onset:] = True
-        if fault.subtype == "encoder_bias":
-            q_obs[active, joint] += fault.severity
-        elif fault.subtype == "encoder_drift":
-            elapsed = np.clip(t_s - t_s[onset], 0.0, None)
-            q_obs[active, joint] += fault.severity * elapsed[active]
-        elif fault.subtype == "encoder_dropout":
-            dropout_prob[active, joint] = np.clip(dropout_prob[active, joint] + fault.severity, 0.0, 1.0)
-        return q_obs, dropout_prob
-
-    def _current_proxy_channel(
-        self, sources: ObservableSources, pair_id: int | str, sensor_seed: int
-    ) -> np.ndarray:
-        """Nominal-Kt noisy current proxy of `control_effort` (upstream of gain loss)."""
-
-        cfg = self.config
-        effort = sources.control_effort
-        std = cfg.current_noise_floor_nm + cfg.current_noise_frac * np.abs(effort)
-        noise = channel_generator(sensor_seed, pair_id, "current_proxy_obs", "value").normal(
-            0.0, std
-        )
-        bias = channel_generator(sensor_seed, pair_id, "current_proxy_obs", "bias").normal(
-            0.0, cfg.current_bias_nm, size=(N_JOINTS,)
-        )
-        return effort + noise + bias
-
-    def _imu_channel(
-        self, sources: ObservableSources, pair_id: int | str, sensor_seed: int
-    ) -> np.ndarray:
-        """Distal IMU: per-axis additive noise + constant bias on accel/gyro."""
-
-        cfg = self.config
-        std = np.concatenate(
-            (np.full(3, cfg.imu_accel_noise), np.full(3, cfg.imu_gyro_noise))
-        )
-        noise = channel_generator(sensor_seed, pair_id, "imu_obs", "value").normal(
-            0.0, std, size=(sources.t_s.shape[0], IMU_DIM)
-        )
-        bias_std = np.concatenate(
-            (np.full(3, cfg.imu_accel_bias), np.full(3, cfg.imu_gyro_bias))
-        )
-        bias = channel_generator(sensor_seed, pair_id, "imu_obs", "bias").normal(0.0, bias_std)
-        return sources.imu_true + noise + bias
-
-    def _gauge_channel(
-        self, sources: ObservableSources, pair_id: int | str, sensor_seed: int, dt: float
-    ) -> np.ndarray:
-        """Surface strain: hysteresis(strain) + thermal apparent strain + bias + drift + noise + quant."""
-
-        cfg = self.config
-        shape = (sources.t_s.shape[0], N_GAUGES)
-        strain_response = first_order_lag(sources.gauge_true, cfg.gauge_hysteresis_alpha)
-        thermal = cfg.thermal_microstrain_per_c * (
-            sources.temperature_true - cfg.reference_temperature_c
-        )
-        bias = channel_generator(sensor_seed, pair_id, "gauge_obs", "bias").normal(
-            0.0, cfg.gauge_bias_microstrain, size=(N_GAUGES,)
-        )
-        drift = random_walk(
-            channel_generator(sensor_seed, pair_id, "gauge_obs", "drift"),
-            shape,
-            cfg.gauge_drift_microstrain_per_rt_s,
-            dt,
-        )
-        noise = channel_generator(sensor_seed, pair_id, "gauge_obs", "value").normal(
-            0.0, cfg.gauge_noise_microstrain, size=shape
-        )
-        gauge = strain_response + thermal + bias + drift + noise
-        return quantize(gauge, cfg.gauge_quant_microstrain)
-
-    def _dropout_only(
-        self, pair_id: int | str, sensor_seed: int, channel: str, shape: tuple[int, int]
-    ) -> np.ndarray:
-        """Baseline (fault-free) dropout mask for a channel."""
-
-        prob = np.full(shape, self.config.dropout_prob)
-        return validity_from_dropout(
-            channel_generator(sensor_seed, pair_id, channel, "dropout"), prob
-        )
+        for index in range(record.n_steps):
+            session.observe_step(record.slice_step(index))
+        return session.to_record()

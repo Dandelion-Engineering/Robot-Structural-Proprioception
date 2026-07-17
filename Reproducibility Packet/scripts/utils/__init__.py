@@ -8,13 +8,14 @@ here and is imported rather than copy-pasted. Modules:
   * ``schema_types`` -- typed carriers for schema v1.0 (privileged / observed records).
   * ``rng``          -- common-random-number substreams for the matched C1-vs-S pair.
   * ``sensor_model`` -- the sensor-realism + fault-injection model (schema section C).
+  * ``online_loop``  -- causal plant/sensor/policy interleaving on the control grid.
   * ``synthetic_plant`` -- a schema-conforming synthetic privileged trace, for
     exercising the sensor lane in isolation (a development/test stand-in for the
     plant lane's real output, NOT part of the confirmatory pipeline).
   * ``metrics``      -- the two-layer success-bar metrics: four-way macro-F1 with
     abstention-as-error, calibration/selective/OOD family, and the J_5s tracking
     integral (schema Slot 7 / §G).
-  * ``stats``        -- the paired hierarchical-bootstrap confidence interval for the
+  * ``stats``        -- paired crossed pair-id/train-seed bootstrap intervals for the
     S-vs-C1 headline comparisons.
 """
 

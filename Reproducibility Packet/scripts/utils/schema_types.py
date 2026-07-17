@@ -340,6 +340,20 @@ class ObservableSources:
     temperature_true: np.ndarray  # [T,4]
 
 
+@dataclass(frozen=True)
+class ObservableStepSources:
+    """One-step version of the strict plant-to-sensor observable boundary."""
+
+    step: int
+    t_s: float
+    q_true: np.ndarray  # [2]
+    tau_cmd: np.ndarray  # [2]
+    control_effort: np.ndarray  # [2]
+    imu_true: np.ndarray  # [6]
+    gauge_true: np.ndarray  # [4]
+    temperature_true: np.ndarray  # [4]
+
+
 def observable_sources(record: PrivilegedRecord) -> ObservableSources:
     """Return only the privileged fields a real onboard sensor could measure.
 
@@ -356,6 +370,21 @@ def observable_sources(record: PrivilegedRecord) -> ObservableSources:
         imu_true=record.imu_true,
         gauge_true=record.gauge_true,
         temperature_true=record.temperature_true,
+    )
+
+
+def observable_step_sources(state: PlantStepState) -> ObservableStepSources:
+    """Expose only the physically measurable subset of one privileged plant step."""
+
+    return ObservableStepSources(
+        step=int(state.step),
+        t_s=float(state.t_s),
+        q_true=np.asarray(state.q_true),
+        tau_cmd=np.asarray(state.tau_cmd),
+        control_effort=np.asarray(state.control_effort),
+        imu_true=np.asarray(state.imu_true),
+        gauge_true=np.asarray(state.gauge_true),
+        temperature_true=np.asarray(state.temperature_true),
     )
 
 
