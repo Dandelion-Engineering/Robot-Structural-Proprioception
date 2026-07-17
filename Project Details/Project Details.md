@@ -338,7 +338,7 @@ Important hardware and environment facts:
 - GPU driver/CUDA observed previously: driver 581.95, CUDA 13.0
 - RAM: 32 GB DDR5
 - Local storage: 1 TB NVMe on `C:`
-- External/data storage: SSD on `D:`, where `D:\Datasets\ds004752` lives
+- External/data storage: SSD on `D:`
 
 
 ## Virtual environment rule
