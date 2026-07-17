@@ -40,6 +40,42 @@ N_GAUGES = 4  # two stations per link at 0.25 L and 0.75 L
 IMU_DIM = 6  # distal-link specific force (3) + angular rate (3)
 DEFAULT_N_DEF = 90  # spike-frozen: 3-vector log-map rot for 15 internal ball joints x 2 links
 
+SENSOR_FAULT_SUBTYPES: frozenset[str] = frozenset(
+    {"encoder_bias", "encoder_drift", "encoder_dropout"}
+)
+SOURCE_CLASSES: frozenset[str] = frozenset({"healthy", "structure", "actuator", "sensor"})
+
+
+@dataclass(frozen=True)
+class FaultSpec:
+    """Shared fault-library entry used at the plant/sensor injection boundary.
+
+    The plant realizes structure/actuator entries; the sensor model realizes
+    sensor entries. Labels are built separately from the same specification.
+    Severity units remain subtype-specific until the frozen fault grid is written.
+    """
+
+    source_class: str = "healthy"
+    subtype: str = "none"
+    location: int = -1
+    severity: float = 0.0
+    onset_index: int = -1
+    compound_flag: bool = False
+    ood_flag: bool = False
+
+    def validate(self) -> None:
+        """Fail loudly on an unknown source class or ill-formed sensor fault."""
+
+        if self.source_class not in SOURCE_CLASSES:
+            raise ValueError(f"unknown source_class: {self.source_class!r}")
+        if self.source_class == "sensor" and self.subtype not in SENSOR_FAULT_SUBTYPES:
+            raise ValueError(
+                f"sensor fault subtype {self.subtype!r} not in {sorted(SENSOR_FAULT_SUBTYPES)}"
+            )
+        if self.source_class == "sensor" and not 0 <= self.location < N_JOINTS:
+            raise ValueError(f"sensor fault location {self.location} out of joint range")
+
+
 # --- Observed channel registry (schema section C), fixed width, fixed order ---
 # Every deployable suite writes this full registry; unavailable channels are NaN.
 OBSERVED_CHANNELS: tuple[tuple[str, int], ...] = (
@@ -143,12 +179,46 @@ class PrivilegedRecord:
                 raise ValueError(
                     f"PrivilegedRecord.{name} has shape {arr.shape}, expected {shape}"
                 )
-        if self.deform_coords.shape[0] != t:
-            raise ValueError("PrivilegedRecord.deform_coords leading axis must be T")
-        for name in ("t_s", "q_true", "gauge_true", "imu_true", "temperature_true", "control_effort"):
+        for name in ("deform_coords", "contact_state", "safety_flag"):
+            arr = getattr(self, name)
+            if arr.ndim != 2 or arr.shape[0] != t:
+                raise ValueError(f"PrivilegedRecord.{name} must have shape [T,width]")
+        if not np.issubdtype(self.step.dtype, np.integer):
+            raise ValueError("PrivilegedRecord.step must use an integer dtype")
+        if not np.array_equal(self.step, np.arange(t)):
+            raise ValueError("PrivilegedRecord.step must be the contiguous 0-based control grid")
+        if t > 1 and not np.all(np.diff(self.t_s) > 0.0):
+            raise ValueError("PrivilegedRecord.t_s must be strictly increasing")
+        for name in (
+            "t_s",
+            "q_true",
+            "qd_true",
+            "qdd_true",
+            "tau_cmd",
+            "tau_delivered_true",
+            "deform_coords",
+            "curvature_true",
+            "gauge_true",
+            "imu_true",
+            "temperature_true",
+            "contact_state",
+            "task_reference",
+            "true_task_output",
+            "tracking_error",
+            "tracking_error_norm",
+            "control_effort",
+        ):
             arr = getattr(self, name)
             if not np.all(np.isfinite(arr)):
                 raise ValueError(f"PrivilegedRecord.{name} contains non-finite values")
+        if self.saturation_flag.dtype != np.bool_ or self.safety_flag.dtype != np.bool_:
+            raise ValueError("PrivilegedRecord saturation/safety flags must use bool dtype")
+        expected_error = self.task_reference - self.true_task_output
+        if not np.allclose(self.tracking_error, expected_error, rtol=0.0, atol=1.0e-12):
+            raise ValueError("PrivilegedRecord.tracking_error is inconsistent with task truth")
+        expected_norm = np.linalg.norm(self.tracking_error, axis=1)
+        if not np.allclose(self.tracking_error_norm, expected_norm, rtol=0.0, atol=1.0e-12):
+            raise ValueError("PrivilegedRecord.tracking_error_norm is inconsistent")
 
     def slice_step(self, index: int) -> "PlantStepState":
         """Return the single-control-step privileged slice for the online loop (schema 0)."""
@@ -158,13 +228,42 @@ class PrivilegedRecord:
             t_s=float(self.t_s[index]),
             q_true=self.q_true[index].copy(),
             qd_true=self.qd_true[index].copy(),
+            qdd_true=self.qdd_true[index].copy(),
             tau_cmd=self.tau_cmd[index].copy(),
-            control_effort=self.control_effort[index].copy(),
             tau_delivered_true=self.tau_delivered_true[index].copy(),
+            deform_coords=self.deform_coords[index].copy(),
+            curvature_true=self.curvature_true[index].copy(),
             gauge_true=self.gauge_true[index].copy(),
             imu_true=self.imu_true[index].copy(),
             temperature_true=self.temperature_true[index].copy(),
+            contact_state=self.contact_state[index].copy(),
+            task_reference=self.task_reference[index].copy(),
+            true_task_output=self.true_task_output[index].copy(),
+            tracking_error=self.tracking_error[index].copy(),
+            tracking_error_norm=float(self.tracking_error_norm[index]),
+            control_effort=self.control_effort[index].copy(),
+            saturation_flag=self.saturation_flag[index].copy(),
+            safety_flag=self.safety_flag[index].copy(),
         )
+
+    @classmethod
+    def from_steps(cls, steps: list["PlantStepState"]) -> "PrivilegedRecord":
+        """Stack lossless per-step plant states into one validated schema-B trace."""
+
+        if not steps:
+            raise ValueError("at least one PlantStepState is required")
+        payload: dict[str, np.ndarray] = {}
+        for field in fields(cls):
+            values = [getattr(step, field.name) for step in steps]
+            if field.name == "step":
+                payload[field.name] = np.asarray(values, dtype=np.int64)
+            elif field.name == "t_s":
+                payload[field.name] = np.asarray(values, dtype=float)
+            else:
+                payload[field.name] = np.stack(values)
+        record = cls(**payload)
+        record.validate()
+        return record
 
     def save_npz(self, path: Path) -> None:
         """Persist the full privileged trace as one non-pickled `.npz` (schema E).
@@ -173,6 +272,7 @@ class PrivilegedRecord:
         payload; the plant lane owns the authoritative producer and may refine it.
         """
 
+        self.validate()
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         np.savez(path, **{f.name: np.asarray(getattr(self, f.name)) for f in fields(self)})
@@ -182,32 +282,43 @@ class PrivilegedRecord:
         """Load a privileged trace from disk without allowing pickled objects."""
 
         with np.load(Path(path), allow_pickle=False) as data:
-            return cls(**{f.name: np.asarray(data[f.name]) for f in fields(cls)})
+            record = cls(**{f.name: np.asarray(data[f.name]) for f in fields(cls)})
+        record.validate()
+        return record
 
 
 @dataclass(frozen=True)
 class PlantStepState:
-    """Per-control-step privileged slice the plant lane hands to the sensor interface.
+    """Lossless per-control-step schema-B state produced by the plant lane.
 
     Schema section 0: the plant advances one control step and exposes the current
-    privileged state; the sensor model maps it to the suite's observations. This
-    is the in-memory handoff object (proposed name `PlantStepState`, agreed at the
-    Phase-2 kickoff). Only the observable-source fields (`q_true`, `tau_cmd`,
-    `control_effort`, `imu_true`, `gauge_true`, `temperature_true`) are read by the
-    sensor lane; `tau_delivered_true`/`qd_true` are carried for the metric/oracle
-    path, not for observation.
+    privileged state; a narrow observable-source adapter then maps only the
+    physically measurable subset to the sensor lane. Keeping every schema-B field
+    here makes `PrivilegedRecord.slice_step` lossless and lets the same state feed
+    persistence, labels/metrics, and the allowlisted oracle without widening the
+    deployable sensor boundary.
     """
 
     step: int
     t_s: float
     q_true: np.ndarray  # [2]
     qd_true: np.ndarray  # [2]
+    qdd_true: np.ndarray  # [2]
     tau_cmd: np.ndarray  # [2]
-    control_effort: np.ndarray  # [2]
     tau_delivered_true: np.ndarray  # [2]
+    deform_coords: np.ndarray  # [n_def]
+    curvature_true: np.ndarray  # [4]
     gauge_true: np.ndarray  # [4]
     imu_true: np.ndarray  # [6]
     temperature_true: np.ndarray  # [4]
+    contact_state: np.ndarray  # [n_contact]
+    task_reference: np.ndarray  # [2]
+    true_task_output: np.ndarray  # [2]
+    tracking_error: np.ndarray  # [2]
+    tracking_error_norm: float
+    control_effort: np.ndarray  # [2]
+    saturation_flag: np.ndarray  # [2]
+    safety_flag: np.ndarray  # [n_safety]
 
 
 @dataclass(frozen=True)

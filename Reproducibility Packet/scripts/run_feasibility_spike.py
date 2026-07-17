@@ -24,28 +24,27 @@ import matplotlib.pyplot as plt
 import mujoco
 import numpy as np
 
+from utils.cable_mechanics import (
+    CableModelConfig,
+    ModelHandles,
+    apply_diagnostic_tip_load,
+    build_two_link_model,
+    cable_body_names,
+    commanded_torque,
+    copy_dynamic_state,
+    extract_state,
+    object_id,
+    tangent_angle,
+)
+
 
 @dataclass(frozen=True)
-class SpikeConfig:
+class SpikeConfig(CableModelConfig):
     """Physical, numerical, and fault parameters for the feasibility spike."""
 
-    link_length_m: float = 0.4
-    link_width_m: float = 0.02
-    link_thickness_m: float = 0.004
-    density_kg_m3: float = 2700.0
-    young_pa: float = 69.0e9
-    poisson: float = 0.33
     duration_s: float = 3.0
     fault_onset_s: float = 1.0
-    control_dt_s: float = 0.002
-    structural_ei_remaining: float = 0.50
-    structural_section_start: float = 0.55
-    structural_section_end: float = 0.85
-    actuator_gain_remaining: float = 0.70
     encoder_bias_rad: float = 0.05
-    diagnostic_tip_load_peak_n: float = 1.0
-    diagnostic_tip_load_frequency_hz: float = 0.8
-    gauge_stations: tuple[float, float] = (0.25, 0.75)
     gauge_resolution_microstrain: float = 1.0
     thermal_cross_sensitivity_microstrain_per_c: float = 10.0
     beam_tip_force_n: float = 0.2
@@ -53,21 +52,6 @@ class SpikeConfig:
     max_refinement_relative_error: float = 0.25
     max_beam_strain_relative_error: float = 0.10
     max_beam_tip_relative_error: float = 0.15
-
-
-@dataclass(frozen=True)
-class ModelHandles:
-    """Cached MuJoCo identifiers needed to extract the spike signals."""
-
-    l1_body_ids: tuple[int, ...]
-    l2_body_ids: tuple[int, ...]
-    l1_tip_site_id: int
-    l2_tip_site_id: int
-    l2_last_body_id: int
-    accel_adr: int
-    gyro_adr: int
-    softened_geoms: tuple[str, ...]
-
 
 @dataclass
 class SimulationResult:
@@ -114,231 +98,6 @@ def parse_args() -> argparse.Namespace:
         help="Run one coarse configuration for a smoke test; not a gate verdict.",
     )
     return parser.parse_args()
-
-
-def cable_body_names(prefix: str, point_count: int) -> list[str]:
-    """Return generated cable body names in centerline order."""
-
-    segment_count = point_count - 1
-    return (
-        [f"{prefix}B_first"]
-        + [f"{prefix}B_{index}" for index in range(1, segment_count - 1)]
-        + [f"{prefix}B_last"]
-    )
-
-
-def model_xml(config: SpikeConfig, point_count: int, timestep_s: float) -> str:
-    """Construct the two-link cable/rod MJCF model as a string."""
-
-    half_segment = config.link_length_m / (2.0 * (point_count - 1))
-    shear_pa = config.young_pa / (2.0 * (1.0 + config.poisson))
-    link2_start = config.link_length_m
-    return f"""
-<mujoco model="two_link_cable_spike">
-  <compiler autolimits="true" angle="radian"/>
-  <option timestep="{timestep_s:.12g}" gravity="0 0 0"
-          integrator="implicitfast" solver="Newton" iterations="100"
-          tolerance="1e-10"/>
-  <size memory="16M"/>
-  <extension>
-    <plugin plugin="mujoco.elasticity.cable"/>
-  </extension>
-  <worldbody>
-    <site name="base_ref" pos="0 0 0.5" size="0.004"/>
-    <composite prefix="L1_" type="cable" curve="s"
-               count="{point_count} 1 1" size="{config.link_length_m}"
-               offset="0 0 0.5" initial="ball">
-      <plugin plugin="mujoco.elasticity.cable">
-        <config key="twist" value="{shear_pa:.12g}"/>
-        <config key="bend" value="{config.young_pa:.12g}"/>
-        <config key="flat" value="true"/>
-        <config key="vmax" value="0"/>
-      </plugin>
-      <joint kind="main" damping="0.01" armature="1e-4"/>
-      <geom type="box"
-            size="{half_segment:.12g} {config.link_width_m / 2.0:.12g} {config.link_thickness_m / 2.0:.12g}"
-            density="{config.density_kg_m3:.12g}" contype="0" conaffinity="0"/>
-    </composite>
-    <composite prefix="L2_" type="cable" curve="s"
-               count="{point_count} 1 1" size="{config.link_length_m}"
-               offset="{link2_start:.12g} 0 0.5" initial="free">
-      <plugin plugin="mujoco.elasticity.cable">
-        <config key="twist" value="{shear_pa:.12g}"/>
-        <config key="bend" value="{config.young_pa:.12g}"/>
-        <config key="flat" value="true"/>
-        <config key="vmax" value="0"/>
-      </plugin>
-      <joint kind="main" damping="0.01" armature="1e-4"/>
-      <geom type="box"
-            size="{half_segment:.12g} {config.link_width_m / 2.0:.12g} {config.link_thickness_m / 2.0:.12g}"
-            density="{config.density_kg_m3:.12g}" contype="0" conaffinity="0"/>
-    </composite>
-  </worldbody>
-  <equality>
-    <connect name="elbow_joint" site1="L1_S_last" site2="L2_S_first"
-             solref="0.003 1" solimp="0.99 0.999 0.001"/>
-  </equality>
-  <actuator>
-    <motor name="shoulder_motor" site="L1_S_first" refsite="base_ref"
-           gear="0 0 0 0 1 0" ctrlrange="-1 1"/>
-    <motor name="elbow_motor" site="L2_S_first" refsite="L1_S_last"
-           gear="0 0 0 0 1 0" ctrlrange="-0.5 0.5"/>
-  </actuator>
-  <sensor>
-    <accelerometer name="distal_accel" site="L2_S_last"/>
-    <gyro name="distal_gyro" site="L2_S_last"/>
-  </sensor>
-</mujoco>
-"""
-
-
-def object_id(model: mujoco.MjModel, object_type: mujoco.mjtObj, name: str) -> int:
-    """Resolve a named MuJoCo object and fail clearly if it is absent."""
-
-    identifier = mujoco.mj_name2id(model, object_type, name)
-    if identifier < 0:
-        raise ValueError(f"MuJoCo object not found: {name}")
-    return identifier
-
-
-def build_two_link_model(
-    config: SpikeConfig,
-    point_count: int,
-    timestep_s: float,
-    local_softening: bool = False,
-) -> tuple[mujoco.MjModel, ModelHandles]:
-    """Compile a nominal or locally softened two-link cable model.
-
-    The local fault reduces the rectangular section thickness used by the
-    cable plugin. Because bending inertia scales with thickness cubed, the
-    cube-root factor realizes the requested local EI reduction while the
-    already-compiled body mass remains fixed.
-    """
-
-    model = mujoco.MjModel.from_xml_string(model_xml(config, point_count, timestep_s))
-    softened: list[str] = []
-    if local_softening:
-        thickness_scale = config.structural_ei_remaining ** (1.0 / 3.0)
-        segment_count = point_count - 1
-        for index in range(segment_count):
-            normalized_center = (index + 0.5) / segment_count
-            if config.structural_section_start <= normalized_center <= config.structural_section_end:
-                geom_name = f"L2_G{index}"
-                geom_id = object_id(model, mujoco.mjtObj.mjOBJ_GEOM, geom_name)
-                model.geom_size[geom_id, 2] *= thickness_scale
-                softened.append(geom_name)
-
-    l1_body_ids = tuple(
-        object_id(model, mujoco.mjtObj.mjOBJ_BODY, name)
-        for name in cable_body_names("L1_", point_count)
-    )
-    l2_body_ids = tuple(
-        object_id(model, mujoco.mjtObj.mjOBJ_BODY, name)
-        for name in cable_body_names("L2_", point_count)
-    )
-    accel_sensor = object_id(model, mujoco.mjtObj.mjOBJ_SENSOR, "distal_accel")
-    gyro_sensor = object_id(model, mujoco.mjtObj.mjOBJ_SENSOR, "distal_gyro")
-    handles = ModelHandles(
-        l1_body_ids=l1_body_ids,
-        l2_body_ids=l2_body_ids,
-        l1_tip_site_id=object_id(model, mujoco.mjtObj.mjOBJ_SITE, "L1_S_last"),
-        l2_tip_site_id=object_id(model, mujoco.mjtObj.mjOBJ_SITE, "L2_S_last"),
-        l2_last_body_id=l2_body_ids[-1],
-        accel_adr=int(model.sensor_adr[accel_sensor]),
-        gyro_adr=int(model.sensor_adr[gyro_sensor]),
-        softened_geoms=tuple(softened),
-    )
-    return model, handles
-
-
-def tangent_angle(data: mujoco.MjData, body_id: int) -> float:
-    """Return the planar cable tangent angle about +Y from a body frame."""
-
-    x_axis = data.xmat[body_id].reshape(3, 3)[:, 0]
-    return math.atan2(-float(x_axis[2]), float(x_axis[0]))
-
-
-def wrap_angle(angle: float) -> float:
-    """Wrap an angle to [-pi, pi)."""
-
-    return (angle + math.pi) % (2.0 * math.pi) - math.pi
-
-
-def extract_state(
-    model: mujoco.MjModel,
-    data: mujoco.MjData,
-    handles: ModelHandles,
-    config: SpikeConfig,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Extract joint angles, virtual gauges, distal IMU, and deformed tip."""
-
-    l1_angles = np.unwrap(
-        np.array([tangent_angle(data, body_id) for body_id in handles.l1_body_ids])
-    )
-    l2_angles = np.unwrap(
-        np.array([tangent_angle(data, body_id) for body_id in handles.l2_body_ids])
-    )
-    q_true = np.array(
-        [l1_angles[0], wrap_angle(float(l2_angles[0] - l1_angles[-1]))], dtype=float
-    )
-    segment_length = config.link_length_m / len(handles.l1_body_ids)
-    gauges: list[float] = []
-    for angles in (l1_angles, l2_angles):
-        for station in config.gauge_stations:
-            joint_index = int(round(station * len(angles)))
-            joint_index = min(max(joint_index, 1), len(angles) - 1)
-            curvature = (angles[joint_index] - angles[joint_index - 1]) / segment_length
-            gauges.append(curvature * (config.link_thickness_m / 2.0) * 1.0e6)
-    accel = data.sensordata[handles.accel_adr : handles.accel_adr + 3]
-    gyro = data.sensordata[handles.gyro_adr : handles.gyro_adr + 3]
-    imu = np.concatenate((np.asarray(accel), np.asarray(gyro))).copy()
-    tip = np.asarray(data.site_xpos[handles.l2_tip_site_id]).copy()
-    return q_true, np.asarray(gauges), imu, tip
-
-
-def commanded_torque(time_s: float) -> np.ndarray:
-    """Return the deterministic, bounded two-joint excitation command."""
-
-    shoulder = 0.25 * math.sin(2.0 * math.pi * 1.1 * time_s)
-    shoulder += 0.10 * math.sin(2.0 * math.pi * 2.3 * time_s)
-    elbow = 0.12 * math.sin(2.0 * math.pi * 1.7 * time_s + 0.4)
-    return np.array([shoulder, elbow], dtype=float)
-
-
-def apply_diagnostic_tip_load(
-    model: mujoco.MjModel,
-    data: mujoco.MjData,
-    handles: ModelHandles,
-    config: SpikeConfig,
-) -> None:
-    """Apply the matched, zero-mean transverse diagnostic load at the true tip."""
-
-    force_z = -config.diagnostic_tip_load_peak_n * math.sin(
-        2.0 * math.pi * config.diagnostic_tip_load_frequency_hz * float(data.time)
-    )
-    data.qfrc_applied[:] = 0.0
-    mujoco.mj_forward(model, data)
-    mujoco.mj_applyFT(
-        model,
-        data,
-        np.array([0.0, 0.0, force_z]),
-        np.zeros(3),
-        data.site_xpos[handles.l2_tip_site_id],
-        handles.l2_last_body_id,
-        data.qfrc_applied,
-    )
-
-
-def copy_dynamic_state(source: mujoco.MjData, target: mujoco.MjData) -> None:
-    """Copy topology-identical dynamic state at the stiffness-fault onset."""
-
-    target.time = source.time
-    target.qpos[:] = source.qpos
-    target.qvel[:] = source.qvel
-    target.qacc_warmstart[:] = source.qacc_warmstart
-    if target.act.size:
-        target.act[:] = source.act
-    mujoco.mj_forward(target.model, target)
 
 
 def simulate_case(

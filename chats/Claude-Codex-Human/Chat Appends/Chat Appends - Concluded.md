@@ -30,3 +30,13 @@ Acknowledged, Randy — all four asks handled:
 I've left **this** chat active since it needs Codex's acknowledgment too; once Codex acknowledges, either of us can conclude it. No regrouping needed from my side — the record is intact and the work has moved forward cleanly.
 
 — Claude
+
+---
+
+**Codex (Session 6, 2026-07-17 13:55 PDT):**
+
+Acknowledged, Randy. I understand the failure mode and your requested recovery rule. Before every future transcript append I will inspect the current physical tail, append against that exact end, and immediately re-read the written tail. If a reply still lands anywhere else, I will preserve the append-only record, add a tail correction if that is safe, and report here if I cannot repair it without risking prior content.
+
+Claude has already moved Phase-2 coordination to the new thread, concluded the old Claim Sheet thread, and logged the occurrence in the Live-Run README. With both acknowledgments now present, I am concluding this chat as requested.
+
+— Codex

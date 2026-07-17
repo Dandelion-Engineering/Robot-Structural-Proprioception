@@ -77,11 +77,33 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def config_hash(config: SensorConfig) -> str:
-    """Return a short stable hash of the sensor configuration for provenance."""
+def development_config_hash(config: SensorConfig, plant_sha256: str) -> str:
+    """Return an explicitly non-frozen hash for development integration output."""
 
-    payload = json.dumps(dataclasses.asdict(config), sort_keys=True).encode("utf-8")
-    return hashlib.sha256(payload).hexdigest()[:16]
+    payload = json.dumps(
+        {"sensor_config": dataclasses.asdict(config), "plant_payload_sha256": plant_sha256},
+        sort_keys=True,
+    ).encode("utf-8")
+    return f"dev-{hashlib.sha256(payload).hexdigest()[:16]}"
+
+
+def indexed_plant_config_hash(plant_npz: Path) -> str | None:
+    """Read the matching plant-role index hash when the input follows schema E."""
+
+    index_csv = Path(plant_npz).parent / "index.csv"
+    if not index_csv.exists():
+        return None
+    with index_csv.open("r", newline="", encoding="utf-8") as handle:
+        matches = [
+            row["config_hash"]
+            for row in csv.DictReader(handle)
+            if row.get("npz_path") == Path(plant_npz).name
+        ]
+    if not matches:
+        return None
+    if len(set(matches)) != 1:
+        raise ValueError(f"plant index has conflicting config hashes for {plant_npz.name}")
+    return matches[0]
 
 
 def sha256_file(path: Path) -> str:
@@ -122,7 +144,12 @@ def main() -> int:
     )
     config = SensorConfig()
     model = SensorModel(config)
-    hashed = config_hash(config)
+    # Preserve the role-shared config hash when the input is a schema-E plant
+    # payload. Analytic/ad-hoc fixtures without a role index receive an explicit
+    # development hash instead; the `dev-` prefix prevents confirmatory reuse.
+    hashed = indexed_plant_config_hash(args.plant_npz) or development_config_hash(
+        config, sha256_file(args.plant_npz)
+    )
 
     print(
         f"Applying sensor model: suite={args.suite}, fault={args.fault_class}/{args.fault_subtype}, "

@@ -36,6 +36,7 @@ import numpy as np
 from utils.rng import channel_generator
 from utils.schema_types import (
     CHANNEL_WIDTH,
+    FaultSpec,
     IMU_DIM,
     N_GAUGES,
     N_JOINTS,
@@ -47,46 +48,6 @@ from utils.schema_types import (
     SCHEMA_VERSION,
     observable_sources,
 )
-
-# Sensor-class fault subtypes this model injects into the observation path.
-SENSOR_FAULT_SUBTYPES: frozenset[str] = frozenset(
-    {"encoder_bias", "encoder_drift", "encoder_dropout"}
-)
-SOURCE_CLASSES: frozenset[str] = frozenset({"healthy", "structure", "actuator", "sensor"})
-
-
-@dataclass(frozen=True)
-class FaultSpec:
-    """Shared fault-library entry (schema D labels are derived from this).
-
-    Covers all four source classes so the library is one object across lanes;
-    this model only *applies* `source_class == "sensor"` faults (structure and
-    actuator faults are realized by the plant lane and arrive via the privileged
-    record). `location` is a joint index for sensor/actuator faults, a segment
-    index for structural faults, or -1 when not applicable. `severity` units are
-    subtype-specific: rad (encoder_bias), rad/s (encoder_drift), added dropout
-    probability (encoder_dropout).
-    """
-
-    source_class: str = "healthy"
-    subtype: str = "none"
-    location: int = -1
-    severity: float = 0.0
-    onset_index: int = -1  # first affected control step; -1 = healthy / no onset
-    compound_flag: bool = False
-    ood_flag: bool = False
-
-    def validate(self) -> None:
-        """Fail loudly on an ill-formed fault spec."""
-
-        if self.source_class not in SOURCE_CLASSES:
-            raise ValueError(f"unknown source_class: {self.source_class!r}")
-        if self.source_class == "sensor" and self.subtype not in SENSOR_FAULT_SUBTYPES:
-            raise ValueError(
-                f"sensor fault subtype {self.subtype!r} not in {sorted(SENSOR_FAULT_SUBTYPES)}"
-            )
-        if self.source_class == "sensor" and not 0 <= self.location < N_JOINTS:
-            raise ValueError(f"sensor fault location {self.location} out of joint range")
 
 
 @dataclass(frozen=True)
@@ -304,8 +265,13 @@ class SensorModel:
 
         q_obs, q_valid = self._encoder_channel(sources, fault, pair_id, sensor_seed, dt)
         qd_obs = causal_derivative(q_obs, t_s)
-        # qd validity inherits q validity (it is derived, not independently sampled).
+        # A backward difference needs both the current and previous encoder
+        # samples. Do not mark a finite-looking derivative as valid immediately
+        # after a dropped sample; the previous NaN makes that derivative unknown.
         qd_valid = q_valid.copy()
+        if n_steps > 1:
+            qd_valid[1:] &= q_valid[:-1]
+        qd_obs = np.where(qd_valid, qd_obs, np.nan)
 
         tau_cmd = sources.tau_cmd.copy()  # known command; passes through cleanly
         tau_valid = np.ones((n_steps, N_JOINTS), dtype=bool)

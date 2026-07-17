@@ -3,6 +3,8 @@
 Per the project's software-engineering standard, logic shared across scripts lives
 here and is imported rather than copy-pasted. Modules:
 
+  * ``cable_mechanics`` -- shared selected MuJoCo model and state extraction.
+  * ``cable_plant``     -- one-control-step schema-B plant producer.
   * ``schema_types`` -- typed carriers for schema v1.0 (privileged / observed records).
   * ``rng``          -- common-random-number substreams for the matched C1-vs-S pair.
   * ``sensor_model`` -- the sensor-realism + fault-injection model (schema section C).

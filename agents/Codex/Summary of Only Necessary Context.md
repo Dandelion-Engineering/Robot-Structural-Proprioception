@@ -1,84 +1,88 @@
 # Summary of Only Necessary Context — Codex
 
-**Rewritten:** 2026-07-17 12:38 PDT
+**Rewritten:** 2026-07-17 14:17 PDT
 
 **Current phase:** Phase 2 — Execution
 
-**Codex session just completed:** Session 5 · **Next:** Session 6
+**Codex session just completed:** Session 6 · **Next:** Session 7
 
 ## Current authoritative state
 
-Phase 0 and Phase 1 are closed. The technical [`../../Claim Sheet.md`](../../Claim%20Sheet.md), [`../../Accessible Claim Sheet.md`](../../Accessible%20Claim%20Sheet.md), [`../../Study Guide/Pass 1 - Conceptual Foundation.tex`](../../Study%20Guide/Pass%201%20-%20Conceptual%20Foundation.tex) plus [PDF](../../Study%20Guide/Pass%201%20-%20Conceptual%20Foundation.pdf), and co-owned [`../../Reproducibility Packet/schema/schema-v1.0.md`](../../Reproducibility%20Packet/schema/schema-v1.0.md) are jointly approved. Schema v1.0 is in force; changes require the append-and-date amendment protocol.
+Phase 0 and Phase 1 are closed. The jointly approved technical Claim Sheet, Accessible Claim Sheet, Study Guide Pass 1, and `Reproducibility Packet/schema/schema-v1.0.md` remain in force. The Claim Sheet awaits Randy's non-blocking review in `director_requests.md`; Phase-2 work continues.
 
-Claude Session 5 genuinely re-reviewed and approved Codex's edited schema state, closed the last Phase-1 gate, created the non-blocking Claim Sheet director request, flipped the public README to Phase 2, and wrote the phase-transition report. Codex Session 5 then completed the bounded mechanics feasibility spike assigned as the first plant-side Phase-2 gate.
+Active Claude–Codex coordination is now `chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`. The old Claim Sheet review thread is concluded. The director's `Chat Appends` thread is also concluded after Codex Session 6 appended its acknowledgment at the verified physical tail and created the summary.
 
-The authoritative live record remains [`../../chats/Claude-Codex/Claim Sheet Review and Division of Labor/Claim Sheet Review and Division of Labor - Active.md`](../../chats/Claude-Codex/Claim%20Sheet%20Review%20and%20Division%20of%20Labor/Claim%20Sheet%20Review%20and%20Division%20of%20Labor%20-%20Active.md). Read its true tail before acting.
+## Mechanics decision that remains binding
 
-## Mechanics gate decision — qualified PASS
+The native MuJoCo cable/rod candidate is selected only under bounded matched diagnostic excitation:
 
-The runnable spike is [`../../Reproducibility Packet/scripts/run_feasibility_spike.py`](../../Reproducibility%20Packet/scripts/run_feasibility_spike.py). It uses two first-party MuJoCo cable elements, four curvature-derived gauges, a localized structural stiffness loss, downstream actuator-gain loss, and observation-only encoder bias.
+- Ordinary torque-only condition: **BLOCK** (structural 1.92 µε, actuator 5.81 µε, separation 5.81 µε; all below 10 µε).
+- Diagnostic condition: **PASS** (1.0 N peak, 0.8 Hz zero-mean distal transverse sinusoid; structural 10.24 µε, actuator/separation 23.87 µε).
+- Fine model: 17 centerline points / 16 segments per link, 0.1 ms MuJoCo step, 2 ms control step.
+- `n_def=90`: shortest three-component log-map rotation for each of 15 internal ball joints per link; exclude the L1 shoulder ball pose and L2 elbow-side free pose.
+- Gauges: link 1 at 0.25/0.75 L; link 2 at 0.25/0.75 L.
+- Structural development fault: link-2 section `[0.55,0.85]`, remaining EI 0.50.
+- Actuator development fault: elbow remaining gain 0.70 downstream of unchanged upstream `control_effort`.
+- Reserve: volumetric 3-D flex; PyElastica external fallback only if later cable validation fails.
 
-The decision is **excitation-dependent**:
+Do not report the mechanics gate as a research-hypothesis result. Preserve the ordinary BLOCK as its own `trajectory_spec_id` condition.
 
-- **Ordinary joint-torque excitation: BLOCK.** Structural max gauge RMS 1.92 µε; actuator max 5.81 µε; structural-versus-actuator max separation 5.81 µε. All remain below the unchanged 10 µε credibility floor. Preserve this result; report and machine-readable outputs are in [`../../Reproducibility Packet/results/feasibility_spike_ordinary_excitation_blocked/`](../../Reproducibility%20Packet/results/feasibility_spike_ordinary_excitation_blocked/).
-- **Matched bounded diagnostic excitation: PASS.** Adding the same zero-mean 1.0 N, 0.8 Hz distal load to every scenario gives structural max 10.24 µε, actuator max 23.87 µε, and structural-versus-actuator separation 23.87 µε. Encoder observation RMS changes 0.050 rad while the physical gauge and IMU histories remain unchanged. Outputs are in [`../../Reproducibility Packet/results/feasibility_spike/`](../../Reproducibility%20Packet/results/feasibility_spike/).
+## Session-6 plant→sensor implementation
 
-Native MuJoCo cable/rod mechanics are selected for the next plant implementation **only with this diagnostic-excitation condition attached**. Volumetric 3-D flex remains the compiled reserve; PyElastica remains the external fallback. This gate is not a research-hypothesis result and must never be reported as one.
+`Reproducibility Packet/scripts/utils/cable_mechanics.py` now holds the single selected-model implementation used by both the full gate and runtime producer. The full gate was rerun after refactor and returned PASS; archived `fine_metrics`, refinement, beam-validation, candidate-contract, gate, and decision objects are value-identical.
 
-## Validation state
+`Reproducibility Packet/scripts/utils/cable_plant.py:CablePlant` is the schema-facing plant producer. `advance()` integrates one 2 ms control interval (20 × 0.1 ms physics steps), applies structure/actuator faults only in the physical path, and emits a complete `PlantStepState`. `rollout()` stacks those states into a validated `PrivilegedRecord`.
 
-- Timestep relative signature error max: 0.212 ≤ 0.25.
-- Mesh relative signature error max: 0.127 ≤ 0.25.
-- Independent Euler–Bernoulli maximum gauge-strain error: 2.06% ≤ 10%.
-- Independent tip-deflection error: 10.97% ≤ 15%.
-- Reserve 3-D flex: compiled and finite; 36 vertices, 48 tetrahedra, `nq=96`.
-- Focused tests: 4 passed.
-- Full diagnostic run returns exit 0; full ordinary negative control returns the expected exit 2.
-- Both diagnostic 300-DPI figures were visually inspected and are legible.
+`PlantStepState` is now lossless across all schema-B fields. This corrected Claude's proposed sensor-subset carrier, which had made `PrivilegedRecord.slice_step()` drop `qdd_true`, deformation/curvature, contact/task/tracking fields, and flags. The narrow leakage boundary is still `observable_sources()`; it excludes delivered torque, deformation/curvature, task truth, labels, and other privileged-only fields.
 
-## Selected plant contract to integrate
+`Reproducibility Packet/scripts/make_mujoco_plant_trace.py` writes a real non-pickled `plant/<run_id>.npz` and `plant/index.csv`. Current hashes are prefixed `dev-`; they are not confirmatory. `run_sensor_model.py` inherits the matching plant-role index hash for its observation role. The analytic synthetic plant remains optional test support only.
 
-- Candidate mechanics: first-party MuJoCo native cable/rod.
-- Each link: 0.4 m, aluminum-like `E=69 GPa`, density 2700 kg/m³, 20 mm × 4 mm rectangular section.
-- Fine discretization: 17 points / 16 segments per link; simulation timestep 0.1 ms; control timestep 2 ms.
-- `n_def=90`: three-component log-map rotation vector for each of 15 internal cable ball joints per link; shoulder and elbow rigid-joint coordinates excluded.
-- Gauge stations: link 1 at 0.25 L / 0.75 L and link 2 at 0.25 L / 0.75 L.
-- Structural spike fault: link-2 section `[0.55, 0.85]` at 50% remaining EI.
-- Actuator spike fault: elbow delivered-torque gain 0.70 downstream of the unchanged upstream proxy.
-- Encoder spike fault: +0.05 rad shoulder observation bias, plant unchanged.
+## Sensor review state — owner re-review required
 
-These values are machine-readable under `candidate_contract` and `config` in the PASS `summary.json`. Do **not** create an incomplete file called the immutable shared `config.json`. Integrate Claude's exact sensor/fault/evaluation values and freeze the complete config before pilot or confirmatory generation.
+Codex reviewed Claude's Session-6 sensor implementation and directly corrected one bug: `qd_obs[t]`, a backward difference, is now valid only if both `q_obs[t]` and `q_obs[t-1]` are valid. Previously the step after encoder dropout could contain `NaN` marked valid.
 
-## Runtime and storage invariants that remain binding
+Codex's 14:13 PDT turn explicitly approves the current edited **development interface state** (`schema_types.py`, shared mechanics/plant producer, corrected `sensor_model.py`) and hands it back to Claude. The review loop is **open** until Claude genuinely re-opens the files and explicitly approves the same state or edits and returns it. Do not infer approval from Claude's initial proposal.
 
-- Plant, sensing, estimator, and controller interleave online at each control step; stored records are role-separated traces, not an offline plant-first replay.
-- Sensor faults enter observations only. Structural and actuator faults enter plant/actuation. The current proxy remains upstream of actuator gain loss.
-- The next plant-side interface should be a single-step schema slice. Codex recommended the explicit name `PlantStepState`; implement it rather than continuing with spike-only full-history objects.
-- `tau_cmd` is pre-limit request; `control_effort` is saturated upstream proxy/actuator-side effort; `tau_delivered_true` is post-fault physical torque.
-- Deployable loaders receive only their suite's observation index/root. Identity manifest, labels, privileged plant truth, oracle, and other-suite payloads remain unreachable.
-- Before fitting: audit that each `pair_id`, `trajectory_spec_id`, and `fault_setting_id` belongs to exactly one split and no `run_id` is split over time.
-- Shared-channel random innovations use deterministic pair/channel/step substreams so S-only gauge draws cannot shift later C1/S shared noise.
+## Verified integration state
+
+- Full packet suite: **25 passed**.
+- Python compileall: passed.
+- Full mechanics gate after refactor: PASS, value-identical scientific objects.
+- Real integration run: 1,500 steps at 500 Hz, `n_def=90`, persisted/loaded successfully.
+- Real trace → matched C1/S: C1 gauge arrays all NaN; S gauges present; shared channels and masks bitwise-identical under CRN; valid entries finite; plant/observation role hashes match.
+- Packet-only copy: all 25 tests and a real plant-producer smoke run passed without repository-sibling code.
+
+The packet README now documents the real plant trace before sensor generation. It still correctly says the current sensor CLI is batch: `CablePlant.advance()` provides the online seam, but sensing→estimator→controller is not interleaved yet.
+
+## Shared config status — deliberately not frozen
+
+Exact plant-side values ready for the complete config:
+
+- `f_ctrl=500 Hz`; `dt=0.002 s`.
+- MuJoCo timestep `0.0001 s`.
+- `n_def=90`; four gauge locations above.
+- Gate-supported diagnostic amplitude/frequency: 1.0 N peak, 0.8 Hz.
+
+Still open: diagnostic duration/envelope, `W`, `stride`, remaining sensor pathology sanity check, severity/onset grids, contact/safety widths and thresholds. The gate used the sinusoid through its complete 3 s run; it did **not** validate a separately windowed/tapered short burst. Preserve that distinction and either retain the gate condition for pilot or run burst sensitivity before freeze.
+
+Do not create a partial file named the immutable shared `config.json`. Current `dev-` traces must be rejected from confirmatory use.
 
 ## Exact resume path
 
-1. Read the true tail of the active Claude–Codex transcript and inspect current repo state; Claude may have integrated sensor/evaluation work after this handoff.
-2. If the complete shared config is ready, genuinely review all mechanics, sensor, timing, window, split, and evaluation values before freezing it. Do not accept a partial immutable config.
-3. Implement Codex's schema-facing `PlantStepState` and plant-trace persistence against v1.0, using the selected cable candidate and `n_def=90`.
-4. Connect Claude's sensor-realism/fault map and evaluation harness through the per-step boundary; verify encoder faults remain relational and that shared-channel CRN substreams remain matched.
-5. Keep diagnostic and ordinary excitation as separate `trajectory_spec_id` conditions. The ordinary BLOCK remains visible and is not superseded.
-6. Before any pilot, run focused unit tests plus the full mechanics gate. Before confirmatory generation, freeze complete `schema.json`/`config.json`, validate role-separated storage and loader leakage tests, and hash the artifacts.
-7. Escalate to volumetric 3-D flex or PyElastica only if later validation reveals a cable-specific failure.
+1. Read the true tail of the active Phase-2 integration thread; Claude may have re-reviewed or edited the handed-back state.
+2. If Claude approves the same state, record the interface review loop closed. If Claude edits, inspect the actual diff and continue the explicit review cycle.
+3. Converge remaining full-config values, especially the diagnostic envelope and Claude's `W`/`stride` proposal. Do not freeze until the complete mechanics + sensor + timing + fault + split/evaluation surface is reviewed.
+4. Add a stateful per-step sensor interface so `CablePlant.advance()` → sensing → estimator → controller interleaves online; batch trace replay is development-only and cannot be the confirmatory execution order.
+5. Implement Codex's interpretable residual/linear system-ID baseline and recovery controller against the online seam once the interface/config gate closes.
+6. Before pilot: define safety/contact role widths, implement the deployable-loader leakage test and whole-group split audit, and reject any role with mismatched or `dev-` config hash.
+7. Before confirmatory generation: freeze/hash complete `schema.json` + `config.json`, keep ordinary and diagnostic trajectories separate, and run all focused/full gates.
 
-## Transcript-order note
+## Transcript-order rule
 
-Codex's substantive Session-5 mechanics handoff (12:38 PDT) was accidentally inserted near the beginning of the active transcript because a generic patch anchor matched an earlier Claude sign-off. No prior transcript content was removed or moved. A correction at the true tail declares that handoff the latest substantive turn. Preserve both entries; do not clean up the append-only history.
+Before every chat append: read the UTF-8 physical tail, patch against exact stored tail text, and re-read immediately afterward. If a reply lands elsewhere, preserve history and add a safe tail correction; if that cannot be done without risking prior content, report in the Claude–Codex–Human channel. Session 6 followed this successfully for both the director acknowledgment and Phase-2 handoff.
 
-The same pattern exists for Codex Session 4: its substantive review turn is physically earlier than Claude Session 4, with a tail correction naming the intended order. Read correction notes, not physical position alone.
+## Public/session status
 
-## Public and session status
-
-- Root [`../../README.md`](../../README.md) is Phase 2 / `In Progress` and includes one lean mechanics-gate heartbeat naming both the ordinary BLOCK and diagnostic PASS.
-- [`../../director_requests.md`](../../director_requests.md) contains the non-blocking Claim Sheet review request; work continues while it awaits the director.
-- The Reproducibility Packet working surface now has a self-contained runbook, pinned requirements, packet-local ignore file, `DATA.md`, code, tests, both condition outputs, and reports/figures. It is still a Phase-2 working packet, not the final Phase-3 verification artifact.
-- Detailed Session-5 record: [`Session Summaries/HumanReport5.md`](Session%20Summaries/HumanReport5.md).
-- Codex's next regular research-progress trigger is Session 8 unless a material event triggers one earlier.
+- Root README remains Phase 2 / `In Progress`. Session 6 did not add a heartbeat because this was internal integration infrastructure, not a phase close, finished artifact, amendment, or research result.
+- No Codex research progress report was due (next regular trigger: Session 8; no event trigger this session).
+- Detailed session record: `agents/Codex/Session Summaries/HumanReport6.md`.

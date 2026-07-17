@@ -28,6 +28,7 @@ from utils.schema_types import (  # noqa: E402
 )
 from utils.sensor_model import FaultSpec, SensorConfig, SensorModel  # noqa: E402
 from utils.synthetic_plant import synthetic_privileged_record  # noqa: E402
+from run_sensor_model import indexed_plant_config_hash  # noqa: E402
 
 SHARED_CHANNELS = ("q_obs", "qd_obs", "tau_cmd", "current_proxy_obs", "imu_obs")
 
@@ -213,6 +214,28 @@ def test_encoder_dropout_fault_invalidates_samples() -> None:
     assert np.all(np.isnan(observed.values["q_obs"][dropped, 1]))
 
 
+def test_qd_validity_requires_current_and_previous_encoder_samples() -> None:
+    """A backward-difference velocity stays invalid for one step after q dropout."""
+
+    record = small_record()
+    fault = FaultSpec(
+        source_class="sensor",
+        subtype="encoder_dropout",
+        location=1,
+        severity=1.0,
+        onset_index=100,
+    )
+    observed = SensorModel(quiet_config()).observe(
+        record, "C0", pair_id=1, sensor_seed=0, fault=fault
+    )
+    q_valid = observed.valid_mask["q_obs"][:, 1]
+    qd_valid = observed.valid_mask["qd_obs"][:, 1]
+    expected = q_valid.copy()
+    expected[1:] &= q_valid[:-1]
+    np.testing.assert_array_equal(qd_valid, expected)
+    assert np.all(np.isnan(observed.values["qd_obs"][~qd_valid, 1]))
+
+
 def test_latency_gives_causal_availability_times() -> None:
     """availability_time = measurement_time + latency >= measurement_time (schema D)."""
 
@@ -223,7 +246,10 @@ def test_latency_gives_causal_availability_times() -> None:
         avail = observed.availability_time_s[name]
         meas = observed.measurement_time_s[name]
         assert np.all(avail >= meas - 1e-12)
-    gauge_latency = observed.availability_time_s["gauge_obs"] - observed.measurement_time_s["gauge_obs"]
+    gauge_latency = (
+        observed.availability_time_s["gauge_obs"]
+        - observed.measurement_time_s["gauge_obs"]
+    )
     assert np.allclose(gauge_latency, 0.004)
     tau_latency = observed.availability_time_s["tau_cmd"] - observed.measurement_time_s["tau_cmd"]
     assert np.allclose(tau_latency, 0.0)
@@ -264,6 +290,21 @@ def test_observed_record_npz_round_trip(tmp_path: Path) -> None:
     for name in CHANNEL_NAMES:
         np.testing.assert_array_equal(observed.values[name], restored.values[name])
         np.testing.assert_array_equal(observed.valid_mask[name], restored.valid_mask[name])
+
+
+def test_observation_role_inherits_matching_plant_config_hash(tmp_path: Path) -> None:
+    """A schema-E plant payload carries one role-shared hash into observations."""
+
+    plant_root = tmp_path / "plant"
+    plant_root.mkdir()
+    payload = plant_root / "run.npz"
+    payload.write_bytes(b"development fixture")
+    (plant_root / "index.csv").write_text(
+        "run_id,schema_version,config_hash,npz_path,sha256\n"
+        "run,1.0,dev-shared,run.npz,unused\n",
+        encoding="utf-8",
+    )
+    assert indexed_plant_config_hash(payload) == "dev-shared"
 
 
 def test_invalid_fault_spec_fails_loud() -> None:
