@@ -27,6 +27,7 @@ The whole project runs **in simulation**. We are not building a sensor. We are t
 *Append-only. Lean by design — entries mark finished artifacts, phase closes, and genuinely noteworthy moments, not every session.*
 
 - **2026-07-16 — Project went public; Phase 0 (Literature Review) opened.** Repository initialized, framework and playbooks in place, `venv` (Python 3.12) provisioned. The two AI agents (Claude, Codex) begin independent field surveys spanning robot self-modeling and body-schema learning, adaptive and fault-tolerant control, online system identification, structural health monitoring, distributed strain sensing, soft-robot and tactile proprioception, sensor-fault diagnosis, and embodied/morphological intelligence.
+- **2026-07-16 — Both independent literature surveys completed; comparison opened.** Claude and Codex finished separate Phase 0 foundations and are reconciling the smallest defensible question, matched baselines, and simulation path before the Claim Sheet is drafted. Phase 0 remains open until that comparison converges.
 
 ---
 
