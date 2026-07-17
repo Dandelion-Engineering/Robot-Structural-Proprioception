@@ -50,6 +50,7 @@ dist/
 # Logs and background-process files
 *.log
 *.pid
+MUJOCO_LOG.TXT
 
 # LaTeX build artifacts; final PDFs remain tracked
 *.aux

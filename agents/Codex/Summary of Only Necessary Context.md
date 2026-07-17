@@ -1,68 +1,84 @@
 # Summary of Only Necessary Context — Codex
 
-**Rewritten:** 2026-07-16 22:35 PDT
+**Rewritten:** 2026-07-17 12:38 PDT
 
-**Current phase:** Phase 1 — Sharpening (one schema same-state approval gate remains)
+**Current phase:** Phase 2 — Execution
 
-**Codex session just completed:** Session 4 · **Next:** Session 5
+**Codex session just completed:** Session 5 · **Next:** Session 6
 
 ## Current authoritative state
 
-Phase 0 is concluded. The technical [`../../Claim Sheet.md`](../../Claim%20Sheet.md), [`../../Accessible Claim Sheet.md`](../../Accessible%20Claim%20Sheet.md), and [`../../Study Guide/Pass 1 - Conceptual Foundation.tex`](../../Study%20Guide/Pass%201%20-%20Conceptual%20Foundation.tex) plus [PDF](../../Study%20Guide/Pass%201%20-%20Conceptual%20Foundation.pdf) have each reached explicit dual approval of the same state. Their review loops are closed. The diagnosis-versus-plant/control labor split and schema-first sequencing remain agreed.
+Phase 0 and Phase 1 are closed. The technical [`../../Claim Sheet.md`](../../Claim%20Sheet.md), [`../../Accessible Claim Sheet.md`](../../Accessible%20Claim%20Sheet.md), [`../../Study Guide/Pass 1 - Conceptual Foundation.tex`](../../Study%20Guide/Pass%201%20-%20Conceptual%20Foundation.tex) plus [PDF](../../Study%20Guide/Pass%201%20-%20Conceptual%20Foundation.pdf), and co-owned [`../../Reproducibility Packet/schema/schema-v1.0.md`](../../Reproducibility%20Packet/schema/schema-v1.0.md) are jointly approved. Schema v1.0 is in force; changes require the append-and-date amendment protocol.
 
-The only remaining Phase-1 gate is the co-owned [`../../Reproducibility Packet/schema/schema-v1.0.md`](../../Reproducibility%20Packet/schema/schema-v1.0.md). Claude created and approved a proposed v1.0 in Session 4. Codex genuinely reviewed it in Session 4, edited it, explicitly approved the edited state, and returned it to Claude. Claude must now genuinely re-review this exact edited state and either explicitly approve it or edit and return it.
+Claude Session 5 genuinely re-reviewed and approved Codex's edited schema state, closed the last Phase-1 gate, created the non-blocking Claim Sheet director request, flipped the public README to Phase 2, and wrote the phase-transition report. Codex Session 5 then completed the bounded mechanics feasibility spike assigned as the first plant-side Phase-2 gate.
 
-Do not install/import a project dependency, write implementation code, create `director_requests.md`, flip the live-run README to Phase 2, or write the phase-transition progress report until Claude's same-state schema approval closes the gate.
+The authoritative live record remains [`../../chats/Claude-Codex/Claim Sheet Review and Division of Labor/Claim Sheet Review and Division of Labor - Active.md`](../../chats/Claude-Codex/Claim%20Sheet%20Review%20and%20Division%20of%20Labor/Claim%20Sheet%20Review%20and%20Division%20of%20Labor%20-%20Active.md). Read its true tail before acting.
 
-The authoritative live record is [`../../chats/Claude-Codex/Claim Sheet Review and Division of Labor/Claim Sheet Review and Division of Labor - Active.md`](../../chats/Claude-Codex/Claim%20Sheet%20Review%20and%20Division%20of%20Labor/Claim%20Sheet%20Review%20and%20Division%20of%20Labor%20-%20Active.md). Read its true tail before acting.
+## Mechanics gate decision — qualified PASS
 
-## Schema v1.0 decisions already accepted by both agents in substance
+The runnable spike is [`../../Reproducibility Packet/scripts/run_feasibility_spike.py`](../../Reproducibility%20Packet/scripts/run_feasibility_spike.py). It uses two first-party MuJoCo cable elements, four curvature-derived gauges, a localized structural stiffness loss, downstream actuator-gain loss, and observation-only encoder bias.
 
-- Separate `scenario_spec_id`, `pair_id`, and `run_id`; a matched C1/S pair may causally diverge in closed loop.
-- C0/C1/S use one fixed deployable channel registry; S adds exactly four signed surface-bending-strain channels. O is a separate allowlisted oracle.
-- Sensor faults enter observations; structural/actuator faults enter plant/actuation; the nominal current proxy remains upstream of actuator-gain loss.
-- Estimator windows are past-only and honor per-channel measurement/availability time.
-- The headline control quantity is distal-endpoint planar position error in metres, L2 norm, sampled on the control grid and integrated by the trapezoid rule over `[onset, onset + 5 s]`.
-- The endpoint is the **true deformed tip**, using joint and deformation state, not rigid-model forward kinematics.
-- C1/S pairs use common exogenous randomness; estimator/controller identifiers bind the same architecture + protocol across suites.
-- Storage remains dependency-light: CSV, numeric non-pickled NPZ, immutable JSON configuration/schema, and SHA-256.
+The decision is **excitation-dependent**:
 
-## Codex Session-4 schema edits awaiting Claude re-review
+- **Ordinary joint-torque excitation: BLOCK.** Structural max gauge RMS 1.92 µε; actuator max 5.81 µε; structural-versus-actuator max separation 5.81 µε. All remain below the unchanged 10 µε credibility floor. Preserve this result; report and machine-readable outputs are in [`../../Reproducibility Packet/results/feasibility_spike_ordinary_excitation_blocked/`](../../Reproducibility%20Packet/results/feasibility_spike_ordinary_excitation_blocked/).
+- **Matched bounded diagnostic excitation: PASS.** Adding the same zero-mean 1.0 N, 0.8 Hz distal load to every scenario gives structural max 10.24 µε, actuator max 23.87 µε, and structural-versus-actuator separation 23.87 µε. Encoder observation RMS changes 0.050 rad while the physical gauge and IMU histories remain unchanged. Outputs are in [`../../Reproducibility Packet/results/feasibility_spike/`](../../Reproducibility%20Packet/results/feasibility_spike/).
 
-1. **Online dataflow:** plant → sensing → estimator → controller interleave at every control step. The stored records are role-separated traces, not a complete plant rollout generated before sensing.
-2. **Role-separated persistence:** the identity manifest is path-free and non-deployable. Plant, per-suite observations, labels, per-suite estimator outputs, and per-suite controller logs each have separate roots/indexes and per-role NPZ payloads/hashes.
-3. **No identity-metadata leakage:** `fault_setting_id` and related provenance can reveal the target, so inference loaders receive only their suite's observation index/root. A separate allowlisted training builder joins labels as targets, never as feature columns.
-4. **Executable split audit:** before fitting, assert that `pair_id`, `trajectory_spec_id`, and `fault_setting_id` each map to one split and that no `run_id` is split over time. Suite never determines the split.
-5. **Robust common random numbers:** shared-channel innovations use deterministic per-channel/per-step substreams (or equivalent counter-based RNG), so S-only gauge draws cannot shift later shared-channel noise. State-dependent observations may still differ after legitimate causal divergence.
-6. **Actuator semantics:** `tau_cmd` is the pre-limit controller request; `control_effort` is the saturated actuator-side effort upstream of gain loss/current proxy; `tau_delivered_true` is post-fault physical torque.
-7. **Timing/temperature detail:** validity and measurement/availability/age are per time and channel; temperature truth has four channels at the four gauge stations.
+Native MuJoCo cable/rod mechanics are selected for the next plant implementation **only with this diagnostic-excitation condition attached**. Volumetric 3-D flex remains the compiled reserve; PyElastica remains the external fallback. This gate is not a research-hypothesis result and must never be reported as one.
 
-Codex explicitly approves the current edited schema state. If Claude changes any of these, re-open the entire returned schema and genuinely review both the diagnosis and implementation before approving or returning it.
+## Validation state
 
-## Labor state after schema approval
+- Timestep relative signature error max: 0.212 ≤ 0.25.
+- Mesh relative signature error max: 0.127 ≤ 0.25.
+- Independent Euler–Bernoulli maximum gauge-strain error: 2.06% ≤ 10%.
+- Independent tip-deflection error: 10.97% ≤ 15%.
+- Reserve 3-D flex: compiled and finite; 36 vertices, 48 tetrahedra, `nq=96`.
+- Focused tests: 4 passed.
+- Full diagnostic run returns exit 0; full ordinary negative control returns the expected exit 2.
+- Both diagnostic 300-DPI figures were visually inspected and are legible.
 
-- **Codex:** bounded MuJoCo cable/rod versus slender-3D-flex feasibility spike; physics; virtual-gauge extraction; excitation design; interpretable residual/linear-system-ID baseline; recovery controller.
-- **Claude:** sensor realism and fault injection; matched attribution estimator/capacity ladder; calibration/abstention; RMA-style comparator; evaluation/statistics harness; Slot-8 demo; default-writer artifacts.
-- **Shared:** versioned schema/config, fault library, diagnosis-to-control headline experiment, Reproducibility Packet, bibliography reconciliation.
+## Selected plant contract to integrate
 
-The feasibility spike remains the Phase-2 critical gate. It must test differential signatures at credible SNR and realistic stiffness using mechanics that actually represent bending; implementation details remain governed by the Claim Sheet.
+- Candidate mechanics: first-party MuJoCo native cable/rod.
+- Each link: 0.4 m, aluminum-like `E=69 GPa`, density 2700 kg/m³, 20 mm × 4 mm rectangular section.
+- Fine discretization: 17 points / 16 segments per link; simulation timestep 0.1 ms; control timestep 2 ms.
+- `n_def=90`: three-component log-map rotation vector for each of 15 internal cable ball joints per link; shoulder and elbow rigid-joint coordinates excluded.
+- Gauge stations: link 1 at 0.25 L / 0.75 L and link 2 at 0.25 L / 0.75 L.
+- Structural spike fault: link-2 section `[0.55, 0.85]` at 50% remaining EI.
+- Actuator spike fault: elbow delivered-torque gain 0.70 downstream of the unchanged upstream proxy.
+- Encoder spike fault: +0.05 rad shoulder observation bias, plant unchanged.
+
+These values are machine-readable under `candidate_contract` and `config` in the PASS `summary.json`. Do **not** create an incomplete file called the immutable shared `config.json`. Integrate Claude's exact sensor/fault/evaluation values and freeze the complete config before pilot or confirmatory generation.
+
+## Runtime and storage invariants that remain binding
+
+- Plant, sensing, estimator, and controller interleave online at each control step; stored records are role-separated traces, not an offline plant-first replay.
+- Sensor faults enter observations only. Structural and actuator faults enter plant/actuation. The current proxy remains upstream of actuator gain loss.
+- The next plant-side interface should be a single-step schema slice. Codex recommended the explicit name `PlantStepState`; implement it rather than continuing with spike-only full-history objects.
+- `tau_cmd` is pre-limit request; `control_effort` is saturated upstream proxy/actuator-side effort; `tau_delivered_true` is post-fault physical torque.
+- Deployable loaders receive only their suite's observation index/root. Identity manifest, labels, privileged plant truth, oracle, and other-suite payloads remain unreachable.
+- Before fitting: audit that each `pair_id`, `trajectory_spec_id`, and `fault_setting_id` belongs to exactly one split and no `run_id` is split over time.
+- Shared-channel random innovations use deterministic pair/channel/step substreams so S-only gauge draws cannot shift later C1/S shared noise.
 
 ## Exact resume path
 
-1. Read the true tail of the active Claim Sheet/schema transcript before acting.
-2. If Claude explicitly approves Codex's edited `schema-v1.0.md` unchanged, the schema loop and Phase 1 close.
-3. On that close, fire the transition exactly once: create/append the non-blocking “Claim Sheet ready for director review” entry in `director_requests.md`, update the root README banner/log to Phase 2, and write the event-triggered phase-transition progress report.
-4. Then begin Phase 2. Codex's first technical work is the bounded mechanics-only feasibility spike; install only the dependencies justified by that reviewed need, use the project `venv`, and pin what is committed.
-5. If Claude edits the schema, review the full returned state. Escalate only if the same issue survives roughly two complete round-trips.
+1. Read the true tail of the active Claude–Codex transcript and inspect current repo state; Claude may have integrated sensor/evaluation work after this handoff.
+2. If the complete shared config is ready, genuinely review all mechanics, sensor, timing, window, split, and evaluation values before freezing it. Do not accept a partial immutable config.
+3. Implement Codex's schema-facing `PlantStepState` and plant-trace persistence against v1.0, using the selected cable candidate and `n_def=90`.
+4. Connect Claude's sensor-realism/fault map and evaluation harness through the per-step boundary; verify encoder faults remain relational and that shared-channel CRN substreams remain matched.
+5. Keep diagnostic and ordinary excitation as separate `trajectory_spec_id` conditions. The ordinary BLOCK remains visible and is not superseded.
+6. Before any pilot, run focused unit tests plus the full mechanics gate. Before confirmatory generation, freeze complete `schema.json`/`config.json`, validate role-separated storage and loader leakage tests, and hash the artifacts.
+7. Escalate to volumetric 3-D flex or PyElastica only if later validation reveals a cable-specific failure.
 
 ## Transcript-order note
 
-Codex's substantive Session-4 schema-review turn (timestamp 22:33 PDT) was accidentally inserted after Claude's Session-2 opening turn because a patch anchor matched the first Claude sign-off. No prior transcript content was removed or changed. A timestamped correction at the true tail (22:34 PDT) declares that turn the latest substantive message. Preserve both entries; do not “clean up” the append-only history by deleting or moving them.
+Codex's substantive Session-5 mechanics handoff (12:38 PDT) was accidentally inserted near the beginning of the active transcript because a generic patch anchor matched an earlier Claude sign-off. No prior transcript content was removed or moved. A correction at the true tail declares that handoff the latest substantive turn. Preserve both entries; do not clean up the append-only history.
+
+The same pattern exists for Codex Session 4: its substantive review turn is physically earlier than Claude Session 4, with a tail correction naming the intended order. Read correction notes, not physical position alone.
 
 ## Public and session status
 
-- Root [`../../README.md`](../../README.md) remains Phase 1 / `In Progress`. Its latest lean log entry already says the companion artifacts are approved and schema v1.0 is in final review; Session 4 did not add another heartbeat because the schema and phase remain open.
-- No `director_requests.md` exists yet.
-- No implementation code, simulation, model training, project Python command, or dependency change has begun.
-- Codex's next regular progress-report trigger is Session 8 unless the Phase-1 transition occurs first.
-- Detailed Session-4 record: [`Session Summaries/HumanReport4.md`](Session%20Summaries/HumanReport4.md).
+- Root [`../../README.md`](../../README.md) is Phase 2 / `In Progress` and includes one lean mechanics-gate heartbeat naming both the ordinary BLOCK and diagnostic PASS.
+- [`../../director_requests.md`](../../director_requests.md) contains the non-blocking Claim Sheet review request; work continues while it awaits the director.
+- The Reproducibility Packet working surface now has a self-contained runbook, pinned requirements, packet-local ignore file, `DATA.md`, code, tests, both condition outputs, and reports/figures. It is still a Phase-2 working packet, not the final Phase-3 verification artifact.
+- Detailed Session-5 record: [`Session Summaries/HumanReport5.md`](Session%20Summaries/HumanReport5.md).
+- Codex's next regular research-progress trigger is Session 8 unless a material event triggers one earlier.

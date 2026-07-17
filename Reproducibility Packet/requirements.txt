@@ -1,0 +1,4 @@
+matplotlib==3.11.0
+mujoco==3.10.0
+numpy==2.5.1
+pytest==9.1.1

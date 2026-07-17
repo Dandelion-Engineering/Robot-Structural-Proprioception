@@ -14,16 +14,20 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`Session Summaries/HumanReport2.md`](Session%20Summaries/HumanReport2.md) — detailed record of Codex Session 2 (Claim Sheet review, edits, approval, and labor response).
 - [`Session Summaries/HumanReport3.md`](Session%20Summaries/HumanReport3.md) — detailed record of Codex Session 3 (companion-artifact review, PDF verification, and schema v0.2).
 - [`Session Summaries/HumanReport4.md`](Session%20Summaries/HumanReport4.md) — detailed record of Codex Session 4 (schema v1.0 review, implementation-boundary edits, approval, and owner handback).
+- [`Session Summaries/HumanReport5.md`](Session%20Summaries/HumanReport5.md) — detailed record of Codex Session 5 (native MuJoCo mechanics spike, excitation-dependent gate, candidate selection, and runnable packet).
 
 ## Shared files outside this folder
 
 - [`../../Claim Sheet.md`](../../Claim%20Sheet.md) — jointly approved Phase-1 technical contract; its same-state review loop is closed.
 - [`../../Accessible Claim Sheet.md`](../../Accessible%20Claim%20Sheet.md) — jointly approved plain-language companion; its same-state review loop is closed.
 - [`../../Study Guide/Pass 1 - Conceptual Foundation.tex`](../../Study%20Guide/Pass%201%20-%20Conceptual%20Foundation.tex) and [compiled PDF](../../Study%20Guide/Pass%201%20-%20Conceptual%20Foundation.pdf) — jointly approved director-facing conceptual guide; its same-state review loop is closed.
-- [`../../Reproducibility Packet/schema/schema-v1.0.md`](../../Reproducibility%20Packet/schema/schema-v1.0.md) — co-owned shared data contract. Codex explicitly approves the current edited state; Claude's genuine owner re-review is the only remaining Phase-1 gate.
+- [`../../Reproducibility Packet/schema/schema-v1.0.md`](../../Reproducibility%20Packet/schema/schema-v1.0.md) — co-owned shared data contract, jointly approved and in force.
+- [`../../Reproducibility Packet/scripts/run_feasibility_spike.py`](../../Reproducibility%20Packet/scripts/run_feasibility_spike.py) — runnable native cable/rod mechanics gate with an ordinary-excitation negative control, diagnostic-excitation decision, refinement checks, beam validation, and a reserve 3-D-flex probe.
+- [`../../Reproducibility Packet/results/feasibility_spike/feasibility_spike_report.md`](../../Reproducibility%20Packet/results/feasibility_spike/feasibility_spike_report.md) — qualified-PASS report; native cable/rod selected under bounded diagnostic excitation.
+- [`../../Reproducibility Packet/results/feasibility_spike_ordinary_excitation_blocked/feasibility_spike_report.md`](../../Reproducibility%20Packet/results/feasibility_spike_ordinary_excitation_blocked/feasibility_spike_report.md) — preserved torque-only BLOCK showing the selection's excitation boundary.
 - [`../../chats/Claude-Codex/Claim Sheet Review and Division of Labor/Claim Sheet Review and Division of Labor - Active.md`](../../chats/Claude-Codex/Claim%20Sheet%20Review%20and%20Division%20of%20Labor/Claim%20Sheet%20Review%20and%20Division%20of%20Labor%20-%20Active.md) — authoritative append-only review and labor thread.
 - [`../../chats/Claude-Codex/Phase 0 Coordination/Summary.md`](../../chats/Claude-Codex/Phase%200%20Coordination/Summary.md) — concluded Phase-0 convergence record that feeds the Claim Sheet.
-- [`../../README.md`](../../README.md) — public live-run status. It remains Phase 1 / `In Progress`; update only for a qualifying heartbeat event under its playbook.
+- [`../../README.md`](../../README.md) — public live-run status, now Phase 2 / `In Progress`, including the mechanics gate's excitation-dependent heartbeat.
 
 ## Structure
 
@@ -37,5 +41,6 @@ agents/Codex/
     ├── HumanReport1.md
     ├── HumanReport2.md
     ├── HumanReport3.md
-    └── HumanReport4.md
+    ├── HumanReport4.md
+    └── HumanReport5.md
 ```

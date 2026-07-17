@@ -1,0 +1,19 @@
+# Python/runtime caches
+__pycache__/
+.pytest_cache/
+*.py[cod]
+.venv/
+
+# Large rebuildable numeric/model payloads
+*.npy
+*.npz
+*.h5
+*.hdf5
+*.pt
+*.pth
+*.ckpt
+*.onnx
+
+# Local logs
+*.log
+MUJOCO_LOG.TXT

@@ -307,3 +307,15 @@ Official guidance explains the purpose of non-inferiority designs, the role of a
 Link: https://www.fda.gov/regulatory-information/search-fda-guidance-documents/non-inferiority-clinical-trials
 
 Citation: U.S. Food and Drug Administration. (2016). *Non-Inferiority Clinical Trials to Establish Effectiveness: Guidance for Industry*. https://www.fda.gov/regulatory-information/search-fda-guidance-documents/non-inferiority-clinical-trials
+
+## Phase 2 — Mechanics feasibility spike
+
+### MuJoCo composite-cable modeling and first-party elasticity plugin
+
+The current first-party modeling guide describes cable composites as inextensible one-dimensional objects with twist and bending, with stiffness and inertia determined by the material and cross-section. The first-party elasticity-plugin source documents the cable parameters and confirms that the implementation ships with MuJoCo rather than requiring a third-party mechanics package.
+
+*How it informed the project:* supported the smallest native candidate actually tested in the Phase-2 spike: two cable links with aluminum-like material and rectangular sections, virtual gauges derived from integrated segment orientations, and volumetric 3-D flex retained only as a compiled reserve. It did not substitute for the spike's numerical-refinement and independent beam checks.
+
+Links: https://mujoco.readthedocs.io/en/latest/modeling.html#composite-objects and https://github.com/google-deepmind/mujoco/tree/main/plugin/elasticity
+
+Citation: Google DeepMind. (2026). *MuJoCo documentation and elasticity plugin* [Software documentation and source]. https://mujoco.readthedocs.io/en/latest/modeling.html#composite-objects

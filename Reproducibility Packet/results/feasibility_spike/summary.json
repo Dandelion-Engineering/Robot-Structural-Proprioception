@@ -1,0 +1,289 @@
+{
+  "mujoco_version": "3.10.0",
+  "quick": false,
+  "config": {
+    "link_length_m": 0.4,
+    "link_width_m": 0.02,
+    "link_thickness_m": 0.004,
+    "density_kg_m3": 2700.0,
+    "young_pa": 69000000000.0,
+    "poisson": 0.33,
+    "duration_s": 3.0,
+    "fault_onset_s": 1.0,
+    "control_dt_s": 0.002,
+    "structural_ei_remaining": 0.5,
+    "structural_section_start": 0.55,
+    "structural_section_end": 0.85,
+    "actuator_gain_remaining": 0.7,
+    "encoder_bias_rad": 0.05,
+    "diagnostic_tip_load_peak_n": 1.0,
+    "diagnostic_tip_load_frequency_hz": 0.8,
+    "gauge_stations": [
+      0.25,
+      0.75
+    ],
+    "gauge_resolution_microstrain": 1.0,
+    "thermal_cross_sensitivity_microstrain_per_c": 10.0,
+    "beam_tip_force_n": 0.2,
+    "beam_validation_duration_s": 4.0,
+    "max_refinement_relative_error": 0.25,
+    "max_beam_strain_relative_error": 0.1,
+    "max_beam_tip_relative_error": 0.15
+  },
+  "simulation_configurations": {
+    "points_9_dt_2e-04": {
+      "point_count": 9,
+      "timestep_s": 0.0002
+    },
+    "points_9_dt_1e-04": {
+      "point_count": 9,
+      "timestep_s": 0.0001
+    },
+    "points_17_dt_1e-04": {
+      "point_count": 17,
+      "timestep_s": 0.0001
+    }
+  },
+  "max_connect_residual_m": {
+    "points_9_dt_2e-04": {
+      "healthy": 0.00010650423287338062,
+      "structural": 0.0001064558112009173,
+      "actuator": 0.00011916344269242984,
+      "encoder": 0.00010650423287338062
+    },
+    "points_9_dt_1e-04": {
+      "healthy": 0.00010057760130915971,
+      "structural": 0.00010057760130915971,
+      "actuator": 0.00014558602616969452,
+      "encoder": 0.00010057760130915971
+    },
+    "points_17_dt_1e-04": {
+      "healthy": 0.00014371403148671913,
+      "structural": 0.00014371403148671913,
+      "actuator": 0.00015873699225948945,
+      "encoder": 0.00014371403148671913
+    }
+  },
+  "fine_configuration": "points_17_dt_1e-04",
+  "fine_metrics": {
+    "structural": {
+      "q_rms": [
+        0.0007798501039610492,
+        0.0008389049223364011
+      ],
+      "imu_rms": [
+        0.32000510534083754,
+        0.0,
+        2.660105590016165,
+        0.0,
+        0.0625868363256203,
+        0.0
+      ],
+      "gauge_rms": [
+        0.2788440552294727,
+        0.15636612684263912,
+        0.9365047107052077,
+        10.240275574031024
+      ],
+      "gauge_peak": [
+        2.728849096991226,
+        1.3494839276662063,
+        14.582048115663333,
+        29.2077025204307
+      ],
+      "feature_vector": [
+        0.07798501039610492,
+        0.0838904922336401,
+        3.2000510534083753,
+        0.0,
+        26.601055900161647,
+        0.0,
+        0.625868363256203,
+        0.0,
+        0.02788440552294727,
+        0.01563661268426391,
+        0.09365047107052077,
+        1.0240275574031024
+      ]
+    },
+    "actuator": {
+      "q_rms": [
+        1.2808321998456373,
+        4.2862706218890425
+      ],
+      "imu_rms": [
+        68.17571571877279,
+        0.0,
+        25.297910308985415,
+        0.0,
+        9.557354253345597,
+        0.0
+      ],
+      "gauge_rms": [
+        21.19103493706162,
+        23.86879800227093,
+        11.936184525935241,
+        11.109739034777558
+      ],
+      "gauge_peak": [
+        97.9608624109396,
+        95.63298866016368,
+        39.25116537597751,
+        34.264962798904456
+      ],
+      "feature_vector": [
+        128.08321998456373,
+        428.62706218890423,
+        681.7571571877279,
+        0.0,
+        252.97910308985414,
+        0.0,
+        95.57354253345596,
+        0.0,
+        2.119103493706162,
+        2.386879800227093,
+        1.193618452593524,
+        1.1109739034777557
+      ]
+    },
+    "encoder": {
+      "q_rms": [
+        0.05000000000000012,
+        0.0
+      ],
+      "imu_rms": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "gauge_rms": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "gauge_peak": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "feature_vector": [
+        5.0000000000000115,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "structural_actuator_gauge_rms_microstrain": [
+    21.193407410764046,
+    23.868204591011057,
+    11.976550241236604,
+    19.409730767482273
+  ],
+  "refinement": {
+    "evaluated": true,
+    "timestep_relative_error": {
+      "structural": 0.025899015420300514,
+      "actuator": 0.21168290157926345
+    },
+    "mesh_relative_error": {
+      "structural": 0.020026329340622918,
+      "actuator": 0.12664466433713265
+    },
+    "timestep_relative_error_max": 0.21168290157926345,
+    "mesh_relative_error_max": 0.12664466433713265,
+    "timestep_pass": true,
+    "mesh_pass": true
+  },
+  "beam_validation": {
+    "point_count": 17,
+    "timestep_s": 0.0001,
+    "tip_force_n": 0.2,
+    "measured_gauge_microstrain": [
+      15.967909283139784,
+      5.384452775349362
+    ],
+    "expected_gauge_microstrain": [
+      16.304347826086957,
+      5.434782608695651
+    ],
+    "gauge_relative_error": [
+      0.02063489730075993,
+      0.009260689335717246
+    ],
+    "measured_tip_deflection_m": 0.000516104373040272,
+    "expected_tip_deflection_m": 0.0005797101449275363,
+    "tip_relative_error": 0.10971995650553087
+  },
+  "slender_3d_flex_probe": {
+    "compiled": true,
+    "finite_smoke_step": true,
+    "nq": 96,
+    "nv": 96,
+    "nbody": 33,
+    "nflexvert": 36,
+    "nflexelem": 48,
+    "role": "reserve candidate; full two-link escalation not needed if cable gate passes"
+  },
+  "candidate_contract": {
+    "mechanics": "mujoco_native_cable_rod",
+    "point_count_per_link": 17,
+    "segment_count_per_link": 16,
+    "internal_ball_joints_per_link": 15,
+    "deformation_coordinate_semantics": "three-component log-map rotation vector for every internal ball joint; shoulder and elbow rigid-joint coordinates excluded",
+    "n_def": 90,
+    "gauge_stations": [
+      {
+        "link": 1,
+        "normalized_position": 0.25
+      },
+      {
+        "link": 1,
+        "normalized_position": 0.75
+      },
+      {
+        "link": 2,
+        "normalized_position": 0.25
+      },
+      {
+        "link": 2,
+        "normalized_position": 0.75
+      }
+    ],
+    "simulation_timestep_s": 0.0001,
+    "control_timestep_s": 0.002,
+    "selection_condition": "bounded_zero_mean_distal_diagnostic_excitation"
+  },
+  "gate": {
+    "credible_floor_microstrain": 10.0,
+    "structural_max_gauge_rms_microstrain": 10.240275574031024,
+    "actuator_max_gauge_rms_microstrain": 23.86879800227093,
+    "structural_actuator_max_gauge_rms_microstrain": 23.868204591011057,
+    "encoder_q_rms_rad": 0.05000000000000012,
+    "encoder_required_q_rms_rad": 0.04000000000000001,
+    "encoder_physical_gauge_rms_microstrain": 0.0,
+    "encoder_physical_imu_rms": 0.0,
+    "structural_signal": true,
+    "actuator_signal": true,
+    "structural_actuator_separation": true,
+    "encoder_physical_gauge_unchanged": true,
+    "encoder_relational": true,
+    "beam_strain": true,
+    "beam_tip": true,
+    "pass": true
+  },
+  "candidate_decision": "select_native_cable_rod"
+}
