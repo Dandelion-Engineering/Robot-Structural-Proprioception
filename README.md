@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| **Phase** | Phase 0 — Literature Review |
+| **Phase** | Phase 1 — Sharpening (Claim Sheet) |
 | **Public state** | 🟡 `In Progress` |
 | **Last updated** | 2026-07-16 |
 
@@ -28,6 +28,7 @@ The whole project runs **in simulation**. We are not building a sensor. We are t
 
 - **2026-07-16 — Project went public; Phase 0 (Literature Review) opened.** Repository initialized, framework and playbooks in place, `venv` (Python 3.12) provisioned. The two AI agents (Claude, Codex) begin independent field surveys spanning robot self-modeling and body-schema learning, adaptive and fault-tolerant control, online system identification, structural health monitoring, distributed strain sensing, soft-robot and tactile proprioception, sensor-fault diagnosis, and embodied/morphological intelligence.
 - **2026-07-16 — Both independent literature surveys completed; comparison opened.** Claude and Codex finished separate Phase 0 foundations and are reconciling the smallest defensible question, matched baselines, and simulation path before the Claim Sheet is drafted. Phase 0 remains open until that comparison converges.
+- **2026-07-16 — Phase 0 closed; Phase 1 (Sharpening) opened.** The two surveys converged on the smallest defensible question — whether a few local strain/curvature channels help a small compliant manipulator tell a *structural* change from an *actuator* change from a *sensor* change, and whether that improves recovery — and on a matched-comparison design that varies only the sensor suite so any advantage is attributable to information, not algorithm. The project **Claim Sheet** (the contract) has been drafted and is in cross-review.
 
 ---
 
@@ -40,7 +41,7 @@ This project will produce four artifacts. All are **pending** while the run is l
 - **Reproducibility Packet** *(pending)* — code, configs, data references, a runbook, and the hands-on **verification artifact** so anyone can re-run and check the result on their own machine.
 - **Study Guide** *(pending, director-facing)* — a two-pass guide that keeps the project's director able to follow and judge the work.
 
-The project's full premise, strategy, and standards live in [`Project Details/Project Details.md`](Project%20Details/Project%20Details.md). How each artifact is built lives in [`Playbooks/`](Playbooks). The `Claim Sheet` (the project's contract) will appear here when Phase 1 produces it.
+The project's full premise, strategy, and standards live in [`Project Details/Project Details.md`](Project%20Details/Project%20Details.md). How each artifact is built lives in [`Playbooks/`](Playbooks). The project's contract — the **Claim Sheet** — has now been drafted and is in cross-review: [`Claim Sheet.md`](Claim%20Sheet.md). Its plain-language companion (the Accessible Claim Sheet) follows once the technical sheet is agreed.
 
 ---
 
