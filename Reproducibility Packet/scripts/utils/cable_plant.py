@@ -24,6 +24,7 @@ from utils.cable_mechanics import (
     copy_dynamic_state,
     extract_deformation_coordinates,
     extract_state,
+    validate_diagnostic_excitation,
     wrap_angle,
 )
 from utils.schema_types import FaultSpec, N_GAUGES, N_JOINTS, PlantStepState, PrivilegedRecord
@@ -51,6 +52,7 @@ class CablePlant:
         """
 
         self.config = config or CableModelConfig()
+        validate_diagnostic_excitation(self.config)
         self.point_count = int(point_count)
         self.simulation_timestep_s = float(simulation_timestep_s)
         self.fault = fault or FaultSpec()

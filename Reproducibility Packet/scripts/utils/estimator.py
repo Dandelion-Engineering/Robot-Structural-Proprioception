@@ -107,6 +107,10 @@ class EstimatorOutput:
     def validate(self) -> None:
         """Fail loudly if the output violates the §D shape/range contract."""
 
+        if not isinstance(self.step, (int, np.integer)) or int(self.step) < 0:
+            raise ValueError("step must be a non-negative integer")
+        if not np.isfinite(self.decision_time_s) or self.decision_time_s < 0.0:
+            raise ValueError("decision_time_s must be finite and non-negative")
         probs = np.asarray(self.p_class, dtype=float)
         if probs.shape != (N_SOURCE_CLASSES,):
             raise ValueError(f"p_class must be shape ({N_SOURCE_CLASSES},), got {probs.shape}")
@@ -120,10 +124,23 @@ class EstimatorOutput:
             raise ValueError("unknown_score must be finite")
         if not isinstance(self.abstain_decision, (bool, np.bool_)):
             raise ValueError("abstain_decision must be boolean")
-        if int(self.location_out) < -1:
+        if not isinstance(self.location_out, (int, np.integer)) or int(self.location_out) < -1:
             raise ValueError("location_out must be a joint index or -1")
-        if self.severity_uncertainty < 0.0 or not np.isfinite(self.severity_out):
+        if (
+            not np.isfinite(self.severity_out)
+            or np.isnan(self.severity_uncertainty)
+            or self.severity_uncertainty < 0.0
+        ):
             raise ValueError("severity_out finite and severity_uncertainty non-negative")
+        if not np.isnan(self.detection_time_s):
+            if (
+                not np.isfinite(self.detection_time_s)
+                or self.detection_time_s < 0.0
+                or self.detection_time_s > self.decision_time_s + 1.0e-12
+            ):
+                raise ValueError(
+                    "detection_time_s must be NaN or a finite time no later than decision_time_s"
+                )
 
 
 @dataclass
@@ -144,6 +161,12 @@ class EstimatorTrace:
         """Validate and append one decision-step output."""
 
         output.validate()
+        if self.outputs:
+            previous = self.outputs[-1]
+            if output.step <= previous.step:
+                raise ValueError("estimator-output steps must be strictly increasing")
+            if output.decision_time_s <= previous.decision_time_s:
+                raise ValueError("estimator-output decision times must be strictly increasing")
         self.outputs.append(output)
 
     def __len__(self) -> int:
@@ -213,9 +236,9 @@ class RecommendedWindow:
 
 # Proposed values for the frozen config (see the chat / progress report for the full
 # argument). At f_ctrl = 500 Hz (dt = 2 ms): W = 512 samples ≈ 1.02 s spans most of the
-# 0.8 Hz diagnostic excitation period (1.25 s), enough context to resolve a differential
-# gauge signature while keeping the per-decision tensor and detection-latency floor
-# bounded; stride = 8 samples runs the diagnosis at 62.5 Hz (the 500 Hz controller
+# 0.8 Hz diagnostic excitation period (1.25 s), a plausible history budget for a
+# differential gauge signature while keeping the per-update tensor bounded; stride =
+# 8 samples runs the diagnosis at 62.5 Hz (the 500 Hz controller
 # zero-order-holds the latest diagnosis between updates). These are config-freeze-time
 # values, not pilot-blocking; a cheap pilot sweep over W ∈ {256, 512, 768} and
 # stride ∈ {4, 8, 16} can confirm them before the freeze.
@@ -224,8 +247,8 @@ RECOMMENDED_WINDOW = RecommendedWindow(
     stride=8,
     rationale=(
         "W=512 (~1.02 s at 500 Hz) covers most of the 1.25 s (0.8 Hz) diagnostic "
-        "excitation period so a full differential gauge signature is in-window, while "
-        "bounding per-decision cost and the detection-latency floor; stride=8 updates "
+        "excitation period, providing a plausible differential-signature history while "
+        "bounding per-update cost; stride=8 updates "
         "the diagnosis at 62.5 Hz under a 500 Hz zero-order-hold controller. "
         "Confirm with a pilot sweep W∈{256,512,768}, stride∈{4,8,16} before freeze."
     ),
@@ -241,9 +264,12 @@ class WindowFeatureExtractor:
     This is what lets the matched suite ablation hold the estimator constant.
     """
 
-    def __init__(self) -> None:
-        """Initialize the extractor and cache the registry column layout."""
+    def __init__(self, window_steps: int = RECOMMENDED_WINDOW.W) -> None:
+        """Set the fixed past-only window length and cache the registry layout."""
 
+        if not isinstance(window_steps, (int, np.integer)) or int(window_steps) <= 0:
+            raise ValueError("window_steps must be a positive integer")
+        self.window_steps = int(window_steps)
         self.registry_width = observed_registry_width()
         # Column offsets so a [T, registry_width] tensor concatenates channels in the
         # fixed CHANNEL_NAMES order.
@@ -268,16 +294,31 @@ class WindowFeatureExtractor:
         """
 
         t = record.n_steps
-        values = np.zeros((t, self.registry_width), dtype=float)
-        valid = np.zeros((t, self.registry_width), dtype=bool)
+        if t <= 0:
+            raise ValueError("observed window must contain at least one step")
+        if t > self.window_steps:
+            raise ValueError(
+                f"observed window has {t} steps, exceeding fixed W={self.window_steps}"
+            )
+        values = np.zeros((self.window_steps, self.registry_width), dtype=float)
+        valid = np.zeros((self.window_steps, self.registry_width), dtype=bool)
+        row_start = self.window_steps - t
         for name in CHANNEL_NAMES:
             off = self._offsets[name]
             width = CHANNEL_WIDTH[name]
-            col = record.values[name]
-            mask = record.valid_mask[name]
+            col = np.asarray(record.values[name], dtype=float)
+            mask = np.asarray(record.valid_mask[name])
+            expected = (t, width)
+            if col.shape != expected or mask.shape != expected:
+                raise ValueError(
+                    f"{name} values/mask must both have shape {expected}, got "
+                    f"{col.shape}/{mask.shape}"
+                )
+            if mask.dtype != np.bool_:
+                raise ValueError(f"{name} valid_mask must use boolean dtype")
             filled = np.where(mask, col, 0.0)
-            values[:, off : off + width] = np.nan_to_num(filled, nan=0.0)
-            valid[:, off : off + width] = mask
+            values[row_start:, off : off + width] = np.nan_to_num(filled, nan=0.0)
+            valid[row_start:, off : off + width] = mask
         return values, valid
 
     def window_features(self, record: ObservedRecord) -> np.ndarray:
@@ -290,27 +331,36 @@ class WindowFeatureExtractor:
         """
 
         values, valid = self.window_tensor(record)
-        t = values.shape[0]
-        # times for slope: use the record's own q_obs measurement grid when finite,
-        # else a unit grid (slope units then per-sample, still a valid feature).
-        times = np.asarray(record.measurement_time_s.get("q_obs"))
-        if times is None or times.shape[0] != t or not np.all(np.isfinite(times)):
-            times = np.arange(t, dtype=float)
+        t = record.n_steps
+        row_start = self.window_steps - t
         feats = np.zeros((self.registry_width, N_FEATURE_STATS + 1), dtype=float)
-        for col in range(self.registry_width):
-            col_valid = valid[:, col]
-            n_valid = int(np.count_nonzero(col_valid))
-            feats[col, N_FEATURE_STATS] = n_valid / t if t else 0.0
-            if n_valid == 0:
-                continue
-            v = values[col_valid, col]
-            ct = times[col_valid]
-            feats[col, 0] = v[-1]  # last valid
-            feats[col, 1] = float(np.mean(v))
-            feats[col, 2] = float(np.std(v))
-            if n_valid >= 2 and np.ptp(ct) > _EPS:
-                # least-squares slope of the valid samples (per second)
-                feats[col, 3] = float(np.polyfit(ct - ct[0], v, 1)[0])
+        for name in CHANNEL_NAMES:
+            off = self._offsets[name]
+            width = CHANNEL_WIDTH[name]
+            times_raw = np.asarray(record.measurement_time_s[name], dtype=float)
+            if times_raw.shape != (t,):
+                raise ValueError(
+                    f"{name} measurement_time_s must have shape {(t,)}, got {times_raw.shape}"
+                )
+            times = np.full(self.window_steps, np.nan, dtype=float)
+            times[row_start:] = times_raw
+            for local_col in range(width):
+                col = off + local_col
+                col_valid = valid[:, col]
+                n_valid = int(np.count_nonzero(col_valid))
+                feats[col, N_FEATURE_STATS] = n_valid / self.window_steps
+                if n_valid == 0:
+                    continue
+                ct = times[col_valid]
+                if not np.all(np.isfinite(ct)):
+                    raise ValueError(f"valid {name} samples require finite measurement times")
+                v = values[col_valid, col]
+                feats[col, 0] = v[-1]  # last valid
+                feats[col, 1] = float(np.mean(v))
+                feats[col, 2] = float(np.std(v))
+                if n_valid >= 2 and np.ptp(ct) > _EPS:
+                    # least-squares slope on this channel's own measurement grid.
+                    feats[col, 3] = float(np.polyfit(ct - ct[0], v, 1)[0])
         return feats.reshape(-1)
 
 
@@ -343,7 +393,7 @@ class WindowNoveltyDetector(DiagnosisEstimator):
     """Interpretable detection + calibrated-abstention rung (ladder stage a).
 
     Fits a healthy feature reference (mean/std per feature) and scores each window by
-    the RMS z-score of its features against that reference — a standard,
+    a top-k sparse-change z statistic against that reference — a standard,
     dependency-light novelty/change statistic. It separates healthy from changed and
     reports `detection_time_s`, an `unknown_score`, a calibrated `abstain_decision`,
     and an honest `p_class` that splits healthy-vs-not but **not** the fault type: the
@@ -527,37 +577,52 @@ class OracleInterface:
     """The allowlisted privileged oracle `O` (schema §D) — the diagnosis ceiling.
 
     Unlike every deployable rung, this reads privileged §B state (`PlantStepState`) and
-    the run's true `FaultSpec`, so it reports the *best attainable* diagnosis given
+    the run's true fault metadata, so it reports the *best attainable* diagnosis given
     perfect knowledge. It is a **separate interface**, never importable by a deployable
     loader, used only for the oracle-ceiling analyses (Slot 5: how much of the gap S
     closes toward O). It takes privileged input explicitly so the boundary is visible
     in the type signature.
     """
 
-    def __init__(self, true_source_index: int, *, location: int = -1, severity: float = 0.0) -> None:
+    def __init__(
+        self,
+        true_source_index: int,
+        *,
+        location: int = -1,
+        severity: float = 0.0,
+        onset_time_s: float = 0.0,
+    ) -> None:
         """Bind the oracle to a run's ground-truth source class and fault parameters."""
 
         if not 0 <= int(true_source_index) < N_SOURCE_CLASSES:
             raise ValueError(f"true_source_index must be in [0, {N_SOURCE_CLASSES})")
+        if not np.isfinite(onset_time_s) or onset_time_s < 0.0:
+            raise ValueError("onset_time_s must be finite and non-negative")
         self.true_source_index = int(true_source_index)
         self.location = int(location)
         self.severity = float(severity)
+        self.onset_time_s = float(onset_time_s)
 
     def update(self, step_index: int, state: PlantStepState) -> EstimatorOutput:
         """Return the perfect-knowledge §D output from privileged plant state."""
 
+        fault_active = (
+            self.true_source_index != HEALTHY_INDEX
+            and float(state.t_s) + 1.0e-12 >= self.onset_time_s
+        )
+        active_index = self.true_source_index if fault_active else HEALTHY_INDEX
         p = np.zeros(N_SOURCE_CLASSES)
-        p[self.true_source_index] = 1.0
-        detected = float(state.t_s) if self.true_source_index != HEALTHY_INDEX else float("nan")
+        p[active_index] = 1.0
+        detected = self.onset_time_s if fault_active else float("nan")
         return EstimatorOutput(
             step=step_index,
             decision_time_s=float(state.t_s),
             p_class=p,
             unknown_score=0.0,
             abstain_decision=False,
-            location_out=self.location,
-            severity_out=self.severity,
-            severity_uncertainty=0.0,
+            location_out=self.location if fault_active else -1,
+            severity_out=self.severity if fault_active else 0.0,
+            severity_uncertainty=0.0 if fault_active else float("inf"),
             detection_time_s=detected,
         )
 
@@ -584,7 +649,7 @@ class EstimatorCommandPolicy:
 
     Instances are callable with the `CommandPolicy` signature
     ``(step_index, decision_time_s, available) -> command`` and, as a side effect,
-    accumulate the per-decision `EstimatorOutput`s into `self.trace` (the §D
+    accumulate the per-update `EstimatorOutput`s into `self.trace` (the §D
     estimator-outputs role). The estimator runs every `stride` decisions; between
     updates the controller reuses the latest output (zero-order hold), matching the
     schema's `stride` semantics.

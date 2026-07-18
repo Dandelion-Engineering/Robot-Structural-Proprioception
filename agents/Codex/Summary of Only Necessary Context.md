@@ -1,98 +1,114 @@
 # Summary of Only Necessary Context — Codex
 
-**Rewritten:** 2026-07-17 15:42 PDT
+**Rewritten:** 2026-07-17 17:06 PDT
 
 **Current phase:** Phase 2 — Execution
 
-**Codex session just completed:** Session 7 · **Next:** Session 8
-
-> **Session-8 requirement:** Codex Session 8 is a regular progress-report session. Complete normal work, then also write the director-facing report under `agents/Codex/Progress Reports/` using `Playbooks/research-progress-report.md`. Phase/amendment reports do not reset the every-eighth-session count.
+**Codex session just completed:** Session 8 · **Next:** Session 9
 
 ## Current authoritative state
 
-Phase 0 and Phase 1 are closed. The jointly approved Claim Sheet, Accessible Claim Sheet, Study Guide Pass 1, and `Reproducibility Packet/schema/schema-v1.0.md` remain in force. The Claim Sheet is still awaiting Randy's non-blocking review in `director_requests.md`; Phase-2 execution continues.
+Phase 0 and Phase 1 remain closed. The jointly approved Claim Sheet, Accessible Claim Sheet, Study Guide Pass 1, and `Reproducibility Packet/schema/schema-v1.0.md` are in force. The Claim Sheet still awaits Randy’s non-blocking review in `director_requests.md`; Phase-2 execution continues.
 
-The authoritative coordination file is `chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`. The prior Session-6 development-interface loop is **closed**: Claude genuinely re-reviewed commit `70e6e4f` and explicitly approved the exact producer/sensor state Codex had approved.
+The authoritative coordination file is `chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`.
 
-Two new Session-7 review loops are **open** after Codex directly edited and explicitly approved the current state:
+Claude Session 8 genuinely re-reviewed and explicitly approved the exact Session-7 evaluation-core and online-interface states. Those two loops are closed. `metrics.py`/`stats.py`, `schema_types.py`, `sensor_model.py`, and `online_loop.py` are not awaiting another response for the Session-7 work.
 
-1. Claude-owned evaluation core: `utils/metrics.py`, `utils/stats.py`, and tests.
-2. Claude-owned/co-owned sensor interface: `utils/schema_types.py`, `utils/sensor_model.py`, plus Codex's `utils/online_loop.py` and tests.
+One review loop is open after Codex Session 8 directly edited and explicitly approved Claude’s estimator front:
 
-Claude must genuinely re-open the files and review both the diagnoses and implementations, then explicitly approve the same state or edit and return it. Do not infer approval from use, silence, or a future handoff.
+- `Reproducibility Packet/scripts/utils/estimator.py`
+- `Reproducibility Packet/tests/test_estimator.py`
 
-## Mechanics decision that remains binding
+Claude must genuinely re-open the files, review both the diagnoses and implementations, and explicitly approve the same state or edit and hand it back. Do not infer approval from use, silence, or a future unrelated handoff.
 
-- Native MuJoCo cable/rod selected only under matched diagnostic excitation.
-- Ordinary torque-only: **BLOCK** (structural 1.92 µε, actuator 5.81 µε, separation 5.81 µε; all below 10 µε). Preserve as its own `trajectory_spec_id` negative control.
-- Diagnostic condition: **PASS** (continuous 3 s development trace, 1.0 N peak, 0.8 Hz zero-mean distal transverse sinusoid; structural 10.24 µε, actuator/separation 23.87 µε).
-- Fine model: 17 points / 16 segments per link; MuJoCo step 0.0001 s; control step 0.002 s / 500 Hz.
+## Estimator state handed back in Session 8
+
+Claude’s detection/abstention front, output contract, oracle boundary, and online policy adapter remain the correct architecture. Codex corrected three contract issues:
+
+1. `WindowFeatureExtractor(window_steps=W)` now left-pads startup with zero values plus false masks, rejects an overlong record, and always emits fixed `[W,D]`; the prior implementation emitted `[T,D]` as startup history grew.
+2. Summary slopes now use each channel’s own `measurement_time_s`; the prior implementation used the `q_obs` time grid for every channel despite schema-C channel-level timing.
+3. `OracleInterface(onset_time_s=...)` reports healthy/no location/no severity before onset and exposes the perfect class only at/after onset; the prior implementation leaked the run’s known fault class before the change existed.
+
+Estimator-output validation now enforces non-negative integral steps, finite non-negative decision times, integral location, non-NaN/non-negative uncertainty, causal detection time, and increasing trace steps/times. `W=512` / `stride=8` remain a pilot-sweep proposal. The corrected rationale says 512 samples (1.024 s) cover most, not all, of a 1.25 s 0.8-Hz cycle and do not create a detection-latency floor.
+
+`coverage_at_risk` was independently reviewed against Claim Sheet Slot 7 and is correct as written.
+
+## Mechanics/config decision — bounded diagnostic is BLOCKED
+
+The mechanics substrate decision remains binding:
+
+- Native MuJoCo cable/rod selected as the primary plant; volumetric 3-D flex is reserve.
+- Selected resolution: 17 points / 16 segments per link; MuJoCo step `0.0001 s`; control step `0.002 s` / 500 Hz.
 - `n_def=90`: shortest log-map rotations for 15 internal ball joints on each link; exclude the L1 shoulder pose and L2 elbow-side free pose.
 - Gauges: L1 0.25/0.75 L; L2 0.25/0.75 L.
 - Development faults: link-2 `[0.55,0.85]`, remaining EI 0.50; elbow remaining actuator gain 0.70 downstream of unchanged `control_effort`.
-- Reserve: volumetric 3-D flex; PyElastica only if later cable validation fails.
+- Ordinary torque-only remains its own `trajectory_spec_id` negative control.
 
-The mechanics gate is a method decision, not a research-hypothesis result. Its continuous three-second sinusoid does **not** prove a shorter tapered burst works.
+Session 8 added a finite raised-cosine diagnostic envelope to the same authoritative `cable_mechanics.py` path. Default continuous behavior is preserved when duration is `None`. Canonical selected-model sensitivity artifacts live under `Reproducibility Packet/results/bounded_burst_sensitivity/`.
 
-## Session-7 evaluation corrections awaiting Claude re-review
+Exact screen (max gauge RMS microstrain; unchanged 10-microstrain floor):
 
-Codex reproduced Claude's 51/51 baseline, then found four contract-level issues:
+| Condition | Structure | Actuator | Structure–actuator | Mechanics |
+|---|---:|---:|---:|---|
+| ordinary | 2.17 | 5.92 | 5.93 | BLOCK |
+| continuous gate load | 10.56 | 23.36 | 23.36 | PASS |
+| bounded one cycle / 1.25 s | 8.18 | 7.84 | 12.33 | BLOCK |
+| bounded two cycles / 2.50 s | 8.67 | 13.38 | 17.49 | BLOCK |
 
-1. `j_5s` previously returned a truncated integral if the trace ended before `onset + 5 s`. It now requires finite inputs, a strictly increasing uniform grid, and exact onset/end coverage.
-2. `risk_coverage_curve` previously split equal-confidence ties based on input order. It now reports threshold-realizable tie-group endpoints only.
-3. OOD false acceptance previously used a threshold selected at 95% ID acceptance and selected/evaluated on the same cases. It now uses `unknown_threshold_at_sensitivity` on validation OOD and `ood_false_acceptance_rate` at the frozen threshold on held-out OOD, matching Slot 7's 95% unknown-detection-sensitivity contract.
-4. The bootstrap previously resampled train seeds independently inside each `pair_id`. Because trained seeds are evaluated across all pair units, the design is crossed. It now requires a rectangular `pair_id × train_seed` grid and resamples pair rows plus global seed columns while preserving each C1/S cell.
+The continuous feasibility load was active before the 1 s fault onset; the honest bounded diagnostic starts at the fault boundary. Therefore the earlier continuous PASS remains valid for selecting the mechanics but does not establish a short post-detection diagnostic budget.
 
-Hard predictions/booleans/finite inputs now fail loudly when malformed. Focused metrics/stats tests: 29 passed.
+## Contact/safety proposal — explicit, not frozen
 
-## Stateful online execution seam
+The Session-8 development proposal is stored in the bounded-burst summary and active chat:
 
-`CablePlant.advance()` remains the one-step schema-B producer. Session 7 added:
+- `contact_state[2]`: `tip_contact_force_n`, `tip_contact_active`.
+- `safety_flag[7]`: joint-angle flags ×2, joint-speed flags ×2, tip-workspace, absolute-gauge-strain, tip-contact-force.
+- Keep the existing `saturation_flag[2]` separate.
+- Provisional screening thresholds: `|q|≤π rad` and `|qd|≤10 rad/s` per joint; tip radius `≤0.82 m`; `|gauge_true|≤500 microstrain`; tip contact force `≤5 N`.
 
-- `ObservableStepSources` / `observable_step_sources()` — the one-step narrow plant→sensor doorway. It exposes only time, q source, requested command, upstream control effort, IMU/gauge sources, and temperature; privileged delivered torque, deformation, task truth, labels, contact, and safety remain unreachable.
-- `OnlineSensorSession.observe_step()` — owns persistent per-rollout CRN generators, biases, previous encoder state, gauge hysteresis, and random-walk drift; emits one `ObservedStep` with values/masks/timing.
-- `SensorModel.observe()` — now only a compatibility/persistence wrapper over the same online session, so batch CLI and online execution share one authoritative pathology implementation.
-- `OnlineSensorSession.available_record(decision_time, history_steps=…)` — keeps an explicit bounded past-only tail and masks channel rows until declared availability, preventing controller/estimator use before latency elapses and avoiding quadratic history rebuilding.
-- `utils/online_loop.py:run_online_rollout()` — causal sequence: bounded delivered history → policy callback → command → plant advance → sensor observation. Required `history_steps` becomes Claude's frozen `W`; the callback otherwise remains generic until estimator outputs arrive.
-- `SensorConfig.validate()` — rejects non-physical noise/timing/quantization/hysteresis/dropout constants before rollout.
+These are conservative development values for review, not hardware claims or frozen config. They deliberately expose that every current command condition fails the motion screen:
 
-Verification:
+- ordinary: peak accumulated angle 3.18 rad; speed 13.79 rad/s;
+- continuous: 9.05 rad; 40.67 rad/s;
+- bounded one cycle: 4.53 rad; 37.74 rad/s;
+- bounded two cycles: 21.06 rad; 37.74 rad/s.
 
-- Full packet: **59 passed**; compileall passed.
-- Current stateful path vs pre-session committed batch code: every channel value, validity mask, measurement time, and availability time bitwise identical on a stochastic thermal + encoder-drift trace.
-- Real matched online C1/S rollouts: all shared values/masks bitwise identical under CRN; C1 gauges absent; S gauges finite where valid.
-- Policy causality: encoder available at the next decision; 2 ms gauge withheld until its availability time.
+Contact is still disabled in the selected MJCF, so the contact-force field/flag cannot yet be exercised. Zero-width contact/safety arrays remain development placeholders and are disallowed for pilot/confirmatory generation.
 
-## Shared config status — deliberately not frozen
+## Complete config state — deliberately not frozen
 
-Settled plant values ready for eventual complete config: `f_ctrl=500 Hz`, `dt=0.002 s`, MuJoCo step `0.0001 s`, `n_def=90`, four gauge locations, diagnostic amplitude 1.0 N and frequency 0.8 Hz.
+Settled mechanics values remain ready for eventual inclusion: `f_ctrl=500 Hz`, `dt=0.002 s`, MuJoCo step `0.0001 s`, `n_def=90`, four gauge locations, diagnostic amplitude 1.0 N and frequency 0.8 Hz.
 
-Still open:
+Open/blocking:
 
-- Diagnostic duration/envelope — Codex must run bounded-burst sensitivity or retain the continuous gate condition honestly.
-- Contact/safety field widths, semantics, and thresholds — Codex must propose before pilot; current development arrays are zero-width.
-- `W` and `stride` — Claude will propose with the estimator, not before.
-- Remaining sensor-pathology constants — Claude proposed defaults; both agents must sanity-check.
-- Severity/onset grids — shared and pilot-informed.
-- Validation-derived class, abstention, selective, and OOD thresholds.
+- **Diagnostic duration/envelope/controller:** concrete BLOCK; redesign so it clears both signature and approved safety screens. Do not merely lengthen the open-loop sine.
+- **Contact/safety roles and thresholds:** explicit proposal awaits review and implementation.
+- **`W=512`, `stride=8`:** Claude proposal, now correctly implemented as a fixed tensor interface, but still needs pilot sweep after the probe is coherent.
+- **Sensor pathology constants:** two load-bearing FBG values remain reference-grounded; non-load-bearing defaults need joint sanity-check.
+- **Severity/onset grids:** shared and pilot-informed.
+- **Validation-derived class, abstention, selective, and OOD thresholds:** freeze from validation only.
 
 Do not create a partial immutable `config.json`. Current role hashes remain `dev-`; no current trace may enter confirmatory analysis.
 
-## Exact resume path for Codex Session 8
+## Exact resume path for Codex Session 9
 
-1. Read the true UTF-8 physical tail of the active Phase-2 thread. If Claude approved the exact Session-7 edited states, record both loops closed. If Claude edited, inspect the actual diff and continue the explicit review cycle.
-2. Perform normal Session-8 work. Highest-value Codex lane: run a bounded-burst excitation sensitivity against the selected mechanics and prepare an explicit contact/safety width + threshold proposal. Keep the ordinary condition separate.
-3. If Claude's estimator/`W`/`stride` proposal has landed, review it against the causal `available_record` interface and integrate only after same-state approval.
-4. After normal work, write the required Codex Session-8 progress report per `Playbooks/research-progress-report.md`.
-5. Continue toward the interpretable residual/linear system-ID baseline and recovery controller only once the relevant shared interface/config values converge.
-6. Before pilot: implement the deployable-loader leakage test, whole-trajectory/fault-setting split audit, role-hash rejection, and nonzero safety/contact roles. Before confirmatory generation: freeze/hash complete `schema.json` + `config.json`, preserve ordinary/diagnostic conditions separately, and rerun all gates.
+1. Read the true UTF-8 physical tail of the active Phase-2 thread. If Claude explicitly approves the exact Session-8 estimator edits, record the loop closed. If Claude edits, inspect the actual diff and continue the explicit review cycle.
+2. Review Claude’s response to the `contact_state[2]` / `safety_flag[7]` semantics and provisional thresholds. Treat silence as no approval.
+3. Highest-value Codex lane: redesign the diagnostic/controller pair so the arm stays inside an approved motion envelope while clearing the unchanged signature floor. Candidate families: closed-loop tip/joint-space probe, lower-amplitude multi-frequency sequence, bounded pulses, increased damping/task stabilization. Preserve ordinary and continuous conditions as evidence, not as approved pilot settings.
+4. Implement nonzero contact/safety roles in `CablePlant` once semantics converge; endpoint contact truth must populate the two-wide contact role before optional-contact pilot cases.
+5. Continue toward the interpretable residual/linear-system-ID baseline and recovery controller after the diagnostic/safety interface converges.
+6. Before pilot: implement deployable-loader leakage test, whole-trajectory/fault-setting split audit, role-hash rejection, multi-run storage checks, and nonzero contact/safety gates. Before confirmatory generation: freeze/hash complete `schema.json` + `config.json`, preserve ordinary/diagnostic conditions separately, and rerun all gates.
+
+## Verification and session record
+
+- Full packet: **80 passed**.
+- `compileall` over packet scripts/tests: passed.
+- Bounded-burst CLI help: passed using `.\venv\Scripts\python.exe`.
+- Canonical four-condition selected-model sensitivity regenerated successfully.
+- Public README contains one lean negative-method heartbeat; this is not a research result.
+- Detailed session record: `agents/Codex/Session Summaries/HumanReport8.md`.
+- Required regular director update: `agents/Codex/Progress Reports/Progress Report Session 8.md`; next regular Codex report is Session 16 unless a phase/amendment trigger fires earlier.
 
 ## Transcript-order rule
 
-Before every chat append: read the UTF-8 physical tail, patch against unique exact tail text, and re-read immediately afterward. If an append ever lands mid-file, preserve history and add a tail correction; if safe correction is not possible, report in the Claude–Codex–Human channel. Session 7's main turn landed correctly, but a 15:41 bounded-window addendum matched the earlier Session-6 `— Codex` marker; the misplaced entry was preserved and an explicit 15:42 correction was appended at the verified physical tail. Do not use a bare speaker-signature anchor again.
-
-## Public/session status
-
-- Root README remains Phase 2 / `In Progress`. Session 7 added one lean heartbeat because the schema's causal online execution order became executable; it explicitly says this is scaffolding, not a result, and config remains unfrozen.
-- Detailed session record: `agents/Codex/Session Summaries/HumanReport7.md`.
-- **Next Codex session is Session 8 and must include the regular progress report in addition to normal work.**
+Before every chat append: read the UTF-8 physical tail, patch against unique exact tail text, and re-read immediately afterward. Session 8’s turn landed correctly at the physical tail; no correction was required. Never use a bare speaker-signature anchor.

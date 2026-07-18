@@ -17,6 +17,8 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`Session Summaries/HumanReport5.md`](Session%20Summaries/HumanReport5.md) — detailed record of Codex Session 5 (native MuJoCo mechanics spike, excitation-dependent gate, candidate selection, and runnable packet).
 - [`Session Summaries/HumanReport6.md`](Session%20Summaries/HumanReport6.md) — detailed record of Codex Session 6 (lossless plant-interface review, real MuJoCo privileged trace, plant→sensor integration, and sensor-validity correction).
 - [`Session Summaries/HumanReport7.md`](Session%20Summaries/HumanReport7.md) — detailed record of Codex Session 7 (evaluation-core corrections, crossed bootstrap, stateful online sensing, and causal policy loop).
+- [`Session Summaries/HumanReport8.md`](Session%20Summaries/HumanReport8.md) — detailed record of Codex Session 8 (estimator-interface corrections, bounded-burst BLOCK, contact/safety proposal, and config-freeze decision).
+- [`Progress Reports/Progress Report Session 8.md`](Progress%20Reports/Progress%20Report%20Session%208.md) — regular every-eighth-session director update at the Accessible-Piece bar; next regular Codex report is Session 16.
 
 ## Shared files outside this folder
 
@@ -27,24 +29,29 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`../../Reproducibility Packet/scripts/run_feasibility_spike.py`](../../Reproducibility%20Packet/scripts/run_feasibility_spike.py) — runnable native cable/rod mechanics gate with an ordinary-excitation negative control, diagnostic-excitation decision, refinement checks, beam validation, and a reserve 3-D-flex probe.
 - [`../../Reproducibility Packet/scripts/utils/cable_mechanics.py`](../../Reproducibility%20Packet/scripts/utils/cable_mechanics.py) — co-owned shared selected-model mechanics and state extraction used by both the gate and runtime producer.
 - [`../../Reproducibility Packet/scripts/utils/cable_plant.py`](../../Reproducibility%20Packet/scripts/utils/cable_plant.py) — Codex-owned one-control-step plant wrapper that emits complete schema-B `PlantStepState` objects.
+- [`../../Reproducibility Packet/scripts/run_bounded_burst_sensitivity.py`](../../Reproducibility%20Packet/scripts/run_bounded_burst_sensitivity.py) — Codex-owned finite raised-cosine diagnostic sensitivity; current selected-model result blocks both one- and two-cycle candidates and keeps the diagnostic config field open.
 - [`../../Reproducibility Packet/scripts/make_mujoco_plant_trace.py`](../../Reproducibility%20Packet/scripts/make_mujoco_plant_trace.py) — portable real-plant development trace CLI with role-separated persistence.
-- [`../../Reproducibility Packet/scripts/utils/schema_types.py`](../../Reproducibility%20Packet/scripts/utils/schema_types.py) — co-owned schema-v1.0 carriers and strict record/step observable adapters; the Session-7 one-step adapter awaits Claude's owner re-review.
-- [`../../Reproducibility Packet/scripts/utils/sensor_model.py`](../../Reproducibility%20Packet/scripts/utils/sensor_model.py) — Claude-owned sensor-realism model, now with Codex's stateful per-step session and delivered-history masking; current edited state awaits Claude's owner re-review.
+- [`../../Reproducibility Packet/scripts/utils/schema_types.py`](../../Reproducibility%20Packet/scripts/utils/schema_types.py) — co-owned schema-v1.0 carriers and strict record/step observable adapters; its Session-7 review loop is closed at same-state approval.
+- [`../../Reproducibility Packet/scripts/utils/sensor_model.py`](../../Reproducibility%20Packet/scripts/utils/sensor_model.py) — Claude-owned sensor-realism model with the same-state-approved stateful per-step session and delivered-history masking.
 - [`../../Reproducibility Packet/scripts/utils/online_loop.py`](../../Reproducibility%20Packet/scripts/utils/online_loop.py) — Codex-owned causal policy→plant→sensor orchestration for inserting the matched estimator/controller online.
-- [`../../Reproducibility Packet/scripts/utils/metrics.py`](../../Reproducibility%20Packet/scripts/utils/metrics.py) and [`stats.py`](../../Reproducibility%20Packet/scripts/utils/stats.py) — Claude-owned evaluation core with Codex Session-7 corrections for complete `J_5s` windows, tie-safe selective metrics, validation-frozen OOD thresholds, and crossed pair/seed resampling; owner re-review pending.
+- [`../../Reproducibility Packet/scripts/utils/metrics.py`](../../Reproducibility%20Packet/scripts/utils/metrics.py) and [`stats.py`](../../Reproducibility%20Packet/scripts/utils/stats.py) — Claude-owned, same-state-approved evaluation core with complete `J_5s` windows, tie-safe selective metrics, validation-frozen OOD thresholds, `coverage_at_risk`, and crossed pair/seed resampling.
+- [`../../Reproducibility Packet/scripts/utils/estimator.py`](../../Reproducibility%20Packet/scripts/utils/estimator.py) — Claude-owned diagnosis front with Codex Session-8 corrections for fixed startup tensors, channel-specific measurement times, causal oracle onset, and stronger output validation; Codex approves the edited state and Claude owner re-review is pending.
 - [`../../Reproducibility Packet/results/feasibility_spike/feasibility_spike_report.md`](../../Reproducibility%20Packet/results/feasibility_spike/feasibility_spike_report.md) — qualified-PASS report; native cable/rod selected under bounded diagnostic excitation.
 - [`../../Reproducibility Packet/results/feasibility_spike_ordinary_excitation_blocked/feasibility_spike_report.md`](../../Reproducibility%20Packet/results/feasibility_spike_ordinary_excitation_blocked/feasibility_spike_report.md) — preserved torque-only BLOCK showing the selection's excitation boundary.
+- [`../../Reproducibility Packet/results/bounded_burst_sensitivity/bounded_burst_report.md`](../../Reproducibility%20Packet/results/bounded_burst_sensitivity/bounded_burst_report.md) — development sensitivity record: one- and two-cycle bounded probes block; continuous mechanics pass exceeds the provisional motion-safety envelope; contact/safety role proposal remains under review.
 - [`../../chats/Claude-Codex/Claim Sheet Review and Division of Labor/Summary.md`](../../chats/Claude-Codex/Claim%20Sheet%20Review%20and%20Division%20of%20Labor/Summary.md) — concluded Phase-1 review/labor summary.
-- [`../../chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`](../../chats/Claude-Codex/Phase%202%20Integration%20and%20Config%20Freeze/Phase%202%20Integration%20and%20Config%20Freeze%20-%20Active.md) — authoritative active interface/config thread; evaluation-core and online-sensor edited states are handed back for Claude's genuine owner re-review.
+- [`../../chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`](../../chats/Claude-Codex/Phase%202%20Integration%20and%20Config%20Freeze/Phase%202%20Integration%20and%20Config%20Freeze%20-%20Active.md) — authoritative active interface/config thread; estimator edits await Claude owner re-review, and diagnostic/contact/safety/config fields remain explicitly unfrozen.
 - [`../../chats/Claude-Codex-Human/Chat Appends/Summary.md`](../../chats/Claude-Codex-Human/Chat%20Appends/Summary.md) — concluded director coordination record for the transcript-tail failure mode and recovery rule.
 - [`../../chats/Claude-Codex/Phase 0 Coordination/Summary.md`](../../chats/Claude-Codex/Phase%200%20Coordination/Summary.md) — concluded Phase-0 convergence record that feeds the Claim Sheet.
-- [`../../README.md`](../../README.md) — public live-run status, now Phase 2 / `In Progress`, including the excitation-dependent gate and causal-online-execution heartbeats.
+- [`../../README.md`](../../README.md) — public live-run status, Phase 2 / `In Progress`, including the bounded-probe negative method/config heartbeat.
 
 ## Structure
 
 ```text
 agents/Codex/
 ├── Literature Foundation.md
+├── Progress Reports/
+│   └── Progress Report Session 8.md
 ├── references.md
 ├── README.md
 ├── Summary of Only Necessary Context.md
@@ -55,5 +62,6 @@ agents/Codex/
     ├── HumanReport4.md
     ├── HumanReport5.md
     ├── HumanReport6.md
-    └── HumanReport7.md
+    ├── HumanReport7.md
+    └── HumanReport8.md
 ```

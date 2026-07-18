@@ -1,0 +1,329 @@
+{
+  "purpose": "development bounded-burst mechanics sensitivity; not confirmatory",
+  "point_count": 17,
+  "simulation_timestep_s": 0.0001,
+  "contact_safety_proposal": {
+    "contact_state_fields": [
+      "tip_contact_force_n",
+      "tip_contact_active"
+    ],
+    "safety_flag_fields": [
+      "joint_angle_0_exceeded",
+      "joint_angle_1_exceeded",
+      "joint_speed_0_exceeded",
+      "joint_speed_1_exceeded",
+      "tip_workspace_exceeded",
+      "gauge_abs_exceeded",
+      "tip_contact_force_exceeded"
+    ],
+    "thresholds": {
+      "joint_angle_abs_limit_rad": [
+        3.141592653589793,
+        3.141592653589793
+      ],
+      "joint_speed_abs_limit_rad_s": [
+        10.0,
+        10.0
+      ],
+      "tip_radius_limit_m": 0.82,
+      "gauge_abs_limit_microstrain": 500.0,
+      "tip_contact_force_limit_n": 5.0
+    },
+    "status": "development proposal; same-state review and implementation required"
+  },
+  "results": [
+    {
+      "name": "ordinary_no_tip_load",
+      "analysis_duration_s": 1.25,
+      "config": {
+        "link_length_m": 0.4,
+        "link_width_m": 0.02,
+        "link_thickness_m": 0.004,
+        "density_kg_m3": 2700.0,
+        "young_pa": 69000000000.0,
+        "poisson": 0.33,
+        "control_dt_s": 0.002,
+        "structural_ei_remaining": 0.5,
+        "structural_section_start": 0.55,
+        "structural_section_end": 0.85,
+        "actuator_gain_remaining": 0.7,
+        "diagnostic_tip_load_peak_n": 0.0,
+        "diagnostic_tip_load_frequency_hz": 0.8,
+        "diagnostic_tip_load_start_s": 0.0,
+        "diagnostic_tip_load_duration_s": null,
+        "diagnostic_tip_load_ramp_s": 0.0,
+        "gauge_stations": [
+          0.25,
+          0.75
+        ],
+        "duration_s": 3.75,
+        "fault_onset_s": 1.0,
+        "encoder_bias_rad": 0.05,
+        "gauge_resolution_microstrain": 1.0,
+        "thermal_cross_sensitivity_microstrain_per_c": 10.0,
+        "beam_tip_force_n": 0.2,
+        "beam_validation_duration_s": 4.0,
+        "max_refinement_relative_error": 0.25,
+        "max_beam_strain_relative_error": 0.1,
+        "max_beam_tip_relative_error": 0.15
+      },
+      "load_budget": {
+        "peak_abs_force_n": 0.0,
+        "signed_impulse_n_s": 0.0,
+        "absolute_impulse_n_s": 0.0,
+        "force_rms_n": 0.0
+      },
+      "screen": {
+        "analysis_samples": 626,
+        "credible_floor_microstrain": 10.0,
+        "structural_max_gauge_rms_microstrain": 2.1733306264576555,
+        "actuator_max_gauge_rms_microstrain": 5.924440413419893,
+        "structural_actuator_max_gauge_rms_microstrain": 5.925239946380909,
+        "encoder_q_rms_rad": 0.049960047936089116,
+        "encoder_physical_gauge_rms_microstrain": 0.0,
+        "encoder_physical_imu_rms": 0.0,
+        "healthy_peak_abs_joint_angle_rad": 3.176253408124522,
+        "healthy_peak_abs_joint_speed_rad_s": 13.790340593316595,
+        "healthy_peak_abs_gauge_microstrain": 74.15046432967642,
+        "healthy_peak_tip_radius_m": 0.8000126411202788,
+        "checks": {
+          "structural_signal": false,
+          "actuator_signal": false,
+          "structural_actuator_separation": false,
+          "encoder_relational": true,
+          "encoder_physical_unchanged": true
+        },
+        "mechanics_pass": false,
+        "safety_checks": {
+          "joint_angle_limit_exceeded": true,
+          "joint_speed_limit_exceeded": true,
+          "gauge_abs_limit_exceeded": false,
+          "tip_workspace_limit_exceeded": false
+        },
+        "safety_screen_pass": false,
+        "pass": false
+      }
+    },
+    {
+      "name": "continuous_gate_load",
+      "analysis_duration_s": 1.25,
+      "config": {
+        "link_length_m": 0.4,
+        "link_width_m": 0.02,
+        "link_thickness_m": 0.004,
+        "density_kg_m3": 2700.0,
+        "young_pa": 69000000000.0,
+        "poisson": 0.33,
+        "control_dt_s": 0.002,
+        "structural_ei_remaining": 0.5,
+        "structural_section_start": 0.55,
+        "structural_section_end": 0.85,
+        "actuator_gain_remaining": 0.7,
+        "diagnostic_tip_load_peak_n": 1.0,
+        "diagnostic_tip_load_frequency_hz": 0.8,
+        "diagnostic_tip_load_start_s": 0.0,
+        "diagnostic_tip_load_duration_s": null,
+        "diagnostic_tip_load_ramp_s": 0.0,
+        "gauge_stations": [
+          0.25,
+          0.75
+        ],
+        "duration_s": 3.75,
+        "fault_onset_s": 1.0,
+        "encoder_bias_rad": 0.05,
+        "gauge_resolution_microstrain": 1.0,
+        "thermal_cross_sensitivity_microstrain_per_c": 10.0,
+        "beam_tip_force_n": 0.2,
+        "beam_validation_duration_s": 4.0,
+        "max_refinement_relative_error": 0.25,
+        "max_beam_strain_relative_error": 0.1,
+        "max_beam_tip_relative_error": 0.15
+      },
+      "load_budget": {
+        "peak_abs_force_n": 1.0,
+        "signed_impulse_n_s": -5.551115123125783e-17,
+        "absolute_impulse_n_s": 2.3873240961129474,
+        "force_rms_n": 0.7070973532846894
+      },
+      "screen": {
+        "analysis_samples": 626,
+        "credible_floor_microstrain": 10.0,
+        "structural_max_gauge_rms_microstrain": 10.558581295387675,
+        "actuator_max_gauge_rms_microstrain": 23.35632645143609,
+        "structural_actuator_max_gauge_rms_microstrain": 23.35819187242479,
+        "encoder_q_rms_rad": 0.04996004793608965,
+        "encoder_physical_gauge_rms_microstrain": 0.0,
+        "encoder_physical_imu_rms": 0.0,
+        "healthy_peak_abs_joint_angle_rad": 9.053823065586874,
+        "healthy_peak_abs_joint_speed_rad_s": 40.67390111933115,
+        "healthy_peak_abs_gauge_microstrain": 136.45008594689756,
+        "healthy_peak_tip_radius_m": 0.8001503972760557,
+        "checks": {
+          "structural_signal": true,
+          "actuator_signal": true,
+          "structural_actuator_separation": true,
+          "encoder_relational": true,
+          "encoder_physical_unchanged": true
+        },
+        "mechanics_pass": true,
+        "safety_checks": {
+          "joint_angle_limit_exceeded": true,
+          "joint_speed_limit_exceeded": true,
+          "gauge_abs_limit_exceeded": false,
+          "tip_workspace_limit_exceeded": false
+        },
+        "safety_screen_pass": false,
+        "pass": false
+      }
+    },
+    {
+      "name": "bounded_1_cycle",
+      "analysis_duration_s": 1.25,
+      "config": {
+        "link_length_m": 0.4,
+        "link_width_m": 0.02,
+        "link_thickness_m": 0.004,
+        "density_kg_m3": 2700.0,
+        "young_pa": 69000000000.0,
+        "poisson": 0.33,
+        "control_dt_s": 0.002,
+        "structural_ei_remaining": 0.5,
+        "structural_section_start": 0.55,
+        "structural_section_end": 0.85,
+        "actuator_gain_remaining": 0.7,
+        "diagnostic_tip_load_peak_n": 1.0,
+        "diagnostic_tip_load_frequency_hz": 0.8,
+        "diagnostic_tip_load_start_s": 1.0,
+        "diagnostic_tip_load_duration_s": 1.25,
+        "diagnostic_tip_load_ramp_s": 0.15625,
+        "gauge_stations": [
+          0.25,
+          0.75
+        ],
+        "duration_s": 3.75,
+        "fault_onset_s": 1.0,
+        "encoder_bias_rad": 0.05,
+        "gauge_resolution_microstrain": 1.0,
+        "thermal_cross_sensitivity_microstrain_per_c": 10.0,
+        "beam_tip_force_n": 0.2,
+        "beam_validation_duration_s": 4.0,
+        "max_refinement_relative_error": 0.25,
+        "max_beam_strain_relative_error": 0.1,
+        "max_beam_tip_relative_error": 0.15
+      },
+      "load_budget": {
+        "peak_abs_force_n": 1.0,
+        "signed_impulse_n_s": 2.7755575615628914e-17,
+        "absolute_impulse_n_s": 0.7601466595008698,
+        "force_rms_n": 0.4022950948119602
+      },
+      "screen": {
+        "analysis_samples": 626,
+        "credible_floor_microstrain": 10.0,
+        "structural_max_gauge_rms_microstrain": 8.18114542584087,
+        "actuator_max_gauge_rms_microstrain": 7.843141862861496,
+        "structural_actuator_max_gauge_rms_microstrain": 12.32862890992018,
+        "encoder_q_rms_rad": 0.049960047936089276,
+        "encoder_physical_gauge_rms_microstrain": 0.0,
+        "encoder_physical_imu_rms": 0.0,
+        "healthy_peak_abs_joint_angle_rad": 4.531569938781988,
+        "healthy_peak_abs_joint_speed_rad_s": 37.73995856863015,
+        "healthy_peak_abs_gauge_microstrain": 84.66866125107941,
+        "healthy_peak_tip_radius_m": 0.8001047779062536,
+        "checks": {
+          "structural_signal": false,
+          "actuator_signal": false,
+          "structural_actuator_separation": true,
+          "encoder_relational": true,
+          "encoder_physical_unchanged": true
+        },
+        "mechanics_pass": false,
+        "safety_checks": {
+          "joint_angle_limit_exceeded": true,
+          "joint_speed_limit_exceeded": true,
+          "gauge_abs_limit_exceeded": false,
+          "tip_workspace_limit_exceeded": false
+        },
+        "safety_screen_pass": false,
+        "pass": false
+      }
+    },
+    {
+      "name": "bounded_2_cycle",
+      "analysis_duration_s": 2.5,
+      "config": {
+        "link_length_m": 0.4,
+        "link_width_m": 0.02,
+        "link_thickness_m": 0.004,
+        "density_kg_m3": 2700.0,
+        "young_pa": 69000000000.0,
+        "poisson": 0.33,
+        "control_dt_s": 0.002,
+        "structural_ei_remaining": 0.5,
+        "structural_section_start": 0.55,
+        "structural_section_end": 0.85,
+        "actuator_gain_remaining": 0.7,
+        "diagnostic_tip_load_peak_n": 1.0,
+        "diagnostic_tip_load_frequency_hz": 0.8,
+        "diagnostic_tip_load_start_s": 1.0,
+        "diagnostic_tip_load_duration_s": 2.5,
+        "diagnostic_tip_load_ramp_s": 0.15625,
+        "gauge_stations": [
+          0.25,
+          0.75
+        ],
+        "duration_s": 3.75,
+        "fault_onset_s": 1.0,
+        "encoder_bias_rad": 0.05,
+        "gauge_resolution_microstrain": 1.0,
+        "thermal_cross_sensitivity_microstrain_per_c": 10.0,
+        "beam_tip_force_n": 0.2,
+        "beam_validation_duration_s": 4.0,
+        "max_refinement_relative_error": 0.25,
+        "max_beam_strain_relative_error": 0.1,
+        "max_beam_tip_relative_error": 0.15
+      },
+      "load_budget": {
+        "peak_abs_force_n": 1.0,
+        "signed_impulse_n_s": -2.7755575615628914e-17,
+        "absolute_impulse_n_s": 1.5559213582051854,
+        "force_rms_n": 0.5731523058057968
+      },
+      "screen": {
+        "analysis_samples": 1250,
+        "credible_floor_microstrain": 10.0,
+        "structural_max_gauge_rms_microstrain": 8.672631294808106,
+        "actuator_max_gauge_rms_microstrain": 13.379362984541585,
+        "structural_actuator_max_gauge_rms_microstrain": 17.490804101289783,
+        "encoder_q_rms_rad": 0.049979995998398835,
+        "encoder_physical_gauge_rms_microstrain": 0.0,
+        "encoder_physical_imu_rms": 0.0,
+        "healthy_peak_abs_joint_angle_rad": 21.06159865692902,
+        "healthy_peak_abs_joint_speed_rad_s": 37.73995856863015,
+        "healthy_peak_abs_gauge_microstrain": 84.66866125107941,
+        "healthy_peak_tip_radius_m": 0.8001229377770598,
+        "checks": {
+          "structural_signal": false,
+          "actuator_signal": true,
+          "structural_actuator_separation": true,
+          "encoder_relational": true,
+          "encoder_physical_unchanged": true
+        },
+        "mechanics_pass": false,
+        "safety_checks": {
+          "joint_angle_limit_exceeded": true,
+          "joint_speed_limit_exceeded": true,
+          "gauge_abs_limit_exceeded": false,
+          "tip_workspace_limit_exceeded": false
+        },
+        "safety_screen_pass": false,
+        "pass": false
+      }
+    }
+  ],
+  "recommendation": {
+    "decision": "NO BOUNDED CANDIDATE PASSES",
+    "candidate": null,
+    "reason": "Do not freeze a diagnostic condition. Redesign the bounded probe/controller and implement the proposed safety roles before the pilot."
+  }
+}

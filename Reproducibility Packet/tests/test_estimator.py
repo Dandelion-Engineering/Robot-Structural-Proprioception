@@ -83,6 +83,18 @@ def test_estimator_output_validates_good_and_rejects_bad():
         EstimatorOutput(
             0, 0.0, healthy_p_class(), 0.0, False, severity_uncertainty=-1.0
         ).validate()  # negative uncertainty
+    with pytest.raises(ValueError):
+        EstimatorOutput(-1, 0.0, healthy_p_class(), 0.0, False).validate()
+    with pytest.raises(ValueError):
+        EstimatorOutput(0, np.nan, healthy_p_class(), 0.0, False).validate()
+    with pytest.raises(ValueError):
+        EstimatorOutput(
+            0, 0.0, healthy_p_class(), 0.0, False, severity_uncertainty=np.nan
+        ).validate()
+    with pytest.raises(ValueError):
+        EstimatorOutput(
+            0, 0.0, healthy_p_class(), 0.0, False, detection_time_s=0.1
+        ).validate()
 
 
 def test_estimator_order_matches_metric_order():
@@ -103,13 +115,15 @@ def test_estimator_trace_reductions():
     stacked = trace.stack()
     assert stacked["p_class"].shape == (3, N_SOURCE_CLASSES)
     assert stacked["abstain_decision"].dtype == np.bool_
+    with pytest.raises(ValueError):
+        trace.append(EstimatorOutput(2, 0.03, changed, 3.0, True))
 
 
 # --------------------------------------------------------------------------- #
 # Window front-end: suite-agnostic fixed shapes, NaN-safe features.
 # --------------------------------------------------------------------------- #
 def test_window_tensor_fixed_shape_across_suites():
-    ext = WindowFeatureExtractor()
+    ext = WindowFeatureExtractor(window_steps=80)
     width = observed_registry_width()
     shapes = set()
     valid_widths = {}
@@ -125,8 +139,18 @@ def test_window_tensor_fixed_shape_across_suites():
     assert valid_widths["S"] > valid_widths["C1"] > valid_widths["C0"]
 
 
+def test_window_tensor_left_pads_startup_to_fixed_w():
+    ext = WindowFeatureExtractor(window_steps=80)
+    values, valid = ext.window_tensor(observed("C1", n_steps=12))
+    assert values.shape == valid.shape == (80, observed_registry_width())
+    assert not valid[:68].any()
+    assert valid[68:].any()
+    with pytest.raises(ValueError):
+        ext.window_tensor(observed("C1", n_steps=81))
+
+
 def test_window_features_shape_and_nan_safety():
-    ext = WindowFeatureExtractor()
+    ext = WindowFeatureExtractor(window_steps=80)
     assert ext.n_features == observed_registry_width() * (4 + 1)
     feats_c0 = ext.window_features(observed("C0"))
     assert feats_c0.shape == (ext.n_features,)
@@ -156,13 +180,52 @@ def test_window_features_last_mean_slope_known_values():
         availability_time_s=avail, latency_age_s=lat,
         suite_available_mask={n: n in SUITE_CHANNELS["C0"] for n in CHANNEL_NAMES},
     )
-    ext = WindowFeatureExtractor()
+    ext = WindowFeatureExtractor(window_steps=t)
     feats = ext.window_features(rec).reshape(observed_registry_width(), 5)
     # column 0 == q_obs[:,0]: last=0.8, mean=0.4, slope=2.0, valid_frac=1.0
     assert feats[0, 0] == pytest.approx(0.8)
     assert feats[0, 1] == pytest.approx(0.4)
     assert feats[0, 3] == pytest.approx(2.0)
     assert feats[0, 4] == pytest.approx(1.0)
+
+
+def test_window_features_use_each_channels_measurement_times():
+    from utils.schema_types import CHANNEL_NAMES, CHANNEL_WIDTH, SUITE_CHANNELS, ObservedRecord
+
+    t = 5
+    q_times = np.arange(t) * 0.1
+    imu_times = np.arange(t) * 0.2
+    values, valid, meas, avail, lat = {}, {}, {}, {}, {}
+    for name in CHANNEL_NAMES:
+        width = CHANNEL_WIDTH[name]
+        values[name] = np.zeros((t, width))
+        valid[name] = (
+            np.ones((t, width), dtype=bool)
+            if name in SUITE_CHANNELS["C1"]
+            else np.zeros((t, width), dtype=bool)
+        )
+        meas[name] = q_times.copy()
+        avail[name] = q_times.copy()
+        lat[name] = np.zeros(t)
+    meas["imu_obs"] = imu_times.copy()
+    avail["imu_obs"] = imu_times.copy()
+    values["imu_obs"][:, 0] = 3.0 * imu_times
+    rec = ObservedRecord(
+        suite="C1",
+        run_id="r",
+        pair_id="1",
+        config_hash="dev-x",
+        values=values,
+        valid_mask=valid,
+        measurement_time_s=meas,
+        availability_time_s=avail,
+        latency_age_s=lat,
+        suite_available_mask={n: n in SUITE_CHANNELS["C1"] for n in CHANNEL_NAMES},
+    )
+    ext = WindowFeatureExtractor(window_steps=t)
+    feats = ext.window_features(rec).reshape(observed_registry_width(), 5)
+    imu_offset = sum(CHANNEL_WIDTH[name] for name in CHANNEL_NAMES[:4])
+    assert feats[imu_offset, 3] == pytest.approx(3.0)
 
 
 # --------------------------------------------------------------------------- #
@@ -259,6 +322,20 @@ def test_oracle_reports_true_class():
     # healthy oracle does not "detect"
     healthy_out = OracleInterface(true_source_index=HEALTHY_INDEX).update(5, state)
     assert not np.isfinite(healthy_out.detection_time_s)
+
+
+def test_oracle_does_not_expose_fault_before_onset():
+    rec = synthetic_privileged_record(n_steps=10, f_ctrl=500.0, seed=0)
+    oracle = OracleInterface(
+        true_source_index=2, location=1, severity=0.4, onset_time_s=0.012
+    )
+    before = oracle.update(4, rec.slice_step(4))
+    after = oracle.update(7, rec.slice_step(7))
+    assert np.argmax(before.p_class) == HEALTHY_INDEX
+    assert before.location_out == -1
+    assert not np.isfinite(before.detection_time_s)
+    assert np.argmax(after.p_class) == 2
+    assert after.detection_time_s == pytest.approx(0.012)
 
 
 # --------------------------------------------------------------------------- #

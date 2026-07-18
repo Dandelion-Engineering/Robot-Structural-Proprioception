@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
@@ -15,6 +16,11 @@ from run_feasibility_spike import (  # noqa: E402
     build_two_link_model,
     run_gate,
     simulate_case,
+)
+from run_bounded_burst_sensitivity import build_candidates  # noqa: E402
+from utils.cable_mechanics import (  # noqa: E402
+    diagnostic_tip_force_z,
+    diagnostic_tip_load_envelope,
 )
 
 
@@ -56,6 +62,55 @@ def test_short_simulation_is_finite_and_has_schema_facing_shapes() -> None:
     assert result.gauge_microstrain.shape == (10, 4)
     assert result.tip_position_m.shape == (10, 3)
     assert np.all(np.isfinite(result.gauge_microstrain))
+
+
+def test_bounded_diagnostic_burst_is_smooth_bounded_and_zero_mean() -> None:
+    """A one-cycle raised-cosine burst should start/end at zero with no net impulse."""
+
+    start = 0.5
+    period = 1.0 / 0.8
+    config = SpikeConfig(
+        diagnostic_tip_load_start_s=start,
+        diagnostic_tip_load_duration_s=period,
+        diagnostic_tip_load_ramp_s=period / 8.0,
+    )
+    times = np.linspace(0.0, start + period + 0.5, 10001)
+    force = np.asarray([diagnostic_tip_force_z(time, config) for time in times])
+    assert diagnostic_tip_load_envelope(start - 1.0e-6, config) == 0.0
+    assert diagnostic_tip_load_envelope(start, config) == 0.0
+    assert diagnostic_tip_load_envelope(start + period, config) == 0.0
+    assert np.max(np.abs(force)) <= config.diagnostic_tip_load_peak_n + 1.0e-12
+    assert np.trapezoid(force, times) == pytest.approx(0.0, abs=1.0e-9)
+
+
+def test_diagnostic_envelope_rejects_ramp_longer_than_half_burst() -> None:
+    config = SpikeConfig(
+        diagnostic_tip_load_duration_s=1.0,
+        diagnostic_tip_load_ramp_s=0.6,
+    )
+    with pytest.raises(ValueError):
+        diagnostic_tip_load_envelope(0.5, config)
+
+
+def test_burst_sensitivity_candidates_keep_controls_and_integer_cycle_budgets() -> None:
+    candidates = build_candidates(
+        onset_s=1.0,
+        peak_load_n=1.0,
+        frequency_hz=0.8,
+        cycles=[2, 1],
+        ramp_period_fraction=0.125,
+        settle_s=0.25,
+    )
+    assert [candidate.name for candidate in candidates] == [
+        "ordinary_no_tip_load",
+        "continuous_gate_load",
+        "bounded_1_cycle",
+        "bounded_2_cycle",
+    ]
+    one_cycle = candidates[2]
+    assert one_cycle.config.diagnostic_tip_load_start_s == pytest.approx(1.0)
+    assert one_cycle.config.diagnostic_tip_load_duration_s == pytest.approx(1.25)
+    assert one_cycle.config.diagnostic_tip_load_ramp_s == pytest.approx(0.15625)
 
 
 def test_quick_summary_declares_deformation_coordinate_contract(tmp_path: Path) -> None:

@@ -32,6 +32,9 @@ class CableModelConfig:
     actuator_gain_remaining: float = 0.70
     diagnostic_tip_load_peak_n: float = 1.0
     diagnostic_tip_load_frequency_hz: float = 0.8
+    diagnostic_tip_load_start_s: float = 0.0
+    diagnostic_tip_load_duration_s: float | None = None
+    diagnostic_tip_load_ramp_s: float = 0.0
     gauge_stations: tuple[float, float] = (0.25, 0.75)
 
 
@@ -279,11 +282,68 @@ def commanded_torque(time_s: float) -> np.ndarray:
     return np.array([shoulder, elbow], dtype=float)
 
 
+def validate_diagnostic_excitation(config: CableModelConfig) -> None:
+    """Fail loudly when the diagnostic-load envelope is non-physical or ambiguous."""
+
+    if not np.isfinite(config.diagnostic_tip_load_peak_n) or config.diagnostic_tip_load_peak_n < 0.0:
+        raise ValueError("diagnostic_tip_load_peak_n must be finite and non-negative")
+    if (
+        not np.isfinite(config.diagnostic_tip_load_frequency_hz)
+        or config.diagnostic_tip_load_frequency_hz <= 0.0
+    ):
+        raise ValueError("diagnostic_tip_load_frequency_hz must be finite and positive")
+    if not np.isfinite(config.diagnostic_tip_load_start_s) or config.diagnostic_tip_load_start_s < 0.0:
+        raise ValueError("diagnostic_tip_load_start_s must be finite and non-negative")
+    duration = config.diagnostic_tip_load_duration_s
+    ramp = config.diagnostic_tip_load_ramp_s
+    if not np.isfinite(ramp) or ramp < 0.0:
+        raise ValueError("diagnostic_tip_load_ramp_s must be finite and non-negative")
+    if duration is None:
+        if ramp != 0.0:
+            raise ValueError("a finite ramp requires diagnostic_tip_load_duration_s")
+        return
+    if not np.isfinite(duration) or duration <= 0.0:
+        raise ValueError("diagnostic_tip_load_duration_s must be finite and positive")
+    if ramp > duration / 2.0:
+        raise ValueError("diagnostic_tip_load_ramp_s cannot exceed half the burst duration")
+
+
+def diagnostic_tip_load_envelope(time_s: float, config: CableModelConfig) -> float:
+    """Return the causal raised-cosine burst envelope in ``[0, 1]``.
+
+    ``duration_s=None`` preserves the continuous gate excitation after ``start_s``.
+    A finite duration produces a compact burst. Symmetric raised-cosine ramps make
+    the load continuous at both boundaries without changing the declared peak.
+    """
+
+    validate_diagnostic_excitation(config)
+    local_time = float(time_s) - config.diagnostic_tip_load_start_s
+    if local_time < 0.0:
+        return 0.0
+    duration = config.diagnostic_tip_load_duration_s
+    if duration is None:
+        return 1.0
+    if local_time >= duration:
+        return 0.0
+    ramp = config.diagnostic_tip_load_ramp_s
+    if ramp <= 0.0:
+        return 1.0
+    if local_time < ramp:
+        return 0.5 * (1.0 - math.cos(math.pi * local_time / ramp))
+    if local_time > duration - ramp:
+        remaining = duration - local_time
+        return 0.5 * (1.0 - math.cos(math.pi * remaining / ramp))
+    return 1.0
+
+
 def diagnostic_tip_force_z(time_s: float, config: CableModelConfig) -> float:
     """Return the signed transverse diagnostic force at `time_s` (newtons)."""
 
-    return -config.diagnostic_tip_load_peak_n * math.sin(
-        2.0 * math.pi * config.diagnostic_tip_load_frequency_hz * time_s
+    local_time = float(time_s) - config.diagnostic_tip_load_start_s
+    return (
+        -config.diagnostic_tip_load_peak_n
+        * diagnostic_tip_load_envelope(time_s, config)
+        * math.sin(2.0 * math.pi * config.diagnostic_tip_load_frequency_hz * local_time)
     )
 
 
