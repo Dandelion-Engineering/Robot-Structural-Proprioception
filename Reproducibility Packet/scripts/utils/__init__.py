@@ -22,6 +22,9 @@ here and is imported rather than copy-pasted. Modules:
     detection/calibrated-abstention rung, the allowlisted oracle interface, and the
     online-seam command-policy adapter. The learned attribution/RMA rungs share this
     front-end and are trained post-config-freeze.
+  * ``residual_baseline`` -- the deployable linear-ARX residual attribution floor:
+    healthy nominal system identification, transparent residual-pattern prototypes,
+    and separately calibrated off-prototype abstention.
 """
 
 from utils.schema_types import SCHEMA_VERSION
