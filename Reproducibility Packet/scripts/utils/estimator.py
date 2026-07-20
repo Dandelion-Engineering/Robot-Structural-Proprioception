@@ -31,6 +31,15 @@ The capacity ladder (Slot 9), in rungs that share this front-end and output cont
      the non-healthy mass uniformly and abstains on the fault type. This renders
      ladder stages (a) detect and the calibration/abstention layer today, on the real
      online seam, without fabricating a diagnosis that needs frozen training data.
+  1b. **`CoefficientReferenceDetector`** (built here) — the second interpretable
+     detection rung, scoring the *joint* healthy-standardized coefficient distance of the
+     live window to a healthy calibration reference. It is the deployable analog of the
+     mechanics safe-probe screen (`synchronous_coefficient_vector` +
+     `coefficient_reference_distance`), so the deployed detection margin is the one the
+     excitation/detector co-design and the noisy-reference pilot measured — closing that
+     loop on one statistic. Like rung 1 it detects without attributing the fault type,
+     and it freezes its threshold on healthy calibration with a fail-loud guard against
+     an under-resolved false-alarm tail.
   2. **`TemporalAttributionNet`** (specified; trained post-freeze) — the matched
      learned temporal-attribution head: a shared temporal encoder over the `[W, D]`
      window (dilated temporal-conv / GRU) feeding class/unknown/location/severity
@@ -259,24 +268,32 @@ class RecommendedWindow:
 
 
 # Proposed values for the frozen config (see the chat / progress report for the full
-# argument). At f_ctrl = 500 Hz (dt = 2 ms): W = 640 samples ≈ 1.28 s spans a *full*
-# 0.8 Hz diagnostic-probe period (1.25 s = 625 samples). Covering a complete cycle is
-# what the synchronous window feature needs to resolve the probe (a sub-cycle window
-# leaves the lock-in poorly conditioned — the S9 Claude/Codex co-design that moved the
-# window from 512 to 640); stride = 8 samples runs the diagnosis at 62.5 Hz (the 500 Hz
-# controller zero-order-holds the latest diagnosis between updates). These are
-# config-freeze-time values, not pilot-blocking; a cheap pilot sweep over
-# W ∈ {512, 640, 768} and stride ∈ {4, 8, 16} confirms them before the freeze.
+# argument). At f_ctrl = 500 Hz (dt = 2 ms): W = 768 samples ≈ 1.54 s spans a *full*
+# 0.8 Hz diagnostic-probe period (1.25 s = 625 samples) with margin. Covering a complete
+# cycle is what the synchronous window feature needs to resolve the probe (a sub-cycle
+# window leaves the lock-in poorly conditioned and inert — the S9 Claude/Codex co-design
+# that moved the window off 512). The S11 noisy-reference pilot swept W ∈ {512, 640, 768}
+# and stride ∈ {4, 8, 16} on noisy deployable observations and advanced W=768/stride=16;
+# stride = 16 samples runs the diagnosis at ~31 Hz (the 500 Hz controller zero-order-holds
+# the latest diagnosis between updates). These remain config-freeze-time proposals, not
+# frozen: the pilot's false-alarm margins are single-event-thin at 48 held-out seeds, so a
+# validation-sized healthy calibration set owns the frozen W/stride/threshold.
 RECOMMENDED_WINDOW = RecommendedWindow(
-    W=640,
-    stride=8,
+    W=768,
+    stride=16,
     rationale=(
-        "W=640 (~1.28 s at 500 Hz) covers a full 1.25 s (0.8 Hz) diagnostic-probe "
-        "period, which the synchronous window feature requires to resolve a complete "
-        "cycle (a sub-cycle window such as 512 leaves the lock-in poorly conditioned); "
-        "stride=8 updates the diagnosis at 62.5 Hz under a 500 Hz zero-order-hold "
-        "controller. Still a pilot-sweep proposal, not frozen: confirm with "
-        "W∈{512,640,768}, stride∈{4,8,16} before freeze."
+        "W=768 (~1.54 s at 500 Hz) covers a full 1.25 s (0.8 Hz) diagnostic-probe period "
+        "with margin, which the synchronous window feature requires to resolve a complete "
+        "cycle (a sub-cycle window such as 512 leaves the lock-in poorly conditioned and "
+        "inert); stride=16 updates the diagnosis at ~31 Hz under a 500 Hz zero-order-hold "
+        "controller. The S11 noisy-reference pilot "
+        "(results/noisy_reference_pilot_threshold_followup/) swept W∈{512,640,768}, "
+        "stride∈{4,8,16} on noisy deployable observations and advanced W=768/stride=16 as "
+        "the only suite-S cell clearing the <=5% worst-alignment held-out false-alarm "
+        "screen (2.1% worst / 0.7% pooled) at 97.9% min per-fault detection and 100% "
+        "prototype attribution, versus 0% matched-C1 detection. Still a pilot proposal, "
+        "not frozen: the false-alarm margins are single-event-thin at 48 held-out seeds, "
+        "so a validation-sized healthy calibration set owns the frozen W/stride/threshold."
     ),
 )
 
@@ -634,6 +651,311 @@ class WindowNoveltyDetector(DiagnosisEstimator):
             decision_time_s=decision_time_s,
             p_class=p,
             unknown_score=score,
+            abstain_decision=abstain,
+            location_out=-1,
+            severity_out=0.0,
+            severity_uncertainty=float("inf"),
+            detection_time_s=self._detection_time_s,
+        )
+
+
+# --------------------------------------------------------------------------- #
+# Joint coefficient-distance-to-reference detector: the deployable analog of the
+# mechanics safe-probe screen (the second interpretable detection rung).
+# --------------------------------------------------------------------------- #
+def synchronous_coefficient_vector(
+    record: ObservedRecord, extractor: "WindowFeatureExtractor"
+) -> np.ndarray:
+    """Return the joint retained cosine/sine coefficients over a suite's live channels.
+
+    Selects the per-column ``[sync_cos, sync_sin]`` the `WindowFeatureExtractor` retains
+    down to the scalar channels the record's suite physically carries, flattened into one
+    vector. This is the deployable analog of the mechanics safe-probe screen's
+    fault-minus-reference coefficient vector: the screen measures
+    ``||coeff(fault) - coeff(reference)||`` on the privileged differential, and this is the
+    same coefficient vector recovered from one noisy suite observation, ready to be
+    compared to a healthy *calibration* reference by `coefficient_reference_distance`.
+
+    The vector length is ``2 x (#scalar channels the suite carries)`` — constant within a
+    suite (C0/C1/S each fixed) but different across suites; a detector is fit and scored on
+    one suite, so its reference and live vectors are always aligned.
+    """
+
+    per_col = N_FEATURE_STATS + N_EXTRA_FEATURES
+    features = extractor.window_features(record).reshape(observed_registry_width(), per_col)
+    pair = features[:, [SYNC_COS_FEATURE_COL, SYNC_SIN_FEATURE_COL]]
+    flags: list[bool] = []
+    for name in CHANNEL_NAMES:
+        flags.extend([bool(record.suite_available_mask[name])] * CHANNEL_WIDTH[name])
+    mask = np.asarray(flags, dtype=bool)
+    if mask.shape[0] != observed_registry_width():
+        raise RuntimeError("suite scalar mask drifted from the observed registry")
+    vector = pair[mask].reshape(-1)
+    if not np.all(np.isfinite(vector)):
+        raise ValueError("synchronous coefficient vector must be finite")
+    return vector
+
+
+def coefficient_reference_distance(
+    vector: np.ndarray, mean: np.ndarray, scale: np.ndarray
+) -> float:
+    """Return the dimension-normalized, healthy-standardized coefficient distance.
+
+    ``||(vector - mean) / scale||_2 / sqrt(D)`` — a diagonal-Mahalanobis distance of the
+    live coefficient vector to the healthy calibration mean, standardized by the
+    per-dimension healthy spread and normalized by the coefficient dimension so windows of
+    different widths (suites) sit on a comparable scale. This is the mechanics screen's
+    ``||coeff(fault) - coeff(reference)||`` made deployable: the privileged matched
+    reference becomes a healthy calibration model ``(mean, scale)``.
+    """
+
+    sample = np.asarray(vector, dtype=float)
+    reference = np.asarray(mean, dtype=float)
+    spread = np.asarray(scale, dtype=float)
+    if sample.shape != reference.shape or sample.shape != spread.shape or sample.ndim != 1:
+        raise ValueError("vector, mean, and scale must be aligned one-dimensional arrays")
+    if sample.size == 0:
+        raise ValueError("coefficient vector must be non-empty")
+    if not np.all(np.isfinite(sample)) or not np.all(np.isfinite(reference)):
+        raise ValueError("vector and mean must be finite")
+    if not np.all(np.isfinite(spread)) or np.any(spread <= 0.0):
+        raise ValueError("scale must be finite and positive")
+    return float(np.linalg.norm((sample - reference) / spread) / np.sqrt(sample.size))
+
+
+class CoefficientReferenceDetector(DiagnosisEstimator):
+    """Detection rung scoring the *joint* coefficient distance to a healthy reference.
+
+    `WindowNoveltyDetector` consumes the retained ``sync_cos``/``sync_sin`` only as generic
+    per-feature z-scores (each standardized independently inside a top-k mean-|z|). This
+    rung instead computes the *joint* healthy-standardized Euclidean distance of the live
+    coefficient vector to a healthy calibration mean — the same quantity the mechanics
+    safe-probe screen and the noisy-reference pilot measure (`synchronous_coefficient_vector`
+    + `coefficient_reference_distance`). So the deployed estimator's detection margin is the
+    one the excitation/detector co-design analyzed, closing that loop on a single statistic
+    (S10-S12 coherence): amplitude -> coefficient pair -> joint coefficient distance.
+
+    It is a **detection** rung, not attribution. Crossing the threshold says the body's
+    probe response has moved away from healthy, not which of structure/actuator/sensor
+    moved — separating those needs the trained head reading the differential shape/phase
+    across the four gauge stations (rung 2). So `p_class` is the honest healthy-vs-not
+    simplex with the non-healthy mass spread uniformly, and the type call is abstained,
+    exactly like `WindowNoveltyDetector` but on the screen's statistic. The pilot's
+    nearest-centroid attribution is a *pilot instrument*, deliberately not reproduced here
+    as a deployed diagnosis.
+
+    **Threshold discipline.** The detection threshold is frozen on a healthy *calibration*
+    set, never tuned on the evaluation/held-out set (the OOD-threshold discipline in
+    `utils.metrics`). Because a small calibration set cannot resolve a low false-alarm tail
+    — the pilot's first BLOCK: with ``N`` healthy calibration values the ``(1 - far)``
+    quantile is merely the maximum until ``N`` is large — `calibrate_threshold` **fails
+    loud** when the calibration set is too small to place the requested tail, rather than
+    silently freezing an unresolved maximum. The threshold may also be set directly (a
+    labeled pilot-proposal value) for pre-validation experiments.
+    """
+
+    def __init__(
+        self,
+        extractor: WindowFeatureExtractor | None = None,
+        *,
+        detect_threshold: float | None = None,
+        persistence: int = 3,
+        scale_floor_abs: float = 1.0e-6,
+        scale_floor_rel: float = 1.0e-6,
+    ) -> None:
+        """Configure the coefficient-distance detector.
+
+        Args:
+            extractor: shared front-end (a default is created if none is given). The
+                detector reads the extractor's retained cosine/sine, so its window length
+                and probe frequency come from the extractor.
+            detect_threshold: an optional directly-set detection threshold in the units of
+                `coefficient_reference_distance`. Leave ``None`` and call
+                `calibrate_threshold` to freeze it on healthy calibration scores (the
+                disciplined path); a directly-set value is a labeled pilot-proposal escape
+                hatch, not a validation-frozen threshold.
+            persistence: consecutive over-threshold decisions required to latch detection,
+                so a single noisy window does not trip it.
+            scale_floor_abs / scale_floor_rel: floor on the per-dimension healthy spread,
+                ``scale = max(std, scale_floor_abs + scale_floor_rel*|mean|)``, so a
+                constant coefficient dimension does not divide by zero.
+        """
+
+        if persistence < 1:
+            raise ValueError("persistence must be >= 1")
+        if scale_floor_abs <= 0.0 or scale_floor_rel < 0.0:
+            raise ValueError("scale_floor_abs must be > 0 and scale_floor_rel >= 0")
+        if detect_threshold is not None and (
+            not np.isfinite(detect_threshold) or detect_threshold <= 0.0
+        ):
+            raise ValueError("detect_threshold, when given, must be finite and positive")
+        self.extractor = extractor or WindowFeatureExtractor()
+        self.persistence = int(persistence)
+        self.scale_floor_abs = float(scale_floor_abs)
+        self.scale_floor_rel = float(scale_floor_rel)
+        self._detect_threshold: float | None = (
+            float(detect_threshold) if detect_threshold is not None else None
+        )
+        self._ref_mean: np.ndarray | None = None
+        self._ref_scale: np.ndarray | None = None
+        self._calibration_null_scores: np.ndarray | None = None
+        self.reset()
+
+    def _scale_from(self, mean: np.ndarray, std: np.ndarray) -> np.ndarray:
+        """Floor the per-dimension healthy spread away from zero."""
+
+        return np.maximum(std, self.scale_floor_abs + self.scale_floor_rel * np.abs(mean))
+
+    def fit_reference(
+        self, healthy_windows: list[ObservedRecord]
+    ) -> "CoefficientReferenceDetector":
+        """Fit the healthy coefficient mean/scale on healthy calibration windows.
+
+        Fit on **healthy** windows only (the healthy class is always present). Stores the
+        leave-one-out healthy null scores so `calibrate_threshold` can freeze an operating
+        threshold and so the sigma-above-null rendering of `p_class` has a spread. All
+        windows must be the same suite as the windows later scored (aligned coefficient
+        vectors); a mismatch raises in `coefficient_reference_distance`.
+        """
+
+        if len(healthy_windows) < 2:
+            raise ValueError("need at least two healthy windows to fit a reference spread")
+        vectors = np.stack(
+            [synchronous_coefficient_vector(w, self.extractor) for w in healthy_windows]
+        )
+        self._ref_mean = vectors.mean(axis=0)
+        self._ref_scale = self._scale_from(self._ref_mean, vectors.std(axis=0))
+        n = vectors.shape[0]
+        loo = np.empty(n, dtype=float)
+        for i in range(n):
+            others = np.delete(vectors, i, axis=0)
+            m = others.mean(axis=0)
+            s = self._scale_from(m, others.std(axis=0))
+            loo[i] = coefficient_reference_distance(vectors[i], m, s)
+        self._calibration_null_scores = loo
+        return self
+
+    def calibrate_threshold(
+        self,
+        *,
+        false_alarm_rate: float = 0.05,
+        healthy_calibration_scores: np.ndarray | None = None,
+        min_tail_count: int = 5,
+    ) -> float:
+        """Freeze the detection threshold at the ``(1 - far)`` healthy-score quantile.
+
+        Uses the leave-one-out null scores from `fit_reference` unless explicit
+        ``healthy_calibration_scores`` are supplied. **Fails loud** when the calibration
+        set is too small to resolve the requested tail: to place a false-alarm rate
+        ``far`` at the ``(1 - far)`` quantile with at least ``min_tail_count`` expected
+        exceedances, the set needs at least ``ceil(min_tail_count / far)`` values —
+        otherwise the "quantile" is merely the calibration maximum (the pilot's first
+        BLOCK). This refuses to freeze an unresolved maximum as if it were a genuine
+        quantile. Returns the frozen threshold.
+        """
+
+        if not (0.0 < false_alarm_rate < 1.0):
+            raise ValueError("false_alarm_rate must be in (0, 1)")
+        if min_tail_count < 1:
+            raise ValueError("min_tail_count must be >= 1")
+        if healthy_calibration_scores is not None:
+            scores = np.asarray(healthy_calibration_scores, dtype=float)
+        elif self._calibration_null_scores is not None:
+            scores = self._calibration_null_scores
+        else:
+            raise ValueError("fit_reference or explicit calibration scores required")
+        if scores.ndim != 1 or scores.size < 2 or not np.all(np.isfinite(scores)):
+            raise ValueError("healthy calibration scores must be >=2 finite values")
+        required = int(np.ceil(min_tail_count / false_alarm_rate))
+        if scores.size < required:
+            raise ValueError(
+                f"cannot resolve a {false_alarm_rate:.3g} false-alarm tail with "
+                f"{scores.size} healthy calibration scores: need >= {required} "
+                f"(>= {min_tail_count} expected exceedances), else the threshold is just "
+                "the calibration maximum. Use a validation-sized healthy calibration set."
+            )
+        threshold = float(
+            max(np.quantile(scores, 1.0 - false_alarm_rate, method="higher"), _EPS)
+        )
+        self._detect_threshold = threshold
+        return threshold
+
+    @property
+    def detect_threshold(self) -> float | None:
+        """The frozen detection threshold, or ``None`` if not yet set."""
+
+        return self._detect_threshold
+
+    @property
+    def calibration_null_scores(self) -> np.ndarray | None:
+        """The leave-one-out healthy calibration scores from `fit_reference`."""
+
+        return self._calibration_null_scores
+
+    def reset(self) -> None:
+        """Reset the per-rollout detection latch and timing."""
+
+        self._over_count = 0
+        self._detection_time_s = float("nan")
+
+    def score(self, window: ObservedRecord) -> float:
+        """Return the joint coefficient distance of one window to the healthy reference."""
+
+        if self._ref_mean is None or self._ref_scale is None:
+            raise ValueError("fit_reference must be called before scoring")
+        vector = synchronous_coefficient_vector(window, self.extractor)
+        return coefficient_reference_distance(vector, self._ref_mean, self._ref_scale)
+
+    def update(
+        self, step_index: int, decision_time_s: float, window: ObservedRecord | None
+    ) -> EstimatorOutput:
+        """Score one window and emit the §D detection/abstention output."""
+
+        if window is None:
+            # No delivered observation yet: assume healthy, no detection, do not abstain.
+            p = np.zeros(N_SOURCE_CLASSES)
+            p[HEALTHY_INDEX] = 1.0
+            return EstimatorOutput(
+                step=step_index,
+                decision_time_s=decision_time_s,
+                p_class=p,
+                unknown_score=0.0,
+                abstain_decision=False,
+                detection_time_s=self._detection_time_s,
+            )
+        if self._detect_threshold is None:
+            raise ValueError(
+                "detection threshold is unset: call calibrate_threshold (or pass "
+                "detect_threshold) before update"
+            )
+        distance = self.score(window)
+        if distance >= self._detect_threshold:
+            self._over_count += 1
+        else:
+            self._over_count = 0
+        if self._over_count >= self.persistence and not np.isfinite(self._detection_time_s):
+            self._detection_time_s = decision_time_s
+
+        # Render p_class/unknown_score in sigma-above-healthy-null units: a typical healthy
+        # window (distance near the null) reads confidently healthy and a clearly changed
+        # one reads mostly not-healthy, with a hard type-abstention once detected. The
+        # non-healthy mass spreads uniformly — no structure/actuator/sensor call is claimed.
+        null = self._calibration_null_scores
+        null_mean = float(null.mean()) if null is not None else 0.0
+        null_std = float(max(null.std(), _EPS)) if null is not None else 1.0
+        z = (distance - null_mean) / null_std
+        z_threshold = (self._detect_threshold - null_mean) / null_std
+        x = float(np.clip(z - z_threshold, -30.0, 30.0))
+        healthy_prob = float(np.clip(1.0 / (1.0 + np.exp(x)), 0.02, 0.98))
+        p = np.empty(N_SOURCE_CLASSES)
+        p[HEALTHY_INDEX] = healthy_prob
+        p[list(FAULT_INDICES)] = (1.0 - healthy_prob) / len(FAULT_INDICES)
+        abstain = bool(distance >= self._detect_threshold)
+        return EstimatorOutput(
+            step=step_index,
+            decision_time_s=decision_time_s,
+            p_class=p,
+            unknown_score=float(z),
             abstain_decision=abstain,
             location_out=-1,
             severity_out=0.0,

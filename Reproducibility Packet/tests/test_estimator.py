@@ -20,6 +20,7 @@ sys.path.insert(0, str(SCRIPTS_DIR))
 
 from utils.cable_plant import CablePlant  # noqa: E402
 from utils.estimator import (  # noqa: E402
+    CoefficientReferenceDetector,
     DIAGNOSTIC_PROBE_HZ,
     EstimatorCommandPolicy,
     EstimatorOutput,
@@ -37,6 +38,8 @@ from utils.estimator import (  # noqa: E402
     VALID_FRACTION_COL,
     WindowFeatureExtractor,
     WindowNoveltyDetector,
+    coefficient_reference_distance,
+    synchronous_coefficient_vector,
 )
 from utils.metrics import SOURCE_CLASS_ORDER as METRIC_ORDER  # noqa: E402
 from utils.online_loop import run_online_rollout  # noqa: E402
@@ -277,7 +280,8 @@ def _single_tone_record(channel: str, times: np.ndarray, signal: np.ndarray, sui
 def test_recommended_window_covers_one_probe_cycle():
     # The synchronous feature needs the window to span a full probe period, so the default
     # W at 500 Hz must cover at least one 0.8 Hz cycle (1.25 s = 625 samples). This is the
-    # concrete reason the S9 co-design moved W from 512 to 640.
+    # concrete reason the S9 co-design moved W off the sub-cycle 512, and the S11
+    # noisy-reference pilot then advanced it to 768.
     span_s = (RECOMMENDED_WINDOW.W - 1) / 500.0
     assert span_s + 1.0e-9 >= 1.0 / DIAGNOSTIC_PROBE_HZ
 
@@ -464,6 +468,139 @@ def test_novelty_output_is_honest_healthy_vs_not():
     assert out.location_out == -1  # not localized without a trained head
     fault_probs = out.p_class[list(range(1, N_SOURCE_CLASSES))]
     assert np.allclose(fault_probs, fault_probs[0])  # uniform over fault classes
+
+
+# --------------------------------------------------------------------------- #
+# Joint coefficient-distance-to-reference detector (deployable analog of the screen).
+# --------------------------------------------------------------------------- #
+def _coef_times() -> np.ndarray:
+    return np.arange(80) * 0.02  # 50 Hz grid; 1.58 s spans > one 1.25 s probe cycle
+
+
+def _coef_tone_record(amp: float, noise: np.ndarray):
+    """An S record carrying a probe tone of amplitude `amp` (+noise) on gauge 0."""
+
+    times = _coef_times()
+    signal = amp * np.cos(2.0 * np.pi * DIAGNOSTIC_PROBE_HZ * times) + noise
+    rec, _, _ = _single_tone_record("gauge_obs", times, signal, "S")
+    return rec
+
+
+def test_coefficient_statistic_matches_pilot_definition():
+    """The estimator's coefficient vector/distance ARE the pilot's exact statistic.
+
+    This pins the S10-S12 coherence claim: the deployed rung and Codex's noisy-reference
+    pilot compute the same joint coefficient vector and the same standardized distance, so
+    the pilot's margins describe the deployed detector, not a different quantity.
+    """
+
+    import run_noisy_reference_pilot as pilot
+
+    times = _coef_times()
+    rec, _, _ = _single_tone_record(
+        "gauge_obs", times, 3.0 * np.cos(2.0 * np.pi * DIAGNOSTIC_PROBE_HZ * times), "S"
+    )
+    ext = WindowFeatureExtractor(window_steps=times.size, probe_frequency_hz=DIAGNOSTIC_PROBE_HZ)
+    mine = synchronous_coefficient_vector(rec, ext)
+    theirs = pilot.synchronous_coefficient_vector(rec, ext)
+    assert np.array_equal(mine, theirs)
+    mean = np.zeros_like(mine)
+    scale = np.ones_like(mine)
+    assert coefficient_reference_distance(mine, mean, scale) == pytest.approx(
+        pilot.coefficient_distance(theirs, mean, scale)
+    )
+
+
+def test_coefficient_reference_detector_low_on_healthy_high_on_change():
+    rng = np.random.default_rng(3)
+    ext = WindowFeatureExtractor(window_steps=80, probe_frequency_hz=DIAGNOSTIC_PROBE_HZ)
+    det = CoefficientReferenceDetector(ext, persistence=1)
+    det.fit_reference([_coef_tone_record(2.0, 0.02 * rng.standard_normal(80)) for _ in range(8)])
+    det.calibrate_threshold(false_alarm_rate=0.25, min_tail_count=1)  # required=4 <= 8
+    fresh = det.score(_coef_tone_record(2.0, 0.02 * rng.standard_normal(80)))
+    changed = det.score(_coef_tone_record(5.0, 0.02 * rng.standard_normal(80)))
+    assert np.isfinite(fresh)
+    assert changed > fresh  # the probe-band coefficient shift is picked up jointly
+    assert changed >= det.detect_threshold
+
+
+def test_coefficient_reference_detector_calibrate_threshold_guards_small_calibration():
+    """The rung refuses to freeze an unresolved-tail threshold (the pilot's first BLOCK)."""
+
+    rng = np.random.default_rng(5)
+    ext = WindowFeatureExtractor(window_steps=80, probe_frequency_hz=DIAGNOSTIC_PROBE_HZ)
+    det = CoefficientReferenceDetector(ext)
+    det.fit_reference([_coef_tone_record(2.0, 0.02 * rng.standard_normal(80)) for _ in range(8)])
+    # 8 calibration scores cannot resolve a 5% tail (needs >= 100): fail loud.
+    with pytest.raises(ValueError):
+        det.calibrate_threshold(false_alarm_rate=0.05, min_tail_count=5)
+    # a coarse tail the 8 scores CAN place succeeds.
+    thr = det.calibrate_threshold(false_alarm_rate=0.5, min_tail_count=1)  # required=2
+    assert np.isfinite(thr) and thr > 0.0
+    # the explicit-scores path with a validation-sized set resolves the 5% tail.
+    big = np.linspace(0.0, 1.0, 200)
+    thr2 = det.calibrate_threshold(
+        false_alarm_rate=0.05, healthy_calibration_scores=big, min_tail_count=5
+    )
+    assert thr2 == pytest.approx(float(np.quantile(big, 0.95, method="higher")))
+
+
+def test_coefficient_reference_detector_is_detection_only_and_abstains_on_type():
+    rng = np.random.default_rng(7)
+    ext = WindowFeatureExtractor(window_steps=80, probe_frequency_hz=DIAGNOSTIC_PROBE_HZ)
+    det = CoefficientReferenceDetector(ext, persistence=1)
+    det.fit_reference([_coef_tone_record(2.0, 0.02 * rng.standard_normal(80)) for _ in range(8)])
+    det.calibrate_threshold(false_alarm_rate=0.25, min_tail_count=1)
+    # None window -> confident healthy, no detection, no abstain
+    out0 = det.update(0, 0.0, None)
+    out0.validate()
+    assert out0.p_class[HEALTHY_INDEX] == pytest.approx(1.0)
+    assert out0.abstain_decision is False
+    # a fresh healthy window -> healthy-dominant simplex
+    healthy_out = det.update(1, 0.01, _coef_tone_record(2.0, np.zeros(80)))
+    healthy_out.validate()
+    assert np.argmax(healthy_out.p_class) == HEALTHY_INDEX
+    # a strongly changed window -> abstains on the fault type, spreads non-healthy mass
+    # uniformly, and does not localize (no structure/actuator/sensor attribution claimed).
+    det.reset()
+    changed = det.update(2, 0.02, _coef_tone_record(6.0, 0.02 * rng.standard_normal(80)))
+    changed.validate()
+    assert changed.abstain_decision is True
+    assert changed.location_out == -1
+    fault_probs = changed.p_class[list(range(1, N_SOURCE_CLASSES))]
+    assert np.allclose(fault_probs, fault_probs[0])
+
+
+def test_coefficient_reference_detector_latches_after_persistence():
+    rng = np.random.default_rng(9)
+    ext = WindowFeatureExtractor(window_steps=80, probe_frequency_hz=DIAGNOSTIC_PROBE_HZ)
+    det = CoefficientReferenceDetector(ext, persistence=3)
+    det.fit_reference([_coef_tone_record(2.0, 0.02 * rng.standard_normal(80)) for _ in range(8)])
+    det.calibrate_threshold(false_alarm_rate=0.25, min_tail_count=1)
+    pre = _coef_tone_record(2.0, np.zeros(80))  # a clean healthy stays below threshold
+
+    def changed():
+        return _coef_tone_record(8.0, 0.02 * rng.standard_normal(80))
+
+    det.update(0, 0.0, pre)
+    det.update(1, 0.01, pre)
+    assert not np.isfinite(det.update(2, 0.02, changed()).detection_time_s)
+    assert not np.isfinite(det.update(3, 0.03, changed()).detection_time_s)
+    latched = det.update(4, 0.04, changed())
+    assert latched.detection_time_s == pytest.approx(0.04)  # latches on the 3rd consecutive
+    assert det.update(5, 0.05, changed()).detection_time_s == pytest.approx(0.04)  # stable
+
+
+def test_coefficient_reference_detector_requires_reference_and_threshold():
+    ext = WindowFeatureExtractor(window_steps=80, probe_frequency_hz=DIAGNOSTIC_PROBE_HZ)
+    det = CoefficientReferenceDetector(ext)
+    rec = _coef_tone_record(2.0, np.zeros(80))
+    with pytest.raises(ValueError):
+        det.score(rec)  # no reference fitted yet
+    det.fit_reference([_coef_tone_record(2.0, np.zeros(80)), _coef_tone_record(2.0, 0.02 * np.ones(80))])
+    with pytest.raises(ValueError):
+        det.update(0, 0.0, rec)  # reference fitted but threshold unset
+    det.update(0, 0.0, None).validate()  # a None window needs no threshold
 
 
 # --------------------------------------------------------------------------- #
