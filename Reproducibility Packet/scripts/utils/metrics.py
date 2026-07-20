@@ -23,6 +23,9 @@ conflated with a control result (schema §D):
   * **Layer 2 — control** (reads §B privileged metric arrays + §D controller logs):
       - `j_5s` : the headline post-change tracking integral (schema §G).
       - `tracking_reduction_pct` : S-vs-C1 percentage reduction in `j_5s`.
+      - `safety_incident_rate` / `safety_flag_rates` / `safety_regression_delta` :
+        the Claim-Sheet "no safety regression" gate on the control win, over the
+        privileged-truth `safety_flag` (schema Amendment A1).
 
 Paired hierarchical-bootstrap confidence intervals for the S-vs-C1 headline
 comparisons live in `utils.stats`; this module supplies the point statistics those
@@ -44,7 +47,7 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
-from utils.schema_types import SOURCE_CLASSES
+from utils.schema_types import N_SAFETY_FLAGS, SOURCE_CLASSES
 
 # Canonical source-class ordering (index <-> name). The set is the schema's; the
 # *order* is a metric-layer convention so p_class columns and label indices align.
@@ -480,3 +483,65 @@ def tracking_reduction_pct(j_c1: float, j_s: float) -> float:
     if j_c1 <= 0.0:
         raise ValueError("j_c1 must be positive to form a percentage reduction")
     return float(100.0 * (j_c1 - j_s) / j_c1)
+
+
+# --------------------------------------------------------------------------- #
+# Layer 2 — control: safety (schema Amendment A1 `safety_flag`).
+# The Claim-Sheet control win requires "no safety regression": S must not incur more
+# unsafe excursions than the matched C1 run. Safety is scored from the privileged-truth
+# `safety_flag` (never a corrupted observed channel), consistent with how A1's plant
+# populates it.
+# --------------------------------------------------------------------------- #
+def _check_safety_flag(safety_flag: np.ndarray) -> np.ndarray:
+    """Validate and return a ``[T, N_SAFETY_FLAGS]`` boolean privileged-truth array."""
+
+    flags = np.asarray(safety_flag)
+    if flags.ndim != 2 or flags.shape[1] != N_SAFETY_FLAGS:
+        raise ValueError(f"safety_flag must be [T, {N_SAFETY_FLAGS}], got {flags.shape}")
+    if flags.shape[0] < 1:
+        raise ValueError("safety_flag must contain at least one control step")
+    if flags.dtype != np.bool_:
+        raise ValueError("safety_flag must be boolean (privileged exceedance indicators)")
+    return flags
+
+
+def safety_incident_rate(safety_flag: np.ndarray) -> float:
+    """Fraction of control steps with at least one active safety flag (schema A1).
+
+    The per-run safety burden: the share of steps at which *any* of the seven
+    privileged-truth exceedance indicators (joint angle ×2, joint speed ×2, tip
+    workspace, absolute gauge strain, tip contact force) is set. Computed on whatever
+    window the caller passes — the eval driver slices the same post-change
+    ``[t_c, t_c+5 s]`` extent it uses for ``j_5s``, so tracking and safety are judged over
+    one window. A pure per-run scalar; the S-vs-C1 comparison is aggregated by the paired
+    bootstrap in ``utils.stats``.
+    """
+
+    flags = _check_safety_flag(safety_flag)
+    return float(np.mean(flags.any(axis=1)))
+
+
+def safety_flag_rates(safety_flag: np.ndarray) -> np.ndarray:
+    """Per-flag activation fraction over the steps: ``[N_SAFETY_FLAGS]`` in ``[0, 1]``.
+
+    The transparency breakdown behind ``safety_incident_rate`` — which specific limit
+    (in ``schema_types.SAFETY_FLAG_FIELDS`` order) drove any regression. Reported
+    alongside the headline so an excursion is attributable, not merely counted.
+    """
+
+    flags = _check_safety_flag(safety_flag)
+    return flags.mean(axis=0).astype(float)
+
+
+def safety_regression_delta(c1_safety_flag: np.ndarray, s_safety_flag: np.ndarray) -> float:
+    """Paired per-run safety delta ``rate(S) − rate(C1)`` (positive = S regressed).
+
+    The per-cell scalar the crossed pair×seed bootstrap (``utils.stats``) aggregates for
+    the Claim-Sheet "no safety regression" clause: the control-side win only stands if S
+    does **not** incur more unsafe steps than the matched C1 run. Operationally, "no
+    safety regression" holds when the paired 95% interval on this delta has an **upper**
+    bound ≤ 0; a positive delta whose interval excludes zero is a regression that
+    disqualifies the tracking improvement even when ``tracking_reduction_pct`` clears 10%.
+    """
+
+    return safety_incident_rate(s_safety_flag) - safety_incident_rate(c1_safety_flag)

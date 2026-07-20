@@ -32,10 +32,14 @@ from utils.metrics import (  # noqa: E402
     per_class_recall,
     resolve_predictions,
     risk_coverage_curve,
+    safety_flag_rates,
+    safety_incident_rate,
+    safety_regression_delta,
     selective_risk_at_coverage,
     tracking_reduction_pct,
     unknown_threshold_at_sensitivity,
 )
+from utils.schema_types import N_SAFETY_FLAGS  # noqa: E402
 
 
 # --------------------------------------------------------------------------- #
@@ -251,6 +255,62 @@ def test_j_5s_rejects_a_truncated_five_second_window() -> None:
     output = np.zeros((3, 2))
     with pytest.raises(ValueError, match="truncated"):
         j_5s(t_s, reference, output, onset_time_s=1.0, window_s=5.0)
+
+
+# --------------------------------------------------------------------------- #
+# Safety gate (schema A1 safety_flag; the "no safety regression" clause).
+# --------------------------------------------------------------------------- #
+def _safety(rows: list[list[int]]) -> np.ndarray:
+    """Build a [T, N_SAFETY_FLAGS] bool array from 0/1 rows (each row one control step)."""
+
+    return np.asarray(rows, dtype=bool)
+
+
+def test_safety_incident_rate_counts_any_active_flag() -> None:
+    """A step counts as unsafe if *any* of its seven flags is set."""
+
+    steps = _safety(
+        [
+            [0] * N_SAFETY_FLAGS,  # safe
+            [1] + [0] * (N_SAFETY_FLAGS - 1),  # angle_0 tripped -> unsafe
+            [0] * N_SAFETY_FLAGS,  # safe
+            [0, 0, 0, 0, 1, 0, 1],  # two different flags -> still one unsafe step
+        ]
+    )
+    assert safety_incident_rate(steps) == pytest.approx(2.0 / 4.0)
+
+
+def test_safety_flag_rates_are_per_flag() -> None:
+    """Per-flag activation fractions in SAFETY_FLAG_FIELDS order."""
+
+    steps = _safety([[1, 0, 0, 0, 0, 0, 0], [1, 0, 0, 0, 0, 0, 1]])
+    rates = safety_flag_rates(steps)
+    assert rates.shape == (N_SAFETY_FLAGS,)
+    assert rates[0] == pytest.approx(1.0)  # angle_0 in both steps
+    assert rates[6] == pytest.approx(0.5)  # contact-force in one of two
+    assert rates[1] == pytest.approx(0.0)
+
+
+def test_safety_regression_delta_sign() -> None:
+    """Positive when S is less safe than C1, negative when safer, zero when equal."""
+
+    c1 = _safety([[0] * N_SAFETY_FLAGS, [1] + [0] * (N_SAFETY_FLAGS - 1)])  # rate 0.5
+    s_worse = _safety([[1] + [0] * (N_SAFETY_FLAGS - 1)] * 2)  # rate 1.0
+    s_safer = _safety([[0] * N_SAFETY_FLAGS] * 2)  # rate 0.0
+    assert safety_regression_delta(c1, s_worse) == pytest.approx(0.5)  # regression
+    assert safety_regression_delta(c1, s_safer) == pytest.approx(-0.5)  # improvement
+    assert safety_regression_delta(c1, c1.copy()) == pytest.approx(0.0)  # no change
+
+
+def test_safety_flag_validation() -> None:
+    """Wrong width, non-boolean dtype, and empty traces all fail loudly."""
+
+    with pytest.raises(ValueError):
+        safety_incident_rate(np.zeros((4, N_SAFETY_FLAGS - 1), dtype=bool))  # wrong width
+    with pytest.raises(ValueError):
+        safety_incident_rate(np.zeros((4, N_SAFETY_FLAGS), dtype=float))  # not boolean
+    with pytest.raises(ValueError):
+        safety_incident_rate(np.zeros((0, N_SAFETY_FLAGS), dtype=bool))  # empty
 
 
 def test_coverage_at_risk_pre_registered_ceiling() -> None:

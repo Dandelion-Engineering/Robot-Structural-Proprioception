@@ -20,14 +20,19 @@ sys.path.insert(0, str(SCRIPTS_DIR))
 
 from utils.cable_plant import CablePlant  # noqa: E402
 from utils.estimator import (  # noqa: E402
+    DIAGNOSTIC_PROBE_HZ,
     EstimatorCommandPolicy,
     EstimatorOutput,
     EstimatorTrace,
     HEALTHY_INDEX,
+    N_EXTRA_FEATURES,
+    N_FEATURE_STATS,
     N_SOURCE_CLASSES,
     OracleInterface,
     RECOMMENDED_WINDOW,
     SOURCE_CLASS_ORDER,
+    SYNC_FEATURE_COL,
+    VALID_FRACTION_COL,
     WindowFeatureExtractor,
     WindowNoveltyDetector,
 )
@@ -151,7 +156,8 @@ def test_window_tensor_left_pads_startup_to_fixed_w():
 
 def test_window_features_shape_and_nan_safety():
     ext = WindowFeatureExtractor(window_steps=80)
-    assert ext.n_features == observed_registry_width() * (4 + 1)
+    # per column: last, mean, std, slope, sync amplitude, valid fraction
+    assert ext.n_features == observed_registry_width() * (4 + 2)
     feats_c0 = ext.window_features(observed("C0"))
     assert feats_c0.shape == (ext.n_features,)
     assert np.all(np.isfinite(feats_c0))  # never NaN even though gauges are absent
@@ -181,12 +187,14 @@ def test_window_features_last_mean_slope_known_values():
         suite_available_mask={n: n in SUITE_CHANNELS["C0"] for n in CHANNEL_NAMES},
     )
     ext = WindowFeatureExtractor(window_steps=t)
-    feats = ext.window_features(rec).reshape(observed_registry_width(), 5)
+    feats = ext.window_features(rec).reshape(observed_registry_width(), 6)
     # column 0 == q_obs[:,0]: last=0.8, mean=0.4, slope=2.0, valid_frac=1.0
     assert feats[0, 0] == pytest.approx(0.8)
     assert feats[0, 1] == pytest.approx(0.4)
     assert feats[0, 3] == pytest.approx(2.0)
-    assert feats[0, 4] == pytest.approx(1.0)
+    assert feats[0, 5] == pytest.approx(1.0)  # valid fraction (now the last column)
+    # sync amplitude (col 4) is 0: this 5-sample 0.4 s window spans < one 1.25 s cycle
+    assert feats[0, 4] == 0.0
 
 
 def test_window_features_use_each_channels_measurement_times():
@@ -223,9 +231,129 @@ def test_window_features_use_each_channels_measurement_times():
         suite_available_mask={n: n in SUITE_CHANNELS["C1"] for n in CHANNEL_NAMES},
     )
     ext = WindowFeatureExtractor(window_steps=t)
-    feats = ext.window_features(rec).reshape(observed_registry_width(), 5)
+    feats = ext.window_features(rec).reshape(observed_registry_width(), 6)
     imu_offset = sum(CHANNEL_WIDTH[name] for name in CHANNEL_NAMES[:4])
     assert feats[imu_offset, 3] == pytest.approx(3.0)
+
+
+# --------------------------------------------------------------------------- #
+# Synchronous (lock-in) window feature at the probe frequency.
+# --------------------------------------------------------------------------- #
+def _single_tone_record(channel: str, times: np.ndarray, signal: np.ndarray, suite: str):
+    """Hand-build an ObservedRecord carrying `signal` on `channel[:,0]` over `times`.
+
+    Every channel in `suite` is fully valid; only `channel[:,0]` carries the signal, so
+    the tests read a known per-column synchronous amplitude. `times` is that channel's
+    own measurement grid; all others share `times` unless the test overrides them.
+    """
+
+    from utils.schema_types import CHANNEL_NAMES, CHANNEL_WIDTH, SUITE_CHANNELS, ObservedRecord
+
+    t = times.shape[0]
+    values, valid, meas, avail, lat = {}, {}, {}, {}, {}
+    for name in CHANNEL_NAMES:
+        w = CHANNEL_WIDTH[name]
+        values[name] = np.zeros((t, w))
+        valid[name] = (
+            np.ones((t, w), dtype=bool)
+            if name in SUITE_CHANNELS[suite]
+            else np.zeros((t, w), dtype=bool)
+        )
+        meas[name] = times.copy()
+        avail[name] = times.copy()
+        lat[name] = np.zeros(t)
+    values[channel][:, 0] = signal
+    rec = ObservedRecord(
+        suite=suite, run_id="r", pair_id="1", config_hash="dev-x",
+        values=values, valid_mask=valid, measurement_time_s=meas,
+        availability_time_s=avail, latency_age_s=lat,
+        suite_available_mask={n: n in SUITE_CHANNELS[suite] for n in CHANNEL_NAMES},
+    )
+    return rec, meas, values
+
+
+def test_recommended_window_covers_one_probe_cycle():
+    # The synchronous feature needs the window to span a full probe period, so the default
+    # W at 500 Hz must cover at least one 0.8 Hz cycle (1.25 s = 625 samples). This is the
+    # concrete reason the S9 co-design moved W from 512 to 640.
+    span_s = (RECOMMENDED_WINDOW.W - 1) / 500.0
+    assert span_s + 1.0e-9 >= 1.0 / DIAGNOSTIC_PROBE_HZ
+
+
+def test_synchronous_feature_recovers_probe_tone_phase_invariant():
+    t = 80
+    times = np.arange(t) * 0.02  # 50 Hz grid: one 0.8 Hz period (1.25 s) spans 62.5 < 80
+    amp = 5.0
+    per_col = N_FEATURE_STATS + N_EXTRA_FEATURES
+    recovered = []
+    for phase in (0.0, 1.1, 2.7, 4.5):
+        signal = amp * np.cos(2.0 * np.pi * DIAGNOSTIC_PROBE_HZ * times + phase)
+        rec, _, _ = _single_tone_record("q_obs", times, signal, "C0")
+        ext = WindowFeatureExtractor(window_steps=t, probe_frequency_hz=DIAGNOSTIC_PROBE_HZ)
+        feats = ext.window_features(rec).reshape(observed_registry_width(), per_col)
+        recovered.append(feats[0, SYNC_FEATURE_COL])
+        assert feats[0, VALID_FRACTION_COL] == pytest.approx(1.0)
+    for r in recovered:
+        assert r == pytest.approx(amp, rel=1.0e-6)  # recovers the injected amplitude
+    assert max(recovered) - min(recovered) < 1.0e-9  # phase invariant
+
+
+def test_synchronous_feature_zero_below_one_period():
+    t = 20
+    times = np.arange(t) * 0.02  # span 0.38 s < one 1.25 s probe period -> gate not met
+    signal = 5.0 * np.cos(2.0 * np.pi * DIAGNOSTIC_PROBE_HZ * times)
+    rec, _, _ = _single_tone_record("q_obs", times, signal, "C0")
+    ext = WindowFeatureExtractor(window_steps=t, probe_frequency_hz=DIAGNOSTIC_PROBE_HZ)
+    feats = ext.window_features(rec).reshape(
+        observed_registry_width(), N_FEATURE_STATS + N_EXTRA_FEATURES
+    )
+    assert feats[0, SYNC_FEATURE_COL] == 0.0
+
+
+def test_synchronous_feature_uses_each_channel_grid():
+    from utils.schema_types import CHANNEL_NAMES, CHANNEL_WIDTH
+
+    t = 96
+    q_times = np.arange(t) * 0.02
+    imu_times = np.arange(t) * 0.03  # imu_obs samples on its own coarser grid
+    amp = 4.0
+    imu_signal = amp * np.cos(2.0 * np.pi * DIAGNOSTIC_PROBE_HZ * imu_times)
+    rec, meas, values = _single_tone_record("q_obs", q_times, np.zeros(t), "C1")
+    # override imu_obs to sit on its own grid and carry the tone
+    meas["imu_obs"] = imu_times.copy()
+    rec.availability_time_s["imu_obs"] = imu_times.copy()
+    values["imu_obs"][:, 0] = imu_signal
+    ext = WindowFeatureExtractor(window_steps=t, probe_frequency_hz=DIAGNOSTIC_PROBE_HZ)
+    feats = ext.window_features(rec).reshape(
+        observed_registry_width(), N_FEATURE_STATS + N_EXTRA_FEATURES
+    )
+    imu_offset = sum(CHANNEL_WIDTH[name] for name in CHANNEL_NAMES[:4])
+    # the imu tone is recovered on the imu grid; the flat q_obs reads zero amplitude
+    assert feats[imu_offset, SYNC_FEATURE_COL] == pytest.approx(amp, rel=1.0e-6)
+    assert feats[0, SYNC_FEATURE_COL] == 0.0
+
+
+def test_synchronous_feature_lifts_novelty_on_probe_amplitude_change():
+    # A change confined to the probe-frequency amplitude (structure/actuator signature)
+    # raises the interpretable detector's novelty via the synchronous feature.
+    rng = np.random.default_rng(0)
+    t = 96
+    times = np.arange(t) * 0.02
+    base_amp = 2.0
+
+    def tone_record(amp: float, seed_noise: np.ndarray):
+        signal = amp * np.cos(2.0 * np.pi * DIAGNOSTIC_PROBE_HZ * times) + seed_noise
+        rec, _, _ = _single_tone_record("q_obs", times, signal, "C0")
+        return rec
+
+    ext = WindowFeatureExtractor(window_steps=t, probe_frequency_hz=DIAGNOSTIC_PROBE_HZ)
+    det = WindowNoveltyDetector(ext, detect_threshold=4.0, abstain_threshold=2.5)
+    healthy = [tone_record(base_amp, 0.01 * rng.standard_normal(t)) for _ in range(8)]
+    det.fit_reference(healthy)
+    fresh = det.novelty_score(tone_record(base_amp, 0.01 * rng.standard_normal(t)))
+    changed = det.novelty_score(tone_record(base_amp + 3.0, 0.01 * rng.standard_normal(t)))
+    assert np.isfinite(fresh)
+    assert changed > fresh  # the probe-band amplitude jump is picked up
 
 
 # --------------------------------------------------------------------------- #

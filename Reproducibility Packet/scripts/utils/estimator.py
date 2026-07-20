@@ -63,6 +63,7 @@ from utils.schema_types import (
     PlantStepState,
     observed_registry_width,
 )
+from utils.synchronous import harmonic_amplitude
 
 # Canonical source-class order — must match utils.metrics.SOURCE_CLASS_ORDER so a
 # p_class column means the same class in the estimator and in the scorer.
@@ -74,6 +75,28 @@ FAULT_INDICES: tuple[int, ...] = tuple(range(1, N_SOURCE_CLASSES))  # structure/
 # Per-column summary statistics the interpretable front-end computes over a window.
 FEATURE_STATS: tuple[str, ...] = ("last", "mean", "std", "slope")
 N_FEATURE_STATS = len(FEATURE_STATS)
+
+# The interpretable per-column summary appends two more entries after the FEATURE_STATS
+# block, giving the fixed layout ``[last, mean, std, slope, sync_amplitude, valid_frac]``:
+#   * a *synchronous (lock-in) amplitude* at the known diagnostic-probe frequency, and
+#   * the column's valid fraction.
+# The synchronous amplitude is the interpretable realization of the ~100x detector-referred
+# headroom the S9 co-design found: a lock-in at the probe frequency rejects the thermal
+# ramp / bias / drift that dominate the per-sample floor. (The learned rungs read the raw
+# ``[W, D]`` tensor and can learn their own synchronous features.)
+N_EXTRA_FEATURES = 2  # synchronous amplitude + valid fraction
+SYNC_FEATURE_COL = N_FEATURE_STATS  # index of the synchronous amplitude within a column
+VALID_FRACTION_COL = N_FEATURE_STATS + 1  # index of the valid fraction within a column
+
+# Settled diagnostic-probe frequency (config-freeze table: a mechanics parameter, 0.8 Hz).
+# The frozen config supplies the authoritative value; this default keeps the estimator
+# runnable pre-freeze. The synchronous feature is keyed to this frequency.
+DIAGNOSTIC_PROBE_HZ = 0.8
+# A column's synchronous amplitude is estimated only when it has at least this many valid
+# samples (the shared harmonic regression needs >= 5; we keep a margin) AND those samples
+# span at least one full probe period, so the lock-in resolves a complete cycle rather than
+# a poorly-conditioned arc (S9 Claude/Codex co-design: W >= one probe cycle).
+MIN_SYNC_SAMPLES = 8
 
 _EPS = 1.0e-12
 
@@ -235,22 +258,24 @@ class RecommendedWindow:
 
 
 # Proposed values for the frozen config (see the chat / progress report for the full
-# argument). At f_ctrl = 500 Hz (dt = 2 ms): W = 512 samples ≈ 1.02 s spans most of the
-# 0.8 Hz diagnostic excitation period (1.25 s), a plausible history budget for a
-# differential gauge signature while keeping the per-update tensor bounded; stride =
-# 8 samples runs the diagnosis at 62.5 Hz (the 500 Hz controller
-# zero-order-holds the latest diagnosis between updates). These are config-freeze-time
-# values, not pilot-blocking; a cheap pilot sweep over W ∈ {256, 512, 768} and
-# stride ∈ {4, 8, 16} can confirm them before the freeze.
+# argument). At f_ctrl = 500 Hz (dt = 2 ms): W = 640 samples ≈ 1.28 s spans a *full*
+# 0.8 Hz diagnostic-probe period (1.25 s = 625 samples). Covering a complete cycle is
+# what the synchronous window feature needs to resolve the probe (a sub-cycle window
+# leaves the lock-in poorly conditioned — the S9 Claude/Codex co-design that moved the
+# window from 512 to 640); stride = 8 samples runs the diagnosis at 62.5 Hz (the 500 Hz
+# controller zero-order-holds the latest diagnosis between updates). These are
+# config-freeze-time values, not pilot-blocking; a cheap pilot sweep over
+# W ∈ {512, 640, 768} and stride ∈ {4, 8, 16} confirms them before the freeze.
 RECOMMENDED_WINDOW = RecommendedWindow(
-    W=512,
+    W=640,
     stride=8,
     rationale=(
-        "W=512 (~1.02 s at 500 Hz) covers most of the 1.25 s (0.8 Hz) diagnostic "
-        "excitation period, providing a plausible differential-signature history while "
-        "bounding per-update cost; stride=8 updates "
-        "the diagnosis at 62.5 Hz under a 500 Hz zero-order-hold controller. "
-        "Confirm with a pilot sweep W∈{256,512,768}, stride∈{4,8,16} before freeze."
+        "W=640 (~1.28 s at 500 Hz) covers a full 1.25 s (0.8 Hz) diagnostic-probe "
+        "period, which the synchronous window feature requires to resolve a complete "
+        "cycle (a sub-cycle window such as 512 leaves the lock-in poorly conditioned); "
+        "stride=8 updates the diagnosis at 62.5 Hz under a 500 Hz zero-order-hold "
+        "controller. Still a pilot-sweep proposal, not frozen: confirm with "
+        "W∈{512,640,768}, stride∈{4,8,16} before freeze."
     ),
 )
 
@@ -262,14 +287,31 @@ class WindowFeatureExtractor:
     are identical for C0/C1/S; a channel the suite lacks (all-NaN, masked off)
     contributes zeros and a zero validity indicator rather than changing the width.
     This is what lets the matched suite ablation hold the estimator constant.
+
+    The summary feature vector (`window_features`) carries, per registry column,
+    ``[last, mean, std, slope, sync_amplitude, valid_fraction]``. `sync_amplitude` is a
+    synchronous (lock-in) amplitude at `probe_frequency_hz`, computed with the shared
+    phase-invariant `utils.synchronous` harmonic regression on each channel's own
+    measurement grid — the interpretable rung's realization of the ~100x detector-referred
+    headroom over the per-sample floor. The learned rungs consume the raw `[W, D]` tensor
+    (`window_tensor`) and can learn their own synchronous features, so the tensor is
+    unchanged by this.
     """
 
-    def __init__(self, window_steps: int = RECOMMENDED_WINDOW.W) -> None:
-        """Set the fixed past-only window length and cache the registry layout."""
+    def __init__(
+        self,
+        window_steps: int = RECOMMENDED_WINDOW.W,
+        *,
+        probe_frequency_hz: float = DIAGNOSTIC_PROBE_HZ,
+    ) -> None:
+        """Set the fixed past-only window length and probe frequency; cache the layout."""
 
         if not isinstance(window_steps, (int, np.integer)) or int(window_steps) <= 0:
             raise ValueError("window_steps must be a positive integer")
+        if not np.isfinite(probe_frequency_hz) or probe_frequency_hz <= 0.0:
+            raise ValueError("probe_frequency_hz must be finite and positive")
         self.window_steps = int(window_steps)
+        self.probe_frequency_hz = float(probe_frequency_hz)
         self.registry_width = observed_registry_width()
         # Column offsets so a [T, registry_width] tensor concatenates channels in the
         # fixed CHANNEL_NAMES order.
@@ -281,9 +323,12 @@ class WindowFeatureExtractor:
 
     @property
     def n_features(self) -> int:
-        """Length of the summary feature vector (registry_width × #stats + valid frac)."""
+        """Length of the summary feature vector.
 
-        return self.registry_width * (N_FEATURE_STATS + 1)
+        ``registry_width × (#FEATURE_STATS + synchronous amplitude + valid fraction)``.
+        """
+
+        return self.registry_width * (N_FEATURE_STATS + N_EXTRA_FEATURES)
 
     def window_tensor(self, record: ObservedRecord) -> tuple[np.ndarray, np.ndarray]:
         """Return ``(values[T, D], valid[T, D])`` over the registry for the learned rungs.
@@ -325,15 +370,25 @@ class WindowFeatureExtractor:
         """Return a fixed-width per-column summary feature vector for the window.
 
         For each registry column, over the valid samples in the window: the last valid
-        value, mean, std, and a linear slope (per second), plus the column's valid
-        fraction. Columns with no valid sample contribute zeros and a zero valid
-        fraction — a suite-agnostic, NaN-safe reduction the interpretable rung uses.
+        value, mean, std, a linear slope (per second), a **synchronous (lock-in)
+        amplitude at the probe frequency**, and the column's valid fraction — the fixed
+        per-column layout ``[last, mean, std, slope, sync, valid_fraction]``.
+
+        The synchronous amplitude is the phase-invariant harmonic-regression coefficient
+        magnitude at ``probe_frequency_hz`` (shared ``utils.synchronous``: one joint
+        intercept + linear-trend + cosine + sine fit), on the channel's own measurement
+        grid. It is emitted only when the column's valid samples span at least one full
+        probe period, so a complete cycle is resolved rather than a poorly-conditioned arc
+        (S9 co-design: W >= one probe cycle); otherwise it is 0.0. Columns with no valid
+        sample contribute zeros and a zero valid fraction — a suite-agnostic, NaN-safe
+        reduction the interpretable rung uses.
         """
 
         values, valid = self.window_tensor(record)
         t = record.n_steps
         row_start = self.window_steps - t
-        feats = np.zeros((self.registry_width, N_FEATURE_STATS + 1), dtype=float)
+        feats = np.zeros((self.registry_width, N_FEATURE_STATS + N_EXTRA_FEATURES), dtype=float)
+        probe_period_s = 1.0 / self.probe_frequency_hz
         for name in CHANNEL_NAMES:
             off = self._offsets[name]
             width = CHANNEL_WIDTH[name]
@@ -348,7 +403,7 @@ class WindowFeatureExtractor:
                 col = off + local_col
                 col_valid = valid[:, col]
                 n_valid = int(np.count_nonzero(col_valid))
-                feats[col, N_FEATURE_STATS] = n_valid / self.window_steps
+                feats[col, VALID_FRACTION_COL] = n_valid / self.window_steps
                 if n_valid == 0:
                     continue
                 ct = times[col_valid]
@@ -361,6 +416,17 @@ class WindowFeatureExtractor:
                 if n_valid >= 2 and np.ptp(ct) > _EPS:
                     # least-squares slope on this channel's own measurement grid.
                     feats[col, 3] = float(np.polyfit(ct - ct[0], v, 1)[0])
+                # Synchronous (lock-in) amplitude at the probe frequency — only once the
+                # valid samples span a full probe period (a complete cycle) on a strictly
+                # increasing grid; otherwise the lock-in is ill-posed and it stays 0.0.
+                if (
+                    n_valid >= MIN_SYNC_SAMPLES
+                    and np.ptp(ct) + _EPS >= probe_period_s
+                    and np.all(np.diff(ct) > 0.0)
+                ):
+                    feats[col, SYNC_FEATURE_COL] = harmonic_amplitude(
+                        v, np.ones(v.shape[0], dtype=bool), ct, self.probe_frequency_hz
+                    )
         return feats.reshape(-1)
 
 
