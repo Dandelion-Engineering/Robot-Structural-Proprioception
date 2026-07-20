@@ -56,6 +56,7 @@ def test_short_simulation_is_finite_and_has_schema_facing_shapes() -> None:
     config = SpikeConfig(duration_s=0.02, fault_onset_s=0.01, control_dt_s=0.002)
     result = simulate_case(config, 9, 2.0e-4, "healthy")
     assert result.q_obs_rad.shape == (10, 2)
+    assert result.qd_true_rad_s.shape == (10, 2)
     assert result.qd_obs_rad_s.shape == (10, 2)
     assert result.tau_cmd_nm.shape == (10, 2)
     assert result.imu.shape == (10, 6)

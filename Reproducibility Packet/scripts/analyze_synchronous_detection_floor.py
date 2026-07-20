@@ -25,10 +25,12 @@ genuine detectability limit for the windowed estimator.
 Honesty boundaries:
   * It reports a *detection* floor only. It does **not** claim structure-vs-actuator
     *attribution*; that remains the learned head's job (estimator rung 2).
-  * It imposes an aggressive per-window thermal ramp (default 3 degC over ~1 s). Real
-    thermal drift is far slower, so the reported NES is a conservative upper bound.
-  * The injected signal side uses both a pure-tone and a realistic single-cycle
-    raised-cosine burst so finite-burst spectral spread is not hidden.
+  * It imposes a per-window linear thermal ramp (default 3 degC) as a direct check that
+    the joint trend/harmonic regression rejects modeled linear drift. This is **not** an
+    upper bound on unmodeled nonlinear or probe-band thermal dynamics.
+  * The injected signal side uses pure-tone and single-cycle raised-cosine **surrogates**
+    scaled to the earlier mechanics-summary RMS values. A separate mechanics-coupled
+    screen must use the actual four-gauge traces before an excitation can advance.
   * No frozen config is written; nothing here promotes a development trace.
 """
 
@@ -42,9 +44,9 @@ from typing import Any
 
 import numpy as np
 
-from utils.rng import channel_generator  # noqa: F401  (imported so CRN provenance is explicit)
 from utils.schema_types import N_GAUGES, PlantStepState, observable_step_sources
 from utils.sensor_model import OnlineSensorSession, SensorConfig
+from utils.synchronous import harmonic_amplitude, harmonic_design_condition_number
 from utils.synthetic_plant import synthetic_privileged_record
 
 
@@ -61,10 +63,10 @@ def parse_args() -> argparse.Namespace:
         help="Project-relative output directory.",
     )
     parser.add_argument("--f-ctrl-hz", type=float, default=500.0, help="Control-grid rate.")
-    parser.add_argument("--window", type=int, default=512, help="Past-only window W (samples).")
+    parser.add_argument("--window", type=int, default=640, help="Past-only window W (samples).")
     parser.add_argument("--diagnostic-hz", type=float, default=0.8, help="Probe frequency f_d.")
     parser.add_argument("--thermal-ramp-c", type=float, default=3.0,
-                        help="Thermal excursion imposed across the window (degC); conservative.")
+                        help="Linear thermal excursion imposed across the window (degC).")
     parser.add_argument("--realizations", type=int, default=200,
                         help="Independent CRN sensor-noise realizations.")
     parser.add_argument("--gate-floor-microstrain", type=float, default=10.0,
@@ -114,6 +116,8 @@ def unit_burst(t_s: np.ndarray, f_d: float) -> np.ndarray:
     """
 
     period = 1.0 / f_d
+    if float(t_s[-1] - t_s[0]) + 1.0e-12 < period:
+        raise ValueError("a one-cycle burst requires a window spanning at least one period")
     end = float(t_s[-1])
     start = end - period
     x = np.zeros_like(t_s)
@@ -127,39 +131,22 @@ def unit_burst(t_s: np.ndarray, f_d: float) -> np.ndarray:
 
 def synchronous_amplitude(window: np.ndarray, valid: np.ndarray, t_s: np.ndarray,
                           f_d: float) -> float:
-    """Raw lock-in amplitude of the f_d component of one gauge window.
+    """Phase-invariant harmonic-regression amplitude at ``f_d``.
 
-    Removes mean + linear trend (rejecting DC bias and the thermal ramp), then projects
-    onto cos/sin at f_d with the ``2/N`` normalization. The window here (W=512 at 500 Hz)
-    spans only ~0.82 of a 0.8 Hz cycle, so the single-bin projection has a sub-unity but
-    deterministic gain; `detector_gain` measures it and the caller calibrates it out, so
-    the reported floor and signal are in true-strain units. Dropped samples are excluded
-    from the trend fit and contribute zero residual (baseline dropout ~1%).
+    Intercept, linear trend, cosine, and sine terms are fitted jointly. This avoids the
+    phase-dependent 0.35x--1.16x recovery produced by the earlier sequential detrend plus
+    raw projection when ``W`` covered less than one cycle.
     """
 
-    n = window.shape[0]
-    x = np.asarray(window, dtype=float)
-    m = np.asarray(valid, dtype=bool) & np.isfinite(x)
-    if m.sum() < 4:
-        return 0.0
-    # linear detrend fit on valid samples, evaluated on the full grid
-    design = np.vstack([np.ones(n), t_s]).T
-    coef, *_ = np.linalg.lstsq(design[m], x[m], rcond=None)
-    resid = x - design @ coef
-    resid[~m] = 0.0
-    cos = np.cos(2.0 * np.pi * f_d * t_s)
-    sin = np.sin(2.0 * np.pi * f_d * t_s)
-    inphase = 2.0 / n * np.sum(resid * cos)
-    quad = 2.0 / n * np.sum(resid * sin)
-    return float(np.hypot(inphase, quad))
+    return harmonic_amplitude(window, valid, t_s, f_d)
 
 
 def detector_gain(t_s: np.ndarray, f_d: float) -> float:
-    """Lock-in gain on a clean unit-amplitude tone (recovered / true).
+    """Harmonic-regression gain on a clean unit-amplitude tone.
 
-    < 1 when the window spans a non-integer number of probe cycles; measured so the
-    reported amplitudes and floor calibrate back to true strain units. The z-score and
-    detection rate are gain-invariant (signal and null both scale by the same factor).
+    The joint regression is phase invariant and returns unit gain for any full-rank
+    window; short windows instead reveal their cost through worse conditioning and a
+    higher empirical noise floor.
     """
 
     n = t_s.shape[0]
@@ -227,12 +214,22 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     temp = 25.0 + np.linspace(0.0, args.thermal_ramp_c, w)[:, None] * np.ones(N_GAUGES)
     zero_signal = np.zeros((w, N_GAUGES))
 
-    # Detector-gain calibration: the lock-in gain on a clean tone (< 1 when W spans a
-    # non-integer number of probe cycles). Amplitudes are divided by this so the floor
-    # and signal read in true-strain units; z-scores/detection rates are gain-invariant.
+    if not np.isfinite(f_ctrl) or f_ctrl <= 0.0:
+        raise ValueError("f_ctrl_hz must be finite and positive")
+    if not np.isfinite(f_d) or f_d <= 0.0:
+        raise ValueError("diagnostic_hz must be finite and positive")
+    if not np.isfinite(args.thermal_ramp_c):
+        raise ValueError("thermal_ramp_c must be finite")
+    if args.detect_sigma <= 0.0 or not np.isfinite(args.detect_sigma):
+        raise ValueError("detect_sigma must be finite and positive")
+
+    # Joint trend/harmonic regression is unit-gain for any phase when the design is
+    # full rank. Window adequacy is exposed by the design condition number and the
+    # measured noise floor rather than a phase-specific scalar correction.
     gain = detector_gain(t_s, f_d)
-    if not np.isfinite(gain) or gain <= 0.2:
-        raise RuntimeError(f"lock-in detector gain implausibly low ({gain:.3f}); check W/f_d")
+    condition_number = harmonic_design_condition_number(t_s, f_d)
+    if not np.isfinite(gain) or not np.isclose(gain, 1.0, rtol=1.0e-6, atol=1.0e-9):
+        raise RuntimeError(f"harmonic-regression gain must be one; got {gain:.6f}")
 
     # ---- Noise-only null over the real gauge stack ----
     null_sync, null_broadband, null_broadband_detrended = [], [], []
@@ -251,7 +248,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             coef, *_ = np.linalg.lstsq(design[m], x[m], rcond=None)
             resid = (x - design @ coef)[m]
             null_broadband_detrended.append(float(np.sqrt(np.mean(resid ** 2))))
-    null_sync = np.asarray(null_sync) / gain  # calibrate to true-strain units
+    null_sync = np.asarray(null_sync)
     nes_mean, nes_std = float(null_sync.mean()), float(null_sync.std())
     detect_threshold = nes_mean + args.detect_sigma * nes_std
 
@@ -272,7 +269,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                     sensor_seed=args.seed + r, config=config,
                 )
                 amps.append(synchronous_amplitude(vals[:, 0], valid[:, 0], t_s, f_d))
-            amps = np.asarray(amps) / gain  # calibrate to true-strain units
+            amps = np.asarray(amps)
             entry[shape_name] = {
                 "sync_amplitude_mean_microstrain": float(amps.mean()),
                 "sync_amplitude_std_microstrain": float(amps.std()),
@@ -287,7 +284,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "f_ctrl_hz": f_ctrl, "window_samples": w,
             "window_duration_s": float(w / f_ctrl), "diagnostic_hz": f_d,
             "thermal_ramp_c_per_window": args.thermal_ramp_c,
-            "lock_in_detector_gain": gain,
+            "harmonic_regression_gain": gain,
+            "harmonic_design_condition_number": condition_number,
             "probe_cycles_in_window": float(f_d * w / f_ctrl),
             "realizations": args.realizations, "detect_sigma": args.detect_sigma,
             "gate_floor_microstrain": args.gate_floor_microstrain,
@@ -322,7 +320,8 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
         "characterizes the noise-equivalent strain (NES) of a lock-in detector at the "
         f"{cfg['diagnostic_hz']} Hz probe over a W={cfg['window_samples']} sample "
         f"({cfg['window_duration_s']:.3f} s) window, using the real gauge pathology stack, "
-        "and compares it to the per-sample mechanics-gate floor.",
+        "and compares it to the per-sample mechanics-gate floor. The target waveforms "
+        "below are detector surrogates, not replayed mechanics traces.",
         "",
         "## Noise-only floor (real gauge stack: thermal ramp + bias + drift + white + quant + dropout)",
         "",
@@ -338,10 +337,11 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
         f"**{null['detect_threshold_microstrain']:.3f} microstrain**.",
         f"- Gate floor / synchronous NES ratio: "
         f"**{summary['gate_floor_over_synchronous_nes']:.0f}x** more sensitive.",
-        f"- Lock-in gain at this window: **{cfg['lock_in_detector_gain']:.2f}** "
-        f"({cfg['probe_cycles_in_window']:.2f} probe cycles in the window). W below one "
-        "full probe period gives sub-unity gain; W covering >=1 cycle (>=625 samples at "
-        "0.8 Hz / 500 Hz) restores unit gain and lowers the floor further.",
+        f"- Harmonic-regression gain: **{cfg['harmonic_regression_gain']:.2f}**; design "
+        f"condition number: **{cfg['harmonic_design_condition_number']:.2f}** "
+        f"({cfg['probe_cycles_in_window']:.2f} probe cycles). The joint regression is "
+        "phase invariant; covering at least one cycle improves conditioning and includes "
+        "the complete bounded probe.",
         "",
         "## Detectability of the bounded-burst differential RMS values",
         "",
@@ -368,14 +368,15 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
         "f_d rejects the low-frequency thermal ramp, DC bias, and random-walk drift, so its "
         "noise floor is far below the per-sample gate floor. Under this model the bounded "
         "one-cycle differentials that the per-sample gate marked BLOCK sit many sigma above "
-        "the synchronous floor.",
+        "the synchronous floor in this surrogate calculation. Executable margin is owned "
+        "by the separate screen that analyzes the actual mechanics traces.",
         "",
         "## Honesty boundaries",
         "",
         "- This is a **detection** floor only; structure-vs-actuator **attribution** still "
         "requires the learned head (estimator rung 2) and is not claimed here.",
-        "- The thermal ramp imposed here is aggressive for a ~1 s window; real thermal drift "
-        "is slower, making the reported NES a conservative upper bound.",
+        "- The imposed thermal path is linear and is rejected by construction. It verifies "
+        "trend rejection but does not bound nonlinear or probe-band thermal dynamics.",
         "- Realizing this advantage requires the estimator to include a synchronous feature "
         "keyed to the probe spectrum; that is the proposed next estimator-lane increment.",
         "- This does not by itself clear the diagnostic for pilot: the **safety** screen "

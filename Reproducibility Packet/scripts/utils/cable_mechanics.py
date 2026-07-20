@@ -30,12 +30,18 @@ class CableModelConfig:
     structural_section_start: float = 0.55
     structural_section_end: float = 0.85
     actuator_gain_remaining: float = 0.70
+    task_torque_scale: float = 1.0
     diagnostic_tip_load_peak_n: float = 1.0
     diagnostic_tip_load_frequency_hz: float = 0.8
     diagnostic_tip_load_start_s: float = 0.0
     diagnostic_tip_load_duration_s: float | None = None
     diagnostic_tip_load_ramp_s: float = 0.0
     gauge_stations: tuple[float, float] = (0.25, 0.75)
+    joint_angle_abs_limit_rad: tuple[float, float] = (math.pi, math.pi)
+    joint_speed_abs_limit_rad_s: tuple[float, float] = (10.0, 10.0)
+    tip_workspace_radius_limit_m: float = 0.82
+    gauge_abs_limit_microstrain: float = 500.0
+    tip_contact_force_limit_n: float = 5.0
 
 
 @dataclass(frozen=True)
@@ -273,13 +279,45 @@ def extract_deformation_coordinates(
     return np.concatenate(rotation_vectors)
 
 
-def commanded_torque(time_s: float) -> np.ndarray:
-    """Return the deterministic, bounded two-joint feasibility excitation command."""
+def commanded_torque(time_s: float, scale: float = 1.0) -> np.ndarray:
+    """Return the deterministic, bounded two-joint task-excitation command."""
+
+    if not np.isfinite(scale) or scale < 0.0:
+        raise ValueError("task torque scale must be finite and non-negative")
 
     shoulder = 0.25 * math.sin(2.0 * math.pi * 1.1 * time_s)
     shoulder += 0.10 * math.sin(2.0 * math.pi * 2.3 * time_s)
     elbow = 0.12 * math.sin(2.0 * math.pi * 1.7 * time_s + 0.4)
-    return np.array([shoulder, elbow], dtype=float)
+    return scale * np.array([shoulder, elbow], dtype=float)
+
+
+def validate_safety_config(config: CableModelConfig) -> None:
+    """Fail loudly when development safety-role limits are malformed."""
+
+    angle_limits = np.asarray(config.joint_angle_abs_limit_rad, dtype=float)
+    speed_limits = np.asarray(config.joint_speed_abs_limit_rad_s, dtype=float)
+    if (
+        angle_limits.shape != (2,)
+        or not np.all(np.isfinite(angle_limits))
+        or np.any(angle_limits <= 0.0)
+    ):
+        raise ValueError("joint_angle_abs_limit_rad must contain two finite positive values")
+    if (
+        speed_limits.shape != (2,)
+        or not np.all(np.isfinite(speed_limits))
+        or np.any(speed_limits <= 0.0)
+    ):
+        raise ValueError("joint_speed_abs_limit_rad_s must contain two finite positive values")
+    scalar_limits = {
+        "tip_workspace_radius_limit_m": config.tip_workspace_radius_limit_m,
+        "gauge_abs_limit_microstrain": config.gauge_abs_limit_microstrain,
+        "tip_contact_force_limit_n": config.tip_contact_force_limit_n,
+    }
+    for name, value in scalar_limits.items():
+        if not np.isfinite(value) or value <= 0.0:
+            raise ValueError(f"{name} must be finite and positive")
+    if not np.isfinite(config.task_torque_scale) or config.task_torque_scale < 0.0:
+        raise ValueError("task_torque_scale must be finite and non-negative")
 
 
 def validate_diagnostic_excitation(config: CableModelConfig) -> None:

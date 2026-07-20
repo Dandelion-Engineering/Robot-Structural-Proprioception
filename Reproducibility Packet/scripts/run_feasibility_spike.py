@@ -35,6 +35,7 @@ from utils.cable_mechanics import (
     extract_state,
     object_id,
     tangent_angle,
+    validate_safety_config,
 )
 
 
@@ -60,6 +61,7 @@ class SimulationResult:
     time_s: np.ndarray
     tau_cmd_nm: np.ndarray
     q_true_rad: np.ndarray
+    qd_true_rad_s: np.ndarray
     q_obs_rad: np.ndarray
     qd_obs_rad_s: np.ndarray
     imu: np.ndarray
@@ -110,6 +112,7 @@ def simulate_case(
 
     if scenario not in {"healthy", "structural", "actuator", "encoder"}:
         raise ValueError(f"Unknown scenario: {scenario}")
+    validate_safety_config(config)
     ratio = config.control_dt_s / timestep_s
     output_stride = int(round(ratio))
     if not math.isclose(ratio, output_stride, rel_tol=0.0, abs_tol=1e-9):
@@ -140,7 +143,7 @@ def simulate_case(
             copy_dynamic_state(data, soft_data)
             model, data, handles = soft_model, soft_data, soft_handles
 
-        tau_cmd = commanded_torque(float(data.time))
+        tau_cmd = commanded_torque(float(data.time), scale=config.task_torque_scale)
         delivered = tau_cmd.copy()
         if scenario == "actuator" and step >= onset_step:
             delivered[1] *= config.actuator_gain_remaining
@@ -173,6 +176,9 @@ def simulate_case(
     time = np.asarray(times)
     q_true_array = np.unwrap(np.asarray(q_true_rows), axis=0)
     q_obs_array = np.unwrap(np.asarray(q_obs_rows), axis=0)
+    qd_true = np.zeros_like(q_true_array)
+    qd_true[1:] = np.diff(q_true_array, axis=0) / np.diff(time)[:, None]
+    qd_true[0] = qd_true[1]
     qd_obs = np.zeros_like(q_obs_array)
     qd_obs[1:] = np.diff(q_obs_array, axis=0) / np.diff(time)[:, None]
     qd_obs[0] = qd_obs[1]
@@ -180,6 +186,7 @@ def simulate_case(
         time_s=time,
         tau_cmd_nm=np.asarray(commands),
         q_true_rad=q_true_array,
+        qd_true_rad_s=qd_true,
         q_obs_rad=q_obs_array,
         qd_obs_rad_s=qd_obs,
         imu=np.asarray(imus),

@@ -25,9 +25,18 @@ from utils.cable_mechanics import (
     extract_deformation_coordinates,
     extract_state,
     validate_diagnostic_excitation,
+    validate_safety_config,
     wrap_angle,
 )
-from utils.schema_types import FaultSpec, N_GAUGES, N_JOINTS, PlantStepState, PrivilegedRecord
+from utils.schema_types import (
+    FaultSpec,
+    N_CONTACT_STATE,
+    N_GAUGES,
+    N_JOINTS,
+    N_SAFETY_FLAGS,
+    PlantStepState,
+    PrivilegedRecord,
+)
 
 
 class CablePlant:
@@ -53,6 +62,7 @@ class CablePlant:
 
         self.config = config or CableModelConfig()
         validate_diagnostic_excitation(self.config)
+        validate_safety_config(self.config)
         self.point_count = int(point_count)
         self.simulation_timestep_s = float(simulation_timestep_s)
         self.fault = fault or FaultSpec()
@@ -146,6 +156,53 @@ class CablePlant:
         self.handles = self._soft_handles
         self._softened = True
 
+    def _contact_state(self) -> np.ndarray:
+        """Return the fixed two-field contact role for the no-contact development model.
+
+        The selected MJCF currently disables collision. Optional-contact pilots must
+        replace this zero state with MuJoCo endpoint-contact truth before generation.
+        """
+
+        if self.data.ncon != 0:
+            raise RuntimeError(
+                "contact detected but endpoint-contact extraction is not implemented"
+            )
+        state = np.array([0.0, 0.0], dtype=float)
+        if state.shape != (N_CONTACT_STATE,):
+            raise RuntimeError("contact-state width drifted from the schema amendment")
+        return state
+
+    def _safety_flags(
+        self,
+        q_true: np.ndarray,
+        qd_true: np.ndarray,
+        gauge_true: np.ndarray,
+        tip_xyz: np.ndarray,
+        contact_state: np.ndarray,
+    ) -> np.ndarray:
+        """Evaluate the seven privileged development safety indicators."""
+
+        angle_flags = np.abs(q_true) > np.asarray(self.config.joint_angle_abs_limit_rad)
+        speed_flags = np.abs(qd_true) > np.asarray(self.config.joint_speed_abs_limit_rad_s)
+        tip_radius = float(np.linalg.norm(tip_xyz - np.array([0.0, 0.0, 0.5])))
+        flags = np.concatenate(
+            [
+                angle_flags,
+                speed_flags,
+                np.array(
+                    [
+                        tip_radius > self.config.tip_workspace_radius_limit_m,
+                        np.max(np.abs(gauge_true)) > self.config.gauge_abs_limit_microstrain,
+                        contact_state[0] > self.config.tip_contact_force_limit_n,
+                    ],
+                    dtype=bool,
+                ),
+            ]
+        ).astype(bool, copy=False)
+        if flags.shape != (N_SAFETY_FLAGS,):
+            raise RuntimeError("safety-flag width drifted from the schema amendment")
+        return flags
+
     def advance(
         self,
         tau_cmd: np.ndarray,
@@ -217,6 +274,10 @@ class CablePlant:
         curvature_true = gauge_true / ((self.config.link_thickness_m / 2.0) * 1.0e6)
         true_task_output = np.array([tip_xyz[0], tip_xyz[2] - 0.5])
         tracking_error = reference - true_task_output
+        contact_state = self._contact_state()
+        safety_flag = self._safety_flags(
+            q_true, qd_true, gauge_true, tip_xyz, contact_state
+        )
 
         state = PlantStepState(
             step=self._step_index,
@@ -231,14 +292,14 @@ class CablePlant:
             gauge_true=gauge_true.copy(),
             imu_true=imu_true.copy(),
             temperature_true=temperature.copy(),
-            contact_state=np.empty(0, dtype=float),
+            contact_state=contact_state,
             task_reference=reference.copy(),
             true_task_output=true_task_output,
             tracking_error=tracking_error,
             tracking_error_norm=float(np.linalg.norm(tracking_error)),
             control_effort=control_effort,
             saturation_flag=np.not_equal(command, control_effort),
-            safety_flag=np.empty(0, dtype=bool),
+            safety_flag=safety_flag,
         )
         self._previous_q = q_true.copy()
         self._previous_qd = qd_true.copy()
@@ -249,7 +310,7 @@ class CablePlant:
         self,
         n_steps: int,
         *,
-        command_fn: Callable[[float], np.ndarray] = commanded_torque,
+        command_fn: Callable[[float], np.ndarray] | None = None,
         reference_fn: Callable[[float], np.ndarray] | None = None,
         temperature_fn: Callable[[int, float], float | np.ndarray] | None = None,
     ) -> PrivilegedRecord:
@@ -262,9 +323,16 @@ class CablePlant:
             time_before_step = float(self.data.time)
             reference = reference_fn(time_before_step) if reference_fn else None
             temperature = temperature_fn(index, time_before_step) if temperature_fn else 25.0
+            command = (
+                command_fn(time_before_step)
+                if command_fn is not None
+                else commanded_torque(
+                    time_before_step, scale=self.config.task_torque_scale
+                )
+            )
             states.append(
                 self.advance(
-                    command_fn(time_before_step),
+                    command,
                     task_reference=reference,
                     temperature_c=temperature,
                 )

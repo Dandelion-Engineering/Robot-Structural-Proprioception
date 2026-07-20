@@ -21,17 +21,6 @@ from run_feasibility_spike import SimulationResult, SpikeConfig, rms, simulate_c
 from utils.cable_mechanics import diagnostic_tip_force_z
 
 
-# Development proposal for the still-open schema-B contact/safety widths. These are
-# deliberately conservative screening values, not frozen config: the sensitivity
-# records whether the current excitation already violates them so a failing probe
-# cannot be made "safe" by merely omitting the flags.
-PROPOSED_JOINT_ANGLE_LIMIT_RAD = np.array([np.pi, np.pi])
-PROPOSED_JOINT_SPEED_LIMIT_RAD_S = np.array([10.0, 10.0])
-PROPOSED_GAUGE_ABS_LIMIT_MICROSTRAIN = 500.0
-PROPOSED_TIP_RADIUS_LIMIT_M = 0.82
-PROPOSED_TIP_CONTACT_FORCE_LIMIT_N = 5.0
-
-
 @dataclass(frozen=True)
 class BurstCandidate:
     """One excitation condition and the post-onset interval used to screen it."""
@@ -179,6 +168,24 @@ def signature_screen(
         config.gauge_resolution_microstrain,
         config.thermal_cross_sensitivity_microstrain_per_c,
     )
+    scenario_safety: dict[str, dict[str, float]] = {}
+    for scenario, result in cases.items():
+        scenario_mask = analysis_mask(result, config.fault_onset_s, analysis_duration_s)
+        scenario_safety[scenario] = {
+            "peak_abs_joint_angle_rad": float(np.max(np.abs(result.q_true_rad[scenario_mask]))),
+            "peak_abs_joint_speed_rad_s": float(np.max(np.abs(result.qd_true_rad_s[scenario_mask]))),
+            "peak_abs_gauge_microstrain": float(
+                np.max(np.abs(result.gauge_microstrain[scenario_mask]))
+            ),
+            "peak_tip_radius_m": float(
+                np.max(
+                    np.linalg.norm(
+                        result.tip_position_m[scenario_mask] - np.array([0.0, 0.0, 0.5]),
+                        axis=1,
+                    )
+                )
+            ),
+        }
     metrics = {
         "analysis_samples": int(np.count_nonzero(mask)),
         "credible_floor_microstrain": float(floor),
@@ -196,38 +203,53 @@ def signature_screen(
             np.max(rms(deltas["encoder"]["gauge"]))
         ),
         "encoder_physical_imu_rms": float(np.max(rms(deltas["encoder"]["imu"]))),
-        "healthy_peak_abs_joint_angle_rad": float(np.max(np.abs(healthy.q_true_rad[mask]))),
-        "healthy_peak_abs_joint_speed_rad_s": float(np.max(np.abs(healthy.qd_obs_rad_s[mask]))),
-        "healthy_peak_abs_gauge_microstrain": float(
-            np.max(np.abs(healthy.gauge_microstrain[mask]))
+        "worst_peak_abs_joint_angle_rad": max(
+            item["peak_abs_joint_angle_rad"] for item in scenario_safety.values()
         ),
-        "healthy_peak_tip_radius_m": float(
-            np.max(
-                np.linalg.norm(
-                    healthy.tip_position_m[mask] - np.array([0.0, 0.0, 0.5]), axis=1
-                )
-            )
+        "worst_peak_abs_joint_speed_rad_s": max(
+            item["peak_abs_joint_speed_rad_s"] for item in scenario_safety.values()
         ),
+        "worst_peak_abs_gauge_microstrain": max(
+            item["peak_abs_gauge_microstrain"] for item in scenario_safety.values()
+        ),
+        "worst_peak_tip_radius_m": max(
+            item["peak_tip_radius_m"] for item in scenario_safety.values()
+        ),
+        "scenario_safety": scenario_safety,
     }
     safety_checks = {
         "joint_angle_limit_exceeded": bool(
-            np.any(
-                np.abs(healthy.q_true_rad[mask])
-                > PROPOSED_JOINT_ANGLE_LIMIT_RAD[None, :]
+            any(
+                np.any(
+                    np.abs(
+                        result.q_true_rad[
+                            analysis_mask(result, config.fault_onset_s, analysis_duration_s)
+                        ]
+                    )
+                    > np.asarray(config.joint_angle_abs_limit_rad)[None, :]
+                )
+                for result in cases.values()
             )
         ),
         "joint_speed_limit_exceeded": bool(
-            np.any(
-                np.abs(healthy.qd_obs_rad_s[mask])
-                > PROPOSED_JOINT_SPEED_LIMIT_RAD_S[None, :]
+            any(
+                np.any(
+                    np.abs(
+                        result.qd_true_rad_s[
+                            analysis_mask(result, config.fault_onset_s, analysis_duration_s)
+                        ]
+                    )
+                    > np.asarray(config.joint_speed_abs_limit_rad_s)[None, :]
+                )
+                for result in cases.values()
             )
         ),
         "gauge_abs_limit_exceeded": bool(
-            metrics["healthy_peak_abs_gauge_microstrain"]
-            > PROPOSED_GAUGE_ABS_LIMIT_MICROSTRAIN
+            metrics["worst_peak_abs_gauge_microstrain"]
+            > config.gauge_abs_limit_microstrain
         ),
         "tip_workspace_limit_exceeded": bool(
-            metrics["healthy_peak_tip_radius_m"] > PROPOSED_TIP_RADIUS_LIMIT_M
+            metrics["worst_peak_tip_radius_m"] > config.tip_workspace_radius_limit_m
         ),
     }
     checks = {
@@ -292,10 +314,10 @@ def write_csv(path: Path, results: list[dict[str, Any]]) -> None:
         "structural_max_gauge_rms_microstrain",
         "actuator_max_gauge_rms_microstrain",
         "structural_actuator_max_gauge_rms_microstrain",
-        "healthy_peak_abs_joint_angle_rad",
-        "healthy_peak_abs_joint_speed_rad_s",
-        "healthy_peak_abs_gauge_microstrain",
-        "healthy_peak_tip_radius_m",
+        "worst_peak_abs_joint_angle_rad",
+        "worst_peak_abs_joint_speed_rad_s",
+        "worst_peak_abs_gauge_microstrain",
+        "worst_peak_tip_radius_m",
         "mechanics_pass",
         "safety_screen_pass",
         "pass",
@@ -322,16 +344,16 @@ def write_csv(path: Path, results: list[dict[str, Any]]) -> None:
                     "structural_actuator_max_gauge_rms_microstrain": screen[
                         "structural_actuator_max_gauge_rms_microstrain"
                     ],
-                    "healthy_peak_abs_joint_angle_rad": screen[
-                        "healthy_peak_abs_joint_angle_rad"
+                    "worst_peak_abs_joint_angle_rad": screen[
+                        "worst_peak_abs_joint_angle_rad"
                     ],
-                    "healthy_peak_abs_joint_speed_rad_s": screen[
-                        "healthy_peak_abs_joint_speed_rad_s"
+                    "worst_peak_abs_joint_speed_rad_s": screen[
+                        "worst_peak_abs_joint_speed_rad_s"
                     ],
-                    "healthy_peak_abs_gauge_microstrain": screen[
-                        "healthy_peak_abs_gauge_microstrain"
+                    "worst_peak_abs_gauge_microstrain": screen[
+                        "worst_peak_abs_gauge_microstrain"
                     ],
-                    "healthy_peak_tip_radius_m": screen["healthy_peak_tip_radius_m"],
+                    "worst_peak_tip_radius_m": screen["worst_peak_tip_radius_m"],
                     "mechanics_pass": screen["mechanics_pass"],
                     "safety_screen_pass": screen["safety_screen_pass"],
                     "pass": screen["pass"],
@@ -362,8 +384,8 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
             f"{screen['structural_max_gauge_rms_microstrain']:.2f} microstrain | "
             f"{screen['actuator_max_gauge_rms_microstrain']:.2f} microstrain | "
             f"{screen['structural_actuator_max_gauge_rms_microstrain']:.2f} microstrain | "
-            f"{screen['healthy_peak_abs_joint_angle_rad']:.2f} rad | "
-            f"{screen['healthy_peak_abs_joint_speed_rad_s']:.2f} rad/s | "
+            f"{screen['worst_peak_abs_joint_angle_rad']:.2f} rad | "
+            f"{screen['worst_peak_abs_joint_speed_rad_s']:.2f} rad/s | "
             f"{'PASS' if screen['mechanics_pass'] else 'BLOCK'} | "
             f"{'PASS' if screen['safety_screen_pass'] else 'BLOCK'} | "
             f"{'PASS' if screen['pass'] else 'BLOCK'} |"
@@ -393,10 +415,14 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
             "one tip-workspace flag, one absolute-gauge-strain flag, and one tip-contact-force flag. "
             "Actuator saturation stays in the schema's separate two-wide `saturation_flag`.",
             f"- Provisional screening thresholds: `|q| <= pi rad` per joint; `|qd| <= "
-            f"{PROPOSED_JOINT_SPEED_LIMIT_RAD_S[0]:.0f} rad/s` per joint; tip radius `<= "
-            f"{PROPOSED_TIP_RADIUS_LIMIT_M:.2f} m`; `|gauge_true| <= "
-            f"{PROPOSED_GAUGE_ABS_LIMIT_MICROSTRAIN:.0f} microstrain`; tip contact force `<= "
-            f"{PROPOSED_TIP_CONTACT_FORCE_LIMIT_N:.0f} N`. These are a review proposal, "
+            f"{summary['contact_safety_proposal']['thresholds']['joint_speed_abs_limit_rad_s'][0]:.0f} "
+            f"rad/s` per joint; tip radius `<= "
+            f"{summary['contact_safety_proposal']['thresholds']['tip_radius_limit_m']:.2f} m`; "
+            f"`|gauge_true| <= "
+            f"{summary['contact_safety_proposal']['thresholds']['gauge_abs_limit_microstrain']:.0f} "
+            f"microstrain`; tip contact force `<= "
+            f"{summary['contact_safety_proposal']['thresholds']['tip_contact_force_limit_n']:.0f} N`. "
+            "These are a review proposal, "
             "not hardware claims or frozen values.",
             "",
             "The present sensitivity can evaluate the first six flags but not contact force, "
@@ -487,11 +513,11 @@ def run_sensitivity(
                     "tip_contact_force_exceeded",
                 ],
                 "thresholds": {
-                    "joint_angle_abs_limit_rad": PROPOSED_JOINT_ANGLE_LIMIT_RAD,
-                    "joint_speed_abs_limit_rad_s": PROPOSED_JOINT_SPEED_LIMIT_RAD_S,
-                    "tip_radius_limit_m": PROPOSED_TIP_RADIUS_LIMIT_M,
-                    "gauge_abs_limit_microstrain": PROPOSED_GAUGE_ABS_LIMIT_MICROSTRAIN,
-                    "tip_contact_force_limit_n": PROPOSED_TIP_CONTACT_FORCE_LIMIT_N,
+                    "joint_angle_abs_limit_rad": results[0]["config"]["joint_angle_abs_limit_rad"],
+                    "joint_speed_abs_limit_rad_s": results[0]["config"]["joint_speed_abs_limit_rad_s"],
+                    "tip_radius_limit_m": results[0]["config"]["tip_workspace_radius_limit_m"],
+                    "gauge_abs_limit_microstrain": results[0]["config"]["gauge_abs_limit_microstrain"],
+                    "tip_contact_force_limit_n": results[0]["config"]["tip_contact_force_limit_n"],
                 },
                 "status": "development proposal; same-state review and implementation required",
             },

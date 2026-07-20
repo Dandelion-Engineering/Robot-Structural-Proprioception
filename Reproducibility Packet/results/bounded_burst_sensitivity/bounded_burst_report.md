@@ -7,7 +7,7 @@ This is a mechanics/config sensitivity, not a research-hypothesis result and not
 | Condition | Probe budget | Structural RMS | Actuator RMS | Structure-actuator separation | Peak angle | Peak speed | Mechanics | Safety | Overall |
 |---|---:|---:|---:|---:|---:|---:|---|---|---|
 | ordinary_no_tip_load | 1.250 s | 2.17 microstrain | 5.92 microstrain | 5.93 microstrain | 3.18 rad | 13.79 rad/s | BLOCK | BLOCK | BLOCK |
-| continuous_gate_load | 1.250 s | 10.56 microstrain | 23.36 microstrain | 23.36 microstrain | 9.05 rad | 40.67 rad/s | PASS | BLOCK | BLOCK |
+| continuous_gate_load | 1.250 s | 10.56 microstrain | 23.36 microstrain | 23.36 microstrain | 9.10 rad | 40.67 rad/s | PASS | BLOCK | BLOCK |
 | bounded_1_cycle | 1.250 s | 8.18 microstrain | 7.84 microstrain | 12.33 microstrain | 4.53 rad | 37.74 rad/s | BLOCK | BLOCK | BLOCK |
 | bounded_2_cycle | 2.500 s | 8.67 microstrain | 13.38 microstrain | 17.49 microstrain | 21.06 rad | 37.74 rad/s | BLOCK | BLOCK | BLOCK |
 

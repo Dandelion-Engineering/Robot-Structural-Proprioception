@@ -22,10 +22,10 @@ Produces: `.venv/` (local, ignored).
 
 ## Step 2 — Run the focused tests
 
-Checks model compilation, independent deformation-state availability, localized stiffness-fault construction, and schema-facing output shapes.
+Checks model compilation, independent deformation-state availability, localized stiffness-fault construction, schema-facing output shapes, synchronous-feature correctness, and the safe-probe decision functions.
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest tests\test_feasibility_spike.py -q
+.\.venv\Scripts\python.exe -m pytest tests\test_feasibility_spike.py tests\test_synchronous_detection_floor.py tests\test_safe_probe_screen.py -q
 ```
 
 Produces: terminal test results.
@@ -60,7 +60,48 @@ if ($ordinaryGateExit -ne 2) { throw "Expected BLOCK exit code 2; received $ordi
 
 Produces the same five artifact types under `results/feasibility_spike_ordinary_excitation_blocked/`.
 
-## Step 5 — Run the plant-interface and sensor-model tests
+## Step 5 — Reproduce the original bounded-burst blocker
+
+Replays ordinary, continuous, one-cycle, and two-cycle excitation through the selected mechanics and checks the unchanged per-sample mechanics floor plus the development safety envelope across every scenario. It preserves why the original 1.0 N bounded probes were not acceptable.
+
+```powershell
+.\.venv\Scripts\python.exe scripts\run_bounded_burst_sensitivity.py
+```
+
+Produces:
+
+- `results/bounded_burst_sensitivity/summary.json`
+- `results/bounded_burst_sensitivity/burst_sensitivity.csv`
+- `results/bounded_burst_sensitivity/bounded_burst_report.md`
+
+## Step 6 — Reproduce the synchronous detector floor
+
+Runs the real gauge pathology stack over a 640-sample full-cycle window and measures the phase-invariant 0.8 Hz harmonic-regression floor. The injected target waveforms are detector surrogates; they do not replace the actual-mechanics screen in Step 7.
+
+```powershell
+.\.venv\Scripts\python.exe scripts\analyze_synchronous_detection_floor.py
+```
+
+Produces:
+
+- `results/synchronous_detection_floor/summary.json`
+- `results/synchronous_detection_floor/synchronous_detection_floor_report.md`
+
+## Step 7 — Reproduce the safe-probe co-design screen
+
+Uses the Step-6 development threshold on actual four-gauge MuJoCo fault-minus-healthy histories, checks safety across healthy, structural, actuator, and encoder cases, and identifies the lowest-force row in the focused grid that is eligible for a later pilot sweep. This is a development decision only; it does not freeze configuration or establish fault attribution.
+
+```powershell
+.\.venv\Scripts\python.exe scripts\screen_synchronous_safe_probe.py
+```
+
+Produces:
+
+- `results/synchronous_safe_probe/summary.json`
+- `results/synchronous_safe_probe/candidate_comparison.csv`
+- `results/synchronous_safe_probe/synchronous_safe_probe_report.md`
+
+## Step 8 — Run the plant-interface and sensor-model tests
 
 Checks the lossless `PlantStepState` → privileged-trace interface, real MuJoCo deformation-coordinate extraction, plant/sensor fault boundary, three-torque semantics, privileged/observed leakage boundary, common-random-number substreams, suite masks, sensor-fault relational signature, thermal apparent strain, dropout/derived-velocity validity, latency causality, and deterministic persistence.
 
@@ -70,7 +111,7 @@ Checks the lossless `PlantStepState` → privileged-trace interface, real MuJoCo
 
 Produces: terminal test results.
 
-## Step 6 — Generate a real privileged trace from the selected MuJoCo plant
+## Step 9 — Generate a real privileged trace from the selected MuJoCo plant
 
 Advances the selected 17-point-per-link cable plant at 500 Hz control / 10 kHz simulation, extracts the frozen 90-wide internal ball-joint log-map deformation vector, and persists every schema-B field under the isolated `plant/` role. The command uses the bounded 1.0 N, 0.8 Hz diagnostic condition that cleared the mechanics gate. Its `config_hash` is deliberately prefixed `dev-`: the shared immutable `config.json` has not been frozen, so this output is for development/integration and cannot be mistaken for confirmatory data.
 
@@ -83,9 +124,9 @@ Produces:
 - `results/mujoco_plant/plant/healthy_dev.npz` — role-separated privileged plant payload.
 - `results/mujoco_plant/plant/index.csv` — plant-role index (`run_id, schema_version, config_hash, npz_path, sha256`).
 
-Use `--scenario structure --fault-severity 0.50` or `--scenario actuator --fault-severity 0.70` for a physical-fault development trace. Sensor faults are rejected here and must be injected only in Step 7.
+Use `--scenario structure --fault-severity 0.50` or `--scenario actuator --fault-severity 0.70` for a physical-fault development trace. Sensor faults are rejected here and must be injected only in Step 10.
 
-## Step 7 — Apply the sensor-realism + fault-injection model
+## Step 10 — Apply the sensor-realism + fault-injection model
 
 Maps the real privileged plant trace to one deployable sensor suite's observed record: encoder/IMU/current-proxy/gauge channels with additive noise, thermal apparent strain, bias, drift, hysteresis, quantization, dropout, and latency, plus optional injection of a sensor-class encoder fault into the observation path only. Channels a suite does not carry are written as `NaN` and masked off, so the suites differ only by available information.
 
@@ -100,7 +141,7 @@ Produces:
 
 Use `--suite C0` or `--suite C1` for the leaner conventional suites, and `--fault-class sensor --fault-subtype encoder_bias --fault-location 0 --fault-severity 0.05 --fault-onset 499` to inject a sensor fault at the 1.000 s sample of this 500 Hz post-integration trace.
 
-## Step 8 — Generate the optional analytic plant fixture
+## Step 11 — Generate the optional analytic plant fixture
 
 Writes a schema-conforming privileged plant record built from analytic signals. This is a **development stand-in** used to exercise the sensor model on its own; it is not integrated mechanics and makes no physical claim. The `--thermal-ramp-c` option adds a temperature rise so the gauge channel's thermal apparent-strain pathology is visible.
 
@@ -127,4 +168,4 @@ All are free and commercial-use-permitting. Project-owned code and configuration
 
 ## Current boundary
 
-This packet reproduces the mechanics gate and now connects the selected MuJoCo plant's **real persisted privileged output** to the sensor-realism model. `CablePlant.advance()` is a one-control-step interface suitable for the required online loop, but Step 7 currently consumes a completed development trace in batch; the estimator/controller have not yet been inserted between steps. The shared immutable `config.json` is also not frozen. The packet therefore does **not** yet implement the online closed-loop plant→sensor→estimator→controller experiment, learned attribution, recovery control, confirmatory statistics, or the interactive verification artifact. Those capabilities must not be inferred from what runs here.
+This packet reproduces the mechanics gate, detector-floor correction, and safe-probe co-design screen, and it connects the selected MuJoCo plant's **real persisted privileged output** to the sensor-realism model. The causal one-step plant→sensor→policy loop and estimator front exist and are tested, but the learned attribution heads and recovery controller are not trained or complete. The fixed two-field contact role currently records zero because collision is disabled; optional-contact pilots still require endpoint-contact extraction. The shared immutable `config.json` is not frozen, schema Amendment A1 awaits same-state review, and the selected safe probe advances only to a pilot sweep. The packet therefore does **not** yet implement the confirmatory experiment or the interactive verification artifact; neither a research result nor a frozen configuration may be inferred from these development sensitivities.

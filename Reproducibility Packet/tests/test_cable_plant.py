@@ -14,7 +14,13 @@ sys.path.insert(0, str(SCRIPTS_DIR))
 
 from utils.cable_mechanics import CableModelConfig  # noqa: E402
 from utils.cable_plant import CablePlant  # noqa: E402
-from utils.schema_types import FaultSpec, PlantStepState, PrivilegedRecord  # noqa: E402
+from utils.schema_types import (  # noqa: E402
+    CONTACT_STATE_FIELDS,
+    SAFETY_FLAG_FIELDS,
+    FaultSpec,
+    PlantStepState,
+    PrivilegedRecord,
+)
 
 
 def small_config(**kwargs: float) -> CableModelConfig:
@@ -29,6 +35,9 @@ def test_plant_step_is_lossless_schema_b_state() -> None:
     plant = CablePlant(small_config(), point_count=9, simulation_timestep_s=2.0e-4)
     record = plant.rollout(3)
     assert record.deform_coords.shape == (3, 42)
+    assert record.contact_state.shape == (3, len(CONTACT_STATE_FIELDS))
+    assert record.safety_flag.shape == (3, len(SAFETY_FLAG_FIELDS))
+    assert np.all(record.contact_state == 0.0)
     restored = record.slice_step(1)
     for field in dataclasses.fields(PlantStepState):
         expected = getattr(restored, field.name)
@@ -108,3 +117,27 @@ def test_sensor_fault_is_rejected_by_plant_boundary() -> None:
     )
     with pytest.raises(ValueError, match="sensor faults"):
         CablePlant(small_config(), point_count=9, simulation_timestep_s=2.0e-4, fault=fault)
+
+
+def test_safety_role_uses_fixed_order_and_flags_gauge_overrange() -> None:
+    """The implemented seven-wide role must evaluate, not merely allocate, flags."""
+
+    plant = CablePlant(
+        small_config(gauge_abs_limit_microstrain=1.0e-9),
+        point_count=9,
+        simulation_timestep_s=2.0e-4,
+    )
+    state = plant.advance(np.zeros(2))
+    assert state.safety_flag.shape == (len(SAFETY_FLAG_FIELDS),)
+    assert bool(state.safety_flag[SAFETY_FLAG_FIELDS.index("gauge_abs_exceeded")])
+    assert not bool(state.contact_state[CONTACT_STATE_FIELDS.index("tip_contact_active")])
+
+
+def test_default_rollout_honors_task_torque_scale() -> None:
+    plant = CablePlant(
+        small_config(task_torque_scale=0.0, diagnostic_tip_load_peak_n=0.0),
+        point_count=9,
+        simulation_timestep_s=2.0e-4,
+    )
+    record = plant.rollout(3)
+    np.testing.assert_array_equal(record.tau_cmd, np.zeros((3, 2)))

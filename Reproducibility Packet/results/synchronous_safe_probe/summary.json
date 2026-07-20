@@ -1,0 +1,885 @@
+{
+  "purpose": "development mechanics/detector co-design; not confirmatory",
+  "point_count": 17,
+  "simulation_timestep_s": 0.0001,
+  "detector_summary_path": "results\\synchronous_detection_floor\\summary.json",
+  "detector_contract": {
+    "frequency_hz": 0.8,
+    "f_ctrl_hz": 500.0,
+    "window_samples": 640,
+    "detect_threshold_microstrain": 0.4052568000762401,
+    "realizations": 200
+  },
+  "minimum_required_margin": 2.0,
+  "results": [
+    {
+      "name": "task_0.400_probe_0.050N",
+      "config": {
+        "link_length_m": 0.4,
+        "link_width_m": 0.02,
+        "link_thickness_m": 0.004,
+        "density_kg_m3": 2700.0,
+        "young_pa": 69000000000.0,
+        "poisson": 0.33,
+        "control_dt_s": 0.002,
+        "structural_ei_remaining": 0.5,
+        "structural_section_start": 0.55,
+        "structural_section_end": 0.85,
+        "actuator_gain_remaining": 0.7,
+        "task_torque_scale": 0.4,
+        "diagnostic_tip_load_peak_n": 0.05,
+        "diagnostic_tip_load_frequency_hz": 0.8,
+        "diagnostic_tip_load_start_s": 1.0,
+        "diagnostic_tip_load_duration_s": 1.25,
+        "diagnostic_tip_load_ramp_s": 0.15625,
+        "gauge_stations": [
+          0.25,
+          0.75
+        ],
+        "joint_angle_abs_limit_rad": [
+          3.141592653589793,
+          3.141592653589793
+        ],
+        "joint_speed_abs_limit_rad_s": [
+          10.0,
+          10.0
+        ],
+        "tip_workspace_radius_limit_m": 0.82,
+        "gauge_abs_limit_microstrain": 500.0,
+        "tip_contact_force_limit_n": 5.0,
+        "duration_s": 2.5,
+        "fault_onset_s": 1.0,
+        "encoder_bias_rad": 0.05,
+        "gauge_resolution_microstrain": 1.0,
+        "thermal_cross_sensitivity_microstrain_per_c": 10.0,
+        "beam_tip_force_n": 0.2,
+        "beam_validation_duration_s": 4.0,
+        "max_refinement_relative_error": 0.25,
+        "max_beam_strain_relative_error": 0.1,
+        "max_beam_tip_relative_error": 0.15
+      },
+      "load_budget": {
+        "peak_abs_force_n": 0.05,
+        "signed_impulse_n_s": -3.469446951953614e-18,
+        "absolute_impulse_n_s": 0.03800733297504348,
+        "force_rms_n": 0.02463527847758412
+      },
+      "screen": {
+        "analysis_samples": 626,
+        "credible_floor_microstrain": 10.0,
+        "structural_max_gauge_rms_microstrain": 1.0265308804157314,
+        "actuator_max_gauge_rms_microstrain": 2.2247144168092783,
+        "structural_actuator_max_gauge_rms_microstrain": 2.2233675838718603,
+        "encoder_q_rms_rad": 0.04996004793608947,
+        "encoder_physical_gauge_rms_microstrain": 0.0,
+        "encoder_physical_imu_rms": 0.0,
+        "worst_peak_abs_joint_angle_rad": 1.7665516389964682,
+        "worst_peak_abs_joint_speed_rad_s": 3.893091357448182,
+        "worst_peak_abs_gauge_microstrain": 31.4482693538487,
+        "worst_peak_tip_radius_m": 0.7523958654113433,
+        "scenario_safety": {
+          "healthy": {
+            "peak_abs_joint_angle_rad": 1.7665516389964682,
+            "peak_abs_joint_speed_rad_s": 3.888141735410839,
+            "peak_abs_gauge_microstrain": 31.4482693538487,
+            "peak_tip_radius_m": 0.7523958654113433
+          },
+          "structural": {
+            "peak_abs_joint_angle_rad": 1.766542464980023,
+            "peak_abs_joint_speed_rad_s": 3.893091357448182,
+            "peak_abs_gauge_microstrain": 31.447925866405765,
+            "peak_tip_radius_m": 0.7523958654113433
+          },
+          "actuator": {
+            "peak_abs_joint_angle_rad": 1.6851559592638812,
+            "peak_abs_joint_speed_rad_s": 3.4738679676097837,
+            "peak_abs_gauge_microstrain": 30.337666838438082,
+            "peak_tip_radius_m": 0.7523958654113433
+          },
+          "encoder": {
+            "peak_abs_joint_angle_rad": 1.7665516389964682,
+            "peak_abs_joint_speed_rad_s": 3.888141735410839,
+            "peak_abs_gauge_microstrain": 31.4482693538487,
+            "peak_tip_radius_m": 0.7523958654113433
+          }
+        },
+        "checks": {
+          "structural_signal": false,
+          "actuator_signal": false,
+          "structural_actuator_separation": false,
+          "encoder_relational": true,
+          "encoder_physical_unchanged": true
+        },
+        "mechanics_pass": false,
+        "safety_checks": {
+          "joint_angle_limit_exceeded": false,
+          "joint_speed_limit_exceeded": false,
+          "gauge_abs_limit_exceeded": false,
+          "tip_workspace_limit_exceeded": false
+        },
+        "safety_screen_pass": true,
+        "pass": false
+      },
+      "harmonic_signatures": {
+        "structural_minus_healthy": {
+          "per_gauge_amplitude_microstrain": [
+            4.738464836903698e-06,
+            4.490496596869377e-06,
+            0.00015747124892593286,
+            0.9400714726088386
+          ],
+          "max_amplitude_microstrain": 0.9400714726088386,
+          "max_gauge_index": 3
+        },
+        "actuator_minus_healthy": {
+          "per_gauge_amplitude_microstrain": [
+            0.19957488040232382,
+            0.6860267240225068,
+            0.5500245427425068,
+            0.052044290094304384
+          ],
+          "max_amplitude_microstrain": 0.6860267240225068,
+          "max_gauge_index": 1
+        },
+        "structural_minus_actuator": {
+          "per_gauge_amplitude_microstrain": [
+            0.19957635594341888,
+            0.6860308793773868,
+            0.5501368643446873,
+            0.9847955373967286
+          ],
+          "max_amplitude_microstrain": 0.9847955373967286,
+          "max_gauge_index": 3
+        }
+      },
+      "minimum_detector_margin": 1.6928197722862295,
+      "detector_screen_pass": false,
+      "advance_to_pilot_sweep": false
+    },
+    {
+      "name": "task_0.400_probe_0.100N",
+      "config": {
+        "link_length_m": 0.4,
+        "link_width_m": 0.02,
+        "link_thickness_m": 0.004,
+        "density_kg_m3": 2700.0,
+        "young_pa": 69000000000.0,
+        "poisson": 0.33,
+        "control_dt_s": 0.002,
+        "structural_ei_remaining": 0.5,
+        "structural_section_start": 0.55,
+        "structural_section_end": 0.85,
+        "actuator_gain_remaining": 0.7,
+        "task_torque_scale": 0.4,
+        "diagnostic_tip_load_peak_n": 0.1,
+        "diagnostic_tip_load_frequency_hz": 0.8,
+        "diagnostic_tip_load_start_s": 1.0,
+        "diagnostic_tip_load_duration_s": 1.25,
+        "diagnostic_tip_load_ramp_s": 0.15625,
+        "gauge_stations": [
+          0.25,
+          0.75
+        ],
+        "joint_angle_abs_limit_rad": [
+          3.141592653589793,
+          3.141592653589793
+        ],
+        "joint_speed_abs_limit_rad_s": [
+          10.0,
+          10.0
+        ],
+        "tip_workspace_radius_limit_m": 0.82,
+        "gauge_abs_limit_microstrain": 500.0,
+        "tip_contact_force_limit_n": 5.0,
+        "duration_s": 2.5,
+        "fault_onset_s": 1.0,
+        "encoder_bias_rad": 0.05,
+        "gauge_resolution_microstrain": 1.0,
+        "thermal_cross_sensitivity_microstrain_per_c": 10.0,
+        "beam_tip_force_n": 0.2,
+        "beam_validation_duration_s": 4.0,
+        "max_refinement_relative_error": 0.25,
+        "max_beam_strain_relative_error": 0.1,
+        "max_beam_tip_relative_error": 0.15
+      },
+      "load_budget": {
+        "peak_abs_force_n": 0.1,
+        "signed_impulse_n_s": -6.938893903907228e-18,
+        "absolute_impulse_n_s": 0.07601466595008696,
+        "force_rms_n": 0.04927055695516824
+      },
+      "screen": {
+        "analysis_samples": 626,
+        "credible_floor_microstrain": 10.0,
+        "structural_max_gauge_rms_microstrain": 1.3422362729163921,
+        "actuator_max_gauge_rms_microstrain": 2.628447398580397,
+        "structural_actuator_max_gauge_rms_microstrain": 2.6272191101619695,
+        "encoder_q_rms_rad": 0.04996004793608947,
+        "encoder_physical_gauge_rms_microstrain": 0.0,
+        "encoder_physical_imu_rms": 0.0,
+        "worst_peak_abs_joint_angle_rad": 1.5439651245622144,
+        "worst_peak_abs_joint_speed_rad_s": 5.286812263360391,
+        "worst_peak_abs_gauge_microstrain": 30.611871798065238,
+        "worst_peak_tip_radius_m": 0.8000014222790097,
+        "scenario_safety": {
+          "healthy": {
+            "peak_abs_joint_angle_rad": 1.5439651245622144,
+            "peak_abs_joint_speed_rad_s": 5.238772707495976,
+            "peak_abs_gauge_microstrain": 30.611871798065238,
+            "peak_tip_radius_m": 0.7999994690011173
+          },
+          "structural": {
+            "peak_abs_joint_angle_rad": 1.5439595289178518,
+            "peak_abs_joint_speed_rad_s": 5.238368413542771,
+            "peak_abs_gauge_microstrain": 30.611044033967968,
+            "peak_tip_radius_m": 0.7999994449529713
+          },
+          "actuator": {
+            "peak_abs_joint_angle_rad": 1.4647664187339766,
+            "peak_abs_joint_speed_rad_s": 5.286812263360391,
+            "peak_abs_gauge_microstrain": 29.17416743361656,
+            "peak_tip_radius_m": 0.8000014222790097
+          },
+          "encoder": {
+            "peak_abs_joint_angle_rad": 1.5439651245622144,
+            "peak_abs_joint_speed_rad_s": 5.238772707495976,
+            "peak_abs_gauge_microstrain": 30.611871798065238,
+            "peak_tip_radius_m": 0.7999994690011173
+          }
+        },
+        "checks": {
+          "structural_signal": false,
+          "actuator_signal": false,
+          "structural_actuator_separation": false,
+          "encoder_relational": true,
+          "encoder_physical_unchanged": true
+        },
+        "mechanics_pass": false,
+        "safety_checks": {
+          "joint_angle_limit_exceeded": false,
+          "joint_speed_limit_exceeded": false,
+          "gauge_abs_limit_exceeded": false,
+          "tip_workspace_limit_exceeded": false
+        },
+        "safety_screen_pass": true,
+        "pass": false
+      },
+      "harmonic_signatures": {
+        "structural_minus_healthy": {
+          "per_gauge_amplitude_microstrain": [
+            0.00017156950332296748,
+            0.00014855950320830037,
+            0.00020248727469557995,
+            1.719332828814331
+          ],
+          "max_amplitude_microstrain": 1.719332828814331,
+          "max_gauge_index": 3
+        },
+        "actuator_minus_healthy": {
+          "per_gauge_amplitude_microstrain": [
+            0.9301288823099121,
+            1.3748913978132282,
+            1.106730125384503,
+            0.3398668580965082
+          ],
+          "max_amplitude_microstrain": 1.3748913978132282,
+          "max_gauge_index": 1
+        },
+        "structural_minus_actuator": {
+          "per_gauge_amplitude_microstrain": [
+            0.9299595627328925,
+            1.3747441664665807,
+            1.1069152515640759,
+            2.0587502065654038
+          ],
+          "max_amplitude_microstrain": 2.0587502065654038,
+          "max_gauge_index": 3
+        }
+      },
+      "minimum_detector_margin": 3.392642387628222,
+      "detector_screen_pass": true,
+      "advance_to_pilot_sweep": true
+    },
+    {
+      "name": "task_0.400_probe_0.150N",
+      "config": {
+        "link_length_m": 0.4,
+        "link_width_m": 0.02,
+        "link_thickness_m": 0.004,
+        "density_kg_m3": 2700.0,
+        "young_pa": 69000000000.0,
+        "poisson": 0.33,
+        "control_dt_s": 0.002,
+        "structural_ei_remaining": 0.5,
+        "structural_section_start": 0.55,
+        "structural_section_end": 0.85,
+        "actuator_gain_remaining": 0.7,
+        "task_torque_scale": 0.4,
+        "diagnostic_tip_load_peak_n": 0.15,
+        "diagnostic_tip_load_frequency_hz": 0.8,
+        "diagnostic_tip_load_start_s": 1.0,
+        "diagnostic_tip_load_duration_s": 1.25,
+        "diagnostic_tip_load_ramp_s": 0.15625,
+        "gauge_stations": [
+          0.25,
+          0.75
+        ],
+        "joint_angle_abs_limit_rad": [
+          3.141592653589793,
+          3.141592653589793
+        ],
+        "joint_speed_abs_limit_rad_s": [
+          10.0,
+          10.0
+        ],
+        "tip_workspace_radius_limit_m": 0.82,
+        "gauge_abs_limit_microstrain": 500.0,
+        "tip_contact_force_limit_n": 5.0,
+        "duration_s": 2.5,
+        "fault_onset_s": 1.0,
+        "encoder_bias_rad": 0.05,
+        "gauge_resolution_microstrain": 1.0,
+        "thermal_cross_sensitivity_microstrain_per_c": 10.0,
+        "beam_tip_force_n": 0.2,
+        "beam_validation_duration_s": 4.0,
+        "max_refinement_relative_error": 0.25,
+        "max_beam_strain_relative_error": 0.1,
+        "max_beam_tip_relative_error": 0.15
+      },
+      "load_budget": {
+        "peak_abs_force_n": 0.15,
+        "signed_impulse_n_s": -1.3877787807814457e-17,
+        "absolute_impulse_n_s": 0.11402199892513044,
+        "force_rms_n": 0.07390583543275236
+      },
+      "screen": {
+        "analysis_samples": 626,
+        "credible_floor_microstrain": 10.0,
+        "structural_max_gauge_rms_microstrain": 1.3149590231134582,
+        "actuator_max_gauge_rms_microstrain": 3.2871153642389457,
+        "structural_actuator_max_gauge_rms_microstrain": 3.2860901182650477,
+        "encoder_q_rms_rad": 0.049960047936089456,
+        "encoder_physical_gauge_rms_microstrain": 0.0,
+        "encoder_physical_imu_rms": 0.0,
+        "worst_peak_abs_joint_angle_rad": 4.103975958384291,
+        "worst_peak_abs_joint_speed_rad_s": 8.417572036015159,
+        "worst_peak_abs_gauge_microstrain": 27.531124196720214,
+        "worst_peak_tip_radius_m": 0.8000077992193321,
+        "scenario_safety": {
+          "healthy": {
+            "peak_abs_joint_angle_rad": 3.7924468926433907,
+            "peak_abs_joint_speed_rad_s": 7.257461738018911,
+            "peak_abs_gauge_microstrain": 27.531124196720214,
+            "peak_tip_radius_m": 0.8000053131310176
+          },
+          "structural": {
+            "peak_abs_joint_angle_rad": 3.792456685082852,
+            "peak_abs_joint_speed_rad_s": 7.257707342560726,
+            "peak_abs_gauge_microstrain": 27.528034829078507,
+            "peak_tip_radius_m": 0.8000052943434929
+          },
+          "actuator": {
+            "peak_abs_joint_angle_rad": 4.103975958384291,
+            "peak_abs_joint_speed_rad_s": 8.417572036015159,
+            "peak_abs_gauge_microstrain": 25.39507563527721,
+            "peak_tip_radius_m": 0.8000077992193321
+          },
+          "encoder": {
+            "peak_abs_joint_angle_rad": 3.7924468926433907,
+            "peak_abs_joint_speed_rad_s": 7.257461738018911,
+            "peak_abs_gauge_microstrain": 27.531124196720214,
+            "peak_tip_radius_m": 0.8000053131310176
+          }
+        },
+        "checks": {
+          "structural_signal": false,
+          "actuator_signal": false,
+          "structural_actuator_separation": false,
+          "encoder_relational": true,
+          "encoder_physical_unchanged": true
+        },
+        "mechanics_pass": false,
+        "safety_checks": {
+          "joint_angle_limit_exceeded": true,
+          "joint_speed_limit_exceeded": false,
+          "gauge_abs_limit_exceeded": false,
+          "tip_workspace_limit_exceeded": false
+        },
+        "safety_screen_pass": false,
+        "pass": false
+      },
+      "harmonic_signatures": {
+        "structural_minus_healthy": {
+          "per_gauge_amplitude_microstrain": [
+            0.00024320028084913825,
+            0.0001630492152322779,
+            0.00014806530265002962,
+            0.7002374295204318
+          ],
+          "max_amplitude_microstrain": 0.7002374295204318,
+          "max_gauge_index": 3
+        },
+        "actuator_minus_healthy": {
+          "per_gauge_amplitude_microstrain": [
+            2.421134711775545,
+            2.2027321083526914,
+            0.45616700259716686,
+            0.16619910143735914
+          ],
+          "max_amplitude_microstrain": 2.421134711775545,
+          "max_gauge_index": 0
+        },
+        "structural_minus_actuator": {
+          "per_gauge_amplitude_microstrain": [
+            2.4208949309712233,
+            2.202570109887335,
+            0.4561594967566491,
+            0.8619339693699711
+          ],
+          "max_amplitude_microstrain": 2.4208949309712233,
+          "max_gauge_index": 0
+        }
+      },
+      "minimum_detector_margin": 1.7278856996075023,
+      "detector_screen_pass": false,
+      "advance_to_pilot_sweep": false
+    },
+    {
+      "name": "task_0.500_probe_0.050N",
+      "config": {
+        "link_length_m": 0.4,
+        "link_width_m": 0.02,
+        "link_thickness_m": 0.004,
+        "density_kg_m3": 2700.0,
+        "young_pa": 69000000000.0,
+        "poisson": 0.33,
+        "control_dt_s": 0.002,
+        "structural_ei_remaining": 0.5,
+        "structural_section_start": 0.55,
+        "structural_section_end": 0.85,
+        "actuator_gain_remaining": 0.7,
+        "task_torque_scale": 0.5,
+        "diagnostic_tip_load_peak_n": 0.05,
+        "diagnostic_tip_load_frequency_hz": 0.8,
+        "diagnostic_tip_load_start_s": 1.0,
+        "diagnostic_tip_load_duration_s": 1.25,
+        "diagnostic_tip_load_ramp_s": 0.15625,
+        "gauge_stations": [
+          0.25,
+          0.75
+        ],
+        "joint_angle_abs_limit_rad": [
+          3.141592653589793,
+          3.141592653589793
+        ],
+        "joint_speed_abs_limit_rad_s": [
+          10.0,
+          10.0
+        ],
+        "tip_workspace_radius_limit_m": 0.82,
+        "gauge_abs_limit_microstrain": 500.0,
+        "tip_contact_force_limit_n": 5.0,
+        "duration_s": 2.5,
+        "fault_onset_s": 1.0,
+        "encoder_bias_rad": 0.05,
+        "gauge_resolution_microstrain": 1.0,
+        "thermal_cross_sensitivity_microstrain_per_c": 10.0,
+        "beam_tip_force_n": 0.2,
+        "beam_validation_duration_s": 4.0,
+        "max_refinement_relative_error": 0.25,
+        "max_beam_strain_relative_error": 0.1,
+        "max_beam_tip_relative_error": 0.15
+      },
+      "load_budget": {
+        "peak_abs_force_n": 0.05,
+        "signed_impulse_n_s": -3.469446951953614e-18,
+        "absolute_impulse_n_s": 0.03800733297504348,
+        "force_rms_n": 0.02463527847758412
+      },
+      "screen": {
+        "analysis_samples": 626,
+        "credible_floor_microstrain": 10.0,
+        "structural_max_gauge_rms_microstrain": 1.2161876025491847,
+        "actuator_max_gauge_rms_microstrain": 2.749059600653834,
+        "structural_actuator_max_gauge_rms_microstrain": 2.7479541760457873,
+        "encoder_q_rms_rad": 0.04996004793608947,
+        "encoder_physical_gauge_rms_microstrain": 0.0,
+        "encoder_physical_imu_rms": 0.0,
+        "worst_peak_abs_joint_angle_rad": 1.895079703264188,
+        "worst_peak_abs_joint_speed_rad_s": 3.90906679082835,
+        "worst_peak_abs_gauge_microstrain": 38.832423336003785,
+        "worst_peak_tip_radius_m": 0.7122555922324365,
+        "scenario_safety": {
+          "healthy": {
+            "peak_abs_joint_angle_rad": 1.895079703264188,
+            "peak_abs_joint_speed_rad_s": 3.9027933054110866,
+            "peak_abs_gauge_microstrain": 38.832423336003785,
+            "peak_tip_radius_m": 0.7122555922324365
+          },
+          "structural": {
+            "peak_abs_joint_angle_rad": 1.895066265115768,
+            "peak_abs_joint_speed_rad_s": 3.90906679082835,
+            "peak_abs_gauge_microstrain": 38.83163829712544,
+            "peak_tip_radius_m": 0.7122555922324365
+          },
+          "actuator": {
+            "peak_abs_joint_angle_rad": 1.8366956838644493,
+            "peak_abs_joint_speed_rad_s": 3.4896681441216004,
+            "peak_abs_gauge_microstrain": 37.51991431922619,
+            "peak_tip_radius_m": 0.7122555922324365
+          },
+          "encoder": {
+            "peak_abs_joint_angle_rad": 1.895079703264188,
+            "peak_abs_joint_speed_rad_s": 3.9027933054110866,
+            "peak_abs_gauge_microstrain": 38.832423336003785,
+            "peak_tip_radius_m": 0.7122555922324365
+          }
+        },
+        "checks": {
+          "structural_signal": false,
+          "actuator_signal": false,
+          "structural_actuator_separation": false,
+          "encoder_relational": true,
+          "encoder_physical_unchanged": true
+        },
+        "mechanics_pass": false,
+        "safety_checks": {
+          "joint_angle_limit_exceeded": false,
+          "joint_speed_limit_exceeded": false,
+          "gauge_abs_limit_exceeded": false,
+          "tip_workspace_limit_exceeded": false
+        },
+        "safety_screen_pass": true,
+        "pass": false
+      },
+      "harmonic_signatures": {
+        "structural_minus_healthy": {
+          "per_gauge_amplitude_microstrain": [
+            1.1055155938895834e-05,
+            3.9532310325373344e-06,
+            0.00018368478045240386,
+            1.0147194018093009
+          ],
+          "max_amplitude_microstrain": 1.0147194018093009,
+          "max_gauge_index": 3
+        },
+        "actuator_minus_healthy": {
+          "per_gauge_amplitude_microstrain": [
+            0.31392339273037323,
+            0.8977123597955935,
+            0.7161139100319711,
+            0.08208335886910302
+          ],
+          "max_amplitude_microstrain": 0.8977123597955935,
+          "max_gauge_index": 1
+        },
+        "structural_minus_actuator": {
+          "per_gauge_amplitude_microstrain": [
+            0.3139138135517781,
+            0.8977112373422413,
+            0.7162347632050385,
+            1.0901666558237153
+          ],
+          "max_amplitude_microstrain": 1.0901666558237153,
+          "max_gauge_index": 3
+        }
+      },
+      "minimum_detector_margin": 2.2151691461480936,
+      "detector_screen_pass": true,
+      "advance_to_pilot_sweep": true
+    },
+    {
+      "name": "task_0.500_probe_0.100N",
+      "config": {
+        "link_length_m": 0.4,
+        "link_width_m": 0.02,
+        "link_thickness_m": 0.004,
+        "density_kg_m3": 2700.0,
+        "young_pa": 69000000000.0,
+        "poisson": 0.33,
+        "control_dt_s": 0.002,
+        "structural_ei_remaining": 0.5,
+        "structural_section_start": 0.55,
+        "structural_section_end": 0.85,
+        "actuator_gain_remaining": 0.7,
+        "task_torque_scale": 0.5,
+        "diagnostic_tip_load_peak_n": 0.1,
+        "diagnostic_tip_load_frequency_hz": 0.8,
+        "diagnostic_tip_load_start_s": 1.0,
+        "diagnostic_tip_load_duration_s": 1.25,
+        "diagnostic_tip_load_ramp_s": 0.15625,
+        "gauge_stations": [
+          0.25,
+          0.75
+        ],
+        "joint_angle_abs_limit_rad": [
+          3.141592653589793,
+          3.141592653589793
+        ],
+        "joint_speed_abs_limit_rad_s": [
+          10.0,
+          10.0
+        ],
+        "tip_workspace_radius_limit_m": 0.82,
+        "gauge_abs_limit_microstrain": 500.0,
+        "tip_contact_force_limit_n": 5.0,
+        "duration_s": 2.5,
+        "fault_onset_s": 1.0,
+        "encoder_bias_rad": 0.05,
+        "gauge_resolution_microstrain": 1.0,
+        "thermal_cross_sensitivity_microstrain_per_c": 10.0,
+        "beam_tip_force_n": 0.2,
+        "beam_validation_duration_s": 4.0,
+        "max_refinement_relative_error": 0.25,
+        "max_beam_strain_relative_error": 0.1,
+        "max_beam_tip_relative_error": 0.15
+      },
+      "load_budget": {
+        "peak_abs_force_n": 0.1,
+        "signed_impulse_n_s": -6.938893903907228e-18,
+        "absolute_impulse_n_s": 0.07601466595008696,
+        "force_rms_n": 0.04927055695516824
+      },
+      "screen": {
+        "analysis_samples": 626,
+        "credible_floor_microstrain": 10.0,
+        "structural_max_gauge_rms_microstrain": 1.4529023864384667,
+        "actuator_max_gauge_rms_microstrain": 3.0237890293307594,
+        "structural_actuator_max_gauge_rms_microstrain": 3.0227302993490373,
+        "encoder_q_rms_rad": 0.04996004793608947,
+        "encoder_physical_gauge_rms_microstrain": 0.0,
+        "encoder_physical_imu_rms": 0.0,
+        "worst_peak_abs_joint_angle_rad": 1.799046218401191,
+        "worst_peak_abs_joint_speed_rad_s": 7.037000867214814,
+        "worst_peak_abs_gauge_microstrain": 37.914712487605584,
+        "worst_peak_tip_radius_m": 0.8000039559831279,
+        "scenario_safety": {
+          "healthy": {
+            "peak_abs_joint_angle_rad": 1.799046218401191,
+            "peak_abs_joint_speed_rad_s": 7.037000867214814,
+            "peak_abs_gauge_microstrain": 37.91423005583994,
+            "peak_tip_radius_m": 0.8000039559831279
+          },
+          "structural": {
+            "peak_abs_joint_angle_rad": 1.7990375693993395,
+            "peak_abs_joint_speed_rad_s": 7.036330978614667,
+            "peak_abs_gauge_microstrain": 37.914712487605584,
+            "peak_tip_radius_m": 0.8000039465269025
+          },
+          "actuator": {
+            "peak_abs_joint_angle_rad": 1.7201083972113174,
+            "peak_abs_joint_speed_rad_s": 6.574952731095265,
+            "peak_abs_gauge_microstrain": 36.31630915386098,
+            "peak_tip_radius_m": 0.8000008475252005
+          },
+          "encoder": {
+            "peak_abs_joint_angle_rad": 1.799046218401191,
+            "peak_abs_joint_speed_rad_s": 7.037000867214814,
+            "peak_abs_gauge_microstrain": 37.91423005583994,
+            "peak_tip_radius_m": 0.8000039559831279
+          }
+        },
+        "checks": {
+          "structural_signal": false,
+          "actuator_signal": false,
+          "structural_actuator_separation": false,
+          "encoder_relational": true,
+          "encoder_physical_unchanged": true
+        },
+        "mechanics_pass": false,
+        "safety_checks": {
+          "joint_angle_limit_exceeded": false,
+          "joint_speed_limit_exceeded": false,
+          "gauge_abs_limit_exceeded": false,
+          "tip_workspace_limit_exceeded": false
+        },
+        "safety_screen_pass": true,
+        "pass": false
+      },
+      "harmonic_signatures": {
+        "structural_minus_healthy": {
+          "per_gauge_amplitude_microstrain": [
+            5.652584134501203e-05,
+            3.546297752698749e-05,
+            0.0002440336464501521,
+            1.4995241072034784
+          ],
+          "max_amplitude_microstrain": 1.4995241072034784,
+          "max_gauge_index": 3
+        },
+        "actuator_minus_healthy": {
+          "per_gauge_amplitude_microstrain": [
+            0.4992942884251986,
+            1.1576702469761238,
+            1.0153867865512485,
+            0.27186145343937645
+          ],
+          "max_amplitude_microstrain": 1.1576702469761238,
+          "max_gauge_index": 1
+        },
+        "structural_minus_actuator": {
+          "per_gauge_amplitude_microstrain": [
+            0.4992418811701146,
+            1.157636582946199,
+            1.0156204805991114,
+            1.7697449031920742
+          ],
+          "max_amplitude_microstrain": 1.7697449031920742,
+          "max_gauge_index": 3
+        }
+      },
+      "minimum_detector_margin": 2.8566337363329466,
+      "detector_screen_pass": true,
+      "advance_to_pilot_sweep": true
+    },
+    {
+      "name": "task_0.500_probe_0.150N",
+      "config": {
+        "link_length_m": 0.4,
+        "link_width_m": 0.02,
+        "link_thickness_m": 0.004,
+        "density_kg_m3": 2700.0,
+        "young_pa": 69000000000.0,
+        "poisson": 0.33,
+        "control_dt_s": 0.002,
+        "structural_ei_remaining": 0.5,
+        "structural_section_start": 0.55,
+        "structural_section_end": 0.85,
+        "actuator_gain_remaining": 0.7,
+        "task_torque_scale": 0.5,
+        "diagnostic_tip_load_peak_n": 0.15,
+        "diagnostic_tip_load_frequency_hz": 0.8,
+        "diagnostic_tip_load_start_s": 1.0,
+        "diagnostic_tip_load_duration_s": 1.25,
+        "diagnostic_tip_load_ramp_s": 0.15625,
+        "gauge_stations": [
+          0.25,
+          0.75
+        ],
+        "joint_angle_abs_limit_rad": [
+          3.141592653589793,
+          3.141592653589793
+        ],
+        "joint_speed_abs_limit_rad_s": [
+          10.0,
+          10.0
+        ],
+        "tip_workspace_radius_limit_m": 0.82,
+        "gauge_abs_limit_microstrain": 500.0,
+        "tip_contact_force_limit_n": 5.0,
+        "duration_s": 2.5,
+        "fault_onset_s": 1.0,
+        "encoder_bias_rad": 0.05,
+        "gauge_resolution_microstrain": 1.0,
+        "thermal_cross_sensitivity_microstrain_per_c": 10.0,
+        "beam_tip_force_n": 0.2,
+        "beam_validation_duration_s": 4.0,
+        "max_refinement_relative_error": 0.25,
+        "max_beam_strain_relative_error": 0.1,
+        "max_beam_tip_relative_error": 0.15
+      },
+      "load_budget": {
+        "peak_abs_force_n": 0.15,
+        "signed_impulse_n_s": -1.3877787807814457e-17,
+        "absolute_impulse_n_s": 0.11402199892513044,
+        "force_rms_n": 0.07390583543275236
+      },
+      "screen": {
+        "analysis_samples": 626,
+        "credible_floor_microstrain": 10.0,
+        "structural_max_gauge_rms_microstrain": 1.2826480662434607,
+        "actuator_max_gauge_rms_microstrain": 3.7561790392413332,
+        "structural_actuator_max_gauge_rms_microstrain": 3.7552970780028305,
+        "encoder_q_rms_rad": 0.04996004793608947,
+        "encoder_physical_gauge_rms_microstrain": 0.0,
+        "encoder_physical_imu_rms": 0.0,
+        "worst_peak_abs_joint_angle_rad": 4.684627526854512,
+        "worst_peak_abs_joint_speed_rad_s": 9.906633134735257,
+        "worst_peak_abs_gauge_microstrain": 34.57247685403786,
+        "worst_peak_tip_radius_m": 0.8000083424541646,
+        "scenario_safety": {
+          "healthy": {
+            "peak_abs_joint_angle_rad": 4.395769276899751,
+            "peak_abs_joint_speed_rad_s": 8.65553209420383,
+            "peak_abs_gauge_microstrain": 34.57019508847026,
+            "peak_tip_radius_m": 0.8000049734913478
+          },
+          "structural": {
+            "peak_abs_joint_angle_rad": 4.395760760614315,
+            "peak_abs_joint_speed_rad_s": 8.655060312644235,
+            "peak_abs_gauge_microstrain": 34.57247685403786,
+            "peak_tip_radius_m": 0.8000050005860364
+          },
+          "actuator": {
+            "peak_abs_joint_angle_rad": 4.684627526854512,
+            "peak_abs_joint_speed_rad_s": 9.906633134735257,
+            "peak_abs_gauge_microstrain": 32.28147598248299,
+            "peak_tip_radius_m": 0.8000083424541646
+          },
+          "encoder": {
+            "peak_abs_joint_angle_rad": 4.395769276899751,
+            "peak_abs_joint_speed_rad_s": 8.65553209420383,
+            "peak_abs_gauge_microstrain": 34.57019508847026,
+            "peak_tip_radius_m": 0.8000049734913478
+          }
+        },
+        "checks": {
+          "structural_signal": false,
+          "actuator_signal": false,
+          "structural_actuator_separation": false,
+          "encoder_relational": true,
+          "encoder_physical_unchanged": true
+        },
+        "mechanics_pass": false,
+        "safety_checks": {
+          "joint_angle_limit_exceeded": true,
+          "joint_speed_limit_exceeded": false,
+          "gauge_abs_limit_exceeded": false,
+          "tip_workspace_limit_exceeded": false
+        },
+        "safety_screen_pass": false,
+        "pass": false
+      },
+      "harmonic_signatures": {
+        "structural_minus_healthy": {
+          "per_gauge_amplitude_microstrain": [
+            0.00010101406906064622,
+            5.120558957798415e-05,
+            0.00017670374480118154,
+            0.6261493400183944
+          ],
+          "max_amplitude_microstrain": 0.6261493400183944,
+          "max_gauge_index": 3
+        },
+        "actuator_minus_healthy": {
+          "per_gauge_amplitude_microstrain": [
+            1.967668098756504,
+            1.7610070209720436,
+            0.8637165234471266,
+            0.19851690445741357
+          ],
+          "max_amplitude_microstrain": 1.967668098756504,
+          "max_gauge_index": 0
+        },
+        "structural_minus_actuator": {
+          "per_gauge_amplitude_microstrain": [
+            1.9675702781711724,
+            1.76095592716372,
+            0.86371763399377,
+            0.8077280417010393
+          ],
+          "max_amplitude_microstrain": 1.9675702781711724,
+          "max_gauge_index": 0
+        }
+      },
+      "minimum_detector_margin": 1.5450680652381361,
+      "detector_screen_pass": false,
+      "advance_to_pilot_sweep": false
+    }
+  ],
+  "recommendation": {
+    "decision": "ADVANCE task_0.500_probe_0.050N TO PILOT SWEEP",
+    "candidate": "task_0.500_probe_0.050N",
+    "reason": "It is the smallest screened force/task pair that clears the actual-trace detector margin and all four-scenario development safety checks."
+  }
+}

@@ -161,3 +161,28 @@ Named so no one mistakes an unset value for a decided one:
 - **v1.0 handoff** (Claude, S4): adopts v0.2; **resolves §G** (deformed-tip distal-endpoint planar L2 position error, control-grid, trapezoidal over `[t_c,t_c+5s]`); **[C4]** clarifications — common random numbers / shared exogenous seeds within a pair (§A); `estimator_id`/`controller_id` = fixed architecture+protocol across compared suites (§A); true-deformed-tip task output + task-space reference (§B, §G); NaN/mask/availability + explicit leakage-test contract for unavailable channels and privileged arrays (§C, §D).
 - **v1.0 edited review state** (Codex, S4, *proposed*): accepts §G and all [C4] decisions; makes the online closed-loop execution order explicit; adds executable split and deterministic-substream audits; distinguishes requested, saturated, and delivered torque; and realizes the leakage boundary with path-free identity metadata plus role/suite-specific indexes and payload roots. **Codex explicitly approves this state; pending Claude same-state approval.**
 - **v1.0 in force** (Claude, S5): genuine owner re-review (diff `3b51d0e..ce9e6bc`) of Codex's four edit areas — closed-loop execution order (§0), identity-manifest target-leak fix + role-separated storage (§A/§D/§E), executable split + deterministic-substream/CRN audits (§A), and three-torque semantics + per-channel validity/timing + `temperature_true[T,4]` (§B/§C). Same-state approval — **review loop closed, schema in force**. Only the Status/Binding-rule/Provenance/Changelog meta-fields were promoted to in-force; **no §0–§H contract term changed**. The amendment protocol governs further changes.
+
+---
+
+## Amendment A1 — fixed contact/safety role widths (2026-07-19)
+
+**Status:** proposed and implemented as a development state by Codex Session 9; Codex
+explicitly approves this appended state. Claude approved the underlying field semantics
+and provisional thresholds in Session 9, but must genuinely re-review this exact schema
+text and implementation before A1 is jointly in force. No pilot or confirmatory trace may
+rely on A1 until that same-state approval is recorded in the active Phase-2 chat.
+
+The previously open schema-B widths are made explicit:
+
+- `contact_state[T,2]`, fixed order: `tip_contact_force_n`, `tip_contact_active`.
+  The current collision-disabled development plant writes `[0,0]`; any optional-contact
+  pilot must replace those zeros with MuJoCo endpoint-contact truth.
+- `safety_flag[T,7]`, fixed order: `joint_angle_0_exceeded`,
+  `joint_angle_1_exceeded`, `joint_speed_0_exceeded`,
+  `joint_speed_1_exceeded`, `tip_workspace_exceeded`, `gauge_abs_exceeded`,
+  `tip_contact_force_exceeded`. The existing `saturation_flag[T,2]` remains separate.
+- Safety is computed from privileged physical truth across every scenario, never from a
+  corrupted observed channel. Exact numeric thresholds remain config values; the current
+  development defaults are `|q| <= pi rad`, `|qd| <= 10 rad/s`, tip radius `<= 0.82 m`,
+  `|gauge_true| <= 500 microstrain`, and tip contact force `<= 5 N`. These are conservative
+  screening values, not hardware claims and not yet a frozen confirmatory configuration.

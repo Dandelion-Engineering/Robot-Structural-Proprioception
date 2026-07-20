@@ -27,8 +27,10 @@ import numpy as np
 from utils.schema_types import (
     DEFAULT_N_DEF,
     IMU_DIM,
+    N_CONTACT_STATE,
     N_GAUGES,
     N_JOINTS,
+    N_SAFETY_FLAGS,
     PrivilegedRecord,
 )
 from utils.sensor_model import FaultSpec
@@ -120,7 +122,7 @@ def synthetic_privileged_record(
     temperature_true = reference_temperature_c + thermal_ramp_c * (t_s / t_s[-1])[:, None]
     temperature_true = np.repeat(temperature_true, N_GAUGES, axis=1)
 
-    contact_state = np.zeros((n_steps, 1))
+    contact_state = np.zeros((n_steps, N_CONTACT_STATE))
 
     # Task-space tip: forward kinematics through the (deformed) configuration.
     true_task_output = _deformed_tip(q_true, curvature_true)
@@ -129,7 +131,7 @@ def synthetic_privileged_record(
     tracking_error_norm = np.linalg.norm(tracking_error, axis=1)
 
     saturation_flag = np.abs(tau_cmd) >= 0.5
-    safety_flag = np.zeros((n_steps, 1), dtype=bool)
+    safety_flag = np.zeros((n_steps, N_SAFETY_FLAGS), dtype=bool)
 
     record = PrivilegedRecord(
         step=step,

@@ -2,12 +2,13 @@
   "purpose": "development synchronous-detection noise-floor sensitivity; not confirmatory",
   "config": {
     "f_ctrl_hz": 500.0,
-    "window_samples": 512,
-    "window_duration_s": 1.024,
+    "window_samples": 640,
+    "window_duration_s": 1.28,
     "diagnostic_hz": 0.8,
     "thermal_ramp_c_per_window": 3.0,
-    "lock_in_detector_gain": 0.6258988561797904,
-    "probe_cycles_in_window": 0.8192,
+    "harmonic_regression_gain": 1.0,
+    "harmonic_design_condition_number": 4.440725090631148,
+    "probe_cycles_in_window": 1.024,
     "realizations": 200,
     "detect_sigma": 5.0,
     "gate_floor_microstrain": 10.0,
@@ -15,28 +16,28 @@
     "thermal_microstrain_per_c": 10.0
   },
   "noise_only_null": {
-    "broadband_rms_mean_microstrain": 17.351353166763758,
-    "broadband_rms_detrended_mean_microstrain": 1.0088227631637203,
-    "synchronous_nes_mean_microstrain": 0.09720741058336392,
-    "synchronous_nes_std_microstrain": 0.05838223840396057,
-    "synchronous_nes_p99_9_microstrain": 0.3055009355803563,
-    "detect_threshold_microstrain": 0.3891186026031668
+    "broadband_rms_mean_microstrain": 17.351454820516114,
+    "broadband_rms_detrended_mean_microstrain": 1.0097255050881646,
+    "synchronous_nes_mean_microstrain": 0.1108174899469363,
+    "synchronous_nes_std_microstrain": 0.05888786202586076,
+    "synchronous_nes_p99_9_microstrain": 0.33988504637920713,
+    "detect_threshold_microstrain": 0.4052568000762401
   },
-  "gate_floor_over_synchronous_nes": 102.8728153541763,
+  "gate_floor_over_synchronous_nes": 90.23846330383758,
   "targets": [
     {
       "label": "structural_1cycle",
       "injected_rms_microstrain": 8.18,
       "pure_tone": {
-        "sync_amplitude_mean_microstrain": 11.88579812263692,
-        "sync_amplitude_std_microstrain": 0.11270146501793171,
-        "z_over_null": 201.92084158345384,
+        "sync_amplitude_mean_microstrain": 11.436472132914105,
+        "sync_amplitude_std_microstrain": 0.07248946133934434,
+        "z_over_null": 192.32579097528586,
         "detection_rate_at_threshold": 1.0
       },
       "raised_cosine_1cycle_burst": {
-        "sync_amplitude_mean_microstrain": 9.437776636028739,
-        "sync_amplitude_std_microstrain": 0.11206121784351707,
-        "z_over_null": 159.98991269940282,
+        "sync_amplitude_mean_microstrain": 8.691729229348514,
+        "sync_amplitude_std_microstrain": 0.07445262362861284,
+        "z_over_null": 145.71613647025,
         "detection_rate_at_threshold": 1.0
       }
     },
@@ -44,15 +45,15 @@
       "label": "actuator_1cycle",
       "injected_rms_microstrain": 7.84,
       "pure_tone": {
-        "sync_amplitude_mean_microstrain": 11.392892280973237,
-        "sync_amplitude_std_microstrain": 0.11126482049267591,
-        "z_over_null": 193.47810531402288,
+        "sync_amplitude_mean_microstrain": 10.960089565744536,
+        "sync_amplitude_std_microstrain": 0.07119044723891035,
+        "z_over_null": 184.23613462198907,
         "detection_rate_at_threshold": 1.0
       },
       "raised_cosine_1cycle_burst": {
-        "sync_amplitude_mean_microstrain": 9.044205306351273,
-        "sync_amplitude_std_microstrain": 0.10975832585972321,
-        "z_over_null": 153.2486273284266,
+        "sync_amplitude_mean_microstrain": 8.330994420135116,
+        "sync_amplitude_std_microstrain": 0.07435456463910246,
+        "z_over_null": 139.59034421352007,
         "detection_rate_at_threshold": 1.0
       }
     },
@@ -60,15 +61,15 @@
       "label": "separation_1cycle",
       "injected_rms_microstrain": 12.33,
       "pure_tone": {
-        "sync_amplitude_mean_microstrain": 17.914253189841705,
-        "sync_amplitude_std_microstrain": 0.1344053912574307,
-        "z_over_null": 305.1792165962869,
+        "sync_amplitude_mean_microstrain": 17.238526721585448,
+        "sync_amplitude_std_microstrain": 0.07125033206894336,
+        "z_over_null": 290.8529643021653,
         "detection_rate_at_threshold": 1.0
       },
       "raised_cosine_1cycle_burst": {
-        "sync_amplitude_mean_microstrain": 14.222381504066812,
-        "sync_amplitude_std_microstrain": 0.13054206358043371,
-        "z_over_null": 241.9430032084076,
+        "sync_amplitude_mean_microstrain": 13.103461927120474,
+        "sync_amplitude_std_microstrain": 0.07884808078068357,
+        "z_over_null": 220.63365845185186,
         "detection_rate_at_threshold": 1.0
       }
     }

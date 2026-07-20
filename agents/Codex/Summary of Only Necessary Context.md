@@ -1,114 +1,172 @@
 # Summary of Only Necessary Context — Codex
 
-**Rewritten:** 2026-07-17 17:06 PDT
+**Rewritten:** 2026-07-19 21:12 PDT
 
 **Current phase:** Phase 2 — Execution
 
-**Codex session just completed:** Session 8 · **Next:** Session 9
+**Codex session just completed:** Session 9 · **Next:** Session 10
 
 ## Current authoritative state
 
-Phase 0 and Phase 1 remain closed. The jointly approved Claim Sheet, Accessible Claim Sheet, Study Guide Pass 1, and `Reproducibility Packet/schema/schema-v1.0.md` are in force. The Claim Sheet still awaits Randy’s non-blocking review in `director_requests.md`; Phase-2 execution continues.
+Phase 0 and Phase 1 remain closed. The jointly approved Claim Sheet, Accessible Claim
+Sheet, Study Guide Pass 1, and original schema v1.0 remain in force. The Claim Sheet still
+awaits Randy's non-blocking review in `director_requests.md`; execution continues.
 
-The authoritative coordination file is `chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`.
+The authoritative coordination file is
+`chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`.
 
-Claude Session 8 genuinely re-reviewed and explicitly approved the exact Session-7 evaluation-core and online-interface states. Those two loops are closed. `metrics.py`/`stats.py`, `schema_types.py`, `sensor_model.py`, and `online_loop.py` are not awaiting another response for the Session-7 work.
+Claude Session 9 genuinely re-reviewed and explicitly approved Codex Session-8's exact
+`estimator.py`/`test_estimator.py` edited state. That loop is closed.
 
-One review loop is open after Codex Session 8 directly edited and explicitly approved Claude’s estimator front:
+Two review obligations are now open after Codex Session 9:
 
-- `Reproducibility Packet/scripts/utils/estimator.py`
-- `Reproducibility Packet/tests/test_estimator.py`
+1. Claude must genuinely owner-re-review Codex's edits to
+   `scripts/analyze_synchronous_detection_floor.py`, new shared
+   `scripts/utils/synchronous.py`, the focused tests, and regenerated detector artifact,
+   then explicitly approve the same state or edit and hand it back.
+2. Claude must review the exact appended schema Amendment A1 plus fixed-width
+   `schema_types.py` / `CablePlant` implementation and explicitly approve the same state
+   before A1 is jointly in force. The underlying role semantics were approved by Claude
+   Session 9, but that does not substitute for exact-state review.
 
-Claude must genuinely re-open the files, review both the diagnoses and implementations, and explicitly approve the same state or edit and hand it back. Do not infer approval from use, silence, or a future unrelated handoff.
+Do not infer either approval from use, silence, or a later unrelated handoff.
 
-## Estimator state handed back in Session 8
+## Corrected synchronous detector state
 
-Claude’s detection/abstention front, output contract, oracle boundary, and online policy adapter remain the correct architecture. Codex corrected three contract issues:
+The detector-side concept remains valid, but Session 9 corrected the implementation:
 
-1. `WindowFeatureExtractor(window_steps=W)` now left-pads startup with zero values plus false masks, rejects an overlong record, and always emits fixed `[W,D]`; the prior implementation emitted `[T,D]` as startup history grew.
-2. Summary slopes now use each channel’s own `measurement_time_s`; the prior implementation used the `q_obs` time grid for every channel despite schema-C channel-level timing.
-3. `OracleInterface(onset_time_s=...)` reports healthy/no location/no severity before onset and exposes the perfect class only at/after onset; the prior implementation leaked the run’s known fault class before the change existed.
+- The old W=512 sequential detrend + raw projection was phase dependent: after its
+  phase-zero calibration, a unit tone recovered 0.345–1.159 across phase.
+- `utils/synchronous.py` now jointly fits intercept, linear trend, cosine, and sine and
+  returns phase-invariant harmonic coefficients/amplitude.
+- Default development window is W=640 (1.280 s at 500 Hz), which contains the complete
+  1.25 s / 0.8 Hz probe. A one-cycle surrogate rejects a shorter window.
+- A linear 3 °C/window path checks modeled trend rejection; it is not claimed as a bound
+  on nonlinear or probe-band thermal behavior.
+- Injected tone/burst targets in the detector-floor script are explicit surrogates. The
+  actual mechanics-coupled margin is evaluated separately.
 
-Estimator-output validation now enforces non-negative integral steps, finite non-negative decision times, integral location, non-NaN/non-negative uncertainty, causal detection time, and increasing trace steps/times. `W=512` / `stride=8` remain a pilot-sweep proposal. The corrected rationale says 512 samples (1.024 s) cover most, not all, of a 1.25 s 0.8-Hz cycle and do not create a detection-latency floor.
+Regenerated W=640 detector artifact (`results/synchronous_detection_floor/`):
 
-`coverage_at_risk` was independently reviewed against Claim Sheet Slot 7 and is correct as written.
+- broadband RMS 17.35 µε; detrended RMS 1.01 µε;
+- harmonic NES 0.111 ± 0.059 µε;
+- development threshold (mean + 5 standard deviations) 0.405 µε;
+- gate-floor / mean-NES ratio 90×;
+- harmonic design condition number 4.44, 1.024 cycles in window.
 
-## Mechanics/config decision — bounded diagnostic is BLOCKED
+This is detection only, not source attribution. The threshold is development-only and
+must later be frozen from validation data.
 
-The mechanics substrate decision remains binding:
+## Actual-trace safe-probe result — pilot candidate, not freeze
 
-- Native MuJoCo cable/rod selected as the primary plant; volumetric 3-D flex is reserve.
-- Selected resolution: 17 points / 16 segments per link; MuJoCo step `0.0001 s`; control step `0.002 s` / 500 Hz.
-- `n_def=90`: shortest log-map rotations for 15 internal ball joints on each link; exclude the L1 shoulder pose and L2 elbow-side free pose.
-- Gauges: L1 0.25/0.75 L; L2 0.25/0.75 L.
-- Development faults: link-2 `[0.55,0.85]`, remaining EI 0.50; elbow remaining actuator gain 0.70 downstream of unchanged `control_effort`.
-- Ordinary torque-only remains its own `trajectory_spec_id` negative control.
+New `scripts/screen_synchronous_safe_probe.py` imports the corrected detector threshold,
+measures the same feature on actual four-gauge MuJoCo fault-minus-healthy histories, and
+checks development safety across healthy, structural, actuator, and encoder scenarios.
 
-Session 8 added a finite raised-cosine diagnostic envelope to the same authoritative `cable_mechanics.py` path. Default continuous behavior is preserved when duration is `None`. Canonical selected-model sensitivity artifacts live under `Reproducibility Packet/results/bounded_burst_sensitivity/`.
+Focused six-row grid selected:
 
-Exact screen (max gauge RMS microstrain; unchanged 10-microstrain floor):
+- task torque scale: **0.50** of the ordinary deterministic task waveform;
+- diagnostic: **0.05 N peak**, **0.8 Hz**, **one 1.25 s raised-cosine cycle** starting at
+  the fault boundary;
+- feature window: **W=640**;
+- actual harmonic amplitudes: structural **1.015 µε** (gauge 3), actuator **0.898 µε**
+  (gauge 1), structure–actuator separation **1.090 µε** (gauge 3);
+- minimum detector margin: **2.22×** over 0.405 µε;
+- worst all-scenario safety: angle **1.895 rad**, speed **3.909 rad/s**, gauge
+  **38.83 µε**, tip radius **0.712 m**; all inside current development limits.
 
-| Condition | Structure | Actuator | Structure–actuator | Mechanics |
-|---|---:|---:|---:|---|
-| ordinary | 2.17 | 5.92 | 5.93 | BLOCK |
-| continuous gate load | 10.56 | 23.36 | 23.36 | PASS |
-| bounded one cycle / 1.25 s | 8.18 | 7.84 | 12.33 | BLOCK |
-| bounded two cycles / 2.50 s | 8.67 | 13.38 | 17.49 | BLOCK |
+The 0.05 N / 0.40 task-scale row was safe but missed the 2× rule at 1.69×. The 0.15 N
+rows violated the angle limit. The selected row advances only to a pilot sweep; no current
+trace may enter confirmatory analysis. It still fails the historical 10 µε per-sample
+mechanics screen, which remains preserved as the original mechanics-selection record.
 
-The continuous feasibility load was active before the 1 s fault onset; the honest bounded diagnostic starts at the fault boundary. Therefore the earlier continuous PASS remains valid for selecting the mechanics but does not establish a short post-detection diagnostic budget.
+## Safety/contact truth and proposed schema Amendment A1
 
-## Contact/safety proposal — explicit, not frozen
+Session 9 found that the original bounded-burst safety code checked only the healthy
+rollout. Expanding it across scenarios then exposed a second bug: the encoder bias step
+created a false 25 rad/s event when safety read `qd_obs`. `SimulationResult` now preserves
+`qd_true_rad_s`; safety reads privileged physical truth across every scenario.
 
-The Session-8 development proposal is stored in the bounded-burst summary and active chat:
+Appended Amendment A1 (Codex-approved, Claude exact-state review pending):
 
-- `contact_state[2]`: `tip_contact_force_n`, `tip_contact_active`.
-- `safety_flag[7]`: joint-angle flags ×2, joint-speed flags ×2, tip-workspace, absolute-gauge-strain, tip-contact-force.
-- Keep the existing `saturation_flag[2]` separate.
-- Provisional screening thresholds: `|q|≤π rad` and `|qd|≤10 rad/s` per joint; tip radius `≤0.82 m`; `|gauge_true|≤500 microstrain`; tip contact force `≤5 N`.
+- `contact_state[2]`: `tip_contact_force_n`, `tip_contact_active`;
+- `safety_flag[7]`: joint-angle ×2, joint-speed ×2, tip workspace, absolute gauge strain,
+  tip contact force; `saturation_flag[2]` remains separate;
+- development limits remain `|q|<=pi`, `|qd|<=10 rad/s`, tip radius `<=0.82 m`,
+  `|gauge_true|<=500 µε`, tip contact force `<=5 N`.
 
-These are conservative development values for review, not hardware claims or frozen config. They deliberately expose that every current command condition fails the motion screen:
+`CablePlant` and the analytic fixture now emit fixed widths. Collision remains disabled,
+so the current plant emits zero contact truth. If contact unexpectedly appears,
+`CablePlant` fails; optional-contact pilots require real endpoint-contact extraction.
 
-- ordinary: peak accumulated angle 3.18 rad; speed 13.79 rad/s;
-- continuous: 9.05 rad; 40.67 rad/s;
-- bounded one cycle: 4.53 rad; 37.74 rad/s;
-- bounded two cycles: 21.06 rad; 37.74 rad/s.
+## Mechanics and config state
 
-Contact is still disabled in the selected MJCF, so the contact-force field/flag cannot yet be exercised. Zero-width contact/safety arrays remain development placeholders and are disallowed for pilot/confirmatory generation.
+The mechanics substrate decision is unchanged:
 
-## Complete config state — deliberately not frozen
+- native MuJoCo cable/rod primary; volumetric 3-D flex reserve;
+- 17 points / 16 segments per link; simulation step 0.0001 s; control 0.002 s / 500 Hz;
+- `n_def=90`; shortest log-map rotations for 15 internal ball joints per link;
+- gauges at L1/L2 0.25 and 0.75 L;
+- development structural fault: link-2 `[0.55,0.85]`, remaining EI 0.50;
+- development actuator fault: elbow remaining gain 0.70 downstream of unchanged
+  `control_effort`;
+- ordinary task-only remains a separate `trajectory_spec_id` negative control.
 
-Settled mechanics values remain ready for eventual inclusion: `f_ctrl=500 Hz`, `dt=0.002 s`, MuJoCo step `0.0001 s`, `n_def=90`, four gauge locations, diagnostic amplitude 1.0 N and frequency 0.8 Hz.
+The original 1.0 N bounded-burst artifact was regenerated through all-scenario true-speed
+safety and remains BLOCK: one-cycle 8.18/7.84/12.33 µε at 4.53 rad / 37.74 rad/s;
+two-cycle 8.67/13.38/17.49 µε at 21.06 rad / 37.74 rad/s. Continuous load clears the
+legacy mechanics floor but fails safety.
 
-Open/blocking:
+**Do not freeze `config.json`.** Current role hashes remain `dev-`. Open fields/work:
 
-- **Diagnostic duration/envelope/controller:** concrete BLOCK; redesign so it clears both signature and approved safety screens. Do not merely lengthen the open-loop sine.
-- **Contact/safety roles and thresholds:** explicit proposal awaits review and implementation.
-- **`W=512`, `stride=8`:** Claude proposal, now correctly implemented as a fixed tensor interface, but still needs pilot sweep after the probe is coherent.
-- **Sensor pathology constants:** two load-bearing FBG values remain reference-grounded; non-load-bearing defaults need joint sanity-check.
-- **Severity/onset grids:** shared and pilot-informed.
-- **Validation-derived class, abstention, selective, and OOD thresholds:** freeze from validation only.
+- Claude exact-state re-review of detector edits and Amendment A1;
+- build synchronous feature into `WindowFeatureExtractor`; pilot-sweep W=640 and stride
+  (stride 8 remains proposed, not frozen);
+- joint sanity-check of non-load-bearing sensor constants;
+- shared severity/onset grids;
+- validation-derived class, abstention, selective, and OOD thresholds;
+- optional-contact extraction/cases;
+- learned attribution heads, interpretable residual/system-ID baseline, and recovery
+  controller;
+- deployable-loader leakage test, whole-trajectory/fault-setting split audit, role-hash
+  rejection, and multi-run storage checks before pilot/confirmatory generation.
 
-Do not create a partial immutable `config.json`. Current role hashes remain `dev-`; no current trace may enter confirmatory analysis.
+## Exact resume path for Codex Session 10
 
-## Exact resume path for Codex Session 9
-
-1. Read the true UTF-8 physical tail of the active Phase-2 thread. If Claude explicitly approves the exact Session-8 estimator edits, record the loop closed. If Claude edits, inspect the actual diff and continue the explicit review cycle.
-2. Review Claude’s response to the `contact_state[2]` / `safety_flag[7]` semantics and provisional thresholds. Treat silence as no approval.
-3. Highest-value Codex lane: redesign the diagnostic/controller pair so the arm stays inside an approved motion envelope while clearing the unchanged signature floor. Candidate families: closed-loop tip/joint-space probe, lower-amplitude multi-frequency sequence, bounded pulses, increased damping/task stabilization. Preserve ordinary and continuous conditions as evidence, not as approved pilot settings.
-4. Implement nonzero contact/safety roles in `CablePlant` once semantics converge; endpoint contact truth must populate the two-wide contact role before optional-contact pilot cases.
-5. Continue toward the interpretable residual/linear-system-ID baseline and recovery controller after the diagnostic/safety interface converges.
-6. Before pilot: implement deployable-loader leakage test, whole-trajectory/fault-setting split audit, role-hash rejection, multi-run storage checks, and nonzero contact/safety gates. Before confirmatory generation: freeze/hash complete `schema.json` + `config.json`, preserve ordinary/diagnostic conditions separately, and rerun all gates.
+1. Read the UTF-8 physical tail of the active Phase-2 thread. If Claude explicitly
+   approves the exact detector edits, close that loop. If Claude edits, inspect the actual
+   diff and continue the review cycle.
+2. Separately resolve Amendment A1 exact-state review. Do not treat detector approval as
+   schema approval or vice versa.
+3. Review Claude's synchronous `WindowFeatureExtractor` increment if it lands. Check that
+   it uses the shared phase-invariant harmonic implementation or an explicitly equivalent
+   version, channel-specific measurement times/masks, and the W=640 full-cycle contract.
+4. Implement real endpoint-contact extraction before any optional-contact pilot, or keep
+   optional-contact cases blocked explicitly.
+5. Continue Codex's interpretable residual/linear-system-ID baseline and recovery
+   controller against the online seam; preserve the matched sensor-suite architecture.
+6. Run the pilot over probe/task scale + W/stride and remaining shared grids. The current
+   0.05 N / 0.50 task-scale row is a candidate, not a frozen value.
+7. Before confirmatory generation, freeze/hash complete `schema.json` + `config.json`,
+   preserve ordinary/diagnostic conditions separately, and rerun every leakage, split,
+   safety, storage, and role-hash gate.
 
 ## Verification and session record
 
-- Full packet: **80 passed**.
-- `compileall` over packet scripts/tests: passed.
-- Bounded-burst CLI help: passed using `.\venv\Scripts\python.exe`.
-- Canonical four-condition selected-model sensitivity regenerated successfully.
-- Public README contains one lean negative-method heartbeat; this is not a research result.
-- Detailed session record: `agents/Codex/Session Summaries/HumanReport8.md`.
-- Required regular director update: `agents/Codex/Progress Reports/Progress Report Session 8.md`; next regular Codex report is Session 16 unless a phase/amendment trigger fires earlier.
+- Full packet: **91 passed**.
+- `compileall`: passed.
+- Detector, bounded-burst, and safe-probe CLI help: passed.
+- Corrected detector artifact: 200 modeled sensor realizations, W=640.
+- Both mechanics sensitivities regenerated at 17 points / 0.1 ms.
+- Public README has one lean correction/safe-candidate heartbeat; no research result claim.
+- Packet README contains exact copy-paste run steps for the three development sensitivities.
+- Detailed session record: `agents/Codex/Session Summaries/HumanReport9.md`.
+- Next regular Codex progress report remains Session 16 unless a phase/amendment trigger
+  fires earlier. A1 is not approved yet, so Session 9 did not fire an approved-amendment
+  progress report.
 
 ## Transcript-order rule
 
-Before every chat append: read the UTF-8 physical tail, patch against unique exact tail text, and re-read immediately afterward. Session 8’s turn landed correctly at the physical tail; no correction was required. Never use a bare speaker-signature anchor.
+Before every chat append: read the UTF-8 physical tail, patch against unique exact tail
+text, and re-read immediately afterward. Session 9's turn is physically last and appears
+exactly once. Never use a bare speaker-signature anchor.

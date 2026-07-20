@@ -39,6 +39,21 @@ N_JOINTS = 2  # planar two-link arm
 N_GAUGES = 4  # two stations per link at 0.25 L and 0.75 L
 IMU_DIM = 6  # distal-link specific force (3) + angular rate (3)
 DEFAULT_N_DEF = 90  # spike-frozen: 3-vector log-map rot for 15 internal ball joints x 2 links
+CONTACT_STATE_FIELDS: tuple[str, ...] = (
+    "tip_contact_force_n",
+    "tip_contact_active",
+)
+SAFETY_FLAG_FIELDS: tuple[str, ...] = (
+    "joint_angle_0_exceeded",
+    "joint_angle_1_exceeded",
+    "joint_speed_0_exceeded",
+    "joint_speed_1_exceeded",
+    "tip_workspace_exceeded",
+    "gauge_abs_exceeded",
+    "tip_contact_force_exceeded",
+)
+N_CONTACT_STATE = len(CONTACT_STATE_FIELDS)
+N_SAFETY_FLAGS = len(SAFETY_FLAG_FIELDS)
 
 SENSOR_FAULT_SUBTYPES: frozenset[str] = frozenset(
     {"encoder_bias", "encoder_drift", "encoder_dropout"}
@@ -113,8 +128,9 @@ class PrivilegedRecord:
     NON-deployable: only the metric builder, label builder, and oracle interface
     may read it. The sensor model consumes only `observable_sources(self)`.
 
-    Shapes/units follow schema section B exactly. `n_def`, `n_contact`, and
-    `n_safety` are model-defined widths carried for completeness.
+    Shapes/units follow schema section B exactly. ``n_def`` remains model-defined;
+    the Phase-2 schema-width amendment fixes contact state at two fields and safety
+    flags at seven fields.
     """
 
     step: np.ndarray  # [T] int, 0-based control step
@@ -166,12 +182,14 @@ class PrivilegedRecord:
             "gauge_true": (t, N_GAUGES),
             "imu_true": (t, IMU_DIM),
             "temperature_true": (t, N_GAUGES),
+            "contact_state": (t, N_CONTACT_STATE),
             "task_reference": (t, 2),
             "true_task_output": (t, 2),
             "tracking_error": (t, 2),
             "tracking_error_norm": (t,),
             "control_effort": (t, N_JOINTS),
             "saturation_flag": (t, N_JOINTS),
+            "safety_flag": (t, N_SAFETY_FLAGS),
         }
         for name, shape in expected.items():
             arr = getattr(self, name)
@@ -179,10 +197,8 @@ class PrivilegedRecord:
                 raise ValueError(
                     f"PrivilegedRecord.{name} has shape {arr.shape}, expected {shape}"
                 )
-        for name in ("deform_coords", "contact_state", "safety_flag"):
-            arr = getattr(self, name)
-            if arr.ndim != 2 or arr.shape[0] != t:
-                raise ValueError(f"PrivilegedRecord.{name} must have shape [T,width]")
+        if self.deform_coords.ndim != 2 or self.deform_coords.shape[0] != t:
+            raise ValueError("PrivilegedRecord.deform_coords must have shape [T,width]")
         if not np.issubdtype(self.step.dtype, np.integer):
             raise ValueError("PrivilegedRecord.step must use an integer dtype")
         if not np.array_equal(self.step, np.arange(t)):
@@ -311,14 +327,14 @@ class PlantStepState:
     gauge_true: np.ndarray  # [4]
     imu_true: np.ndarray  # [6]
     temperature_true: np.ndarray  # [4]
-    contact_state: np.ndarray  # [n_contact]
+    contact_state: np.ndarray  # [2], CONTACT_STATE_FIELDS order
     task_reference: np.ndarray  # [2]
     true_task_output: np.ndarray  # [2]
     tracking_error: np.ndarray  # [2]
     tracking_error_norm: float
     control_effort: np.ndarray  # [2]
     saturation_flag: np.ndarray  # [2]
-    safety_flag: np.ndarray  # [n_safety]
+    safety_flag: np.ndarray  # [7], SAFETY_FLAG_FIELDS order
 
 
 @dataclass(frozen=True)

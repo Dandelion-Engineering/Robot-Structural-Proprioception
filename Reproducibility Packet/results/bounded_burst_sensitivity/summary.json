@@ -47,6 +47,7 @@
         "structural_section_start": 0.55,
         "structural_section_end": 0.85,
         "actuator_gain_remaining": 0.7,
+        "task_torque_scale": 1.0,
         "diagnostic_tip_load_peak_n": 0.0,
         "diagnostic_tip_load_frequency_hz": 0.8,
         "diagnostic_tip_load_start_s": 0.0,
@@ -56,6 +57,17 @@
           0.25,
           0.75
         ],
+        "joint_angle_abs_limit_rad": [
+          3.141592653589793,
+          3.141592653589793
+        ],
+        "joint_speed_abs_limit_rad_s": [
+          10.0,
+          10.0
+        ],
+        "tip_workspace_radius_limit_m": 0.82,
+        "gauge_abs_limit_microstrain": 500.0,
+        "tip_contact_force_limit_n": 5.0,
         "duration_s": 3.75,
         "fault_onset_s": 1.0,
         "encoder_bias_rad": 0.05,
@@ -82,10 +94,36 @@
         "encoder_q_rms_rad": 0.049960047936089116,
         "encoder_physical_gauge_rms_microstrain": 0.0,
         "encoder_physical_imu_rms": 0.0,
-        "healthy_peak_abs_joint_angle_rad": 3.176253408124522,
-        "healthy_peak_abs_joint_speed_rad_s": 13.790340593316595,
-        "healthy_peak_abs_gauge_microstrain": 74.15046432967642,
-        "healthy_peak_tip_radius_m": 0.8000126411202788,
+        "worst_peak_abs_joint_angle_rad": 3.176253408124522,
+        "worst_peak_abs_joint_speed_rad_s": 13.790340593316595,
+        "worst_peak_abs_gauge_microstrain": 74.15070008306657,
+        "worst_peak_tip_radius_m": 0.8000127513913382,
+        "scenario_safety": {
+          "healthy": {
+            "peak_abs_joint_angle_rad": 3.176253408124522,
+            "peak_abs_joint_speed_rad_s": 13.790340593316595,
+            "peak_abs_gauge_microstrain": 74.15046432967642,
+            "peak_tip_radius_m": 0.8000126411202788
+          },
+          "structural": {
+            "peak_abs_joint_angle_rad": 3.1762458542297796,
+            "peak_abs_joint_speed_rad_s": 13.78847757848086,
+            "peak_abs_gauge_microstrain": 74.15070008306657,
+            "peak_tip_radius_m": 0.8000127513913382
+          },
+          "actuator": {
+            "peak_abs_joint_angle_rad": 3.144833772863725,
+            "peak_abs_joint_speed_rad_s": 12.286196453829245,
+            "peak_abs_gauge_microstrain": 71.5206519261713,
+            "peak_tip_radius_m": 0.8000089245804517
+          },
+          "encoder": {
+            "peak_abs_joint_angle_rad": 3.176253408124522,
+            "peak_abs_joint_speed_rad_s": 13.790340593316595,
+            "peak_abs_gauge_microstrain": 74.15046432967642,
+            "peak_tip_radius_m": 0.8000126411202788
+          }
+        },
         "checks": {
           "structural_signal": false,
           "actuator_signal": false,
@@ -119,6 +157,7 @@
         "structural_section_start": 0.55,
         "structural_section_end": 0.85,
         "actuator_gain_remaining": 0.7,
+        "task_torque_scale": 1.0,
         "diagnostic_tip_load_peak_n": 1.0,
         "diagnostic_tip_load_frequency_hz": 0.8,
         "diagnostic_tip_load_start_s": 0.0,
@@ -128,6 +167,17 @@
           0.25,
           0.75
         ],
+        "joint_angle_abs_limit_rad": [
+          3.141592653589793,
+          3.141592653589793
+        ],
+        "joint_speed_abs_limit_rad_s": [
+          10.0,
+          10.0
+        ],
+        "tip_workspace_radius_limit_m": 0.82,
+        "gauge_abs_limit_microstrain": 500.0,
+        "tip_contact_force_limit_n": 5.0,
         "duration_s": 3.75,
         "fault_onset_s": 1.0,
         "encoder_bias_rad": 0.05,
@@ -154,10 +204,36 @@
         "encoder_q_rms_rad": 0.04996004793608965,
         "encoder_physical_gauge_rms_microstrain": 0.0,
         "encoder_physical_imu_rms": 0.0,
-        "healthy_peak_abs_joint_angle_rad": 9.053823065586874,
-        "healthy_peak_abs_joint_speed_rad_s": 40.67390111933115,
-        "healthy_peak_abs_gauge_microstrain": 136.45008594689756,
-        "healthy_peak_tip_radius_m": 0.8001503972760557,
+        "worst_peak_abs_joint_angle_rad": 9.09849426038965,
+        "worst_peak_abs_joint_speed_rad_s": 40.67390111933115,
+        "worst_peak_abs_gauge_microstrain": 136.45154081576294,
+        "worst_peak_tip_radius_m": 0.8001505186804235,
+        "scenario_safety": {
+          "healthy": {
+            "peak_abs_joint_angle_rad": 9.053823065586874,
+            "peak_abs_joint_speed_rad_s": 40.67390111933115,
+            "peak_abs_gauge_microstrain": 136.45008594689756,
+            "peak_tip_radius_m": 0.8001503972760557
+          },
+          "structural": {
+            "peak_abs_joint_angle_rad": 9.053859955827937,
+            "peak_abs_joint_speed_rad_s": 40.6317874343887,
+            "peak_abs_gauge_microstrain": 136.45154081576294,
+            "peak_tip_radius_m": 0.8001505186804235
+          },
+          "actuator": {
+            "peak_abs_joint_angle_rad": 9.09849426038965,
+            "peak_abs_joint_speed_rad_s": 38.98730175481265,
+            "peak_abs_gauge_microstrain": 128.97470313429693,
+            "peak_tip_radius_m": 0.8001202342801716
+          },
+          "encoder": {
+            "peak_abs_joint_angle_rad": 9.053823065586874,
+            "peak_abs_joint_speed_rad_s": 40.67390111933115,
+            "peak_abs_gauge_microstrain": 136.45008594689756,
+            "peak_tip_radius_m": 0.8001503972760557
+          }
+        },
         "checks": {
           "structural_signal": true,
           "actuator_signal": true,
@@ -191,6 +267,7 @@
         "structural_section_start": 0.55,
         "structural_section_end": 0.85,
         "actuator_gain_remaining": 0.7,
+        "task_torque_scale": 1.0,
         "diagnostic_tip_load_peak_n": 1.0,
         "diagnostic_tip_load_frequency_hz": 0.8,
         "diagnostic_tip_load_start_s": 1.0,
@@ -200,6 +277,17 @@
           0.25,
           0.75
         ],
+        "joint_angle_abs_limit_rad": [
+          3.141592653589793,
+          3.141592653589793
+        ],
+        "joint_speed_abs_limit_rad_s": [
+          10.0,
+          10.0
+        ],
+        "tip_workspace_radius_limit_m": 0.82,
+        "gauge_abs_limit_microstrain": 500.0,
+        "tip_contact_force_limit_n": 5.0,
         "duration_s": 3.75,
         "fault_onset_s": 1.0,
         "encoder_bias_rad": 0.05,
@@ -226,10 +314,36 @@
         "encoder_q_rms_rad": 0.049960047936089276,
         "encoder_physical_gauge_rms_microstrain": 0.0,
         "encoder_physical_imu_rms": 0.0,
-        "healthy_peak_abs_joint_angle_rad": 4.531569938781988,
-        "healthy_peak_abs_joint_speed_rad_s": 37.73995856863015,
-        "healthy_peak_abs_gauge_microstrain": 84.66866125107941,
-        "healthy_peak_tip_radius_m": 0.8001047779062536,
+        "worst_peak_abs_joint_angle_rad": 4.531569938781988,
+        "worst_peak_abs_joint_speed_rad_s": 37.73995856863015,
+        "worst_peak_abs_gauge_microstrain": 84.66866125107941,
+        "worst_peak_tip_radius_m": 0.8001047779062536,
+        "scenario_safety": {
+          "healthy": {
+            "peak_abs_joint_angle_rad": 4.531569938781988,
+            "peak_abs_joint_speed_rad_s": 37.73995856863015,
+            "peak_abs_gauge_microstrain": 84.66866125107941,
+            "peak_tip_radius_m": 0.8001047779062536
+          },
+          "structural": {
+            "peak_abs_joint_angle_rad": 4.530707984883155,
+            "peak_abs_joint_speed_rad_s": 37.70297815662775,
+            "peak_abs_gauge_microstrain": 84.66273940211266,
+            "peak_tip_radius_m": 0.8001047503621769
+          },
+          "actuator": {
+            "peak_abs_joint_angle_rad": 4.42611643459353,
+            "peak_abs_joint_speed_rad_s": 35.289580875978885,
+            "peak_abs_gauge_microstrain": 75.02929220766674,
+            "peak_tip_radius_m": 0.8000137052615588
+          },
+          "encoder": {
+            "peak_abs_joint_angle_rad": 4.531569938781988,
+            "peak_abs_joint_speed_rad_s": 37.73995856863015,
+            "peak_abs_gauge_microstrain": 84.66866125107941,
+            "peak_tip_radius_m": 0.8001047779062536
+          }
+        },
         "checks": {
           "structural_signal": false,
           "actuator_signal": false,
@@ -263,6 +377,7 @@
         "structural_section_start": 0.55,
         "structural_section_end": 0.85,
         "actuator_gain_remaining": 0.7,
+        "task_torque_scale": 1.0,
         "diagnostic_tip_load_peak_n": 1.0,
         "diagnostic_tip_load_frequency_hz": 0.8,
         "diagnostic_tip_load_start_s": 1.0,
@@ -272,6 +387,17 @@
           0.25,
           0.75
         ],
+        "joint_angle_abs_limit_rad": [
+          3.141592653589793,
+          3.141592653589793
+        ],
+        "joint_speed_abs_limit_rad_s": [
+          10.0,
+          10.0
+        ],
+        "tip_workspace_radius_limit_m": 0.82,
+        "gauge_abs_limit_microstrain": 500.0,
+        "tip_contact_force_limit_n": 5.0,
         "duration_s": 3.75,
         "fault_onset_s": 1.0,
         "encoder_bias_rad": 0.05,
@@ -298,10 +424,36 @@
         "encoder_q_rms_rad": 0.049979995998398835,
         "encoder_physical_gauge_rms_microstrain": 0.0,
         "encoder_physical_imu_rms": 0.0,
-        "healthy_peak_abs_joint_angle_rad": 21.06159865692902,
-        "healthy_peak_abs_joint_speed_rad_s": 37.73995856863015,
-        "healthy_peak_abs_gauge_microstrain": 84.66866125107941,
-        "healthy_peak_tip_radius_m": 0.8001229377770598,
+        "worst_peak_abs_joint_angle_rad": 21.06159865692902,
+        "worst_peak_abs_joint_speed_rad_s": 37.73995856863015,
+        "worst_peak_abs_gauge_microstrain": 88.8963637360618,
+        "worst_peak_tip_radius_m": 0.8001229377770598,
+        "scenario_safety": {
+          "healthy": {
+            "peak_abs_joint_angle_rad": 21.06159865692902,
+            "peak_abs_joint_speed_rad_s": 37.73995856863015,
+            "peak_abs_gauge_microstrain": 84.66866125107941,
+            "peak_tip_radius_m": 0.8001229377770598
+          },
+          "structural": {
+            "peak_abs_joint_angle_rad": 21.06051878855799,
+            "peak_abs_joint_speed_rad_s": 37.70297815662775,
+            "peak_abs_gauge_microstrain": 84.66273940211266,
+            "peak_tip_radius_m": 0.8001047503621769
+          },
+          "actuator": {
+            "peak_abs_joint_angle_rad": 4.620590961027121,
+            "peak_abs_joint_speed_rad_s": 35.289580875978885,
+            "peak_abs_gauge_microstrain": 88.8963637360618,
+            "peak_tip_radius_m": 0.8000137052615588
+          },
+          "encoder": {
+            "peak_abs_joint_angle_rad": 21.06159865692902,
+            "peak_abs_joint_speed_rad_s": 37.73995856863015,
+            "peak_abs_gauge_microstrain": 84.66866125107941,
+            "peak_tip_radius_m": 0.8001229377770598
+          }
+        },
         "checks": {
           "structural_signal": false,
           "actuator_signal": true,
