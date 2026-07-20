@@ -302,6 +302,15 @@ def test_safety_regression_delta_sign() -> None:
     assert safety_regression_delta(c1, c1.copy()) == pytest.approx(0.0)  # no change
 
 
+def test_safety_regression_delta_requires_matched_control_grid() -> None:
+    """A paired comparison cannot silently subtract rates from unequal trace extents."""
+
+    c1 = np.zeros((2, N_SAFETY_FLAGS), dtype=bool)
+    s = np.zeros((3, N_SAFETY_FLAGS), dtype=bool)
+    with pytest.raises(ValueError, match="same control-grid shape"):
+        safety_regression_delta(c1, s)
+
+
 def test_safety_flag_validation() -> None:
     """Wrong width, non-boolean dtype, and empty traces all fail loudly."""
 

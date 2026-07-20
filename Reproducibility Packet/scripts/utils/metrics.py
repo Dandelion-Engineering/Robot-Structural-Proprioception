@@ -544,4 +544,11 @@ def safety_regression_delta(c1_safety_flag: np.ndarray, s_safety_flag: np.ndarra
     disqualifies the tracking improvement even when ``tracking_reduction_pct`` clears 10%.
     """
 
-    return safety_incident_rate(s_safety_flag) - safety_incident_rate(c1_safety_flag)
+    c1_flags = _check_safety_flag(c1_safety_flag)
+    s_flags = _check_safety_flag(s_safety_flag)
+    if c1_flags.shape != s_flags.shape:
+        raise ValueError(
+            "paired C1/S safety traces must share the same control-grid shape, got "
+            f"{c1_flags.shape}/{s_flags.shape}"
+        )
+    return float(np.mean(s_flags.any(axis=1)) - np.mean(c1_flags.any(axis=1)))

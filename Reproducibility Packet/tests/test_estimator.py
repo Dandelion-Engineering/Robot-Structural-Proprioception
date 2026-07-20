@@ -31,7 +31,9 @@ from utils.estimator import (  # noqa: E402
     OracleInterface,
     RECOMMENDED_WINDOW,
     SOURCE_CLASS_ORDER,
-    SYNC_FEATURE_COL,
+    SYNC_AMPLITUDE_FEATURE_COL,
+    SYNC_COS_FEATURE_COL,
+    SYNC_SIN_FEATURE_COL,
     VALID_FRACTION_COL,
     WindowFeatureExtractor,
     WindowNoveltyDetector,
@@ -156,8 +158,8 @@ def test_window_tensor_left_pads_startup_to_fixed_w():
 
 def test_window_features_shape_and_nan_safety():
     ext = WindowFeatureExtractor(window_steps=80)
-    # per column: last, mean, std, slope, sync amplitude, valid fraction
-    assert ext.n_features == observed_registry_width() * (4 + 2)
+    # per column: last, mean, std, slope, sync cos/sin/amplitude, valid fraction
+    assert ext.n_features == observed_registry_width() * (4 + 4)
     feats_c0 = ext.window_features(observed("C0"))
     assert feats_c0.shape == (ext.n_features,)
     assert np.all(np.isfinite(feats_c0))  # never NaN even though gauges are absent
@@ -187,14 +189,14 @@ def test_window_features_last_mean_slope_known_values():
         suite_available_mask={n: n in SUITE_CHANNELS["C0"] for n in CHANNEL_NAMES},
     )
     ext = WindowFeatureExtractor(window_steps=t)
-    feats = ext.window_features(rec).reshape(observed_registry_width(), 6)
+    feats = ext.window_features(rec).reshape(observed_registry_width(), 8)
     # column 0 == q_obs[:,0]: last=0.8, mean=0.4, slope=2.0, valid_frac=1.0
     assert feats[0, 0] == pytest.approx(0.8)
     assert feats[0, 1] == pytest.approx(0.4)
     assert feats[0, 3] == pytest.approx(2.0)
-    assert feats[0, 5] == pytest.approx(1.0)  # valid fraction (now the last column)
-    # sync amplitude (col 4) is 0: this 5-sample 0.4 s window spans < one 1.25 s cycle
-    assert feats[0, 4] == 0.0
+    assert feats[0, VALID_FRACTION_COL] == pytest.approx(1.0)
+    # all sync entries are 0: this 5-sample 0.4 s window spans < one 1.25 s cycle
+    assert np.all(feats[0, SYNC_COS_FEATURE_COL : SYNC_AMPLITUDE_FEATURE_COL + 1] == 0.0)
 
 
 def test_window_features_use_each_channels_measurement_times():
@@ -231,7 +233,7 @@ def test_window_features_use_each_channels_measurement_times():
         suite_available_mask={n: n in SUITE_CHANNELS["C1"] for n in CHANNEL_NAMES},
     )
     ext = WindowFeatureExtractor(window_steps=t)
-    feats = ext.window_features(rec).reshape(observed_registry_width(), 6)
+    feats = ext.window_features(rec).reshape(observed_registry_width(), 8)
     imu_offset = sum(CHANNEL_WIDTH[name] for name in CHANNEL_NAMES[:4])
     assert feats[imu_offset, 3] == pytest.approx(3.0)
 
@@ -291,7 +293,7 @@ def test_synchronous_feature_recovers_probe_tone_phase_invariant():
         rec, _, _ = _single_tone_record("q_obs", times, signal, "C0")
         ext = WindowFeatureExtractor(window_steps=t, probe_frequency_hz=DIAGNOSTIC_PROBE_HZ)
         feats = ext.window_features(rec).reshape(observed_registry_width(), per_col)
-        recovered.append(feats[0, SYNC_FEATURE_COL])
+        recovered.append(feats[0, SYNC_AMPLITUDE_FEATURE_COL])
         assert feats[0, VALID_FRACTION_COL] == pytest.approx(1.0)
     for r in recovered:
         assert r == pytest.approx(amp, rel=1.0e-6)  # recovers the injected amplitude
@@ -307,7 +309,9 @@ def test_synchronous_feature_zero_below_one_period():
     feats = ext.window_features(rec).reshape(
         observed_registry_width(), N_FEATURE_STATS + N_EXTRA_FEATURES
     )
-    assert feats[0, SYNC_FEATURE_COL] == 0.0
+    assert feats[0, SYNC_COS_FEATURE_COL] == 0.0
+    assert feats[0, SYNC_SIN_FEATURE_COL] == 0.0
+    assert feats[0, SYNC_AMPLITUDE_FEATURE_COL] == 0.0
 
 
 def test_synchronous_feature_uses_each_channel_grid():
@@ -329,8 +333,36 @@ def test_synchronous_feature_uses_each_channel_grid():
     )
     imu_offset = sum(CHANNEL_WIDTH[name] for name in CHANNEL_NAMES[:4])
     # the imu tone is recovered on the imu grid; the flat q_obs reads zero amplitude
-    assert feats[imu_offset, SYNC_FEATURE_COL] == pytest.approx(amp, rel=1.0e-6)
-    assert feats[0, SYNC_FEATURE_COL] == 0.0
+    assert feats[imu_offset, SYNC_AMPLITUDE_FEATURE_COL] == pytest.approx(amp, rel=1.0e-6)
+    assert feats[0, SYNC_AMPLITUDE_FEATURE_COL] == 0.0
+
+
+def test_synchronous_feature_retains_phase_not_only_amplitude():
+    """Equal amplitudes with different phase remain distinguishable in coefficient space."""
+
+    t = 80
+    times = np.arange(t) * 0.02
+    amplitude = 5.0
+    per_col = N_FEATURE_STATS + N_EXTRA_FEATURES
+    phase_0 = amplitude * np.cos(2.0 * np.pi * DIAGNOSTIC_PROBE_HZ * times)
+    phase_90 = amplitude * np.cos(
+        2.0 * np.pi * DIAGNOSTIC_PROBE_HZ * times + np.pi / 2.0
+    )
+    rec_0, _, _ = _single_tone_record("q_obs", times, phase_0, "C0")
+    rec_90, _, _ = _single_tone_record("q_obs", times, phase_90, "C0")
+    ext = WindowFeatureExtractor(window_steps=t, probe_frequency_hz=DIAGNOSTIC_PROBE_HZ)
+    feat_0 = ext.window_features(rec_0).reshape(observed_registry_width(), per_col)[0]
+    feat_90 = ext.window_features(rec_90).reshape(observed_registry_width(), per_col)[0]
+
+    assert feat_0[SYNC_AMPLITUDE_FEATURE_COL] == pytest.approx(amplitude, rel=1.0e-6)
+    assert feat_90[SYNC_AMPLITUDE_FEATURE_COL] == pytest.approx(amplitude, rel=1.0e-6)
+    coefficient_delta = (
+        feat_0[[SYNC_COS_FEATURE_COL, SYNC_SIN_FEATURE_COL]]
+        - feat_90[[SYNC_COS_FEATURE_COL, SYNC_SIN_FEATURE_COL]]
+    )
+    assert np.linalg.norm(coefficient_delta) == pytest.approx(
+        amplitude * np.sqrt(2.0), rel=1.0e-6
+    )
 
 
 def test_synchronous_feature_lifts_novelty_on_probe_amplitude_change():

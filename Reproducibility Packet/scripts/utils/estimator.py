@@ -63,7 +63,7 @@ from utils.schema_types import (
     PlantStepState,
     observed_registry_width,
 )
-from utils.synchronous import harmonic_amplitude
+from utils.synchronous import harmonic_coefficients
 
 # Canonical source-class order — must match utils.metrics.SOURCE_CLASS_ORDER so a
 # p_class column means the same class in the estimator and in the scorer.
@@ -76,17 +76,18 @@ FAULT_INDICES: tuple[int, ...] = tuple(range(1, N_SOURCE_CLASSES))  # structure/
 FEATURE_STATS: tuple[str, ...] = ("last", "mean", "std", "slope")
 N_FEATURE_STATS = len(FEATURE_STATS)
 
-# The interpretable per-column summary appends two more entries after the FEATURE_STATS
-# block, giving the fixed layout ``[last, mean, std, slope, sync_amplitude, valid_frac]``:
-#   * a *synchronous (lock-in) amplitude* at the known diagnostic-probe frequency, and
-#   * the column's valid fraction.
-# The synchronous amplitude is the interpretable realization of the ~100x detector-referred
-# headroom the S9 co-design found: a lock-in at the probe frequency rejects the thermal
-# ramp / bias / drift that dominate the per-sample floor. (The learned rungs read the raw
-# ``[W, D]`` tensor and can learn their own synchronous features.)
-N_EXTRA_FEATURES = 2  # synchronous amplitude + valid fraction
-SYNC_FEATURE_COL = N_FEATURE_STATS  # index of the synchronous amplitude within a column
-VALID_FRACTION_COL = N_FEATURE_STATS + 1  # index of the valid fraction within a column
+# The interpretable per-column summary appends four entries after FEATURE_STATS, giving
+# ``[last, mean, std, slope, sync_cos, sync_sin, sync_amplitude, valid_frac]``.
+# Keeping the coefficient pair is load-bearing: the mechanics screen measures a
+# fault-minus-reference harmonic amplitude, which equals the Euclidean distance between
+# the two coefficient vectors. Amplitude alone cannot reconstruct that distance and can
+# hide a phase-only change. The coefficient pair preserves the screened information;
+# amplitude remains a convenient phase-invariant summary.
+N_EXTRA_FEATURES = 4  # synchronous cosine, sine, amplitude + valid fraction
+SYNC_COS_FEATURE_COL = N_FEATURE_STATS
+SYNC_SIN_FEATURE_COL = N_FEATURE_STATS + 1
+SYNC_AMPLITUDE_FEATURE_COL = N_FEATURE_STATS + 2
+VALID_FRACTION_COL = N_FEATURE_STATS + 3
 
 # Settled diagnostic-probe frequency (config-freeze table: a mechanics parameter, 0.8 Hz).
 # The frozen config supplies the authoritative value; this default keeps the estimator
@@ -289,11 +290,11 @@ class WindowFeatureExtractor:
     This is what lets the matched suite ablation hold the estimator constant.
 
     The summary feature vector (`window_features`) carries, per registry column,
-    ``[last, mean, std, slope, sync_amplitude, valid_fraction]``. `sync_amplitude` is a
-    synchronous (lock-in) amplitude at `probe_frequency_hz`, computed with the shared
-    phase-invariant `utils.synchronous` harmonic regression on each channel's own
-    measurement grid — the interpretable rung's realization of the ~100x detector-referred
-    headroom over the per-sample floor. The learned rungs consume the raw `[W, D]` tensor
+    ``[last, mean, std, slope, sync_cos, sync_sin, sync_amplitude, valid_fraction]``.
+    The synchronous entries come from the shared `utils.synchronous` harmonic regression
+    on each channel's own measurement grid. Retaining cosine and sine preserves phase and
+    makes the mechanics screen's coefficient-vector distance reconstructible; amplitude
+    remains the phase-invariant summary. The learned rungs consume the raw `[W, D]` tensor
     (`window_tensor`) and can learn their own synchronous features, so the tensor is
     unchanged by this.
     """
@@ -325,7 +326,7 @@ class WindowFeatureExtractor:
     def n_features(self) -> int:
         """Length of the summary feature vector.
 
-        ``registry_width × (#FEATURE_STATS + synchronous amplitude + valid fraction)``.
+        ``registry_width × (#FEATURE_STATS + three synchronous entries + valid fraction)``.
         """
 
         return self.registry_width * (N_FEATURE_STATS + N_EXTRA_FEATURES)
@@ -370,18 +371,18 @@ class WindowFeatureExtractor:
         """Return a fixed-width per-column summary feature vector for the window.
 
         For each registry column, over the valid samples in the window: the last valid
-        value, mean, std, a linear slope (per second), a **synchronous (lock-in)
-        amplitude at the probe frequency**, and the column's valid fraction — the fixed
-        per-column layout ``[last, mean, std, slope, sync, valid_fraction]``.
+        value, mean, std, a linear slope (per second), synchronous cosine/sine
+        coefficients and phase-invariant amplitude at the probe frequency, and the
+        column's valid fraction — the fixed per-column layout
+        ``[last, mean, std, slope, sync_cos, sync_sin, sync_amplitude, valid_fraction]``.
 
-        The synchronous amplitude is the phase-invariant harmonic-regression coefficient
-        magnitude at ``probe_frequency_hz`` (shared ``utils.synchronous``: one joint
-        intercept + linear-trend + cosine + sine fit), on the channel's own measurement
-        grid. It is emitted only when the column's valid samples span at least one full
-        probe period, so a complete cycle is resolved rather than a poorly-conditioned arc
-        (S9 co-design: W >= one probe cycle); otherwise it is 0.0. Columns with no valid
-        sample contribute zeros and a zero valid fraction — a suite-agnostic, NaN-safe
-        reduction the interpretable rung uses.
+        The synchronous entries use one joint intercept + linear-trend + cosine + sine
+        fit at ``probe_frequency_hz`` on the channel's own measurement grid. Cosine and
+        sine retain phase; amplitude is their Euclidean norm. They are emitted only when
+        the column's valid samples span at least one full probe period, so a complete cycle
+        is resolved rather than a poorly-conditioned arc (S9 co-design: W >= one probe
+        cycle); otherwise all three stay 0.0. Columns with no valid sample contribute
+        zeros and a zero valid fraction — a suite-agnostic, NaN-safe reduction.
         """
 
         values, valid = self.window_tensor(record)
@@ -424,8 +425,13 @@ class WindowFeatureExtractor:
                     and np.ptp(ct) + _EPS >= probe_period_s
                     and np.all(np.diff(ct) > 0.0)
                 ):
-                    feats[col, SYNC_FEATURE_COL] = harmonic_amplitude(
+                    coefficients = harmonic_coefficients(
                         v, np.ones(v.shape[0], dtype=bool), ct, self.probe_frequency_hz
+                    )
+                    feats[col, SYNC_COS_FEATURE_COL] = coefficients[0]
+                    feats[col, SYNC_SIN_FEATURE_COL] = coefficients[1]
+                    feats[col, SYNC_AMPLITUDE_FEATURE_COL] = float(
+                        np.linalg.norm(coefficients)
                     )
         return feats.reshape(-1)
 
