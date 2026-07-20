@@ -35,11 +35,12 @@ The capacity ladder (Slot 9), in rungs that share this front-end and output cont
      detection rung, scoring the *joint* healthy-standardized coefficient distance of the
      live window to a healthy calibration reference. It is the deployable analog of the
      mechanics safe-probe screen (`synchronous_coefficient_vector` +
-     `coefficient_reference_distance`), so the deployed detection margin is the one the
-     excitation/detector co-design and the noisy-reference pilot measured — closing that
-     loop on one statistic. Like rung 1 it detects without attributing the fault type,
-     and it freezes its threshold on healthy calibration with a fail-loud guard against
-     an under-resolved false-alarm tail.
+     `coefficient_reference_distance`), so the excitation/detector co-design, pilot, and
+     deployed rung share one *score statistic*. The reference sample, threshold, and
+     persistence remain validation-owned and therefore do not inherit the pilot's margin
+     or decision rates. Like rung 1 it detects without attributing the fault type, and it
+     freezes its threshold on healthy calibration with a fail-loud guard against an
+     under-resolved false-alarm tail.
   2. **`TemporalAttributionNet`** (specified; trained post-freeze) — the matched
      learned temporal-attribution head: a shared temporal encoder over the `[W, D]`
      window (dilated temporal-conv / GRU) feeding class/unknown/location/severity
@@ -291,7 +292,8 @@ RECOMMENDED_WINDOW = RecommendedWindow(
         "stride∈{4,8,16} on noisy deployable observations and advanced W=768/stride=16 as "
         "the only suite-S cell clearing the <=5% worst-alignment held-out false-alarm "
         "screen (2.1% worst / 0.7% pooled) at 97.9% min per-fault detection and 100% "
-        "prototype attribution, versus 0% matched-C1 detection. Still a pilot proposal, "
+        "prototype attribution, versus 0% matched-C1 minimum per-fault detection. Still "
+        "a pilot proposal, "
         "not frozen: the false-alarm margins are single-event-thin at 48 held-out seeds, "
         "so a validation-sized healthy calibration set owns the frozen W/stride/threshold."
     ),
@@ -731,9 +733,10 @@ class CoefficientReferenceDetector(DiagnosisEstimator):
     rung instead computes the *joint* healthy-standardized Euclidean distance of the live
     coefficient vector to a healthy calibration mean — the same quantity the mechanics
     safe-probe screen and the noisy-reference pilot measure (`synchronous_coefficient_vector`
-    + `coefficient_reference_distance`). So the deployed estimator's detection margin is the
-    one the excitation/detector co-design analyzed, closing that loop on a single statistic
-    (S10-S12 coherence): amplitude -> coefficient pair -> joint coefficient distance.
+    + `coefficient_reference_distance`). The chain therefore closes on a single *score
+    statistic* (S10-S12 coherence): amplitude -> coefficient pair -> joint coefficient
+    distance. It does not transfer the pilot's detection margin or decision rates: the
+    validation reference, threshold, and persistence still own those quantities.
 
     It is a **detection** rung, not attribution. Crossing the threshold says the body's
     probe response has moved away from healthy, not which of structure/actuator/sensor
@@ -747,11 +750,11 @@ class CoefficientReferenceDetector(DiagnosisEstimator):
     **Threshold discipline.** The detection threshold is frozen on a healthy *calibration*
     set, never tuned on the evaluation/held-out set (the OOD-threshold discipline in
     `utils.metrics`). Because a small calibration set cannot resolve a low false-alarm tail
-    — the pilot's first BLOCK: with ``N`` healthy calibration values the ``(1 - far)``
-    quantile is merely the maximum until ``N`` is large — `calibrate_threshold` **fails
-    loud** when the calibration set is too small to place the requested tail, rather than
-    silently freezing an unresolved maximum. The threshold may also be set directly (a
-    labeled pilot-proposal value) for pre-validation experiments.
+    — the pilot's first BLOCK: an extreme empirical quantile can collapse to or sit near
+    the calibration maximum with too few tail observations — `calibrate_threshold` **fails
+    loud** when the calibration set is too small to provide the requested nominal tail
+    support. The threshold may also be set directly (a labeled pilot-proposal value) for
+    pre-validation experiments.
     """
 
     def __init__(
@@ -823,8 +826,8 @@ class CoefficientReferenceDetector(DiagnosisEstimator):
         vectors = np.stack(
             [synchronous_coefficient_vector(w, self.extractor) for w in healthy_windows]
         )
-        self._ref_mean = vectors.mean(axis=0)
-        self._ref_scale = self._scale_from(self._ref_mean, vectors.std(axis=0))
+        ref_mean = vectors.mean(axis=0)
+        ref_scale = self._scale_from(ref_mean, vectors.std(axis=0))
         n = vectors.shape[0]
         loo = np.empty(n, dtype=float)
         for i in range(n):
@@ -832,7 +835,16 @@ class CoefficientReferenceDetector(DiagnosisEstimator):
             m = others.mean(axis=0)
             s = self._scale_from(m, others.std(axis=0))
             loo[i] = coefficient_reference_distance(vectors[i], m, s)
+        had_reference = self._ref_mean is not None
+        self._ref_mean = ref_mean
+        self._ref_scale = ref_scale
         self._calibration_null_scores = loo
+        if had_reference:
+            # A threshold is meaningful only for the reference distribution that produced
+            # it. Re-fitting must fail closed instead of silently carrying an old calibrated
+            # or directly supplied operating point onto a new score distribution.
+            self._detect_threshold = None
+        self.reset()
         return self
 
     def calibrate_threshold(
@@ -848,10 +860,10 @@ class CoefficientReferenceDetector(DiagnosisEstimator):
         ``healthy_calibration_scores`` are supplied. **Fails loud** when the calibration
         set is too small to resolve the requested tail: to place a false-alarm rate
         ``far`` at the ``(1 - far)`` quantile with at least ``min_tail_count`` expected
-        exceedances, the set needs at least ``ceil(min_tail_count / far)`` values —
-        otherwise the "quantile" is merely the calibration maximum (the pilot's first
-        BLOCK). This refuses to freeze an unresolved maximum as if it were a genuine
-        quantile. Returns the frozen threshold.
+        tail observations, the set needs at least ``ceil(min_tail_count / far)`` values.
+        Below that size an extreme empirical quantile may collapse to or sit near the
+        calibration maximum (the pilot's first BLOCK). This refuses to freeze a threshold
+        with under-resolved nominal tail support. Returns the frozen threshold.
         """
 
         if not (0.0 < false_alarm_rate < 1.0):
@@ -871,8 +883,9 @@ class CoefficientReferenceDetector(DiagnosisEstimator):
             raise ValueError(
                 f"cannot resolve a {false_alarm_rate:.3g} false-alarm tail with "
                 f"{scores.size} healthy calibration scores: need >= {required} "
-                f"(>= {min_tail_count} expected exceedances), else the threshold is just "
-                "the calibration maximum. Use a validation-sized healthy calibration set."
+                f"(>= {min_tail_count} nominal tail observations). An under-sized set can "
+                "collapse the empirical quantile to or near its maximum. Use a "
+                "validation-sized healthy calibration set."
             )
         threshold = float(
             max(np.quantile(scores, 1.0 - false_alarm_rate, method="higher"), _EPS)
@@ -890,7 +903,11 @@ class CoefficientReferenceDetector(DiagnosisEstimator):
     def calibration_null_scores(self) -> np.ndarray | None:
         """The leave-one-out healthy calibration scores from `fit_reference`."""
 
-        return self._calibration_null_scores
+        return (
+            None
+            if self._calibration_null_scores is None
+            else self._calibration_null_scores.copy()
+        )
 
     def reset(self) -> None:
         """Reset the per-rollout detection latch and timing."""

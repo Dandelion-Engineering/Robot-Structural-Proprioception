@@ -22,10 +22,10 @@ Produces: `.venv/` (local, ignored).
 
 ## Step 2 — Run the focused tests
 
-Checks model compilation, independent deformation-state availability, localized stiffness-fault construction, schema-facing output shapes, synchronous-feature correctness, the safe-probe decision functions, and the noisy healthy-reference pilot's causal window/reference logic.
+Checks model compilation, independent deformation-state availability, localized stiffness-fault construction, schema-facing output shapes, synchronous-feature and coefficient-reference correctness, the safe-probe decision functions, the noisy healthy-reference pilot's causal window/reference logic, and the interpretable recovery-controller seam.
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest tests\test_feasibility_spike.py tests\test_synchronous_detection_floor.py tests\test_safe_probe_screen.py tests\test_noisy_reference_pilot.py -q
+.\.venv\Scripts\python.exe -m pytest tests\test_feasibility_spike.py tests\test_synchronous_detection_floor.py tests\test_safe_probe_screen.py tests\test_noisy_reference_pilot.py tests\test_estimator.py tests\test_recovery_control.py -q
 ```
 
 Produces: terminal test results.
@@ -191,4 +191,4 @@ All are free and commercial-use-permitting. Project-owned code and configuration
 
 ## Current boundary
 
-This packet reproduces the mechanics gate, detector-floor correction, safe-probe co-design screen, and noisy healthy-reference pilot, and it connects the selected MuJoCo plant's **real persisted privileged output** to the sensor-realism model. Schema Amendment A1 is jointly in force. The causal one-step plant→sensor→policy loop and estimator front exist and are tested, but the permanent coefficient-distance reference rung, learned attribution heads, and recovery controller are not complete. The fixed two-field contact role currently records zero because collision is disabled; optional-contact pilots still require endpoint-contact extraction. The prospective pilot follow-up advances W=768 / stride=16 only for estimator-owner review; the shared immutable `config.json` remains unfrozen. The packet therefore does **not** yet implement the confirmatory experiment or the interactive verification artifact; neither a research result nor a frozen configuration may be inferred from these development sensitivities.
+This packet reproduces the mechanics gate, detector-floor correction, safe-probe co-design screen, and noisy healthy-reference pilot, and it connects the selected MuJoCo plant's **real persisted privileged output** to the sensor-realism model. Schema Amendment A1 is jointly in force. The causal one-step plant→sensor→policy loop and estimator front exist and are tested. The permanent `CoefficientReferenceDetector` now uses the pilot's canonical score statistic with fail-loud reference/threshold lifecycle guards, and an interpretable gain-scheduled recovery-controller floor plugs into the same seam; both remain development increments under review, not a completed control result. The learned attribution and RMA heads are still unbuilt. The fixed two-field contact role currently records zero because collision is disabled; optional-contact pilots still require endpoint-contact extraction. The prospective pilot follow-up advances W=768 / stride=16 only as a development proposal; the shared immutable `config.json` remains unfrozen. The packet therefore does **not** yet implement the confirmatory experiment or the interactive verification artifact; neither a research result nor a frozen configuration may be inferred from these development sensitivities.

@@ -43,7 +43,12 @@ from utils.estimator import (  # noqa: E402
 )
 from utils.metrics import SOURCE_CLASS_ORDER as METRIC_ORDER  # noqa: E402
 from utils.online_loop import run_online_rollout  # noqa: E402
-from utils.schema_types import FaultSpec, N_JOINTS, observed_registry_width  # noqa: E402
+from utils.schema_types import (  # noqa: E402
+    CHANNEL_NAMES,
+    FaultSpec,
+    N_JOINTS,
+    observed_registry_width,
+)
 from utils.sensor_model import OnlineSensorSession, SensorModel  # noqa: E402
 from utils.synthetic_plant import synthetic_privileged_record  # noqa: E402
 
@@ -487,14 +492,12 @@ def _coef_tone_record(amp: float, noise: np.ndarray):
 
 
 def test_coefficient_statistic_matches_pilot_definition():
-    """The estimator's coefficient vector/distance ARE the pilot's exact statistic.
+    """The canonical coefficient vector/distance match an independent reconstruction.
 
-    This pins the S10-S12 coherence claim: the deployed rung and Codex's noisy-reference
-    pilot compute the same joint coefficient vector and the same standardized distance, so
-    the pilot's margins describe the deployed detector, not a different quantity.
+    The pilot imports these canonical helpers. This test independently reconstructs their
+    outputs so the shared score statistic is pinned without claiming that the pilot's
+    threshold, persistence, margin, or decision rates are already frozen for deployment.
     """
-
-    import run_noisy_reference_pilot as pilot
 
     times = _coef_times()
     rec, _, _ = _single_tone_record(
@@ -502,13 +505,19 @@ def test_coefficient_statistic_matches_pilot_definition():
     )
     ext = WindowFeatureExtractor(window_steps=times.size, probe_frequency_hz=DIAGNOSTIC_PROBE_HZ)
     mine = synchronous_coefficient_vector(rec, ext)
-    theirs = pilot.synchronous_coefficient_vector(rec, ext)
-    assert np.array_equal(mine, theirs)
+    features = ext.window_features(rec).reshape(-1, N_FEATURE_STATS + N_EXTRA_FEATURES)
+    available = np.concatenate(
+        [
+            np.repeat(rec.suite_available_mask[name], rec.values[name].shape[1])
+            for name in CHANNEL_NAMES
+        ]
+    ).astype(bool)
+    expected = features[:, [SYNC_COS_FEATURE_COL, SYNC_SIN_FEATURE_COL]][available].reshape(-1)
+    assert np.array_equal(mine, expected)
     mean = np.zeros_like(mine)
     scale = np.ones_like(mine)
-    assert coefficient_reference_distance(mine, mean, scale) == pytest.approx(
-        pilot.coefficient_distance(theirs, mean, scale)
-    )
+    expected_distance = np.linalg.norm((mine - mean) / scale) / np.sqrt(mine.size)
+    assert coefficient_reference_distance(mine, mean, scale) == pytest.approx(expected_distance)
 
 
 def test_coefficient_reference_detector_low_on_healthy_high_on_change():
@@ -601,6 +610,26 @@ def test_coefficient_reference_detector_requires_reference_and_threshold():
     with pytest.raises(ValueError):
         det.update(0, 0.0, rec)  # reference fitted but threshold unset
     det.update(0, 0.0, None).validate()  # a None window needs no threshold
+
+
+def test_coefficient_reference_detector_refit_invalidates_threshold_and_latch():
+    """A threshold/detection state cannot silently survive a changed healthy reference."""
+
+    rng = np.random.default_rng(13)
+    ext = WindowFeatureExtractor(window_steps=80, probe_frequency_hz=DIAGNOSTIC_PROBE_HZ)
+    det = CoefficientReferenceDetector(ext, persistence=1)
+    first = [_coef_tone_record(2.0, 0.02 * rng.standard_normal(80)) for _ in range(8)]
+    det.fit_reference(first)
+    det.calibrate_threshold(false_alarm_rate=0.25, min_tail_count=1)
+    latched = det.update(0, 0.0, _coef_tone_record(8.0, np.zeros(80)))
+    assert np.isfinite(latched.detection_time_s)
+
+    second = [_coef_tone_record(3.0, 0.02 * rng.standard_normal(80)) for _ in range(8)]
+    det.fit_reference(second)
+    assert det.detect_threshold is None
+    assert not np.isfinite(det.update(1, 0.01, None).detection_time_s)
+    with pytest.raises(ValueError):
+        det.update(2, 0.02, second[0])
 
 
 # --------------------------------------------------------------------------- #

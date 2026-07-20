@@ -1,10 +1,10 @@
 # Summary of Only Necessary Context — Codex
 
-**Rewritten:** 2026-07-20 11:35 PDT
+**Rewritten:** 2026-07-20 13:40 PDT
 
 **Current phase:** Phase 2 — Execution
 
-**Codex session just completed:** Session 11 · **Next:** Session 12
+**Codex session just completed:** Session 12 · **Next:** Session 13
 
 ## Current authoritative state
 
@@ -16,86 +16,87 @@ non-blocking review in `director_requests.md`; execution continues.
 The authoritative coordination file is
 `chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`.
 
-Claude Session 11 genuinely owner-re-reviewed Codex Session 10's coefficient-preserving
-feature and safety-pairing guard and explicitly approved the exact state. That combined
-loop is closed.
+Claude Session 12 genuinely reviewed and explicitly approved Codex Session 11's full
+noisy healthy-reference pilot state. That pilot loop is closed.
 
-One new review obligation is open after Codex Session 11: Claude must genuinely review
-Codex's noisy healthy-reference pilot script, tests, broad BLOCK, prospective follow-up,
-and documentation. Codex explicitly approves the current state and handed it back in the
-active thread. Do not infer Claude approval from use, implementation of a later rung,
-silence, or an unrelated handoff.
+Two new review obligations are open after Codex Session 12:
 
-## Noisy healthy-reference pilot
+1. Claude must owner-re-review Codex's edits to Claude's `CoefficientReferenceDetector`
+   and tests, plus the forward pilot canonicalization/metadata/report state. Codex
+   explicitly approves the current edited state.
+2. Claude must first-review Codex's new `GainScheduledRecoveryController` and tests.
+   Codex explicitly approves the current state.
 
-New Codex-owned instrument:
-`Reproducibility Packet/scripts/run_noisy_reference_pilot.py`.
+Do not infer either approval from later use, implementation, silence, or an unrelated
+handoff.
 
-It uses causal noisy deployable `ObservedRecord` windows and the same-state-approved
-cosine/sine features. It does **not** use a privileged fault-minus-healthy trace as the
-detector input and does not edit Claude's permanent estimator rung.
+## Coefficient-reference detector: current edited state
 
-Development convention tested:
+`Reproducibility Packet/scripts/utils/estimator.py` contains the permanent
+`CoefficientReferenceDetector` and proposes W=768 / stride=16. The core is sound:
 
-- scheduled one-cycle 0.8 Hz probe, phase reset at fault/probe onset;
-- first global stride-grid decision at or after probe end;
-- healthy calibration reference conditioned on task/probe, W, and decision lag;
-- dimension-normalized, healthy-standardized Euclidean distance on retained cosine/sine
-  coefficients;
-- 99th-percentile higher-method leave-one-out healthy calibration score as the
-  development threshold;
-- nearest standardized fault-shape centroid as a pilot-only attribution instrument.
+- joint healthy-standardized cosine/sine distance
+  `||(coeff_live-mean)/scale|| / sqrt(D)`;
+- healthy calibration reference replaces the privileged matched counterfactual;
+- detection only: non-healthy mass is uniform and the source-type call is abstained;
+- calibration tail guard requires at least `ceil(min_tail_count/far)` nominal tail
+  support; thresholds remain validation-owned.
 
-W=512 is a required inert negative control: it cannot span a full 0.8 Hz period, so the
-production extractor leaves all synchronous coefficients zero.
+Codex Session 12 made two load-bearing corrections:
 
-### Broad sweep — preserved BLOCK
+- the pilot and permanent rung share the **score statistic**, not an already-frozen
+  margin or decision rate; validation reference, threshold, and persistence still own
+  those quantities;
+- a successful `fit_reference()` that replaces an existing reference now atomically
+  installs the new reference, invalidates the old threshold, and resets the detection
+  latch. Scoring then fails until recalibration.
 
-Artifact: `Reproducibility Packet/results/noisy_reference_pilot/`.
+The W=768 / stride=16 rationale now says matched C1's **minimum per-fault** detection was
+0%, not that C1 detected no faults. This remains a pilot proposal, not frozen config.
 
-Grid: C1/S; task {0.4,0.5}; probe {0.025,0.05 N}; W {512,640,768}; stride
-{4,8,16}; onset offsets {0,5,11}; 8 calibration + 12 held-out sensor seeds per
-class/suite.
+## Noisy healthy-reference pilot: closed loop plus forward hygiene
 
-Closest cell: task 0.50 / probe 0.05 N / W=640 / stride=8.
+The broad BLOCK and prospective follow-up decisions are unchanged.
 
-- S minimum per-fault detection: 100%.
-- S minimum prototype attribution: 100%.
-- matched C1 minimum fault detection: 8.3%.
-- S healthy false alarms: 8.3% pooled, 16.7% worst alignment.
+- Broad artifact: `results/noisy_reference_pilot/`, base seed **1000**, 8 calibration +
+  12 held-out seeds. Closest W=640/stride=8 cell: S 100% minimum per-fault detection,
+  100% attribution, 8.3% pooled / 16.7% worst healthy false alarms; BLOCK.
+- Follow-up artifact: `results/noisy_reference_pilot_threshold_followup/`, base seed
+  **5000**, 32 calibration + 48 held-out seeds. W=768/stride=16: S 97.9% worst
+  per-fault detection, 100% prototype attribution, 0.7% pooled / 2.1% worst healthy
+  false alarms; matched C1 minimum per-fault detection 0%.
 
-Decision: BLOCK. Eight calibration values could not resolve the 5% healthy tail. The
-threshold was not retuned on those held-out rows.
+The follow-up report now states the missing caveat: 32 values leave its 99th-percentile
+higher-method threshold at the LOO maximum, and 2.1% is one event in 48. Both summaries
+record their base seeds and exact report seed ranges. The pilot now imports the canonical
+coefficient vector/distance from `utils.estimator`; duplicated definitions are gone. No
+metrics or decision changed and nothing is frozen.
 
-### Prospective larger-calibration follow-up — advances to owner review
+## Interpretable recovery-controller floor
 
-Artifact:
-`Reproducibility Packet/results/noisy_reference_pilot_threshold_followup/`.
+New `Reproducibility Packet/scripts/utils/recovery_control.py` implements
+`GainScheduledRecoveryController` for the existing `EstimatorCommandPolicy` callback.
+It consumes only deployable `EstimatorOutput` and time.
 
-Used the already-selected task 0.50 / probe 0.05 N candidate, the same statistic and
-threshold rule, new non-overlapping seeds (base 5000), 32 calibration + 48 held-out
-seeds per class/suite, and the same three onset alignments.
+- Healthy, type-abstained, tied/ambiguous, unlocalized, invalid-severity, or overly
+  uncertain outputs preserve the nominal 50%-task command. An actionable source must be
+  the unique highest-probability class as well as clear the configured threshold.
+- A confident structural diagnosis applies an explicit bounded global derate. This is a
+  safety response, not a claim that stiffness is repaired.
+- A confident localized actuator diagnosis applies probability-weighted, capped inverse-
+  gain scheduling using `severity_out` as remaining gain.
+- Detection-only rungs cannot trigger active compensation because they abstain on type.
 
-Advancing development cell: **W=768 / stride=16**.
-
-- S worst per-fault detection: **97.9%**.
-- S worst prototype attribution: **100%**.
-- S healthy false alarms: **0.7% pooled**, **2.1% worst alignment**.
-- matched C1 minimum fault detection: **0%**.
-- no healthy/structural/actuator development safety flag.
-
-Decision boundary: advance only to Claude's permanent coefficient-reference-rung
-implementation review. This is not the confirmatory C1-vs-S result and freezes nothing.
+On the real `CablePlant`, a one-hot joint-1 estimate with 50% gain remaining requested
+2× nominal at that joint; the plant's downstream fault delivered nominal torque exactly
+with no saturation. This is an interface/mechanism regression, **not** a closed-loop
+tracking result or research result. Controller defaults are provisional and unfrozen.
 
 ## Current estimator, detector, safety, and mechanics boundaries
 
-The approved per-column summary remains:
-
+The approved per-column summary remains
 `[last, mean, std, slope, sync_cos, sync_sin, sync_amplitude, valid_fraction]`.
-
-The learned `[W,D]` tensor is unchanged. W=768 / stride=16 now supersedes W=640 /
-stride=8 only as the **pilot proposal** for the coefficient-reference rung; neither is
-frozen until the review/validation/config gates close.
+The learned `[W,D]` tensor is unchanged.
 
 The selected mechanics candidate remains 50% ordinary task torque plus a 0.05 N,
 0.8 Hz, one-cycle raised-cosine probe. It is safe within the current development
@@ -104,55 +105,56 @@ envelope across healthy, structural, actuator, and encoder scenarios. The old cl
 margin.
 
 Safety uses privileged A1 truth: angle×2, speed×2, tip workspace, absolute gauge strain,
-and contact force. `safety_regression_delta` requires paired C1/S `[T,7]` shapes; the
-future evaluation driver still owns exact `[t_c,t_c+5 s]` slicing.
-
-Current contact remains collision-disabled and `[0,0]`; `CablePlant` fails if contact
-unexpectedly appears. Optional-contact pilots remain blocked until real MuJoCo endpoint-
-contact extraction exists.
+and contact force. The contact role remains collision-disabled `[0,0]`; `CablePlant`
+fails if contact unexpectedly appears. Optional-contact pilots require real endpoint-
+contact extraction first.
 
 ## Config remains explicitly unfrozen
 
 Current role hashes remain `dev-`. Still open:
 
-- Claude review of the noisy-reference pilot and permanent coefficient-distance rung;
+- Claude owner-re-review of the edited coefficient-reference state and first review of
+  the recovery-controller floor;
 - validation-sized healthy reference and validation-frozen class/abstention/selective/
   OOD thresholds;
 - shared severity/onset grids;
 - joint sanity-check of non-load-bearing sensor constants;
 - unscheduled phase drift and nonlinear/probe-band thermal interference;
 - optional-contact extraction/cases;
-- learned temporal attribution/RMA heads;
-- Codex residual/linear-system-ID baseline and recovery controller;
+- learned temporal attribution and RMA heads;
+- Codex residual/linear-system-ID baseline and controlled recovery comparison;
 - deployable-loader leakage, whole-trajectory/fault-setting split, role-hash rejection,
   multi-run storage, and immutable schema/config hash gates.
 
-## Exact resume path for Codex Session 12
+## Exact resume path for Codex Session 13
 
 1. Read the UTF-8 physical tail of the active Phase-2 thread. If Claude explicitly
-   approves the exact pilot state, close the loop. If Claude edits, inspect the actual
-   diff and genuinely re-review before approving or returning it.
-2. If Claude implements the permanent coefficient-distance healthy-reference rung,
-   review it against the approved pilot convention and verify it does not treat the
-   pilot threshold or W/stride as frozen validation values.
-3. Continue Codex's interpretable residual/linear-system-ID baseline and recovery
-   controller against the online seam.
-4. Implement endpoint-contact extraction before any optional-contact pilot.
-5. Before confirmatory generation, complete validation thresholding, fault grids,
+   approves the exact edited coefficient-reference/pilot state, close that loop. If
+   Claude edits, inspect the actual diff and genuinely re-review it.
+2. Review Claude's response to `recovery_control.py`; if Claude edits, reproduce the
+   real-plant compensation and genuinely re-review before approving or returning it.
+3. Implement the interpretable residual/linear-system-ID baseline against the causal
+   observation seam.
+4. Design a bounded development closed-loop comparison that separates exact actuator
+   delivery compensation from tracking recovery and safety. Do not call the one-step
+   compensation regression a control result.
+5. Implement endpoint-contact extraction before any optional-contact pilot.
+6. Before confirmatory generation, complete validation thresholding, fault grids,
    non-load-bearing sensor sanity, leakage/split/storage/role-hash audits, then freeze and
    hash the complete schema/config.
 
 ## Verification and session record
 
-- Full packet: **107 passed**.
-- `compileall`: passed.
-- Pilot CLI help: passed.
-- Broad pilot: 216 result rows; follow-up: 54 result rows; both JSON trees contain no
-  NaN/Infinity tokens.
-- Projected C1 is bit-for-bit identical to native C1 across values, masks, timing
-  metadata, and suite flags.
+- Full packet: **127 passed**.
+- Focused estimator + pilot: **36 passed**.
+- Recovery controller: **12 passed**, including real MuJoCo compensation and ambiguous-
+  source fallback.
+- `compileall`: passed; pilot CLI help: passed.
+- Pilot base-seed metadata: 1000 broad / 5000 follow-up.
+- Both report files reproduce exactly from amended JSON summaries after newline
+  normalization.
 - `git diff --check`: clean (line-ending warnings only).
-- Detailed record: `agents/Codex/Session Summaries/HumanReport11.md`.
+- Detailed record: `agents/Codex/Session Summaries/HumanReport12.md`.
 - Next regular Codex progress report: Session 16 unless a Claim-Sheet amendment or phase
   transition fires earlier.
 

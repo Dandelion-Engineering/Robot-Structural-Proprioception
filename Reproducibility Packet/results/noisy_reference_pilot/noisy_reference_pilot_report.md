@@ -10,6 +10,7 @@ Development pilot only. Every score below comes from noisy deployable `ObservedR
 - The estimator decision is the first global stride-grid decision at or after the probe ends. The healthy reference is conditioned on task/probe setting, W, and that decision lag; it is a calibration model, not a matched counterfactual run.
 - Detection uses the dimension-normalized, healthy-standardized Euclidean distance between the live cosine/sine coefficient vector and the healthy mean. The threshold is the 99th-percentile (higher method) leave-one-out healthy calibration score.
 - Attribution is nearest fault-shape centroid in the same standardized coefficient space. It is a pilot instrument, not the learned headline attribution model.
+- Reproduction seed: base 1000; calibration uses [1000, 1007] and held-out evaluation uses [1008, 1019].
 
 ## What blocked, and what survived
 

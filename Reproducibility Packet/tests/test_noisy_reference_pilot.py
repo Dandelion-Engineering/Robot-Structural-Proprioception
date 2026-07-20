@@ -14,13 +14,18 @@ sys.path.insert(0, str(SCRIPTS_DIR))
 from run_noisy_reference_pilot import (  # noqa: E402
     causal_window,
     ceil_to_stride,
+    coefficient_distance,
     evaluate_reference,
     fit_reference,
     project_observed_suite,
     synchronous_coefficient_vector,
 )
 from utils.schema_types import CHANNEL_NAMES  # noqa: E402
-from utils.estimator import WindowFeatureExtractor  # noqa: E402
+from utils.estimator import (  # noqa: E402
+    WindowFeatureExtractor,
+    coefficient_reference_distance,
+    synchronous_coefficient_vector as canonical_coefficient_vector,
+)
 from utils.sensor_model import SensorConfig, SensorModel  # noqa: E402
 from utils.synthetic_plant import synthetic_privileged_record  # noqa: E402
 
@@ -82,6 +87,13 @@ def test_w512_is_inert_and_w640_retains_the_real_gauge_coefficients() -> None:
     assert short_vector.shape == (36,)
     assert np.array_equal(short_vector, np.zeros_like(short_vector))
     assert np.any(np.abs(full_vector) > 1.0)
+
+
+def test_pilot_uses_canonical_estimator_coefficient_statistic() -> None:
+    """Pilot and permanent rung share functions, not duplicated look-alike definitions."""
+
+    assert synchronous_coefficient_vector is canonical_coefficient_vector
+    assert coefficient_distance is coefficient_reference_distance
 
 
 def test_projected_c1_is_exactly_the_matched_sensor_model_output() -> None:

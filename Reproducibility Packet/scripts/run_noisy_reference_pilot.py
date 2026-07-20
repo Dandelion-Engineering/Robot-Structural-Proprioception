@@ -29,20 +29,16 @@ import numpy as np
 from utils.cable_mechanics import CableModelConfig
 from utils.cable_plant import CablePlant
 from utils.estimator import (
-    N_EXTRA_FEATURES,
-    N_FEATURE_STATS,
-    SYNC_COS_FEATURE_COL,
-    SYNC_SIN_FEATURE_COL,
     WindowFeatureExtractor,
+    coefficient_reference_distance as coefficient_distance,
+    synchronous_coefficient_vector,
 )
 from utils.schema_types import (
     CHANNEL_NAMES,
-    CHANNEL_WIDTH,
     FaultSpec,
     ObservedRecord,
     PrivilegedRecord,
     SUITE_CHANNELS,
-    observed_registry_width,
 )
 from utils.sensor_model import SensorConfig, SensorModel
 
@@ -208,33 +204,6 @@ def causal_window(
     )
 
 
-def suite_scalar_mask(record: ObservedRecord) -> np.ndarray:
-    """Return the fixed-registry scalar mask physically carried by ``record.suite``."""
-
-    flags: list[bool] = []
-    for name in CHANNEL_NAMES:
-        flags.extend([bool(record.suite_available_mask[name])] * CHANNEL_WIDTH[name])
-    mask = np.asarray(flags, dtype=bool)
-    if mask.shape != (observed_registry_width(),):
-        raise RuntimeError("suite scalar mask drifted from the observed registry")
-    return mask
-
-
-def synchronous_coefficient_vector(
-    record: ObservedRecord, extractor: WindowFeatureExtractor
-) -> np.ndarray:
-    """Return available-channel cosine/sine coefficients from the shared front-end."""
-
-    features = extractor.window_features(record).reshape(
-        observed_registry_width(), N_FEATURE_STATS + N_EXTRA_FEATURES
-    )
-    pair = features[:, [SYNC_COS_FEATURE_COL, SYNC_SIN_FEATURE_COL]]
-    vector = pair[suite_scalar_mask(record)].reshape(-1)
-    if not np.all(np.isfinite(vector)):
-        raise ValueError("synchronous coefficient vector must be finite")
-    return vector
-
-
 def project_observed_suite(record: ObservedRecord, suite: str) -> ObservedRecord:
     """Project an S record to C1 by discarding the unavailable gauge role.
 
@@ -297,23 +266,6 @@ def project_observed_suite(record: ObservedRecord, suite: str) -> ObservedRecord
         schema_version=record.schema_version,
         split=record.split,
     )
-
-
-def coefficient_distance(
-    vector: np.ndarray, mean: np.ndarray, scale: np.ndarray
-) -> float:
-    """Return dimension-normalized diagonal-Mahalanobis coefficient distance."""
-
-    sample = np.asarray(vector, dtype=float)
-    reference = np.asarray(mean, dtype=float)
-    spread = np.asarray(scale, dtype=float)
-    if sample.shape != reference.shape or sample.shape != spread.shape or sample.ndim != 1:
-        raise ValueError("vector, mean, and scale must be aligned one-dimensional arrays")
-    if not np.all(np.isfinite(sample)) or not np.all(np.isfinite(reference)):
-        raise ValueError("vector and mean must be finite")
-    if not np.all(np.isfinite(spread)) or np.any(spread <= 0.0):
-        raise ValueError("scale must be finite and positive")
-    return float(np.linalg.norm((sample - reference) / spread) / np.sqrt(sample.size))
 
 
 def fit_reference(samples: dict[str, np.ndarray]) -> CoefficientReference:
@@ -831,9 +783,13 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
             f"alignment was {100.0 * closest['maximum_false_alarm_rate']:.1f}%, while "
             f"the minimum per-fault detection rate remained "
             f"{100.0 * closest['minimum_fault_detection_rate']:.1f}%. This advances the "
-            "scheduled-reference convention for estimator-owner review only. The "
-            "threshold, sensor constants, severities, and W/stride values remain "
-            "development choices until validation and config freeze."
+            "scheduled-reference convention for estimator-owner review only. With "
+            f"{summary['grid']['calibration_seeds']} calibration seeds, the pilot's "
+            "99th-percentile higher-method threshold is still the maximum leave-one-out "
+            "score; the reported worst-alignment false-alarm rate therefore has only "
+            f"1/{summary['grid']['evaluation_seeds']} event resolution. The threshold, "
+            "sensor constants, severities, and W/stride values remain development choices "
+            "until a larger validation calibration and config freeze."
         )
         closing_boundary = (
             "- The advance is only to estimator-owner review and the next pilot increment; "
@@ -863,6 +819,12 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
         "is the 99th-percentile (higher method) leave-one-out healthy calibration score.",
         "- Attribution is nearest fault-shape centroid in the same standardized coefficient "
         "space. It is a pilot instrument, not the learned headline attribution model.",
+        f"- Reproduction seed: base {summary['grid']['base_seed']}; calibration uses "
+        f"[{summary['grid']['base_seed']}, "
+        f"{summary['grid']['base_seed'] + summary['grid']['calibration_seeds'] - 1}] and "
+        f"held-out evaluation uses "
+        f"[{summary['grid']['base_seed'] + summary['grid']['calibration_seeds']}, "
+        f"{summary['grid']['base_seed'] + summary['grid']['calibration_seeds'] + summary['grid']['evaluation_seeds'] - 1}].",
         "",
         diagnosis_heading,
         "",
@@ -1072,6 +1034,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 "windows": sorted(set(args.windows)),
                 "strides": sorted(set(args.strides)),
                 "onset_offset_steps": sorted(set(args.onset_offset_steps)),
+                "base_seed": args.seed,
                 "calibration_seeds": args.calibration_seeds,
                 "evaluation_seeds": args.evaluation_seeds,
                 "workers": args.workers,

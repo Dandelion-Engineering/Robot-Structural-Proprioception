@@ -10,12 +10,13 @@ Development pilot only. Every score below comes from noisy deployable `ObservedR
 - The estimator decision is the first global stride-grid decision at or after the probe ends. The healthy reference is conditioned on task/probe setting, W, and that decision lag; it is a calibration model, not a matched counterfactual run.
 - Detection uses the dimension-normalized, healthy-standardized Euclidean distance between the live cosine/sine coefficient vector and the healthy mean. The threshold is the 99th-percentile (higher method) leave-one-out healthy calibration score.
 - Attribution is nearest fault-shape centroid in the same standardized coefficient space. It is a pilot instrument, not the learned headline attribution model.
+- Reproduction seed: base 5000; calibration uses [5000, 5031] and held-out evaluation uses [5032, 5079].
 
 ## What cleared, and what remains provisional
 
 The selected cell was task 0.500, probe 0.050 N, W=768, stride=16. Suite S's worst per-fault detection rate across the tested alignments was 97.9%, and its prototype attribution was 100.0% in the worst alignment. The matched C1 minimum fault-detection rate was only 0.0%.
 
-Suite S's pooled/mean held-out healthy false-alarm rate was 0.7% and the worst tested alignment was 2.1%, while the minimum per-fault detection rate remained 97.9%. This advances the scheduled-reference convention for estimator-owner review only. The threshold, sensor constants, severities, and W/stride values remain development choices until validation and config freeze.
+Suite S's pooled/mean held-out healthy false-alarm rate was 0.7% and the worst tested alignment was 2.1%, while the minimum per-fault detection rate remained 97.9%. This advances the scheduled-reference convention for estimator-owner review only. With 32 calibration seeds, the pilot's 99th-percentile higher-method threshold is still the maximum leave-one-out score; the reported worst-alignment false-alarm rate therefore has only 1/48 event resolution. The threshold, sensor constants, severities, and W/stride values remain development choices until a larger validation calibration and config freeze.
 
 ## Best cell per candidate (suite S)
 

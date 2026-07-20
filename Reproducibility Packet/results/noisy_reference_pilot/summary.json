@@ -24,6 +24,7 @@
       5,
       11
     ],
+    "base_seed": 1000,
     "calibration_seeds": 8,
     "evaluation_seeds": 12,
     "workers": 4,
