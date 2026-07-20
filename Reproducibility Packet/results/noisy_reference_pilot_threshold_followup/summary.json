@@ -1,0 +1,3308 @@
+{
+  "purpose": "development noisy-reference pilot; not confirmatory or frozen",
+  "grid": {
+    "task_torque_scales": [
+      0.5
+    ],
+    "peak_loads_n": [
+      0.05
+    ],
+    "windows": [
+      512,
+      640,
+      768
+    ],
+    "strides": [
+      4,
+      8,
+      16
+    ],
+    "onset_offset_steps": [
+      0,
+      5,
+      11
+    ],
+    "calibration_seeds": 32,
+    "evaluation_seeds": 48,
+    "workers": 4,
+    "frequency_hz": 0.8,
+    "thermal_ramp_c_per_640_sample_window": 3.0,
+    "point_count": 17,
+    "simulation_timestep_s": 0.0001
+  },
+  "development_screen": {
+    "maximum_false_alarm_rate": 0.05,
+    "minimum_fault_detection_rate": 0.8
+  },
+  "reference_convention": {
+    "probe": "scheduled phase-reset one-cycle burst",
+    "decision": "first global stride-grid decision at or after probe end",
+    "reference": "healthy calibration mean/scale conditioned on task, probe, W, and decision lag; no matched fault-minus-healthy input",
+    "distance": "dimension-normalized diagonal-Mahalanobis distance on retained cosine/sine coefficients",
+    "threshold": "99th-percentile higher-method leave-one-out healthy calibration score",
+    "attribution": "nearest calibration fault-shape centroid; pilot instrument only"
+  },
+  "rows": [
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 0,
+      "onset_index": 500,
+      "suite": "C1",
+      "window": 512,
+      "stride": 4,
+      "decision_lag_steps": 0,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": false,
+      "detect_threshold": 1e-12,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.0,
+      "structure_detection_rate": 0.0,
+      "actuator_detection_rate": 0.0,
+      "sensor_detection_rate": 0.0,
+      "macro_attribution_accuracy": 0.3333333333333333,
+      "structure_attribution_accuracy": 0.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.0,
+      "detail": {
+        "detect_threshold": 1e-12,
+        "calibration_null_mean": 0.0,
+        "calibration_null_max": 0.0,
+        "healthy_score_mean": 0.0,
+        "healthy_score_max": 0.0,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "actuator": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "sensor": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.0,
+        "macro_attribution_accuracy": 0.3333333333333333
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 0,
+      "onset_index": 500,
+      "suite": "C1",
+      "window": 512,
+      "stride": 8,
+      "decision_lag_steps": 4,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": false,
+      "detect_threshold": 1e-12,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.0,
+      "structure_detection_rate": 0.0,
+      "actuator_detection_rate": 0.0,
+      "sensor_detection_rate": 0.0,
+      "macro_attribution_accuracy": 0.3333333333333333,
+      "structure_attribution_accuracy": 0.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.0,
+      "detail": {
+        "detect_threshold": 1e-12,
+        "calibration_null_mean": 0.0,
+        "calibration_null_max": 0.0,
+        "healthy_score_mean": 0.0,
+        "healthy_score_max": 0.0,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "actuator": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "sensor": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.0,
+        "macro_attribution_accuracy": 0.3333333333333333
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 0,
+      "onset_index": 500,
+      "suite": "C1",
+      "window": 512,
+      "stride": 16,
+      "decision_lag_steps": 12,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": false,
+      "detect_threshold": 1e-12,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.0,
+      "structure_detection_rate": 0.0,
+      "actuator_detection_rate": 0.0,
+      "sensor_detection_rate": 0.0,
+      "macro_attribution_accuracy": 0.3333333333333333,
+      "structure_attribution_accuracy": 0.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.0,
+      "detail": {
+        "detect_threshold": 1e-12,
+        "calibration_null_mean": 0.0,
+        "calibration_null_max": 0.0,
+        "healthy_score_mean": 0.0,
+        "healthy_score_max": 0.0,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "actuator": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "sensor": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.0,
+        "macro_attribution_accuracy": 0.3333333333333333
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 0,
+      "onset_index": 500,
+      "suite": "C1",
+      "window": 640,
+      "stride": 4,
+      "decision_lag_steps": 0,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.2599739661509957,
+      "false_alarm_rate": 0.125,
+      "minimum_fault_detection_rate": 0.14583333333333334,
+      "structure_detection_rate": 0.14583333333333334,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 0.9930555555555555,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.9791666666666666,
+      "detail": {
+        "detect_threshold": 1.2599739661509957,
+        "calibration_null_mean": 0.9880937760879629,
+        "calibration_null_max": 1.2599739661509957,
+        "healthy_score_mean": 1.0133871232768241,
+        "healthy_score_max": 1.4711725479917381,
+        "false_alarm_rate": 0.125,
+        "per_class": {
+          "structure": {
+            "score_mean": 1.0024962261717862,
+            "score_min": 0.6322529000029005,
+            "detection_rate": 0.14583333333333334,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "actuator": {
+            "score_mean": 13.719270195165855,
+            "score_min": 13.396901133752436,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 15.333107496179501,
+            "score_min": 8.031021738106524,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 0.9791666666666666,
+            "detected_attribution_accuracy": 0.9791666666666666
+          }
+        },
+        "minimum_fault_detection_rate": 0.14583333333333334,
+        "macro_attribution_accuracy": 0.9930555555555555
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 0,
+      "onset_index": 500,
+      "suite": "C1",
+      "window": 640,
+      "stride": 8,
+      "decision_lag_steps": 4,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.3261505521856802,
+      "false_alarm_rate": 0.10416666666666667,
+      "minimum_fault_detection_rate": 0.041666666666666664,
+      "structure_detection_rate": 0.041666666666666664,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 0.9930555555555555,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.9791666666666666,
+      "detail": {
+        "detect_threshold": 1.3261505521856802,
+        "calibration_null_mean": 0.986516026912347,
+        "calibration_null_max": 1.3261505521856802,
+        "healthy_score_mean": 1.0115627689557598,
+        "healthy_score_max": 1.398237273167057,
+        "false_alarm_rate": 0.10416666666666667,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.9999399240825902,
+            "score_min": 0.6234841500502846,
+            "detection_rate": 0.041666666666666664,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "actuator": {
+            "score_mean": 13.037968594307403,
+            "score_min": 12.690765528268933,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 13.844282700281843,
+            "score_min": 5.924302717705506,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 0.9791666666666666,
+            "detected_attribution_accuracy": 0.9791666666666666
+          }
+        },
+        "minimum_fault_detection_rate": 0.041666666666666664,
+        "macro_attribution_accuracy": 0.9930555555555555
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 0,
+      "onset_index": 500,
+      "suite": "C1",
+      "window": 640,
+      "stride": 16,
+      "decision_lag_steps": 12,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.3527751156031491,
+      "false_alarm_rate": 0.0625,
+      "minimum_fault_detection_rate": 0.08333333333333333,
+      "structure_detection_rate": 0.08333333333333333,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 0.9930555555555555,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.9791666666666666,
+      "detail": {
+        "detect_threshold": 1.3527751156031491,
+        "calibration_null_mean": 0.9822162079921122,
+        "calibration_null_max": 1.3527751156031491,
+        "healthy_score_mean": 0.9799511327296243,
+        "healthy_score_max": 1.4571807742625589,
+        "false_alarm_rate": 0.0625,
+        "per_class": {
+          "structure": {
+            "score_mean": 1.0306208187050496,
+            "score_min": 0.620977963573586,
+            "detection_rate": 0.08333333333333333,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "actuator": {
+            "score_mean": 14.332359621030966,
+            "score_min": 13.826443055219986,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 13.915477537712723,
+            "score_min": 2.459197235203128,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 0.9791666666666666,
+            "detected_attribution_accuracy": 0.9791666666666666
+          }
+        },
+        "minimum_fault_detection_rate": 0.08333333333333333,
+        "macro_attribution_accuracy": 0.9930555555555555
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 0,
+      "onset_index": 500,
+      "suite": "C1",
+      "window": 768,
+      "stride": 4,
+      "decision_lag_steps": 0,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.2618103657521078,
+      "false_alarm_rate": 0.020833333333333332,
+      "minimum_fault_detection_rate": 0.041666666666666664,
+      "structure_detection_rate": 0.041666666666666664,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 1.0,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 1.0,
+      "detail": {
+        "detect_threshold": 1.2618103657521078,
+        "calibration_null_mean": 0.9848570758207749,
+        "calibration_null_max": 1.2618103657521078,
+        "healthy_score_mean": 0.9232587102856761,
+        "healthy_score_max": 1.318506648770954,
+        "false_alarm_rate": 0.020833333333333332,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.9484532551457431,
+            "score_min": 0.5199658187883479,
+            "detection_rate": 0.041666666666666664,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "actuator": {
+            "score_mean": 7.671456183017516,
+            "score_min": 7.099375249685614,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 12.63158821043495,
+            "score_min": 12.015092871978418,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.041666666666666664,
+        "macro_attribution_accuracy": 1.0
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 0,
+      "onset_index": 500,
+      "suite": "C1",
+      "window": 768,
+      "stride": 8,
+      "decision_lag_steps": 4,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.259796284916877,
+      "false_alarm_rate": 0.041666666666666664,
+      "minimum_fault_detection_rate": 0.10416666666666667,
+      "structure_detection_rate": 0.10416666666666667,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 1.0,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 1.0,
+      "detail": {
+        "detect_threshold": 1.259796284916877,
+        "calibration_null_mean": 0.9860218772960695,
+        "calibration_null_max": 1.259796284916877,
+        "healthy_score_mean": 0.9134247538715096,
+        "healthy_score_max": 1.3210883109256608,
+        "false_alarm_rate": 0.041666666666666664,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.964285817299697,
+            "score_min": 0.5332888057140945,
+            "detection_rate": 0.10416666666666667,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "actuator": {
+            "score_mean": 8.075596558934748,
+            "score_min": 7.4978228121871995,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 13.181386984325428,
+            "score_min": 12.574540433173746,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.10416666666666667,
+        "macro_attribution_accuracy": 1.0
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 0,
+      "onset_index": 500,
+      "suite": "C1",
+      "window": 768,
+      "stride": 16,
+      "decision_lag_steps": 12,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.2949253588363505,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.020833333333333332,
+      "structure_detection_rate": 0.020833333333333332,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 1.0,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 1.0,
+      "detail": {
+        "detect_threshold": 1.2949253588363505,
+        "calibration_null_mean": 0.9821536550703818,
+        "calibration_null_max": 1.2949253588363505,
+        "healthy_score_mean": 0.8975631799902692,
+        "healthy_score_max": 1.2331175891827766,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.9251640037751491,
+            "score_min": 0.4543319353719143,
+            "detection_rate": 0.020833333333333332,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "actuator": {
+            "score_mean": 8.42700640073255,
+            "score_min": 7.867234799970693,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 12.28219602904162,
+            "score_min": 11.61667032474104,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.020833333333333332,
+        "macro_attribution_accuracy": 1.0
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 0,
+      "onset_index": 500,
+      "suite": "S",
+      "window": 512,
+      "stride": 4,
+      "decision_lag_steps": 0,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": false,
+      "detect_threshold": 1e-12,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.0,
+      "structure_detection_rate": 0.0,
+      "actuator_detection_rate": 0.0,
+      "sensor_detection_rate": 0.0,
+      "macro_attribution_accuracy": 0.3333333333333333,
+      "structure_attribution_accuracy": 0.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.0,
+      "detail": {
+        "detect_threshold": 1e-12,
+        "calibration_null_mean": 0.0,
+        "calibration_null_max": 0.0,
+        "healthy_score_mean": 0.0,
+        "healthy_score_max": 0.0,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "actuator": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "sensor": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.0,
+        "macro_attribution_accuracy": 0.3333333333333333
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 0,
+      "onset_index": 500,
+      "suite": "S",
+      "window": 512,
+      "stride": 8,
+      "decision_lag_steps": 4,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": false,
+      "detect_threshold": 1e-12,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.0,
+      "structure_detection_rate": 0.0,
+      "actuator_detection_rate": 0.0,
+      "sensor_detection_rate": 0.0,
+      "macro_attribution_accuracy": 0.3333333333333333,
+      "structure_attribution_accuracy": 0.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.0,
+      "detail": {
+        "detect_threshold": 1e-12,
+        "calibration_null_mean": 0.0,
+        "calibration_null_max": 0.0,
+        "healthy_score_mean": 0.0,
+        "healthy_score_max": 0.0,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "actuator": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "sensor": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.0,
+        "macro_attribution_accuracy": 0.3333333333333333
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 0,
+      "onset_index": 500,
+      "suite": "S",
+      "window": 512,
+      "stride": 16,
+      "decision_lag_steps": 12,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": false,
+      "detect_threshold": 1e-12,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.0,
+      "structure_detection_rate": 0.0,
+      "actuator_detection_rate": 0.0,
+      "sensor_detection_rate": 0.0,
+      "macro_attribution_accuracy": 0.3333333333333333,
+      "structure_attribution_accuracy": 0.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.0,
+      "detail": {
+        "detect_threshold": 1e-12,
+        "calibration_null_mean": 0.0,
+        "calibration_null_max": 0.0,
+        "healthy_score_mean": 0.0,
+        "healthy_score_max": 0.0,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "actuator": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "sensor": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.0,
+        "macro_attribution_accuracy": 0.3333333333333333
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 0,
+      "onset_index": 500,
+      "suite": "S",
+      "window": 640,
+      "stride": 4,
+      "decision_lag_steps": 0,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.2791461301713547,
+      "false_alarm_rate": 0.08333333333333333,
+      "minimum_fault_detection_rate": 1.0,
+      "structure_detection_rate": 1.0,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 0.9930555555555555,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.9791666666666666,
+      "detail": {
+        "detect_threshold": 1.2791461301713547,
+        "calibration_null_mean": 1.0077426906082916,
+        "calibration_null_max": 1.2791461301713547,
+        "healthy_score_mean": 1.0144330315836987,
+        "healthy_score_max": 1.3793213520957988,
+        "false_alarm_rate": 0.08333333333333333,
+        "per_class": {
+          "structure": {
+            "score_mean": 1.7038712750236755,
+            "score_min": 1.3982908689581854,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "actuator": {
+            "score_mean": 12.23070761189704,
+            "score_min": 11.955693481330437,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 13.53248908127226,
+            "score_min": 7.10089974087163,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 0.9791666666666666,
+            "detected_attribution_accuracy": 0.9791666666666666
+          }
+        },
+        "minimum_fault_detection_rate": 1.0,
+        "macro_attribution_accuracy": 0.9930555555555555
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 0,
+      "onset_index": 500,
+      "suite": "S",
+      "window": 640,
+      "stride": 8,
+      "decision_lag_steps": 4,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.382532050900287,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 1.0,
+      "structure_detection_rate": 1.0,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 0.9930555555555555,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.9791666666666666,
+      "detail": {
+        "detect_threshold": 1.382532050900287,
+        "calibration_null_mean": 1.0063338005767435,
+        "calibration_null_max": 1.382532050900287,
+        "healthy_score_mean": 1.0089140453524335,
+        "healthy_score_max": 1.316667044836172,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 1.7356665522623738,
+            "score_min": 1.398807641759718,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "actuator": {
+            "score_mean": 11.641115968393121,
+            "score_min": 11.359508385453834,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 12.22071723051524,
+            "score_min": 5.249761886176878,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 0.9791666666666666,
+            "detected_attribution_accuracy": 0.9791666666666666
+          }
+        },
+        "minimum_fault_detection_rate": 1.0,
+        "macro_attribution_accuracy": 0.9930555555555555
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 0,
+      "onset_index": 500,
+      "suite": "S",
+      "window": 640,
+      "stride": 16,
+      "decision_lag_steps": 12,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.287103135278068,
+      "false_alarm_rate": 0.041666666666666664,
+      "minimum_fault_detection_rate": 1.0,
+      "structure_detection_rate": 1.0,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 0.9930555555555555,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.9791666666666666,
+      "detail": {
+        "detect_threshold": 1.287103135278068,
+        "calibration_null_mean": 1.0037082866680525,
+        "calibration_null_max": 1.287103135278068,
+        "healthy_score_mean": 0.983293774566353,
+        "healthy_score_max": 1.3482080417242939,
+        "false_alarm_rate": 0.041666666666666664,
+        "per_class": {
+          "structure": {
+            "score_mean": 1.8952598615096017,
+            "score_min": 1.5170224091608973,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "actuator": {
+            "score_mean": 12.77049459262451,
+            "score_min": 12.343638218435444,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 12.283916314364966,
+            "score_min": 2.224718482342596,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 0.9791666666666666,
+            "detected_attribution_accuracy": 0.9791666666666666
+          }
+        },
+        "minimum_fault_detection_rate": 1.0,
+        "macro_attribution_accuracy": 0.9930555555555555
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 0,
+      "onset_index": 500,
+      "suite": "S",
+      "window": 768,
+      "stride": 4,
+      "decision_lag_steps": 0,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.193630843225238,
+      "false_alarm_rate": 0.0625,
+      "minimum_fault_detection_rate": 1.0,
+      "structure_detection_rate": 1.0,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 1.0,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 1.0,
+      "detail": {
+        "detect_threshold": 1.193630843225238,
+        "calibration_null_mean": 1.0069395374942796,
+        "calibration_null_max": 1.193630843225238,
+        "healthy_score_mean": 0.9595929694942432,
+        "healthy_score_max": 1.241311227772665,
+        "false_alarm_rate": 0.0625,
+        "per_class": {
+          "structure": {
+            "score_mean": 1.5972797597808348,
+            "score_min": 1.2316484633565412,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "actuator": {
+            "score_mean": 6.979957441060655,
+            "score_min": 6.529143268499353,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 11.153039846736766,
+            "score_min": 10.608230816400779,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          }
+        },
+        "minimum_fault_detection_rate": 1.0,
+        "macro_attribution_accuracy": 1.0
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 0,
+      "onset_index": 500,
+      "suite": "S",
+      "window": 768,
+      "stride": 8,
+      "decision_lag_steps": 4,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.2113987253838203,
+      "false_alarm_rate": 0.08333333333333333,
+      "minimum_fault_detection_rate": 0.9791666666666666,
+      "structure_detection_rate": 0.9791666666666666,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 1.0,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 1.0,
+      "detail": {
+        "detect_threshold": 1.2113987253838203,
+        "calibration_null_mean": 1.0077567554776885,
+        "calibration_null_max": 1.2113987253838203,
+        "healthy_score_mean": 0.9455910310252621,
+        "healthy_score_max": 1.2385885984593494,
+        "false_alarm_rate": 0.08333333333333333,
+        "per_class": {
+          "structure": {
+            "score_mean": 1.6207395306066568,
+            "score_min": 1.1984734091800509,
+            "detection_rate": 0.9791666666666666,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "actuator": {
+            "score_mean": 7.333050521136927,
+            "score_min": 6.791813864414984,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 11.63724778512175,
+            "score_min": 11.101009376415684,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.9791666666666666,
+        "macro_attribution_accuracy": 1.0
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 0,
+      "onset_index": 500,
+      "suite": "S",
+      "window": 768,
+      "stride": 16,
+      "decision_lag_steps": 12,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.2236485846498566,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 1.0,
+      "structure_detection_rate": 1.0,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 1.0,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 1.0,
+      "detail": {
+        "detect_threshold": 1.2236485846498566,
+        "calibration_null_mean": 1.0044181124153455,
+        "calibration_null_max": 1.2236485846498566,
+        "healthy_score_mean": 0.9444583097164346,
+        "healthy_score_max": 1.1963349349007142,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 1.7290199833643944,
+            "score_min": 1.2837288523459842,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "actuator": {
+            "score_mean": 7.66095939497428,
+            "score_min": 7.17788905227998,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 10.84600050550963,
+            "score_min": 10.260012875234905,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          }
+        },
+        "minimum_fault_detection_rate": 1.0,
+        "macro_attribution_accuracy": 1.0
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 5,
+      "onset_index": 505,
+      "suite": "C1",
+      "window": 512,
+      "stride": 4,
+      "decision_lag_steps": 3,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": false,
+      "detect_threshold": 1e-12,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.0,
+      "structure_detection_rate": 0.0,
+      "actuator_detection_rate": 0.0,
+      "sensor_detection_rate": 0.0,
+      "macro_attribution_accuracy": 0.3333333333333333,
+      "structure_attribution_accuracy": 0.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.0,
+      "detail": {
+        "detect_threshold": 1e-12,
+        "calibration_null_mean": 0.0,
+        "calibration_null_max": 0.0,
+        "healthy_score_mean": 0.0,
+        "healthy_score_max": 0.0,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "actuator": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "sensor": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.0,
+        "macro_attribution_accuracy": 0.3333333333333333
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 5,
+      "onset_index": 505,
+      "suite": "C1",
+      "window": 512,
+      "stride": 8,
+      "decision_lag_steps": 7,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": false,
+      "detect_threshold": 1e-12,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.0,
+      "structure_detection_rate": 0.0,
+      "actuator_detection_rate": 0.0,
+      "sensor_detection_rate": 0.0,
+      "macro_attribution_accuracy": 0.3333333333333333,
+      "structure_attribution_accuracy": 0.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.0,
+      "detail": {
+        "detect_threshold": 1e-12,
+        "calibration_null_mean": 0.0,
+        "calibration_null_max": 0.0,
+        "healthy_score_mean": 0.0,
+        "healthy_score_max": 0.0,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "actuator": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "sensor": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.0,
+        "macro_attribution_accuracy": 0.3333333333333333
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 5,
+      "onset_index": 505,
+      "suite": "C1",
+      "window": 512,
+      "stride": 16,
+      "decision_lag_steps": 7,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": false,
+      "detect_threshold": 1e-12,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.0,
+      "structure_detection_rate": 0.0,
+      "actuator_detection_rate": 0.0,
+      "sensor_detection_rate": 0.0,
+      "macro_attribution_accuracy": 0.3333333333333333,
+      "structure_attribution_accuracy": 0.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.0,
+      "detail": {
+        "detect_threshold": 1e-12,
+        "calibration_null_mean": 0.0,
+        "calibration_null_max": 0.0,
+        "healthy_score_mean": 0.0,
+        "healthy_score_max": 0.0,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "actuator": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "sensor": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.0,
+        "macro_attribution_accuracy": 0.3333333333333333
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 5,
+      "onset_index": 505,
+      "suite": "C1",
+      "window": 640,
+      "stride": 4,
+      "decision_lag_steps": 3,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.4844087677581852,
+      "false_alarm_rate": 0.10416666666666667,
+      "minimum_fault_detection_rate": 0.0,
+      "structure_detection_rate": 0.0,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 0.9930555555555555,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.9791666666666666,
+      "detail": {
+        "detect_threshold": 1.4844087677581852,
+        "calibration_null_mean": 0.982388924757565,
+        "calibration_null_max": 1.4844087677581852,
+        "healthy_score_mean": 1.0753258848360183,
+        "healthy_score_max": 1.822216196551842,
+        "false_alarm_rate": 0.10416666666666667,
+        "per_class": {
+          "structure": {
+            "score_mean": 1.0075201684853683,
+            "score_min": 0.6535068984454226,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "actuator": {
+            "score_mean": 12.622092292689464,
+            "score_min": 12.18445807916771,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 13.79458570185301,
+            "score_min": 6.381431976519703,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 0.9791666666666666,
+            "detected_attribution_accuracy": 0.9791666666666666
+          }
+        },
+        "minimum_fault_detection_rate": 0.0,
+        "macro_attribution_accuracy": 0.9930555555555555
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 5,
+      "onset_index": 505,
+      "suite": "C1",
+      "window": 640,
+      "stride": 8,
+      "decision_lag_steps": 7,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.557997147178573,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.0,
+      "structure_detection_rate": 0.0,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 0.9930555555555555,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.9791666666666666,
+      "detail": {
+        "detect_threshold": 1.557997147178573,
+        "calibration_null_mean": 0.9811427638209513,
+        "calibration_null_max": 1.557997147178573,
+        "healthy_score_mean": 1.0184130842315322,
+        "healthy_score_max": 1.4490700322085468,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 1.0086706683148383,
+            "score_min": 0.6303078507107847,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "actuator": {
+            "score_mean": 11.582933672020152,
+            "score_min": 11.069479056087305,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 14.958586312588066,
+            "score_min": 4.558017703958467,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 0.9791666666666666,
+            "detected_attribution_accuracy": 0.9791666666666666
+          }
+        },
+        "minimum_fault_detection_rate": 0.0,
+        "macro_attribution_accuracy": 0.9930555555555555
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 5,
+      "onset_index": 505,
+      "suite": "C1",
+      "window": 640,
+      "stride": 16,
+      "decision_lag_steps": 7,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.557997147178573,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.0,
+      "structure_detection_rate": 0.0,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 0.9930555555555555,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.9791666666666666,
+      "detail": {
+        "detect_threshold": 1.557997147178573,
+        "calibration_null_mean": 0.9811427638209513,
+        "calibration_null_max": 1.557997147178573,
+        "healthy_score_mean": 1.0184130842315322,
+        "healthy_score_max": 1.4490700322085468,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 1.0086706683148383,
+            "score_min": 0.6303078507107847,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "actuator": {
+            "score_mean": 11.582933672020152,
+            "score_min": 11.069479056087305,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 14.958586312588066,
+            "score_min": 4.558017703958467,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 0.9791666666666666,
+            "detected_attribution_accuracy": 0.9791666666666666
+          }
+        },
+        "minimum_fault_detection_rate": 0.0,
+        "macro_attribution_accuracy": 0.9930555555555555
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 5,
+      "onset_index": 505,
+      "suite": "C1",
+      "window": 768,
+      "stride": 4,
+      "decision_lag_steps": 3,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.3518957026234084,
+      "false_alarm_rate": 0.020833333333333332,
+      "minimum_fault_detection_rate": 0.0,
+      "structure_detection_rate": 0.0,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 1.0,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 1.0,
+      "detail": {
+        "detect_threshold": 1.3518957026234084,
+        "calibration_null_mean": 0.977842125793549,
+        "calibration_null_max": 1.3518957026234084,
+        "healthy_score_mean": 0.9742055813112217,
+        "healthy_score_max": 1.6098049645418293,
+        "false_alarm_rate": 0.020833333333333332,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.9306799919861001,
+            "score_min": 0.6357350347441367,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "actuator": {
+            "score_mean": 9.23752344124473,
+            "score_min": 8.828194651524917,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 10.192843785242689,
+            "score_min": 9.283204835657237,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.0,
+        "macro_attribution_accuracy": 1.0
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 5,
+      "onset_index": 505,
+      "suite": "C1",
+      "window": 768,
+      "stride": 8,
+      "decision_lag_steps": 7,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.3443047797094339,
+      "false_alarm_rate": 0.041666666666666664,
+      "minimum_fault_detection_rate": 0.0,
+      "structure_detection_rate": 0.0,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 1.0,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 1.0,
+      "detail": {
+        "detect_threshold": 1.3443047797094339,
+        "calibration_null_mean": 0.9788404431727871,
+        "calibration_null_max": 1.3443047797094339,
+        "healthy_score_mean": 0.989970079386069,
+        "healthy_score_max": 1.6290663738504632,
+        "false_alarm_rate": 0.041666666666666664,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.9376982088507626,
+            "score_min": 0.692874791172203,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "actuator": {
+            "score_mean": 9.469069894471426,
+            "score_min": 8.951385272975005,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 10.565447537747588,
+            "score_min": 9.534801898918188,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.0,
+        "macro_attribution_accuracy": 1.0
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 5,
+      "onset_index": 505,
+      "suite": "C1",
+      "window": 768,
+      "stride": 16,
+      "decision_lag_steps": 7,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.3443047797094339,
+      "false_alarm_rate": 0.041666666666666664,
+      "minimum_fault_detection_rate": 0.0,
+      "structure_detection_rate": 0.0,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 1.0,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 1.0,
+      "detail": {
+        "detect_threshold": 1.3443047797094339,
+        "calibration_null_mean": 0.9788404431727871,
+        "calibration_null_max": 1.3443047797094339,
+        "healthy_score_mean": 0.989970079386069,
+        "healthy_score_max": 1.6290663738504632,
+        "false_alarm_rate": 0.041666666666666664,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.9376982088507626,
+            "score_min": 0.692874791172203,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "actuator": {
+            "score_mean": 9.469069894471426,
+            "score_min": 8.951385272975005,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 10.565447537747588,
+            "score_min": 9.534801898918188,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.0,
+        "macro_attribution_accuracy": 1.0
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 5,
+      "onset_index": 505,
+      "suite": "S",
+      "window": 512,
+      "stride": 4,
+      "decision_lag_steps": 3,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": false,
+      "detect_threshold": 1e-12,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.0,
+      "structure_detection_rate": 0.0,
+      "actuator_detection_rate": 0.0,
+      "sensor_detection_rate": 0.0,
+      "macro_attribution_accuracy": 0.3333333333333333,
+      "structure_attribution_accuracy": 0.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.0,
+      "detail": {
+        "detect_threshold": 1e-12,
+        "calibration_null_mean": 0.0,
+        "calibration_null_max": 0.0,
+        "healthy_score_mean": 0.0,
+        "healthy_score_max": 0.0,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "actuator": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "sensor": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.0,
+        "macro_attribution_accuracy": 0.3333333333333333
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 5,
+      "onset_index": 505,
+      "suite": "S",
+      "window": 512,
+      "stride": 8,
+      "decision_lag_steps": 7,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": false,
+      "detect_threshold": 1e-12,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.0,
+      "structure_detection_rate": 0.0,
+      "actuator_detection_rate": 0.0,
+      "sensor_detection_rate": 0.0,
+      "macro_attribution_accuracy": 0.3333333333333333,
+      "structure_attribution_accuracy": 0.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.0,
+      "detail": {
+        "detect_threshold": 1e-12,
+        "calibration_null_mean": 0.0,
+        "calibration_null_max": 0.0,
+        "healthy_score_mean": 0.0,
+        "healthy_score_max": 0.0,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "actuator": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "sensor": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.0,
+        "macro_attribution_accuracy": 0.3333333333333333
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 5,
+      "onset_index": 505,
+      "suite": "S",
+      "window": 512,
+      "stride": 16,
+      "decision_lag_steps": 7,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": false,
+      "detect_threshold": 1e-12,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.0,
+      "structure_detection_rate": 0.0,
+      "actuator_detection_rate": 0.0,
+      "sensor_detection_rate": 0.0,
+      "macro_attribution_accuracy": 0.3333333333333333,
+      "structure_attribution_accuracy": 0.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.0,
+      "detail": {
+        "detect_threshold": 1e-12,
+        "calibration_null_mean": 0.0,
+        "calibration_null_max": 0.0,
+        "healthy_score_mean": 0.0,
+        "healthy_score_max": 0.0,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "actuator": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "sensor": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.0,
+        "macro_attribution_accuracy": 0.3333333333333333
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 5,
+      "onset_index": 505,
+      "suite": "S",
+      "window": 640,
+      "stride": 4,
+      "decision_lag_steps": 3,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.420142628777988,
+      "false_alarm_rate": 0.10416666666666667,
+      "minimum_fault_detection_rate": 1.0,
+      "structure_detection_rate": 1.0,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 0.9930555555555555,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.9791666666666666,
+      "detail": {
+        "detect_threshold": 1.420142628777988,
+        "calibration_null_mean": 1.002558789665535,
+        "calibration_null_max": 1.420142628777988,
+        "healthy_score_mean": 1.067922305168937,
+        "healthy_score_max": 1.735733251755435,
+        "false_alarm_rate": 0.10416666666666667,
+        "per_class": {
+          "structure": {
+            "score_mean": 2.0382337665152668,
+            "score_min": 1.6523293701804918,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "actuator": {
+            "score_mean": 11.263089575675977,
+            "score_min": 10.84241385113827,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 12.176730261529025,
+            "score_min": 5.652192780732019,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 0.9791666666666666,
+            "detected_attribution_accuracy": 0.9791666666666666
+          }
+        },
+        "minimum_fault_detection_rate": 1.0,
+        "macro_attribution_accuracy": 0.9930555555555555
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 5,
+      "onset_index": 505,
+      "suite": "S",
+      "window": 640,
+      "stride": 8,
+      "decision_lag_steps": 7,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.4842719450250115,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 1.0,
+      "structure_detection_rate": 1.0,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 0.9930555555555555,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.9791666666666666,
+      "detail": {
+        "detect_threshold": 1.4842719450250115,
+        "calibration_null_mean": 1.0008594479144999,
+        "calibration_null_max": 1.4842719450250115,
+        "healthy_score_mean": 1.0284406071579244,
+        "healthy_score_max": 1.3633220598832354,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 2.0472988485175634,
+            "score_min": 1.6202323978920097,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "actuator": {
+            "score_mean": 10.36391829524319,
+            "score_min": 9.871929814755363,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 13.202939783100602,
+            "score_min": 4.051631522107954,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 0.9791666666666666,
+            "detected_attribution_accuracy": 0.9791666666666666
+          }
+        },
+        "minimum_fault_detection_rate": 1.0,
+        "macro_attribution_accuracy": 0.9930555555555555
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 5,
+      "onset_index": 505,
+      "suite": "S",
+      "window": 640,
+      "stride": 16,
+      "decision_lag_steps": 7,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.4842719450250115,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 1.0,
+      "structure_detection_rate": 1.0,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 0.9930555555555555,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.9791666666666666,
+      "detail": {
+        "detect_threshold": 1.4842719450250115,
+        "calibration_null_mean": 1.0008594479144999,
+        "calibration_null_max": 1.4842719450250115,
+        "healthy_score_mean": 1.0284406071579244,
+        "healthy_score_max": 1.3633220598832354,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 2.0472988485175634,
+            "score_min": 1.6202323978920097,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "actuator": {
+            "score_mean": 10.36391829524319,
+            "score_min": 9.871929814755363,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 13.202939783100602,
+            "score_min": 4.051631522107954,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 0.9791666666666666,
+            "detected_attribution_accuracy": 0.9791666666666666
+          }
+        },
+        "minimum_fault_detection_rate": 1.0,
+        "macro_attribution_accuracy": 0.9930555555555555
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 5,
+      "onset_index": 505,
+      "suite": "S",
+      "window": 768,
+      "stride": 4,
+      "decision_lag_steps": 3,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.3454224553808507,
+      "false_alarm_rate": 0.020833333333333332,
+      "minimum_fault_detection_rate": 1.0,
+      "structure_detection_rate": 1.0,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 1.0,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 1.0,
+      "detail": {
+        "detect_threshold": 1.3454224553808507,
+        "calibration_null_mean": 0.9991234799276241,
+        "calibration_null_max": 1.3454224553808507,
+        "healthy_score_mean": 0.9858634317698893,
+        "healthy_score_max": 1.499753973345314,
+        "false_alarm_rate": 0.020833333333333332,
+        "per_class": {
+          "structure": {
+            "score_mean": 1.7694454229096188,
+            "score_min": 1.3958928644960888,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "actuator": {
+            "score_mean": 8.292753330983896,
+            "score_min": 7.903976458474251,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 9.002431178702347,
+            "score_min": 8.192611807772343,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          }
+        },
+        "minimum_fault_detection_rate": 1.0,
+        "macro_attribution_accuracy": 1.0
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 5,
+      "onset_index": 505,
+      "suite": "S",
+      "window": 768,
+      "stride": 8,
+      "decision_lag_steps": 7,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.336981568707358,
+      "false_alarm_rate": 0.020833333333333332,
+      "minimum_fault_detection_rate": 1.0,
+      "structure_detection_rate": 1.0,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 1.0,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 1.0,
+      "detail": {
+        "detect_threshold": 1.336981568707358,
+        "calibration_null_mean": 0.9996934089978262,
+        "calibration_null_max": 1.336981568707358,
+        "healthy_score_mean": 0.9981488314826952,
+        "healthy_score_max": 1.5199069786654453,
+        "false_alarm_rate": 0.020833333333333332,
+        "per_class": {
+          "structure": {
+            "score_mean": 1.842896097357351,
+            "score_min": 1.4358090253416311,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "actuator": {
+            "score_mean": 8.498847629825894,
+            "score_min": 8.014621458651353,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 9.330281917703209,
+            "score_min": 8.414110148598867,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          }
+        },
+        "minimum_fault_detection_rate": 1.0,
+        "macro_attribution_accuracy": 1.0
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 5,
+      "onset_index": 505,
+      "suite": "S",
+      "window": 768,
+      "stride": 16,
+      "decision_lag_steps": 7,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.336981568707358,
+      "false_alarm_rate": 0.020833333333333332,
+      "minimum_fault_detection_rate": 1.0,
+      "structure_detection_rate": 1.0,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 1.0,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 1.0,
+      "detail": {
+        "detect_threshold": 1.336981568707358,
+        "calibration_null_mean": 0.9996934089978262,
+        "calibration_null_max": 1.336981568707358,
+        "healthy_score_mean": 0.9981488314826952,
+        "healthy_score_max": 1.5199069786654453,
+        "false_alarm_rate": 0.020833333333333332,
+        "per_class": {
+          "structure": {
+            "score_mean": 1.842896097357351,
+            "score_min": 1.4358090253416311,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "actuator": {
+            "score_mean": 8.498847629825894,
+            "score_min": 8.014621458651353,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 9.330281917703209,
+            "score_min": 8.414110148598867,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          }
+        },
+        "minimum_fault_detection_rate": 1.0,
+        "macro_attribution_accuracy": 1.0
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 11,
+      "onset_index": 511,
+      "suite": "C1",
+      "window": 512,
+      "stride": 4,
+      "decision_lag_steps": 1,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": false,
+      "detect_threshold": 1e-12,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.0,
+      "structure_detection_rate": 0.0,
+      "actuator_detection_rate": 0.0,
+      "sensor_detection_rate": 0.0,
+      "macro_attribution_accuracy": 0.3333333333333333,
+      "structure_attribution_accuracy": 0.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.0,
+      "detail": {
+        "detect_threshold": 1e-12,
+        "calibration_null_mean": 0.0,
+        "calibration_null_max": 0.0,
+        "healthy_score_mean": 0.0,
+        "healthy_score_max": 0.0,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "actuator": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "sensor": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.0,
+        "macro_attribution_accuracy": 0.3333333333333333
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 11,
+      "onset_index": 511,
+      "suite": "C1",
+      "window": 512,
+      "stride": 8,
+      "decision_lag_steps": 1,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": false,
+      "detect_threshold": 1e-12,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.0,
+      "structure_detection_rate": 0.0,
+      "actuator_detection_rate": 0.0,
+      "sensor_detection_rate": 0.0,
+      "macro_attribution_accuracy": 0.3333333333333333,
+      "structure_attribution_accuracy": 0.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.0,
+      "detail": {
+        "detect_threshold": 1e-12,
+        "calibration_null_mean": 0.0,
+        "calibration_null_max": 0.0,
+        "healthy_score_mean": 0.0,
+        "healthy_score_max": 0.0,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "actuator": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "sensor": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.0,
+        "macro_attribution_accuracy": 0.3333333333333333
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 11,
+      "onset_index": 511,
+      "suite": "C1",
+      "window": 512,
+      "stride": 16,
+      "decision_lag_steps": 1,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": false,
+      "detect_threshold": 1e-12,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.0,
+      "structure_detection_rate": 0.0,
+      "actuator_detection_rate": 0.0,
+      "sensor_detection_rate": 0.0,
+      "macro_attribution_accuracy": 0.3333333333333333,
+      "structure_attribution_accuracy": 0.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.0,
+      "detail": {
+        "detect_threshold": 1e-12,
+        "calibration_null_mean": 0.0,
+        "calibration_null_max": 0.0,
+        "healthy_score_mean": 0.0,
+        "healthy_score_max": 0.0,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "actuator": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "sensor": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.0,
+        "macro_attribution_accuracy": 0.3333333333333333
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 11,
+      "onset_index": 511,
+      "suite": "C1",
+      "window": 640,
+      "stride": 4,
+      "decision_lag_steps": 1,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.369836853018908,
+      "false_alarm_rate": 0.041666666666666664,
+      "minimum_fault_detection_rate": 0.0,
+      "structure_detection_rate": 0.0,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 0.9861111111111112,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.9583333333333334,
+      "detail": {
+        "detect_threshold": 1.369836853018908,
+        "calibration_null_mean": 0.9770513698753174,
+        "calibration_null_max": 1.369836853018908,
+        "healthy_score_mean": 0.9932785989973706,
+        "healthy_score_max": 1.563337265174674,
+        "false_alarm_rate": 0.041666666666666664,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.9355146043136742,
+            "score_min": 0.6710123494096067,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "actuator": {
+            "score_mean": 13.811270227207567,
+            "score_min": 13.142627933274548,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 16.482399399945894,
+            "score_min": 8.17498296281902,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 0.9583333333333334,
+            "detected_attribution_accuracy": 0.9583333333333334
+          }
+        },
+        "minimum_fault_detection_rate": 0.0,
+        "macro_attribution_accuracy": 0.9861111111111112
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 11,
+      "onset_index": 511,
+      "suite": "C1",
+      "window": 640,
+      "stride": 8,
+      "decision_lag_steps": 1,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.369836853018908,
+      "false_alarm_rate": 0.041666666666666664,
+      "minimum_fault_detection_rate": 0.0,
+      "structure_detection_rate": 0.0,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 0.9861111111111112,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.9583333333333334,
+      "detail": {
+        "detect_threshold": 1.369836853018908,
+        "calibration_null_mean": 0.9770513698753174,
+        "calibration_null_max": 1.369836853018908,
+        "healthy_score_mean": 0.9932785989973706,
+        "healthy_score_max": 1.563337265174674,
+        "false_alarm_rate": 0.041666666666666664,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.9355146043136742,
+            "score_min": 0.6710123494096067,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "actuator": {
+            "score_mean": 13.811270227207567,
+            "score_min": 13.142627933274548,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 16.482399399945894,
+            "score_min": 8.17498296281902,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 0.9583333333333334,
+            "detected_attribution_accuracy": 0.9583333333333334
+          }
+        },
+        "minimum_fault_detection_rate": 0.0,
+        "macro_attribution_accuracy": 0.9861111111111112
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 11,
+      "onset_index": 511,
+      "suite": "C1",
+      "window": 640,
+      "stride": 16,
+      "decision_lag_steps": 1,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.369836853018908,
+      "false_alarm_rate": 0.041666666666666664,
+      "minimum_fault_detection_rate": 0.0,
+      "structure_detection_rate": 0.0,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 0.9861111111111112,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.9583333333333334,
+      "detail": {
+        "detect_threshold": 1.369836853018908,
+        "calibration_null_mean": 0.9770513698753174,
+        "calibration_null_max": 1.369836853018908,
+        "healthy_score_mean": 0.9932785989973706,
+        "healthy_score_max": 1.563337265174674,
+        "false_alarm_rate": 0.041666666666666664,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.9355146043136742,
+            "score_min": 0.6710123494096067,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "actuator": {
+            "score_mean": 13.811270227207567,
+            "score_min": 13.142627933274548,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 16.482399399945894,
+            "score_min": 8.17498296281902,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 0.9583333333333334,
+            "detected_attribution_accuracy": 0.9583333333333334
+          }
+        },
+        "minimum_fault_detection_rate": 0.0,
+        "macro_attribution_accuracy": 0.9861111111111112
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 11,
+      "onset_index": 511,
+      "suite": "C1",
+      "window": 768,
+      "stride": 4,
+      "decision_lag_steps": 1,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.491918398924561,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.0,
+      "structure_detection_rate": 0.0,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 1.0,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 1.0,
+      "detail": {
+        "detect_threshold": 1.491918398924561,
+        "calibration_null_mean": 0.9825549023844726,
+        "calibration_null_max": 1.491918398924561,
+        "healthy_score_mean": 0.928461261015602,
+        "healthy_score_max": 1.2976261567478788,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.9652301140383205,
+            "score_min": 0.634945754616135,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "actuator": {
+            "score_mean": 11.083601277323789,
+            "score_min": 10.606842676630247,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 10.330217381498171,
+            "score_min": 9.597869976813515,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.0,
+        "macro_attribution_accuracy": 1.0
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 11,
+      "onset_index": 511,
+      "suite": "C1",
+      "window": 768,
+      "stride": 8,
+      "decision_lag_steps": 1,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.491918398924561,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.0,
+      "structure_detection_rate": 0.0,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 1.0,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 1.0,
+      "detail": {
+        "detect_threshold": 1.491918398924561,
+        "calibration_null_mean": 0.9825549023844726,
+        "calibration_null_max": 1.491918398924561,
+        "healthy_score_mean": 0.928461261015602,
+        "healthy_score_max": 1.2976261567478788,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.9652301140383205,
+            "score_min": 0.634945754616135,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "actuator": {
+            "score_mean": 11.083601277323789,
+            "score_min": 10.606842676630247,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 10.330217381498171,
+            "score_min": 9.597869976813515,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.0,
+        "macro_attribution_accuracy": 1.0
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 11,
+      "onset_index": 511,
+      "suite": "C1",
+      "window": 768,
+      "stride": 16,
+      "decision_lag_steps": 1,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.491918398924561,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.0,
+      "structure_detection_rate": 0.0,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 1.0,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 1.0,
+      "detail": {
+        "detect_threshold": 1.491918398924561,
+        "calibration_null_mean": 0.9825549023844726,
+        "calibration_null_max": 1.491918398924561,
+        "healthy_score_mean": 0.928461261015602,
+        "healthy_score_max": 1.2976261567478788,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.9652301140383205,
+            "score_min": 0.634945754616135,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "actuator": {
+            "score_mean": 11.083601277323789,
+            "score_min": 10.606842676630247,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 10.330217381498171,
+            "score_min": 9.597869976813515,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.0,
+        "macro_attribution_accuracy": 1.0
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 11,
+      "onset_index": 511,
+      "suite": "S",
+      "window": 512,
+      "stride": 4,
+      "decision_lag_steps": 1,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": false,
+      "detect_threshold": 1e-12,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.0,
+      "structure_detection_rate": 0.0,
+      "actuator_detection_rate": 0.0,
+      "sensor_detection_rate": 0.0,
+      "macro_attribution_accuracy": 0.3333333333333333,
+      "structure_attribution_accuracy": 0.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.0,
+      "detail": {
+        "detect_threshold": 1e-12,
+        "calibration_null_mean": 0.0,
+        "calibration_null_max": 0.0,
+        "healthy_score_mean": 0.0,
+        "healthy_score_max": 0.0,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "actuator": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "sensor": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.0,
+        "macro_attribution_accuracy": 0.3333333333333333
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 11,
+      "onset_index": 511,
+      "suite": "S",
+      "window": 512,
+      "stride": 8,
+      "decision_lag_steps": 1,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": false,
+      "detect_threshold": 1e-12,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.0,
+      "structure_detection_rate": 0.0,
+      "actuator_detection_rate": 0.0,
+      "sensor_detection_rate": 0.0,
+      "macro_attribution_accuracy": 0.3333333333333333,
+      "structure_attribution_accuracy": 0.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.0,
+      "detail": {
+        "detect_threshold": 1e-12,
+        "calibration_null_mean": 0.0,
+        "calibration_null_max": 0.0,
+        "healthy_score_mean": 0.0,
+        "healthy_score_max": 0.0,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "actuator": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "sensor": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.0,
+        "macro_attribution_accuracy": 0.3333333333333333
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 11,
+      "onset_index": 511,
+      "suite": "S",
+      "window": 512,
+      "stride": 16,
+      "decision_lag_steps": 1,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": false,
+      "detect_threshold": 1e-12,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.0,
+      "structure_detection_rate": 0.0,
+      "actuator_detection_rate": 0.0,
+      "sensor_detection_rate": 0.0,
+      "macro_attribution_accuracy": 0.3333333333333333,
+      "structure_attribution_accuracy": 0.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.0,
+      "detail": {
+        "detect_threshold": 1e-12,
+        "calibration_null_mean": 0.0,
+        "calibration_null_max": 0.0,
+        "healthy_score_mean": 0.0,
+        "healthy_score_max": 0.0,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "actuator": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 0.0
+          },
+          "sensor": {
+            "score_mean": 0.0,
+            "score_min": 0.0,
+            "detection_rate": 0.0,
+            "attribution_accuracy": 0.0,
+            "detected_attribution_accuracy": 0.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.0,
+        "macro_attribution_accuracy": 0.3333333333333333
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 11,
+      "onset_index": 511,
+      "suite": "S",
+      "window": 640,
+      "stride": 4,
+      "decision_lag_steps": 1,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.3373302931071727,
+      "false_alarm_rate": 0.0625,
+      "minimum_fault_detection_rate": 1.0,
+      "structure_detection_rate": 1.0,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 0.9861111111111112,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.9583333333333334,
+      "detail": {
+        "detect_threshold": 1.3373302931071727,
+        "calibration_null_mean": 1.0026087865765358,
+        "calibration_null_max": 1.3373302931071727,
+        "healthy_score_mean": 1.007670952029841,
+        "healthy_score_max": 1.5256464108370043,
+        "false_alarm_rate": 0.0625,
+        "per_class": {
+          "structure": {
+            "score_mean": 2.0697021877550195,
+            "score_min": 1.7692383828080847,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "actuator": {
+            "score_mean": 12.357176289715616,
+            "score_min": 11.73695372377234,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 14.545028428151264,
+            "score_min": 7.2317592044973855,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 0.9583333333333334,
+            "detected_attribution_accuracy": 0.9583333333333334
+          }
+        },
+        "minimum_fault_detection_rate": 1.0,
+        "macro_attribution_accuracy": 0.9861111111111112
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 11,
+      "onset_index": 511,
+      "suite": "S",
+      "window": 640,
+      "stride": 8,
+      "decision_lag_steps": 1,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.3373302931071727,
+      "false_alarm_rate": 0.0625,
+      "minimum_fault_detection_rate": 1.0,
+      "structure_detection_rate": 1.0,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 0.9861111111111112,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.9583333333333334,
+      "detail": {
+        "detect_threshold": 1.3373302931071727,
+        "calibration_null_mean": 1.0026087865765358,
+        "calibration_null_max": 1.3373302931071727,
+        "healthy_score_mean": 1.007670952029841,
+        "healthy_score_max": 1.5256464108370043,
+        "false_alarm_rate": 0.0625,
+        "per_class": {
+          "structure": {
+            "score_mean": 2.0697021877550195,
+            "score_min": 1.7692383828080847,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "actuator": {
+            "score_mean": 12.357176289715616,
+            "score_min": 11.73695372377234,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 14.545028428151264,
+            "score_min": 7.2317592044973855,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 0.9583333333333334,
+            "detected_attribution_accuracy": 0.9583333333333334
+          }
+        },
+        "minimum_fault_detection_rate": 1.0,
+        "macro_attribution_accuracy": 0.9861111111111112
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 11,
+      "onset_index": 511,
+      "suite": "S",
+      "window": 640,
+      "stride": 16,
+      "decision_lag_steps": 1,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.3373302931071727,
+      "false_alarm_rate": 0.0625,
+      "minimum_fault_detection_rate": 1.0,
+      "structure_detection_rate": 1.0,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 0.9861111111111112,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 0.9583333333333334,
+      "detail": {
+        "detect_threshold": 1.3373302931071727,
+        "calibration_null_mean": 1.0026087865765358,
+        "calibration_null_max": 1.3373302931071727,
+        "healthy_score_mean": 1.007670952029841,
+        "healthy_score_max": 1.5256464108370043,
+        "false_alarm_rate": 0.0625,
+        "per_class": {
+          "structure": {
+            "score_mean": 2.0697021877550195,
+            "score_min": 1.7692383828080847,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "actuator": {
+            "score_mean": 12.357176289715616,
+            "score_min": 11.73695372377234,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 14.545028428151264,
+            "score_min": 7.2317592044973855,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 0.9583333333333334,
+            "detected_attribution_accuracy": 0.9583333333333334
+          }
+        },
+        "minimum_fault_detection_rate": 1.0,
+        "macro_attribution_accuracy": 0.9861111111111112
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 11,
+      "onset_index": 511,
+      "suite": "S",
+      "window": 768,
+      "stride": 4,
+      "decision_lag_steps": 1,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.4149562797065605,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.9791666666666666,
+      "structure_detection_rate": 0.9791666666666666,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 1.0,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 1.0,
+      "detail": {
+        "detect_threshold": 1.4149562797065605,
+        "calibration_null_mean": 1.002905308583396,
+        "calibration_null_max": 1.4149562797065605,
+        "healthy_score_mean": 0.9349680983609995,
+        "healthy_score_max": 1.2015052595404974,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 1.6607608354653973,
+            "score_min": 1.3721435992481232,
+            "detection_rate": 0.9791666666666666,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "actuator": {
+            "score_mean": 9.910238659534256,
+            "score_min": 9.519575824830085,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 9.122678612654967,
+            "score_min": 8.486585655356464,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.9791666666666666,
+        "macro_attribution_accuracy": 1.0
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 11,
+      "onset_index": 511,
+      "suite": "S",
+      "window": 768,
+      "stride": 8,
+      "decision_lag_steps": 1,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.4149562797065605,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.9791666666666666,
+      "structure_detection_rate": 0.9791666666666666,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 1.0,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 1.0,
+      "detail": {
+        "detect_threshold": 1.4149562797065605,
+        "calibration_null_mean": 1.002905308583396,
+        "calibration_null_max": 1.4149562797065605,
+        "healthy_score_mean": 0.9349680983609995,
+        "healthy_score_max": 1.2015052595404974,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 1.6607608354653973,
+            "score_min": 1.3721435992481232,
+            "detection_rate": 0.9791666666666666,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "actuator": {
+            "score_mean": 9.910238659534256,
+            "score_min": 9.519575824830085,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 9.122678612654967,
+            "score_min": 8.486585655356464,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.9791666666666666,
+        "macro_attribution_accuracy": 1.0
+      }
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "onset_offset_steps": 11,
+      "onset_index": 511,
+      "suite": "S",
+      "window": 768,
+      "stride": 16,
+      "decision_lag_steps": 1,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true,
+      "detect_threshold": 1.4149562797065605,
+      "false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.9791666666666666,
+      "structure_detection_rate": 0.9791666666666666,
+      "actuator_detection_rate": 1.0,
+      "sensor_detection_rate": 1.0,
+      "macro_attribution_accuracy": 1.0,
+      "structure_attribution_accuracy": 1.0,
+      "actuator_attribution_accuracy": 1.0,
+      "sensor_attribution_accuracy": 1.0,
+      "detail": {
+        "detect_threshold": 1.4149562797065605,
+        "calibration_null_mean": 1.002905308583396,
+        "calibration_null_max": 1.4149562797065605,
+        "healthy_score_mean": 0.9349680983609995,
+        "healthy_score_max": 1.2015052595404974,
+        "false_alarm_rate": 0.0,
+        "per_class": {
+          "structure": {
+            "score_mean": 1.6607608354653973,
+            "score_min": 1.3721435992481232,
+            "detection_rate": 0.9791666666666666,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "actuator": {
+            "score_mean": 9.910238659534256,
+            "score_min": 9.519575824830085,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          },
+          "sensor": {
+            "score_mean": 9.122678612654967,
+            "score_min": 8.486585655356464,
+            "detection_rate": 1.0,
+            "attribution_accuracy": 1.0,
+            "detected_attribution_accuracy": 1.0
+          }
+        },
+        "minimum_fault_detection_rate": 0.9791666666666666,
+        "macro_attribution_accuracy": 1.0
+      }
+    }
+  ],
+  "aggregate": [
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "suite": "C1",
+      "window": 512,
+      "stride": 4,
+      "onset_alignments": 3,
+      "maximum_false_alarm_rate": 0.0,
+      "mean_false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.0,
+      "mean_macro_attribution_accuracy": 0.3333333333333333,
+      "minimum_macro_attribution_accuracy": 0.3333333333333333,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": false
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "suite": "C1",
+      "window": 512,
+      "stride": 8,
+      "onset_alignments": 3,
+      "maximum_false_alarm_rate": 0.0,
+      "mean_false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.0,
+      "mean_macro_attribution_accuracy": 0.3333333333333333,
+      "minimum_macro_attribution_accuracy": 0.3333333333333333,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": false
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "suite": "C1",
+      "window": 512,
+      "stride": 16,
+      "onset_alignments": 3,
+      "maximum_false_alarm_rate": 0.0,
+      "mean_false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.0,
+      "mean_macro_attribution_accuracy": 0.3333333333333333,
+      "minimum_macro_attribution_accuracy": 0.3333333333333333,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": false
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "suite": "C1",
+      "window": 640,
+      "stride": 4,
+      "onset_alignments": 3,
+      "maximum_false_alarm_rate": 0.125,
+      "mean_false_alarm_rate": 0.09027777777777779,
+      "minimum_fault_detection_rate": 0.0,
+      "mean_macro_attribution_accuracy": 0.9907407407407408,
+      "minimum_macro_attribution_accuracy": 0.9861111111111112,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "suite": "C1",
+      "window": 640,
+      "stride": 8,
+      "onset_alignments": 3,
+      "maximum_false_alarm_rate": 0.10416666666666667,
+      "mean_false_alarm_rate": 0.04861111111111111,
+      "minimum_fault_detection_rate": 0.0,
+      "mean_macro_attribution_accuracy": 0.9907407407407408,
+      "minimum_macro_attribution_accuracy": 0.9861111111111112,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "suite": "C1",
+      "window": 640,
+      "stride": 16,
+      "onset_alignments": 3,
+      "maximum_false_alarm_rate": 0.0625,
+      "mean_false_alarm_rate": 0.03472222222222222,
+      "minimum_fault_detection_rate": 0.0,
+      "mean_macro_attribution_accuracy": 0.9907407407407408,
+      "minimum_macro_attribution_accuracy": 0.9861111111111112,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "suite": "C1",
+      "window": 768,
+      "stride": 4,
+      "onset_alignments": 3,
+      "maximum_false_alarm_rate": 0.020833333333333332,
+      "mean_false_alarm_rate": 0.013888888888888888,
+      "minimum_fault_detection_rate": 0.0,
+      "mean_macro_attribution_accuracy": 1.0,
+      "minimum_macro_attribution_accuracy": 1.0,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "suite": "C1",
+      "window": 768,
+      "stride": 8,
+      "onset_alignments": 3,
+      "maximum_false_alarm_rate": 0.041666666666666664,
+      "mean_false_alarm_rate": 0.027777777777777776,
+      "minimum_fault_detection_rate": 0.0,
+      "mean_macro_attribution_accuracy": 1.0,
+      "minimum_macro_attribution_accuracy": 1.0,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "suite": "C1",
+      "window": 768,
+      "stride": 16,
+      "onset_alignments": 3,
+      "maximum_false_alarm_rate": 0.041666666666666664,
+      "mean_false_alarm_rate": 0.013888888888888888,
+      "minimum_fault_detection_rate": 0.0,
+      "mean_macro_attribution_accuracy": 1.0,
+      "minimum_macro_attribution_accuracy": 1.0,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "suite": "S",
+      "window": 512,
+      "stride": 4,
+      "onset_alignments": 3,
+      "maximum_false_alarm_rate": 0.0,
+      "mean_false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.0,
+      "mean_macro_attribution_accuracy": 0.3333333333333333,
+      "minimum_macro_attribution_accuracy": 0.3333333333333333,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": false
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "suite": "S",
+      "window": 512,
+      "stride": 8,
+      "onset_alignments": 3,
+      "maximum_false_alarm_rate": 0.0,
+      "mean_false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.0,
+      "mean_macro_attribution_accuracy": 0.3333333333333333,
+      "minimum_macro_attribution_accuracy": 0.3333333333333333,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": false
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "suite": "S",
+      "window": 512,
+      "stride": 16,
+      "onset_alignments": 3,
+      "maximum_false_alarm_rate": 0.0,
+      "mean_false_alarm_rate": 0.0,
+      "minimum_fault_detection_rate": 0.0,
+      "mean_macro_attribution_accuracy": 0.3333333333333333,
+      "minimum_macro_attribution_accuracy": 0.3333333333333333,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": false
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "suite": "S",
+      "window": 640,
+      "stride": 4,
+      "onset_alignments": 3,
+      "maximum_false_alarm_rate": 0.10416666666666667,
+      "mean_false_alarm_rate": 0.08333333333333333,
+      "minimum_fault_detection_rate": 1.0,
+      "mean_macro_attribution_accuracy": 0.9907407407407408,
+      "minimum_macro_attribution_accuracy": 0.9861111111111112,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "suite": "S",
+      "window": 640,
+      "stride": 8,
+      "onset_alignments": 3,
+      "maximum_false_alarm_rate": 0.0625,
+      "mean_false_alarm_rate": 0.020833333333333332,
+      "minimum_fault_detection_rate": 1.0,
+      "mean_macro_attribution_accuracy": 0.9907407407407408,
+      "minimum_macro_attribution_accuracy": 0.9861111111111112,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "suite": "S",
+      "window": 640,
+      "stride": 16,
+      "onset_alignments": 3,
+      "maximum_false_alarm_rate": 0.0625,
+      "mean_false_alarm_rate": 0.03472222222222222,
+      "minimum_fault_detection_rate": 1.0,
+      "mean_macro_attribution_accuracy": 0.9907407407407408,
+      "minimum_macro_attribution_accuracy": 0.9861111111111112,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "suite": "S",
+      "window": 768,
+      "stride": 4,
+      "onset_alignments": 3,
+      "maximum_false_alarm_rate": 0.0625,
+      "mean_false_alarm_rate": 0.027777777777777776,
+      "minimum_fault_detection_rate": 0.9791666666666666,
+      "mean_macro_attribution_accuracy": 1.0,
+      "minimum_macro_attribution_accuracy": 1.0,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "suite": "S",
+      "window": 768,
+      "stride": 8,
+      "onset_alignments": 3,
+      "maximum_false_alarm_rate": 0.08333333333333333,
+      "mean_false_alarm_rate": 0.03472222222222222,
+      "minimum_fault_detection_rate": 0.9791666666666666,
+      "mean_macro_attribution_accuracy": 1.0,
+      "minimum_macro_attribution_accuracy": 1.0,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true
+    },
+    {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "suite": "S",
+      "window": 768,
+      "stride": 16,
+      "onset_alignments": 3,
+      "maximum_false_alarm_rate": 0.020833333333333332,
+      "mean_false_alarm_rate": 0.006944444444444444,
+      "minimum_fault_detection_rate": 0.9791666666666666,
+      "mean_macro_attribution_accuracy": 1.0,
+      "minimum_macro_attribution_accuracy": 1.0,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true
+    }
+  ],
+  "recommendation": {
+    "decision": "ADVANCE SETTING FOR REFERENCE-RUNG IMPLEMENTATION REVIEW",
+    "setting": {
+      "task_torque_scale": 0.5,
+      "peak_load_n": 0.05,
+      "suite": "S",
+      "window": 768,
+      "stride": 16,
+      "onset_alignments": 3,
+      "maximum_false_alarm_rate": 0.020833333333333332,
+      "mean_false_alarm_rate": 0.006944444444444444,
+      "minimum_fault_detection_rate": 0.9791666666666666,
+      "mean_macro_attribution_accuracy": 1.0,
+      "minimum_macro_attribution_accuracy": 1.0,
+      "safety_screen_pass": true,
+      "sync_vector_nonzero": true
+    },
+    "reason": "This suite-S setting cleared the predeclared development false-alarm and per-fault detection screens across every tested onset alignment and ranked highest on worst-alignment prototype attribution. It remains a pilot choice, not a frozen configuration or headline result."
+  }
+}

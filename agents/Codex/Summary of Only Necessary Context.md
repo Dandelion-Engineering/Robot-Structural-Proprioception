@@ -1,159 +1,163 @@
 # Summary of Only Necessary Context — Codex
 
-**Rewritten:** 2026-07-19 22:06 PDT
+**Rewritten:** 2026-07-20 11:35 PDT
 
 **Current phase:** Phase 2 — Execution
 
-**Codex session just completed:** Session 10 · **Next:** Session 11
+**Codex session just completed:** Session 11 · **Next:** Session 12
 
 ## Current authoritative state
 
 Phase 0 and Phase 1 remain closed. The jointly approved Claim Sheet, Accessible Claim
-Sheet, Study Guide Pass 1, original schema v1.0, and appended schema Amendment A1 are in
-force. A1 fixes `contact_state[2]` and `safety_flag[7]`; Claude Session 10 genuinely
-re-reviewed Codex Session 9's exact amendment/implementation and explicitly approved it.
-The detector-floor review loop is also closed at Codex Session 9's corrected state.
+Sheet, Study Guide Pass 1, schema v1.0, and appended schema Amendment A1 are in force.
+A1 fixes `contact_state[2]` and `safety_flag[7]`. The Claim Sheet still awaits Randy's
+non-blocking review in `director_requests.md`; execution continues.
 
-The Claim Sheet still awaits Randy's non-blocking review in `director_requests.md`;
-execution continues. The authoritative coordination file is
+The authoritative coordination file is
 `chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`.
 
-One combined review obligation is open after Codex Session 10: Claude must genuinely
-owner-re-review the current cosine/sine/amplitude synchronous feature in `estimator.py`,
-the paired safety-shape guard in `metrics.py`, and their focused tests. Codex explicitly
-approves this edited state. Do not infer Claude approval from use, silence, or a later
-unrelated handoff.
+Claude Session 11 genuinely owner-re-reviewed Codex Session 10's coefficient-preserving
+feature and safety-pairing guard and explicitly approved the exact state. That combined
+loop is closed.
 
-## Session-10 synchronous-feature correction
+One new review obligation is open after Codex Session 11: Claude must genuinely review
+Codex's noisy healthy-reference pilot script, tests, broad BLOCK, prospective follow-up,
+and documentation. Codex explicitly approves the current state and handed it back in the
+active thread. Do not infer Claude approval from use, implementation of a later rung,
+silence, or an unrelated handoff.
 
-Claude Session 10 correctly reused `utils.synchronous.harmonic_coefficients`, retained
-per-channel measurement grids, and moved the recommended window to W=640 so a 0.8 Hz
-probe has a complete 1.25 s period in view. The handed-off feature stored only the
-phase-invariant amplitude. That lost information counted by the safe-probe screen:
+## Noisy healthy-reference pilot
 
-- the clean screen computes `||coeff(fault) - coeff(reference)||_2` by regressing the
-  fault-minus-reference trace;
-- amplitude-only exposes `||coeff(run)||_2`, so the largest comparison it can recover is
-  `abs(||a||_2 - ||b||_2)`;
-- this can be strictly smaller and is zero for a pure phase change.
+New Codex-owned instrument:
+`Reproducibility Packet/scripts/run_noisy_reference_pilot.py`.
 
-Independent selected-candidate audit at W=640 / 0.8 Hz:
+It uses causal noisy deployable `ObservedRecord` windows and the same-state-approved
+cosine/sine features. It does **not** use a privileged fault-minus-healthy trace as the
+detector input and does not edit Claude's permanent estimator rung.
 
-- clean coefficient-vector distances reproduce structural **1.015 µε**, actuator
-  **0.898 µε**, and structure–actuator **1.090 µε**;
-- with the 0.405 µε modeled floor, the clean minimum is **2.22×**;
-- amplitude-only's best actuator change is **0.716 µε = 1.77×**;
-- on the screen's gauge-1 actuator channel, amplitude-only retains 0.266/0.898 = 29.6%.
+Development convention tested:
 
-Current edited per-column summary layout:
+- scheduled one-cycle 0.8 Hz probe, phase reset at fault/probe onset;
+- first global stride-grid decision at or after probe end;
+- healthy calibration reference conditioned on task/probe, W, and decision lag;
+- dimension-normalized, healthy-standardized Euclidean distance on retained cosine/sine
+  coefficients;
+- 99th-percentile higher-method leave-one-out healthy calibration score as the
+  development threshold;
+- nearest standardized fault-shape centroid as a pilot-only attribution instrument.
+
+W=512 is a required inert negative control: it cannot span a full 0.8 Hz period, so the
+production extractor leaves all synchronous coefficients zero.
+
+### Broad sweep — preserved BLOCK
+
+Artifact: `Reproducibility Packet/results/noisy_reference_pilot/`.
+
+Grid: C1/S; task {0.4,0.5}; probe {0.025,0.05 N}; W {512,640,768}; stride
+{4,8,16}; onset offsets {0,5,11}; 8 calibration + 12 held-out sensor seeds per
+class/suite.
+
+Closest cell: task 0.50 / probe 0.05 N / W=640 / stride=8.
+
+- S minimum per-fault detection: 100%.
+- S minimum prototype attribution: 100%.
+- matched C1 minimum fault detection: 8.3%.
+- S healthy false alarms: 8.3% pooled, 16.7% worst alignment.
+
+Decision: BLOCK. Eight calibration values could not resolve the 5% healthy tail. The
+threshold was not retuned on those held-out rows.
+
+### Prospective larger-calibration follow-up — advances to owner review
+
+Artifact:
+`Reproducibility Packet/results/noisy_reference_pilot_threshold_followup/`.
+
+Used the already-selected task 0.50 / probe 0.05 N candidate, the same statistic and
+threshold rule, new non-overlapping seeds (base 5000), 32 calibration + 48 held-out
+seeds per class/suite, and the same three onset alignments.
+
+Advancing development cell: **W=768 / stride=16**.
+
+- S worst per-fault detection: **97.9%**.
+- S worst prototype attribution: **100%**.
+- S healthy false alarms: **0.7% pooled**, **2.1% worst alignment**.
+- matched C1 minimum fault detection: **0%**.
+- no healthy/structural/actuator development safety flag.
+
+Decision boundary: advance only to Claude's permanent coefficient-reference-rung
+implementation review. This is not the confirmatory C1-vs-S result and freezes nothing.
+
+## Current estimator, detector, safety, and mechanics boundaries
+
+The approved per-column summary remains:
 
 `[last, mean, std, slope, sync_cos, sync_sin, sync_amplitude, valid_fraction]`.
 
-Cosine/sine preserve phase and make the clean coefficient distance reconstructible;
-amplitude remains a phase-invariant summary. The raw `[W,D]` learned-model tensor is
-unchanged. W=640 / stride=8 remain pilot proposals, not frozen values.
+The learned `[W,D]` tensor is unchanged. W=768 / stride=16 now supersedes W=640 /
+stride=8 only as the **pilot proposal** for the coefficient-reference rung; neither is
+frozen until the review/validation/config gates close.
 
-## Detector and safe-probe boundaries
+The selected mechanics candidate remains 50% ordinary task torque plus a 0.05 N,
+0.8 Hz, one-cycle raised-cosine probe. It is safe within the current development
+envelope across healthy, structural, actuator, and encoder scenarios. The old clean
+2.22× differential/floor ratio remains a mechanics-screen fact only, not a deployed
+margin.
 
-The jointly approved modeled detector floor remains:
+Safety uses privileged A1 truth: angle×2, speed×2, tip workspace, absolute gauge strain,
+and contact force. `safety_regression_delta` requires paired C1/S `[T,7]` shapes; the
+future evaluation driver still owns exact `[t_c,t_c+5 s]` slicing.
 
-- W=640, 500 Hz, 0.8 Hz joint intercept/trend/cosine/sine regression;
-- harmonic NES **0.111 ± 0.059 µε**;
-- development threshold **0.405 µε**;
-- gate-floor / mean-NES ratio **90×**.
+Current contact remains collision-disabled and `[0,0]`; `CablePlant` fails if contact
+unexpectedly appears. Optional-contact pilots remain blocked until real MuJoCo endpoint-
+contact extraction exists.
 
-The selected mechanics candidate remains 50% ordinary task torque plus a 0.05 N, 0.8 Hz,
-one-cycle raised-cosine probe. It is safe within the current development envelope across
-healthy, structural, actuator, and encoder scenarios. It advances only to a pilot.
+## Config remains explicitly unfrozen
 
-Crucial boundary after Session 10: the clean privileged fault-minus-healthy coefficient
-distance and modeled null floor do not directly establish the deployable estimator's
-margin. The pilot must run noisy per-suite observations against a healthy/reference
-model and measure coefficient-space detectability, false alarms, phase/onset/stride
-alignment, and attribution. Do not call the clean 2.22× value the deployed margin.
+Current role hashes remain `dev-`. Still open:
 
-## Safety/contact and metric state
-
-Amendment A1 is jointly in force:
-
-- `contact_state[2]`: `tip_contact_force_n`, `tip_contact_active`;
-- `safety_flag[7]`: joint-angle ×2, joint-speed ×2, tip workspace, absolute gauge strain,
-  tip contact force; `saturation_flag[2]` stays separate;
-- safety is computed from privileged `q_true`, `qd_true`, `gauge_true`, and tip truth,
-  never corrupted observations.
-
-Claude Session 10 added `safety_incident_rate`, `safety_flag_rates`, and
-`safety_regression_delta`. Codex approves their privileged-truth semantics and positive-
-means-regression sign. Codex added a fail-loud requirement that paired C1/S inputs share
-the same `[T,7]` control-grid shape. The future evaluation driver must still enforce the
-exact `[t_c,t_c+5 s]` slice before calling these point functions. Claude owner re-review
-of the guard remains open.
-
-Current plant contact is collision-disabled and writes `[0,0]`; `CablePlant` fails if
-contact unexpectedly appears. Optional-contact pilot cases remain blocked until real
-MuJoCo endpoint-contact extraction exists.
-
-## Mechanics and config state
-
-Selected mechanics remain unchanged:
-
-- native MuJoCo cable/rod primary; volumetric 3-D flex reserve;
-- 17 points / 16 segments per link; simulation step 0.0001 s; control 0.002 s / 500 Hz;
-- `n_def=90`; shortest log-map rotations for 15 internal ball joints per link;
-- gauges at L1/L2 0.25 and 0.75 L;
-- development structural fault: link-2 `[0.55,0.85]`, remaining EI 0.50;
-- development actuator fault: elbow remaining gain 0.70 downstream of unchanged
-  `control_effort`;
-- ordinary task-only remains a separate `trajectory_spec_id` negative control.
-
-**Do not freeze `config.json`.** Current role hashes remain `dev-`. Open fields/work:
-
-- Claude owner re-review of the coefficient-preserving feature and safety pairing guard;
-- deployable noisy/reference pilot over probe/task scale, W/stride, onset alignment, and
-  shared fault severity/onset grids;
+- Claude review of the noisy-reference pilot and permanent coefficient-distance rung;
+- validation-sized healthy reference and validation-frozen class/abstention/selective/
+  OOD thresholds;
+- shared severity/onset grids;
 - joint sanity-check of non-load-bearing sensor constants;
-- validation-derived class, abstention, selective, and OOD thresholds;
+- unscheduled phase drift and nonlinear/probe-band thermal interference;
 - optional-contact extraction/cases;
-- learned temporal attribution/RMA heads, Codex's residual/system-ID baseline, and
-  recovery controller;
-- deployable-loader leakage test, whole-trajectory/fault-setting split audit, role-hash
-  rejection, and multi-run storage checks before confirmatory generation.
+- learned temporal attribution/RMA heads;
+- Codex residual/linear-system-ID baseline and recovery controller;
+- deployable-loader leakage, whole-trajectory/fault-setting split, role-hash rejection,
+  multi-run storage, and immutable schema/config hash gates.
 
-## Exact resume path for Codex Session 11
+## Exact resume path for Codex Session 12
 
 1. Read the UTF-8 physical tail of the active Phase-2 thread. If Claude explicitly
-   approves the exact cosine/sine/amplitude layout and safety pairing guard, close that
-   loop. If Claude edits, inspect the actual diff and continue the review cycle.
-2. Do not begin the pilot by merely rescoring the clean privileged differential. Build
-   the pilot around noisy `ObservedRecord` data and a healthy/reference comparison. It
-   must preserve coefficient phase, test onset relative to stride, and report false
-   positives as well as fault/reference separation.
-3. Sweep the current candidate neighborhood over task/probe scale plus
-   W∈{512,640,768}, stride∈{4,8,16}; W=512 will intentionally leave the full-cycle
-   synchronous entries zero under the current contract and is a negative window control.
-4. Continue the interpretable residual/linear-system-ID baseline and recovery controller
-   against the online seam; keep estimator architecture matched across suites.
-5. Implement endpoint-contact extraction before any optional-contact pilot.
-6. Before confirmatory generation, freeze/hash complete schema/config, preserve ordinary
-   and diagnostic conditions separately, and rerun leakage, split, safety, storage, and
-   role-hash gates.
+   approves the exact pilot state, close the loop. If Claude edits, inspect the actual
+   diff and genuinely re-review before approving or returning it.
+2. If Claude implements the permanent coefficient-distance healthy-reference rung,
+   review it against the approved pilot convention and verify it does not treat the
+   pilot threshold or W/stride as frozen validation values.
+3. Continue Codex's interpretable residual/linear-system-ID baseline and recovery
+   controller against the online seam.
+4. Implement endpoint-contact extraction before any optional-contact pilot.
+5. Before confirmatory generation, complete validation thresholding, fault grids,
+   non-load-bearing sensor sanity, leakage/split/storage/role-hash audits, then freeze and
+   hash the complete schema/config.
 
 ## Verification and session record
 
-- Full packet: **102 passed**.
+- Full packet: **107 passed**.
 - `compileall`: passed.
+- Pilot CLI help: passed.
+- Broad pilot: 216 result rows; follow-up: 54 result rows; both JSON trees contain no
+  NaN/Infinity tokens.
+- Projected C1 is bit-for-bit identical to native C1 across values, masks, timing
+  metadata, and suite flags.
 - `git diff --check`: clean (line-ending warnings only).
-- Detailed record: `agents/Codex/Session Summaries/HumanReport10.md`.
-- Next regular Codex progress report remains Session 16 unless a Claim Sheet amendment
-  or phase transition fires earlier.
+- Detailed record: `agents/Codex/Session Summaries/HumanReport11.md`.
+- Next regular Codex progress report: Session 16 unless a Claim-Sheet amendment or phase
+  transition fires earlier.
 
-## Transcript-order rule and current anomaly
-
-Session 10's first full chat append was mistakenly inserted at line 61 because a bare
-`— Claude` signature was used as the patch anchor. No content was deleted, moved, or
-rewritten. A dated Session-10 transcript-order correction is physically last and is the
-operative handoff; it restates the open owner-review gate and 102-test state.
+## Transcript append rule
 
 Before every future chat append: read the UTF-8 physical tail, patch against a unique
-multi-line tail block (never a bare speaker signature), then re-read the written tail and
-confirm the new header's physical location immediately.
+multi-line tail block (never a bare speaker signature), then immediately re-read the
+written tail and confirm the new header appears exactly once and is physically last.
