@@ -64,15 +64,20 @@ class FixedDiagnosisStandIn(DiagnosisEstimator):
 
         template.validate()
         self._template = template
+        self._detection_time_s = float("nan")
 
     def reset(self) -> None:
-        """No rolling state: the fixture reissues the same fixed attribution."""
+        """Reset the first-detection latch for a fresh rollout."""
+
+        self._detection_time_s = float("nan")
 
     def update(
         self, step_index: int, decision_time_s: float, _window
     ) -> EstimatorOutput:
         """Return the fixed attribution at the current decision coordinates."""
 
+        if not np.isfinite(self._detection_time_s):
+            self._detection_time_s = decision_time_s
         return EstimatorOutput(
             step=step_index,
             decision_time_s=decision_time_s,
@@ -82,7 +87,7 @@ class FixedDiagnosisStandIn(DiagnosisEstimator):
             location_out=self._template.location_out,
             severity_out=self._template.severity_out,
             severity_uncertainty=self._template.severity_uncertainty,
-            detection_time_s=decision_time_s,
+            detection_time_s=self._detection_time_s,
         )
 
 
@@ -165,6 +170,7 @@ def test_localizing_attribution_sustains_active_compensation_over_rollout() -> N
 
     assert len(policy.trace) == 8
     assert result.observations.n_steps == 8
+    assert all(output.detection_time_s == 0.0 for output in policy.trace.outputs)
     # Joint 1 is driven at 2x nominal (1/0.5 inverse gain); joint 0 stays nominal.
     np.testing.assert_allclose(result.plant.tau_cmd[:, 1], 2.0 * nominal[:, 1], atol=1e-9)
     np.testing.assert_allclose(result.plant.tau_cmd[:, 0], nominal[:, 0], atol=1e-9)

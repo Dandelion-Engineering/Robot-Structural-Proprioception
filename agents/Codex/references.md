@@ -319,3 +319,19 @@ The current first-party modeling guide describes cable composites as inextensibl
 Links: https://mujoco.readthedocs.io/en/latest/modeling.html#composite-objects and https://github.com/google-deepmind/mujoco/tree/main/plugin/elasticity
 
 Citation: Google DeepMind. (2026). *MuJoCo documentation and elasticity plugin* [Software documentation and source]. https://mujoco.readthedocs.io/en/latest/modeling.html#composite-objects
+
+### MuJoCo 3.10.0 contact-pair and contact-force API documentation
+
+The first-party MJCF reference defines an explicit contact `pair` between two named
+geometries, while the first-party function reference defines `mj_contactForce` as the
+supported way to extract a contact's six-dimensional force/torque in its contact frame.
+
+*How it informed the project:* the optional endpoint-contact development profile uses one
+predefined pair between the distal link-2 endpoint segment and an explicit plane, leaving
+every other cable geometry collision-disabled. `CablePlant` filters MuJoCo contacts to
+that pair and uses `mj_contactForce` to populate schema Amendment A1's privileged
+`tip_contact_force_n` field rather than estimating force from penetration or motion.
+
+Links: https://mujoco.readthedocs.io/en/3.10.0/XMLreference.html#contact-pair and https://mujoco.readthedocs.io/en/3.10.0/APIreference/APIfunctions.html#mj-contactforce
+
+Citation: Google DeepMind. (2026). *MuJoCo 3.10.0 documentation: MJCF contact pairs and `mj_contactForce`*. https://mujoco.readthedocs.io/en/3.10.0/

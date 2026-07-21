@@ -126,7 +126,7 @@ The prospective follow-up advances W=768 / stride=16 for **reference-rung implem
 
 ## Step 9 — Run the plant-interface and sensor-model tests
 
-Checks the lossless `PlantStepState` → privileged-trace interface, real MuJoCo deformation-coordinate extraction, plant/sensor fault boundary, three-torque semantics, privileged/observed leakage boundary, common-random-number substreams, suite masks, sensor-fault relational signature, thermal apparent strain, dropout/derived-velocity validity, latency causality, and deterministic persistence.
+Checks the lossless `PlantStepState` → privileged-trace interface, real MuJoCo deformation-coordinate and optional endpoint-contact-force extraction, plant/sensor fault boundary, three-torque semantics, privileged/observed leakage boundary, common-random-number substreams, suite masks, sensor-fault relational signature, thermal apparent strain, dropout/derived-velocity validity, latency causality, and deterministic persistence.
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest tests\test_cable_plant.py tests\test_sensor_model.py -q
@@ -142,10 +142,20 @@ Advances the selected 17-point-per-link cable plant at 500 Hz control / 10 kHz s
 .\.venv\Scripts\python.exe scripts\make_mujoco_plant_trace.py --output-root results\mujoco_plant --run-id healthy_dev --duration-s 3 --thermal-ramp-c 5
 ```
 
+For a development-only check of the A1 endpoint-contact role, supply an explicit plane
+height. This enables only the distal endpoint-segment/plane collision pair and records
+MuJoCo constraint-force truth; it does not define or freeze the eventual contact grid:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\make_mujoco_plant_trace.py --output-root results\mujoco_contact_dev --run-id contact_dev --duration-s 0.2 --endpoint-contact-plane-z-m 0.498
+```
+
 Produces:
 
 - `results/mujoco_plant/plant/healthy_dev.npz` — role-separated privileged plant payload.
 - `results/mujoco_plant/plant/index.csv` — plant-role index (`run_id, schema_version, config_hash, npz_path, sha256`).
+- Optional contact command: `results/mujoco_contact_dev/plant/contact_dev.npz` and its
+  adjacent `index.csv`, with the same role/index schema.
 
 Use `--scenario structure --fault-severity 0.50` or `--scenario actuator --fault-severity 0.70` for a physical-fault development trace. Sensor faults are rejected here and must be injected only in Step 11.
 
@@ -191,4 +201,4 @@ All are free and commercial-use-permitting. Project-owned code and configuration
 
 ## Current boundary
 
-This packet reproduces the mechanics gate, detector-floor correction, safe-probe co-design screen, and noisy healthy-reference pilot, and it connects the selected MuJoCo plant's **real persisted privileged output** to the sensor-realism model. Schema Amendment A1 is jointly in force. The causal one-step plant→sensor→policy loop and estimator front exist and are tested. The permanent `CoefficientReferenceDetector` uses the pilot's canonical score statistic with fail-loud reference/threshold lifecycle guards, and the jointly approved interpretable gain-scheduled recovery-controller floor plugs into the same seam; neither is a completed control result. A new `LinearResidualAttributionEstimator` supplies the Claim-Sheet-required interpretable baseline: it fits healthy deployable one-step ARX dynamics, builds four transparent residual-pattern prototypes in a separate development role, and calibrates off-prototype abstention on a third role. Its synthetic separation and real-seam checks are mechanism tests only, and the implementation awaits cross-review. The learned attribution and RMA heads are still unbuilt. The fixed two-field contact role currently records zero because collision is disabled; optional-contact pilots still require endpoint-contact extraction. The prospective pilot follow-up advances W=768 / stride=16 only as a development proposal; the shared immutable `config.json` remains unfrozen. The packet therefore does **not** yet implement the confirmatory experiment or the interactive verification artifact; neither a research result nor a frozen configuration may be inferred from these development sensitivities.
+This packet reproduces the mechanics gate, detector-floor correction, safe-probe co-design screen, and noisy healthy-reference pilot, and it connects the selected MuJoCo plant's **real persisted privileged output** to the sensor-realism model. Schema Amendment A1 is jointly in force. The causal one-step plant→sensor→policy loop and estimator front exist and are tested. The permanent `CoefficientReferenceDetector` uses the pilot's canonical score statistic with fail-loud reference/threshold lifecycle guards, and the jointly approved interpretable gain-scheduled recovery-controller floor plugs into the same seam; neither is a completed control result. A new `LinearResidualAttributionEstimator` supplies the Claim-Sheet-required interpretable baseline: it fits healthy deployable one-step ARX dynamics, builds four transparent residual-pattern prototypes in a separate development role, and calibrates off-prototype abstention on a third role. Its synthetic separation and real-seam checks are mechanism tests only. The learned attribution and RMA heads are still unbuilt. The fixed two-field contact role now has a development-only optional profile that enables collision solely between the distal endpoint segment and an explicit plane, extracts MuJoCo's constraint-force truth, and drives the seventh privileged safety flag; the default model remains collision-disabled. No contact profile or contact-enabled scenario grid is frozen or piloted yet. The prospective pilot follow-up advances W=768 / stride=16 only as a development proposal; the shared immutable `config.json` remains unfrozen. The packet therefore does **not** yet implement the confirmatory experiment or the interactive verification artifact; neither a research result nor a frozen configuration may be inferred from these development sensitivities.

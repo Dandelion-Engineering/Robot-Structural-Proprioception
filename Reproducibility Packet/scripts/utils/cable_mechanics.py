@@ -42,6 +42,8 @@ class CableModelConfig:
     tip_workspace_radius_limit_m: float = 0.82
     gauge_abs_limit_microstrain: float = 500.0
     tip_contact_force_limit_n: float = 5.0
+    endpoint_contact_enabled: bool = False
+    endpoint_contact_plane_z_m: float = 0.498
 
 
 @dataclass(frozen=True)
@@ -53,6 +55,8 @@ class ModelHandles:
     l1_tip_site_id: int
     l2_tip_site_id: int
     l2_last_body_id: int
+    endpoint_contact_geom_id: int
+    endpoint_contact_plane_geom_id: int
     accel_adr: int
     gyro_adr: int
     softened_geoms: tuple[str, ...]
@@ -75,6 +79,20 @@ def model_xml(config: CableModelConfig, point_count: int, timestep_s: float) -> 
     half_segment = config.link_length_m / (2.0 * (point_count - 1))
     shear_pa = config.young_pa / (2.0 * (1.0 + config.poisson))
     link2_start = config.link_length_m
+    endpoint_contact_plane = ""
+    endpoint_contact_pair = ""
+    if config.endpoint_contact_enabled:
+        endpoint_contact_plane = f"""
+    <geom name="endpoint_contact_plane" type="plane"
+          pos="0 0 {config.endpoint_contact_plane_z_m:.12g}"
+          size="1 1 0.1" contype="0" conaffinity="0"/>
+"""
+        endpoint_contact_pair = f"""
+  <contact>
+    <pair name="endpoint_contact_pair" geom1="L2_G{point_count - 2}"
+          geom2="endpoint_contact_plane" condim="3"/>
+  </contact>
+"""
     return f"""
 <mujoco model="two_link_cable_spike">
   <compiler autolimits="true" angle="radian"/>
@@ -86,6 +104,7 @@ def model_xml(config: CableModelConfig, point_count: int, timestep_s: float) -> 
     <plugin plugin="mujoco.elasticity.cable"/>
   </extension>
   <worldbody>
+    {endpoint_contact_plane}
     <site name="base_ref" pos="0 0 0.5" size="0.004"/>
     <composite prefix="L1_" type="cable" curve="s"
                count="{point_count} 1 1" size="{config.link_length_m}"
@@ -116,6 +135,7 @@ def model_xml(config: CableModelConfig, point_count: int, timestep_s: float) -> 
             density="{config.density_kg_m3:.12g}" contype="0" conaffinity="0"/>
     </composite>
   </worldbody>
+  {endpoint_contact_pair}
   <equality>
     <connect name="elbow_joint" site1="L1_S_last" site2="L2_S_first"
              solref="0.003 1" solimp="0.99 0.999 0.001"/>
@@ -180,12 +200,22 @@ def build_two_link_model(
     )
     accel_sensor = object_id(model, mujoco.mjtObj.mjOBJ_SENSOR, "distal_accel")
     gyro_sensor = object_id(model, mujoco.mjtObj.mjOBJ_SENSOR, "distal_gyro")
+    endpoint_geom = object_id(
+        model, mujoco.mjtObj.mjOBJ_GEOM, f"L2_G{point_count - 2}"
+    )
+    contact_plane_geom = -1
+    if config.endpoint_contact_enabled:
+        contact_plane_geom = object_id(
+            model, mujoco.mjtObj.mjOBJ_GEOM, "endpoint_contact_plane"
+        )
     return model, ModelHandles(
         l1_body_ids=l1_body_ids,
         l2_body_ids=l2_body_ids,
         l1_tip_site_id=object_id(model, mujoco.mjtObj.mjOBJ_SITE, "L1_S_last"),
         l2_tip_site_id=object_id(model, mujoco.mjtObj.mjOBJ_SITE, "L2_S_last"),
         l2_last_body_id=l2_body_ids[-1],
+        endpoint_contact_geom_id=endpoint_geom,
+        endpoint_contact_plane_geom_id=contact_plane_geom,
         accel_adr=int(model.sensor_adr[accel_sensor]),
         gyro_adr=int(model.sensor_adr[gyro_sensor]),
         softened_geoms=tuple(softened),
@@ -318,6 +348,10 @@ def validate_safety_config(config: CableModelConfig) -> None:
             raise ValueError(f"{name} must be finite and positive")
     if not np.isfinite(config.task_torque_scale) or config.task_torque_scale < 0.0:
         raise ValueError("task_torque_scale must be finite and non-negative")
+    if not isinstance(config.endpoint_contact_enabled, (bool, np.bool_)):
+        raise ValueError("endpoint_contact_enabled must be boolean")
+    if not np.isfinite(config.endpoint_contact_plane_z_m):
+        raise ValueError("endpoint_contact_plane_z_m must be finite")
 
 
 def validate_diagnostic_excitation(config: CableModelConfig) -> None:

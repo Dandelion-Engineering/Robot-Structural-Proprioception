@@ -133,6 +133,32 @@ def test_safety_role_uses_fixed_order_and_flags_gauge_overrange() -> None:
     assert not bool(state.contact_state[CONTACT_STATE_FIELDS.index("tip_contact_active")])
 
 
+def test_optional_endpoint_contact_records_mujoco_force_and_safety_truth() -> None:
+    """The contact profile must populate A1 from the actual endpoint-plane constraint."""
+
+    plant = CablePlant(
+        small_config(
+            task_torque_scale=0.0,
+            endpoint_contact_enabled=True,
+            endpoint_contact_plane_z_m=0.498,
+            tip_contact_force_limit_n=0.05,
+        ),
+        point_count=9,
+        simulation_timestep_s=2.0e-4,
+    )
+    record = plant.rollout(100, command_fn=lambda _time_s: np.zeros(2))
+    force_col = CONTACT_STATE_FIELDS.index("tip_contact_force_n")
+    active_col = CONTACT_STATE_FIELDS.index("tip_contact_active")
+    safety_col = SAFETY_FLAG_FIELDS.index("tip_contact_force_exceeded")
+
+    assert np.any(record.contact_state[:, active_col] == 1.0)
+    assert np.max(record.contact_state[:, force_col]) > 0.05
+    np.testing.assert_array_equal(
+        record.safety_flag[:, safety_col],
+        record.contact_state[:, force_col] > plant.config.tip_contact_force_limit_n,
+    )
+
+
 def test_default_rollout_honors_task_torque_scale() -> None:
     plant = CablePlant(
         small_config(task_torque_scale=0.0, diagnostic_tip_load_peak_n=0.0),

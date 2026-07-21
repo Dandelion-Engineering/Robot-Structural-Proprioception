@@ -157,17 +157,50 @@ class CablePlant:
         self._softened = True
 
     def _contact_state(self) -> np.ndarray:
-        """Return the fixed two-field contact role for the no-contact development model.
+        """Return endpoint contact force and activity from MuJoCo constraint truth.
 
-        The selected MJCF currently disables collision. Optional-contact pilots must
-        replace this zero state with MuJoCo endpoint-contact truth before generation.
+        The default development model remains collision-disabled and therefore emits
+        ``[0, 0]``. When the optional endpoint-contact profile is enabled, only the
+        distal link-2 endpoint geom and the explicit plane can collide. The first role
+        field is the sum of the 3-D contact-force magnitudes returned by
+        ``mujoco.mj_contactForce`` across that pair's contact points; the second is one
+        whenever MuJoCo reports at least one contact for the pair.
         """
 
-        if self.data.ncon != 0:
+        if not self.config.endpoint_contact_enabled:
+            if self.data.ncon != 0:
+                raise RuntimeError(
+                    "contact detected while the endpoint-contact profile is disabled"
+                )
+            state = np.array([0.0, 0.0], dtype=float)
+        else:
+            endpoint_geom = self.handles.endpoint_contact_geom_id
+            plane_geom = self.handles.endpoint_contact_plane_geom_id
+            if endpoint_geom < 0 or plane_geom < 0:
+                raise RuntimeError("endpoint-contact geometry handles are unavailable")
+            expected_pair = {endpoint_geom, plane_geom}
+            total_force_n = 0.0
+            active = False
+            for contact_index in range(self.data.ncon):
+                contact = self.data.contact[contact_index]
+                actual_pair = {int(contact.geom1), int(contact.geom2)}
+                if actual_pair != expected_pair:
+                    raise RuntimeError(
+                        "non-endpoint contact reached the endpoint-contact profile"
+                    )
+                wrench = np.zeros(6, dtype=float)
+                mujoco.mj_contactForce(
+                    self.model, self.data, contact_index, wrench
+                )
+                if not np.all(np.isfinite(wrench)):
+                    raise RuntimeError("MuJoCo returned a non-finite contact wrench")
+                total_force_n += float(np.linalg.norm(wrench[:3]))
+                active = True
+            state = np.array([total_force_n, float(active)], dtype=float)
+        if not np.all(np.isfinite(state)) or state[0] < 0.0:
             raise RuntimeError(
-                "contact detected but endpoint-contact extraction is not implemented"
+                "contact-state force must be finite and non-negative"
             )
-        state = np.array([0.0, 0.0], dtype=float)
         if state.shape != (N_CONTACT_STATE,):
             raise RuntimeError("contact-state width drifted from the schema amendment")
         return state

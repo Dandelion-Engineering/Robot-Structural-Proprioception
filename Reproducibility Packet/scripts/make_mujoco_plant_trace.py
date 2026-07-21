@@ -57,6 +57,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--diagnostic-tip-load-peak-n", type=float, default=1.0)
     parser.add_argument("--diagnostic-tip-load-frequency-hz", type=float, default=0.8)
     parser.add_argument(
+        "--endpoint-contact-plane-z-m",
+        type=float,
+        default=None,
+        help=(
+            "Enable the development endpoint-contact profile against a horizontal "
+            "plane at this world-z coordinate; omitted keeps collision disabled."
+        ),
+    )
+    parser.add_argument(
         "--thermal-ramp-c",
         type=float,
         default=0.0,
@@ -130,10 +139,17 @@ def main() -> int:
     # at 1.000 s is index 499 for dt=0.002 s.
     onset_index = max(0, int(math.ceil(args.fault_onset_s / args.control_dt_s)) - 1)
     fault = fault_from_args(args, onset_index)
+    default_config = CableModelConfig()
     config = CableModelConfig(
         control_dt_s=args.control_dt_s,
         diagnostic_tip_load_peak_n=args.diagnostic_tip_load_peak_n,
         diagnostic_tip_load_frequency_hz=args.diagnostic_tip_load_frequency_hz,
+        endpoint_contact_enabled=args.endpoint_contact_plane_z_m is not None,
+        endpoint_contact_plane_z_m=(
+            args.endpoint_contact_plane_z_m
+            if args.endpoint_contact_plane_z_m is not None
+            else default_config.endpoint_contact_plane_z_m
+        ),
     )
     plant = CablePlant(
         config,
