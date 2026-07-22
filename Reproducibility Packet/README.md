@@ -22,10 +22,10 @@ Produces: `.venv/` (local, ignored).
 
 ## Step 2 — Run the focused tests
 
-Checks model compilation, independent deformation-state availability, localized stiffness-fault construction, schema-facing output shapes, synchronous-feature and coefficient-reference correctness, the safe-probe, optional-contact-profile, matched-contact-pilot, bounded-task/contact, and bounded noisy held-decision functions, the noisy healthy-reference pilot's causal window/reference logic, the interpretable recovery-controller seam, and the linear system-ID residual baseline's role separation, suite-leakage guard, and real causal-seam integration.
+Checks model compilation, independent deformation-state availability, localized stiffness-fault construction, schema-facing output shapes, synchronous-feature and coefficient-reference correctness, the safe-probe, optional-contact-profile, matched-contact-pilot, bounded-task/contact, bounded noisy held-decision, and structural-recovery-action functions, the noisy healthy-reference pilot's causal window/reference logic, the interpretable recovery-controller seam, and the linear system-ID residual baseline's role separation, suite-leakage guard, and real causal-seam integration.
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest tests\test_feasibility_spike.py tests\test_synchronous_detection_floor.py tests\test_safe_probe_screen.py tests\test_optional_contact_profile.py tests\test_noisy_reference_pilot.py tests\test_matched_contact_pilot.py tests\test_bounded_task_contact.py tests\test_bounded_noisy_information_review.py tests\test_estimator.py tests\test_recovery_control.py tests\test_residual_baseline.py -q
+.\.venv\Scripts\python.exe -m pytest tests\test_feasibility_spike.py tests\test_synchronous_detection_floor.py tests\test_safe_probe_screen.py tests\test_optional_contact_profile.py tests\test_noisy_reference_pilot.py tests\test_matched_contact_pilot.py tests\test_bounded_task_contact.py tests\test_bounded_noisy_information_review.py tests\test_structural_recovery_action.py tests\test_estimator.py tests\test_recovery_control.py tests\test_residual_baseline.py -q
 ```
 
 Produces: terminal test results.
@@ -192,7 +192,25 @@ Produces:
 
 The recorded decision is split: **advance the information/reference lifecycle only; block the current recovery-control profile.** S reaches 0.995 held-out four-way macro-F1 versus C1's 0.704, with 100% versus 8.3% structural recall, 100% minimum per-fault detection, and 2.1% held-out healthy false alarms. C1 and S share bit-identical pre-decision physical/shared-observation histories, and every representative six-second arm keeps one bounded contact episode with zero A1 safety steps. But the only suite-informed representative action — S correctly calling the structural fault while C1 stays healthy/no-action — worsens `J_5s` by 18.6% (1.0184 versus 0.8589 m·s), so the structural derating policy fails the control-sensitivity gate. The probabilities are one-hot mechanism instruments and the full-horizon continuation uses one held-out seed per source/suite; this is neither confirmatory evidence nor permission to freeze any setting.
 
-## Step 13 — Run the plant-interface and sensor-model tests
+## Step 13 — Reproduce the structural recovery action-family screen
+
+Keeps the approved six-second bounded mechanics, task/contact profile, and one-held-decision lifecycle fixed while comparing the old 0.75 derate, no action, and a predeclared family of global/local severity-conditioned inverse-stiffness multipliers. Three tuning-only sensor seeds select a candidate; four disjoint assessment seeds then test structural tracking, healthy false authorization, A1 safety, saturation, source specificity, and exact pre-decision CRN matching. Fixed source-correct outputs isolate the controller mechanism, so this is not attribution evidence or a frozen setting.
+
+```powershell
+.\.venv\Scripts\python.exe scripts\screen_structural_recovery_action.py --workers 8
+```
+
+Produces:
+
+- `results/structural_recovery_action_screen/summary.json`
+- `results/structural_recovery_action_screen/candidate_rows.csv`
+- `results/structural_recovery_action_screen/tuning_rows.csv`
+- `results/structural_recovery_action_screen/assessment_rows.csv`
+- `results/structural_recovery_action_screen/structural_recovery_action_report.md`
+
+The recorded decision is **BLOCK**. Global 1.5× and 2.0× candidates clear the 10% per-seed structural tracking gate with zero A1 or saturation events, and the selected 2.0× action retains a 19.4–20.2% reduction on disjoint structural seeds. But the same false-authorized action improves healthy tracking slightly more on average (20.15% versus 19.88%), so the source-specificity gate blocks: this is evidence that the nominal bounded controller is under-authorized, not that inverse-stiffness scheduling recovered a structural deficit. The default 0.75 derate remains the approved transparent safety floor; the nominal controller and task/fault sensitivity must be redesigned before another structural action advances.
+
+## Step 14 — Run the plant-interface and sensor-model tests
 
 Checks the lossless `PlantStepState` → privileged-trace interface, real MuJoCo deformation-coordinate and optional endpoint-contact-force extraction, the contact-profile selection rule, plant/sensor fault boundary, three-torque semantics, privileged/observed leakage boundary, common-random-number substreams, suite masks, sensor-fault relational signature, thermal apparent strain, dropout/derived-velocity validity, latency causality, and deterministic persistence.
 
@@ -202,7 +220,7 @@ Checks the lossless `PlantStepState` → privileged-trace interface, real MuJoCo
 
 Produces: terminal test results.
 
-## Step 14 — Generate a real privileged trace from the selected MuJoCo plant
+## Step 15 — Generate a real privileged trace from the selected MuJoCo plant
 
 Advances the selected 17-point-per-link cable plant at 500 Hz control / 10 kHz simulation, extracts the frozen 90-wide internal ball-joint log-map deformation vector, and persists every schema-B field under the isolated `plant/` role. The command uses the bounded 1.0 N, 0.8 Hz diagnostic condition that cleared the mechanics gate. Its `config_hash` is deliberately prefixed `dev-`: the shared immutable `config.json` has not been frozen, so this output is for development/integration and cannot be mistaken for confirmatory data.
 
@@ -226,9 +244,9 @@ Produces:
 - Optional contact command: `results/mujoco_contact_dev/plant/contact_dev.npz` and its
   adjacent `index.csv`, with the same role/index schema.
 
-Use `--scenario structure --fault-severity 0.50` or `--scenario actuator --fault-severity 0.70` for a physical-fault development trace. Sensor faults are rejected here and must be injected only in Step 15.
+Use `--scenario structure --fault-severity 0.50` or `--scenario actuator --fault-severity 0.70` for a physical-fault development trace. Sensor faults are rejected here and must be injected only in Step 16.
 
-## Step 15 — Apply the sensor-realism + fault-injection model
+## Step 16 — Apply the sensor-realism + fault-injection model
 
 Maps the real privileged plant trace to one deployable sensor suite's observed record: encoder/IMU/current-proxy/gauge channels with additive noise, thermal apparent strain, bias, drift, hysteresis, quantization, dropout, and latency, plus optional injection of a sensor-class encoder fault into the observation path only. Channels a suite does not carry are written as `NaN` and masked off, so the suites differ only by available information.
 
@@ -243,7 +261,7 @@ Produces:
 
 Use `--suite C0` or `--suite C1` for the leaner conventional suites, and `--fault-class sensor --fault-subtype encoder_bias --fault-location 0 --fault-severity 0.05 --fault-onset 499` to inject a sensor fault at the 1.000 s sample of this 500 Hz post-integration trace.
 
-## Step 16 — Generate the optional analytic plant fixture
+## Step 17 — Generate the optional analytic plant fixture
 
 Writes a schema-conforming privileged plant record built from analytic signals. This is a **development stand-in** used to exercise the sensor model on its own; it is not integrated mechanics and makes no physical claim. The `--thermal-ramp-c` option adds a temperature rise so the gauge channel's thermal apparent-strain pathology is visible.
 
@@ -270,4 +288,4 @@ All are free and commercial-use-permitting. Project-owned code and configuration
 
 ## Current boundary
 
-This packet reproduces the mechanics gate, detector-floor correction, safe-probe co-design screen, noisy healthy-reference pilot, optional endpoint-contact profile screen, matched contact-enabled development pilot, bounded task/contact/controller redesign, and bounded noisy held-decision information review, and it connects the selected MuJoCo plant's **real persisted privileged output** to the sensor-realism model. Schema Amendment A1 is jointly in force. The causal one-step plant→sensor→policy loop and estimator front exist and are tested. The permanent `CoefficientReferenceDetector` uses the pilot's canonical score statistic with fail-loud reference/threshold lifecycle guards, and the jointly approved interpretable gain-scheduled recovery-controller floor plugs into the same seam; neither is a completed control result. A new `LinearResidualAttributionEstimator` supplies the Claim-Sheet-required interpretable baseline: it fits healthy deployable one-step ARX dynamics, builds four transparent residual-pattern prototypes in a separate development role, and calibrates off-prototype abstention on a third role. Its synthetic separation and real-seam checks are mechanism tests only. The learned attribution and RMA heads are still unbuilt. The fixed two-field contact role enables collision solely between the distal endpoint segment and an explicit plane, extracts MuJoCo's constraint-force truth, and drives the seventh privileged safety flag; the default model remains collision-disabled. The earlier short open-loop grid advanced z = 0.100 m to matched pilot review, but the matched pilot **blocked** it: S's contact-conditioned scheduled-decision signal came with 8.3% healthy false alarms, the pilot-only continuous prototype was phase/reference-unstable, and the selected plane produced repeated contacts plus privileged joint-angle safety violations over onset+5 s. The bounded redesign advanced z = 0.200 m as the lowest all-source mechanics/lifecycle candidate under deployable encoder feedback, one held scheduled diagnosis, a post-decision finite contact excursion, and zero A1 flags over onset+5 s. Replacing its fixed diagnoses with resolved-tail noisy references now advances the **information/reference lifecycle only**: S reaches 0.995 held-out macro-F1 and 100% structural recall versus C1's 0.704 and 8.3%, with 2.1% versus 4.2% healthy false alarms. The current recovery-control profile remains blocked because the representative suite-informed structural action worsens `J_5s` by 18.6% despite zero safety flags. Probability calibration, the recovery action itself, validation-sized multi-setting evidence, and the evaluation-sized paired control comparison remain open. The prospective non-contact noisy-reference follow-up still advances W=768 / stride=16 only as a development proposal; the shared immutable `config.json` remains unfrozen. The packet therefore does **not** yet implement the confirmatory experiment or the interactive verification artifact; neither a research result nor a frozen configuration may be inferred from these development sensitivities.
+This packet reproduces the mechanics gate, detector-floor correction, safe-probe co-design screen, noisy healthy-reference pilot, optional endpoint-contact profile screen, matched contact-enabled development pilot, bounded task/contact/controller redesign, bounded noisy held-decision information review, and structural recovery action-family screen, and it connects the selected MuJoCo plant's **real persisted privileged output** to the sensor-realism model. Schema Amendment A1 is jointly in force. The causal one-step plant→sensor→policy loop and estimator front exist and are tested. The permanent `CoefficientReferenceDetector` uses the pilot's canonical score statistic with fail-loud reference/threshold lifecycle guards, and the jointly approved interpretable gain-scheduled recovery-controller floor plugs into the same seam; neither is a completed control result. A new `LinearResidualAttributionEstimator` supplies the Claim-Sheet-required interpretable baseline: it fits healthy deployable one-step ARX dynamics, builds four transparent residual-pattern prototypes in a separate development role, and calibrates off-prototype abstention on a third role. Its synthetic separation and real-seam checks are mechanism tests only. The learned attribution and RMA heads are still unbuilt. The fixed two-field contact role enables collision solely between the distal endpoint segment and an explicit plane, extracts MuJoCo's constraint-force truth, and drives the seventh privileged safety flag; the default model remains collision-disabled. The earlier short open-loop grid advanced z = 0.100 m to matched pilot review, but the matched pilot **blocked** it: S's contact-conditioned scheduled-decision signal came with 8.3% healthy false alarms, the pilot-only continuous prototype was phase/reference-unstable, and the selected plane produced repeated contacts plus privileged joint-angle safety violations over onset+5 s. The bounded redesign advanced z = 0.200 m as the lowest all-source mechanics/lifecycle candidate under deployable encoder feedback, one held scheduled diagnosis, a post-decision finite contact excursion, and zero A1 flags over onset+5 s. Replacing its fixed diagnoses with resolved-tail noisy references now advances the **information/reference lifecycle only**: S reaches 0.995 held-out macro-F1 and 100% structural recall versus C1's 0.704 and 8.3%, with 2.1% versus 4.2% healthy false alarms. The old structural derate remains blocked because it worsens `J_5s` by 18.6%. A predeclared inverse-stiffness multiplier family then found 19–20% structural tracking reductions with no A1 or saturation events, but the selected 2.0× multiplier improved healthy tracking slightly more than the structural-fault case; the source-specificity gate therefore **blocks** it as a generic nominal-controller retune, not structural recovery. Probability calibration, a retuned nominal controller plus a task/fault condition with measurable structural deficit, validation-sized multi-setting evidence, and the evaluation-sized paired control comparison remain open. The prospective non-contact noisy-reference follow-up still advances W=768 / stride=16 only as a development proposal; the shared immutable `config.json` remains unfrozen. The packet therefore does **not** yet implement the confirmatory experiment or the interactive verification artifact; neither a research result nor a frozen configuration may be inferred from these development sensitivities.

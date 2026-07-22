@@ -1,10 +1,10 @@
 # Summary of Only Necessary Context
 
-**Rewritten:** 2026-07-21 22:43 PDT
+**Rewritten:** 2026-07-22 14:43 PDT
 
-**Last completed Codex session:** 18
+**Last completed Codex session:** 19
 
-**Next Codex session:** 19
+**Next Codex session:** 20
 
 **Current branch:** `main`
 
@@ -14,137 +14,163 @@
 
 ## Resume state
 
-Codex Session 18 closed the Session-17 bounded task/contact/controller review loop after Claude Session 18 independently reproduced and explicitly approved the exact handed-off state. Codex then completed the matched noisy held-decision C1-vs-S information/reference-lifecycle review on that approved bounded development condition.
+Codex Session 19 first closed Claude's corrective review of the Session-18 bounded noisy held-decision artifact. Codex genuinely re-reviewed Claude's decision-guard, evidence-boundary, and test edits, independently verified them, and explicitly approved the exact handed-back state. That review loop is closed.
 
-The new exact decision is:
+The accepted noisy-information result remains:
 
 `ADVANCE_INFORMATION_REFERENCE_LIFECYCLE_ONLY_BLOCK_RECOVERY_CONTROL_PROFILE`
 
-The S suite clears the held-out information and transparent action-authorization gates at the one pre-movement decision. The current structural recovery action nevertheless worsens the only representative suite-informed tracking outcome, so recovery control remains blocked. This is not an evaluation-sized C1-vs-S result, learned attribution, probability calibration, OOD evidence, or permission to freeze `config.json`.
+The advancing label is now guarded by information, action authorization, representative safety/lifecycle, exact pre-decision matching, and clean decision windows. Only the representative control result can distinguish full advance from information-only advance. The evidence remains one fixed fault setting per class with held-out sensor-noise variation; the minimum held-out prototype margin is 0.90, and known-fault abstention is not stressed.
 
-Codex explicitly approved the exact Session-18 implementation and appended the handoff to the active Phase-2 transcript. **Claude now owes genuine first review of this new state.** If Claude edits any handed-off artifact, Codex must inspect the actual edited files and provide a genuine owner re-review before the loop can close.
+Codex then chose the Claim Sheet's existing tracking objective rather than a post-hoc graded-safety amendment and completed the first tracking-directed structural-action family screen. It blocks:
 
-## What changed in Session 18
+`BLOCK_STRUCTURAL_RECOVERY_ACTION_FAMILY`
 
-- Added `Reproducibility Packet/scripts/run_bounded_noisy_information_review.py`.
-- Added four focused regressions in `Reproducibility Packet/tests/test_bounded_noisy_information_review.py`.
-- Added five recorded artifacts under `Reproducibility Packet/results/bounded_noisy_information_review/`.
-- Updated the packet runbook with Step 12, renumbered downstream steps through Step 16, and rewrote the current evidence boundary.
-- Added one lean root Live Run Status entry for the information/control split.
-- Accepted Claude's explicit same-state Session-17 approval, closing the bounded-redesign loop.
+The selected global 2.00 multiplier improves structural tracking by about 20%, but it improves healthy false-authorized tracking slightly more. The result identifies generic nominal-controller under-authority, not structural-specific recovery. No action advances. The old 0.75 global derate remains the jointly approved transparent safety floor. The new inverse-stiffness path is proposed code under Claude review, not an approved controller. `config.json` remains unfrozen.
 
-## Exact development condition and roles
+Codex explicitly approved the exact proposed state it handed off. **Claude now owes genuine first review of the Session-19 action-screen state.** If Claude edits any handed-off artifact, Codex must inspect the actual edited files and genuinely owner-re-review them before the loop can close.
 
-The review inherits the approved bounded mechanics/controller schedule:
+## What changed in Session 19
 
-- contact plane: `z=0.200 m`;
-- W=768 and stride=16;
-- fault/probe onset: `1.000 s`;
-- one held decision: step `1136`, time `2.272 s`;
-- movement begins: `2.400 s`;
-- full horizon ends: `6.000 s`.
+- Closed Claude's Session-19 edit-and-hand-back review with explicit owner same-state approval.
+- Added `Reproducibility Packet/scripts/screen_structural_recovery_action.py`.
+- Added `Reproducibility Packet/tests/test_structural_recovery_action.py`.
+- Added five artifacts under `Reproducibility Packet/results/structural_recovery_action_screen/`.
+- Extended `scripts/utils/recovery_control.py` with an explicit unchanged default derate and proposed bounded inverse-stiffness alternative.
+- Extended `tests/test_recovery_control.py` with structural compensation and fail-safe coverage.
+- Added packet Step 13 and renumbered downstream commands through Step 17.
+- Appended one lean root Live Run Status blocker.
+- Appended the exact new handoff to the active Phase-2 transcript under the hard append gate.
 
-Seed roles are disjoint:
+## Closed prior review loop
 
-- calibration-only sensor seeds: 14000-14099, 100 per canonical source;
-- held-out evaluation sensor seeds: 14100-14147, 48 per canonical source;
-- representative full-horizon seed: 14100, predeclared within the held-out role.
+Claude's accepted corrections to `run_bounded_noisy_information_review.py`, its tests, and generated report are:
 
-One hundred calibration seeds resolve five observations in the declared 5% healthy tail. Suite-specific references use calibration-only healthy mean/scale, a higher-method 95th-percentile leave-one-out detection threshold, labeled fault centroids, and a leave-one-out selective-margin threshold at no more than 5% selective error. Held-out seeds never tune these values.
+- `lifecycle_pass` requires information, action authorization, representative safety/lifecycle, matched pre-decision histories, and clean decision windows;
+- only `control_sensitivity_pass` may separate full advance from information-only advance;
+- five counterfactual failures explicitly block while the information gate can remain true;
+- the report limits the held-out result to one fixed subtype/location/severity/onset per class; and
+- the report computes the observed minimum prototype margin, 0.90.
 
-Every window is captured from a real noisy `CablePlant -> OnlineSensorSession(S) -> ObservedJointPDController` trajectory. C1 is projected from the exact same S window, so C1/S share plant history, commands, sensor seed, and common observation channels while differing in gauge availability. References remain suite-specific.
+Codex verification before approval: focused file 5 passed, then-current packet 160 passed, clean compile/CLI/diff checks, and byte-identical report regeneration. The approval appears in the active transcript at line 1,331; Codex was physically last at line 1,356 before opening the next work unit.
 
-## Held-out information/action result
+## Proposed structural action seam
 
-| Suite | Macro-F1 | Balanced accuracy | Healthy FA | Min fault detect | Structure recall | Actuator recall | Sensor recall | Healthy false-actionable | Information | Action |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---|---|
-| C1 | 0.704 | 0.760 | 4.2% | 8.3% | 8.3% | 100% | 100% | 4.2% | BLOCK | BLOCK |
-| S | 0.995 | 0.995 | 2.1% | 100% | 100% | 100% | 100% | 2.1% | PASS | PASS |
+`RecoveryControlConfig` now contains:
 
-False-actionable healthy decisions are C1 seeds 14137 and 14141 and S seed 14141, all called structure.
+- `structural_action`: `derate` by default, optional `inverse_stiffness`;
+- `structural_compensation_scope`: `global` or `localized`;
+- `minimum_stiffness_remaining`: 0.25 default; and
+- `maximum_structural_compensation`: 2.0 default.
 
-Both suites' leave-one-out fault prototypes have 100% calibration selective coverage and 0% error, selecting margin threshold 0. Held-out known-fault selective accuracy is 100%, and no known fault abstains. This means the known development faults do not stress abstention; compound/OOD faults, calibrated probabilities, and validation-frozen selective thresholds remain open.
+The existing default behavior is unchanged: a confident structural diagnosis applies the 0.75 global derate. The proposed inverse-stiffness path requires valid location and remaining stiffness, applies a probability-weighted bounded inverse multiplier globally or locally, and fails safe to the nominal command on unusable estimates. Existing command/plant limits still apply.
 
-Accepted prototype calls are one-hot schema/recovery instruments. They are not calibrated learned-head probabilities.
+This code is intentionally present for review even though the recorded family blocks. Do not call it jointly approved or deployable.
 
-## Separate representative control sensitivity
+## Exact structural-action screen
 
-All eight representative source/suite rows have:
+The screen inherits the approved bounded mechanics and fixes the diagnosis to isolate controller behavior:
 
-- one classifier evaluation held through the run;
-- no source-specific command change before the decision;
-- exactly one bounded contact episode;
-- zero A1 safety flags; and
-- exact matched C1/S pre-decision plant and shared-observation hashes.
+- contact plane `z=0.200 m`;
+- one held decision, no pre-decision source action;
+- tuning seeds 15000–15002;
+- disjoint assessment seeds 15100–15103;
+- minimum per-seed structural `J_5s` reduction 10%; and
+- exact paired pre-decision CRN hashes, zero A1 incidents, and zero saturation required.
 
-Representative paired `J_5s`:
+Candidate family:
 
-| Source | C1 gate | S gate | C1 `J_5s` | S `J_5s` | S change | Control implication |
-|---|---|---|---:|---:|---:|---|
-| healthy | correct no action | correct no action | 0.8604 | 0.8604 | 0.0% | no suite-informed difference |
-| structure | withheld | correct structural action | 0.8589 | 1.0184 | -18.6% | BLOCK current structural action |
-| actuator | correct action | correct action | 0.8667 | 0.8667 | 0.0% | no suite-informed difference |
-| sensor | correct no action | correct no action | 0.9937 | 0.9937 | 0.0% | no suite-informed difference |
+- current global derate 0.75;
+- no action 1.00;
+- global caps 1.10, 1.25, 1.50, 2.00;
+- localized caps 1.25, 1.50, 2.00.
 
-The structural S action lowers peak force from 2.051 N to 0.499 N, but both arms already have zero safety incidents. It therefore does not establish a safety benefit and cannot offset the worse tracking result. This is a one-seed sensitivity that may block a harmful controller profile; it cannot establish a recovery advantage.
+Tuning result:
+
+| Candidate | Mean reduction | Minimum reduction | Gate |
+|---|---:|---:|---|
+| derate 0.75 | -18.46% | -18.54% | BLOCK |
+| no action | 0.00% | 0.00% | BLOCK |
+| global 1.10 | 4.66% | 4.59% | BLOCK |
+| global 1.25 | 8.88% | 8.80% | BLOCK |
+| global 1.50 | 13.48% | 13.44% | PASS |
+| global 2.00 | 20.37% | 20.24% | PASS / selected |
+| localized 1.25 | 2.40% | 2.28% | BLOCK |
+| localized 1.50 | 4.14% | 3.99% | BLOCK |
+| localized 2.00 | 6.16% | 6.07% | BLOCK |
+
+Disjoint assessment of global 2.00:
+
+- structural mean/min reduction: 19.8837% / 19.4002%;
+- healthy false-authorization mean reduction: 20.1463%;
+- structural-minus-healthy margin: -0.2626 percentage points;
+- structural tracking gate: PASS;
+- healthy false-authorization safety gate: PASS;
+- source-specificity gate: BLOCK;
+- A1 safety incidents: zero;
+- actuator saturation: zero.
+
+The healthy comparison is essential. Without it, a generally under-powered nominal controller would be mislabeled as successful structural compensation.
 
 ## Evidence boundary that must survive review
 
-- Information/reference lifecycle advances; recovery control does not.
-- Detection, attribution/action authorization, representative mechanics, and control consequence are separate gates.
-- C1/S decision windows are common-random-number matched; suite references are fit independently.
-- The prototype instrument is not the learned attribution head or RMA.
-- Zero abstentions on known faults do not establish compound/OOD behavior.
-- The representative continuation has one seed per source/suite and no paired uncertainty interval.
-- `z=0.200 m`, W/stride, controller gains/limits/timing, sensor constants, severity/onset grids, references, and thresholds remain development candidates.
-- The central Claim Sheet question remains open, and `config.json` remains unfrozen.
+- This is a fixed-source-correct mechanism screen, not noisy attribution evidence.
+- The small tuning/assessment roles are development-only and not evaluation-sized.
+- The source-specificity block overrides the large raw tracking improvement.
+- The assessment gate explicitly requires both structural and healthy selected-action arms to evaluate once and actually apply the action; a skipped false-action stress blocks.
+- The old derate is an approved safety floor, not an advancing tracking action.
+- The proposed inverse-stiffness code has not advanced and is not jointly approved.
+- The noisy S information result remains fixed-setting prototype/reference evidence, not a learned head, probability calibration, OOD result, or confirmatory comparison.
+- Detection, attribution/action authorization, mechanics/safety, and control consequence remain separate.
+- Task/contact/controller values, W/stride, sensor constants, fault settings, thresholds, action family, and multiplier remain unfrozen.
+- The central Claim Sheet question remains open.
 
 ## Verification state
 
-- Focused new tests: **4 passed**.
-- Full Reproducibility Packet: **159 passed**.
+- Claude-edit focused review: **5 passed**.
+- Structural controller plus screen focused tests: **27 passed**.
+- Full Reproducibility Packet: **173 passed**.
 - `compileall -q scripts tests`: passed.
-- New CLI `--help`: passed.
-- Fresh final full run with 12 workers: passed in 704.5 s and returned the recorded split decision.
+- New screen CLI `--help`: passed.
 - Strict JSON: no `NaN` or `Infinity` tokens.
-- Generator/artifact audit: all five outputs reproduce byte-for-byte from the recorded strict JSON and final writers.
-- Recorded row counts: 2 suite information rows, 384 held-out decision rows, 8 representative online rows.
-- Pre-decision histories: 592 physical calibration/evaluation histories, zero contact and zero A1 safety rows.
+- Recorded screen (`--workers 8`) returned `BLOCK_STRUCTURAL_RECOVERY_ACTION_FAMILY`.
+- Independent regeneration (`--workers 10`) reproduced all five outputs byte-for-byte.
 - Artifact SHA-256:
-  - summary: `053b97237eae4f3c99b39af40643971415229488d20220a3df5e471b72c20d37`
-  - information rows: `d3e62eb797131b6690c725b77d847da406c585e208a7c92d93a89767964ec90a`
-  - held-out decisions: `71b044e6459e65ffc4ddef3eafa5aa460cb07166ecaf5825e7e7ee7a340709b8`
-  - representative rows: `25187670191540f5fd91930471aabe70048c795edefbe497aa309e36298a17ee`
-  - report: `7248d802aabc42880637378b58708fa7fbc2ae691b5baeda0067dd389a8277fd`
-- Transcript hard gate: pre-write 1,227 lines; new header exactly once at line 1,229; Codex physically last at line 1,261.
+  - assessment rows: `4f3acb81cb6ba1df888a48bc3e0731c0620bcef5ce739b51129eaebfd9195aca`
+  - candidate rows: `824e6de83be0cceea6c186d3f741af9fe1be23bb2beb693890debb8c89da01ce`
+  - report: `3c4dc4587d2ba1f2c831d21ed33fcc055daf87179adb48ae5561fb0f4aa8f210`
+  - summary: `bb29ad055a75e5ef954870ee6fcf90c89a48afd21056846369796ed7bc4b7b28`
+  - tuning rows: `acf4afc6cea52f96fa00661742bed968dc3a5fb5780018568d4d6ada91803054`
+- Transcript hard gate for new handoff: pre-write 1,356 lines; header exactly once at line 1,360; Codex physically last at line 1,385.
+- Transcript hard gate for final correction: pre-write 1,385 lines; header exactly once at line 1,389; Codex physically last at line 1,397.
 
 ## Open review loop
 
-Claude must first-review this exact state:
+Claude must first-review this exact Session-19 state:
 
-- `Reproducibility Packet/scripts/run_bounded_noisy_information_review.py`
-- `Reproducibility Packet/tests/test_bounded_noisy_information_review.py`
-- `Reproducibility Packet/results/bounded_noisy_information_review/*`
+- `Reproducibility Packet/scripts/utils/recovery_control.py`
+- `Reproducibility Packet/tests/test_recovery_control.py`
+- `Reproducibility Packet/scripts/screen_structural_recovery_action.py`
+- `Reproducibility Packet/tests/test_structural_recovery_action.py`
+- `Reproducibility Packet/results/structural_recovery_action_screen/*`
 - `Reproducibility Packet/README.md`
-- root `README.md` wording
-- Codex's appended Session-18 handoff in the active Phase-2 transcript
+- root `README.md` appended wording
+- Codex's Session-19 handoff at the active transcript tail
+- Codex's Session-19 correction turn that strengthens the healthy false-action lifecycle guard
 
-Silence, a handoff, continuity text, or unrelated edits are not approval. The loop closes only on explicit same-state approval or owner approval after genuine review of reviewer edits.
+Silence, continuity text, downstream use, or an unrelated handoff is not approval. The loop closes only on explicit same-state approval or owner approval after genuine review of reviewer edits.
 
 ## Next technical gate after approval
 
-Redesign the structural recovery action/control sensitivity before any freeze or evaluation-sized comparison:
+1. Retune the common nominal controller on healthy and physical-source development cases without using a structural diagnosis as a tuning oracle.
+2. Identify or design a task/fault condition where structural stiffness loss causes a measurable tracking deficit relative to healthy.
+3. Predeclare the next source-specific action family and keep tuning/evaluation roles disjoint.
+4. Retain a healthy false-authorization control, exact pre-decision matching, one held decision, A1 safety, saturation, and per-seed tracking gates.
+5. Do not enlarge the noisy information claim or skip validation-sized calibration.
 
-1. preserve the exact bounded mechanics condition and real noisy held-decision information path;
-2. define a predeclared structural action family or bounded tuning role without using evaluation data;
-3. require suite-informed action to improve a declared tracking or safety readout rather than merely change torque/force;
-4. preserve action-gate false-authorization and withholding accounting;
-5. retain the full onset+5 s A1 safety audit and exact C1/S pre-decision matching; and
-6. keep any small screen or one-seed continuation labeled development sensitivity.
+Validation-sized healthy/four-class calibration, per-suite probability calibration, compound/OOD faults, severity/onset grids, non-load-bearing sensor constants, class/abstention/selective/OOD thresholds, learned attribution plus RMA, whole-trajectory/fault-setting split, deployable-loader leakage, role hashes, multi-run storage, immutable config/schema gates, and the evaluation-sized closed-loop comparison all remain unresolved.
 
-Validation-sized healthy/four-class calibration, per-suite probability calibration, compound/OOD faults, severity/onset grids, non-load-bearing sensor constants, class/abstention/selective/OOD thresholds, learned attribution + RMA, whole-trajectory/fault-setting split, deployable-loader leakage, role hashes, multi-run storage, immutable config/schema gates, and the evaluation-sized closed-loop comparison all remain unresolved.
-
-## Required startup sequence for Session 19
+## Required startup sequence for Session 20
 
 1. Re-read `AgentPrompt.md` and follow it exactly.
 2. Read all of `Project Details/Project Details.md`.
@@ -152,8 +178,8 @@ Validation-sized healthy/four-class calibration, per-suite probability calibrati
 4. Read every relevant `Summary.md`, then the complete active Phase-2 transcript to physical EOF.
 5. Read Claude's latest Human Report and continuity.
 6. Inspect git status/HEAD and the actual files before trusting this summary if the repo has advanced.
-7. Process Claude's review first. If it is explicit same-state approval, close the loop; if Claude edited, genuinely re-review those edits.
-8. Keep `config.json` unfrozen unless all remaining gates actually close.
+7. Process Claude's review first. Explicitly close only a same-state approval; genuinely re-review any edits.
+8. Keep `config.json` unfrozen unless every remaining gate actually closes.
 
 ## Closeout conventions to preserve
 

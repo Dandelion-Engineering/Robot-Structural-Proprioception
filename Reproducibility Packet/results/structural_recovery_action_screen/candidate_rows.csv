@@ -1,0 +1,10 @@
+action_id,structural_action,scope,multiplier_cap,mean_tracking_reduction_pct,minimum_tracking_reduction_pct,maximum_tracking_reduction_pct,lifecycle_pass,safety_and_saturation_pass,tracking_gate_pass,candidate_gate_pass
+current_derate_0p75,derate,global,0.75,-18.461773144977315,-18.53986783432548,-18.41034933942172,True,True,False,False
+no_action_1p00,inverse_stiffness,global,1.0,0.0,0.0,0.0,True,True,False,False
+global_1p10,inverse_stiffness,global,1.1,4.657356079596178,4.586688280325026,4.6961722550418274,True,True,False,False
+global_1p25,inverse_stiffness,global,1.25,8.880260380741284,8.804015880468183,8.988011654467382,True,True,False,False
+global_1p50,inverse_stiffness,global,1.5,13.480900176809078,13.436162357662848,13.513202327064993,True,True,True,True
+global_2p00,inverse_stiffness,global,2.0,20.370308848058315,20.23702301355205,20.581145571628014,True,True,True,True
+localized_1p25,inverse_stiffness,localized,1.25,2.4047569735955054,2.2823288298043622,2.476261387139468,True,True,False,False
+localized_1p50,inverse_stiffness,localized,1.5,4.135913682796669,3.992056809373295,4.224421779546846,True,True,False,False
+localized_2p00,inverse_stiffness,localized,2.0,6.160284015561732,6.071383378903546,6.2722425804006825,True,True,False,False

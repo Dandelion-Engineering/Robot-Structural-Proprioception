@@ -122,6 +122,50 @@ def test_structural_diagnosis_derates_without_claiming_repair() -> None:
     )
 
 
+@pytest.mark.parametrize(
+    ("scope", "expected"),
+    [
+        ("global", np.array([0.12, -0.06])),
+        ("localized", np.array([0.08, -0.06])),
+    ],
+)
+def test_structural_inverse_stiffness_action_is_bounded_and_scope_explicit(
+    scope: str, expected: np.ndarray
+) -> None:
+    """A one-hot 50%-remaining diagnosis applies the declared capped multiplier."""
+
+    controller = GainScheduledRecoveryController(
+        RecoveryControlConfig(
+            structural_action="inverse_stiffness",
+            structural_compensation_scope=scope,
+            maximum_structural_compensation=1.5,
+        )
+    )
+    nominal = np.array([0.08, -0.04])
+    recovered = controller.command_from_nominal(
+        diagnosis("structure", location=1, severity=0.5), nominal
+    )
+    np.testing.assert_allclose(recovered, expected)
+    np.testing.assert_allclose(nominal, np.array([0.08, -0.04]))
+
+
+def test_structural_compensation_requires_location_and_remaining_stiffness() -> None:
+    """Tracking compensation fails safe when its physical estimate is unusable."""
+
+    controller = GainScheduledRecoveryController(
+        RecoveryControlConfig(structural_action="inverse_stiffness")
+    )
+    nominal = np.array([0.08, -0.04])
+    for output in (
+        diagnosis("structure", location=-1, severity=0.5),
+        diagnosis("structure", location=1, severity=0.0),
+        diagnosis("structure", location=1, severity=1.2),
+    ):
+        np.testing.assert_allclose(
+            controller.command_from_nominal(output, nominal), nominal
+        )
+
+
 def test_recovery_can_condition_an_external_deployable_nominal_command() -> None:
     """Observation-feedback task commands use the same diagnosis gates and actions."""
 
@@ -223,7 +267,11 @@ def test_recovery_controller_plugs_into_estimator_command_policy() -> None:
     "config",
     [
         RecoveryControlConfig(source_probability_threshold=0.0),
+        RecoveryControlConfig(structural_action="unknown"),
+        RecoveryControlConfig(structural_compensation_scope="unknown"),
         RecoveryControlConfig(structural_command_derate=1.1),
+        RecoveryControlConfig(minimum_stiffness_remaining=1.1),
+        RecoveryControlConfig(maximum_structural_compensation=0.9),
         RecoveryControlConfig(minimum_gain_remaining=1.1),
         RecoveryControlConfig(maximum_gain_compensation=0.9),
         RecoveryControlConfig(torque_abs_limit=(1.0, -0.5)),

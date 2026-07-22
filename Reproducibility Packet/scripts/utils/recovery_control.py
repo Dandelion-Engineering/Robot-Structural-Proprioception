@@ -6,7 +6,9 @@ small, auditable floor: it preserves the nominal bounded task command while diag
 healthy, ambiguous, unlocalized, or too uncertain; it applies only two explicit actions
 when a source estimate is confident enough to support them:
 
-* derate the task command after a localized-or-global structural diagnosis; and
+* either derate the task command after a structural diagnosis (the original safety
+  floor) or apply a bounded, severity-conditioned stiffness-compensation multiplier
+  selected only through an explicit development screen; and
 * compensate an attributed actuator-gain loss by increasing the requested torque at the
   affected joint, within conservative controller and plant limits.
 
@@ -46,7 +48,11 @@ class RecoveryControlConfig:
     nominal_task_scale: float = 0.5
     source_probability_threshold: float = 0.5
     maximum_severity_uncertainty: float = 0.25
+    structural_action: str = "derate"
+    structural_compensation_scope: str = "global"
     structural_command_derate: float = 0.75
+    minimum_stiffness_remaining: float = 0.25
+    maximum_structural_compensation: float = 2.0
     minimum_gain_remaining: float = 0.25
     maximum_gain_compensation: float = 2.0
     torque_abs_limit: tuple[float, float] = (1.0, 0.5)
@@ -56,6 +62,8 @@ class RecoveryControlConfig:
 
         finite_positive = {
             "maximum_severity_uncertainty": self.maximum_severity_uncertainty,
+            "minimum_stiffness_remaining": self.minimum_stiffness_remaining,
+            "maximum_structural_compensation": self.maximum_structural_compensation,
             "minimum_gain_remaining": self.minimum_gain_remaining,
             "maximum_gain_compensation": self.maximum_gain_compensation,
         }
@@ -68,6 +76,18 @@ class RecoveryControlConfig:
             raise ValueError("source_probability_threshold must lie in (0, 1]")
         if not 0.0 < self.structural_command_derate <= 1.0:
             raise ValueError("structural_command_derate must lie in (0, 1]")
+        if self.structural_action not in {"derate", "inverse_stiffness"}:
+            raise ValueError(
+                "structural_action must be 'derate' or 'inverse_stiffness'"
+            )
+        if self.structural_compensation_scope not in {"global", "localized"}:
+            raise ValueError(
+                "structural_compensation_scope must be 'global' or 'localized'"
+            )
+        if self.minimum_stiffness_remaining > 1.0:
+            raise ValueError("minimum_stiffness_remaining must be <= 1")
+        if self.maximum_structural_compensation < 1.0:
+            raise ValueError("maximum_structural_compensation must be >= 1")
         if self.minimum_gain_remaining > 1.0:
             raise ValueError("minimum_gain_remaining must be <= 1")
         if self.maximum_gain_compensation < 1.0:
@@ -148,9 +168,31 @@ class GainScheduledRecoveryController:
         command = command.copy()
 
         if self._confident_source(output, STRUCTURE_INDEX):
-            # A structural diagnosis does not justify pretending the stiffness estimate
-            # restores the plant. The auditable safe action is a bounded global derate.
-            command *= self.config.structural_command_derate
+            if self.config.structural_action == "derate":
+                # The original transparent safety floor deliberately trades task
+                # authority for margin. It remains the default and is not silently
+                # reinterpreted as tracking compensation.
+                command *= self.config.structural_command_derate
+            else:
+                location = int(output.location_out)
+                remaining = float(output.severity_out)
+                if 0 <= location < N_JOINTS and 0.0 < remaining <= 1.0:
+                    effective_remaining = max(
+                        remaining, self.config.minimum_stiffness_remaining
+                    )
+                    ideal_compensation = 1.0 / effective_remaining
+                    capped_compensation = min(
+                        ideal_compensation,
+                        self.config.maximum_structural_compensation,
+                    )
+                    probability = float(output.p_class[STRUCTURE_INDEX])
+                    multiplier = 1.0 + probability * (
+                        capped_compensation - 1.0
+                    )
+                    if self.config.structural_compensation_scope == "global":
+                        command *= multiplier
+                    else:
+                        command[location] *= multiplier
 
         if self._confident_source(output, ACTUATOR_INDEX):
             location = int(output.location_out)
