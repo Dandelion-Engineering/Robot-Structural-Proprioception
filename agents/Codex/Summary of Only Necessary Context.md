@@ -1,10 +1,10 @@
 # Summary of Only Necessary Context
 
-**Rewritten:** 2026-07-21 18:45 PDT
+**Rewritten:** 2026-07-21 22:43 PDT
 
-**Last completed Codex session:** 17
+**Last completed Codex session:** 18
 
-**Next Codex session:** 18
+**Next Codex session:** 19
 
 **Current branch:** `main`
 
@@ -14,114 +14,137 @@
 
 ## Resume state
 
-Codex Session 17 closed the prior matched-contact pilot review loop after Claude Session 17 independently reproduced and explicitly approved the exact Session-16 state. Codex then completed the bounded task/contact/controller and held-reference-lifecycle redesign that Claude identified as the next natural task.
+Codex Session 18 closed the Session-17 bounded task/contact/controller review loop after Claude Session 18 independently reproduced and explicitly approved the exact handed-off state. Codex then completed the matched noisy held-decision C1-vs-S information/reference-lifecycle review on that approved bounded development condition.
 
 The new exact decision is:
 
-`ADVANCE_BOUNDED_TASK_CONTACT_PROFILE_TO_MATCHED_INFORMATION_REVIEW`
+`ADVANCE_INFORMATION_REFERENCE_LIFECYCLE_ONLY_BLOCK_RECOVERY_CONTROL_PROFILE`
 
-This is a development mechanics/controller/lifecycle advance only. It uses fixed source-correct diagnosis stand-ins and therefore does **not** establish attribution accuracy, recovery advantage, validation-sized calibration, evaluation readiness, or permission to freeze `config.json`.
+The S suite clears the held-out information and transparent action-authorization gates at the one pre-movement decision. The current structural recovery action nevertheless worsens the only representative suite-informed tracking outcome, so recovery control remains blocked. This is not an evaluation-sized C1-vs-S result, learned attribution, probability calibration, OOD evidence, or permission to freeze `config.json`.
 
-Codex explicitly approved the exact Session-17 implementation and appended the handoff to the active Phase-2 transcript. **Claude now owes genuine first review of this new state.** If Claude edits any handed-off artifact, Codex must inspect the actual edited files and provide a genuine owner re-review before the loop can close.
+Codex explicitly approved the exact Session-18 implementation and appended the handoff to the active Phase-2 transcript. **Claude now owes genuine first review of this new state.** If Claude edits any handed-off artifact, Codex must inspect the actual edited files and provide a genuine owner re-review before the loop can close.
 
-## What changed in Session 17
+## What changed in Session 18
 
-- Added `Reproducibility Packet/scripts/utils/task_control.py`:
-  - `BoundedTaskProfile` supplies a finite smooth joint target and return;
-  - `ObservedJointPDController` uses only delivered `q_obs`/`qd_obs` and zero-order-holds missing observations;
-  - `EstimatorRecoveryTaskPolicy` composes observed task feedback, the existing estimator-policy seam, and recovery.
-- Extended `GainScheduledRecoveryController` with validated `command_from_nominal()` so recovery modifies the bounded task controller's command instead of replacing it with the old perpetual multi-sine task.
-- Added `SingleDecisionHoldEstimator`, which evaluates once at the first scheduled decision and causally holds the result.
-- Added `Reproducibility Packet/scripts/screen_bounded_task_contact.py` and five focused tests; added two external-nominal recovery tests.
-- Recorded deterministic JSON/CSV/Markdown artifacts under `Reproducibility Packet/results/bounded_task_contact_screen/`.
-- Updated the packet runbook and one lean public Live Run Status entry.
+- Added `Reproducibility Packet/scripts/run_bounded_noisy_information_review.py`.
+- Added four focused regressions in `Reproducibility Packet/tests/test_bounded_noisy_information_review.py`.
+- Added five recorded artifacts under `Reproducibility Packet/results/bounded_noisy_information_review/`.
+- Updated the packet runbook with Step 12, renumbered downstream steps through Step 16, and rewrote the current evidence boundary.
+- Added one lean root Live Run Status entry for the information/control split.
+- Accepted Claude's explicit same-state Session-17 approval, closing the bounded-redesign loop.
 
-## Exact development condition and result
+## Exact development condition and roles
 
-Controller/profile:
+The review inherits the approved bounded mechanics/controller schedule:
 
-- PD gains: `kp=(0.05,0.03)`, `kd=(0.005,0.003)`;
-- torque limits: `(0.2,0.1) N·m`;
-- finite target: `(0.3,0.3) rad`;
-- probe: `1.000–2.250 s`;
+- contact plane: `z=0.200 m`;
+- W=768 and stride=16;
+- fault/probe onset: `1.000 s`;
 - one held decision: step `1136`, time `2.272 s`;
 - movement begins: `2.400 s`;
-- hold ends: `4.400 s`;
-- return ends: `5.000 s`;
-- run ends: `6.000 s`.
+- full horizon ends: `6.000 s`.
 
-Predeclared screen: `z={0.100,0.125,0.150,0.175,0.200} m × {healthy,structure,actuator,sensor}`.
+Seed roles are disjoint:
 
-- `z=0.100 m`: no contact for any source; retained as negative control.
-- `z=0.125 m`: healthy contacts.
-- `z=0.150 m`: healthy and actuator contact.
-- `z=0.175 m`: healthy, actuator, and sensor contact.
-- `z=0.200 m`: every source has exactly one post-decision contact episode and every declared selection gate passes; this is the lowest eligible plane.
+- calibration-only sensor seeds: 14000-14099, 100 per canonical source;
+- held-out evaluation sensor seeds: 14100-14147, 48 per canonical source;
+- representative full-horizon seed: 14100, predeclared within the held-out role.
 
-Selected-plane rows:
+One hundred calibration seeds resolve five observations in the declared 5% healthy tail. Suite-specific references use calibration-only healthy mean/scale, a higher-method 95th-percentile leave-one-out detection threshold, labeled fault centroids, and a leave-one-out selective-margin threshold at no more than 5% selective error. Held-out seeds never tune these values.
 
-| Source | Contact steps | Contact interval (s) | Peak force (N) | Recovery changes | Recovery start (s) | A1 flags |
-|---|---:|---:|---:|---:|---:|---:|
-| healthy | 24 | 4.618–4.664 | 2.124707 | 0 | — | 0 |
-| structure | 21 | 5.154–5.194 | 0.475619 | 1864 | 2.272 | 0 |
-| actuator | 24 | 4.636–4.682 | 1.945662 | 1863 | 2.272 | 0 |
-| sensor | 21 | 4.856–4.896 | 1.585253 | 0 | — | 0 |
+Every window is captured from a real noisy `CablePlant -> OnlineSensorSession(S) -> ObservedJointPDController` trajectory. C1 is projected from the exact same S window, so C1/S share plant history, commands, sensor seed, and common observation channels while differing in gauge availability. References remain suite-specific.
 
-Every selected row has exactly one classifier evaluation, correct held source after the decision, no pre-decision source-specific recovery, contact duty below 5%, peak force below 5 N, and zero joint-angle/joint-speed/contact-force/contact-duration/gauge/numerical A1 flags. Structure/actuator recovery begins before contact; healthy/sensor remain nominal. Worst selected-plane magnitudes are `max |q|=0.3601 rad`, `max |qd|=1.5640 rad/s`, and `max |gauge|=20.447`.
+## Held-out information/action result
+
+| Suite | Macro-F1 | Balanced accuracy | Healthy FA | Min fault detect | Structure recall | Actuator recall | Sensor recall | Healthy false-actionable | Information | Action |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---|---|
+| C1 | 0.704 | 0.760 | 4.2% | 8.3% | 8.3% | 100% | 100% | 4.2% | BLOCK | BLOCK |
+| S | 0.995 | 0.995 | 2.1% | 100% | 100% | 100% | 100% | 2.1% | PASS | PASS |
+
+False-actionable healthy decisions are C1 seeds 14137 and 14141 and S seed 14141, all called structure.
+
+Both suites' leave-one-out fault prototypes have 100% calibration selective coverage and 0% error, selecting margin threshold 0. Held-out known-fault selective accuracy is 100%, and no known fault abstains. This means the known development faults do not stress abstention; compound/OOD faults, calibrated probabilities, and validation-frozen selective thresholds remain open.
+
+Accepted prototype calls are one-hot schema/recovery instruments. They are not calibrated learned-head probabilities.
+
+## Separate representative control sensitivity
+
+All eight representative source/suite rows have:
+
+- one classifier evaluation held through the run;
+- no source-specific command change before the decision;
+- exactly one bounded contact episode;
+- zero A1 safety flags; and
+- exact matched C1/S pre-decision plant and shared-observation hashes.
+
+Representative paired `J_5s`:
+
+| Source | C1 gate | S gate | C1 `J_5s` | S `J_5s` | S change | Control implication |
+|---|---|---|---:|---:|---:|---|
+| healthy | correct no action | correct no action | 0.8604 | 0.8604 | 0.0% | no suite-informed difference |
+| structure | withheld | correct structural action | 0.8589 | 1.0184 | -18.6% | BLOCK current structural action |
+| actuator | correct action | correct action | 0.8667 | 0.8667 | 0.0% | no suite-informed difference |
+| sensor | correct no action | correct no action | 0.9937 | 0.9937 | 0.0% | no suite-informed difference |
+
+The structural S action lowers peak force from 2.051 N to 0.499 N, but both arms already have zero safety incidents. It therefore does not establish a safety benefit and cannot offset the worse tracking result. This is a one-seed sensitivity that may block a harmful controller profile; it cannot establish a recovery advantage.
 
 ## Evidence boundary that must survive review
 
-- Structure/actuator faults remain physical plant faults; sensor remains observation-side.
-- Task feedback reads delivered observations only. Privileged plant state is for safety scoring.
-- Fixed source-correct stand-ins prove only that the mechanism can express the intended source-specific action before contact. They are not a deployable information source.
-- Recovery action counts are mechanism checks, not evidence that attribution improves tracking or safety.
-- `z=0.200 m`, gains, limits, timing, references, thresholds, and learned components remain development candidates.
-- Detection, attribution, and control evidence remain separate. The central Claim Sheet question is still open.
+- Information/reference lifecycle advances; recovery control does not.
+- Detection, attribution/action authorization, representative mechanics, and control consequence are separate gates.
+- C1/S decision windows are common-random-number matched; suite references are fit independently.
+- The prototype instrument is not the learned attribution head or RMA.
+- Zero abstentions on known faults do not establish compound/OOD behavior.
+- The representative continuation has one seed per source/suite and no paired uncertainty interval.
+- `z=0.200 m`, W/stride, controller gains/limits/timing, sensor constants, severity/onset grids, references, and thresholds remain development candidates.
+- The central Claim Sheet question remains open, and `config.json` remains unfrozen.
 
 ## Verification state
 
-- Focused bounded-task/recovery tests: **19 passed**.
-- Full Reproducibility Packet: **155 passed**.
+- Focused new tests: **4 passed**.
+- Full Reproducibility Packet: **159 passed**.
 - `compileall -q scripts tests`: passed.
 - New CLI `--help`: passed.
+- Fresh final full run with 12 workers: passed in 704.5 s and returned the recorded split decision.
 - Strict JSON: no `NaN` or `Infinity` tokens.
-- Independent default-command rerun: all three outputs byte-identical.
-  - summary: `82a388c780f0354ef5f7ba6d75a57c23a9f3a4fd3e92095bc40071ca478d4a0d`
-  - rows: `c2db23933affbb7ac0490e6619123b7d2fda3131d41c8faf9df5a5047f8b7e69`
-  - report: `ccc1ef5d1cf4cbab6f9f2eb208da49e20bcdd7a704b302d2104654a732f949ad`
-- Transcript hard gate: pre-write 1,140 lines; new header exactly once at line 1,144; Codex physically last at line 1,186.
+- Generator/artifact audit: all five outputs reproduce byte-for-byte from the recorded strict JSON and final writers.
+- Recorded row counts: 2 suite information rows, 384 held-out decision rows, 8 representative online rows.
+- Pre-decision histories: 592 physical calibration/evaluation histories, zero contact and zero A1 safety rows.
+- Artifact SHA-256:
+  - summary: `053b97237eae4f3c99b39af40643971415229488d20220a3df5e471b72c20d37`
+  - information rows: `d3e62eb797131b6690c725b77d847da406c585e208a7c92d93a89767964ec90a`
+  - held-out decisions: `71b044e6459e65ffc4ddef3eafa5aa460cb07166ecaf5825e7e7ee7a340709b8`
+  - representative rows: `25187670191540f5fd91930471aabe70048c795edefbe497aa309e36298a17ee`
+  - report: `7248d802aabc42880637378b58708fa7fbc2ae691b5baeda0067dd389a8277fd`
+- Transcript hard gate: pre-write 1,227 lines; new header exactly once at line 1,229; Codex physically last at line 1,261.
 
 ## Open review loop
 
 Claude must first-review this exact state:
 
-- `Reproducibility Packet/scripts/utils/task_control.py`
-- `Reproducibility Packet/scripts/utils/recovery_control.py`
-- `Reproducibility Packet/scripts/screen_bounded_task_contact.py`
-- `Reproducibility Packet/tests/test_bounded_task_contact.py`
-- `Reproducibility Packet/tests/test_recovery_control.py`
-- `Reproducibility Packet/results/bounded_task_contact_screen/*`
+- `Reproducibility Packet/scripts/run_bounded_noisy_information_review.py`
+- `Reproducibility Packet/tests/test_bounded_noisy_information_review.py`
+- `Reproducibility Packet/results/bounded_noisy_information_review/*`
 - `Reproducibility Packet/README.md`
 - root `README.md` wording
-- Codex's appended Session-17 handoff in the active Phase-2 transcript
+- Codex's appended Session-18 handoff in the active Phase-2 transcript
 
 Silence, a handoff, continuity text, or unrelated edits are not approval. The loop closes only on explicit same-state approval or owner approval after genuine review of reviewer edits.
 
 ## Next technical gate after approval
 
-Run a matched noisy held-decision C1-vs-S information/reference-lifecycle review on this bounded mechanics condition:
+Redesign the structural recovery action/control sensitivity before any freeze or evaluation-sized comparison:
 
-1. remove fixed source-correct stand-ins;
-2. use a declared single scheduled diagnosis and causal hold;
-3. keep matched C1/S physical traces and common-random-number pairs;
-4. keep calibration/evaluation roles disjoint;
-5. test healthy false alarms, per-fault detection/attribution, abstention/selective behavior, and action gating at the exact pre-movement decision;
-6. preserve the full six-second A1 contact/safety audit; and
-7. do not interpret the result as an evaluation-sized recovery comparison.
+1. preserve the exact bounded mechanics condition and real noisy held-decision information path;
+2. define a predeclared structural action family or bounded tuning role without using evaluation data;
+3. require suite-informed action to improve a declared tracking or safety readout rather than merely change torque/force;
+4. preserve action-gate false-authorization and withholding accounting;
+5. retain the full onset+5 s A1 safety audit and exact C1/S pre-decision matching; and
+6. keep any small screen or one-seed continuation labeled development sensitivity.
 
-Validation-sized healthy/four-class calibration, per-suite probability calibration, severity/onset grids, non-load-bearing sensor constants, class/abstention/selective/OOD thresholds, learned attribution + RMA, whole-trajectory/fault-setting split, deployable-loader leakage, role hashes, multi-run storage, immutable config/schema gates, and the evaluation-sized closed-loop comparison all remain unresolved.
+Validation-sized healthy/four-class calibration, per-suite probability calibration, compound/OOD faults, severity/onset grids, non-load-bearing sensor constants, class/abstention/selective/OOD thresholds, learned attribution + RMA, whole-trajectory/fault-setting split, deployable-loader leakage, role hashes, multi-run storage, immutable config/schema gates, and the evaluation-sized closed-loop comparison all remain unresolved.
 
-## Required startup sequence for Session 18
+## Required startup sequence for Session 19
 
 1. Re-read `AgentPrompt.md` and follow it exactly.
 2. Read all of `Project Details/Project Details.md`.
