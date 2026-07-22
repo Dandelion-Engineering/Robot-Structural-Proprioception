@@ -141,12 +141,12 @@ def test_assessment_requires_the_healthy_false_action_to_be_exercised(
     assert decision["overall_decision"] == "BLOCK_STRUCTURAL_RECOVERY_ACTION_FAMILY"
 
 
-def test_assessment_advances_only_a_safe_source_specific_tracking_action() -> None:
-    """The positive path requires disjoint tracking, safety, and specificity passes."""
+def _advancing_assessment_rows(
+    spec: StructuralRecoveryScreenSpec, selected: str
+) -> list[dict[str, object]]:
+    """Return the source-specific fixture that clears every assessment gate."""
 
-    spec = StructuralRecoveryScreenSpec(assessment_seed_count=2)
-    selected = "global_1p25"
-    rows = []
+    rows: list[dict[str, object]] = []
     for seed in spec.assessment_seeds:
         rows.extend(
             [
@@ -156,6 +156,57 @@ def test_assessment_advances_only_a_safe_source_specific_tracking_action() -> No
                 _row(selected, seed, 3.0, source="healthy"),
             ]
         )
+    return rows
+
+
+@pytest.mark.parametrize("source", ["structure", "healthy"])
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("command_changed_steps", 7),
+        ("classification_evaluations", 2),
+        ("command_changed_before_decision", True),
+        ("safety_incident_steps", 1),
+        ("saturation_steps", 1),
+    ],
+)
+def test_assessment_requires_a_sound_no_action_baseline(
+    source: str, field: str, value: object
+) -> None:
+    """Every reduction is measured against the baseline, so it is gated too.
+
+    A baseline that acted, evaluated twice, moved before the held decision,
+    saturated, or raised an A1 flag makes its whole paired comparison — and the
+    source-specificity margin built from it — meaningless.
+    """
+
+    spec = StructuralRecoveryScreenSpec(assessment_seed_count=2)
+    selected = "global_1p25"
+    rows = _advancing_assessment_rows(spec, selected)
+    assert decide_assessment(spec, selected, rows)["overall_decision"] == (
+        "ADVANCE_STRUCTURAL_INVERSE_STIFFNESS_ACTION_TO_NOISY_REVIEW"
+    )
+    next(
+        row
+        for row in rows
+        if row["physical_source"] == source and row["action_id"] == spec.no_action_id
+    )[field] = value
+    decision = decide_assessment(spec, selected, rows)
+    gate = (
+        "structural_tracking_gate_pass"
+        if source == "structure"
+        else "healthy_false_authorization_safety_pass"
+    )
+    assert not decision[gate]
+    assert decision["overall_decision"] == "BLOCK_STRUCTURAL_RECOVERY_ACTION_FAMILY"
+
+
+def test_assessment_advances_only_a_safe_source_specific_tracking_action() -> None:
+    """The positive path requires disjoint tracking, safety, and specificity passes."""
+
+    spec = StructuralRecoveryScreenSpec(assessment_seed_count=2)
+    selected = "global_1p25"
+    rows = _advancing_assessment_rows(spec, selected)
     decision = decide_assessment(spec, selected, rows)
     assert decision["structural_tracking_gate_pass"]
     assert decision["healthy_false_authorization_safety_pass"]

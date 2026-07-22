@@ -417,12 +417,53 @@ def select_candidate(
     return str(selected["action_id"]), summaries
 
 
+def _baseline_comparison_sound(
+    spec: StructuralRecoveryScreenSpec, rows: list[dict[str, Any]], physical_source: str
+) -> bool:
+    """Return whether one source's no-action baseline can carry a paired comparison.
+
+    Every reported reduction, and therefore the whole source-specificity margin, is
+    measured *against* these rows. A baseline that itself acted, evaluated the
+    classifier more than once, saturated, or raised an A1 flag would silently
+    corrupt the percentages while each acting arm still looked clean, so the
+    baseline is held to the same lifecycle and safety contract as the action arms.
+
+    Args:
+        spec: Screen specification supplying the expected assessment seed count.
+        rows: Assessment rows for every source and action.
+        physical_source: Physically simulated source whose baseline is checked.
+
+    Returns:
+        True when that source's baselines are complete, action-free, evaluated
+        exactly once, saturation-free, and A1-incident-free.
+    """
+
+    baselines = [
+        row
+        for row in rows
+        if row["action_id"] == spec.no_action_id
+        and row["physical_source"] == physical_source
+    ]
+    return bool(
+        len(baselines) == spec.assessment_seed_count
+        and all(row["classification_evaluations"] == 1 for row in baselines)
+        and all(not row["command_changed_before_decision"] for row in baselines)
+        and all(row["command_changed_steps"] == 0 for row in baselines)
+        and all(row["safety_incident_steps"] == 0 for row in baselines)
+        and all(row["saturation_steps"] == 0 for row in baselines)
+    )
+
+
 def decide_assessment(
     spec: StructuralRecoveryScreenSpec,
     selected_id: str | None,
     rows: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    """Apply disjoint assessment, false-authorization, and specificity gates."""
+    """Apply disjoint assessment, false-authorization, and specificity gates.
+
+    Each source's gate covers both halves of that source's paired comparison: the
+    selected-action arm and the no-action baseline it is measured against.
+    """
 
     if selected_id is None:
         return {
@@ -461,6 +502,7 @@ def decide_assessment(
         and all(row["classification_evaluations"] == 1 for row in structural)
         and all(not row["command_changed_before_decision"] for row in structural)
         and all(row["command_changed_steps"] > 0 for row in structural)
+        and _baseline_comparison_sound(spec, rows, "structure")
     )
     healthy_safety = bool(
         len(healthy) == spec.assessment_seed_count
@@ -469,6 +511,7 @@ def decide_assessment(
         and all(row["classification_evaluations"] == 1 for row in healthy)
         and all(not row["command_changed_before_decision"] for row in healthy)
         and all(row["command_changed_steps"] > 0 for row in healthy)
+        and _baseline_comparison_sound(spec, rows, "healthy")
     )
     specificity_margin = float(
         np.mean(structural_reductions) - np.mean(healthy_reductions)
@@ -612,6 +655,134 @@ def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
         writer.writerows(rows)
 
 
+def _scope_lines(summary: dict[str, Any]) -> list[str]:
+    """Return the generated bounds on what this screen's decision can support.
+
+    Every figure is recomputed from the recorded rows so the section regenerates
+    deterministically with the rest of the report and cannot drift from the data.
+
+    Args:
+        summary: The screen summary produced by ``run``.
+
+    Returns:
+        Markdown lines stating the measured limits of the recorded decision.
+    """
+
+    spec = StructuralRecoveryScreenSpec(**summary["screen_spec"])
+    rows = summary["assessment_rows"]
+    decision = summary["decision"]
+    selected_id = decision["selected_action_id"]
+
+    def baseline(source: str) -> list[float]:
+        return [
+            float(row["tracking_integral_5s_m_s"])
+            for row in rows
+            if row["physical_source"] == source and row["action_id"] == spec.no_action_id
+        ]
+
+    def peak(source: str, action_id: str, column: str) -> float:
+        values = [
+            float(row[column])
+            for row in rows
+            if row["physical_source"] == source and row["action_id"] == action_id
+        ]
+        return float(np.mean(values))
+
+    healthy_base = baseline("healthy")
+    structure_base = baseline("structure")
+    healthy_mean = float(np.mean(healthy_base))
+    deficit_pct = 100.0 * (float(np.mean(structure_base)) - healthy_mean) / healthy_mean
+    seed_spread = max(
+        max(healthy_base) - min(healthy_base), max(structure_base) - min(structure_base)
+    )
+    deficit_vs_spread = abs(float(np.mean(structure_base)) - healthy_mean) / seed_spread
+
+    reductions = _paired_reductions(rows, spec.no_action_id)
+    ordered = [row for row in rows if row["action_id"] == selected_id]
+    per_source = {"structure": [], "healthy": []}
+    for value, row in zip(reductions[selected_id], ordered, strict=True):
+        per_source[row["physical_source"]].append(value)
+    structure_spread = max(per_source["structure"]) - min(per_source["structure"])
+    healthy_spread = max(per_source["healthy"]) - min(per_source["healthy"])
+    margin = float(decision["structural_minus_healthy_reduction_margin_pct"])
+
+    candidates = {row["action_id"]: row for row in summary["candidate_rows"]}
+    selected_cap = float(candidates[selected_id]["multiplier_cap"])
+    twin = next(
+        (
+            row
+            for row in summary["candidate_rows"]
+            if row["scope"] == "localized"
+            and float(row["multiplier_cap"]) == selected_cap
+            and row["action_id"] != selected_id
+        ),
+        None,
+    )
+
+    limits = cable_config(
+        spec.mechanics_spec(spec.tuning_seeds[0]), spec.selected_plane_z_m
+    )
+    force_base = max(peak(s, spec.no_action_id, "peak_contact_force_n")
+                     for s in ("healthy", "structure"))
+    force_action = max(peak(s, selected_id, "peak_contact_force_n")
+                       for s in ("healthy", "structure"))
+    gauge_base = peak("structure", spec.no_action_id, "max_abs_gauge_microstrain")
+    gauge_action = peak("structure", selected_id, "max_abs_gauge_microstrain")
+
+    lines = [
+        "",
+        "## What the recorded decision does and does not establish",
+        "",
+        (
+            f"- **The structural fault's own tracking deficit bounds any structural "
+            f"recovery.** Its no-action `J_5s` sits {deficit_pct:+.4f}% from the healthy "
+            f"no-action arm's — only {deficit_vs_spread:.2f}x the widest within-source "
+            f"seed spread, so it is not resolved above seed noise. A source-specific "
+            f"action can at best recover that gap, which is "
+            f"{spec.minimum_tracking_reduction_pct / max(abs(deficit_pct), 1e-9):.0f}x "
+            f"smaller than the {spec.minimum_tracking_reduction_pct:.0f}% gate it would "
+            f"have to clear. On this bounded condition the binding constraint on the "
+            f"control layer is the task/fault severity, not the action family and not "
+            f"the nominal controller's tuning."
+        ),
+        (
+            f"- **The source-specificity margin is smaller than the spread of its own "
+            f"inputs.** It is the difference of two unpaired {spec.assessment_seed_count}"
+            f"-seed means: {margin:+.3f} percentage points, against per-seed reduction "
+            f"spreads of {structure_spread:.3f} pp (structure) and {healthy_spread:.3f} pp "
+            f"(healthy). No uncertainty is computed for it, so its sign is not "
+            f"established by this design and the block should not be read off it."
+        ),
+    ]
+    if twin is not None:
+        global_mean = float(candidates[selected_id]["mean_tracking_reduction_pct"])
+        local_mean = float(twin["mean_tracking_reduction_pct"])
+        lines.append(
+            f"- **Most of the benefit comes from the joint carrying no fault** — this is "
+            f"the robust evidence for the block. At the identical {selected_cap:.2f}x "
+            f"multiplier, `{twin['action_id']}` applied only at the joint the diagnosis "
+            f"localizes recovers {local_mean:.2f}% against `{selected_id}`'s "
+            f"{global_mean:.2f}%, so {100.0 * (global_mean - local_mean) / global_mean:.0f}% "
+            f"of the improvement is produced at the unfaulted joint. That contrast is a "
+            f"within-role comparison at ~{global_mean - local_mean:.0f} pp effect size and "
+            f"is not noise-limited."
+        )
+    lines.append(
+        f"- **The safety readouts did not discriminate between candidates.** No arm in "
+        f"the family raised an A1 flag or saturated, but the limits sit far from the "
+        f"operating point, so those gates carried no information here — and the selected "
+        f"action is not free of cost: mean peak contact force rises "
+        f"{force_base:.3f} -> {force_action:.3f} N "
+        f"({100.0 * force_base / limits.tip_contact_force_limit_n:.0f}% -> "
+        f"{100.0 * force_action / limits.tip_contact_force_limit_n:.0f}% of the "
+        f"{limits.tip_contact_force_limit_n:.1f} N limit) and mean peak structural "
+        f"|gauge| rises {gauge_base:.1f} -> {gauge_action:.1f} µε on the link the "
+        f"diagnosis says has lost stiffness. A threshold-crossing count cannot score "
+        f"that trade in either direction."
+    )
+    return lines
+
+
 def write_report(path: Path, summary: dict[str, Any]) -> None:
     """Write the role-separated structural action sensitivity report."""
 
@@ -728,6 +899,8 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
             "constants, fault setting, W/stride, thresholds, and config remain unfrozen.",
         ]
     )
+    if summary["assessment_rows"]:
+        lines.extend(_scope_lines(summary))
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
