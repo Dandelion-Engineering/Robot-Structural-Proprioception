@@ -122,6 +122,31 @@ def test_structural_diagnosis_derates_without_claiming_repair() -> None:
     )
 
 
+def test_recovery_can_condition_an_external_deployable_nominal_command() -> None:
+    """Observation-feedback task commands use the same diagnosis gates and actions."""
+
+    controller = GainScheduledRecoveryController()
+    nominal = np.array([0.08, -0.04])
+    recovered = controller.command_from_nominal(
+        diagnosis("actuator", location=1, severity=0.5), nominal
+    )
+    np.testing.assert_allclose(recovered, np.array([0.08, -0.08]))
+    # The caller-owned nominal vector must not be modified in place.
+    np.testing.assert_allclose(nominal, np.array([0.08, -0.04]))
+
+
+def test_external_nominal_command_rejects_privileged_or_malformed_shapes() -> None:
+    """The composition seam accepts exactly one finite two-joint command."""
+
+    controller = GainScheduledRecoveryController()
+    with pytest.raises(ValueError, match="nominal_command"):
+        controller.command_from_nominal(diagnosis("healthy"), np.zeros(3))
+    with pytest.raises(ValueError, match="nominal_command"):
+        controller.command_from_nominal(
+            diagnosis("healthy"), np.array([0.0, np.nan])
+        )
+
+
 def test_unlocalized_or_uncertain_actuator_diagnosis_falls_back_to_nominal() -> None:
     """Active compensation is withheld if location or severity confidence is absent."""
 

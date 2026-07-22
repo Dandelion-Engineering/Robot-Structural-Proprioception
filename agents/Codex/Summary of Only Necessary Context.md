@@ -1,114 +1,142 @@
-# Summary of Only Necessary Context — Codex
+# Summary of Only Necessary Context
 
-**Rewritten:** 2026-07-21 17:40 PDT
+**Rewritten:** 2026-07-21 18:45 PDT
 
-**Current phase:** Phase 2 — Execution
+**Last completed Codex session:** 17
 
-**Codex session just completed:** Session 16 · **Next:** Session 17
+**Next Codex session:** 18
 
-## Current authoritative state
+**Current branch:** `main`
 
-Phase 0 and Phase 1 remain closed. The jointly approved Claim Sheet, Accessible Claim Sheet, Study Guide Pass 1, schema v1.0, and appended schema Amendment A1 remain in force. A1 fixes `contact_state[2]` and `safety_flag[7]`. The Claim Sheet still awaits Randy's non-blocking review in `director_requests.md`; execution continues.
+**Project phase:** Phase 2 — Execution
 
-The authoritative coordination file is `chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`.
+**Configuration:** explicitly **unfrozen**
 
-Claude Session 16 independently reproduced and explicitly approved Codex Session 15's optional-contact profile screen at the exact state Codex approved. That loop is closed. One new review obligation is open:
+## Resume state
 
-- **Matched contact-enabled pilot first review (Claude owns next).** Codex Session 16 built, ran, explicitly approved, and handed off `run_matched_contact_pilot.py`, `test_matched_contact_pilot.py`, `results/matched_contact_enabled_pilot/`, the packet-runbook/current-boundary wording, and the lean public README blocker entry. Claude must genuinely first-review that exact state. If Claude edits, Codex must owner-re-review the actual files before approving or returning them. Later use or silence is not approval.
+Codex Session 17 closed the prior matched-contact pilot review loop after Claude Session 17 independently reproduced and explicitly approved the exact Session-16 state. Codex then completed the bounded task/contact/controller and held-reference-lifecycle redesign that Claude identified as the next natural task.
 
-## Matched contact-enabled pilot — current BLOCK
+The new exact decision is:
 
-The pilot applies the previously screened z = 0.100 m endpoint plane identically to matched C1/S CRN pairs under the 50%-task / 0.05 N / 0.8 Hz one-cycle condition. It separates three gates:
+`ADVANCE_BOUNDED_TASK_CONTACT_PROFILE_TO_MATCHED_INFORMATION_REVIEW`
 
-1. contact-conditioned coefficient information at the exact first online-owned post-probe window;
-2. a short 2.6 s causal plant→sensor→estimator→controller seam check; and
-3. a mandatory 6.0 s audit covering fault onset at 1.0 s plus the Claim Sheet's five-second analysis horizon.
+This is a development mechanics/controller/lifecycle advance only. It uses fixed source-correct diagnosis stand-ins and therefore does **not** establish attribution accuracy, recovery advantage, validation-sized calibration, evaluation readiness, or permission to freeze `config.json`.
 
-Exact-window reference/evaluation roles:
+Codex explicitly approved the exact Session-17 implementation and appended the handoff to the active Phase-2 transcript. **Claude now owes genuine first review of this new state.** If Claude edits any handed-off artifact, Codex must inspect the actual edited files and provide a genuine owner re-review before the loop can close.
 
-- W=768, stride=16 remain development proposals;
-- policy decision step = 1136; newest owned observation index = 1135;
-- calibration seeds = 9000–9031 (32); held-out seeds = 9032–9079 (48);
-- 99th-percentile higher-method threshold remains the LOO calibration maximum and is not validation-frozen.
+## What changed in Session 17
 
-Held-out scheduled-decision outcome:
+- Added `Reproducibility Packet/scripts/utils/task_control.py`:
+  - `BoundedTaskProfile` supplies a finite smooth joint target and return;
+  - `ObservedJointPDController` uses only delivered `q_obs`/`qd_obs` and zero-order-holds missing observations;
+  - `EstimatorRecoveryTaskPolicy` composes observed task feedback, the existing estimator-policy seam, and recovery.
+- Extended `GainScheduledRecoveryController` with validated `command_from_nominal()` so recovery modifies the bounded task controller's command instead of replacing it with the old perpetual multi-sine task.
+- Added `SingleDecisionHoldEstimator`, which evaluates once at the first scheduled decision and causally holds the result.
+- Added `Reproducibility Packet/scripts/screen_bounded_task_contact.py` and five focused tests; added two external-nominal recovery tests.
+- Recorded deterministic JSON/CSV/Markdown artifacts under `Reproducibility Packet/results/bounded_task_contact_screen/`.
+- Updated the packet runbook and one lean public Live Run Status entry.
 
-| Suite | Healthy false alarms | Minimum fault detection | Structure detection | Prototype attribution |
-|---|---:|---:|---:|---:|
-| C1 | 4.2% | 20.8% | 20.8% | 100% |
-| S | 8.3% | 100% | 100% | 100% |
+## Exact development condition and result
 
-S retains the fault signal, including structural information that C1 mostly misses, but fails the ≤5% held-out healthy false-alarm screen. Do not advance or freeze this operating point.
+Controller/profile:
 
-The short causal layer uses a pilot-only nearest-centroid estimator with a fixed canonical location/severity lookup attached to the predicted class. It consumes only delivered `ObservedRecord` history; its one-hot probability is not calibrated and it is not the learned head. All eight representative arms preserve nominal commands before the first causal decision and have one short contact episode with zero A1 flags. The observation-side sensor fault genuinely reaches the policy and both sensor arms call sensor at least once. The call is unstable: by the final decision all eight arms call actuator, including healthy and sensor, causing inappropriate actuator compensation. This is a phase/reference-lifecycle BLOCK.
+- PD gains: `kp=(0.05,0.03)`, `kd=(0.005,0.003)`;
+- torque limits: `(0.2,0.1) N·m`;
+- finite target: `(0.3,0.3) rad`;
+- probe: `1.000–2.250 s`;
+- one held decision: step `1136`, time `2.272 s`;
+- movement begins: `2.400 s`;
+- hold ends: `4.400 s`;
+- return ends: `5.000 s`;
+- run ends: `6.000 s`.
 
-Over 6.0 s, z = 0.100 m produces three contact episodes in healthy/structure/actuator and joint-1 angle violations for 1111 / 1658 / 1651 steps. The former z = 0.050 m no-contact control also contacts near 4.32 s; healthy/structure violate the angle limit for 311 / 334 steps. Peak contact forces remain below 5 N. The profile/task/controller condition is blocked from evaluation-horizon use and config freeze. Do not relax A1 thresholds to repair it.
+Predeclared screen: `z={0.100,0.125,0.150,0.175,0.200} m × {healthy,structure,actuator,sensor}`.
 
-Exact overall decision:
+- `z=0.100 m`: no contact for any source; retained as negative control.
+- `z=0.125 m`: healthy contacts.
+- `z=0.150 m`: healthy and actuator contact.
+- `z=0.175 m`: healthy, actuator, and sensor contact.
+- `z=0.200 m`: every source has exactly one post-decision contact episode and every declared selection gate passes; this is the lowest eligible plane.
 
-`BLOCK_MATCHED_CONTACT_PILOT_AND_CONTACT_PROFILE_CONFIG_FREEZE`
+Selected-plane rows:
 
-The earlier open-loop z = 0.100 m screen remains correct within its explicitly bounded 2.274 s horizon. Its one-episode and z = 0.050 no-contact conclusions do not transfer to 6.0 s.
+| Source | Contact steps | Contact interval (s) | Peak force (N) | Recovery changes | Recovery start (s) | A1 flags |
+|---|---:|---:|---:|---:|---:|---:|
+| healthy | 24 | 4.618–4.664 | 2.124707 | 0 | — | 0 |
+| structure | 21 | 5.154–5.194 | 0.475619 | 1864 | 2.272 | 0 |
+| actuator | 24 | 4.636–4.682 | 1.945662 | 1863 | 2.272 | 0 |
+| sensor | 21 | 4.856–4.896 | 1.585253 | 0 | — | 0 |
 
-## Jointly approved causal and interpretable floors
+Every selected row has exactly one classifier evaluation, correct held source after the decision, no pre-decision source-specific recovery, contact duty below 5%, peak force below 5 N, and zero joint-angle/joint-speed/contact-force/contact-duration/gauge/numerical A1 flags. Structure/actuator recovery begins before contact; healthy/sensor remain nominal. Worst selected-plane magnitudes are `max |q|=0.3601 rad`, `max |qd|=1.5640 rad/s`, and `max |gauge|=20.447`.
 
-`utils/residual_baseline.py:LinearResidualAttributionEstimator` is jointly approved. It accepts only `ObservedRecord`, binds to a fixed C0/C1/S layout, uses `tau_cmd` only as an exogenous input, fits healthy normalized affine ARX dynamics, builds transparent `[signed_mean_residual, residual_rms, valid_fraction]` features, fits four labeled development centroids, and calibrates off-prototype abstention on a third known-class role. Re-fit lifecycle invalidation and the ≥100-window default tail guard are approved. It emits no location/severity and cannot activate recovery.
+## Evidence boundary that must survive review
 
-`utils/recovery_control.py:GainScheduledRecoveryController` is jointly approved. Healthy, abstained, tied/ambiguous, unlocalized, invalid-severity, or overly uncertain outputs preserve nominal 50%-task torque. Confident structure applies a bounded global derate; confident localized actuator attribution applies probability-weighted capped inverse-gain scheduling. Detection-only and residual floors cannot activate it.
+- Structure/actuator faults remain physical plant faults; sensor remains observation-side.
+- Task feedback reads delivered observations only. Privileged plant state is for safety scoring.
+- Fixed source-correct stand-ins prove only that the mechanism can express the intended source-specific action before contact. They are not a deployable information source.
+- Recovery action counts are mechanism checks, not evidence that attribution improves tracking or safety.
+- `z=0.200 m`, gains, limits, timing, references, thresholds, and learned components remain development candidates.
+- Detection, attribution, and control evidence remain separate. The central Claim Sheet question is still open.
 
-`utils/estimator.py:CoefficientReferenceDetector` is jointly approved as a detection-only rung. It shares the pilot score statistic, not a frozen margin or decision rate. Validation reference data, threshold, and persistence own those quantities.
+## Verification state
 
-The jointly approved recovery-seam regression drives the real `CablePlant → OnlineSensorSession → EstimatorCommandPolicy → GainScheduledRecoveryController` path with fixed deployable diagnosis stand-ins. It pins torque/interface mechanics only, not trained attribution, `J_5s`, tracking recovery, or safety evidence.
+- Focused bounded-task/recovery tests: **19 passed**.
+- Full Reproducibility Packet: **155 passed**.
+- `compileall -q scripts tests`: passed.
+- New CLI `--help`: passed.
+- Strict JSON: no `NaN` or `Infinity` tokens.
+- Independent default-command rerun: all three outputs byte-identical.
+  - summary: `82a388c780f0354ef5f7ba6d75a57c23a9f3a4fd3e92095bc40071ca478d4a0d`
+  - rows: `c2db23933affbb7ac0490e6619123b7d2fda3131d41c8faf9df5a5047f8b7e69`
+  - report: `ccc1ef5d1cf4cbab6f9f2eb208da49e20bcdd7a704b302d2104654a732f949ad`
+- Transcript hard gate: pre-write 1,140 lines; new header exactly once at line 1,144; Codex physically last at line 1,186.
 
-The new `PilotPrototypeEstimator` lives only in `run_matched_contact_pilot.py` and is **not** a jointly approved permanent rung. Its continuous instability is a recorded negative method finding.
+## Open review loop
 
-## Pilot and mechanics boundary
+Claude must first-review this exact state:
 
-The selected short mechanics candidate remains 50% ordinary task torque plus a 0.05 N, 0.8 Hz, one-cycle raised-cosine probe. It is safe only within the earlier short collision-disabled/contact-screen envelopes. The old clean 2.22× coefficient-space ratio remains a mechanics-screen fact, not a deployable margin.
+- `Reproducibility Packet/scripts/utils/task_control.py`
+- `Reproducibility Packet/scripts/utils/recovery_control.py`
+- `Reproducibility Packet/scripts/screen_bounded_task_contact.py`
+- `Reproducibility Packet/tests/test_bounded_task_contact.py`
+- `Reproducibility Packet/tests/test_recovery_control.py`
+- `Reproducibility Packet/results/bounded_task_contact_screen/*`
+- `Reproducibility Packet/README.md`
+- root `README.md` wording
+- Codex's appended Session-17 handoff in the active Phase-2 transcript
 
-The broad noisy-reference artifact (`base_seed=1000`, 8 calibration + 12 held-out seeds) remains the false-alarm BLOCK. The prospective non-contact follow-up (`base_seed=5000`, 32 calibration + 48 held-out seeds) advanced W=768 / stride=16 with 97.9% S worst per-fault detection, 100% prototype attribution, 0.7% pooled / 2.1% worst healthy false alarms, and matched-C1 minimum per-fault detection 0%. That remains a development proposal, not frozen config or the confirmatory C1-vs-S result.
+Silence, a handoff, continuity text, or unrelated edits are not approval. The loop closes only on explicit same-state approval or owner approval after genuine review of reviewer edits.
 
-Safety uses privileged A1 truth: angle×2, speed×2, tip workspace, absolute gauge strain, and contact force. The row-level two-dimensional tip-radius readout is not the workspace gate; the plant's three-dimensional base-relative flag is authoritative.
+## Next technical gate after approval
 
-## Config remains explicitly unfrozen
+Run a matched noisy held-decision C1-vs-S information/reference-lifecycle review on this bounded mechanics condition:
 
-Current role hashes remain `dev-`. Still open:
+1. remove fixed source-correct stand-ins;
+2. use a declared single scheduled diagnosis and causal hold;
+3. keep matched C1/S physical traces and common-random-number pairs;
+4. keep calibration/evaluation roles disjoint;
+5. test healthy false alarms, per-fault detection/attribution, abstention/selective behavior, and action gating at the exact pre-movement decision;
+6. preserve the full six-second A1 contact/safety audit; and
+7. do not interpret the result as an evaluation-sized recovery comparison.
 
-- Claude's genuine first review of the matched contact pilot BLOCK;
-- a bounded/stabilized five-second task/contact/controller redesign;
-- an honest diagnosis lifecycle: one scheduled decision/hold, phase/time-conditioned references, or a temporal model across the full trajectory;
-- validation-sized healthy/reference and four-class known calibration roles;
-- per-suite probability calibration and frozen class/abstention/selective/OOD thresholds;
-- shared severity/onset grids and final analysis window;
-- joint sanity-check of non-load-bearing sensor constants;
-- unscheduled phase drift and nonlinear/probe-band thermal interference;
-- learned temporal attribution and RMA heads;
-- evaluation-sized closed-loop comparison separating exact delivery from `J_5s` and privileged safety;
-- deployable-loader leakage, whole-trajectory/fault-setting split, role-hash rejection, multi-run storage, and immutable schema/config hash gates.
+Validation-sized healthy/four-class calibration, per-suite probability calibration, severity/onset grids, non-load-bearing sensor constants, class/abstention/selective/OOD thresholds, learned attribution + RMA, whole-trajectory/fault-setting split, deployable-loader leakage, role hashes, multi-run storage, immutable config/schema gates, and the evaluation-sized closed-loop comparison all remain unresolved.
 
-## Exact resume path for Codex Session 17
+## Required startup sequence for Session 18
 
-1. Read the UTF-8 physical tail of the active Phase-2 thread. Process Claude's matched-contact pilot review. If Claude approves as-is, close the loop. If Claude edits, inspect and genuinely owner-re-review the actual state before approving or returning it.
-2. Do not treat a reviewer edit, later use, silence, or handoff as approval. Both agents must explicitly approve the same exact state.
-3. After the review loop settles, the highest-value next pre-freeze task is the coupled bounded-task/contact/reference-lifecycle redesign. Preserve all three gates: exact information, causal action stability, and onset+5 s privileged safety.
-4. Do not tune on the held-out seed range or relax A1 thresholds. New candidate searches need predeclared grids and prospective seed roles.
-5. Before confirmatory generation, finish validation roles/thresholds, per-suite calibration, severity/onset grids, sensor-constant sanity, safe contact/task cases, and leakage/split/storage/hash audits; then freeze and hash the complete schema/config.
-6. Do not build the learned attribution/RMA heads before the agreed post-freeze boundary.
+1. Re-read `AgentPrompt.md` and follow it exactly.
+2. Read all of `Project Details/Project Details.md`.
+3. Read this file.
+4. Read every relevant `Summary.md`, then the complete active Phase-2 transcript to physical EOF.
+5. Read Claude's latest Human Report and continuity.
+6. Inspect git status/HEAD and the actual files before trusting this summary if the repo has advanced.
+7. Process Claude's review first. If it is explicit same-state approval, close the loop; if Claude edited, genuinely re-review those edits.
+8. Keep `config.json` unfrozen unless all remaining gates actually close.
 
-## Verification and session record
+## Closeout conventions to preserve
 
-- New matched-contact focused suite: **5 passed**.
-- Full packet: **148 passed**.
-- `compileall`: passed; new CLI help passed.
-- Summary JSON: valid finite JSON; decision parsed exactly.
-- Default-command scratch reproduction: all five artifacts byte-identical after generated-report newline normalization.
-- First chat append hard gate: pre-write 1036 lines; header once at line 1040 and after the old count; Codex physically last.
-- Pilot handoff append hard gate: pre-write 1048 lines; header once at line 1052 and after the old count; Codex physically last.
-- Root public README heartbeat updated with one lean matched-pilot BLOCK entry.
-- Detailed record: `agents/Codex/Session Summaries/HumanReport16.md`.
-- Regular director update: `agents/Codex/Progress Reports/Progress Report Session 16.md`.
-- Next regular Codex progress report: **Session 24** unless a Claim-Sheet amendment or phase transition also fires.
-
-## Transcript append rule
-
-Before every future chat append: read the UTF-8 physical tail, record the pre-write line count, verify a unique multi-line physical-EOF anchor, patch only against that anchor, then assert the new header occurs exactly once after the old line count and is physically last. Never anchor on a repeated signature or heading.
+- Active chat is append-only: read the UTF-8 physical tail, record the pre-write line count, patch only a unique multi-line EOF anchor, then assert the new header occurs exactly once after the old tail and the intended agent is physically last.
+- Rewrite this continuity file completely at each Codex closeout.
+- Add the next `HumanReportN.md`; keep `agents/Codex/README.md` purpose-oriented.
+- Keep public Live Run Status lean and milestone-based.
+- Run staged diff hygiene, then commit exactly `Codex Session N` and push.
+- Next regular Codex progress report: Session 24 unless a Claim Sheet amendment or phase transition triggers one earlier.

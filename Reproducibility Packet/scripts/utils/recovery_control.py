@@ -11,8 +11,10 @@ when a source estimate is confident enough to support them:
   affected joint, within conservative controller and plant limits.
 
 The defaults are development proposals, not frozen configuration. The module consumes
-only schema-section-D ``EstimatorOutput`` values plus time, so it plugs directly into
-``EstimatorCommandPolicy`` without crossing the deployable/privileged boundary.
+only schema-section-D ``EstimatorOutput`` values plus either the legacy time-indexed
+nominal command or an explicitly supplied deployable nominal command. It therefore
+plugs into ``EstimatorCommandPolicy`` and into observation-feedback task policies
+without crossing the deployable/privileged boundary.
 """
 
 from __future__ import annotations
@@ -114,14 +116,36 @@ class GainScheduledRecoveryController:
     def __call__(
         self, output: EstimatorOutput, _step_index: int, decision_time_s: float
     ) -> np.ndarray:
-        """Return a finite bounded command for one online controller decision."""
+        """Apply recovery to the legacy time-indexed nominal task command."""
 
-        output.validate()
         if not np.isfinite(decision_time_s) or decision_time_s < 0.0:
             raise ValueError("decision_time_s must be finite and non-negative")
-        command = commanded_torque(
+        nominal = commanded_torque(
             decision_time_s, scale=self.config.nominal_task_scale
         )
+        return self.command_from_nominal(output, nominal)
+
+    def command_from_nominal(
+        self, output: EstimatorOutput, nominal_command: np.ndarray
+    ) -> np.ndarray:
+        """Apply diagnosis-conditioned recovery to one deployable nominal command.
+
+        Args:
+            output: Current schema-section-D diagnosis.
+            nominal_command: Command produced by the matched task controller before
+                diagnosis-conditioned recovery. It must contain no privileged truth.
+
+        Returns:
+            A finite command clipped to the controller's development torque limits.
+        """
+
+        output.validate()
+        command = np.asarray(nominal_command, dtype=float)
+        if command.shape != (N_JOINTS,) or not np.all(np.isfinite(command)):
+            raise ValueError(
+                f"nominal_command must be a finite shape-{(N_JOINTS,)} vector"
+            )
+        command = command.copy()
 
         if self._confident_source(output, STRUCTURE_INDEX):
             # A structural diagnosis does not justify pretending the stiffness estimate

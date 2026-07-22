@@ -25,6 +25,11 @@ here and is imported rather than copy-pasted. Modules:
   * ``residual_baseline`` -- the deployable linear-ARX residual attribution floor:
     healthy nominal system identification, transparent residual-pattern prototypes,
     and separately calibrated off-prototype abstention.
+  * ``recovery_control`` -- bounded diagnosis-conditioned derating / inverse-gain
+    scheduling, applicable to either the legacy time-indexed task or an externally
+    supplied deployable nominal command.
+  * ``task_control`` -- low-authority encoder-feedback tracking of a smooth finite task
+    reference and composition with the estimator/recovery policy seam.
 """
 
 from utils.schema_types import SCHEMA_VERSION
