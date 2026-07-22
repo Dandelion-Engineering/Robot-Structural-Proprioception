@@ -1,0 +1,9 @@
+source,suite,sensor_seed,pair_id,estimator_updates,detection_time_s,final_predicted_source,ever_predicted_source,command_changed_steps,command_changed_before_first_decision,sensor_fault_injected_observation_side,contact_active_steps,contact_active_fraction,contact_episode_count,first_contact_time_s,last_contact_time_s,peak_contact_force_n,safety_incident_steps,any_safety_flag
+actuator,C1,9032,matched-contact-actuator-9032,82,2.27200000000037,actuator,True,68,False,False,23,0.01769230769230769,1,1.973999999999799,2.017999999999834,1.0782467483243368,0,False
+actuator,S,9032,matched-contact-actuator-9032,82,2.27200000000037,actuator,True,68,False,False,23,0.01769230769230769,1,1.973999999999799,2.017999999999834,1.0782467483243368,0,False
+healthy,C1,9032,matched-contact-healthy-9032,82,2.3040000000004377,actuator,True,36,False,False,19,0.014615384615384615,1,2.043999999999889,2.079999999999965,1.4090582365599251,0,False
+healthy,S,9032,matched-contact-healthy-9032,82,2.3040000000004377,actuator,True,36,False,False,19,0.014615384615384615,1,2.043999999999889,2.079999999999965,1.4090582365599251,0,False
+sensor,C1,9032,matched-contact-sensor-9032,82,2.27200000000037,actuator,True,20,False,True,19,0.014615384615384615,1,2.043999999999889,2.079999999999965,1.4090582365599251,0,False
+sensor,S,9032,matched-contact-sensor-9032,82,2.27200000000037,actuator,True,20,False,True,19,0.014615384615384615,1,2.043999999999889,2.079999999999965,1.4090582365599251,0,False
+structure,C1,9032,matched-contact-structure-9032,82,2.3040000000004377,actuator,True,36,False,False,19,0.014615384615384615,1,2.043999999999889,2.079999999999965,1.3714844635275314,0,False
+structure,S,9032,matched-contact-structure-9032,82,2.27200000000037,actuator,True,52,False,False,19,0.014615384615384615,1,2.043999999999889,2.079999999999965,1.3714844635275314,0,False

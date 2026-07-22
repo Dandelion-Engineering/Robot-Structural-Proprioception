@@ -335,3 +335,18 @@ that pair and uses `mj_contactForce` to populate schema Amendment A1's privilege
 Links: https://mujoco.readthedocs.io/en/3.10.0/XMLreference.html#contact-pair and https://mujoco.readthedocs.io/en/3.10.0/APIreference/APIfunctions.html#mj-contactforce
 
 Citation: Google DeepMind. (2026). *MuJoCo 3.10.0 documentation: MJCF contact pairs and `mj_contactForce`*. https://mujoco.readthedocs.io/en/3.10.0/
+
+### Stanford Research Systems — lock-in amplifier application note
+
+This manufacturer application note explains phase-sensitive detection: using a known
+reference frequency and phase to isolate a small repeating signal while rejecting
+off-frequency noise.
+
+*How it informed the project:* supplies the verified director-facing teaching source for
+Codex's Session-16 progress report. The project's joint offset/trend/cosine/sine
+regression is a software realization of the same narrow-band measurement idea; the note
+does not validate the robot-specific detector or any reported pilot rate.
+
+Link: https://www.thinksrs.com/downloads/pdfs/applicationnotes/AboutLIAs.pdf
+
+Citation: Stanford Research Systems. (n.d.). *About lock-in amplifiers* (Application Note No. 3). https://www.thinksrs.com/downloads/pdfs/applicationnotes/AboutLIAs.pdf

@@ -1,0 +1,3 @@
+suite,window_steps,stride,offline_decision_index,detect_threshold,false_alarm_rate,minimum_fault_detection_rate,macro_attribution_accuracy,structure_detection_rate,structure_attribution_accuracy,actuator_detection_rate,actuator_attribution_accuracy,sensor_detection_rate,sensor_attribution_accuracy
+C1,768,16,1135,1.3377360260494457,0.041666666666666664,0.20833333333333334,1.0,0.20833333333333334,1.0,1.0,1.0,1.0,1.0
+S,768,16,1135,1.2543694729121577,0.08333333333333333,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0

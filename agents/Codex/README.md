@@ -25,7 +25,9 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`Session Summaries/HumanReport13.md`](Session%20Summaries/HumanReport13.md) — detailed record of Codex Session 13 (linear-ARX residual attribution baseline, role-separated fitting/calibration, fixed-suite leakage guard, and causal-seam verification).
 - [`Session Summaries/HumanReport14.md`](Session%20Summaries/HumanReport14.md) — detailed record of Codex Session 14 (recovery-seam detection-time correction, real MuJoCo endpoint-contact extraction, privileged safety wiring, and portable contact trace path).
 - [`Session Summaries/HumanReport15.md`](Session%20Summaries/HumanReport15.md) — detailed record of Codex Session 15 (predeclared optional-contact profile grid, bounded z = 0.100 m development candidate, matched-suite constraint, and review handoff).
-- [`Progress Reports/Progress Report Session 8.md`](Progress%20Reports/Progress%20Report%20Session%208.md) — regular every-eighth-session director update at the Accessible-Piece bar; next regular Codex report is Session 16.
+- [`Session Summaries/HumanReport16.md`](Session%20Summaries/HumanReport16.md) — detailed record of Codex Session 16 (matched contact-enabled C1/S pilot, exact-window and continuous-reference blockers, onset+5 s contact/safety block, and regular progress report).
+- [`Progress Reports/Progress Report Session 8.md`](Progress%20Reports/Progress%20Report%20Session%208.md) — first regular every-eighth-session director update at the Accessible-Piece bar.
+- [`Progress Reports/Progress Report Session 16.md`](Progress%20Reports/Progress%20Report%20Session%2016.md) — second regular director update, covering the synchronous-probe correction, noisy pilot, real contact integration, and matched-contact BLOCK; next regular Codex report is Session 24.
 
 ## Shared files outside this folder
 
@@ -40,7 +42,8 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`../../Reproducibility Packet/scripts/analyze_synchronous_detection_floor.py`](../../Reproducibility%20Packet/scripts/analyze_synchronous_detection_floor.py) and [`utils/synchronous.py`](../../Reproducibility%20Packet/scripts/utils/synchronous.py) — jointly approved detector sensitivity and shared harmonic utility: phase-invariant joint regression, full-cycle W=640 window, and bounded thermal/surrogate claims; the review loop is closed.
 - [`../../Reproducibility Packet/scripts/screen_synchronous_safe_probe.py`](../../Reproducibility%20Packet/scripts/screen_synchronous_safe_probe.py) — Codex-owned actual-four-gauge mechanics/detector co-design screen; selects 50% task torque + 0.05 N one-cycle probe for the pilot sweep only.
 - [`../../Reproducibility Packet/scripts/run_noisy_reference_pilot.py`](../../Reproducibility%20Packet/scripts/run_noisy_reference_pilot.py) — Codex-owned deployable-observation pilot: matched C1/S coefficient-reference sweep over task/probe scale, W, stride, and onset alignment, with disjoint healthy calibration and held-out sensor seeds.
-- [`../../Reproducibility Packet/scripts/screen_optional_contact_profile.py`](../../Reproducibility%20Packet/scripts/screen_optional_contact_profile.py) — Codex-owned predeclared endpoint-plane grid screen; z = 0.100 m is the lowest all-scenario one-episode/zero-A1-flag development candidate and awaits Claude's genuine first review.
+- [`../../Reproducibility Packet/scripts/screen_optional_contact_profile.py`](../../Reproducibility%20Packet/scripts/screen_optional_contact_profile.py) — jointly approved Codex-owned predeclared endpoint-plane grid screen; z = 0.100 m was the lowest all-scenario one-episode/zero-A1-flag candidate within the explicitly bounded 2.274 s horizon.
+- [`../../Reproducibility Packet/scripts/run_matched_contact_pilot.py`](../../Reproducibility%20Packet/scripts/run_matched_contact_pilot.py) — Codex-owned contact-conditioned exact-window, short causal seam, and onset+5 s audit; the current owner-approved state blocks the matched pilot and contact-profile/config freeze and awaits Claude's genuine first review.
 - [`../../Reproducibility Packet/scripts/utils/recovery_control.py`](../../Reproducibility%20Packet/scripts/utils/recovery_control.py) — jointly approved Codex-owned interpretable recovery-controller floor: abstention/uncertainty-gated structural derating and bounded actuator inverse-gain scheduling through the causal estimator-policy seam.
 - [`../../Reproducibility Packet/scripts/utils/residual_baseline.py`](../../Reproducibility%20Packet/scripts/utils/residual_baseline.py) — jointly approved Codex-owned deployable linear-ARX residual attribution floor with separate healthy-dynamics, labeled-prototype, and known-class abstention-calibration roles.
 - [`../../Reproducibility Packet/scripts/make_mujoco_plant_trace.py`](../../Reproducibility%20Packet/scripts/make_mujoco_plant_trace.py) — jointly approved portable real-plant development trace CLI with role-separated persistence and an explicit optional endpoint-contact plane flag.
@@ -58,11 +61,12 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`../../Reproducibility Packet/results/noisy_reference_pilot/noisy_reference_pilot_report.md`](../../Reproducibility%20Packet/results/noisy_reference_pilot/noisy_reference_pilot_report.md) — preserved broad noisy/reference pilot BLOCK: fault signal survived, but eight healthy calibration seeds produced 8.3% pooled / 16.7% worst-alignment S false alarms and could not resolve the 5% tail.
 - [`../../Reproducibility Packet/results/noisy_reference_pilot_threshold_followup/noisy_reference_pilot_report.md`](../../Reproducibility%20Packet/results/noisy_reference_pilot_threshold_followup/noisy_reference_pilot_report.md) — separately seeded prospective follow-up: W=768 / stride=16 advances with 97.9% worst per-fault S detection, 100% prototype attribution, and 0.7% pooled / 2.1% worst-alignment healthy false alarms; its report now records base seed 5000 and the max-threshold / 1-in-48 resolution caveat. Config remains unfrozen.
 - [`../../Reproducibility Packet/results/optional_contact_profile_screen/optional_contact_profile_report.md`](../../Reproducibility%20Packet/results/optional_contact_profile_screen/optional_contact_profile_report.md) — open-loop development grid advancing z = 0.100 m to matched contact-pilot review after one brief episode and zero A1 safety flags in every canonical scenario; sensor physical truth aliases healthy and config remains unfrozen.
+- [`../../Reproducibility Packet/results/matched_contact_enabled_pilot/matched_contact_pilot_report.md`](../../Reproducibility%20Packet/results/matched_contact_enabled_pilot/matched_contact_pilot_report.md) — three-layer development BLOCK: 8.3% S healthy false alarms, unstable continuous prototype/false actuator compensation, and repeated contact plus angle-safety violations over onset+5 s; config remains unfrozen.
 - [`../../chats/Claude-Codex/Claim Sheet Review and Division of Labor/Summary.md`](../../chats/Claude-Codex/Claim%20Sheet%20Review%20and%20Division%20of%20Labor/Summary.md) — concluded Phase-1 review/labor summary.
-- [`../../chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`](../../chats/Claude-Codex/Phase%202%20Integration%20and%20Config%20Freeze/Phase%202%20Integration%20and%20Config%20Freeze%20-%20Active.md) — authoritative active interface/config thread; the Session-14 loops are closed and Claude now owes genuine first review of Codex's optional-contact profile screen. Config remains explicitly unfrozen.
+- [`../../chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`](../../chats/Claude-Codex/Phase%202%20Integration%20and%20Config%20Freeze/Phase%202%20Integration%20and%20Config%20Freeze%20-%20Active.md) — authoritative active interface/config thread; the optional-contact screen loop is closed and Claude now owes genuine first review of Codex's matched-contact pilot BLOCK. Config remains explicitly unfrozen.
 - [`../../chats/Claude-Codex-Human/Chat Appends/Summary.md`](../../chats/Claude-Codex-Human/Chat%20Appends/Summary.md) — concluded director coordination record for the transcript-tail failure mode and recovery rule.
 - [`../../chats/Claude-Codex/Phase 0 Coordination/Summary.md`](../../chats/Claude-Codex/Phase%200%20Coordination/Summary.md) — concluded Phase-0 convergence record that feeds the Claim Sheet.
-- [`../../README.md`](../../README.md) — public live-run status, Phase 2 / `In Progress`, now carrying the bounded noisy-reference pilot and prospective follow-up without promoting either to a research result.
+- [`../../README.md`](../../README.md) — public live-run status, Phase 2 / `In Progress`, now carrying the matched-contact pilot BLOCK without promoting it to a research result.
 
 ## Structure
 
@@ -70,7 +74,8 @@ This folder contains Codex-owned research, source records, and continuity for th
 agents/Codex/
 ├── Literature Foundation.md
 ├── Progress Reports/
-│   └── Progress Report Session 8.md
+│   ├── Progress Report Session 8.md
+│   └── Progress Report Session 16.md
 ├── references.md
 ├── README.md
 ├── Summary of Only Necessary Context.md
@@ -89,5 +94,6 @@ agents/Codex/
     ├── HumanReport12.md
     ├── HumanReport13.md
     ├── HumanReport14.md
-    └── HumanReport15.md
+    ├── HumanReport15.md
+    └── HumanReport16.md
 ```
