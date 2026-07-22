@@ -1142,15 +1142,24 @@ def decide(
             for row in informative_tracking_pairs
         )
     )
-    if (
+    # The information-only label asserts that everything except the recovery-control
+    # profile advanced, so it must require every precondition that claim rests on --
+    # not the held-out information rates alone.  Matched C1/S pre-decision histories
+    # are what make the suite comparison a comparison at all; contact-free, flag-free
+    # decision windows are what make it a *pre-contact* decision; and the
+    # representative continuation is what shows the single held decision behaved
+    # causally.  Only the control-sensitivity verdict may differ between the two
+    # advancing labels; any other failure is a block, not a qualified advance.
+    lifecycle_pass = bool(
         information_pass
         and action_pass
         and representative_safety
         and matched_predecision
-        and control_sensitivity_pass
-    ):
+        and predecision_clean
+    )
+    if lifecycle_pass and control_sensitivity_pass:
         overall = "ADVANCE_BOUNDED_NOISY_HELD_DECISION_TO_VALIDATION_DESIGN_REVIEW"
-    elif information_pass:
+    elif lifecycle_pass:
         overall = (
             "ADVANCE_INFORMATION_REFERENCE_LIFECYCLE_ONLY_"
             "BLOCK_RECOVERY_CONTROL_PROFILE"
@@ -1276,6 +1285,12 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
     spec = summary["review_spec"]
     mechanics = summary["bounded_mechanics_spec"]
     schedule = summary["causal_schedule"]
+    observed_margins = [
+        float(row["prototype_margin"])
+        for row in summary["heldout_decision_rows"]
+        if row["prototype_margin"] is not None
+    ]
+    smallest_margin = min(observed_margins) if observed_margins else 0.0
     lines = [
         "# Bounded Noisy Held-Decision Information Review",
         "",
@@ -1377,6 +1392,20 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
                 "or RMA model is present, and no paired uncertainty interval is computed for "
                 "tracking or safety. The task/contact/controller profile, sensor constants, "
                 "severity/onset grids, W/stride, thresholds, and config remain unfrozen."
+            ),
+            "",
+            (
+                "Every calibration and held-out case also uses the same single development "
+                "fault setting per class -- fixed subtype, location, severity, and onset -- "
+                "so the held-out seeds vary only the sensor-noise realization and the noisy "
+                "closed-loop trajectory it produces. These rates therefore measure "
+                "separation under noise at one operating point, not generalization across "
+                "severities, onsets, locations, or compound faults, and the whole-trajectory "
+                "and whole-fault-setting split the confirmatory result requires is not "
+                "exercised here. Relatedly, a zero abstention rate is not evidence that "
+                "abstention works: the smallest held-out prototype margin is "
+                f"{smallest_margin:.2f}, so no margin threshold below that value would "
+                "bind on this fault library."
             ),
         ]
     )

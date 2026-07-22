@@ -87,19 +87,10 @@ def test_ambiguous_fault_abstains_and_never_authorizes_recovery() -> None:
     assert action_gate_state("healthy", clear) == "false_actionable"
 
 
-def test_decision_does_not_merge_information_action_and_mechanics_gates() -> None:
-    """An information pass cannot silently override an unsafe action/mechanics path."""
+def _online_rows(**overrides: object) -> list[dict[str, object]]:
+    """Build eight representative rows whose only S-informative pair is structure."""
 
-    spec = BoundedNoisyInformationSpec()
-    information = [
-        {"suite": "C1", "information_gate_pass": False, "action_gate_pass": True},
-        {"suite": "S", "information_gate_pass": True, "action_gate_pass": False},
-    ]
-    heldout = [
-        {"suite": suite, "action_gate_state": "false_actionable"}
-        for suite in ("C1", "S")
-    ]
-    online = []
+    rows = []
     for source in ("healthy", "structure", "actuator", "sensor"):
         for suite in ("C1", "S"):
             gate_state = (
@@ -109,33 +100,87 @@ def test_decision_does_not_merge_information_action_and_mechanics_gates() -> Non
                 if source == "structure"
                 else "correct_no_action"
             )
-            online.append(
-                {
-                    "source": source,
-                    "suite": suite,
-                    "predecision_plant_hash": source,
-                    "predecision_shared_observation_hash": source,
-                    "any_safety_flag": False,
-                    "command_changed_before_decision": False,
-                    "classification_evaluations": 1,
-                    "action_gate_state": gate_state,
-                    "tracking_integral_5s_m_s": (
-                        1.2 if source == "structure" and suite == "S" else 1.0
-                    ),
-                    "safety_incident_steps": 0,
-                }
-            )
-    predecision = [
-        {"any_safety_flag": False, "contact_active_steps": 0}
-        for _ in range(2)
+            row = {
+                "source": source,
+                "suite": suite,
+                "predecision_plant_hash": source,
+                "predecision_shared_observation_hash": source,
+                "any_safety_flag": False,
+                "command_changed_before_decision": False,
+                "classification_evaluations": 1,
+                "action_gate_state": gate_state,
+                "tracking_integral_5s_m_s": (
+                    1.2 if source == "structure" and suite == "S" else 1.0
+                ),
+                "safety_incident_steps": 0,
+            }
+            row.update(overrides)
+            if "predecision_plant_hash" in overrides:
+                row["predecision_plant_hash"] = f"{source}-{suite}"
+            rows.append(row)
+    return rows
+
+
+def test_decision_does_not_merge_information_action_and_mechanics_gates() -> None:
+    """Only the control-sensitivity verdict may separate the two advancing labels."""
+
+    spec = BoundedNoisyInformationSpec()
+    information = [
+        {"suite": "C1", "information_gate_pass": False, "action_gate_pass": False},
+        {"suite": "S", "information_gate_pass": True, "action_gate_pass": True},
     ]
-    result = decide(spec, information, heldout, online, predecision)
+    heldout = [
+        {"suite": suite, "action_gate_state": "correct_actionable"}
+        for suite in ("C1", "S")
+    ]
+    clean = [{"any_safety_flag": False, "contact_active_steps": 0} for _ in range(2)]
+    result = decide(spec, information, heldout, _online_rows(), clean)
     assert result["information_gate_pass"]
-    assert not result["action_gate_pass"]
+    assert result["action_gate_pass"]
     assert result["representative_full_horizon_safety_pass"]
-    assert not result["representative_control_sensitivity_pass"]
     assert result["matched_predecision_crn_pass"]
+    assert result["all_calibration_and_evaluation_predecision_histories_clean"]
+    assert not result["representative_control_sensitivity_pass"]
     assert result["overall_decision"] == (
         "ADVANCE_INFORMATION_REFERENCE_LIFECYCLE_ONLY_"
         "BLOCK_RECOVERY_CONTROL_PROFILE"
     )
+
+
+def test_information_pass_cannot_advance_over_a_failed_lifecycle_precondition() -> None:
+    """A strong held-out information rate must not carry a broken lifecycle forward."""
+
+    spec = BoundedNoisyInformationSpec()
+    passing_information = [
+        {"suite": "C1", "information_gate_pass": False, "action_gate_pass": False},
+        {"suite": "S", "information_gate_pass": True, "action_gate_pass": True},
+    ]
+    heldout = [
+        {"suite": suite, "action_gate_state": "correct_actionable"}
+        for suite in ("C1", "S")
+    ]
+    clean = [{"any_safety_flag": False, "contact_active_steps": 0} for _ in range(2)]
+    block = "BLOCK_BOUNDED_NOISY_HELD_DECISION_REVIEW"
+
+    failed_action = [
+        {"suite": "C1", "information_gate_pass": False, "action_gate_pass": False},
+        {"suite": "S", "information_gate_pass": True, "action_gate_pass": False},
+    ]
+    assert decide(spec, failed_action, heldout, _online_rows(), clean)[
+        "overall_decision"
+    ] == block
+
+    for label, online, predecision in (
+        ("unmatched C1/S histories", _online_rows(predecision_plant_hash="x"), clean),
+        ("unsafe representative arm", _online_rows(any_safety_flag=True), clean),
+        ("repeated classification", _online_rows(classification_evaluations=2), clean),
+        ("pre-decision recovery", _online_rows(command_changed_before_decision=True), clean),
+        (
+            "contaminated decision windows",
+            _online_rows(),
+            [{"any_safety_flag": True, "contact_active_steps": 17}],
+        ),
+    ):
+        result = decide(spec, passing_information, heldout, online, predecision)
+        assert result["information_gate_pass"], label
+        assert result["overall_decision"] == block, label
