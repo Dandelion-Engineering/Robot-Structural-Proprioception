@@ -8,7 +8,10 @@ observed-state controller, probe, and no-recovery lifecycle fixed while sweeping
 the remaining-stiffness and remaining-actuator-gain fractions.
 
 Dedicated tuning seeds select the mildest fault setting whose paired no-action tracking
-deficit clears the 10 percent bar plus a predeclared margin on every seed.  Disjoint
+deficit is large enough to *admit* the Claim Sheet's 10 percent reduction plus a
+predeclared margin on every seed.  Deficit and reduction do not share a denominator, so
+the gate converts the reduction target into deficit units rather than comparing the two
+directly; see ``FaultTrackingDeficitSpec.required_deficit_pct``.  Disjoint
 assessment seeds must reproduce that headroom with zero A1 safety incidents, zero
 saturation, no recovery action, and exact paired pre-fault histories.  A fixed encoder-
 bias case is retained as an observation-side healthy-plant control.  This is not an
@@ -92,10 +95,28 @@ class FaultTrackingDeficitSpec:
     sensor_encoder_bias_rad: float = 0.05
 
     @property
-    def required_deficit_pct(self) -> float:
-        """Return the Claim Sheet bar plus the predeclared development margin."""
+    def required_reduction_pct(self) -> float:
+        """Return the reduction target: the Claim Sheet bar plus the margin."""
 
         return self.claim_tracking_bar_pct + self.development_margin_pct
+
+    @property
+    def required_deficit_pct(self) -> float:
+        """Return the no-action deficit that admits the required reduction.
+
+        The Claim Sheet's control bar is a *reduction* measured against the degraded
+        arm (``100 * (J_C1 - J_S) / J_C1``), while this screen measures a *deficit*
+        against the healthy arm (``100 * (J_fault - J_healthy) / J_healthy``).  The two
+        do not share a denominator.  A source-specific action that restores healthy
+        tracking exactly converts a deficit ``D`` into a reduction ``D / (1 + D)``, so
+        gating the deficit at the reduction target under-delivers that target: a 12%
+        deficit admits at most a 10.71% reduction, which turns a predeclared 2-point
+        margin over a 10% bar into 0.71 points.  Inverting the relation, ``R / (1 - R)``,
+        makes the gate deliver the reduction it names.
+        """
+
+        required = self.required_reduction_pct / 100.0
+        return float(100.0 * required / (1.0 - required))
 
     @property
     def tuning_seeds(self) -> tuple[int, ...]:
@@ -212,6 +233,10 @@ class FaultTrackingDeficitSpec:
             raise ValueError("claim_tracking_bar_pct must be finite and positive")
         if not np.isfinite(self.development_margin_pct) or self.development_margin_pct <= 0.0:
             raise ValueError("development_margin_pct must be finite and positive")
+        if self.required_reduction_pct >= 100.0:
+            raise ValueError(
+                "bar plus margin must stay below a 100% reduction to convert to a deficit"
+            )
         for name, grid in (
             ("structural_ei_remaining_grid", self.structural_ei_remaining_grid),
             ("actuator_gain_remaining_grid", self.actuator_gain_remaining_grid),
@@ -637,6 +662,7 @@ def decide(
     else:
         overall = "BLOCK_FAULT_TRACKING_DEFICIT_GRID"
     return {
+        "required_tracking_reduction_pct": spec.required_reduction_pct,
         "required_tracking_deficit_pct": spec.required_deficit_pct,
         "source_results": source_results,
         "advancing_sources": advancing_sources,
@@ -740,6 +766,111 @@ def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
         writer.writerows(rows)
 
 
+def _ceiling_reduction_pct(deficit_pct: float) -> float:
+    """Convert a no-action deficit into the reduction an exact restoration would give.
+
+    Args:
+        deficit_pct: ``100 * (J_fault - J_healthy) / J_healthy``.
+
+    Returns:
+        ``100 * (J_fault - J_healthy) / J_fault``, the Claim Sheet's own quantity for an
+        action that restores healthy tracking exactly.
+    """
+
+    fraction = deficit_pct / 100.0
+    return float(100.0 * fraction / (1.0 + fraction))
+
+
+def _scope_lines(summary: dict[str, Any]) -> list[str]:
+    """Return the generated bounds on what the recorded headroom licenses.
+
+    Every figure is recomputed from the recorded rows and summaries so the section
+    regenerates deterministically from ``summary.json``.
+
+    Args:
+        summary: The complete run summary.
+
+    Returns:
+        Markdown lines for the scope section.
+    """
+
+    decision = summary["decision"]
+    assessment = {
+        row["case_id"]: row for row in summary["assessment_candidate_summaries"]
+    }
+    bar = summary["screen_spec"]["claim_tracking_bar_pct"]
+    lines = ["", "## What the recorded headroom does and does not license", ""]
+    for source in SCREENED_SOURCES:
+        result = decision["source_results"][source]
+        case_id = result["selected_case_id"]
+        if case_id is None or not result["assessment_gate_pass"]:
+            continue
+        mean_ceiling = _ceiling_reduction_pct(assessment[case_id]["mean_tracking_deficit_pct"])
+        min_ceiling = _ceiling_reduction_pct(
+            assessment[case_id]["minimum_tracking_deficit_pct"]
+        )
+        lines.append(
+            f"- **Headroom is a ceiling, not a result.** `{case_id}` carries a "
+            f"{assessment[case_id]['mean_tracking_deficit_pct']:.2f}% mean / "
+            f"{assessment[case_id]['minimum_tracking_deficit_pct']:.2f}% minimum no-action "
+            f"deficit, so an action that restored healthy tracking exactly would score a "
+            f"{mean_ceiling:.2f}% / {min_ceiling:.2f}% reduction — "
+            f"{min_ceiling - bar:+.2f} percentage points over the {bar:.1f}% bar at the "
+            "worst seed. Any real action recovers less than all of the deficit, so this "
+            "is the most a source-specific recovery on this setting can be worth."
+        )
+    lines.append(
+        "- **Reduction beyond that ceiling is command authority, not recovery.** An "
+        "action can beat the ceiling only by tracking better than the healthy arm, which "
+        "is generic under-authority being collected rather than a fault being reversed. "
+        "The structural action-family screen already recorded that outcome as "
+        "`BLOCK_STRUCTURAL_RECOVERY_ACTION_FAMILY`, so the same standard applies here: "
+        "an actuator action must be compared against a healthy false-authorization arm "
+        "and credited only with the margin above it."
+    )
+    rows = summary["assessment_rows"]
+    structural = [
+        case for case in summary["case_grid"] if case["source_class"] == "structure"
+    ]
+    if structural:
+        pieces = []
+        for case in structural:
+            gauges = [
+                float(row["max_abs_gauge_microstrain"])
+                for row in rows
+                if row["case_id"] == case["case_id"]
+            ]
+            deficit = assessment[case["case_id"]]["mean_tracking_deficit_pct"]
+            pieces.append(
+                f"{case['severity']:.2f} EI → {sum(gauges) / len(gauges):.1f} µε / "
+                f"{deficit:+.2f}%"
+            )
+        healthy_gauges = [
+            float(row["max_abs_gauge_microstrain"])
+            for row in rows
+            if row["source_class"] == "healthy"
+        ]
+        lines.append(
+            "- **The structural block is not a weak signal; it is a strong signal with "
+            "nowhere to act.** Mean peak |gauge| and mean tracking deficit move in "
+            "opposite directions across the same sweep (healthy "
+            f"{sum(healthy_gauges) / len(healthy_gauges):.1f} µε; "
+            + "; ".join(pieces)
+            + "). The strain channel grows monotonically with severity while the "
+            "tracking deficit falls to zero and then turns negative, which is the "
+            "diagnostic-only shape Slot 13 reserves rather than a sensing failure."
+        )
+    lines.append(
+        "- **No-action headroom is not S-over-C1 headroom.** The contract's control "
+        "quantity is the paired difference between the structural and conventional "
+        "suites on the same fault, not the difference between acting and not acting. A "
+        "fault class the conventional suite already detects yields no paired control win "
+        "however much no-action headroom it has, so an advancing class here licenses an "
+        "action screen, not a Slot-11 comparison."
+    )
+    return lines
+
+
 def write_report(path: Path, summary: dict[str, Any]) -> None:
     """Write the deterministic role-separated fault-headroom report."""
 
@@ -765,9 +896,14 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
         "",
         f"- Tuning seeds: {summary['tuning_role']['sensor_seeds']}.",
         f"- Assessment seeds: {summary['assessment_role']['sensor_seeds']}.",
-        f"- Claim Sheet control bar: {spec['claim_tracking_bar_pct']:.1f}%.",
-        f"- Predeclared development margin: +{spec['development_margin_pct']:.1f} percentage points.",
-        f"- Required per-seed no-action deficit: {decision['required_tracking_deficit_pct']:.1f}%.",
+        f"- Claim Sheet control bar: {spec['claim_tracking_bar_pct']:.1f}% *reduction*, measured against the degraded arm.",
+        f"- Predeclared development margin: +{spec['development_margin_pct']:.1f} percentage points, applied in reduction units.",
+        (
+            f"- Required per-seed reduction: {decision['required_tracking_reduction_pct']:.1f}%. A "
+            "source-specific action that exactly restores healthy tracking converts a "
+            "deficit `D` into a reduction `D / (1 + D)`, so the equivalent per-seed "
+            f"no-action deficit gate is {decision['required_tracking_deficit_pct']:.2f}%."
+        ),
         (
             "- Every row must preserve one held healthy decision, zero recovery-command "
             "changes, exact seed-paired pre-fault histories, zero A1 incidents, and zero saturation."
@@ -821,6 +957,7 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
                 f"gates are {'PASS' if sensor['lifecycle_pass'] and sensor['safety_and_saturation_pass'] else 'BLOCK'}. "
                 "It is a fixed control readout, not a selected severity candidate."
             ),
+            *_scope_lines(summary),
             "",
             "## Interpretation boundary",
             "",

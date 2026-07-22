@@ -46,7 +46,7 @@ def _row(
 def _role_rows(spec: FaultTrackingDeficitSpec, seed_count: int) -> list[dict[str, object]]:
     """Return a complete grid with known mildest-passing settings."""
 
-    structure_deficits = {0.75: 5.0, 0.50: 13.0, 0.25: 20.0, 0.10: 25.0, 0.05: 30.0}
+    structure_deficits = {0.75: 5.0, 0.50: 15.0, 0.25: 20.0, 0.10: 25.0, 0.05: 30.0}
     actuator_deficits = {0.85: 4.0, 0.70: 11.0, 0.50: 16.0, 0.25: 25.0, 0.10: 35.0}
     rows: list[dict[str, object]] = []
     for seed in range(seed_count):
@@ -104,7 +104,7 @@ def test_paired_deficit_requires_exact_pre_fault_crn_matching() -> None:
         _paired_deficits(rows, spec.healthy_case.case_id)
 
 
-def test_tuning_selects_the_mildest_setting_with_twelve_percent_headroom() -> None:
+def test_tuning_selects_the_mildest_setting_clearing_the_headroom_gate() -> None:
     """Selection minimizes fault severity after every lifecycle/safety gate clears."""
 
     spec = FaultTrackingDeficitSpec(tuning_seed_count=2)
@@ -122,8 +122,31 @@ def test_tuning_selects_the_mildest_setting_with_twelve_percent_headroom() -> No
         row for row in summaries if row["case_id"] == selected["structure"]
     )
     assert not mild_structure["headroom_gate_pass"]
-    assert selected_structure["minimum_tracking_deficit_pct"] == pytest.approx(13.0)
+    assert selected_structure["minimum_tracking_deficit_pct"] == pytest.approx(15.0)
     assert selected_structure["candidate_gate_pass"]
+
+
+def test_headroom_gate_converts_the_reduction_target_into_deficit_units() -> None:
+    """The gate must deliver the reduction it names, not the same number of points.
+
+    The bar is a reduction against the degraded arm; the screen measures a deficit
+    against the healthy arm. Gating the deficit at the reduction target silently
+    under-delivers, so the gate inverts ``R / (1 - R)`` and a deficit sitting exactly on
+    the gate must convert back to exactly the required reduction.
+    """
+
+    spec = FaultTrackingDeficitSpec()
+    assert spec.required_reduction_pct == pytest.approx(12.0)
+    assert spec.required_deficit_pct == pytest.approx(100.0 * 0.12 / 0.88)
+    assert spec.required_deficit_pct > spec.required_reduction_pct
+    gate = spec.required_deficit_pct / 100.0
+    assert 100.0 * gate / (1.0 + gate) == pytest.approx(spec.required_reduction_pct)
+    # A deficit equal to the bar+margin in *deficit* units would have admitted only
+    # 10.71% — below the 12% the margin was declared to buy, and barely over the bar.
+    naive = spec.required_reduction_pct / 100.0
+    assert 100.0 * naive / (1.0 + naive) == pytest.approx(10.714285, abs=1e-5)
+    with pytest.raises(ValueError, match="below a 100% reduction"):
+        FaultTrackingDeficitSpec(claim_tracking_bar_pct=98.0).validate()
 
 
 @pytest.mark.parametrize(

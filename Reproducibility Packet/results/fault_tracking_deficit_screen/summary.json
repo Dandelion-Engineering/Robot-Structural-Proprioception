@@ -181,7 +181,7 @@
   },
   "tuning_selected": {
     "structure": null,
-    "actuator": "actuator_gain_remaining_0p50"
+    "actuator": "actuator_gain_remaining_0p25"
   },
   "tuning_candidate_summaries": [
     {
@@ -277,8 +277,8 @@
       "maximum_tracking_deficit_pct": 13.267561120891578,
       "lifecycle_pass": true,
       "safety_and_saturation_pass": true,
-      "headroom_gate_pass": true,
-      "candidate_gate_pass": true
+      "headroom_gate_pass": false,
+      "candidate_gate_pass": false
     },
     {
       "source_class": "actuator",
@@ -399,8 +399,8 @@
       "maximum_tracking_deficit_pct": 13.32617359723202,
       "lifecycle_pass": true,
       "safety_and_saturation_pass": true,
-      "headroom_gate_pass": true,
-      "candidate_gate_pass": true
+      "headroom_gate_pass": false,
+      "candidate_gate_pass": false
     },
     {
       "source_class": "actuator",
@@ -3226,7 +3226,8 @@
     }
   ],
   "decision": {
-    "required_tracking_deficit_pct": 12.0,
+    "required_tracking_reduction_pct": 12.0,
+    "required_tracking_deficit_pct": 13.636363636363637,
     "source_results": {
       "structure": {
         "selected_case_id": null,
@@ -3236,11 +3237,11 @@
         "assessment_minimum_tracking_deficit_pct": null
       },
       "actuator": {
-        "selected_case_id": "actuator_gain_remaining_0p50",
+        "selected_case_id": "actuator_gain_remaining_0p25",
         "tuning_gate_pass": true,
         "assessment_gate_pass": true,
-        "assessment_mean_tracking_deficit_pct": 13.201453980942663,
-        "assessment_minimum_tracking_deficit_pct": 13.119727270824722
+        "assessment_mean_tracking_deficit_pct": 23.160934388653637,
+        "assessment_minimum_tracking_deficit_pct": 23.031393428348363
       }
     },
     "advancing_sources": [
