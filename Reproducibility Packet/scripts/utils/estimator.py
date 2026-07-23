@@ -111,6 +111,11 @@ MIN_SYNC_SAMPLES = 8
 
 _EPS = 1.0e-12
 
+# Floor on the standard deviation of a healthy calibration null before it is used as the
+# denominator of a z-score. Both interpretable rungs share it so a degenerate null
+# saturates the same way in each; `_EPS` is a numerical guard, not a score-scale floor.
+_SCORE_STD_FLOOR = 1.0e-3
+
 
 # --------------------------------------------------------------------------- #
 # §D estimator-output contract.
@@ -573,7 +578,7 @@ class WindowNoveltyDetector(DiagnosisEstimator):
                 s = np.where(s > 1.0e-6, s, 1.0)
                 loo[i] = self._raw_from_feats(feats[i], m, s)
             self._healthy_score_mean = float(loo.mean())
-            self._healthy_score_std = float(max(loo.std(), 1.0e-3))
+            self._healthy_score_std = float(max(loo.std(), _SCORE_STD_FLOOR))
         else:
             # too few windows to estimate a spread; fall back to raw scores (sigma==raw)
             self._healthy_score_mean = 0.0
@@ -959,7 +964,10 @@ class CoefficientReferenceDetector(DiagnosisEstimator):
         # non-healthy mass spreads uniformly — no structure/actuator/sensor call is claimed.
         null = self._calibration_null_scores
         null_mean = float(null.mean()) if null is not None else 0.0
-        null_std = float(max(null.std(), _EPS)) if null is not None else 1.0
+        # Same score-scale floor `WindowNoveltyDetector` uses, so a degenerate calibration
+        # null cannot turn this rung's z-score into an arbitrarily large number while the
+        # other interpretable rung saturates gracefully.
+        null_std = float(max(null.std(), _SCORE_STD_FLOOR)) if null is not None else 1.0
         z = (distance - null_mean) / null_std
         z_threshold = (self._detect_threshold - null_mean) / null_std
         x = float(np.clip(z - z_threshold, -30.0, 30.0))
@@ -979,6 +987,185 @@ class CoefficientReferenceDetector(DiagnosisEstimator):
             severity_uncertainty=float("inf"),
             detection_time_s=self._detection_time_s,
         )
+
+
+# --------------------------------------------------------------------------- #
+# Severity read-out rung (schema §D `severity_out` / `severity_uncertainty`).
+# --------------------------------------------------------------------------- #
+class SeverityRidgeHead:
+    """Deployable severity read-out: standardized ridge regression on window features.
+
+    The two interpretable detection rungs above deliberately abstain on severity
+    (`severity_out = 0.0`, `severity_uncertainty = inf`), while the recovery controller's
+    inverse-gain and inverse-stiffness actions are *severity-conditioned*: the multiplier
+    they apply is a function of `severity_out`. Everything measured so far has therefore
+    supplied severity from either a privileged oracle or a pinned stand-in constant. This
+    rung is the smallest deployable thing that closes that gap, so severity-estimation
+    quality can be measured rather than assumed.
+
+    It is deliberately linear and closed-form. The question it exists to answer is whether
+    the S-only gauge channels carry *recoverable* severity information beyond C1 under a
+    matched read-out; a linear map keeps the suites comparable, keeps the fit reproducible
+    without a training loop, and adds no dependency. A learned head can only raise both
+    suites' accuracy, so a null result here bounds rather than settles the question.
+
+    Suite-agnosticism is structural rather than configured. Features come from
+    `WindowFeatureExtractor`, which emits the full registry width for every suite and
+    fills an unavailable channel with zeros plus a zero valid-fraction. Such a column has
+    exactly zero variance across training windows, is floored to unit scale by
+    `feature_std_floor`, and therefore standardizes to zero for every sample — it can
+    contribute nothing to the fit. The same code fits C1 and S; only the data differ.
+
+    The head is conditional on a source class: it estimates the remaining physical
+    fraction *given* that the class has been called, and carries no class opinion of its
+    own. Composition with a classifier rung is the caller's job.
+    """
+
+    def __init__(
+        self,
+        *,
+        regularization: float = 1.0,
+        severity_bounds: tuple[float, float] = (0.0, 1.0),
+        feature_std_floor: float = 1.0e-9,
+    ) -> None:
+        """Configure the ridge penalty, the physical severity range, and the scale floor.
+
+        Args:
+            regularization: Ridge penalty on the standardized coefficients. Applied to
+                slopes only; the intercept is never penalized.
+            severity_bounds: Inclusive `(low, high)` clip applied to predictions, so a
+                read-out cannot report a physically impossible remaining fraction.
+            feature_std_floor: Training standard deviations below this are treated as
+                unit scale, which zeroes constant and suite-unavailable columns.
+        """
+
+        if not np.isfinite(regularization) or regularization < 0.0:
+            raise ValueError("regularization must be finite and non-negative")
+        low, high = (float(severity_bounds[0]), float(severity_bounds[1]))
+        if not (np.isfinite(low) and np.isfinite(high)) or not low < high:
+            raise ValueError("severity_bounds must be finite with low < high")
+        if not np.isfinite(feature_std_floor) or feature_std_floor <= 0.0:
+            raise ValueError("feature_std_floor must be finite and positive")
+        self.regularization = float(regularization)
+        self.severity_bounds = (low, high)
+        self.feature_std_floor = float(feature_std_floor)
+        self._mean: np.ndarray | None = None
+        self._scale: np.ndarray | None = None
+        self._weights: np.ndarray | None = None
+        self._intercept: float = 0.0
+        self._train_residual_std: float = float("inf")
+        self._n_train: int = 0
+
+    @property
+    def is_fitted(self) -> bool:
+        """Return whether `fit` has been called successfully."""
+
+        return self._weights is not None
+
+    @property
+    def n_train(self) -> int:
+        """Return the number of training windows the head was fitted on."""
+
+        return int(self._n_train)
+
+    @property
+    def train_residual_std(self) -> float:
+        """Return the in-sample residual standard deviation of the fit.
+
+        This is a *training* dispersion, not a held-out uncertainty. It is reported so a
+        caller can see how tight the fit was on its own data; a severity uncertainty that
+        the recovery controller's confidence gate should trust must come from held-out
+        error instead.
+        """
+
+        return float(self._train_residual_std)
+
+    @property
+    def active_feature_count(self) -> int:
+        """Return how many feature columns had above-floor variance in training.
+
+        For a C1 fit this is strictly smaller than for a matched S fit by exactly the
+        gauge role's columns, which makes the suite difference auditable rather than
+        asserted.
+        """
+
+        if self._scale is None:
+            raise ValueError("active_feature_count requires a fitted head")
+        return int(np.count_nonzero(self._scale > self.feature_std_floor))
+
+    def fit(self, features: np.ndarray, severities: np.ndarray) -> "SeverityRidgeHead":
+        """Fit the standardized ridge map from window features to remaining fraction.
+
+        Args:
+            features: `[N, F]` stack of `WindowFeatureExtractor.window_features` vectors.
+            severities: `[N]` true remaining physical fractions for those windows.
+
+        Returns:
+            Self, fitted.
+
+        Raises:
+            ValueError: If the shapes disagree, the inputs are not finite, or fewer than
+                two training windows are supplied.
+        """
+
+        x = np.asarray(features, dtype=float)
+        y = np.asarray(severities, dtype=float)
+        if x.ndim != 2:
+            raise ValueError(f"features must be a 2-D [N, F] stack, got shape {x.shape}")
+        if y.shape != (x.shape[0],):
+            raise ValueError(
+                f"severities must have shape {(x.shape[0],)}, got {y.shape}"
+            )
+        if x.shape[0] < 2:
+            raise ValueError("fitting a severity head requires at least two windows")
+        if not np.all(np.isfinite(x)) or not np.all(np.isfinite(y)):
+            raise ValueError("features and severities must be finite")
+        mean = x.mean(axis=0)
+        raw_scale = x.std(axis=0)
+        scale = np.where(raw_scale > self.feature_std_floor, raw_scale, 1.0)
+        z = (x - mean) / scale
+        # Constant and suite-unavailable columns standardize to exactly zero, so they
+        # cannot enter the normal equations at all.
+        z = np.where(raw_scale > self.feature_std_floor, z, 0.0)
+        y_mean = float(y.mean())
+        gram = z.T @ z + self.regularization * np.eye(z.shape[1])
+        weights = np.linalg.solve(gram, z.T @ (y - y_mean))
+        self._mean = mean
+        self._scale = np.where(raw_scale > self.feature_std_floor, raw_scale, 0.0)
+        self._weights = weights
+        self._intercept = y_mean
+        self._n_train = int(x.shape[0])
+        residual = y - (z @ weights + y_mean)
+        self._train_residual_std = float(residual.std())
+        return self
+
+    def predict(self, features: np.ndarray) -> np.ndarray:
+        """Return clipped remaining-fraction estimates for a stack of window features.
+
+        Args:
+            features: `[N, F]` (or a single `[F]` vector) of window feature vectors.
+
+        Returns:
+            `[N]` remaining-fraction estimates clipped into `severity_bounds`.
+
+        Raises:
+            ValueError: If the head is unfitted, or the width does not match training.
+        """
+
+        if self._weights is None or self._mean is None or self._scale is None:
+            raise ValueError("predict requires a fitted head: call fit first")
+        x = np.atleast_2d(np.asarray(features, dtype=float))
+        if x.shape[1] != self._mean.shape[0]:
+            raise ValueError(
+                f"features must have width {self._mean.shape[0]}, got {x.shape[1]}"
+            )
+        if not np.all(np.isfinite(x)):
+            raise ValueError("features must be finite")
+        active = self._scale > 0.0
+        z = np.zeros_like(x)
+        z[:, active] = (x[:, active] - self._mean[active]) / self._scale[active]
+        raw = z @ self._weights + self._intercept
+        return np.clip(raw, self.severity_bounds[0], self.severity_bounds[1])
 
 
 # --------------------------------------------------------------------------- #
