@@ -1168,6 +1168,65 @@ class SeverityRidgeHead:
         return np.clip(raw, self.severity_bounds[0], self.severity_bounds[1])
 
 
+def leave_one_group_out_residuals(
+    features: np.ndarray,
+    severities: np.ndarray,
+    groups: np.ndarray,
+    *,
+    regularization: float,
+    severity_bounds: tuple[float, float] = (0.0, 1.0),
+) -> np.ndarray:
+    """Return out-of-sample severity residuals, one per window, by held-out group.
+
+    `SeverityRidgeHead.train_residual_std` is an *in-sample* dispersion, and the recovery
+    controller's confidence gate rejects a diagnosis whose `severity_uncertainty` exceeds
+    a threshold. Handing an in-sample number to that gate would report a head as more
+    certain than it is, by a factor that is itself a function of how many features the
+    suite carries — which makes the error suite-dependent in exactly the comparison the
+    project is trying to measure. This computes the honest alternative: refit the head
+    once per held-out group and collect the residuals it makes on data it never saw.
+
+    Grouping by *sensor seed* rather than by window is what makes the number meaningful
+    here, because windows sharing a seed share a noise realization and are not
+    independent.
+
+    Args:
+        features: `[N, F]` stack of window feature vectors.
+        severities: `[N]` true remaining physical fractions.
+        groups: `[N]` group labels (sensor seeds); one fit is held out per unique label.
+        regularization: Ridge penalty, held fixed across folds so the returned dispersion
+            describes one model rather than a model-selection procedure.
+        severity_bounds: Prediction clip passed through to each fold's head.
+
+    Returns:
+        `[N]` residuals `estimate - truth`, each produced by a head fitted without the
+        window's own group. Row order matches the inputs.
+
+    Raises:
+        ValueError: If the shapes disagree or fewer than two groups are supplied.
+    """
+
+    x = np.asarray(features, dtype=float)
+    y = np.asarray(severities, dtype=float)
+    g = np.asarray(groups)
+    if x.ndim != 2:
+        raise ValueError(f"features must be a 2-D [N, F] stack, got shape {x.shape}")
+    if y.shape != (x.shape[0],) or g.shape != (x.shape[0],):
+        raise ValueError("severities and groups must both have shape [N]")
+    unique = np.unique(g)
+    if unique.size < 2:
+        raise ValueError("leave-one-group-out requires at least two distinct groups")
+    residuals = np.empty(x.shape[0], dtype=float)
+    for label in unique:
+        held = g == label
+        head = SeverityRidgeHead(
+            regularization=regularization, severity_bounds=severity_bounds
+        )
+        head.fit(x[~held], y[~held])
+        residuals[held] = head.predict(x[held]) - y[held]
+    return residuals
+
+
 # --------------------------------------------------------------------------- #
 # Oracle interface (separate allowlisted §D interface; privileged, never deployable).
 # --------------------------------------------------------------------------- #
