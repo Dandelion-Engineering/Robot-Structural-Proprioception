@@ -1,144 +1,155 @@
-# Codex — Summary of Only Necessary Context
+# Codex — Only Necessary Context
 
-**Last completed session:** Codex Session 24, 2026-07-22
+## Resume state
 
-**Phase:** Phase 2 — Execution
+- Project: **Robot Structural Proprioception**
+- Phase: **Phase 2 — Execution**
+- Public state: **In Progress**
+- Current Codex session: **25**
+- Expected closeout commit: `Codex Session 25`
+- Shared `config.json`: **unfrozen**
+- Controlling scope: the jointly approved Claim Sheet. Randy withdrew the proposed task redesign before any amendment; a different task belongs to a separately scoped follow-on project.
 
-**Branch:** `main`
+At the next session, follow `AgentPrompt.md` from the top. Read the complete physical UTF-8 tails of every active transcript before relying on this continuity file.
 
-**Session-24 starting commit:** `8eb3557` (`Claude Session 24`)
+## Immediate live gates
 
-**Expected closeout commit:** `Codex Session 24`
+1. **Actuator action-mechanism owner review is open.** Codex handed the exact new script, regression, artifacts, and BLOCK interpretation to Claude at the physical tail of `Phase 2 Integration and Config Freeze - Active.md`. Do not treat silence, downstream use, or edits as approval. Require explicit same-state approval or review edits.
+2. **`Better Suited Task` awaits Claude's acknowledgement.** Randy withdrew his redesign request. Codex acknowledged. The chat can conclude only after Claude also acknowledges; do not rename/conclude it early.
+3. **Calibrated authorization remains open.** The action screen forces the same diagnosis on healthy to measure consequence; it does not estimate future false-authorization rates from suite-specific class probability, abstention, or uncertainty.
+4. **Configuration remains unfrozen.** No Session-25 screen is validation-sized or confirmatory.
 
-**Shared configuration:** **UNFROZEN**
+## Session-25 actuator action result
 
-## Resume here
+New executable:
 
-The active coordination surface is:
+- `Reproducibility Packet/scripts/screen_actuator_recovery_action.py`
+- regression: `Reproducibility Packet/tests/test_actuator_recovery_action.py`
+- artifacts: `Reproducibility Packet/results/actuator_recovery_action_screen/`
 
-`chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`
+Design:
 
-Its physical last turn is **Codex Session 24**. Read it to EOF before doing work.
+- selected physical condition: actuator location 1, 0.25 remaining gain, bounded z = 0.200 m task;
+- tuning seeds: 18000–18002;
+- assessment seeds: 17100–17103;
+- 36 tuning arms + 64 assessment arms;
+- cap/floor family: 2/0.25, 3/0.25, 4/0.25, 5/0.25, 5/0.20;
+- tuning target: 12% fault reduction;
+- assessment bars: 10% fault reduction and 10-pp source-specific margin;
+- source-specific margin: fault-action benefit minus identical healthy false-authorization benefit;
+- assessment includes oracle severity and exact recorded held-out C1/S severities from Step 15;
+- deterministic 20,000-replicate paired seed bootstrap.
 
-The immediate live loop is:
+Decision:
 
-- **Cap-boundary loop: CLOSED.** Claude Session 24 explicitly approved the exact Codex Session-23 corrected state.
-- **Actuator class-probability screen: Codex-approved after corrections; Claude owner re-review OPEN.**
-- Claude must explicitly approve the exact reviewer-corrected executable, tests, regenerated summary/report, packet Step 17, packet Current-boundary correction, and root Live-Run correction. Silence, downstream use, or handoff is not same-state approval.
+`BLOCK_ACTUATOR_ACTION_FAMILY_AT_SOURCE_SPECIFIC_GATE`
 
-Do not begin a new probability or actuator action surface until that re-review is resolved unless the human explicitly redirects the work.
+Selected cap-3/floor-0.25 disjoint result:
 
-## Authoritative Session-24 result
+- fault reduction: 16.5764759355% mean, 16.4891729362% minimum;
+- healthy false-authorization benefit: 8.3224227983% mean;
+- source-specific margin: 8.2540531371 pp;
+- four-seed development interval: [8.0926910414, 8.5316317311] pp;
+- oracle, C1, and S are action-identical because all saturate at multiplier 3.0;
+- lifecycle/safety: pass.
 
-Claude's new screen sampled the actuator class probability at:
+Higher-cap boundary:
 
-`p = 0.50, 0.60, 0.70, 0.80, 0.90, 1.00`
+- cap-4/5 reach about 19.711% tuning fault recovery and 9.723 pp mean margin;
+- S cap-5 sensitivity reaches 10.179 pp in assessment;
+- those profiles fail the A1 lifecycle gate;
+- complete candidate audit: 19 A1-incident arms, zero saturation, zero multiplier mismatch;
+- all reference arms remain A1-clean and exactly reproduce committed Step-15 no-action `J_5s` (`max delta = 0.0`).
 
-while holding actuator class, location, severity, common RMS severity uncertainty, and non-abstention fixed.
+Interpretation:
 
-The reviewer-corrected result is:
+- Safe cap-3 recovers tracking but misses the source-specific magnitude bar.
+- Raising the cap reaches more raw recovery only by crossing the safety boundary; it is not a free performance improvement.
+- C1 versus S control is not established by the selected cap because they command identically.
+- This is development action-mechanism evidence only.
 
-- largest sampled gate-clearing S-over-C1 tracking difference: **5.0698636256 percentage points**;
-- mean sampled gate-clearing difference: **5.0162118584 points**;
-- maximum separate gate-crossing authorization difference: **10.8508760759 points**;
-- mean gate-crossing difference: **10.8203657342 points**;
-- all four sampled per-seed curves are strictly monotone;
-- cap realization at the selected 0.25 remaining-gain condition: **57.5%** of the analytic exact-restoration ceiling.
+## Audit lesson preserved in code
 
-The first-review correction is load-bearing:
+The first 100-arm run aborted artifact creation because candidate A1 incidents were included in a global integrity condition. That was wrong: candidate unsafety is a valid negative result.
 
-1. The controller constants exactly define the continuous input/multiplier endpoints, but six rollouts do **not** exhaust the nonlinear response between them.
-2. The implementation now searches every ordered sampled pair instead of assuming the endpoints are extrema.
-3. The complete expected arm grid is now a fail-loud audit condition.
-4. The fixture isolates graded probability only. Calibrated probability-gate, abstention, and `severity_uncertainty` crossings remain authorization questions.
-5. The common RMS uncertainty is a development fixture choice, not a frozen per-example uncertainty definition.
-6. Cap/floor sensitivity remains open because changing the cap changes both recoverable tracking and the flat severity region.
+The corrected audit:
 
-Therefore:
+- requires reference A1, saturation, and multiplier cleanliness as run integrity;
+- records candidate A1/saturation/multiplier violations;
+- feeds candidate violations into lifecycle advancement;
+- writes the negative artifact when references and execution integrity remain sound.
 
-- the six-point graded development result is below the 10-point bar;
-- the continuous probability response is **not closed**;
-- calibrated authorization is **not closed**;
-- the actuator class is **not closed**.
+`test_candidate_a1_incident_is_a_scientific_block_not_audit_corruption` protects this distinction.
 
-## Independent reviewer evidence
+## Prior loop state
 
-Codex ran an ignored dense audit at p = 0.50 through 1.00 in increments of 0.025:
+### Actuator probability screen — closed
 
-- 21 acting probabilities per seed;
-- four assessment seeds;
-- 84 MuJoCo arms;
-- every dense curve strictly monotone;
-- the maximum remains exactly **5.0698636256 points**.
+Claude explicitly approved the exact Session-24 reviewer-corrected state:
 
-This strengthens the empirical envelope but is not an analytical proof or a committed approval artifact.
+- six-point maximum sampled S-over-C1 difference: 5.0698636256 pp;
+- six-point mean: 5.0162118584 pp;
+- result is a sampled empirical envelope, not a continuous proof;
+- separate gate-crossing authorization difference: 10.8508760759 pp maximum;
+- class probability, abstention, uncertainty authorization, and continuous response remain open;
+- common RMS is a development fixture, not frozen predictive uncertainty.
 
-The official 36-arm artifacts were regenerated with 8 workers and independently reproduced to ignored scratch output with 4 workers. All three are byte-identical:
+Do not reopen this loop without new evidence or an owner edit.
 
-- `summary.json`: `EA377BD0BCCD23CE3D7BDDC17B9C0107F16D9C36D8D2D0AB58AC10506D76AE3A`
-- `arm_rows.csv`: `F4E2D43B998BA9CAA46470E7313DBF6D2422D4CFC734E141887206F2751DDB60`
-- `actuator_probability_channel_report.md`: `44F39F4B665B7A4EB5DF9274D5A511508FBF1AE179376D8ED7508240C07D414B`
+### Severity/action boundary — closed
 
-Verification at closeout:
+The jointly approved cap-2 boundary result remains:
 
-- focused probability screen: **54 passed**;
-- full packet: **302 passed**;
-- `compileall -q scripts tests`: passed;
-- CLI help: passed;
-- strict JSON parse: passed;
-- no dependency installed.
+- paired C1/S action difference below the 10-point bar for the recorded linear heads;
+- arbitrary read-outs outside the measured envelope, cap-4 behavior, class probability, abstention, uncertainty, and calibrated authorization were not closed by that screen.
 
-## Current technical boundary
+The new action-family screen measures cap/floor and false-authorization consequences but does not close calibrated authorization rates.
 
-Keep these evidence lanes separate:
+### Fault headroom — closed as development direction
 
-- **Structural information:** on the bounded noisy development fixture, S macro-F1 is 0.995 versus C1 0.704, with structural recall 100% versus 8.3%.
-- **Structural action:** the old derate worsens tracking by 18.6%; the inverse-stiffness family improves healthy tracking slightly more than structural tracking and is blocked as a generic nominal retune.
-- **Structural headroom:** no tested structural severity reaches the development tracking-deficit gate on this task, even though strain rises strongly.
-- **Actuator headroom:** 0.25 remaining gain advances after the deficit/reduction denominator correction.
-- **Recorded linear severity route:** the 0.50/cap-2 paired suite effect is small (mean −0.12 points; max absolute 0.52), but arbitrary future read-outs and cap-4/0.25-floor behavior are open.
-- **Sampled graded probability:** maximum 5.07 points on the six-point grid.
-- **Authorization:** the fixed-fixture gate crossing reaches 10.85 points and remains separate.
-- **Control outcome:** action-versus-no-action benefit, healthy false authorization, source specificity, cap/floor sensitivity, sensor-fault recovery, and evaluation-sized paired control remain open.
+- 0.25 remaining actuator gain has sufficient no-action headroom under the corrected deficit/reduction conversion.
+- Structural settings do not produce the required tracking deficit on the current bounded joint-space task.
+- Structural sensing remains diagnostic-only on this task unless a new in-scope mechanism and evidence change that conclusion.
 
-None of these development screens is validation-sized, confirmatory, a Slot-11 win, or a frozen decision margin.
+## Evidence boundaries that must remain separate
 
-## Public and packet correction state
+- Development screens are not pilot, validation, frozen, or confirmatory evidence.
+- Detection, attribution, calibrated authorization, action-mechanism efficacy, and control outcome are separate gates.
+- A forced false authorization measures consequence, not false-authorization rate.
+- Positive raw recovery is not source-specific recovery.
+- An interval excluding zero does not clear a predeclared magnitude bar.
+- Unsafe high-cap recovery does not advance.
+- C1/S severity differences are irrelevant when the selected cap makes their commands identical.
+- Four physical seeds provide a sign-stability guard, not confirmatory uncertainty.
+- The current joint-space task stays in force; the withdrawn Cartesian-task proposal is preserved only as public history.
 
-The root `README.md` Live-Run log is append-only. Claude's earlier “last/final channel closed” entry remains as history, immediately followed by a dated Codex reviewer correction.
+## Verification at Session-25 closeout
 
-The packet's Step 17 and regenerated report use the narrow sampled interpretation. Its long Current-boundary paragraph still contains the superseded pre-review language but is immediately followed by an explicit reviewer-correction paragraph. Do not quote the stale paragraph without the correction.
+- Focused new regressions: **27 passed**
+- Full Reproducibility Packet: **329 passed**
+- New-file `compileall`: passed
+- Strict JSON parse: passed
+- Required audit fields: all passed
+- Official action screen: 100 arms, 8 workers
+- `summary.json` SHA-256: `B9D50165F0712CCCF6F6CB63B25A37BFCFBEF07E95DE22F3D58EDC6A3D38433F`
 
-## Files changed in Session 24
+## Key live files
 
-- `Reproducibility Packet/scripts/screen_actuator_probability_channel.py`
-- `Reproducibility Packet/tests/test_actuator_probability_channel.py`
-- `Reproducibility Packet/results/actuator_probability_channel/summary.json`
-- `Reproducibility Packet/results/actuator_probability_channel/actuator_probability_channel_report.md`
-- `Reproducibility Packet/README.md`
+- `Claim Sheet.md`
 - `README.md`
-- active Claude–Codex Phase-2 transcript
-- `agents/Codex/Progress Reports/Progress Report Session 24.md`
-- `agents/Codex/Session Summaries/HumanReport24.md`
-- `agents/Codex/references.md`
-- `agents/Codex/README.md`
-- this continuity file
+- `Reproducibility Packet/scripts/screen_actuator_recovery_action.py`
+- `Reproducibility Packet/tests/test_actuator_recovery_action.py`
+- `Reproducibility Packet/results/actuator_recovery_action_screen/summary.json`
+- `Reproducibility Packet/results/actuator_recovery_action_screen/actuator_recovery_action_report.md`
+- `chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`
+- `chats/Claude-Codex-Human/Better Suited Task/Better Suited Task - Active.md`
+- `agents/Codex/Session Summaries/HumanReport25.md`
 
-`arm_rows.csv` is tracked but byte-identical and therefore does not appear in the diff. Reviewer-only dense and reproduction files are under ignored `/tmp/`.
+## Closeout/process invariants
 
-## Next-session instructions
-
-1. Follow `AgentPrompt.md` startup again and read all active transcripts to physical EOF.
-2. Verify repository synchronization and inspect any Claude re-review turn.
-3. If Claude explicitly approves the exact Session-24 corrected state, close the probability-screen loop.
-4. If Claude edits, review the new exact state; reviewer edits reset approval.
-5. Preserve the distinction between:
-   - an exact input interval;
-   - a finite sampled response envelope;
-   - calibrated authorization;
-   - control outcome.
-6. Keep `config.json` unfrozen until the remaining action/controller, calibration, validation, leakage/storage/hash, learned-head, and Phase-3 gates close.
-7. Use only `.\venv\Scripts\python.exe`; never use bare `python`.
-8. Apply the append-only transcript hard gate before the next chat write.
-
-The next regular Codex progress report is Session 32 unless a phase transition or approved Claim Sheet amendment triggers one earlier.
+- Use only the project venv: `.\venv\Scripts\python.exe` from repo root or `..\venv\Scripts\python.exe` from `Reproducibility Packet`.
+- Active transcript appends require the hard gate: physical UTF-8 EOF, recorded pre-line count, verified unique multi-line EOF anchor, `apply_patch`, then exact post-boundary header/signature assertions.
+- Preserve append-only public and transcript history; add corrections instead of rewriting prior entries.
+- Require explicit same-state approval for review closure.
+- Run `git diff --cached --check` before committing.
+- Do not freeze config or promote a development result without the required gates.

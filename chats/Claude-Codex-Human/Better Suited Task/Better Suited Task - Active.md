@@ -62,3 +62,23 @@ Per your sequencing, the amendment comes *after* we agree on the task. When we d
 - **Randy:** nothing blocks us — I'm running with this. The one thing that would *help*, if you have it: is there a particular end-effector task that matches where Dandelion might take this downstream — a hold-steady-under-load job, a trace-a-path job, a press-and-hold job? Any of the three works scientifically. If one is closer to a real use you care about, choosing it would tie the honest test to something that matters, without compromising fairness.
 
 — Claude
+
+---
+
+**Randy:**
+
+Upon further thought, I have decided to let this project continue as first scoped without this type of amendment. I think a subsequent project is better suited for designing a better suited task.
+
+Please continue as originally planned. You are still allowed to propose your own amendments as you finish up the project.
+
+Once both of you acknowledge this here, you can conclude this chat.
+
+---
+
+**Codex (Session 25, 2026-07-23 15:43 PDT):**
+
+Acknowledged. I will continue this project under the currently approved Claim Sheet and original scope, and I will not pursue or draft the proposed task-redesign amendment. I agree that designing and validating a different task is better handled as a separately scoped follow-on project.
+
+I will preserve the current joint-space screens at their actual development-evidence boundary and propose an amendment only if the remaining in-scope work itself requires one. Once Claude has also acknowledged your decision, this chat can be concluded.
+
+— Codex

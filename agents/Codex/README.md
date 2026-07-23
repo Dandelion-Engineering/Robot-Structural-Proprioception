@@ -34,6 +34,7 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`Session Summaries/HumanReport22.md`](Session%20Summaries/HumanReport22.md) — detailed record of Codex Session 22 (severity cap-boundary correction, strict-JSON repair, independent deterministic reproduction, and owner handback).
 - [`Session Summaries/HumanReport23.md`](Session%20Summaries/HumanReport23.md) — detailed record of Codex Session 23 (cap-boundary measurement review, uncertainty-role correction, empirical-envelope narrowing, fail-loud audit repair, and owner handback).
 - [`Session Summaries/HumanReport24.md`](Session%20Summaries/HumanReport24.md) — detailed record of Codex Session 24 (actuator probability-screen review, continuous-response and authorization-boundary correction, dense reviewer audit, and owner handback).
+- [`Session Summaries/HumanReport25.md`](Session%20Summaries/HumanReport25.md) — detailed record of Codex Session 25 (probability-loop close, task-redesign withdrawal acknowledgement, role-separated actuator-action screen, source-specific/lifecycle block, and owner handback).
 - [`Progress Reports/Progress Report Session 8.md`](Progress%20Reports/Progress%20Report%20Session%208.md) — first regular every-eighth-session director update at the Accessible-Piece bar.
 - [`Progress Reports/Progress Report Session 16.md`](Progress%20Reports/Progress%20Report%20Session%2016.md) — second regular director update, covering the synchronous-probe correction, noisy pilot, real contact integration, and matched-contact BLOCK.
 - [`Progress Reports/Progress Report Session 24.md`](Progress%20Reports/Progress%20Report%20Session%2024.md) — third regular director update, covering the bounded-task redesign, information/control split, structural-action block, actuator headroom, and corrected probability-channel boundary; next regular Codex report is Session 32.
@@ -59,7 +60,8 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`../../Reproducibility Packet/scripts/screen_fault_tracking_deficit.py`](../../Reproducibility%20Packet/scripts/screen_fault_tracking_deficit.py) — Codex-owned role-separated no-recovery headroom screen; the 12% reduction target converts to a 13.636% healthy-relative deficit gate, selecting 0.25 remaining actuator gain while every structural setting from 0.75 to 0.05 remaining EI blocks.
 - [`../../Reproducibility Packet/scripts/screen_severity_estimation_quality.py`](../../Reproducibility%20Packet/scripts/screen_severity_estimation_quality.py) — Claude-owned, Codex-corrected actuator-severity read-out screen; strictly capped interiors are action-identical, while the above-bar 0.50 cap-2 boundary remains reachable and requires a paired action measurement.
 - [`../../Reproducibility Packet/scripts/screen_severity_action_boundary.py`](../../Reproducibility%20Packet/scripts/screen_severity_action_boundary.py) — jointly approved Claude-owned, Codex-corrected cap-boundary measurement; the direct four-seed paired difference is below the bar for the recorded linear heads, while calibration-versus-assessment uncertainty roles, arbitrary read-outs outside the measured envelope, class probability, and the cap-4 boundary remain explicit.
-- [`../../Reproducibility Packet/scripts/screen_actuator_probability_channel.py`](../../Reproducibility%20Packet/scripts/screen_actuator_probability_channel.py) — Claude-owned, Codex-corrected sampled probability-sensitivity screen; its six-point graded result is below the bar, while continuous response, probability/abstention/uncertainty authorization, cap/floor sensitivity, and the actuator class remain open. Claude owner re-review is open.
+- [`../../Reproducibility Packet/scripts/screen_actuator_probability_channel.py`](../../Reproducibility%20Packet/scripts/screen_actuator_probability_channel.py) — jointly approved Claude-owned, Codex-corrected sampled probability-sensitivity screen; its six-point graded result is below the bar, while continuous response and calibrated probability/abstention/uncertainty authorization remain open.
+- [`../../Reproducibility Packet/scripts/screen_actuator_recovery_action.py`](../../Reproducibility%20Packet/scripts/screen_actuator_recovery_action.py) — Codex-owned role-separated actuator action-mechanism screen; it selects cap-3 on tuning, then blocks because its 8.254-pp disjoint source-specific margin misses the 10-pp gate while higher caps violate A1 safety.
 - [`../../Reproducibility Packet/scripts/utils/task_control.py`](../../Reproducibility%20Packet/scripts/utils/task_control.py) — jointly approved finite smooth task profile, delivered-observation PD controller, and estimator/recovery task-policy composition.
 - [`../../Reproducibility Packet/scripts/utils/recovery_control.py`](../../Reproducibility%20Packet/scripts/utils/recovery_control.py) — Codex-owned recovery seam: the jointly approved default remains abstention/uncertainty-gated structural derating plus bounded actuator inverse-gain scheduling; the reviewed structural inverse-stiffness seam is preserved as sound code, but its screened constant-gain family is blocked and no structural action advances.
 - [`../../Reproducibility Packet/scripts/utils/residual_baseline.py`](../../Reproducibility%20Packet/scripts/utils/residual_baseline.py) — jointly approved Codex-owned deployable linear-ARX residual attribution floor with separate healthy-dynamics, labeled-prototype, and known-class abstention-calibration roles.
@@ -84,12 +86,13 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`../../Reproducibility Packet/results/structural_recovery_action_screen/structural_recovery_action_report.md`](../../Reproducibility%20Packet/results/structural_recovery_action_screen/structural_recovery_action_report.md) — fixed-setting development BLOCK: a selected global 2.00 multiplier improves structural `J_5s` by 19.88% but healthy false-authorized `J_5s` by 20.15%, identifying generic controller under-authority rather than source-specific recovery.
 - [`../../Reproducibility Packet/results/fault_tracking_deficit_screen/fault_tracking_deficit_report.md`](../../Reproducibility%20Packet/results/fault_tracking_deficit_screen/fault_tracking_deficit_report.md) — role-separated headroom decision: 0.25 remaining actuator gain retains a 23.03% minimum disjoint deficit; structural strain grows monotonically while tracking deficit falls through zero; exact-restoration headroom is explicitly separated from later action specificity.
 - [`../../Reproducibility Packet/results/severity_estimation_quality/severity_estimation_quality_report.md`](../../Reproducibility%20Packet/results/severity_estimation_quality/severity_estimation_quality_report.md) — development linear-read-out record: C1/S severity MAE is 0.0065/0.0076; 3 of 4 paired 0.50-gain arms straddle the cap-2 kink, so severity remains a live actuator-action route pending owner re-review.
+- [`../../Reproducibility Packet/results/actuator_recovery_action_screen/actuator_recovery_action_report.md`](../../Reproducibility%20Packet/results/actuator_recovery_action_screen/actuator_recovery_action_report.md) — 100-arm tuning/assessment development BLOCK: cap-3 recovers 16.576% on fault but also benefits healthy false authorization by 8.322%, leaving 8.254 pp; cap-4/5 profiles fail A1 safety, and C1/S are action-identical at the selected cap.
 - [`../../chats/Claude-Codex/Claim Sheet Review and Division of Labor/Summary.md`](../../chats/Claude-Codex/Claim%20Sheet%20Review%20and%20Division%20of%20Labor/Summary.md) — concluded Phase-1 review/labor summary.
-- [`../../chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`](../../chats/Claude-Codex/Phase%202%20Integration%20and%20Config%20Freeze/Phase%202%20Integration%20and%20Config%20Freeze%20-%20Active.md) — authoritative active interface/config thread; Codex corrected the omitted 0.50 severity boundary and handed the exact edited screen state back for Claude's genuine owner re-review. Config remains explicitly unfrozen.
+- [`../../chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`](../../chats/Claude-Codex/Phase%202%20Integration%20and%20Config%20Freeze/Phase%202%20Integration%20and%20Config%20Freeze%20-%20Active.md) — authoritative active interface/config thread; the probability-screen loop is closed, and the new actuator action-mechanism BLOCK is handed to Claude for genuine owner review. Config remains explicitly unfrozen.
 - [`../../chats/Claude-Codex-Human/Chat Appends/Summary.md`](../../chats/Claude-Codex-Human/Chat%20Appends/Summary.md) — concluded director coordination record for the transcript-tail failure mode and recovery rule.
 - [`../../chats/Claude-Codex-Human/Transcript Order Monitoring/Transcript Order Monitoring - Active.md`](../../chats/Claude-Codex-Human/Transcript%20Order%20Monitoring/Transcript%20Order%20Monitoring%20-%20Active.md) — active director-visible recurrence log; records verified append-only repairs and the requirement that the applied patch use the complete pre-verified EOF block.
 - [`../../chats/Claude-Codex/Phase 0 Coordination/Summary.md`](../../chats/Claude-Codex/Phase%200%20Coordination/Summary.md) — concluded Phase-0 convergence record that feeds the Claim Sheet.
-- [`../../README.md`](../../README.md) — public live-run status, Phase 2 / `In Progress`, carrying the bounded mechanics advance, S held-decision information result, structural recovery block, and actuator-only control-headroom direction without promoting development evidence to a research result.
+- [`../../README.md`](../../README.md) — public live-run status, Phase 2 / `In Progress`, preserving the withdrawn task-redesign proposal and correction plus the actuator action-mechanism BLOCK without promoting development evidence to a research result.
 
 ## Structure
 
@@ -98,7 +101,8 @@ agents/Codex/
 ├── Literature Foundation.md
 ├── Progress Reports/
 │   ├── Progress Report Session 8.md
-│   └── Progress Report Session 16.md
+│   ├── Progress Report Session 16.md
+│   └── Progress Report Session 24.md
 ├── references.md
 ├── README.md
 ├── Summary of Only Necessary Context.md
@@ -125,5 +129,7 @@ agents/Codex/
     ├── HumanReport20.md
     ├── HumanReport21.md
     ├── HumanReport22.md
-    └── HumanReport23.md
+    ├── HumanReport23.md
+    ├── HumanReport24.md
+    └── HumanReport25.md
 ```
