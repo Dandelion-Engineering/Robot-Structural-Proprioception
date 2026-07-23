@@ -1,22 +1,23 @@
 # What a severity difference is worth at the action's cap boundary
 
-Development-sized screen. Measures the paired S-minus-C1 tracking difference at the one actuator setting that is both severity-sensitive and above the Claim Sheet bar, and bounds what any severity read-out difference could be worth there.
+Development-sized screen. Measures the paired S-minus-C1 tracking difference at the one actuator setting that is both severity-sensitive and above the Claim Sheet bar, then places the recorded linear read-outs inside a wider measured multiplier envelope.
 
 - Boundary condition: remaining actuator gain 0.5 at joint 1, compensation cap 2
 - Assessment seeds [17100, 17101, 17102, 17103], reusing Step 15's `pair_id`s
 - 40 arms; commanded multiplier sweep [1.5, 1.7, 1.85, 1.93, 1.97]
 - Config hash `dev-severity-action-boundary-screen` (not frozen)
 
-## Part 1 — held-out severity uncertainty
+## Part 1 — severity-uncertainty diagnostics
 
-The recovery controller's confidence gate rejects a diagnosis whose severity uncertainty exceeds 0.25. The severity head reports an *in-sample* residual dispersion, which is not that number. Refitting the head once per held-out sensor seed on Step 15's recorded feature rows gives the out-of-sample dispersion the gate should see.
+The recovery controller's confidence gate rejects a diagnosis whose severity uncertainty exceeds 0.25. The severity head reports an *in-sample* residual dispersion, which is not that number. A fixed-penalty leave-one-seed-out estimate on the tuning role supplies a calibration-only value the gate can receive without using assessment rows. The disjoint assessment residuals are reported separately as the honest check on how that internal estimate transferred.
 
-| suite | in-sample residual std | held-out residual std | ratio | held-out bias | opens the gate |
-|---|---:|---:|---:|---:|:--:|
-| C1 | 0.004237 | 0.006741 | 1.59x | +0.001752 | yes |
-| S | 0.001951 | 0.011160 | 5.72x | +0.002804 | yes |
+| suite | in-sample std | calibration cross-seed std | disjoint assessment std | calibration / in-sample | assessment / in-sample | opens the gate |
+|---|---:|---:|---:|---:|---:|:--:|
+| C1 | 0.004237 | 0.006741 | 0.008393 | 1.59x | 1.98x | yes |
+| S | 0.001951 | 0.011160 | 0.008029 | 5.72x | 4.12x | yes |
 
-- **The in-sample number understates the true dispersion, and it understates it unevenly across suites** — S by 5.72x. Ranking the suites by the in-sample figure inverts the ranking the held-out figure gives, so wiring the training residual to the confidence gate would have reported the *less* reliable read-out as the more certain one. Both suites clear the gate comfortably, so the action below fires identically for either.
+- **The in-sample number understates both out-of-seed diagnostics, and it understates the disjoint assessment dispersion unevenly across suites** — S by 4.12x. The absolute suite ranking is not stable across the two diagnostics: the internal calibration cross-seed estimate is larger for S, while the disjoint assessment standard deviation is slightly smaller for S (Step 15's MAE remains larger for S because its bias is larger). The safe conclusion is that training dispersion must not reach the confidence gate. Both calibration-only values clear the gate comfortably, so the action below fires for either.
+- The calibration cross-seed values hold Step 15's selected penalties fixed. Because those penalties were selected using the same tuning groups, these are development calibration estimates, not nested post-selection uncertainties or frozen confidence margins.
 
 ## Part 2 — the paired quantity at the boundary
 
@@ -31,11 +32,11 @@ Each suite's *recorded held-out estimate* drives the real recovery controller on
 
 - Mean paired S-minus-C1 reduction: **-0.1177%** against a 10% bar; largest absolute value on any seed **0.5154%**. Seed split — S better on 1, C1 better on 2, exactly identical on 1.
 - The action itself is real on this condition: the no-action deficit is +13.11% and the privileged oracle recovers +10.81% of it. Both deployable suites land close to that ceiling — C1 +10.76%, S +10.65%. The severity channel is not the thing separating them from the ceiling.
-- **Exact restoration of the gain does not exactly restore the tracking.** The analytic exact-restoration ceiling for this deficit is 11.59%, and a privileged oracle commanding the exactly restoring multiplier realizes 10.81% — a shortfall of 0.78 percentage points, or 93.2% of the ceiling, in the same direction on every seed. The gap is the part of the error the fault has already produced before the single held decision fires, which no multiplier recovers. The `deficit -> reduction` conversion the deficit screen's gate uses is therefore an upper bound rather than an achievable value, and a gate calibrated on it is optimistic by about that margin.
+- **Exact restoration of the gain does not exactly restore the tracking.** The analytic exact-restoration ceiling for this deficit is 11.59%, and a privileged oracle commanding the exactly restoring multiplier realizes 10.81% — a shortfall of 0.78 percentage points, or 93.2% of the ceiling, in the same direction on every seed. The gap is the part of the error the fault has already produced before the single held decision fires, which no multiplier recovers. For this boundary condition, the `deficit -> reduction` conversion is therefore an upper bound rather than the achieved value. Whether the same shortfall applies at the 0.25 condition selected by the deficit screen is not measured here.
 
-## Part 3 — the bound
+## Part 3 — the measured conversion envelope
 
-Every severity result in this packet is stated in multiplier units and the contract is stated in tracking units. This sweep is the conversion factor. It spans commanded multipliers far outside any plausible read-out error, so the spread of tracking reduction across it bounds what *any* severity difference can be worth at this boundary.
+Every severity result in this packet is stated in multiplier units and the contract is stated in tracking units. This sweep is the conversion factor. It spans commanded multipliers far outside the errors of the recorded linear read-outs. The resulting tracking span is an empirical envelope for those read-outs on this condition, not a universal bound on an arbitrary future read-out that could command below 1.50.
 
 | commanded multiplier | mean applied | mean reduction vs no-action | min | max |
 |---:|---:|---:|---:|---:|
@@ -48,12 +49,12 @@ Every severity result in this packet is stated in multiplier units and the contr
 
 - Best reduction on the sweep is +10.8093% at a commanded multiplier of 2.00; at the cap it is +10.8093%.
 - **Across the entire swept range 1.50-2.00 the reduction moves by only 3.8083 percentage points**, against a 10% bar. The local slope at the cap is +7.5779 percentage points per unit of multiplier.
-- The two suites' recorded estimates differ by at most 0.0694 in multiplier, which that slope converts to **0.5259 percentage points** of tracking — far below the bar.
-- **How wrong a read-out would have to be to matter here.** The sweep's lowest point commands 1.50, which is what a severity estimate of 0.6667 produces — an error of +0.1667 on a true 0.5, about 15x the larger suite's held-out residual standard deviation. That estimate still recovers 7.00%. Producing a 10-point paired difference would require one suite to command essentially no action at all, which is a class-call difference rather than a severity-precision one — and both suites already call this class correctly.
+- The two suites' recorded estimates differ by at most 0.0694 in multiplier. A local linearization at the cap converts that spread to **0.5259 percentage points** of tracking, consistent with the directly measured 0.5154-point maximum and far below the bar. The direct paired rollouts, not the linearization, are authoritative.
+- **How wrong a read-out would have to be to matter here.** The sweep's lowest point commands 1.50, which is what a severity estimate of 0.6667 produces — an error of +0.1667 on a true 0.5, about 15x the larger suite's calibration cross-seed residual standard deviation. That estimate still recovers 7.00%. Producing a 10-point paired difference would require one suite to command essentially no action at all, which is a class-call difference rather than a severity-precision one — and both suites already call this class correctly.
 
 ## What this screen does and does not establish
 
-- **It closes the severity route on the actuator class at the recorded cap, on this condition.** Step 15 left the boundary open because the suites command differently there. They do; the difference is worth a fraction of a percentage point of tracking, and the bound holds for any read-out, not just this one.
+- **It closes the recorded linear-read-out severity route on the actuator class at the recorded cap, on this condition.** Step 15 left the boundary open because the suites command differently there. They do; the direct paired difference is a fraction of a percentage point, and the wider 1.50–2.00 sweep stays below the bar. It does not close an arbitrary future read-out whose errors leave that multiplier envelope.
 - **It does not close the actuator class.** Action-versus-no-action benefit, false authorization on a healthy body, cap and floor sensitivity, and the source-specific margin are the action screen's questions, not this one's. This screen removes one term from that screen's design; it does not replace it.
 - **It does not measure the class-probability channel.** The multiplier is `1 + p x (capped - 1)`, and every arm here pins `p = 1`. A suite difference in calibrated class probability remains an unmeasured route to a paired difference.
 - **Development-sized.** Four assessment seeds on one bounded task/contact condition, one fault location, one fault setting, held out over sensor noise only, at an unfrozen config.

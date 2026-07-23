@@ -31,10 +31,10 @@ so the recorded estimate is exactly what a deployable head would have produced h
 no-action arm re-runs that trajectory and its `J_5s` is checked against the committed
 Step-15 row, which pins the reuse instead of asserting it.
 
-The sweep is what turns a specific result into a bound. It spans a range of commanded
-multipliers far wider than any plausible read-out error, so the change in tracking across
-it upper-bounds what *any* severity read-out difference could be worth at this boundary —
-independent of which suite happens to win on four seeds.
+The sweep puts the observed result inside a deliberately wider empirical envelope. It
+spans multipliers 1.50–2.00, far beyond the errors of the recorded linear read-outs, and
+shows how multiplier differences in that envelope convert into tracking differences. It
+does *not* bound an arbitrary future read-out that could command below 1.50.
 
 Run from `Reproducibility Packet/`:
     .\\.venv\\Scripts\\python.exe scripts\\screen_severity_action_boundary.py --workers 8
@@ -166,14 +166,16 @@ def load_recorded_features(path: Path) -> dict[str, dict[str, np.ndarray]]:
     return packed
 
 
-def holdout_severity_uncertainty(
+def cross_seed_calibration_uncertainty(
     bundle: dict[str, np.ndarray], *, regularization: float
 ) -> dict[str, float]:
-    """Return a held-out severity dispersion for one suite's recorded tuning rows.
+    """Return a fixed-penalty cross-seed dispersion from one suite's tuning rows.
 
     Leave-one-seed-out, not leave-one-window-out: windows sharing a sensor seed share a
     noise realization, so holding out individual windows would report a dispersion the
-    deployed head will not reproduce.
+    deployed head will not reproduce. This is an internal calibration-role estimate, not
+    the disjoint assessment role and not a nested estimate of the penalty-selection
+    procedure: Step 15 selected the fixed penalty using these same tuning groups.
 
     Args:
         bundle: One suite's entry from `load_recorded_features`.
@@ -182,7 +184,7 @@ def holdout_severity_uncertainty(
             procedure.
 
     Returns:
-        Record carrying the held-out residual standard deviation, its mean (bias), the
+        Record carrying the cross-seed residual standard deviation, its mean (bias), the
         mean absolute residual, and the fold count.
     """
 
@@ -194,11 +196,50 @@ def holdout_severity_uncertainty(
         regularization=regularization,
     )
     return {
-        "holdout_residual_std": float(residuals.std(ddof=1)),
-        "holdout_residual_mean": float(residuals.mean()),
-        "holdout_residual_mean_abs": float(np.mean(np.abs(residuals))),
-        "n_folds": int(np.unique(bundle["seeds"][tuning]).size),
-        "n_residuals": int(residuals.size),
+        "calibration_cross_seed_residual_std": float(residuals.std(ddof=1)),
+        "calibration_cross_seed_residual_mean": float(residuals.mean()),
+        "calibration_cross_seed_residual_mean_abs": float(np.mean(np.abs(residuals))),
+        "n_calibration_folds": int(np.unique(bundle["seeds"][tuning]).size),
+        "n_calibration_residuals": int(residuals.size),
+    }
+
+
+def disjoint_assessment_residual_diagnostics(
+    evaluation: dict[str, Any],
+) -> dict[str, float]:
+    """Return residual diagnostics from Step 15's disjoint assessment predictions.
+
+    These rows were not used to fit the head or select its penalty. They are reported
+    alongside the calibration-role cross-seed estimate so the screen cannot mistake an
+    internal cross-validation ranking for the actual disjoint assessment ranking.
+
+    Args:
+        evaluation: One suite's Step-15 `suite_evaluations` record.
+
+    Returns:
+        Residual standard deviation, bias, mean absolute error, and row count.
+
+    Raises:
+        ValueError: If fewer than two finite prediction rows are present.
+    """
+
+    predictions = evaluation.get("predictions", [])
+    residuals = np.asarray(
+        [
+            float(row["estimate"]) - float(row["severity"])
+            for row in predictions
+        ],
+        dtype=float,
+    )
+    if residuals.size < 2 or not np.all(np.isfinite(residuals)):
+        raise ValueError(
+            "disjoint assessment diagnostics require at least two finite predictions"
+        )
+    return {
+        "assessment_residual_std": float(residuals.std(ddof=1)),
+        "assessment_residual_mean": float(residuals.mean()),
+        "assessment_residual_mean_abs": float(np.mean(np.abs(residuals))),
+        "n_assessment_residuals": int(residuals.size),
     }
 
 
@@ -446,24 +487,25 @@ def build_arm_specs(
 
     Args:
         estimates: Suite-keyed seed→held-out estimate from `load_boundary_estimates`.
-        uncertainties: Suite-keyed held-out severity dispersion from Part 1.
+        uncertainties: Suite-keyed calibration-role cross-seed dispersion from Part 1.
         seeds: Assessment seeds to run.
-        multipliers: Fixed commanded multipliers for the sweep, each at or below the cap.
+        multipliers: Fixed commanded multipliers for the sweep, each strictly below the
+            cap. The cap point is supplied separately by the oracle arm.
 
     Returns:
         One `ActionArmSpec` per arm.
 
     Raises:
         ValueError: If a seed is missing from a suite's recorded estimates, or a sweep
-            multiplier is not in `(1, 1 / minimum_gain_remaining]`.
+            multiplier is not strictly between one and the recorded cap.
     """
 
-    floor = RecoveryControlConfig().minimum_gain_remaining
+    cap = RecoveryControlConfig().maximum_gain_compensation
     for multiplier in multipliers:
-        if not 1.0 < multiplier <= 1.0 / floor:
+        if not 1.0 < multiplier < cap:
             raise ValueError(
-                f"sweep multiplier {multiplier} is outside (1, {1.0 / floor:g}]; a "
-                "multiplier the gain floor re-clips is not the multiplier commanded"
+                f"sweep multiplier {multiplier} is outside (1, {cap:g}); the cap point "
+                "is supplied separately by the oracle arm"
             )
     specs: list[ActionArmSpec] = []
     for seed in seeds:
@@ -632,9 +674,9 @@ def multiplier_sensitivity_curve(
 
     This is the conversion factor the project has been missing: every severity result so
     far is stated in multiplier units, and the contract is stated in tracking units. The
-    sweep spans multipliers far outside any plausible read-out error, so the spread of
-    reduction across it bounds what *any* severity difference can be worth at this
-    boundary, whatever read-out produces it.
+    sweep spans multipliers far outside the recorded linear read-outs' errors. Its
+    reduction span is therefore an empirical envelope for those read-outs and similarly
+    accurate alternatives, not a universal bound on an arbitrary future read-out.
 
     Args:
         rows: All arm rows.
@@ -692,10 +734,14 @@ def multiplier_sensitivity_curve(
     }
 
 
-def bound_from_slope(
+def severity_difference_envelope(
     curve: dict[str, Any], observed_multiplier_spread: float
 ) -> dict[str, Any]:
-    """Convert an observed multiplier spread into a bound on the paired quantity.
+    """Convert the observed spread locally and report the measured sweep envelope.
+
+    The local slope product is a linearized conversion, not a mathematical upper bound:
+    the direct paired rollouts remain the authoritative measurement. The whole-sweep span
+    is likewise scoped to the recorded multiplier interval.
 
     Args:
         curve: The output of `multiplier_sensitivity_curve`.
@@ -703,18 +749,21 @@ def bound_from_slope(
             suites' recorded held-out estimates produce at this boundary.
 
     Returns:
-        The implied tracking-difference bound and whether it clears the Claim Sheet bar.
+        The local linearized tracking difference, the sweep span, and their comparisons
+        with the Claim Sheet bar.
     """
 
     slope = abs(curve["local_slope_pct_per_unit_multiplier_at_cap"])
     implied = float(slope * observed_multiplier_spread)
     return {
         "observed_multiplier_spread": float(observed_multiplier_spread),
-        "implied_reduction_difference_pct": implied,
-        "whole_sweep_reduction_span_pct": float(curve["reduction_span_pct"]),
+        "local_linearized_difference_pct": implied,
+        "swept_reduction_span_pct": float(curve["reduction_span_pct"]),
         "claim_bar_pct": CLAIM_TRACKING_BAR_PCT,
-        "implied_difference_clears_bar": bool(implied >= CLAIM_TRACKING_BAR_PCT),
-        "whole_sweep_span_clears_bar": bool(
+        "local_linearized_difference_clears_bar": bool(
+            implied >= CLAIM_TRACKING_BAR_PCT
+        ),
+        "swept_span_clears_bar": bool(
             curve["reduction_span_pct"] >= CLAIM_TRACKING_BAR_PCT
         ),
     }
@@ -747,10 +796,10 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
     """
 
     spec = summary["screen_spec"]
-    uncertainty = summary["holdout_severity_uncertainty"]
+    uncertainty = summary["severity_uncertainty_diagnostics"]
     paired = summary["paired_boundary_result"]
     curve = summary["multiplier_sensitivity"]
-    bound = summary["severity_difference_bound"]
+    envelope = summary["severity_difference_envelope"]
 
     lines: list[str] = []
     lines.append("# What a severity difference is worth at the action's cap boundary")
@@ -758,7 +807,8 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
     lines.append(
         "Development-sized screen. Measures the paired S-minus-C1 tracking difference at "
         "the one actuator setting that is both severity-sensitive and above the Claim "
-        "Sheet bar, and bounds what any severity read-out difference could be worth there."
+        "Sheet bar, then places the recorded linear read-outs inside a wider measured "
+        "multiplier envelope."
     )
     lines.append("")
     lines.append(
@@ -771,39 +821,53 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
     lines.append(f"- Config hash `{spec['config_hash']}` (not frozen)")
     lines.append("")
 
-    lines.append("## Part 1 — held-out severity uncertainty")
+    lines.append("## Part 1 — severity-uncertainty diagnostics")
     lines.append("")
     lines.append(
         "The recovery controller's confidence gate rejects a diagnosis whose severity "
         f"uncertainty exceeds {spec['recovery_config']['maximum_severity_uncertainty']:g}. "
         "The severity head reports an *in-sample* residual dispersion, which is not that "
-        "number. Refitting the head once per held-out sensor seed on Step 15's recorded "
-        "feature rows gives the out-of-sample dispersion the gate should see."
+        "number. A fixed-penalty leave-one-seed-out estimate on the tuning role supplies "
+        "a calibration-only value the gate can receive without using assessment rows. "
+        "The disjoint assessment residuals are reported separately as the honest check "
+        "on how that internal estimate transferred."
     )
     lines.append("")
     lines.append(
-        "| suite | in-sample residual std | held-out residual std | ratio | held-out bias | opens the gate |"
+        "| suite | in-sample std | calibration cross-seed std | disjoint assessment std | "
+        "calibration / in-sample | assessment / in-sample | opens the gate |"
     )
-    lines.append("|---|---:|---:|---:|---:|:--:|")
+    lines.append("|---|---:|---:|---:|---:|---:|:--:|")
     for suite in sorted(uncertainty):
         record = uncertainty[suite]
         lines.append(
             f"| {suite} | {record['in_sample_residual_std']:.6f} | "
-            f"{record['holdout_residual_std']:.6f} | "
-            f"{record['understatement_ratio']:.2f}x | "
-            f"{record['holdout_residual_mean']:+.6f} | "
+            f"{record['calibration_cross_seed_residual_std']:.6f} | "
+            f"{record['assessment_residual_std']:.6f} | "
+            f"{record['calibration_understatement_ratio']:.2f}x | "
+            f"{record['assessment_understatement_ratio']:.2f}x | "
             f"{'yes' if record['opens_confidence_gate'] else 'no'} |"
         )
     lines.append("")
-    worst = max(uncertainty, key=lambda s: uncertainty[s]["understatement_ratio"])
+    worst = max(
+        uncertainty, key=lambda s: uncertainty[s]["assessment_understatement_ratio"]
+    )
     lines.append(
-        f"- **The in-sample number understates the true dispersion, and it understates it "
-        f"unevenly across suites** — {worst} by "
-        f"{uncertainty[worst]['understatement_ratio']:.2f}x. Ranking the suites by the "
-        "in-sample figure inverts the ranking the held-out figure gives, so wiring the "
-        "training residual to the confidence gate would have reported the *less* reliable "
-        "read-out as the more certain one. Both suites clear the gate comfortably, so the "
-        "action below fires identically for either."
+        f"- **The in-sample number understates both out-of-seed diagnostics, and it "
+        f"understates the disjoint assessment dispersion unevenly across suites** — "
+        f"{worst} by {uncertainty[worst]['assessment_understatement_ratio']:.2f}x. The "
+        "absolute suite ranking is not stable across the two diagnostics: the internal "
+        "calibration cross-seed estimate is larger for S, while the disjoint assessment "
+        "standard deviation is slightly smaller for S (Step 15's MAE remains larger for "
+        "S because its bias is larger). The safe conclusion is that training dispersion "
+        "must not reach the confidence gate. Both calibration-only values clear the gate "
+        "comfortably, so the action below fires for either."
+    )
+    lines.append(
+        "- The calibration cross-seed values hold Step 15's selected penalties fixed. "
+        "Because those penalties were selected using the same tuning groups, these are "
+        "development calibration estimates, not nested post-selection uncertainties or "
+        "frozen confidence margins."
     )
     lines.append("")
 
@@ -861,20 +925,21 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
         f"{100.0 * realized / analytic_ceiling:.1f}% of the ceiling, in the same "
         "direction on every seed. The gap is the part of the error the fault has already "
         "produced before the single held decision fires, which no multiplier recovers. "
-        "The `deficit -> reduction` conversion the deficit screen's gate uses is therefore "
-        "an upper bound rather than an achievable value, and a gate calibrated on it is "
-        "optimistic by about that margin."
+        "For this boundary condition, the `deficit -> reduction` conversion is therefore "
+        "an upper bound rather than the achieved value. Whether the same shortfall applies "
+        "at the 0.25 condition selected by the deficit screen is not measured here."
     )
     lines.append("")
 
-    lines.append("## Part 3 — the bound")
+    lines.append("## Part 3 — the measured conversion envelope")
     lines.append("")
     lines.append(
         "Every severity result in this packet is stated in multiplier units and the "
         "contract is stated in tracking units. This sweep is the conversion factor. It "
-        "spans commanded multipliers far outside any plausible read-out error, so the "
-        "spread of tracking reduction across it bounds what *any* severity difference can "
-        "be worth at this boundary."
+        "spans commanded multipliers far outside the errors of the recorded linear "
+        "read-outs. The resulting tracking span is an empirical envelope for those "
+        "read-outs on this condition, not a universal bound on an arbitrary future "
+        "read-out that could command below 1.50."
     )
     lines.append("")
     lines.append("| commanded multiplier | mean applied | mean reduction vs no-action | min | max |")
@@ -896,33 +961,36 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
     lines.append(
         f"- **Across the entire swept range "
         f"{curve['multiplier_span'][0]:.2f}-{curve['multiplier_span'][1]:.2f} the reduction "
-        f"moves by only {bound['whole_sweep_reduction_span_pct']:.4f} percentage points**, "
-        f"against a {bound['claim_bar_pct']:.0f}% bar. The local slope at the cap is "
+        f"moves by only {envelope['swept_reduction_span_pct']:.4f} percentage points**, "
+        f"against a {envelope['claim_bar_pct']:.0f}% bar. The local slope at the cap is "
         f"{curve['local_slope_pct_per_unit_multiplier_at_cap']:+.4f} percentage points per "
         "unit of multiplier."
     )
     lines.append(
         f"- The two suites' recorded estimates differ by at most "
-        f"{bound['observed_multiplier_spread']:.4f} in multiplier, which that slope converts "
-        f"to **{bound['implied_reduction_difference_pct']:.4f} percentage points** of "
-        f"tracking — "
-        f"{'above' if bound['implied_difference_clears_bar'] else 'far below'} the bar."
+        f"{envelope['observed_multiplier_spread']:.4f} in multiplier. A local linearization "
+        f"at the cap converts that spread to "
+        f"**{envelope['local_linearized_difference_pct']:.4f} percentage points** of "
+        f"tracking, consistent with the directly measured "
+        f"{paired['max_abs_paired_reduction_pct']:.4f}-point maximum and "
+        f"{'above' if envelope['local_linearized_difference_clears_bar'] else 'far below'} "
+        "the bar. The direct paired rollouts, not the linearization, are authoritative."
     )
     lowest = curve["points"][0]
     implied_severity = 1.0 / lowest["commanded_multiplier"]
     severity_error = implied_severity - spec["boundary_severity"]
     worst_std = max(
-        record["holdout_residual_std"] for record in uncertainty.values()
+        record["calibration_cross_seed_residual_std"] for record in uncertainty.values()
     )
     lines.append(
         f"- **How wrong a read-out would have to be to matter here.** The sweep's lowest "
         f"point commands {lowest['commanded_multiplier']:.2f}, which is what a severity "
         f"estimate of {implied_severity:.4f} produces — an error of {severity_error:+.4f} "
         f"on a true {spec['boundary_severity']:g}, about "
-        f"{abs(severity_error) / worst_std:.0f}x the larger suite's held-out residual "
-        f"standard deviation. That estimate still recovers "
+        f"{abs(severity_error) / worst_std:.0f}x the larger suite's calibration "
+        f"cross-seed residual standard deviation. That estimate still recovers "
         f"{lowest['mean_reduction_vs_no_action_pct']:.2f}%. Producing a "
-        f"{bound['claim_bar_pct']:.0f}-point paired difference would require one suite to "
+        f"{envelope['claim_bar_pct']:.0f}-point paired difference would require one suite to "
         "command essentially no action at all, which is a class-call difference rather "
         "than a severity-precision one — and both suites already call this class "
         "correctly."
@@ -932,10 +1000,12 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
     lines.append("## What this screen does and does not establish")
     lines.append("")
     lines.append(
-        "- **It closes the severity route on the actuator class at the recorded cap, on "
-        "this condition.** Step 15 left the boundary open because the suites command "
-        "differently there. They do; the difference is worth a fraction of a percentage "
-        "point of tracking, and the bound holds for any read-out, not just this one."
+        "- **It closes the recorded linear-read-out severity route on the actuator class "
+        "at the recorded cap, on this condition.** Step 15 left the boundary open because "
+        "the suites command differently there. They do; the direct paired difference is "
+        "a fraction of a percentage point, and the wider 1.50–2.00 sweep stays below the "
+        "bar. It does not close an arbitrary future read-out whose errors leave that "
+        "multiplier envelope."
     )
     lines.append(
         "- **It does not close the actuator class.** Action-versus-no-action benefit, "
@@ -1050,6 +1120,33 @@ def build_audit(
     }
 
 
+def require_passing_audit(audit: dict[str, Any]) -> None:
+    """Fail loudly unless every integrity condition required by the report holds.
+
+    Args:
+        audit: The output of `build_audit`.
+
+    Raises:
+        RuntimeError: If any required CRN, lifecycle, action, safety, saturation, or
+            multiplier check is false.
+    """
+
+    required = (
+        "no_action_matches_recorded",
+        "single_evaluation",
+        "no_action_changed_zero_commands",
+        "action_arms_acted",
+        "zero_a1_incidents",
+        "zero_saturation",
+        "applied_multipliers_match_command",
+    )
+    failed = [name for name in required if not bool(audit.get(name, False))]
+    if failed:
+        raise RuntimeError(
+            "severity-action-boundary audit failed: " + ", ".join(failed)
+        )
+
+
 def load_recorded_no_action_j5s(path: Path, severity: float) -> dict[int, float]:
     """Read Step 15's committed assessment `J_5s` at one severity, keyed by seed.
 
@@ -1096,7 +1193,7 @@ def main() -> int:
         "--severity-features",
         type=Path,
         default=Path("results/severity_estimation_quality/window_features.csv"),
-        help="Recorded window features used for the held-out uncertainty.",
+        help="Recorded tuning-window features used for cross-seed calibration uncertainty.",
     )
     parser.add_argument(
         "--severity-arm-rows",
@@ -1121,33 +1218,44 @@ def main() -> int:
         raise SystemExit("--workers must be at least 1")
 
     base = RecoveryControlConfig()
-    print("Part 1 — held-out severity uncertainty from the recorded features", flush=True)
+    print("Part 1 — severity-uncertainty diagnostics from recorded features", flush=True)
     recorded_summary = json.loads(args.severity_summary.read_text(encoding="utf-8"))
     features = load_recorded_features(args.severity_features)
     uncertainty: dict[str, dict[str, Any]] = {}
     for suite, bundle in sorted(features.items()):
         evaluation = recorded_summary["suite_evaluations"][suite]
-        record = holdout_severity_uncertainty(
+        record = cross_seed_calibration_uncertainty(
             bundle, regularization=float(evaluation["selected_regularization"])
         )
+        record.update(disjoint_assessment_residual_diagnostics(evaluation))
         in_sample = float(evaluation["train_residual_std"])
         record["in_sample_residual_std"] = in_sample
-        record["understatement_ratio"] = float(record["holdout_residual_std"] / in_sample)
+        record["calibration_understatement_ratio"] = float(
+            record["calibration_cross_seed_residual_std"] / in_sample
+        )
+        record["assessment_understatement_ratio"] = float(
+            record["assessment_residual_std"] / in_sample
+        )
         record["opens_confidence_gate"] = bool(
-            record["holdout_residual_std"] <= base.maximum_severity_uncertainty
+            record["calibration_cross_seed_residual_std"]
+            <= base.maximum_severity_uncertainty
         )
         uncertainty[suite] = record
         print(
-            f"  {suite}: in-sample {in_sample:.6f} -> held-out "
-            f"{record['holdout_residual_std']:.6f} "
-            f"({record['understatement_ratio']:.2f}x)",
+            f"  {suite}: in-sample {in_sample:.6f} -> calibration cross-seed "
+            f"{record['calibration_cross_seed_residual_std']:.6f} "
+            f"({record['calibration_understatement_ratio']:.2f}x calibration; "
+            f"{record['assessment_residual_std']:.6f} disjoint assessment)",
             flush=True,
         )
 
     estimates = load_boundary_estimates(args.severity_summary, BOUNDARY_SEVERITY)
     specs = build_arm_specs(
         estimates,
-        {suite: record["holdout_residual_std"] for suite, record in uncertainty.items()},
+        {
+            suite: record["calibration_cross_seed_residual_std"]
+            for suite, record in uncertainty.items()
+        },
     )
     print(f"Part 2 — {len(specs)} boundary arms on {args.workers} workers", flush=True)
     rows: list[dict[str, Any]] = []
@@ -1171,12 +1279,7 @@ def main() -> int:
         cap=base.maximum_gain_compensation,
         floor=base.minimum_gain_remaining,
     )
-    if not audit["no_action_matches_recorded"]:
-        raise SystemExit(
-            "no-action arms do not reproduce the recorded Step-15 tracking integrals "
-            f"(max difference {audit['max_abs_j5s_difference_vs_recorded']:.3e}); the "
-            "common-random-number reuse this screen depends on is broken"
-        )
+    require_passing_audit(audit)
 
     print("Part 3 — analysis", flush=True)
     paired = paired_boundary_result(rows)
@@ -1185,7 +1288,7 @@ def main() -> int:
         abs(row["applied_multiplier_s"] - row["applied_multiplier_c1"])
         for row in paired["per_seed"]
     )
-    bound = bound_from_slope(curve, spread)
+    envelope = severity_difference_envelope(curve, spread)
 
     summary = {
         "screen_spec": {
@@ -1203,10 +1306,10 @@ def main() -> int:
             "recorded_severity_screen": str(args.severity_summary).replace("\\", "/"),
         },
         "n_arms": len(rows),
-        "holdout_severity_uncertainty": uncertainty,
+        "severity_uncertainty_diagnostics": uncertainty,
         "paired_boundary_result": paired,
         "multiplier_sensitivity": curve,
-        "severity_difference_bound": bound,
+        "severity_difference_envelope": envelope,
         "audit": audit,
     }
 
@@ -1221,7 +1324,7 @@ def main() -> int:
     print(
         f"Mean paired S-minus-C1 reduction "
         f"{paired['mean_paired_reduction_pct']:+.4f}%; whole-sweep reduction span "
-        f"{bound['whole_sweep_reduction_span_pct']:.4f} pp against a "
+        f"{envelope['swept_reduction_span_pct']:.4f} pp against a "
         f"{CLAIM_TRACKING_BAR_PCT:.0f}% bar",
         flush=True,
     )

@@ -1,4 +1,4 @@
-"""Tests for the cap-boundary action screen and the held-out severity uncertainty."""
+"""Tests for the cap-boundary action screen and severity-uncertainty diagnostics."""
 
 from __future__ import annotations
 
@@ -15,12 +15,14 @@ from screen_severity_action_boundary import (  # noqa: E402
     BOUNDARY_SEVERITY,
     CRN_REUSE_TOLERANCE,
     FixedDiagnosisEstimator,
-    bound_from_slope,
     build_arm_specs,
     build_audit,
-    holdout_severity_uncertainty,
+    cross_seed_calibration_uncertainty,
+    disjoint_assessment_residual_diagnostics,
     multiplier_sensitivity_curve,
     paired_boundary_result,
+    require_passing_audit,
+    severity_difference_envelope,
 )
 from utils.estimator import (  # noqa: E402
     SOURCE_CLASS_ORDER,
@@ -31,7 +33,7 @@ from utils.recovery_control import RecoveryControlConfig  # noqa: E402
 
 
 # --------------------------------------------------------------------------- #
-# Held-out uncertainty — the number the controller's confidence gate should see.
+# Cross-seed calibration uncertainty plus the disjoint assessment check.
 # --------------------------------------------------------------------------- #
 def _grouped_linear_problem(
     n_groups: int = 6, per_group: int = 8, width: int = 5, noise: float = 0.02
@@ -76,7 +78,7 @@ def test_leave_one_group_out_returns_one_residual_per_row_in_input_order() -> No
         assert residuals[held] == pytest.approx(head.predict(features[held]) - targets[held])
 
 
-def test_holdout_dispersion_exceeds_the_in_sample_dispersion() -> None:
+def test_cross_seed_dispersion_exceeds_the_in_sample_dispersion() -> None:
     """The in-sample residual std understates the error on unseen groups.
 
     This is the whole reason the screen computes a held-out number: the recovery
@@ -92,12 +94,12 @@ def test_holdout_dispersion_exceeds_the_in_sample_dispersion() -> None:
     assert residuals.std(ddof=1) > head.train_residual_std
 
 
-def test_holdout_uncertainty_reads_a_recorded_feature_bundle() -> None:
+def test_cross_seed_uncertainty_reads_a_recorded_feature_bundle() -> None:
     """The screen-level wrapper consumes the recorded bundle shape and reports folds."""
 
     features, targets, groups = _grouped_linear_problem()
     roles = np.asarray(["tuning"] * targets.size, dtype=object)
-    record = holdout_severity_uncertainty(
+    record = cross_seed_calibration_uncertainty(
         {
             "features": features,
             "severities": targets,
@@ -106,10 +108,31 @@ def test_holdout_uncertainty_reads_a_recorded_feature_bundle() -> None:
         },
         regularization=1.0,
     )
-    assert record["n_folds"] == np.unique(groups).size
-    assert record["n_residuals"] == targets.size
-    assert record["holdout_residual_std"] > 0.0
-    assert record["holdout_residual_mean_abs"] > 0.0
+    assert record["n_calibration_folds"] == np.unique(groups).size
+    assert record["n_calibration_residuals"] == targets.size
+    assert record["calibration_cross_seed_residual_std"] > 0.0
+    assert record["calibration_cross_seed_residual_mean_abs"] > 0.0
+
+
+def test_disjoint_assessment_diagnostics_use_the_recorded_predictions() -> None:
+    """The actual assessment role is reported separately from tuning cross-validation."""
+
+    record = disjoint_assessment_residual_diagnostics(
+        {
+            "predictions": [
+                {"estimate": 0.48, "severity": 0.50},
+                {"estimate": 0.55, "severity": 0.50},
+                {"estimate": 0.67, "severity": 0.70},
+            ]
+        }
+    )
+    residuals = np.asarray([-0.02, 0.05, -0.03])
+    assert record["assessment_residual_std"] == pytest.approx(residuals.std(ddof=1))
+    assert record["assessment_residual_mean"] == pytest.approx(residuals.mean())
+    assert record["assessment_residual_mean_abs"] == pytest.approx(
+        np.mean(np.abs(residuals))
+    )
+    assert record["n_assessment_residuals"] == 3
 
 
 def test_leave_one_group_out_fails_loudly_on_bad_input() -> None:
@@ -208,7 +231,7 @@ def test_arm_specs_cover_every_reference_and_sweep_point_per_seed() -> None:
     assert oracle.commanded_severity == pytest.approx(BOUNDARY_SEVERITY)
 
 
-def test_arm_specs_carry_each_suites_own_holdout_uncertainty() -> None:
+def test_arm_specs_carry_each_suites_own_calibration_uncertainty() -> None:
     """The uncertainty reported to the gate is the suite's, not a shared constant."""
 
     specs = build_arm_specs(_estimates(), {"C1": 0.007, "S": 0.011}, multipliers=(1.9,))
@@ -220,13 +243,13 @@ def test_arm_specs_carry_each_suites_own_holdout_uncertainty() -> None:
     assert s.commanded_severity == pytest.approx(0.512)
 
 
-def test_arm_specs_reject_a_multiplier_the_gain_floor_would_reclip() -> None:
-    """A swept multiplier above `1 / minimum_gain_remaining` is not the one commanded."""
+def test_arm_specs_reject_the_separate_cap_point_and_out_of_range_multiplier() -> None:
+    """The oracle owns the cap point; every explicitly swept point must be below it."""
 
-    floor = RecoveryControlConfig().minimum_gain_remaining
+    cap = RecoveryControlConfig().maximum_gain_compensation
     with pytest.raises(ValueError, match="outside"):
         build_arm_specs(
-            _estimates(), {"C1": 0.007, "S": 0.011}, multipliers=(1.0 / floor + 0.5,)
+            _estimates(), {"C1": 0.007, "S": 0.011}, multipliers=(cap,)
         )
     with pytest.raises(ValueError, match="outside"):
         build_arm_specs(_estimates(), {"C1": 0.007, "S": 0.011}, multipliers=(1.0,))
@@ -375,24 +398,24 @@ def test_sensitivity_curve_includes_the_cap_arm_and_reports_its_span() -> None:
     )
 
 
-def test_bound_converts_a_multiplier_spread_into_a_tracking_difference() -> None:
-    """The slope is the missing conversion from multiplier units to contract units."""
+def test_envelope_converts_the_spread_without_calling_linearization_a_bound() -> None:
+    """The local slope and whole-sweep span remain explicitly different diagnostics."""
 
     curve = {
         "local_slope_pct_per_unit_multiplier_at_cap": 10.0,
         "reduction_span_pct": 4.0,
     }
-    bound = bound_from_slope(curve, 0.07)
-    assert bound["implied_reduction_difference_pct"] == pytest.approx(0.7)
-    assert not bound["implied_difference_clears_bar"]
-    assert not bound["whole_sweep_span_clears_bar"]
-    big = bound_from_slope(
+    envelope = severity_difference_envelope(curve, 0.07)
+    assert envelope["local_linearized_difference_pct"] == pytest.approx(0.7)
+    assert not envelope["local_linearized_difference_clears_bar"]
+    assert not envelope["swept_span_clears_bar"]
+    big = severity_difference_envelope(
         {"local_slope_pct_per_unit_multiplier_at_cap": -200.0, "reduction_span_pct": 40.0},
         0.07,
     )
-    assert big["implied_reduction_difference_pct"] == pytest.approx(14.0)
-    assert big["implied_difference_clears_bar"]
-    assert big["whole_sweep_span_clears_bar"]
+    assert big["local_linearized_difference_pct"] == pytest.approx(14.0)
+    assert big["local_linearized_difference_clears_bar"]
+    assert big["swept_span_clears_bar"]
 
 
 # --------------------------------------------------------------------------- #
@@ -491,3 +514,35 @@ def test_audit_fails_loudly_when_nothing_was_checked() -> None:
                   "deployable_C1": 0.90, "deployable_S": 0.91})
     with pytest.raises(ValueError, match="nothing was checked"):
         build_audit(rows, {"absent_label": {}}, cap=2.0, floor=0.25)
+
+
+@pytest.mark.parametrize(
+    "failed_field",
+    [
+        "no_action_matches_recorded",
+        "single_evaluation",
+        "no_action_changed_zero_commands",
+        "action_arms_acted",
+        "zero_a1_incidents",
+        "zero_saturation",
+        "applied_multipliers_match_command",
+    ],
+)
+def test_every_report_integrity_condition_is_a_fail_loud_gate(
+    failed_field: str,
+) -> None:
+    """A false audit field cannot survive into a generated positive narrative."""
+
+    audit = {
+        "no_action_matches_recorded": True,
+        "single_evaluation": True,
+        "no_action_changed_zero_commands": True,
+        "action_arms_acted": True,
+        "zero_a1_incidents": True,
+        "zero_saturation": True,
+        "applied_multipliers_match_command": True,
+    }
+    require_passing_audit(audit)
+    audit[failed_field] = False
+    with pytest.raises(RuntimeError, match=failed_field):
+        require_passing_audit(audit)
