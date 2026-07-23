@@ -1,0 +1,215 @@
+{
+  "artifact_status": "development_only_config_unfrozen",
+  "audit": {
+    "acting_arms_acted": true,
+    "applied_multipliers_match_probability": true,
+    "max_abs_j5s_difference_vs_recorded": 0.0,
+    "max_abs_multiplier_identity_error": 2.220446049250313e-16,
+    "n_recorded_comparisons": 8,
+    "no_action_matches_recorded": true,
+    "single_evaluation": true,
+    "withheld_arms_changed_zero_commands": true,
+    "zero_a1_incidents": true,
+    "zero_saturation": true
+  },
+  "gate_discontinuity": {
+    "claim_bar_pct": 10.0,
+    "gate_entry_jump_pct": 6.110652579706812,
+    "graded_span_above_gate_pct": 4.709713154484206,
+    "graded_span_clears_bar": false,
+    "sub_threshold_reduction_pct": 0.0,
+    "total_channel_span_including_gate_pct": 10.820365734191018,
+    "total_span_clears_bar": true
+  },
+  "n_arms": 36,
+  "paired_channel_extremes": {
+    "claim_bar_pct": 10.0,
+    "gate_crossing_clears_bar": true,
+    "graded_clears_bar": false,
+    "max_gate_crossing_paired_pct": 10.850876075944152,
+    "max_graded_paired_pct": 5.069863625610144,
+    "mean_gate_crossing_paired_pct": 10.820365734191018,
+    "mean_graded_paired_pct": 5.016211858412183,
+    "per_seed": [
+      {
+        "gate_crossing_paired_pct": 10.850876075944152,
+        "graded_paired_pct": 5.0025931575809075,
+        "seed": 16100
+      },
+      {
+        "gate_crossing_paired_pct": 10.78894296110828,
+        "graded_paired_pct": 5.069863625610144,
+        "seed": 16101
+      },
+      {
+        "gate_crossing_paired_pct": 10.79259500817749,
+        "graded_paired_pct": 5.0273877639401405,
+        "seed": 16102
+      },
+      {
+        "gate_crossing_paired_pct": 10.849048891534153,
+        "graded_paired_pct": 4.965002886517541,
+        "seed": 16103
+      }
+    ]
+  },
+  "probability_response": {
+    "claim_bar_pct": 10.0,
+    "local_slope_pct_per_unit_probability": 8.168358089343501,
+    "points": [
+      {
+        "max_reduction_vs_no_action_pct": 6.191451763806969,
+        "mean_applied_multiplier": 1.5000000000000002,
+        "mean_reduction_vs_no_action_pct": 6.110652579706812,
+        "min_reduction_vs_no_action_pct": 6.0245139783039665,
+        "probability": 0.5
+      },
+      {
+        "max_reduction_vs_no_action_pct": 7.23776823318945,
+        "mean_applied_multiplier": 1.6000000000000003,
+        "mean_reduction_vs_no_action_pct": 7.171213830814431,
+        "min_reduction_vs_no_action_pct": 7.132917334895389,
+        "probability": 0.6
+      },
+      {
+        "max_reduction_vs_no_action_pct": 8.23407943256728,
+        "mean_applied_multiplier": 1.7000000000000002,
+        "mean_reduction_vs_no_action_pct": 8.166517673616799,
+        "min_reduction_vs_no_action_pct": 8.128154011411208,
+        "probability": 0.7
+      },
+      {
+        "max_reduction_vs_no_action_pct": 9.246319326498678,
+        "mean_applied_multiplier": 1.8000000000000003,
+        "mean_reduction_vs_no_action_pct": 9.141414469204255,
+        "min_reduction_vs_no_action_pct": 9.080842396283337,
+        "probability": 0.8
+      },
+      {
+        "max_reduction_vs_no_action_pct": 10.074709427447809,
+        "mean_applied_multiplier": 1.9000000000000001,
+        "mean_reduction_vs_no_action_pct": 10.003529925256668,
+        "min_reduction_vs_no_action_pct": 9.962875098276093,
+        "probability": 0.9
+      },
+      {
+        "max_reduction_vs_no_action_pct": 10.850876075944152,
+        "mean_applied_multiplier": 2.0,
+        "mean_reduction_vs_no_action_pct": 10.820365734191018,
+        "min_reduction_vs_no_action_pct": 10.78894296110828,
+        "probability": 1.0
+      }
+    ],
+    "probability_span": [
+      0.5,
+      1.0
+    ],
+    "reachable_reduction_span_pct": 4.709713154484206,
+    "reachable_span_clears_bar": false,
+    "reduction_at_certainty_pct": 10.820365734191018,
+    "reduction_at_gate_pct": 6.110652579706812
+  },
+  "reachable_set": {
+    "cap_binds": true,
+    "cap_shortfall_factor": 2.0,
+    "capped_compensation": 2.0,
+    "exact_restoration_multiplier": 4.0,
+    "ideal_compensation": 4.0,
+    "probability_threshold": 0.5,
+    "reachable_multiplier_high": 2.0,
+    "reachable_multiplier_low": 1.5,
+    "severity_flat_at_or_below": 0.5
+  },
+  "restoration_realization": {
+    "mean_analytic_ceiling_pct": 18.80538257241189,
+    "mean_no_action_deficit_pct": 23.160934388653637,
+    "mean_realization_fraction": 0.5753866315947673,
+    "mean_realized_reduction_pct": 10.820365734191018,
+    "per_seed": [
+      {
+        "analytic_exact_restoration_ceiling_pct": 18.786930265133154,
+        "no_action_deficit_pct": 23.132890218860236,
+        "realization_fraction": 0.577575789275292,
+        "realized_reduction_at_certainty_pct": 10.850876075944152,
+        "seed": 16100
+      },
+      {
+        "analytic_exact_restoration_ceiling_pct": 18.71993219499826,
+        "no_action_deficit_pct": 23.031393428348363,
+        "realization_fraction": 0.5763345106554902,
+        "realized_reduction_at_certainty_pct": 10.78894296110828,
+        "seed": 16101
+      },
+      {
+        "analytic_exact_restoration_ceiling_pct": 18.860218842878414,
+        "no_action_deficit_pct": 23.24410859126783,
+        "realization_fraction": 0.5722412395152432,
+        "realized_reduction_at_certainty_pct": 10.79259500817749,
+        "seed": 16102
+      },
+      {
+        "analytic_exact_restoration_ceiling_pct": 18.85444898663774,
+        "no_action_deficit_pct": 23.23534531613812,
+        "realization_fraction": 0.5754105516010009,
+        "realized_reduction_at_certainty_pct": 10.849048891534153,
+        "seed": 16103
+      }
+    ],
+    "same_direction_on_every_seed": true
+  },
+  "screen_spec": {
+    "config_hash": "dev-actuator-probability-channel-screen",
+    "fault_location": 1,
+    "gate_probe_probability": 0.49,
+    "gate_severity_uncertainty": 0.010183117225236724,
+    "plane_z_m": 0.2,
+    "probability_sweep": [
+      0.6,
+      0.7,
+      0.8,
+      0.9
+    ],
+    "purpose": "reachable-set span of the class-probability channel at the deficit screen's selected actuator condition",
+    "recorded_deficit_screen": "results/fault_tracking_deficit_screen/summary.json",
+    "recorded_severity_screen": "results/severity_estimation_quality/summary.json",
+    "recovery_config": {
+      "maximum_gain_compensation": 2.0,
+      "maximum_severity_uncertainty": 0.25,
+      "minimum_gain_remaining": 0.25,
+      "source_probability_threshold": 0.5,
+      "torque_abs_limit": [
+        1.0,
+        0.5
+      ]
+    },
+    "seeds": [
+      16100,
+      16101,
+      16102,
+      16103
+    ],
+    "selected_severity": 0.25
+  },
+  "severity_channel": {
+    "estimate_error_scale": 0.010183117225236724,
+    "flat_region_upper_severity": 0.5,
+    "margin_in_error_scales": 24.55043917008314,
+    "margin_to_flat_region_boundary": 0.25,
+    "severity_channel_flat": true,
+    "true_severity": 0.25
+  },
+  "severity_uncertainty_scales": {
+    "C1": {
+      "assessment_residual_bias": 0.002335924626872274,
+      "assessment_residual_rms": 0.008584677993439312,
+      "assessment_residual_std": 0.0083929403445369,
+      "n_assessment_residuals": 32
+    },
+    "S": {
+      "assessment_residual_bias": 0.006422196501223457,
+      "assessment_residual_rms": 0.010183117225236724,
+      "assessment_residual_std": 0.008029061313235922,
+      "n_assessment_residuals": 32
+    }
+  }
+}
