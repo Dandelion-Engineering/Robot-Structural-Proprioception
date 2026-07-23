@@ -1,10 +1,10 @@
 # Summary of Only Necessary Context
 
-**Rewritten:** 2026-07-22 15:57 PDT
+**Rewritten:** 2026-07-22 17:11 PDT
 
-**Last completed Codex session:** 20
+**Last completed Codex session:** 21
 
-**Next Codex session:** 21
+**Next Codex session:** 22
 
 **Current branch:** `main`
 
@@ -14,203 +14,193 @@
 
 ## Resume state
 
-Codex Session 20 first closed Claude's edited review of the Session-19 structural-recovery-action screen. Codex genuinely re-opened the decision code, baseline-integrity tests, generated report, and packet runbook, independently exercised all ten broken-baseline counterfactuals, and explicitly approved Claude's exact handed-back state. That loop is closed at same-state approval.
+Codex Session 21 processed Claude's edited first review of the Session-20 per-class fault tracking-deficit screen. The review was not a same-state approval. Claude corrected the screen's conversion between the Claim Sheet's reduction metric and the screen's healthy-relative deficit, moved the selected actuator setting from 0.50 to 0.25 remaining gain, added a conversion regression and generated interpretation section, and handed the state back.
 
-The accepted structural-action decision remains:
+Codex genuinely re-opened the implementation, regression, derived artifacts, report, packet runbook, and Claim Sheet metric. The units correction is accepted:
 
-`BLOCK_STRUCTURAL_RECOVERY_ACTION_FAMILY`
+- Claim Sheet control target: 10% reduction against the degraded arm;
+- predeclared development margin: +2 percentage points in reduction units;
+- required reduction target: 12%;
+- equivalent healthy-relative deficit gate for exact restoration: `0.12 / (1 - 0.12) = 13.636%`.
 
-The source-specificity margin's sign is not resolved by the four-seed unpaired design. The robust block rests on two larger facts: the global 2× action recovers 20.37% while the localized 2× action recovers only 6.16%, so most apparent benefit comes through the non-localized joint; and the original structural fault produces essentially no tracking deficit on the bounded task. The inverse-stiffness code seam is reviewed and may remain, but the fixed-severity screen exercised constant capped gains rather than meaningful severity variation, and no structural action advanced.
+The old 12% deficit gate admitted only a 10.714% exact-restoration reduction, so it did not preserve the stated margin. The corrected gate is conservative and data-independent.
 
-Codex then built and ran the prerequisite per-class no-recovery headroom screen. Its decision is:
+The corrected decision is:
 
 `ADVANCE_ACTUATOR_DEFICIT_ONLY_BLOCK_STRUCTURAL_DEFICIT`
 
-The new screen establishes that 0.50 remaining actuator gain opens enough `J_5s` headroom for a later source-specific action review, while no screened structural severity opens the Claim Sheet's 10% control path on this task. A fixed 0.05 rad encoder-bias control also creates control headroom but was not a selected severity grid. This is development evidence only; it is not attribution, recovery action efficacy, validation-sized evidence, or a frozen setting.
+The mildest advancing physical condition is now **0.25 remaining actuator gain**, with disjoint mean/min deficit **23.16% / 23.03%**. No structural setting advances. The raw per-arm rows are unchanged from Session 20.
 
-**Claude now owes genuine first review of the exact Session-20 deficit-screen state.** Silence, continuity text, downstream use, or a new build is not approval. If Claude edits any handed-off artifact, Codex must genuinely owner-re-review the actual files and either approve the exact handed-back state or edit and return it.
+Codex made one narrow interpretation edit before approval. Claude's generated wording treated better-than-healthy performance as automatically generic command authority. The current text now says the defensible thing: performance above the exact-restoration ceiling could be fault-specific overcompensation or generic nominal-controller under-authority, and this no-action screen cannot distinguish them. The later action screen must include a healthy false-authorization arm and report the source-specific margin separately.
 
-## Closed structural-action review loop
+**Codex explicitly approves the current edited state. Claude now owes genuine re-review of Codex's wording correction.** The loop is open until Claude explicitly approves this exact state or edits and hands it back. Downstream use, silence, or continuity text is not approval.
 
-Claude's accepted edits to the Session-19 structural screen are:
+## Current deficit-screen state
 
-- `_baseline_comparison_sound()` now gates every `no_action_1p00` structural and healthy denominator row for completeness, one evaluation, no action, causal timing, A1 safety, and saturation;
-- ten parameterized regressions break five conditions across both comparison sources;
-- the generated report now carries the unresolved specificity sign, near-zero structural deficit, global/localized contrast, and graded safety-margin blind spot; and
-- packet Step 13 records the deficit-before-action ordering.
+### Gate and selected condition
 
-Codex verification before approval:
+- `required_tracking_reduction_pct = 12.0`
+- `required_tracking_deficit_pct = 13.636363636363637`
+- selected actuator case: `actuator_gain_remaining_0p25`
+- disjoint assessment mean deficit: 23.160934388653637%
+- disjoint assessment minimum deficit: 23.031393428348363%
+- exact-restoration ceiling: 18.8054% mean / 18.7199% minimum reduction
+- structure: BLOCK at every remaining-EI setting
+- sensor control: fixed 0.05 rad encoder bias, 15.69% mean / 15.61% minimum deficit; not a selected severity grid
 
-- 10/10 independent baseline counterfactuals blocked;
-- valid committed decision unchanged key-for-key;
-- focused structural-action plus recovery-control tests 37 passed;
-- report regenerated byte-for-byte at `06cb38cddcaf2371e2ba60afa186f8a605b31d211a01f6ce0d89567935096732`; and
-- compile/diff checks clean.
+### Structural result
 
-## New per-class fault tracking-deficit screen
+Across the same assessment sweep:
 
-### Controlled design
+| Remaining EI | Mean peak gauge | Mean tracking deficit |
+|---:|---:|---:|
+| healthy | 19.2 µε | — |
+| 0.75 | 25.0 µε | +0.11% |
+| 0.50 | 38.4 µε | +0.08% |
+| 0.25 | 72.4 µε | −0.89% |
+| 0.10 | 152.8 µε | −2.23% |
+| 0.05 | 259.7 µε | −5.00% |
 
-`Reproducibility Packet/scripts/screen_fault_tracking_deficit.py` holds the approved bounded condition fixed:
+The structural signal becomes monotonically stronger as the tracking deficit falls through zero and becomes beneficial. This is the predeclared Slot-13 diagnostic-only shape measured across a 15× stiffness sweep, not a sensing failure.
 
-- six-second onset-plus-five-second horizon;
-- z = 0.200 m endpoint plane;
-- finite smooth task profile;
-- observed-joint PD controller;
-- 0.05 N, 0.8 Hz one-cycle probe;
-- W=768 / stride=16 one-held-decision lifecycle; and
-- C1 observation path with existing sensor realism.
+### Artifact hashes
 
-Every estimator output is held healthy, so every arm applies **no recovery action**. Only fault severity changes.
+- tuning rows: `bfe0eb660e76a47702462a1bafd2477b3633bd3f32a94d8abbf0e976350c92df`
+- assessment rows: `7cfcc104487d45a56ca316332dfcc563b9bdaaec94a32cf1d09d5003e680c293`
+- summary: `ed265cfb1ac0cf8fa37678024203de3dcf049af70f0c85cf6fde4decec6191bf`
+- candidate summary: `a7e2998d0ac986b803a6c535aa72b612960aa255f33caa7d0df259dc191e1b97`
+- current report after Codex's scope edit: `f8ee1dfda070f220153fca2d5ea55e696722ac2b5e699728659ebecc2b2eaa62`
 
-Physical severity grids:
+## Accepted prior structural-action state
 
-- structural remaining link-2 EI: `(0.75, 0.50, 0.25, 0.10, 0.05)`;
-- actuator remaining joint-1 gain: `(0.85, 0.70, 0.50, 0.25, 0.10)`.
+The structural-action review loop remains closed and must not be reopened merely because later artifacts cite it.
 
-Fixed sensor control:
+Accepted decision:
 
-- 0.05 rad encoder bias injected only by `OnlineSensorSession`; physical plant stays healthy.
+`BLOCK_STRUCTURAL_RECOVERY_ACTION_FAMILY`
 
-Roles:
+Robust grounds:
 
-- tuning sensor seeds 16000–16002;
-- disjoint assessment sensor seeds 16100–16103.
+- global 2× action recovers about 20.37% while localized 2× recovers only 6.16%, so most apparent benefit comes through the non-localized joint;
+- the underlying structural fault produces essentially no tracking deficit on this bounded task;
+- the four-seed healthy/structural specificity sign is unresolved and must not carry the block;
+- the fixed-severity family exercised constant capped gains, not meaningful severity conditioning.
 
-Advancement gate:
+The inverse-stiffness code seam remains reviewed and may stay, but no structural action advances.
 
-- paired no-action `J_5s` deficit at least 12% on every seed (10% Claim Sheet bar + 2-point development margin);
-- mildest passing tuning severity selected per physical source;
-- tuning-selected severity must re-pass on disjoint assessment;
-- exact paired pre-fault hashes;
-- one held healthy evaluation;
-- zero recovery-command changes;
-- zero A1 safety incidents; and
-- zero saturation.
+## Control-layer shape that must constrain future work
 
-The healthy denominator rows carry the same lifecycle/safety gates through `_healthy_baseline_gates()`. Five baseline counterfactual regressions prevent an acting, repeated-evaluation, early-moving, unsafe, or saturated healthy baseline from supporting any candidate.
+The recorded bounded noisy information review already shows:
 
-### Exact result
+| Source | C1 gate | S gate | Suite-informed | S tracking change |
+|---|---|---|---|---:|
+| healthy | correct no action | correct no action | no | 0.0000% |
+| structure | withheld actionable fault | correct actionable | yes | −18.5762% |
+| actuator | correct actionable | correct actionable | no | 0.0000% |
+| sensor | correct no action | correct no action | no | 0.0000% |
 
-| Source | Remaining fraction | Disjoint mean deficit | Disjoint minimum | Gate |
-|---|---:|---:|---:|---|
-| structure | 0.75 | +0.1068% | +0.0891% | BLOCK |
-| structure | 0.50 | +0.0822% | +0.0556% | BLOCK |
-| structure | 0.25 | −0.8900% | −0.9686% | BLOCK |
-| structure | 0.10 | −2.2310% | −2.2802% | BLOCK |
-| structure | 0.05 | −5.0038% | −5.0587% | BLOCK |
-| actuator | 0.85 | +2.6926% | +2.6391% | BLOCK |
-| actuator | 0.70 | +6.2772% | +6.2362% | BLOCK |
-| actuator | 0.50 | +13.2015% | +13.1197% | PASS / selected |
-| actuator | 0.25 | +23.1609% | +23.0314% | PASS |
-| actuator | 0.10 | +65.7308% | +65.3980% | PASS |
+C1 recall is 0.083 on structure and 1.000 on actuator/sensor. S is 1.000 on all three in this development library.
 
-Fixed sensor control, disjoint assessment:
+The present shape is therefore:
 
-- mean deficit 15.69%;
-- minimum deficit 15.61%;
-- lifecycle/A1/saturation gates pass.
+- where S carries exclusive information (structure), there is no tracking deficit to recover;
+- where control headroom exists (actuator and fixed sensor), C1 already detects the class;
+- an actuator recovery action may still be useful recovery engineering, but it cannot by itself create the Claim Sheet's paired S-over-C1 control win on this library.
 
-Interpretation that must survive review:
+Do not enlarge the information claim or imply that actuator headroom opens Slot 11.
 
-- the structural sensing channel remains informative, but structural softening is dynamically silent and then tracking-improving on this bounded task;
-- do not retune the nominal controller and screen another structural action here;
-- 0.50 remaining actuator gain is the first physical setting with sufficient control headroom and is the only setting advanced to action review;
-- the sensor control also has headroom but no severity grid or dedicated recovery action yet;
-- the sensor finding does not create an S advantage because C1 already detects the fixed sensor class in the current development library; and
-- nothing is frozen.
+## Next technical gate after Claude's review
+
+The next Codex-owned action review should measure **achievable source-specific reduction**, not deficit alone.
+
+Minimum design:
+
+1. Compare action versus no action on the same actuator fault with exact seed-paired pre-fault histories.
+2. Apply the same multiplier as a false authorization on healthy and report the source-specific margin separately.
+3. Put specificity into candidate selection, not only post-selection assessment.
+4. Sweep the compensation cap so the screen distinguishes a controller cap from a physics limit. The current `maximum_gain_compensation = 2.0` is explicitly unfrozen.
+5. Include an oracle-severity ceiling arm and a separate deployable-severity arm. Do not silently substitute true remaining gain for an unmeasured estimator output.
+6. Preserve one held decision, zero pre-decision action, the full `J_5s` window, A1 safety, saturation, and contact readouts.
+7. Give the disjoint source-specific margin a real paired uncertainty interval; do not use a sign-only difference of small unpaired means.
+8. Keep the paired S-minus-C1 limitation explicit. A source-specific actuator recovery result is not automatically a sensor-suite result.
+
+Claude's Session-21 exploratory action measurements are context, not tracked deficit-screen artifacts:
+
+| Remaining actuator gain | Achieved reduction with oracle severity | Healthy false authorization | Source-specific margin |
+|---:|---:|---:|---:|
+| 0.50 | 10.77% | 6.11% | +4.67 pp |
+| 0.25 | 10.82% | 6.11% | +4.71 pp |
+| 0.10 | 3.10% | 6.11% | −3.01 pp |
+
+These measurements show why the next gate must combine fault condition, action family/cap, and severity quality rather than advance on deficit alone. Do not copy them into a generated artifact unless the corresponding rows are recorded and reproducible there.
 
 ## Verification state
 
-- New focused deficit-screen tests: **15 passed**.
-- Full Reproducibility Packet: **198 passed**.
+- Focused deficit screen: **16 passed**.
+- Full Reproducibility Packet: **199 passed**.
 - `compileall -q scripts tests`: passed.
-- New screen CLI `--help`: passed.
-- Strict JSON: no `NaN` or `Infinity` tokens.
-- Independent raw-row audit: 84/84 rows pass pre-fault pairing, one-evaluation/no-action lifecycle, A1 safety, and saturation checks.
-- Worst across all 84 arms: `|q|=1.0497 rad`, `|qd|=1.6843 rad/s`, `|gauge|=260.639 µε`, peak force `2.1251 N`, maximum one contact episode.
-- Two complete runs at 10 and 8 workers produced all five outputs byte-for-byte identically.
-- Artifact SHA-256:
-  - summary: `dbbc44a8e38a4c1b593efa1a83a55f483f9af53fca7baa1871892f072571e293`
-  - candidate summary: `624a1a4e7ad96acc48c4fd2a0e78ca222bf9060c694a18b4d315ad0bda672f4d`
-  - tuning rows: `bfe0eb660e76a47702462a1bafd2477b3633bd3f32a94d8abbf0e976350c92df`
-  - assessment rows: `7cfcc104487d45a56ca316332dfcc563b9bdaaec94a32cf1d09d5003e680c293`
-  - report: `e4c7df4eeef069b5a0eb1838c35c7f46fa5432aae4548864a0d38eccdfdfb38b`
+- Generated report reproduces byte-for-byte from `summary.json` through `write_report()`.
+- `git diff --check`: clean except expected line-ending conversion warnings.
+- No new dependency installed.
+- Root Live-Run README deliberately unchanged in Session 21; no new public milestone was produced.
 
-## Open review loop
+## Transcript append state
 
-Claude must first-review this exact Session-20 state:
+The transcript-order failure mode recurred in Session 21.
 
-- `Reproducibility Packet/scripts/screen_fault_tracking_deficit.py`
-- `Reproducibility Packet/tests/test_fault_tracking_deficit.py`
-- `Reproducibility Packet/results/fault_tracking_deficit_screen/*`
-- `Reproducibility Packet/README.md` Step 14, renumbering, and current-boundary wording
-- root `README.md` appended milestone
-- Codex's Session-20 deficit-screen handoff at the active transcript tail
+Phase-2 transcript:
 
-The structural-action screen/recovery seam review is already closed and must not be reopened merely because the new headroom artifact references it.
+- original pre-write boundary: 1,673 lines;
+- Codex's 17:08 turn was mistakenly inserted at line 1,331 because the applied patch used only the final two lines of a separately verified eight-line EOF block;
+- no prior content was deleted, moved, truncated, or rewritten;
+- correction pre-write boundary: 1,689 lines;
+- correction header exactly once at line 1,693;
+- Codex physically last at line 1,705;
+- working-tree transcript diff after repair: +32 / −0.
 
-## Next technical gate after approval
+Monitoring transcript:
 
-1. Evaluate the already-implemented actuator inverse-gain action on the preselected **0.50 remaining-gain** condition.
-2. Include the healthy false-authorization arm during **candidate selection**, not only after selecting the largest tracking gain.
-3. Compare action versus no action using the same seed-paired healthy/actuator design and exact pre-fault hashes.
-4. Preserve one held decision, zero pre-decision action, A1 safety, saturation, and the full `J_5s` window.
-5. Give the disjoint source-specificity comparison a real uncertainty interval; do not use a sign-only difference of small means.
-6. Keep the action review fixed-source-correct/mechanism-only until the learned or validated deployable estimator supplies location/severity.
-7. Do not enlarge the S information claim. The actuator class is already detected by C1 in the fixed development library.
+- pre-write boundary: 27 lines;
+- Codex header exactly once at line 31;
+- Codex physically last at line 41;
+- diff: +14 / −0.
 
-The sensor-fault recovery design also remains open, but it should not displace the preselected actuator action review unless Claude's review finds a reason to change the ordering.
+Operational rule: read the physical UTF-8 tail, record the pre-write line count, verify a complete multi-line EOF anchor is unique, and make the **patch itself** contain that entire verified anchor. Verifying a longer anchor while applying a shorter repeated context does not satisfy the gate. After writing, assert header count, header position after the boundary, physical-last speaker, and append-only diff before any commit.
 
-## Still unresolved / unfrozen
+## Open / unfrozen items
 
-- validation-sized healthy/four-class calibration;
-- per-suite probability calibration;
+- Claude's re-review of Codex's Session-21 wording correction;
+- actuator action family, compensation cap, and deployable severity quality;
+- sensor-fault recovery action;
+- validation-sized healthy/four-class calibration and per-suite probability calibration;
 - ambiguous known-class cases that make abstention bind;
 - compound/OOD faults and held-out subtype/location/severity/onset grids;
 - non-load-bearing sensor constants;
 - class/abstention/selective/OOD thresholds;
-- learned attribution head plus RMA baseline;
+- learned temporal attribution head plus RMA baseline;
 - whole-trajectory/fault-setting split and deployable-loader leakage audits;
 - role hashes, multi-run storage, and immutable config/schema gates;
 - reference lifecycle beyond the scheduled one-held-decision development condition;
-- sensor-fault recovery action;
-- actuator action review and later evaluation-sized paired comparison; and
-- interactive Slot-8 verification artifact and Phase-3 deliverables.
+- task/contact/controller profile and W=768 / stride=16;
+- evaluation-sized paired control comparison;
+- interactive Slot-8 verification artifact and all Phase-3 deliverables.
 
-## Transcript append state
-
-The first Session-20 owner-approval turn was mistakenly inserted at line 1,331 because the patch anchor matched an earlier closing status line. The physical-tail verifier caught it immediately. No prior content was deleted, moved, truncated, or rewritten.
-
-Recovery record:
-
-- misplaced approval preserved at line 1,331;
-- transcript-order correction appended under a verified unique EOF anchor;
-- correction pre-write boundary 1,504 lines;
-- correction header exactly once at line 1,508;
-- Codex physically last after repair;
-- deficit-screen handoff pre-write boundary 1,516 lines;
-- handoff header exactly once at line 1,520;
-- Codex physically last at line 1,562.
-
-Future appends must anchor on the complete verified physical EOF block, never a repeated status/signature line.
-
-## Required startup sequence for Session 21
+## Required startup sequence for Session 22
 
 1. Re-read `AgentPrompt.md` and follow it exactly.
 2. Read all of `Project Details/Project Details.md`.
 3. Read this file.
-4. Read every relevant chat `Summary.md`, then the complete active Phase-2 transcript to physical EOF.
+4. Read every Codex-channel `Summary.md`, then all active transcripts completely to physical EOF before replying.
 5. Read Claude's latest Human Report and continuity.
-6. Inspect git status/HEAD and actual files before trusting this summary if the repo advanced.
-7. Process Claude's deficit-screen review first. Explicitly close only a same-state approval; genuinely re-review any edits.
+6. Inspect git status/HEAD and actual files before trusting this summary.
+7. Process Claude's re-review of the exact Session-21 deficit-screen wording first. Close only on explicit same-state approval; genuinely re-review any further edit.
 8. Keep `config.json` unfrozen unless every remaining gate actually closes.
 
 ## Closeout conventions to preserve
 
-- Active chat is append-only: read the UTF-8 physical tail, record the pre-write line count, patch only against a verified unique multi-line EOF anchor, then assert the new header occurs exactly once after the old line count and the intended agent is physically last.
-- Rewrite this continuity file completely at each Codex closeout.
-- Add the next `HumanReportN.md`; keep `agents/Codex/README.md` purpose-oriented.
-- Keep public Live Run Status lean, append-only, and milestone-based.
-- Run staged diff hygiene, then commit exactly `Codex Session N` and push.
+- Active chats are append-only under the full hard gate described above.
+- Rewrite this continuity file completely at every completed Codex session.
+- Add the next `HumanReportN.md` and keep `agents/Codex/README.md` purpose-oriented.
+- Keep the public Live-Run README lean, append-only, and milestone-based.
+- Review `.gitignore`, stage only intended files, run `git diff --cached --check`, then commit exactly `Codex Session N` and push.
 - Next regular Codex progress report: Session 24 unless a Claim Sheet amendment or phase transition triggers one earlier.

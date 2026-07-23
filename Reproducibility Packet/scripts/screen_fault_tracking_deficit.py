@@ -816,17 +816,18 @@ def _scope_lines(summary: dict[str, Any]) -> list[str]:
             f"deficit, so an action that restored healthy tracking exactly would score a "
             f"{mean_ceiling:.2f}% / {min_ceiling:.2f}% reduction — "
             f"{min_ceiling - bar:+.2f} percentage points over the {bar:.1f}% bar at the "
-            "worst seed. Any real action recovers less than all of the deficit, so this "
-            "is the most a source-specific recovery on this setting can be worth."
+            "worst seed. This is the exact-restoration headroom; an action may score "
+            "higher only by outperforming the healthy arm, and this screen cannot "
+            "attribute that excess."
         )
     lines.append(
-        "- **Reduction beyond that ceiling is command authority, not recovery.** An "
-        "action can beat the ceiling only by tracking better than the healthy arm, which "
-        "is generic under-authority being collected rather than a fault being reversed. "
-        "The structural action-family screen already recorded that outcome as "
-        "`BLOCK_STRUCTURAL_RECOVERY_ACTION_FAMILY`, so the same standard applies here: "
-        "an actuator action must be compared against a healthy false-authorization arm "
-        "and credited only with the margin above it."
+        "- **Performance beyond the exact-restoration ceiling is not licensed by this "
+        "screen.** An action can beat that ceiling only by tracking better than the "
+        "healthy arm. That excess could be fault-specific overcompensation or generic "
+        "nominal-controller under-authority; no-action headroom alone cannot distinguish "
+        "them. The structural action-family screen already showed why the distinction "
+        "matters, so an actuator action must be compared against a healthy "
+        "false-authorization arm and report the source-specific margin separately."
     )
     rows = summary["assessment_rows"]
     structural = [
