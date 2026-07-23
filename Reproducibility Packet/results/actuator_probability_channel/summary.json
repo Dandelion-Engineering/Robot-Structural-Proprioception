@@ -3,6 +3,7 @@
   "audit": {
     "acting_arms_acted": true,
     "applied_multipliers_match_probability": true,
+    "arm_grid_complete": true,
     "max_abs_j5s_difference_vs_recorded": 0.0,
     "max_abs_multiplier_identity_error": 2.220446049250313e-16,
     "n_recorded_comparisons": 8,
@@ -15,47 +16,35 @@
   "gate_discontinuity": {
     "claim_bar_pct": 10.0,
     "gate_entry_jump_pct": 6.110652579706812,
-    "graded_span_above_gate_pct": 4.709713154484206,
-    "graded_span_clears_bar": false,
+    "sampled_span_above_gate_pct": 4.709713154484206,
+    "sampled_span_clears_bar": false,
     "sub_threshold_reduction_pct": 0.0,
     "total_channel_span_including_gate_pct": 10.820365734191018,
     "total_span_clears_bar": true
   },
   "n_arms": 36,
-  "paired_channel_extremes": {
+  "probability_response": {
+    "all_sampled_curves_monotone": true,
     "claim_bar_pct": 10.0,
-    "gate_crossing_clears_bar": true,
-    "graded_clears_bar": false,
-    "max_gate_crossing_paired_pct": 10.850876075944152,
-    "max_graded_paired_pct": 5.069863625610144,
-    "mean_gate_crossing_paired_pct": 10.820365734191018,
-    "mean_graded_paired_pct": 5.016211858412183,
-    "per_seed": [
+    "local_sampled_slope_pct_per_unit_probability": 8.168358089343501,
+    "per_seed_sampled_shape": [
       {
-        "gate_crossing_paired_pct": 10.850876075944152,
-        "graded_paired_pct": 5.0025931575809075,
+        "j5s_strictly_decreases_across_sampled_probabilities": true,
         "seed": 16100
       },
       {
-        "gate_crossing_paired_pct": 10.78894296110828,
-        "graded_paired_pct": 5.069863625610144,
+        "j5s_strictly_decreases_across_sampled_probabilities": true,
         "seed": 16101
       },
       {
-        "gate_crossing_paired_pct": 10.79259500817749,
-        "graded_paired_pct": 5.0273877639401405,
+        "j5s_strictly_decreases_across_sampled_probabilities": true,
         "seed": 16102
       },
       {
-        "gate_crossing_paired_pct": 10.849048891534153,
-        "graded_paired_pct": 4.965002886517541,
+        "j5s_strictly_decreases_across_sampled_probabilities": true,
         "seed": 16103
       }
-    ]
-  },
-  "probability_response": {
-    "claim_bar_pct": 10.0,
-    "local_slope_pct_per_unit_probability": 8.168358089343501,
+    ],
     "points": [
       {
         "max_reduction_vs_no_action_pct": 6.191451763806969,
@@ -104,10 +93,18 @@
       0.5,
       1.0
     ],
-    "reachable_reduction_span_pct": 4.709713154484206,
-    "reachable_span_clears_bar": false,
     "reduction_at_certainty_pct": 10.820365734191018,
-    "reduction_at_gate_pct": 6.110652579706812
+    "reduction_at_gate_pct": 6.110652579706812,
+    "sampled_probabilities": [
+      0.5,
+      0.6,
+      0.7,
+      0.8,
+      0.9,
+      1.0
+    ],
+    "sampled_reduction_span_pct": 4.709713154484206,
+    "sampled_span_clears_bar": false
   },
   "reachable_set": {
     "cap_binds": true,
@@ -157,6 +154,49 @@
     ],
     "same_direction_on_every_seed": true
   },
+  "sampled_pair_extremes": {
+    "claim_bar_pct": 10.0,
+    "gate_crossing_clears_bar": true,
+    "max_gate_crossing_paired_pct": 10.850876075944152,
+    "max_graded_paired_pct": 5.069863625610144,
+    "mean_gate_crossing_paired_pct": 10.820365734191018,
+    "mean_graded_paired_pct": 5.016211858412183,
+    "per_seed": [
+      {
+        "gate_crossing_paired_pct": 10.850876075944152,
+        "gate_crossing_structural_probability": 1.0,
+        "graded_conventional_probability": 0.5,
+        "graded_paired_pct": 5.0025931575809075,
+        "graded_structural_probability": 1.0,
+        "seed": 16100
+      },
+      {
+        "gate_crossing_paired_pct": 10.78894296110828,
+        "gate_crossing_structural_probability": 1.0,
+        "graded_conventional_probability": 0.5,
+        "graded_paired_pct": 5.069863625610144,
+        "graded_structural_probability": 1.0,
+        "seed": 16101
+      },
+      {
+        "gate_crossing_paired_pct": 10.79259500817749,
+        "gate_crossing_structural_probability": 1.0,
+        "graded_conventional_probability": 0.5,
+        "graded_paired_pct": 5.0273877639401405,
+        "graded_structural_probability": 1.0,
+        "seed": 16102
+      },
+      {
+        "gate_crossing_paired_pct": 10.849048891534153,
+        "gate_crossing_structural_probability": 1.0,
+        "graded_conventional_probability": 0.5,
+        "graded_paired_pct": 4.965002886517541,
+        "graded_structural_probability": 1.0,
+        "seed": 16103
+      }
+    ],
+    "sampled_graded_clears_bar": false
+  },
   "screen_spec": {
     "config_hash": "dev-actuator-probability-channel-screen",
     "fault_location": 1,
@@ -169,7 +209,7 @@
       0.8,
       0.9
     ],
-    "purpose": "reachable-set span of the class-probability channel at the deficit screen's selected actuator condition",
+    "purpose": "sampled class-probability response at the deficit screen's selected actuator condition",
     "recorded_deficit_screen": "results/fault_tracking_deficit_screen/summary.json",
     "recorded_severity_screen": "results/severity_estimation_quality/summary.json",
     "recovery_config": {

@@ -1,8 +1,9 @@
-"""Measure what the class-probability channel is worth at the selected actuator condition.
+"""Measure a sampled class-probability response at the selected actuator condition.
 
-This is the last channel through which two sensor suites that both call the actuator class
-correctly could still command different recovery actions. The recovery controller's
-actuator branch is, verbatim:
+This screen isolates one channel through which two sensor suites that both call the
+actuator class correctly could still command different recovery actions while class,
+location, severity, severity uncertainty, and abstention are held fixed. The recovery
+controller's actuator branch is, verbatim:
 
     probability = float(output.p_class[ACTUATOR_INDEX])
     multiplier = 1.0 + probability * (capped_compensation - 1.0)
@@ -17,13 +18,14 @@ deficit screen's selected `actuator_gain_remaining_0p25` case:
    produces `capped_compensation = 2.0` exactly. Both suites estimate remaining gain to
    within roughly 0.008, so on a true `0.25` both land far inside that flat region. No
    severity difference can survive to the plant at this condition.
-2. **The probability channel is closed on both ends by recorded constants.** The gate
-   closes it below at `source_probability_threshold`; the cap closes it above at
-   `maximum_gain_compensation`. So the reachable commanded multiplier is exactly
-   `[1 + threshold * (cap - 1), cap]` — here `[1.50, 2.00]` — and the screen sweeps that
-   whole set rather than a chosen sub-range. This is a reachable-set span, not an
-   extrapolated bound: it is closed by the controller's own constants, and it is reported
-   separately from the gate discontinuity below.
+2. **The probability channel's input interval is closed on both ends by recorded
+   constants.** The gate closes it below at `source_probability_threshold`; probability
+   itself closes it above at one, while the compensation cap fixes the multiplier reached
+   there. The reachable commanded-multiplier interval is exactly
+   `[1 + threshold * (cap - 1), cap]` — here `[1.50, 2.00]`. The simulation samples that
+   continuous interval at the gate, four interior probabilities, and certainty. Those
+   samples form an empirical response envelope; they do not exhaust every probability
+   inside the interval or constitute a mathematical bound on an unsampled response.
 
 The action is cap-saturated throughout. Exact restoration of a `0.25` remaining gain needs
 a multiplier of `4.0`; the recorded cap allows `2.0`. Even a maximally confident diagnosis
@@ -86,9 +88,10 @@ SELECTED_SEVERITY = 0.25
 #: `pair_id`s so each arm's sensor noise realization is that screen's.
 ASSESSMENT_SEEDS: tuple[int, ...] = (16100, 16101, 16102, 16103)
 
-#: Swept actuator class probabilities, strictly interior to the gate and the certain
+#: Sampled actuator class probabilities, strictly interior to the gate and the certain
 #: end. The gate boundary and `p = 1` are supplied by their own dedicated arms so this
-#: sweep can never silently duplicate either endpoint.
+#: grid can never silently duplicate either endpoint. These points sample a continuous
+#: interval; they do not exhaust it.
 PROBABILITY_SWEEP: tuple[float, ...] = (0.60, 0.70, 0.80, 0.90)
 
 #: One probability just below `source_probability_threshold`. The actuator class is still
@@ -200,8 +203,9 @@ def reachable_multiplier_set(config: RecoveryControlConfig, severity: float) -> 
 
     Both ends come from recorded controller constants rather than from a chosen grid: the
     confidence gate closes the interval below at `source_probability_threshold`, and
-    `capped_compensation` closes it above. That is what makes the swept span a
-    reachable-set span instead of an extrapolation.
+    `capped_compensation` closes it above. The endpoint interval is therefore exact, while
+    the rollout screen samples the response inside it and does not claim an exhaustive
+    continuous-response bound.
 
     Args:
         config: The recovery-controller settings in force.
@@ -581,7 +585,7 @@ def probability_response_curve(
     probabilities: tuple[float, ...] = PROBABILITY_SWEEP,
     config: RecoveryControlConfig | None = None,
 ) -> dict[str, Any]:
-    """Return tracking reduction versus no-action as a function of class probability.
+    """Return sampled tracking reduction versus no-action by class probability.
 
     Each point is paired per seed against that seed's own no-action arm, so the curve is
     a within-noise-realization comparison rather than a between-seed one.
@@ -593,8 +597,9 @@ def probability_response_curve(
         config: Recovery-controller settings; defaults to the recorded development values.
 
     Returns:
-        One point per probability with mean/min/max reduction and mean applied multiplier,
-        plus the reachable-set span and the local slope at the certain end.
+        One point per sampled probability with mean/min/max reduction and mean applied
+        multiplier, plus the sampled span, per-seed monotonicity, and the local sampled
+        slope at the certain end.
 
     Raises:
         ValueError: If a required arm is missing.
@@ -627,6 +632,23 @@ def probability_response_curve(
             }
         )
     means = [point["mean_reduction_vs_no_action_pct"] for point in points]
+    per_seed_shape: list[dict[str, Any]] = []
+    for seed in seeds:
+        j_values = np.asarray(
+            [
+                float(indexed[(probability_label(probability), seed)]["j_5s"])
+                for probability in ordered
+            ],
+            dtype=float,
+        )
+        per_seed_shape.append(
+            {
+                "seed": int(seed),
+                "j5s_strictly_decreases_across_sampled_probabilities": bool(
+                    np.all(np.diff(j_values) < 0.0)
+                ),
+            }
+        )
     slope = 0.0
     if len(points) >= 2:
         run = points[-1]["probability"] - points[-2]["probability"]
@@ -637,12 +659,20 @@ def probability_response_curve(
             float(points[0]["probability"]),
             float(points[-1]["probability"]),
         ],
-        "reachable_reduction_span_pct": float(max(means) - min(means)),
+        "sampled_probabilities": [float(value) for value in ordered],
+        "sampled_reduction_span_pct": float(max(means) - min(means)),
         "reduction_at_gate_pct": float(means[0]),
         "reduction_at_certainty_pct": float(means[-1]),
-        "local_slope_pct_per_unit_probability": float(slope),
+        "local_sampled_slope_pct_per_unit_probability": float(slope),
+        "per_seed_sampled_shape": per_seed_shape,
+        "all_sampled_curves_monotone": bool(
+            all(
+                row["j5s_strictly_decreases_across_sampled_probabilities"]
+                for row in per_seed_shape
+            )
+        ),
         "claim_bar_pct": CLAIM_TRACKING_BAR_PCT,
-        "reachable_span_clears_bar": bool(
+        "sampled_span_clears_bar": bool(
             (max(means) - min(means)) >= CLAIM_TRACKING_BAR_PCT
         ),
     }
@@ -673,20 +703,20 @@ def gate_discontinuity(
     return {
         "sub_threshold_reduction_pct": float(probe_reduction_pct),
         "gate_entry_jump_pct": jump,
-        "graded_span_above_gate_pct": float(curve["reachable_reduction_span_pct"]),
+        "sampled_span_above_gate_pct": float(curve["sampled_reduction_span_pct"]),
         "total_channel_span_including_gate_pct": total,
         "claim_bar_pct": CLAIM_TRACKING_BAR_PCT,
-        "graded_span_clears_bar": bool(
-            curve["reachable_reduction_span_pct"] >= CLAIM_TRACKING_BAR_PCT
+        "sampled_span_clears_bar": bool(
+            curve["sampled_reduction_span_pct"] >= CLAIM_TRACKING_BAR_PCT
         ),
         "total_span_clears_bar": bool(total >= CLAIM_TRACKING_BAR_PCT),
     }
 
 
-def paired_channel_extremes(
+def sampled_pair_extremes(
     rows: list[dict[str, Any]], *, seeds: tuple[int, ...] = ASSESSMENT_SEEDS
 ) -> dict[str, Any]:
-    """Return the channel's widest possible difference *in the contract's own units*.
+    """Return the widest sampled differences *in the contract's own units*.
 
     The response curve is stated as reduction against no-action, which is a convenient
     per-arm quantity but is **not** the Claim Sheet's. The contract's quantity is
@@ -697,41 +727,80 @@ def paired_channel_extremes(
 
     Two extremes are reported, and they answer different questions:
 
-    * **graded** — the worst pair that both clear the confidence gate, so this is what a
-      pure probability-precision difference between two suites can buy.
+    * **graded** — the largest positive S-over-C1 comparison among every ordered pair of
+      sampled gate-clearing probabilities. Searching all sampled pairs avoids silently
+      assuming the endpoints are extrema when the response could be non-monotone.
     * **gate-crossing** — one suite withholding the action entirely against the other at
-      full confidence. That is an authorization difference, not a precision one.
+      any sampled gate-clearing probability. That is an authorization difference, not a
+      precision one.
 
     Args:
         rows: All arm rows.
         seeds: Assessment seeds.
 
     Returns:
-        Per-seed and aggregate paired quantities for both extremes.
+        Per-seed and aggregate paired quantities for both sampled extrema.
 
     Raises:
         ValueError: If a required arm is missing.
     """
 
     indexed = _by_label(rows)
-    gate_label = probability_label(RecoveryControlConfig().source_probability_threshold)
-    certain_label = probability_label(1.0)
     per_seed: list[dict[str, Any]] = []
     for seed in seeds:
+        sampled = sorted(
+            [
+                row
+                for row in rows
+                if int(row["seed"]) == seed
+                and row["probability"] is not None
+                and float(row["probability"])
+                >= RecoveryControlConfig().source_probability_threshold
+            ],
+            key=lambda row: float(row["probability"]),
+        )
+        if len(sampled) < 2:
+            raise ValueError(f"fewer than two sampled acting arms for seed {seed}")
         try:
-            gate_arm = indexed[(gate_label, seed)]
-            certain = indexed[(certain_label, seed)]
             no_action = indexed[("no_action", seed)]
-        except KeyError as error:  # pragma: no cover - guarded by build_arm_specs
-            raise ValueError(f"missing arm for seed {seed}: {error}") from error
+        except KeyError as error:  # pragma: no cover - guarded by the arm-grid audit
+            raise ValueError(f"missing no-action arm for seed {seed}") from error
+        graded_candidates: list[tuple[float, dict[str, Any], dict[str, Any]]] = []
+        for conventional in sampled:
+            for structural in sampled:
+                if conventional is structural:
+                    continue
+                graded_candidates.append(
+                    (
+                        tracking_reduction_pct(
+                            conventional["j_5s"], structural["j_5s"]
+                        ),
+                        conventional,
+                        structural,
+                    )
+                )
+        graded_value, conventional, structural = max(
+            graded_candidates, key=lambda item: item[0]
+        )
+        crossing_candidates = [
+            (
+                tracking_reduction_pct(no_action["j_5s"], structural_arm["j_5s"]),
+                structural_arm,
+            )
+            for structural_arm in sampled
+        ]
+        crossing_value, crossing_structural = max(
+            crossing_candidates, key=lambda item: item[0]
+        )
         per_seed.append(
             {
                 "seed": int(seed),
-                "graded_paired_pct": tracking_reduction_pct(
-                    gate_arm["j_5s"], certain["j_5s"]
-                ),
-                "gate_crossing_paired_pct": tracking_reduction_pct(
-                    no_action["j_5s"], certain["j_5s"]
+                "graded_paired_pct": float(graded_value),
+                "graded_conventional_probability": float(conventional["probability"]),
+                "graded_structural_probability": float(structural["probability"]),
+                "gate_crossing_paired_pct": float(crossing_value),
+                "gate_crossing_structural_probability": float(
+                    crossing_structural["probability"]
                 ),
             }
         )
@@ -742,13 +811,15 @@ def paired_channel_extremes(
     return {
         "per_seed": per_seed,
         "mean_graded_paired_pct": float(graded.mean()),
-        "max_graded_paired_pct": float(np.max(np.abs(graded))),
+        "max_graded_paired_pct": float(np.max(graded)),
         "mean_gate_crossing_paired_pct": float(crossing.mean()),
-        "max_gate_crossing_paired_pct": float(np.max(np.abs(crossing))),
+        "max_gate_crossing_paired_pct": float(np.max(crossing)),
         "claim_bar_pct": CLAIM_TRACKING_BAR_PCT,
-        "graded_clears_bar": bool(np.max(np.abs(graded)) >= CLAIM_TRACKING_BAR_PCT),
+        "sampled_graded_clears_bar": bool(
+            np.max(graded) >= CLAIM_TRACKING_BAR_PCT
+        ),
         "gate_crossing_clears_bar": bool(
-            np.max(np.abs(crossing)) >= CLAIM_TRACKING_BAR_PCT
+            np.max(crossing) >= CLAIM_TRACKING_BAR_PCT
         ),
     }
 
@@ -878,6 +949,23 @@ def build_audit(
     """
 
     indexed = _by_label(rows)
+    expected_labels = {
+        "no_action",
+        "healthy_reference",
+        "gate_probe",
+        probability_label(RecoveryControlConfig().source_probability_threshold),
+        *(probability_label(value) for value in PROBABILITY_SWEEP),
+        probability_label(1.0),
+    }
+    arm_grid_complete = all(
+        {
+            str(row["label"])
+            for row in rows
+            if int(row["seed"]) == seed
+        }
+        == expected_labels
+        for seed in ASSESSMENT_SEEDS
+    )
     differences: list[float] = []
     for label, by_seed in recorded.items():
         for seed, value in by_seed.items():
@@ -908,6 +996,7 @@ def build_audit(
         "n_recorded_comparisons": len(differences),
         "max_abs_j5s_difference_vs_recorded": float(max(differences)),
         "no_action_matches_recorded": bool(max(differences) <= CRN_REUSE_TOLERANCE),
+        "arm_grid_complete": bool(arm_grid_complete),
         "single_evaluation": bool(
             all(row["classification_evaluations"] == 1 for row in rows)
         ),
@@ -942,6 +1031,7 @@ def require_passing_audit(audit: dict[str, Any]) -> None:
 
     required = (
         "no_action_matches_recorded",
+        "arm_grid_complete",
         "single_evaluation",
         "withheld_arms_changed_zero_commands",
         "acting_arms_acted",
@@ -1011,7 +1101,7 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
     flat = summary["severity_channel"]
     curve = summary["probability_response"]
     gate = summary["gate_discontinuity"]
-    extremes = summary["paired_channel_extremes"]
+    extremes = summary["sampled_pair_extremes"]
     realization = summary["restoration_realization"]
     scales = summary["severity_uncertainty_scales"]
 
@@ -1019,9 +1109,9 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
     lines.append("# What the class-probability channel is worth at the selected actuator condition")
     lines.append("")
     lines.append(
-        "Development-sized screen. Measures the last channel through which two suites that "
-        "both call the actuator class correctly could still command different recovery "
-        "actions, at the condition the deficit screen selected."
+        "Development-sized screen. Isolates the graded class-probability response while "
+        "class, location, severity, severity uncertainty, and abstention are held fixed, "
+        "at the condition the deficit screen selected."
     )
     lines.append("")
     lines.append(
@@ -1033,13 +1123,14 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
         f"- Assessment seeds {list(spec['seeds'])}, reusing the deficit screen's `pair_id`s"
     )
     lines.append(
-        f"- {summary['n_arms']} arms; swept probabilities {list(spec['probability_sweep'])} "
-        f"plus the gate endpoint, the certain endpoint, and a sub-threshold probe"
+        f"- {summary['n_arms']} arms; sampled probabilities "
+        f"{list(spec['probability_sweep'])} plus the gate endpoint, the certain endpoint, "
+        "and a sub-threshold probe"
     )
     lines.append(f"- Config hash `{spec['config_hash']}` (not frozen)")
     lines.append("")
 
-    lines.append("## Part 0 — why probability is the only live channel here")
+    lines.append("## Part 0 — what is held fixed while probability is varied")
     lines.append("")
     lines.append(
         "The controller's compensation is "
@@ -1059,8 +1150,9 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
         "are plausible. A read-out would have to err by more than "
         f"{flat['margin_to_flat_region_boundary']:.4f} on a true {flat['true_severity']:g}, "
         f"about {flat['margin_in_error_scales']:.0f}x its recorded error scale, before the "
-        "severity channel became live at all. That is what leaves the class probability as "
-        "the only remaining way two suites agreeing on the class could act differently."
+        "severity channel became live at all. The present fixture therefore holds severity "
+        "fixed inside that region and varies class probability alone. It does not test "
+        "suite-specific abstention or uncertainty-gate crossings."
     )
     lines.append("")
     lines.append(
@@ -1078,25 +1170,31 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
         )
     lines.append("")
     lines.append(
-        "- The gate receives a **bias-inclusive RMS**, not a residual standard deviation. "
-        "A standard deviation discards the bias, so a systematically wrong but tightly "
-        "clustered read-out would pass a gate it should fail. The conservative suite value "
-        f"({handed:.6f}) is used at every acting arm, and it clears the "
+        "- The development fixture supplies a common **bias-inclusive RMS**, not a residual "
+        "standard deviation. A standard deviation discards the bias, so it is not a safe "
+        "proxy for absolute severity error. The conservative suite value "
+        f"({handed:.6f}) is used at every acting arm to keep uncertainty from becoming a "
+        "second varied channel, and it clears the "
         f"{spec['recovery_config']['maximum_severity_uncertainty']:g} gate by "
-        f"{spec['recovery_config']['maximum_severity_uncertainty'] / handed:.0f}x, so no "
-        "arm is sensitive to the choice."
+        f"{spec['recovery_config']['maximum_severity_uncertainty'] / handed:.0f}x. This "
+        "does not define a frozen per-example uncertainty statistic or close an "
+        "uncertainty-driven authorization difference."
     )
     lines.append("")
 
-    lines.append("## Part 1 — the reachable probability set")
+    lines.append("## Part 1 — the reachable probability interval")
     lines.append("")
     lines.append(
-        "Both ends of this interval are recorded controller constants, not chosen grid "
+        "Both ends of the input interval are recorded controller constants, not chosen grid "
         f"points. The confidence gate closes it below at p = "
         f"{reachable['probability_threshold']:g}; the compensation cap closes it above. "
         f"The reachable commanded multiplier is therefore exactly "
         f"**[{reachable['reachable_multiplier_low']:.2f}, "
         f"{reachable['reachable_multiplier_high']:.2f}]**."
+    )
+    lines.append(
+        " The interval is continuous. The rollout grid samples six probabilities across "
+        "it; it does not simulate every point between them."
     )
     lines.append("")
     lines.append(
@@ -1130,13 +1228,15 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
         )
     lines.append("")
     lines.append(
-        f"- **Across the entire reachable set p in "
-        f"[{curve['probability_span'][0]:.2f}, {curve['probability_span'][1]:.2f}] the "
-        f"reduction moves by {curve['reachable_reduction_span_pct']:.4f} percentage "
+        f"- **Across the sampled grid p in {curve['sampled_probabilities']}, the mean "
+        f"reduction moves by {curve['sampled_reduction_span_pct']:.4f} percentage "
         f"points**, against a {curve['claim_bar_pct']:.0f}% bar — "
-        f"{'above' if curve['reachable_span_clears_bar'] else 'below'} it. The slope at the "
-        f"certain end is {curve['local_slope_pct_per_unit_probability']:+.4f} points per "
-        "unit of probability."
+        f"{'above' if curve['sampled_span_clears_bar'] else 'below'} it. All four sampled "
+        f"per-seed curves are "
+        f"{'strictly monotone' if curve['all_sampled_curves_monotone'] else 'not monotone'}. "
+        f"The local sampled slope at the certain end is "
+        f"{curve['local_sampled_slope_pct_per_unit_probability']:+.4f} points per unit of "
+        "probability."
     )
     lines.append("")
 
@@ -1156,8 +1256,8 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
         "differences of no-action reductions. Those are not the same number: a difference "
         "of two reductions is smaller by `1 / (1 - r_low / 100)`, so quoting the reduction "
         "span against the bar would understate the quantity the bar is written in. Here "
-        f"the reduction span is {curve['reachable_reduction_span_pct']:.4f} pp while the "
-        f"paired quantity it corresponds to is "
+        f"the sampled mean reduction span is {curve['sampled_reduction_span_pct']:.4f} pp "
+        f"while the largest sampled paired quantity is "
         f"{extremes['max_graded_paired_pct']:.4f} pp."
     )
     lines.append("")
@@ -1167,7 +1267,7 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
         f"| graded — both suites past the gate | "
         f"{extremes['max_graded_paired_pct']:.4f} pp | "
         f"{extremes['mean_graded_paired_pct']:.4f} pp | "
-        f"{'clears' if extremes['graded_clears_bar'] else 'below'} |"
+        f"{'clears' if extremes['sampled_graded_clears_bar'] else 'below'} |"
     )
     lines.append(
         f"| gate-crossing — one suite withholds entirely | "
@@ -1177,12 +1277,12 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
     )
     lines.append("")
     lines.append(
-        "**These must not be collapsed into one number.** The graded span is what a "
-        "*probability-precision* difference between two suites can buy. The gate-entry jump "
-        "is what a difference in whether the suite authorizes the action at all can buy, "
-        "and that is a class-call-scale quantity, already screened elsewhere: both suites "
-        "call this class correctly with one-hot recorded probabilities, so neither the "
-        "recorded difference nor the gate crossing is currently in play."
+        "**These must not be collapsed into one number.** The sampled graded span is an "
+        "empirical sensitivity of the fixed-action fixture. The gate-entry jump is what a "
+        "difference in whether the suite authorizes the action at all can buy. The current "
+        "prototype calls are one-hot mechanism outputs, not calibrated probabilities, and "
+        "future class-probability, abstention, or uncertainty-gate crossings remain "
+        "validation-owned."
     )
     lines.append("")
 
@@ -1208,16 +1308,14 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
 
     lines.append("## What this screen does and does not establish")
     lines.append("")
-    if not extremes["graded_clears_bar"]:
+    if not extremes["sampled_graded_clears_bar"]:
         lines.append(
-            f"- **It closes the class-probability channel on the actuator class at this "
-            f"condition.** The widest paired difference two gate-clearing suites can produce "
-            f"through this channel is {extremes['max_graded_paired_pct']:.4f} pp against a "
-            f"{CLAIM_TRACKING_BAR_PCT:.0f} pp bar, and that is over the channel's *entire "
-            "reachable set*, closed at both ends by the controller's own recorded constants "
-            "rather than by a chosen grid. No probability read-out — linear, learned, or "
-            "calibrated — can reach the bar through this channel here without also crossing "
-            "the confidence gate."
+            f"- **The sampled graded probability response remains below the bar at this "
+            f"condition.** Searching every ordered pair on the six-point gate-clearing grid "
+            f"finds a largest S-over-C1 comparison of "
+            f"{extremes['max_graded_paired_pct']:.4f} pp against a "
+            f"{CLAIM_TRACKING_BAR_PCT:.0f} pp bar. The sampled response is monotone on every "
+            "seed, so the recorded endpoints are the sampled extrema."
         )
     else:
         lines.append(
@@ -1226,9 +1324,14 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
             "carried into the action screen's design."
         )
     lines.append(
-        "- **It does not license collapsing the gate into the channel.** A suite difference "
-        "large enough to put one suite below the confidence threshold and the other above "
-        "it is a class-call/authorization difference, and it is measured separately above."
+        "- **It does not close unsampled probabilities inside the continuous interval.** "
+        "The controller constants close the input range, but six rollout points do not form "
+        "a mathematical bound on the nonlinear tracking response between those points."
+    )
+    lines.append(
+        "- **It does not license collapsing authorization into the graded channel.** A suite "
+        "difference large enough to put one output below a probability, abstention, or "
+        "uncertainty gate and the other above it is a separate authorization difference."
     )
     lines.append(
         "- **It does not close the actuator class.** Action-versus-no-action benefit on a "
@@ -1257,8 +1360,8 @@ def main() -> int:
 
     parser = argparse.ArgumentParser(
         description=(
-            "Measure the class-probability channel's reachable tracking span at the "
-            "deficit screen's selected actuator condition."
+            "Measure a sampled class-probability tracking response at the deficit "
+            "screen's selected actuator condition."
         )
     )
     parser.add_argument(
@@ -1349,14 +1452,14 @@ def main() -> int:
         )
     )
     gate = gate_discontinuity(curve, probe_reduction_pct=probe)
-    extremes = paired_channel_extremes(rows)
+    extremes = sampled_pair_extremes(rows)
     realization = restoration_realization(rows)
 
     summary = {
         "screen_spec": {
             "purpose": (
-                "reachable-set span of the class-probability channel at the deficit "
-                "screen's selected actuator condition"
+                "sampled class-probability response at the deficit screen's selected "
+                "actuator condition"
             ),
             "selected_severity": SELECTED_SEVERITY,
             "fault_location": FAULT_LOCATION,
@@ -1382,7 +1485,7 @@ def main() -> int:
         "severity_channel": flat,
         "probability_response": curve,
         "gate_discontinuity": gate,
-        "paired_channel_extremes": extremes,
+        "sampled_pair_extremes": extremes,
         "restoration_realization": realization,
         "audit": audit,
         "artifact_status": "development_only_config_unfrozen",
@@ -1400,7 +1503,7 @@ def main() -> int:
     print(
         f"Widest graded paired difference {extremes['max_graded_paired_pct']:.4f} pp "
         f"against a {CLAIM_TRACKING_BAR_PCT:.0f} pp bar "
-        f"(reduction span {curve['reachable_reduction_span_pct']:.4f} pp); "
+        f"(sampled reduction span {curve['sampled_reduction_span_pct']:.4f} pp); "
         f"gate-crossing {extremes['max_gate_crossing_paired_pct']:.4f} pp",
         flush=True,
     )

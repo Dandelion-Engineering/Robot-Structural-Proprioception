@@ -350,3 +350,17 @@ does not validate the robot-specific detector or any reported pilot rate.
 Link: https://www.thinksrs.com/downloads/pdfs/applicationnotes/AboutLIAs.pdf
 
 Citation: Stanford Research Systems. (n.d.). *About lock-in amplifiers* (Application Note No. 3). https://www.thinksrs.com/downloads/pdfs/applicationnotes/AboutLIAs.pdf
+
+### scikit-learn macro-F1 documentation
+
+The first-party metric documentation defines F1 as the harmonic mean of precision and
+recall and documents `average="macro"` as the unweighted mean of the per-label scores.
+
+*How it informed the project:* supplies the verified director-facing teaching link for
+Codex's Session-24 progress report. It explains the already-implemented four-way
+macro-F1 metric; it does not justify the project's class labels, thresholds, abstention
+treatment, or any empirical result.
+
+Link: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.f1_score.html
+
+Citation: scikit-learn developers. (2026). *`f1_score` documentation*. https://scikit-learn.org/stable/modules/generated/sklearn.metrics.f1_score.html

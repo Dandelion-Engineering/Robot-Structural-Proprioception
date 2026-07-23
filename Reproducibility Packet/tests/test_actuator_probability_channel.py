@@ -22,12 +22,12 @@ from screen_actuator_probability_channel import (  # noqa: E402
     expected_multiplier,
     gate_discontinuity,
     gate_uncertainty_from_scales,
-    paired_channel_extremes,
     probability_label,
     probability_response_curve,
     reachable_multiplier_set,
     require_passing_audit,
     restoration_realization,
+    sampled_pair_extremes,
     severity_channel_is_flat,
 )
 from utils.estimator import SOURCE_CLASS_ORDER, EstimatorOutput  # noqa: E402
@@ -322,9 +322,10 @@ def test_response_curve_spans_the_reachable_set_and_pairs_within_seed() -> None:
     assert len(curve["points"]) == len(reductions)
     assert curve["reduction_at_gate_pct"] == pytest.approx(5.0)
     assert curve["reduction_at_certainty_pct"] == pytest.approx(10.0)
-    assert curve["reachable_reduction_span_pct"] == pytest.approx(5.0)
-    assert not curve["reachable_span_clears_bar"]
-    assert curve["local_slope_pct_per_unit_probability"] == pytest.approx(10.0)
+    assert curve["sampled_reduction_span_pct"] == pytest.approx(5.0)
+    assert not curve["sampled_span_clears_bar"]
+    assert curve["local_sampled_slope_pct_per_unit_probability"] == pytest.approx(10.0)
+    assert curve["all_sampled_curves_monotone"]
     for point in curve["points"]:
         assert point["mean_applied_multiplier"] == pytest.approx(1.0 + point["probability"])
 
@@ -334,8 +335,8 @@ def test_response_curve_reports_a_span_that_clears_the_bar_when_it_does() -> Non
 
     reductions = {0.50: 1.0, 0.60: 5.0, 0.70: 9.0, 0.80: 13.0, 0.90: 17.0, 1.00: 21.0}
     curve = probability_response_curve(_rows(reductions))
-    assert curve["reachable_reduction_span_pct"] == pytest.approx(20.0)
-    assert curve["reachable_span_clears_bar"]
+    assert curve["sampled_reduction_span_pct"] == pytest.approx(20.0)
+    assert curve["sampled_span_clears_bar"]
 
 
 def test_gate_discontinuity_decomposes_the_total_into_jump_plus_graded_span() -> None:
@@ -344,16 +345,16 @@ def test_gate_discontinuity_decomposes_the_total_into_jump_plus_graded_span() ->
     curve = {
         "reduction_at_gate_pct": 7.0,
         "reduction_at_certainty_pct": 10.0,
-        "reachable_reduction_span_pct": 3.0,
+        "sampled_reduction_span_pct": 3.0,
     }
     gate = gate_discontinuity(curve, probe_reduction_pct=0.0)
     assert gate["gate_entry_jump_pct"] == pytest.approx(7.0)
-    assert gate["graded_span_above_gate_pct"] == pytest.approx(3.0)
+    assert gate["sampled_span_above_gate_pct"] == pytest.approx(3.0)
     assert gate["total_channel_span_including_gate_pct"] == pytest.approx(10.0)
-    assert not gate["graded_span_clears_bar"]
+    assert not gate["sampled_span_clears_bar"]
     assert gate["total_span_clears_bar"]
     assert gate["total_channel_span_including_gate_pct"] == pytest.approx(
-        gate["graded_span_above_gate_pct"] + gate["gate_entry_jump_pct"]
+        gate["sampled_span_above_gate_pct"] + gate["gate_entry_jump_pct"]
     )
 
 
@@ -367,19 +368,19 @@ def test_paired_extremes_are_in_contract_units_not_reduction_differences() -> No
 
     reductions = {0.50: 5.0, 0.60: 6.0, 0.70: 7.0, 0.80: 9.0, 0.90: 11.0, 1.00: 12.0}
     rows = _rows(reductions)
-    extremes = paired_channel_extremes(rows)
+    extremes = sampled_pair_extremes(rows)
     curve = probability_response_curve(rows)
     # J at the gate is 0.95, at certainty 0.88: paired = 100 (0.95 - 0.88) / 0.95.
     assert extremes["max_graded_paired_pct"] == pytest.approx(100.0 * 0.07 / 0.95)
     assert extremes["mean_graded_paired_pct"] == pytest.approx(100.0 * 0.07 / 0.95)
     # Strictly larger than the reduction span, by exactly the documented factor.
-    span = curve["reachable_reduction_span_pct"]
+    span = curve["sampled_reduction_span_pct"]
     assert span == pytest.approx(7.0)
     assert extremes["max_graded_paired_pct"] > span
     assert extremes["max_graded_paired_pct"] == pytest.approx(span / (1.0 - 5.0 / 100.0))
     # The gate-crossing extreme is the full reduction at certainty: J_no_action is 1.0.
     assert extremes["max_gate_crossing_paired_pct"] == pytest.approx(12.0)
-    assert not extremes["graded_clears_bar"]
+    assert not extremes["sampled_graded_clears_bar"]
     assert extremes["gate_crossing_clears_bar"]
 
 
@@ -387,11 +388,35 @@ def test_paired_extremes_report_clearing_the_bar_when_they_do() -> None:
     """The screen must be able to report a positive result in contract units."""
 
     reductions = {0.50: 1.0, 0.60: 5.0, 0.70: 9.0, 0.80: 13.0, 0.90: 17.0, 1.00: 30.0}
-    extremes = paired_channel_extremes(_rows(reductions))
+    extremes = sampled_pair_extremes(_rows(reductions))
     assert extremes["max_graded_paired_pct"] == pytest.approx(
         100.0 * (0.99 - 0.70) / 0.99
     )
-    assert extremes["graded_clears_bar"]
+    assert extremes["sampled_graded_clears_bar"]
+
+
+def test_sampled_extremes_search_interior_instead_of_assuming_endpoints() -> None:
+    """A non-monotone sampled response must not hide a larger interior comparison."""
+
+    reductions = {
+        0.50: 5.0,
+        0.60: 6.0,
+        0.70: 30.0,
+        0.80: 8.0,
+        0.90: 9.0,
+        1.00: 10.0,
+    }
+    extremes = sampled_pair_extremes(_rows(reductions))
+    assert extremes["max_graded_paired_pct"] == pytest.approx(
+        100.0 * (0.95 - 0.70) / 0.95
+    )
+    assert extremes["sampled_graded_clears_bar"]
+    assert {
+        row["graded_conventional_probability"] for row in extremes["per_seed"]
+    } == {0.50}
+    assert {
+        row["graded_structural_probability"] for row in extremes["per_seed"]
+    } == {0.70}
 
 
 def test_restoration_realization_uses_the_deficit_over_one_plus_deficit_ceiling() -> None:
@@ -445,6 +470,28 @@ def test_audit_catches_a_broken_common_random_number_reuse() -> None:
         require_passing_audit(audit)
 
 
+def test_audit_catches_an_incomplete_sampled_arm_grid() -> None:
+    """A missing interior arm must not survive into a sampled-envelope narrative."""
+
+    reductions = {
+        0.50: 5.0,
+        0.60: 6.0,
+        0.70: 7.0,
+        0.80: 8.0,
+        0.90: 9.0,
+        1.00: 10.0,
+    }
+    rows = [
+        row
+        for row in _rows(reductions)
+        if not (row["seed"] == ASSESSMENT_SEEDS[0] and row["probability"] == 0.70)
+    ]
+    audit = build_audit(rows, _recorded(), capped_compensation=2.0)
+    assert not audit["arm_grid_complete"]
+    with pytest.raises(RuntimeError, match="arm_grid_complete"):
+        require_passing_audit(audit)
+
+
 def test_audit_catches_a_sub_threshold_probe_that_acted() -> None:
     """If the gate probe acts, the gate discontinuity measurement is meaningless."""
 
@@ -481,6 +528,7 @@ def test_audit_refuses_a_vacuous_common_random_number_check() -> None:
     "failed_field",
     [
         "no_action_matches_recorded",
+        "arm_grid_complete",
         "single_evaluation",
         "withheld_arms_changed_zero_commands",
         "acting_arms_acted",
@@ -494,6 +542,7 @@ def test_every_report_integrity_condition_is_a_fail_loud_gate(failed_field: str)
 
     audit = {
         "no_action_matches_recorded": True,
+        "arm_grid_complete": True,
         "single_evaluation": True,
         "withheld_arms_changed_zero_commands": True,
         "acting_arms_acted": True,
@@ -514,6 +563,7 @@ def test_a_missing_audit_field_fails_rather_than_defaulting_to_pass() -> None:
         require_passing_audit(
             {
                 "no_action_matches_recorded": True,
+                "arm_grid_complete": True,
                 "single_evaluation": True,
                 "withheld_arms_changed_zero_commands": True,
                 "acting_arms_acted": True,
