@@ -5,7 +5,7 @@ somewhere other than a deployable estimator: a privileged oracle (the action fam
 ceiling) or a pinned stand-in constant. The recovery controller's actuator action is
 severity-conditioned, so "how well can a deployable suite estimate severity?" is an
 unmeasured term sitting underneath every control result the project has recorded. It is
-also the last place the contract's paired S-minus-C1 control quantity could be non-zero
+also one unmeasured place where the contract's paired S-minus-C1 control quantity could be non-zero
 on a fault class the conventional suite already detects: both suites call the class
 identically, but they might not size it identically.
 
@@ -81,8 +81,10 @@ from utils.task_control import (  # noqa: E402
 # --------------------------------------------------------------------------- #
 
 #: Remaining actuator gain at joint 1. 0.55 and 0.40 straddle the 0.50 compensation-cap
-#: threshold Part A identifies, which the deficit screen's grid does not resolve.
-SEVERITY_GRID: tuple[float, ...] = (1.00, 0.85, 0.70, 0.55, 0.40, 0.25, 0.10)
+#: threshold, while 0.50 itself pins the one-sided boundary that the recorded deficit
+#: screen identifies as having enough exact-restoration headroom to clear the Claim-Sheet
+#: bar. Omitting the boundary would miss estimator errors that straddle the cap kink.
+SEVERITY_GRID: tuple[float, ...] = (1.00, 0.85, 0.70, 0.55, 0.50, 0.40, 0.25, 0.10)
 
 #: Fit seeds. Disjoint from every other screen's seeds so no CRN substream is shared.
 TUNING_SEEDS: tuple[int, ...] = (17000, 17001, 17002, 17003, 17004, 17005)
@@ -198,8 +200,8 @@ def action_sensitivity_map(
     """Cross the action's severity-sensitivity against the recorded per-class headroom.
 
     For every compensation cap, a severity grid point is classified on two independent
-    axes: whether an accurate severity estimate lands inside the sensitive interval (so a
-    better estimate can change the command at all), and whether the setting's
+    axes: whether it lands inside the sensitive interval or exactly on its one-sided lower
+    boundary (so estimator error can change the command), and whether the setting's
     exact-restoration ceiling clears the contract bar (so a better command could be worth
     the bar). A severity advantage can only reach the contract where both hold.
 
@@ -224,6 +226,8 @@ def action_sensitivity_map(
         for severity, deficit in sorted(deficits_by_severity.items(), reverse=True):
             ceiling = exact_restoration_ceiling_pct(deficit)
             sensitive = bool(low < severity < high)
+            at_boundary = bool(np.isclose(severity, low, rtol=0.0, atol=1.0e-12))
+            can_change_action = bool(sensitive or at_boundary)
             above_bar = bool(ceiling >= bar_pct)
             rows.append(
                 {
@@ -237,9 +241,11 @@ def action_sensitivity_map(
                         severity, config
                     ),
                     "severity_sensitive": sensitive,
+                    "severity_at_sensitivity_boundary": at_boundary,
+                    "severity_estimation_can_change_action": can_change_action,
                     "ceiling_clears_bar": above_bar,
                     "severity_advantage_can_reach_contract": bool(
-                        sensitive and above_bar
+                        can_change_action and above_bar
                     ),
                 }
             )
@@ -572,9 +578,9 @@ def compare_against_oracle_action(
     Because the multiplier is flat below `1 / cap`, an estimator does not have to be
     accurate to command exactly what an oracle commands — on a fault whose true severity
     is already inside the flat region, *any* estimate that also lands there reproduces the
-    oracle's command bit for bit. This reports how often that happens, split by whether
-    the arm's true severity is inside the flat region, so a severity read-out can be
-    judged on the only thing the action can spend.
+    oracle's command bit for bit. A true severity exactly on the boundary is different:
+    the oracle is capped, but an estimate just above the kink commands less. This reports
+    agreement separately for capped-interior, boundary, sensitive, and healthy regimes.
 
     Args:
         evaluation: `evaluate_suite` record for one suite.
@@ -593,13 +599,17 @@ def compare_against_oracle_action(
             minimum_gain_remaining=base.minimum_gain_remaining,
         )
         low, high = severity_sensitive_interval(config)
-        # Three regimes, not two. `capped` is where the cap binds and the multiplier is
-        # constant; `sensitive` is where it varies with the estimate; `identity` is the
-        # healthy end of the grid, where the true multiplier is 1.0 and any non-zero
-        # estimate error produces some action on a body with nothing wrong with it. The
-        # last of those is a false-authorization question, not a severity-precision one,
-        # and lumping it in with the capped arms understates the capped agreement rate.
-        agreement: dict[str, list[bool]] = {"capped": [], "sensitive": [], "identity": []}
+        # Four regimes, not two. `capped` is strictly below the cap kink and therefore
+        # flat to small estimate errors. `boundary` is the kink itself: the oracle is
+        # capped, but an estimate just above the boundary commands less, so estimator
+        # noise can create a suite difference. `sensitive` is the varying interior and
+        # `identity` is the healthy top anchor, where any action is false authorization.
+        agreement: dict[str, list[bool]] = {
+            "capped": [],
+            "boundary": [],
+            "sensitive": [],
+            "identity": [],
+        }
         differences: list[float] = []
         for row in evaluation["predictions"]:
             truth = float(row["severity"])
@@ -612,6 +622,8 @@ def compare_against_oracle_action(
             differences.append(abs(commanded - oracle))
             if truth >= high:
                 regime = "identity"
+            elif np.isclose(truth, low, rtol=0.0, atol=1.0e-12):
+                regime = "boundary"
             elif truth > low:
                 regime = "sensitive"
             else:
@@ -625,7 +637,7 @@ def compare_against_oracle_action(
         for regime, values in agreement.items():
             entry[f"{regime}_region_arms"] = len(values)
             entry[f"{regime}_region_oracle_identical_rate"] = (
-                float(np.mean(values)) if values else float("nan")
+                float(np.mean(values)) if values else None
             )
         results.append(entry)
     return {"suite": evaluation["suite"], "caps": results}
@@ -668,10 +680,11 @@ def compare_commanded_actions(
         )
         low, high = severity_sensitive_interval(config)
         differences: list[float] = []
-        # Split by regime: a suite difference only matters where the action is both
-        # severity-sensitive and worth the bar. Counting all arms together mixes
-        # differences that could move the contract with differences that cannot.
+        # Split the strictly flat interior from the one-sided cap boundary. At the
+        # boundary an estimate just above the kink changes the command, so folding it
+        # into the capped interior can hide the exact route this screen is meant to test.
         capped_differences: list[float] = []
+        boundary_differences: list[float] = []
         per_pair: list[dict[str, float]] = []
         for c1_row, s_row in zip(c1_predictions, s_predictions):
             if not np.isclose(c1_row["severity"], s_row["severity"]) or (
@@ -693,7 +706,9 @@ def compare_commanded_actions(
             difference = abs(s_multiplier - c1_multiplier)
             differences.append(difference)
             truth = float(c1_row["severity"])
-            if truth <= low:
+            if np.isclose(truth, low, rtol=0.0, atol=1.0e-12):
+                boundary_differences.append(difference)
+            elif truth < low:
                 capped_differences.append(difference)
             per_pair.append(
                 {
@@ -705,6 +720,7 @@ def compare_commanded_actions(
             )
         differing = [d for d in differences if d > 1.0e-12]
         capped_differing = [d for d in capped_differences if d > 1.0e-12]
+        boundary_differing = [d for d in boundary_differences if d > 1.0e-12]
         results.append(
             {
                 "maximum_gain_compensation": float(cap),
@@ -717,6 +733,13 @@ def compare_commanded_actions(
                 "capped_region_multipliers_differ": len(capped_differing),
                 "capped_region_max_abs_difference": (
                     float(np.max(capped_differences)) if capped_differences else 0.0
+                ),
+                "boundary_region_pairs": len(boundary_differences),
+                "boundary_region_multipliers_differ": len(boundary_differing),
+                "boundary_region_max_abs_difference": (
+                    float(np.max(boundary_differences))
+                    if boundary_differences
+                    else 0.0
                 ),
                 "pairs": per_pair,
             }
@@ -829,14 +852,16 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
         f"The controller's actuator multiplier is "
         f"`min(1 / max(severity, {sensitivity['minimum_gain_remaining']:g}), cap)`. It is "
         f"flat for every estimate at or below `1 / cap`, so at the recorded cap of "
-        f"{base_cap:g} any two severity estimates in `(0, {interval_low:g}]` command "
-        "**identically**. A severity advantage is only reachable where the action is "
-        "severity-sensitive *and* the setting's exact-restoration ceiling clears the "
+        f"{base_cap:g} any two estimates that both stay in `(0, {interval_low:g}]` command "
+        "**identically**. A true fault exactly at the boundary still has to be measured: "
+        "an estimate just above the kink commands less. A severity advantage is reachable "
+        "where the true setting is inside the sensitive interval **or at that one-sided "
+        "boundary**, and its exact-restoration ceiling clears the "
         f"{sensitivity['bar_pct']:.1f}% bar."
     )
     lines.append("")
     lines.append(
-        "| cap | sensitive severities | reachable severities (sensitive *and* ceiling ≥ bar) |"
+        "| cap | sensitive severities | reachable severities (sensitive/boundary *and* ceiling ≥ bar) |"
     )
     lines.append("|---:|---|---|")
     for cap_key, entry in sensitivity["by_cap"].items():
@@ -861,16 +886,16 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
             f"- **The smallest cap with any reachable severity is {smallest:g}.** At the "
             f"recorded cap of {base_cap:g} the reachable set is "
             f"{sensitivity['by_cap'][f'{base_cap:.1f}']['reachable_severities'] or 'empty'}: "
-            "every setting with enough headroom to clear the bar sits in the flat region "
-            "of the multiplier, and every severity-sensitive setting has a ceiling below "
-            "the bar. Raising the cap is what moves a setting into both regions at once, "
-            "which is why the pending cap-sensitivity arm and the severity-quality arm "
-            "have to be run together rather than in either order alone."
+            "no setting in the open sensitive interval clears the bar; any reachable "
+            "boundary setting must therefore be tested directly because estimator noise "
+            "can straddle the kink. Raising the cap moves the boundary and changes this "
+            "reachability map, which is why cap/floor sensitivity and severity quality "
+            "have to be reviewed together."
         )
     lines.append("")
     lines.append("| severity | no-action deficit | exact-restoration ceiling | multiplier at cap "
-                 f"{base_cap:g} | severity-sensitive | ceiling ≥ bar |")
-    lines.append("|---:|---:|---:|---:|:--:|:--:|")
+                 f"{base_cap:g} | sensitive interior | at cap boundary | ceiling ≥ bar |")
+    lines.append("|---:|---:|---:|---:|:--:|:--:|:--:|")
     for row in sensitivity["rows"]:
         if not np.isclose(row["maximum_gain_compensation"], base_cap):
             continue
@@ -879,6 +904,7 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
             f"{row['exact_restoration_ceiling_pct']:+.2f}% | "
             f"{row['multiplier_at_true_severity']:.3f} | "
             f"{'yes' if row['severity_sensitive'] else 'no'} | "
+            f"{'yes' if row['severity_at_sensitivity_boundary'] else 'no'} | "
             f"{'yes' if row['ceiling_clears_bar'] else 'no'} |"
         )
     lines.append("")
@@ -895,12 +921,13 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
             f"{record['holdout_max_abs_error']:.4f} | {record['holdout_bias']:+.4f} |"
         )
     lines.append("")
-    delta = c1_eval["holdout_mae"] - s_eval["holdout_mae"]
+    delta = s_eval["holdout_mae"] - c1_eval["holdout_mae"]
+    comparison_word = "higher" if delta > 0.0 else "lower"
     lines.append(
         f"- The gauge role contributes "
         f"{s_eval['active_feature_count'] - c1_eval['active_feature_count']} additional "
         f"active feature columns to S. S's held-out mean absolute severity error is "
-        f"{delta:+.4f} lower than C1's "
+        f"{abs(delta):.4f} {comparison_word} than C1's "
         f"({s_eval['holdout_mae']:.4f} versus {c1_eval['holdout_mae']:.4f})."
     )
     lines.append("")
@@ -924,15 +951,16 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
     )
     lines.append("")
     lines.append(
-        "| suite | cap | capped arms | oracle-identical | sensitive arms | "
-        "oracle-identical | healthy arms | oracle-identical | max multiplier error |"
+        "| suite | cap | capped arms | oracle-identical | boundary arms | "
+        "oracle-identical | sensitive arms | oracle-identical | healthy arms | "
+        "oracle-identical | max multiplier error |"
     )
-    lines.append("|---|---:|---:|---:|---:|---:|---:|---:|---:|")
+    lines.append("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
 
-    def _rate(value: float) -> str:
+    def _rate(value: float | None) -> str:
         """Render an agreement rate, or `n/a` when its regime has no arms."""
 
-        return "n/a" if np.isnan(value) else f"{100.0 * value:.1f}%"
+        return "n/a" if value is None else f"{100.0 * value:.1f}%"
 
     for suite in ("C1", "S"):
         for row in summary["oracle_action_agreement"][suite]["caps"]:
@@ -940,6 +968,8 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
                 f"| {suite} | {row['maximum_gain_compensation']:.1f} | "
                 f"{row['capped_region_arms']} | "
                 f"{_rate(row['capped_region_oracle_identical_rate'])} | "
+                f"{row['boundary_region_arms']} | "
+                f"{_rate(row['boundary_region_oracle_identical_rate'])} | "
                 f"{row['sensitive_region_arms']} | "
                 f"{_rate(row['sensitive_region_oracle_identical_rate'])} | "
                 f"{row['identity_region_arms']} | "
@@ -948,10 +978,11 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
             )
     lines.append("")
     lines.append(
-        "`oracle-identical` is exact multiplier equality. Three regimes are separated "
+        "`oracle-identical` is exact multiplier equality. Four regimes are separated "
         "because they ask different questions. In the **capped** regime the cap binds and "
         "any estimate below the threshold reproduces the oracle exactly, so the rate is "
-        "the one that matters. In the **sensitive** regime exact equality requires an "
+        "the one that matters. At the **boundary**, estimator noise can straddle the kink "
+        "even though the oracle itself is capped. In the **sensitive** regime exact equality requires an "
         "exactly correct number and is near zero by construction, so the graded maximum "
         "multiplier error is the quantity to read. The **healthy** arms are the grid's "
         "top anchor, where the oracle applies no action at all: a non-zero rate there is "
@@ -965,9 +996,9 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
     lines.append("")
     lines.append(
         "| cap | pairs | multipliers differ | mean abs difference | max abs difference | "
-        "capped-region pairs | of those, differ |"
+        "capped-region pairs | of those, differ | boundary pairs | of those, differ |"
     )
-    lines.append("|---:|---:|---:|---:|---:|---:|---:|")
+    lines.append("|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
     for row in comparison["caps"]:
         lines.append(
             f"| {row['maximum_gain_compensation']:.1f} | {row['n_pairs']} | "
@@ -975,7 +1006,9 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
             f"{row['mean_abs_multiplier_difference']:.4f} | "
             f"{row['max_abs_multiplier_difference']:.4f} | "
             f"{row['capped_region_pairs']} | "
-            f"{row['capped_region_multipliers_differ']} |"
+            f"{row['capped_region_multipliers_differ']} | "
+            f"{row['boundary_region_pairs']} | "
+            f"{row['boundary_region_multipliers_differ']} |"
         )
     lines.append("")
     if base_row["n_multipliers_differ"] == 0:
@@ -992,25 +1025,39 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
             f"{base_row['mean_abs_multiplier_difference']:.4f} "
             f"(worst {base_row['max_abs_multiplier_difference']:.4f})."
         )
-    if base_row["capped_region_multipliers_differ"] == 0:
+    reachable_boundaries = [
+        row["severity"]
+        for row in sensitivity["rows"]
+        if np.isclose(row["maximum_gain_compensation"], base_cap)
+        and row["severity_at_sensitivity_boundary"]
+        and row["ceiling_clears_bar"]
+    ]
+    if reachable_boundaries and base_row["boundary_region_multipliers_differ"] > 0:
         lines.append(
-            f"- **And none of those differences fall where the action could be worth the "
-            f"bar.** On all {base_row['capped_region_pairs']} capped-region arms — the only "
-            "severities whose exact-restoration ceiling clears the bar — the two suites "
-            "command **identically**. Every suite difference the read-out produces lands "
-            "on a setting whose ceiling is below the bar. So the recorded 0.0000% paired "
-            "S-minus-C1 control difference on the actuator class is a property of the "
-            "action family, not an artifact of the pinned stand-in severity that produced "
-            "it, and a better severity read-out cannot change it."
+            f"- **The severity route remains live at the cap boundary.** The recorded "
+            f"deficit screen places {reachable_boundaries} remaining gain exactly at the "
+            f"one-sided boundary with enough restoration headroom to clear the bar, and "
+            f"the suites command differently on "
+            f"{base_row['boundary_region_multipliers_differ']} of "
+            f"{base_row['boundary_region_pairs']} held-out boundary arms (worst multiplier "
+            f"difference {base_row['boundary_region_max_abs_difference']:.4f}). The "
+            "paired control effect must therefore be measured; it is not structurally zero."
+        )
+    elif base_row["capped_region_multipliers_differ"] == 0 and (
+        not reachable_boundaries or base_row["boundary_region_multipliers_differ"] == 0
+    ):
+        lines.append(
+            f"- No multiplier difference appears in the strictly capped interior or at a "
+            "recorded above-bar boundary. Within the evaluated grid, the severity read-out "
+            "therefore does not create a paired control route at this cap."
         )
     else:
         lines.append(
             f"- **{base_row['capped_region_multipliers_differ']} of "
             f"{base_row['capped_region_pairs']} capped-region arms do differ between the "
             f"suites** (worst {base_row['capped_region_max_abs_difference']:.4f}). Those "
-            "are the severities whose ceiling clears the bar, so the paired S-minus-C1 "
-            "control difference on the actuator class is not structurally zero and an "
-            "action screen must measure it rather than assume it."
+            "show that the paired S-minus-C1 control difference is not structurally zero; "
+            "an action screen must measure it rather than assume it."
         )
     lines.append("")
 
@@ -1265,7 +1312,8 @@ def main() -> int:
     _write_csv(args.output_dir / "arm_rows.csv", main_rows)
     _write_features_csv(args.output_dir / "window_features.csv", main_rows)
     (args.output_dir / "summary.json").write_text(
-        json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        json.dumps(summary, indent=2, sort_keys=True, allow_nan=False) + "\n",
+        encoding="utf-8",
     )
     write_report(args.output_dir / "severity_estimation_quality_report.md", summary)
     print(f"Wrote four artifacts to {args.output_dir}", flush=True)

@@ -154,6 +154,25 @@ def test_sensitivity_map_finds_a_reachable_severity_when_one_exists() -> None:
     assert result["smallest_cap_with_a_reachable_severity"] == 4.0
 
 
+def test_sensitivity_map_keeps_the_one_sided_cap_boundary_reachable() -> None:
+    """A true severity at the cap kink can straddle it under estimator error.
+
+    At cap 2 the 0.50 remaining-gain condition is not in the open sensitive interval,
+    but an estimate just above 0.50 commands less than the capped oracle. The recorded
+    deficit at this condition has enough exact-restoration headroom to clear 10%, so it
+    must not be discarded by the analytic prefilter.
+    """
+
+    result = action_sensitivity_map({0.50: 13.20}, caps=(2.0,), bar_pct=10.0)
+    row = result["rows"][0]
+    assert row["severity_sensitive"] is False
+    assert row["severity_at_sensitivity_boundary"] is True
+    assert row["severity_estimation_can_change_action"] is True
+    assert row["ceiling_clears_bar"] is True
+    assert result["by_cap"]["2.0"]["reachable_severities"] == [0.50]
+    assert result["smallest_cap_with_a_reachable_severity"] == 2.0
+
+
 # --------------------------------------------------------------------------- #
 # Part B — the severity read-out head.
 # --------------------------------------------------------------------------- #
@@ -294,6 +313,19 @@ def test_comparison_separates_capped_region_differences() -> None:
     assert row["capped_region_max_abs_difference"] == pytest.approx(0.0)
 
 
+def test_comparison_separates_the_one_sided_cap_boundary() -> None:
+    """Boundary errors must not be folded into the strictly flat capped interior."""
+
+    c1 = _evaluation([(0.50, 1, 0.49), (0.25, 1, 0.30)])
+    s = _evaluation([(0.50, 1, 0.51), (0.25, 1, 0.20)])
+    row = compare_commanded_actions(c1, s, caps=(2.0,))["caps"][0]
+    assert row["capped_region_pairs"] == 1
+    assert row["capped_region_multipliers_differ"] == 0
+    assert row["boundary_region_pairs"] == 1
+    assert row["boundary_region_multipliers_differ"] == 1
+    assert row["boundary_region_max_abs_difference"] > 0.0
+
+
 def test_raising_the_cap_can_expose_a_severity_difference() -> None:
     """The same estimates that command identically at one cap may not at a larger one."""
 
@@ -317,8 +349,8 @@ def test_comparison_requires_arm_for_arm_alignment() -> None:
         compare_commanded_actions(c1, _evaluation([]), caps=(2.0,))
 
 
-def test_oracle_agreement_separates_capped_sensitive_and_healthy_arms() -> None:
-    """The healthy anchor is its own regime, not part of the capped region.
+def test_oracle_agreement_separates_capped_boundary_sensitive_and_healthy_arms() -> None:
+    """The cap kink and healthy anchor each need their own regime.
 
     At the top of the grid the oracle applies no action at all, so a mismatch there is a
     false authorization on a sound body — a different question from severity precision.
@@ -327,10 +359,11 @@ def test_oracle_agreement_separates_capped_sensitive_and_healthy_arms() -> None:
 
     evaluation = {
         "suite": "C1",
-        # capped (true 0.25 and 0.10), sensitive (true 0.70), healthy anchor (true 1.00).
+        # capped (0.25/0.10), boundary (0.50), sensitive (0.70), healthy (1.00).
         "predictions": [
             {"severity": 0.25, "seed": 1, "estimate": 0.31},
             {"severity": 0.10, "seed": 1, "estimate": 0.44},
+            {"severity": 0.50, "seed": 1, "estimate": 0.51},
             {"severity": 0.70, "seed": 1, "estimate": 0.70},
             {"severity": 1.00, "seed": 1, "estimate": 0.98},
         ],
@@ -338,6 +371,8 @@ def test_oracle_agreement_separates_capped_sensitive_and_healthy_arms() -> None:
     row = compare_against_oracle_action(evaluation, caps=(2.0,))["caps"][0]
     assert row["capped_region_arms"] == 2
     assert row["capped_region_oracle_identical_rate"] == pytest.approx(1.0)
+    assert row["boundary_region_arms"] == 1
+    assert row["boundary_region_oracle_identical_rate"] == pytest.approx(0.0)
     assert row["sensitive_region_arms"] == 1
     assert row["sensitive_region_oracle_identical_rate"] == pytest.approx(1.0)
     assert row["identity_region_arms"] == 1
@@ -355,10 +390,12 @@ def test_oracle_agreement_reports_na_for_an_empty_regime() -> None:
     }
     row = compare_against_oracle_action(evaluation, caps=(2.0,))["caps"][0]
     assert row["capped_region_arms"] == 1
+    assert row["boundary_region_arms"] == 0
+    assert row["boundary_region_oracle_identical_rate"] is None
     assert row["sensitive_region_arms"] == 0
-    assert np.isnan(row["sensitive_region_oracle_identical_rate"])
+    assert row["sensitive_region_oracle_identical_rate"] is None
     assert row["identity_region_arms"] == 0
-    assert np.isnan(row["identity_region_oracle_identical_rate"])
+    assert row["identity_region_oracle_identical_rate"] is None
 
 
 def test_a_clipped_zero_estimate_is_treated_as_no_action() -> None:
