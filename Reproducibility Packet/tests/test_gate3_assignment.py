@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import copy
 import sys
+from collections import Counter, defaultdict
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -13,6 +15,7 @@ SCRIPTS_ROOT = PACKET_ROOT / "scripts"
 sys.path.insert(0, str(SCRIPTS_ROOT))
 
 from utils.config_contract import load_config  # noqa: E402
+import utils.gate3_assignment as gate3_assignment  # noqa: E402
 from utils.gate3_assignment import (  # noqa: E402
     Gate3AssignmentError,
     expected_assignment_hash,
@@ -50,10 +53,16 @@ def test_tracked_assignment_validates_without_authorizing_payloads() -> None:
     summary = validate_assignment(assignment(), config())
     assert summary == {
         "assignment_hash": (
-            "dev-5939ff5f1f0cc29f75bb4abcd027dbe6ffe84844ad7727ac1e75ca9a0220cedb"
+            "dev-70832daabe7968d55c0bf68e713e945ed48ce167f5c54ec186559b9a660765de"
         ),
         "decision": "PENDING_JOINT_APPROVAL_GATE3_ASSIGNMENT_V0_1",
         "draft_config_hash": config().config_hash,
+        "context_cell_counts_by_split": {
+            "dev": 4,
+            "pilot": 4,
+            "test": 8,
+            "val": 8,
+        },
         "fault_setting_counts": {"dev": 19, "pilot": 19, "test": 21, "val": 21},
         "future_manifest_rows_after_freeze": 13120,
         "model_training_seeds": 5,
@@ -89,6 +98,70 @@ def test_reservation_expansion_is_deterministic_and_whole_group_split() -> None:
         assert row["fault_seed"] == row["sim_seed"] + 1
         assert row["sensor_seed"] == row["sim_seed"] + 2
         assert row["controller_seed"] == row["sim_seed"] + 3
+
+
+def test_context_cells_are_fault_independent_and_balanced() -> None:
+    rows = reservation_dicts(assignment())
+    expected_contexts = {
+        "dev": (4, 1),
+        "pilot": (4, 1),
+        "val": (8, 1),
+        "test": (8, 2),
+    }
+    for split, (expected_count, expected_frequency) in expected_contexts.items():
+        cells_by_fault: dict[
+            str,
+            Counter[tuple[str, str, str]],
+        ] = defaultdict(Counter)
+        for row in rows:
+            if row["split"] != split:
+                continue
+            cells_by_fault[row["fault_setting_id"]].update(
+                [
+                    (
+                        row["payload_id"],
+                        row["env_profile_id"],
+                        row["contact_profile_id"],
+                    )
+                ]
+            )
+        distributions = list(cells_by_fault.values())
+        assert distributions
+        assert all(distribution == distributions[0] for distribution in distributions)
+        assert len(distributions[0]) == expected_count
+        assert set(distributions[0].values()) == {expected_frequency}
+
+
+def test_validator_rejects_fault_conditioned_context_cells(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    original_expand = gate3_assignment.expand_reservations
+
+    def leaky_expand(document):
+        reservations = original_expand(document)
+        target_index = next(
+            index
+            for index, row in enumerate(reservations)
+            if row.split == "dev" and "healthy" in row.fault_setting_id
+        )
+        target = reservations[target_index]
+        replacement_env = next(
+            item["id"]
+            for item in document["context_profiles"]["environments"]
+            if item["split"] == "dev" and item["id"] != target.env_profile_id
+        )
+        reservations[target_index] = replace(
+            target,
+            env_profile_id=replacement_env,
+        )
+        return reservations
+
+    monkeypatch.setattr(gate3_assignment, "expand_reservations", leaky_expand)
+    with pytest.raises(
+        Gate3AssignmentError,
+        match="identical context-cell distribution",
+    ):
+        gate3_assignment.validate_assignment(assignment(), config())
 
 
 def test_expanded_grid_covers_known_classes_and_held_out_compounds() -> None:
@@ -182,14 +255,21 @@ def test_at_least_five_training_seeds_are_required() -> None:
         validate_assignment(rehash(document), config())
 
 
-def test_each_split_requires_multiple_context_profiles() -> None:
+def test_each_split_requires_exactly_two_context_profiles() -> None:
     document = assignment()
     document["context_profiles"]["payloads"] = [
         item
         for item in document["context_profiles"]["payloads"]
         if item["id"] != "payload_test_0p200kg"
     ]
-    with pytest.raises(Gate3AssignmentError, match="at least two profiles"):
+    with pytest.raises(Gate3AssignmentError, match="exactly two profiles"):
+        validate_assignment(rehash(document), config())
+
+
+def test_context_cell_table_is_exact_and_self_hashed() -> None:
+    document = assignment()
+    document["generation_plan"]["context_cell_table"][0] = [0, 1, 0]
+    with pytest.raises(Gate3AssignmentError, match="balanced eight-cell order"):
         validate_assignment(rehash(document), config())
 
 

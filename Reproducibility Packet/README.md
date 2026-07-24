@@ -76,7 +76,10 @@ config and expands its suite-independent reservations in memory. The proposal
 predeclares split-owned ordinary/diagnostic trajectories; healthy, structural,
 actuator, and sensor grids with held-out severities; explicit validation/test
 compound-OOD cases; payload, temperature, and endpoint-contact confounds; five
-model-training seeds; and a deterministic common-random-number rotation.
+model-training seeds; and a fault-independent balanced context-cell rotation.
+Every fault setting in a split must realize the same payload/environment/contact
+cell set: four pairwise-balanced cells in development and pilot, and the complete
+eight-cell factorial in validation and test.
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\validate_gate3_assignment.py
@@ -477,7 +480,7 @@ This packet reproduces the mechanics gate, detector-floor correction, safe-probe
 
 ## Current boundary
 
-This packet reproduces the selected MuJoCo cable/rod mechanics, schema-v1.0 plant and sensor interfaces, causal online loop, evaluation core, detector/reference lifecycle, interpretable residual baseline, bounded task/contact controller, and the development screens through Step 17A. Schema Amendment A1 is jointly in force. A machine-readable schema, self-hashed draft-config contract, whole-group identity-manifest audit, suite-scoped deployable observation loader, schema-driven writers/loaders for every non-observation role, and an explicit `dev|pilot|val` supervised label join now form the Gate 1–2 pre-confirmatory foundation. Step 2A exercises those boundaries end to end on a synthetic role-completeness fixture and hard-refuses `test` under the draft lifecycle. Step 2B validates a self-hashed **proposed** Gate-3 multi-setting assignment and expands its 656 whole-group reservations in memory only. It is pending exact-state joint approval, leaves both generation permissions false, and materializes zero test reservations. The tracked draft is explicitly non-confirmatory; no frozen `config.json`, jointly approved Gate-3 assignment, learned attribution head, or RMA head exists yet.
+This packet reproduces the selected MuJoCo cable/rod mechanics, schema-v1.0 plant and sensor interfaces, causal online loop, evaluation core, detector/reference lifecycle, interpretable residual baseline, bounded task/contact controller, and the development screens through Step 17A. Schema Amendment A1 is jointly in force. A machine-readable schema, self-hashed draft-config contract, whole-group identity-manifest audit, suite-scoped deployable observation loader, schema-driven writers/loaders for every non-observation role, and an explicit `dev|pilot|val` supervised label join now form the Gate 1–2 pre-confirmatory foundation. Step 2A exercises those boundaries end to end on a synthetic role-completeness fixture and hard-refuses `test` under the draft lifecycle. Step 2B validates a self-hashed **proposed** Gate-3 multi-setting assignment and expands its 656 whole-group reservations in memory only. Its replacement review state uses an explicit fault-independent balanced context-cell table and fails unless every fault setting in a split receives the identical context-cell set. It is pending exact-state joint approval, leaves both generation permissions false, and materializes zero test reservations. The tracked draft is explicitly non-confirmatory; no frozen `config.json`, jointly approved Gate-3 assignment, learned attribution head, or RMA head exists yet.
 
 On the current bounded task, the structural suite has strong development information evidence, but structural recovery is blocked because the task has no structural tracking deficit and the tested action behaves like a generic controller retune. The actuator condition has headroom, yet the new source-specific action screen also blocks: safe cap-3 misses the 10-point specificity gate and higher caps violate A1 safety. The probability result remains a sampled empirical envelope; calibrated class-probability, abstention, and uncertainty authorization, sensor-fault recovery, and evaluation-sized paired control remain open.
 

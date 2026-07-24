@@ -4,7 +4,7 @@
   "status": "proposed",
   "decision": "PENDING_JOINT_APPROVAL_GATE3_ASSIGNMENT_V0_1",
   "draft_config_hash": "dev-0211f2e71a473fef3c30cd53fd0a269df45156a3d58e83097bac7a5638bf6180",
-  "assignment_hash": "dev-5939ff5f1f0cc29f75bb4abcd027dbe6ffe84844ad7727ac1e75ca9a0220cedb",
+  "assignment_hash": "dev-70832daabe7968d55c0bf68e713e945ed48ce167f5c54ec186559b9a660765de",
   "required_same_state_approval": "APPROVE_GATE3_ASSIGNMENT_V0_1",
   "research_payload_generation_allowed": false,
   "test_payload_generation_allowed": false,
@@ -74,7 +74,49 @@
     "ood_known_metric_rule": "Rows with ood_flag=true are excluded from four-way known-class metrics and enter only the preregistered abstention/unknown/OOD metrics."
   },
   "generation_plan": {
-    "expansion_rule": "For each split in split_order, enumerate tracked trajectories, expanded fault settings, and realization index in file order. Rotate split-owned payload, environment, and contact profiles by the fixed modular formulas implemented in utils.gate3_assignment; seeds are seed_base + 10*ordinal plus offsets 0,1,2,3.",
+    "expansion_rule": "For each split in split_order, enumerate tracked trajectories, expanded fault settings, and realization index in file order. Select the split-owned payload, environment, and contact profiles from context_cell_table at index (trajectory_index * realizations_per_trajectory_fault[split] + replicate) modulo the table length; fault identity is never an input to context selection. Seeds are seed_base + 10*ordinal plus offsets 0,1,2,3.",
+    "context_cell_table": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        1
+      ],
+      [
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        1,
+        0
+      ],
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        1,
+        1,
+        1
+      ]
+    ],
     "realizations_per_trajectory_fault": {
       "dev": 2,
       "pilot": 2,

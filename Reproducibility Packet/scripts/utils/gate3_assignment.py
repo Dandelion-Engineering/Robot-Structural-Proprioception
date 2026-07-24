@@ -11,6 +11,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+from collections import Counter
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Mapping
@@ -24,6 +25,16 @@ FAULT_SOURCE_CLASSES = ("structure", "actuator", "sensor")
 SENSOR_SUBTYPES = ("encoder_bias", "encoder_drift", "encoder_dropout")
 APPROVAL_TOKEN = "APPROVE_GATE3_ASSIGNMENT_V0_1"
 PROPOSED_DECISION = "PENDING_JOINT_APPROVAL_GATE3_ASSIGNMENT_V0_1"
+BALANCED_CONTEXT_CELL_TABLE = (
+    (0, 0, 0),
+    (0, 1, 1),
+    (1, 0, 1),
+    (1, 1, 0),
+    (0, 0, 1),
+    (0, 1, 0),
+    (1, 0, 0),
+    (1, 1, 1),
+)
 
 TOP_LEVEL_KEYS = {
     "assignment_version",
@@ -596,10 +607,39 @@ def _validate_context_profiles(
                         raise Gate3AssignmentError(
                             "contact window must be increasing within the analysis window"
                         )
-        if any(count < 2 for count in counts.values()):
+        if any(count != 2 for count in counts.values()):
             raise Gate3AssignmentError(
-                f"{catalog_name} requires at least two profiles in every split"
+                f"{catalog_name} requires exactly two profiles in every split"
             )
+
+
+def _context_cell_table(plan: Mapping[str, Any]) -> tuple[tuple[int, int, int], ...]:
+    """Return the exact fault-independent balanced context-cell table."""
+
+    raw_cells = plan["context_cell_table"]
+    if not isinstance(raw_cells, list):
+        raise Gate3AssignmentError("context_cell_table must be a list")
+    cells: list[tuple[int, int, int]] = []
+    for index, raw_cell in enumerate(raw_cells):
+        if (
+            not isinstance(raw_cell, list)
+            or len(raw_cell) != 3
+            or any(
+                not isinstance(value, int)
+                or isinstance(value, bool)
+                or value not in (0, 1)
+                for value in raw_cell
+            )
+        ):
+            raise Gate3AssignmentError(
+                f"context_cell_table[{index}] must contain three binary indexes"
+            )
+        cells.append((raw_cell[0], raw_cell[1], raw_cell[2]))
+    if tuple(cells) != BALANCED_CONTEXT_CELL_TABLE:
+        raise Gate3AssignmentError(
+            "context_cell_table must use the exact balanced eight-cell order"
+        )
+    return tuple(cells)
 
 
 def expand_reservations(document: Mapping[str, Any]) -> list[ScenarioReservation]:
@@ -609,6 +649,7 @@ def expand_reservations(document: Mapping[str, Any]) -> list[ScenarioReservation
     faults = expanded_fault_settings(document)
     contexts = document["context_profiles"]
     plan = document["generation_plan"]
+    context_cells = _context_cell_table(plan)
     reservations: list[ScenarioReservation] = []
     for split in SPLITS:
         split_trajectories = [item for item in trajectories if item["split"] == split]
@@ -624,6 +665,10 @@ def expand_reservations(document: Mapping[str, Any]) -> list[ScenarioReservation
         for trajectory_index, trajectory in enumerate(split_trajectories):
             for fault_index, fault in enumerate(split_faults):
                 for replicate in range(repetitions):
+                    context_cell = context_cells[
+                        (trajectory_index * repetitions + replicate)
+                        % len(context_cells)
+                    ]
                     stem = (
                         f"{split}_t{trajectory_index:02d}_f{fault_index:03d}"
                         f"_r{replicate:02d}"
@@ -639,24 +684,9 @@ def expand_reservations(document: Mapping[str, Any]) -> list[ScenarioReservation
                             fault_setting_id=str(fault["id"]),
                             split_group_id=f"group_{stem}",
                             split=split,
-                            payload_id=str(
-                                payloads[
-                                    (fault_index + trajectory_index + replicate)
-                                    % len(payloads)
-                                ]["id"]
-                            ),
-                            env_profile_id=str(
-                                environments[
-                                    (2 * fault_index + trajectory_index + replicate)
-                                    % len(environments)
-                                ]["id"]
-                            ),
-                            contact_profile_id=str(
-                                contacts[
-                                    (fault_index + 2 * trajectory_index + replicate)
-                                    % len(contacts)
-                                ]["id"]
-                            ),
+                            payload_id=str(payloads[context_cell[0]]["id"]),
+                            env_profile_id=str(environments[context_cell[1]]["id"]),
+                            contact_profile_id=str(contacts[context_cell[2]]["id"]),
                             sim_seed=seed,
                             fault_seed=seed + 1,
                             sensor_seed=seed + 2,
@@ -665,6 +695,56 @@ def expand_reservations(document: Mapping[str, Any]) -> list[ScenarioReservation
                     )
                     ordinal += 1
     return reservations
+
+
+def _assert_fault_independent_context_cells(
+    document: Mapping[str, Any],
+    reservations: list[ScenarioReservation],
+) -> dict[str, int]:
+    """Require identical balanced context-cell distributions for every fault."""
+
+    plan = document["generation_plan"]
+    context_cells = _context_cell_table(plan)
+    context_cell_counts: dict[str, int] = {}
+    for split in SPLITS:
+        cells_by_fault: dict[str, Counter[tuple[str, str, str]]] = {}
+        for reservation in reservations:
+            if reservation.split != split:
+                continue
+            cells_by_fault.setdefault(
+                reservation.fault_setting_id,
+                Counter(),
+            ).update(
+                [
+                    (
+                        reservation.payload_id,
+                        reservation.env_profile_id,
+                        reservation.contact_profile_id,
+                    )
+                ]
+            )
+        cell_distributions = list(cells_by_fault.values())
+        if not cell_distributions or any(
+            cells != cell_distributions[0] for cells in cell_distributions[1:]
+        ):
+            raise Gate3AssignmentError(
+                f"{split} faults must realize an identical context-cell distribution"
+            )
+        trajectory_count = sum(
+            item["split"] == split for item in document["trajectory_specs"]
+        )
+        expected_cell_count = min(
+            len(context_cells),
+            trajectory_count
+            * int(plan["realizations_per_trajectory_fault"][split]),
+        )
+        if len(cell_distributions[0]) != expected_cell_count:
+            raise Gate3AssignmentError(
+                f"{split} faults must realize exactly {expected_cell_count} "
+                "balanced context cells"
+            )
+        context_cell_counts[split] = expected_cell_count
+    return context_cell_counts
 
 
 def _validate_protocol_and_plan(document: Mapping[str, Any]) -> None:
@@ -751,6 +831,7 @@ def _validate_protocol_and_plan(document: Mapping[str, Any]) -> None:
         plan,
         {
             "expansion_rule",
+            "context_cell_table",
             "realizations_per_trajectory_fault",
             "seed_base_by_split",
             "expected_reservations_by_split",
@@ -758,6 +839,7 @@ def _validate_protocol_and_plan(document: Mapping[str, Any]) -> None:
         },
         "generation_plan",
     )
+    _context_cell_table(plan)
     for mapping_name in (
         "realizations_per_trajectory_fault",
         "seed_base_by_split",
@@ -829,6 +911,10 @@ def validate_assignment(
     faults = expanded_fault_settings(document)
     _require_unique_ids(faults, "expanded fault settings")
     reservations = expand_reservations(document)
+    context_cell_counts = _assert_fault_independent_context_cells(
+        document,
+        reservations,
+    )
     ids = {
         "scenario_spec_id": [row.scenario_spec_id for row in reservations],
         "base_pair_id": [row.base_pair_id for row in reservations],
@@ -885,6 +971,7 @@ def validate_assignment(
             for split in SPLITS
         },
         "fault_setting_counts": fault_counts,
+        "context_cell_counts_by_split": context_cell_counts,
         "reservation_counts": counts,
         "total_reservations": len(reservations),
         "model_training_seeds": len(document["split_policy"]["model_training_seed_pool"]),

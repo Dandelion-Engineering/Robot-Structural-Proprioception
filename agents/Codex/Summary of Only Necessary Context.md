@@ -2,7 +2,7 @@
 
 ## Resume point
 
-This is the authoritative Codex resume state after **Codex Session 29**
+This is the authoritative Codex resume state after **Codex Session 30**
 (2026-07-24).
 
 Current phase:
@@ -21,10 +21,10 @@ BLOCK_CONFIG_FREEZE_PENDING_PRECONFIRMATORY_BUILD_AND_VALIDATION
 Expected closeout commit:
 
 ```text
-Codex Session 29
+Codex Session 30
 ```
 
-Read `AgentPrompt.md` from the beginning before any work. Then read the current
+Read `AgentPrompt.md` from the beginning before any work. Then read current
 project details, this file, every relevant chat summary, and every active chat
 containing Codex. The live Phase-2 transcript outranks this handoff if newer
 messages exist.
@@ -41,28 +41,15 @@ Never use bare `python` or `pip`.
 
 ### Closed
 
-- all earlier same-state review loops;
-- Gate-1 / Gate-2 foundation review;
-- Gate-2 role write/load/join review.
-
-Claude Session 29 explicitly returned:
-
-```text
-APPROVE_GATE2_ROLE_WRITE_PATH
-```
-
-for the exact unchanged Session-28 target. Codex accepted it in the live
-transcript. The generic manifest-bound role writers/loaders, non-test supervised
-join, and deterministic contract fixture are jointly approved.
-
-This does **not** complete Gate 2. The real Gate-3-driven multi-setting MuJoCo
-generator and its generated-data role/leakage audit remain missing.
+- all review loops before Gate 3;
+- Gate 1;
+- Gate-2 role write/load/join foundation.
 
 ### Open
 
-Claude review of the exact Gate-3 assignment candidate.
+Claude exact-state review of the corrected Gate-3 assignment.
 
-Codex owner decision:
+Codex replacement owner decision:
 
 ```text
 APPROVE_GATE3_ASSIGNMENT_V0_1
@@ -82,20 +69,23 @@ BLOCK_GATE3_ASSIGNMENT_V0_1
 
 with file/line-specific findings.
 
-Exact assignment hash:
+Replacement assignment hash:
 
 ```text
-dev-5939ff5f1f0cc29f75bb4abcd027dbe6ffe84844ad7727ac1e75ca9a0220cedb
+dev-70832daabe7968d55c0bf68e713e945ed48ce167f5c54ec186559b9a660765de
 ```
 
-Replacement review-target code hashes:
+Exact replacement file identities:
 
 ```text
-scripts/utils/gate3_assignment.py
-8d095fea5c86f421634af95b347df370567606f7b0a86f315d9929640c0c1880
+Reproducibility Packet/config/proposed-gate3-assignment-v0.1.json
+dcee3e6c9d52f7d36a84c06f0e3b1e5f39e89448c8b81940ca2728d9d9f98192
 
-tests/test_gate3_assignment.py
-00ea52fcf30bf59cfcbf02cdc7999ee7172db6eaa138453db7a5247d17f3569b
+Reproducibility Packet/scripts/utils/gate3_assignment.py
+040cfe15ed6ffd70d9c5be32edfa418f4fb0ba98606e2dd7d85eb2f898897cef
+
+Reproducibility Packet/tests/test_gate3_assignment.py
+e4749f67a98033b7d6e8223e8dad4c885b60ee96d9eac57f65910cbf270c1c9d
 ```
 
 Bound draft-config hash:
@@ -104,29 +94,81 @@ Bound draft-config hash:
 dev-0211f2e71a473fef3c30cd53fd0a269df45156a3d58e83097bac7a5638bf6180
 ```
 
-The 10:23 owner handoff was explicitly superseded because the two code files
-above received final defensive checks afterward. The 10:29 transcript message
-is the binding replacement owner handoff. Reviewer edits, handoffs, downstream
-use, and silence are not approval. If Claude changes any target file, inspect
-and approve the actual new state before closing the loop.
+The Session-29 assignment hash
+`dev-5939ff5f1f0cc29f75bb4abcd027dbe6ffe84844ad7727ac1e75ca9a0220cedb`
+is superseded and must not be approved, embedded, or treated as current.
 
-## Gate-3 assignment review target
+Reviewer edits, handoffs, downstream use, and silence are not approval. If
+Claude changes any review-target file, inspect and approve the actual new state
+before closing the loop.
 
-Primary files:
+## Why Session 29 was blocked
 
-- `Reproducibility Packet/config/proposed-gate3-assignment-v0.1.json`
-- `Reproducibility Packet/scripts/utils/gate3_assignment.py`
-- `Reproducibility Packet/scripts/validate_gate3_assignment.py`
-- `Reproducibility Packet/tests/test_gate3_assignment.py`
+The original deterministic context rotation used `fault_index` while every
+split had two payload, environment, and contact profiles. Under modulo 2:
 
-Ancillary exact-state documentation:
+```text
+payload XOR environment = fault_index mod 2
+```
 
-- Step 2B and Current boundary in `Reproducibility Packet/README.md`
-- `gate3_assignment` entry in
-  `Reproducibility Packet/scripts/utils/__init__.py`
+That locked payload/environment alignment to fault identity in all 80 fault
+settings and transferred the same polarity from development into test.
+Temperature is visible through S-only gauge strain, and payload is especially
+legible in structural channels, so the shortcut could inflate paired S-minus-C1
+macro-F1 in the direction of the hypothesis.
 
-The proposal is deliberately separate from the tracked draft config. Its state
-is:
+Claude returned:
+
+```text
+BLOCK_GATE3_ASSIGNMENT_V0_1
+```
+
+with a tested balanced-table remedy. Codex reproduced the leak and accepted the
+finding.
+
+## Corrected Gate-3 context assignment
+
+The replacement self-hashed assignment carries this exact context-cell table,
+in `(payload_index, environment_index, contact_index)` order:
+
+```text
+(0,0,0)
+(0,1,1)
+(1,0,1)
+(1,1,0)
+(0,0,1)
+(0,1,0)
+(1,0,0)
+(1,1,1)
+```
+
+Lookup is:
+
+```text
+(trajectory_index * realizations_per_trajectory_fault[split] + replicate) mod 8
+```
+
+Fault identity is never an input.
+
+Every split must carry exactly two profiles on each context axis. The validator
+fails unless every fault setting within a split receives the identical
+context-cell **count distribution**.
+
+Realized distributions:
+
+```text
+dev    4 unique cells, each once per fault
+pilot  4 unique cells, each once per fault
+val    8 unique cells, each once per fault
+test   8 unique cells, each twice per fault
+```
+
+This removes the fault-conditioned context cue and increases validation/test
+coverage to the complete eight-cell factorial.
+
+## Gate-3 assignment contents
+
+The proposal remains separate from the tracked draft config. Its lifecycle is:
 
 ```text
 status=proposed
@@ -135,69 +177,33 @@ research_payload_generation_allowed=false
 test_payload_generation_allowed=false
 ```
 
-The validator expands reservations in memory only. It writes no manifest,
-research payload, or test payload.
+It predeclares:
 
-## What the assignment fixes
-
-### Split and trajectory ownership
-
-- splits: `dev`, `pilot`, `val`, `test`;
+- splits `dev`, `pilot`, `val`, `test`;
 - two split-exclusive trajectories per split;
-- one ordinary and one diagnostic trajectory per split;
+- ordinary and diagnostic excitation in every split;
 - bounded finite tasks covering the complete onset-plus-five-second window;
 - tracked diagnostic proposal: 0.05 N, 0.8 Hz, one raised-cosine cycle;
-- suite is never an input to split assignment;
-- whole `trajectory_spec_id`, `fault_setting_id`, and `split_group_id` ownership.
+- whole `trajectory_spec_id`, `fault_setting_id`, and `split_group_id`
+  ownership;
+- 19 known settings per split;
+- two compound/OOD settings in validation and two in test;
+- split-owned payload, temperature/environment, and endpoint-contact profiles;
+- five model-training seeds:
+  `31001, 31002, 31003, 31004, 31005`;
+- deterministic simulation/fault/sensor/controller seed tuples; and
+- C1/S common-random-number pairing across every declared field.
 
-### Fault grid
+Structural location uses executable zero-based `1`, meaning the second
+compliant link. `CablePlant` rejects structural location `2`. Do not regress
+this identity convention.
 
-Every split has 19 known settings:
+Compound/OOD rows use the first component as the schema-compatible primary
+label, retain full components in the non-deployable assignment, set
+`compound_flag=true` and `ood_flag=true`, and are excluded from known four-way
+metrics.
 
-- healthy;
-- two structural severities;
-- two actuator severities at joints 0 and 1;
-- two encoder-bias severities at joints 0 and 1;
-- two encoder-drift severities at joints 0 and 1;
-- two encoder-dropout severities at joints 0 and 1.
-
-No exact known fault tuple is reused across splits.
-
-Structural location uses the executable zero-based value `1`, meaning the
-selected second compliant link. `CablePlant` rejects structural location `2`.
-Do not regress this identity convention.
-
-Validation and test each add two cross-source compound/OOD settings. The first
-component supplies the schema-compatible primary label; the full components
-remain in the non-deployable assignment. `compound_flag=true` and
-`ood_flag=true`. OOD rows are excluded from known four-way metrics and enter
-only abstention/unknown/OOD metrics.
-
-### Confounds and seeds
-
-Each split owns:
-
-- two distal payload masses;
-- two temperature/environment profiles; and
-- no-contact plus one split-specific contact-window profile at plane z = 0.200 m.
-
-The real generator does not yet implement all assigned payload,
-contact-window, environment, or compound-fault paths. Those are explicit
-post-approval requirements, not generated evidence.
-
-The proposal has five model-training seeds:
-
-```text
-31001, 31002, 31003, 31004, 31005
-```
-
-Reservations use deterministic simulation/fault/sensor/controller seed tuples
-and context rotation. C1 and S must share every declared common-random-number
-field within each matched suite/seed pair.
-
-### Counts
-
-Expanded suite-independent reservations:
+Counts:
 
 ```text
 dev     76
@@ -222,48 +228,20 @@ Projected later four-suite/five-seed manifest:
 13,120 rows
 ```
 
-This is a projection only. Test reservations materialized: `0`.
-
-## Lifecycle boundary
-
-Joint Gate-3 approval would authorize:
-
-1. embedding the exact approved assignment in
-   `values.scenario_manifest`;
-2. recomputing the draft config hash; and
-3. building the missing real generator paths against that exact assignment.
-
-It would **not** authorize:
-
-- creating final `Reproducibility Packet/config.json`;
-- confirmatory generation;
-- any test materialization;
-- headline model fitting;
-- claiming Gate 2 complete;
-- claiming validation or confirmatory evidence.
-
-The complete frozen config remains a later, separate same-state checkpoint.
-
-The tracked draft remains:
-
-- `Reproducibility Packet/config/draft-config-v0.1.json`;
-- `status=draft`;
-- `confirmatory=False`;
-- Gates 2–7 open.
-
-No final `config.json` exists.
+Projection only. Test reservations materialized: `0`.
 
 ## Verification state
 
-Final Session-29 results from the repository virtual environment:
+Final Session-30 results from the repository virtual environment:
 
 ```text
-focused Gate-3 tests: 15 passed in 0.13s
-full packet suite: 373 passed in 8.93s
+focused Gate-3 tests: 18 passed in 0.12s
+full packet suite: 376 passed in 8.73s
 compileall: pass
 CLI help: pass
 read-only validator: pass
-assignment hash: valid
+canonical assignment hash recomputation: exact match
+context-cell distributions: identical per fault, 4/4/8/8 unique
 reservations: 656
 test reservations materialized: 0
 research generation allowed: false
@@ -278,9 +256,33 @@ Run from `Reproducibility Packet/`:
 ..\venv\Scripts\python.exe scripts\validate_gate3_assignment.py
 ```
 
-Historical ignored `.npz` files exist under `tmp/` and dependency sample-data
-paths. They predate Session 29. No new assignment manifest, result directory, or
-binary payload was created.
+No manifest or payload was written by the validator. No final `config.json`
+exists.
+
+## Lifecycle boundary
+
+Claude's exact-state Gate-3 approval would authorize:
+
+1. embedding the exact approved replacement assignment in
+   `values.scenario_manifest`;
+2. recomputing the draft config hash; and
+3. building the missing real generator paths against that exact assignment.
+
+It would **not** authorize:
+
+- creating final `Reproducibility Packet/config.json`;
+- confirmatory generation;
+- test materialization;
+- headline model fitting;
+- claiming Gate 2 complete;
+- claiming validation or confirmatory evidence.
+
+The tracked draft remains:
+
+- `Reproducibility Packet/config/draft-config-v0.1.json`;
+- `status=draft`;
+- `confirmatory=False`;
+- Gates 2–7 open.
 
 ## Gate map
 
@@ -311,8 +313,8 @@ Still required:
 
 ### Gate 3
 
-Complete review candidate exists, but the gate remains **OPEN** pending Claude's
-same-state approval of the exact hash above.
+Corrected review candidate exists. Gate remains **OPEN** pending Claude's
+explicit same-state approval of the replacement hash.
 
 ### Gates 4–7
 
@@ -330,18 +332,25 @@ Gate 6 remains the in-contract four-arm controller protocol:
 Do not narrow the project to information-only and do not silently retune a
 blocked action family outside the Claim Sheet.
 
+Claude proposed a Gate-7 interpretation rule that Codex accepted: report the
+paired C1-vs-S contrast at pilot, validation, and test; distinguish a contrast
+that decays as confounds become more extreme from one absent at every rung.
+This is agreed direction for the future Gate-7 driver, not an implemented or
+frozen artifact.
+
 ## Immediate next steps
 
-Session 30 should:
+Session 31 should:
 
-1. read the live Phase-2 transcript tail and actual review-target files;
-2. inspect Claude's exact Gate-3 response;
-3. close the loop only if the approval token is explicit and the assignment
-   hash/state are unchanged;
+1. read the live Phase-2 transcript tail and actual replacement target files;
+2. inspect Claude's exact response to hash
+   `dev-70832daabe7968d55c0bf68e713e945ed48ce167f5c54ec186559b9a660765de`;
+3. close Gate 3 only if the approval token is explicit and the exact state is
+   unchanged;
 4. otherwise address supported file/line findings and re-hand off the exact
    corrected state;
-5. only after joint approval, embed the approved assignment into the draft
-   config and recompute its draft hash;
+5. only after joint approval, embed the assignment into the draft config and
+   recompute the draft hash;
 6. implement distal payload mass, split-owned environment, contact-window
    scheduling, and compound plant-plus-sensor realization;
 7. drive all persisted roles through `DatasetRoleBuilder`;
@@ -376,12 +385,12 @@ chats/Claude-Codex/Phase 2 Integration and Config Freeze/
 Phase 2 Integration and Config Freeze - Active.md
 ```
 
-Session-29 physical state:
+Session-30 physical state:
 
 ```text
-pre-session lines: 2608
-final lines: 2669
-session delta: +61 / -0
+pre-session lines: 2765
+final lines: 2855
+session delta: +90 / -0
 last line: — Codex
 ```
 
@@ -395,16 +404,19 @@ For every future append:
 6. verify the new signature is physically last; and
 7. require `git diff --numstat` to show additions only.
 
-No transcript-order recurrence was logged this session.
+No transcript-order recurrence occurred this session.
 
-## Detailed record
+## Public status and closeout
 
-Read:
+The root `README.md` was intentionally unchanged. Claude Session 30 already
+logged the noteworthy blocked pre-registration and its evidence boundary. The
+replacement assignment remains inside an open review loop, so another entry
+would be premature and would bloat the lean append-only log.
+
+`.gitignore` was reviewed and did not need a change.
+
+Detailed record:
 
 ```text
-agents/Codex/Session Summaries/HumanReport29.md
+agents/Codex/Session Summaries/HumanReport30.md
 ```
-
-The root `README.md` was intentionally unchanged because this is an unreviewed
-infrastructure checkpoint, not a public scientific milestone or phase
-transition.
