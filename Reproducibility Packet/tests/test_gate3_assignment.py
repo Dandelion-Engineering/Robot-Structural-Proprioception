@@ -53,26 +53,26 @@ def test_tracked_assignment_validates_without_authorizing_payloads() -> None:
     summary = validate_assignment(assignment(), config())
     assert summary == {
         "assignment_hash": (
-            "dev-70832daabe7968d55c0bf68e713e945ed48ce167f5c54ec186559b9a660765de"
+            "dev-eec59ec8a296a9a4ff4909f8e7f1de91a0a8f4bf289ae1533a427d1a87bc33f1"
         ),
         "decision": "PENDING_JOINT_APPROVAL_GATE3_ASSIGNMENT_V0_1",
         "draft_config_hash": config().config_hash,
         "context_cell_counts_by_split": {
-            "dev": 4,
-            "pilot": 4,
+            "dev": 8,
+            "pilot": 8,
             "test": 8,
             "val": 8,
         },
         "fault_setting_counts": {"dev": 19, "pilot": 19, "test": 21, "val": 21},
-        "future_manifest_rows_after_freeze": 13120,
+        "future_manifest_rows_after_freeze": 16160,
         "model_training_seeds": 5,
         "research_payload_generation_allowed": False,
-        "reservation_counts": {"dev": 76, "pilot": 76, "test": 336, "val": 168},
+        "reservation_counts": {"dev": 152, "pilot": 152, "test": 336, "val": 168},
         "same_state_approval_required": "APPROVE_GATE3_ASSIGNMENT_V0_1",
         "status": "valid_proposed_assignment",
         "test_payload_generation_allowed": False,
         "test_reservations_materialized": 0,
-        "total_reservations": 656,
+        "total_reservations": 808,
         "trajectory_counts": {"dev": 2, "pilot": 2, "test": 2, "val": 2},
     }
 
@@ -82,7 +82,7 @@ def test_reservation_expansion_is_deterministic_and_whole_group_split() -> None:
     first = reservation_dicts(document)
     second = reservation_dicts(document)
     assert first == second
-    assert len(first) == 656
+    assert len(first) == 808
     assert not any("suite" in row or "train_seed" in row for row in first)
     for key in (
         "trajectory_spec_id",
@@ -103,8 +103,8 @@ def test_reservation_expansion_is_deterministic_and_whole_group_split() -> None:
 def test_context_cells_are_fault_independent_and_balanced() -> None:
     rows = reservation_dicts(assignment())
     expected_contexts = {
-        "dev": (4, 1),
-        "pilot": (4, 1),
+        "dev": (8, 1),
+        "pilot": (8, 1),
         "val": (8, 1),
         "test": (8, 2),
     }
@@ -130,6 +130,67 @@ def test_context_cells_are_fault_independent_and_balanced() -> None:
         assert all(distribution == distributions[0] for distribution in distributions)
         assert len(distributions[0]) == expected_count
         assert set(distributions[0].values()) == {expected_frequency}
+
+
+def test_every_trajectory_fault_group_varies_all_context_axes() -> None:
+    rows = reservation_dicts(assignment())
+    axes_by_group: dict[
+        tuple[str, str, str],
+        dict[str, set[str]],
+    ] = defaultdict(
+        lambda: {"payload": set(), "environment": set(), "contact": set()}
+    )
+    for row in rows:
+        group = (
+            row["split"],
+            row["trajectory_spec_id"],
+            row["fault_setting_id"],
+        )
+        axes_by_group[group]["payload"].add(row["payload_id"])
+        axes_by_group[group]["environment"].add(row["env_profile_id"])
+        axes_by_group[group]["contact"].add(row["contact_profile_id"])
+    assert axes_by_group
+    assert all(
+        {axis: len(values) for axis, values in axes.items()}
+        == {"payload": 2, "environment": 2, "contact": 2}
+        for axes in axes_by_group.values()
+    )
+
+
+def test_validator_rejects_fault_independent_trajectory_alias(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    original_expand = gate3_assignment.expand_reservations
+
+    def trajectory_aliased_expand(document):
+        reservations = original_expand(document)
+        dev_trajectories = [
+            item["id"]
+            for item in document["trajectory_specs"]
+            if item["split"] == "dev"
+        ]
+        dev_payloads = [
+            item["id"]
+            for item in document["context_profiles"]["payloads"]
+            if item["split"] == "dev"
+        ]
+        return [
+            replace(
+                row,
+                payload_id=dev_payloads[dev_trajectories.index(row.trajectory_spec_id)],
+            )
+            if row.split == "dev"
+            else row
+            for row in reservations
+        ]
+
+    monkeypatch.setattr(
+        gate3_assignment,
+        "expand_reservations",
+        trajectory_aliased_expand,
+    )
+    with pytest.raises(Gate3AssignmentError, match="must vary both profiles"):
+        gate3_assignment.validate_assignment(assignment(), config())
 
 
 def test_validator_rejects_fault_conditioned_context_cells(

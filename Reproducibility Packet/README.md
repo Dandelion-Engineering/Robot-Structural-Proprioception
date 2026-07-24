@@ -77,16 +77,19 @@ predeclares split-owned ordinary/diagnostic trajectories; healthy, structural,
 actuator, and sensor grids with held-out severities; explicit validation/test
 compound-OOD cases; payload, temperature, and endpoint-contact confounds; five
 model-training seeds; and a fault-independent balanced context-cell rotation.
-Every fault setting in a split must realize the same payload/environment/contact
-cell set: four pairwise-balanced cells in development and pilot, and the complete
-eight-cell factorial in validation and test.
+Every fault setting in every split must realize the same complete eight-cell
+payload/environment/contact factorial. Each trajectory/fault group must also
+vary both profiles on every context axis, so trajectory identity cannot
+deterministically reveal payload, environment, or contact.
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\validate_gate3_assignment.py
 ```
 
-The tracked proposal expands to 656 whole scenario/fault reservations: 76 dev,
-76 pilot, 168 validation, and 336 test. Test identities remain reservation-only.
+The tracked proposal expands to 808 whole scenario/fault reservations: 152 dev,
+152 pilot, 168 validation, and 336 test. The added development/pilot repeats
+remove the conservative trajectory-to-payload alias present at the smaller
+budget. Test identities remain reservation-only.
 The command writes no manifest or payload, reports both generation permissions
 as `false`, and requires the exact same-state approval token
 `APPROVE_GATE3_ASSIGNMENT_V0_1`. Joint approval would authorize embedding this
@@ -480,8 +483,8 @@ This packet reproduces the mechanics gate, detector-floor correction, safe-probe
 
 ## Current boundary
 
-This packet reproduces the selected MuJoCo cable/rod mechanics, schema-v1.0 plant and sensor interfaces, causal online loop, evaluation core, detector/reference lifecycle, interpretable residual baseline, bounded task/contact controller, and the development screens through Step 17A. Schema Amendment A1 is jointly in force. A machine-readable schema, self-hashed draft-config contract, whole-group identity-manifest audit, suite-scoped deployable observation loader, schema-driven writers/loaders for every non-observation role, and an explicit `dev|pilot|val` supervised label join now form the Gate 1–2 pre-confirmatory foundation. Step 2A exercises those boundaries end to end on a synthetic role-completeness fixture and hard-refuses `test` under the draft lifecycle. Step 2B validates a self-hashed **proposed** Gate-3 multi-setting assignment and expands its 656 whole-group reservations in memory only. Its replacement review state uses an explicit fault-independent balanced context-cell table and fails unless every fault setting in a split receives the identical context-cell set. It is pending exact-state joint approval, leaves both generation permissions false, and materializes zero test reservations. The tracked draft is explicitly non-confirmatory; no frozen `config.json`, jointly approved Gate-3 assignment, learned attribution head, or RMA head exists yet.
+This packet reproduces the selected MuJoCo cable/rod mechanics, schema-v1.0 plant and sensor interfaces, causal online loop, evaluation core, detector/reference lifecycle, interpretable residual baseline, bounded task/contact controller, and the development screens through Step 17A. Schema Amendment A1 is jointly in force. A machine-readable schema, self-hashed draft-config contract, whole-group identity-manifest audit, suite-scoped deployable observation loader, schema-driven writers/loaders for every non-observation role, and an explicit `dev|pilot|val` supervised label join now form the Gate 1–2 pre-confirmatory foundation. Step 2A exercises those boundaries end to end on a synthetic role-completeness fixture and hard-refuses `test` under the draft lifecycle. Step 2B validates a self-hashed **proposed** Gate-3 multi-setting assignment and expands its 808 whole-group reservations in memory only. The previously approved 656-reservation state removed the fault-conditioned context leak; this owner-amended candidate adds development/pilot repeats so every fault and every trajectory/fault group receives balanced context exposure. The amended hash requires a new exact-state approval before assignment-driven generation. Both generation permissions remain false, and zero test reservations are materialized. The tracked draft is explicitly non-confirmatory; no frozen `config.json`, learned attribution head, or RMA head exists yet.
 
 On the current bounded task, the structural suite has strong development information evidence, but structural recovery is blocked because the task has no structural tracking deficit and the tested action behaves like a generic controller retune. The actuator condition has headroom, yet the new source-specific action screen also blocks: safe cap-3 misses the 10-point specificity gate and higher caps violate A1 safety. The probability result remains a sampled empirical envelope; calibrated class-probability, abstention, and uncertainty authorization, sensor-fault recovery, and evaluation-sized paired control remain open.
 
-The proposed different-task amendment was withdrawn before approval. The existing Claim Sheet remains in force, `config.json` remains unfrozen, and no development screen here is a confirmatory research result. Gate 2 still requires the real Gate-3-assigned multi-setting generator and role-completeness audit on generated MuJoCo data; the generic write/load/join path and contract fixture are now present. Gate 3 now has a complete review candidate, but remains open until Claude explicitly approves the exact tracked assignment state. Even after approval, the generator must add the assigned payload, contact-window, environment, and compound-fault paths and pass the real role-completeness audit before headline fitting. The packet does not yet implement the learned heads, full evaluation, or interactive verification artifact.
+The proposed different-task amendment was withdrawn before approval. The existing Claim Sheet remains in force, `config.json` remains unfrozen, and no development screen here is a confirmatory research result. Gate 2 still requires the real Gate-3-assigned multi-setting generator and role-completeness audit on generated MuJoCo data; the generic write/load/join path and contract fixture are now present. Gate 3 was jointly approved at the prior corrected hash, then reopened only because Codex adopted the reviewer's optional repeat-budget remedy. The amended assignment must receive a new exact-state approval before generator work begins. Even after approval, the generator must add the assigned payload, contact-window, environment, and compound-fault paths and pass the real role-completeness audit before headline fitting. The packet does not yet implement the learned heads, full evaluation, or interactive verification artifact.

@@ -747,6 +747,37 @@ def _assert_fault_independent_context_cells(
     return context_cell_counts
 
 
+def _assert_context_axes_vary_within_trajectories(
+    reservations: list[ScenarioReservation],
+) -> None:
+    """Reject trajectory/fault groups that alias any context axis."""
+
+    rows_by_group: dict[
+        tuple[str, str, str],
+        list[ScenarioReservation],
+    ] = {}
+    for reservation in reservations:
+        key = (
+            reservation.split,
+            reservation.trajectory_spec_id,
+            reservation.fault_setting_id,
+        )
+        rows_by_group.setdefault(key, []).append(reservation)
+
+    for (split, trajectory_id, fault_id), rows in rows_by_group.items():
+        axes = {
+            "payload": {row.payload_id for row in rows},
+            "environment": {row.env_profile_id for row in rows},
+            "contact": {row.contact_profile_id for row in rows},
+        }
+        aliased = [axis for axis, values in axes.items() if len(values) != 2]
+        if aliased:
+            raise Gate3AssignmentError(
+                f"{split} trajectory {trajectory_id!r} and fault {fault_id!r} "
+                f"must vary both profiles on every context axis; aliased: {aliased}"
+            )
+
+
 def _validate_protocol_and_plan(document: Mapping[str, Any]) -> None:
     """Validate pairing, split roles, seed policy, and generation interlocks."""
 
@@ -915,6 +946,7 @@ def validate_assignment(
         document,
         reservations,
     )
+    _assert_context_axes_vary_within_trajectories(reservations)
     ids = {
         "scenario_spec_id": [row.scenario_spec_id for row in reservations],
         "base_pair_id": [row.base_pair_id for row in reservations],

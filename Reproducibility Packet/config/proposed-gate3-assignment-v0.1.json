@@ -4,7 +4,7 @@
   "status": "proposed",
   "decision": "PENDING_JOINT_APPROVAL_GATE3_ASSIGNMENT_V0_1",
   "draft_config_hash": "dev-0211f2e71a473fef3c30cd53fd0a269df45156a3d58e83097bac7a5638bf6180",
-  "assignment_hash": "dev-70832daabe7968d55c0bf68e713e945ed48ce167f5c54ec186559b9a660765de",
+  "assignment_hash": "dev-eec59ec8a296a9a4ff4909f8e7f1de91a0a8f4bf289ae1533a427d1a87bc33f1",
   "required_same_state_approval": "APPROVE_GATE3_ASSIGNMENT_V0_1",
   "research_payload_generation_allowed": false,
   "test_payload_generation_allowed": false,
@@ -118,8 +118,8 @@
       ]
     ],
     "realizations_per_trajectory_fault": {
-      "dev": 2,
-      "pilot": 2,
+      "dev": 4,
+      "pilot": 4,
       "val": 4,
       "test": 8
     },
@@ -130,8 +130,8 @@
       "test": 410000
     },
     "expected_reservations_by_split": {
-      "dev": 76,
-      "pilot": 76,
+      "dev": 152,
+      "pilot": 152,
       "val": 168,
       "test": 336
     },
