@@ -1,155 +1,170 @@
-# Codex — Only Necessary Context
+# Summary of Only Necessary Context
 
-## Resume state
+**Last completed Codex session:** 26
+**Next Codex session:** 27
+**Expected next commit message:** `Codex Session 27`
+**Project phase:** Phase 2 — Integration and Reproducibility Build
+**Final config state:** **UNFROZEN**
 
-- Project: **Robot Structural Proprioception**
-- Phase: **Phase 2 — Execution**
-- Public state: **In Progress**
-- Current Codex session: **25**
-- Expected closeout commit: `Codex Session 25`
-- Shared `config.json`: **unfrozen**
-- Controlling scope: the jointly approved Claim Sheet. Randy withdrew the proposed task redesign before any amendment; a different task belongs to a separately scoped follow-on project.
+## Resume from the live sources
 
-At the next session, follow `AgentPrompt.md` from the top. Read the complete physical UTF-8 tails of every active transcript before relying on this continuity file.
+Follow `AgentPrompt.md` from the beginning. Before doing substantive work, read:
 
-## Immediate live gates
+1. `Project Details/Project Details.md`;
+2. this file;
+3. all chat summaries that include Codex;
+4. the complete physical tail/current state of every active Codex chat;
+5. Claude's latest human report and continuity summary; and
+6. the actual repository state.
 
-1. **Actuator action-mechanism owner review is open.** Codex handed the exact new script, regression, artifacts, and BLOCK interpretation to Claude at the physical tail of `Phase 2 Integration and Config Freeze - Active.md`. Do not treat silence, downstream use, or edits as approval. Require explicit same-state approval or review edits.
-2. **`Better Suited Task` awaits Claude's acknowledgement.** Randy withdrew his redesign request. Codex acknowledged. The chat can conclude only after Claude also acknowledges; do not rename/conclude it early.
-3. **Calibrated authorization remains open.** The action screen forces the same diagnosis on healthy to measure consequence; it does not estimate future false-authorization rates from suite-specific class probability, abstention, or uncertainty.
-4. **Configuration remains unfrozen.** No Session-25 screen is validation-sized or confirmatory.
+The authoritative active technical thread is:
 
-## Session-25 actuator action result
-
-New executable:
-
-- `Reproducibility Packet/scripts/screen_actuator_recovery_action.py`
-- regression: `Reproducibility Packet/tests/test_actuator_recovery_action.py`
-- artifacts: `Reproducibility Packet/results/actuator_recovery_action_screen/`
-
-Design:
-
-- selected physical condition: actuator location 1, 0.25 remaining gain, bounded z = 0.200 m task;
-- tuning seeds: 18000–18002;
-- assessment seeds: 17100–17103;
-- 36 tuning arms + 64 assessment arms;
-- cap/floor family: 2/0.25, 3/0.25, 4/0.25, 5/0.25, 5/0.20;
-- tuning target: 12% fault reduction;
-- assessment bars: 10% fault reduction and 10-pp source-specific margin;
-- source-specific margin: fault-action benefit minus identical healthy false-authorization benefit;
-- assessment includes oracle severity and exact recorded held-out C1/S severities from Step 15;
-- deterministic 20,000-replicate paired seed bootstrap.
-
-Decision:
-
-`BLOCK_ACTUATOR_ACTION_FAMILY_AT_SOURCE_SPECIFIC_GATE`
-
-Selected cap-3/floor-0.25 disjoint result:
-
-- fault reduction: 16.5764759355% mean, 16.4891729362% minimum;
-- healthy false-authorization benefit: 8.3224227983% mean;
-- source-specific margin: 8.2540531371 pp;
-- four-seed development interval: [8.0926910414, 8.5316317311] pp;
-- oracle, C1, and S are action-identical because all saturate at multiplier 3.0;
-- lifecycle/safety: pass.
-
-Higher-cap boundary:
-
-- cap-4/5 reach about 19.711% tuning fault recovery and 9.723 pp mean margin;
-- S cap-5 sensitivity reaches 10.179 pp in assessment;
-- those profiles fail the A1 lifecycle gate;
-- complete candidate audit: 19 A1-incident arms, zero saturation, zero multiplier mismatch;
-- all reference arms remain A1-clean and exactly reproduce committed Step-15 no-action `J_5s` (`max delta = 0.0`).
-
-Interpretation:
-
-- Safe cap-3 recovers tracking but misses the source-specific magnitude bar.
-- Raising the cap reaches more raw recovery only by crossing the safety boundary; it is not a free performance improvement.
-- C1 versus S control is not established by the selected cap because they command identically.
-- This is development action-mechanism evidence only.
-
-## Audit lesson preserved in code
-
-The first 100-arm run aborted artifact creation because candidate A1 incidents were included in a global integrity condition. That was wrong: candidate unsafety is a valid negative result.
-
-The corrected audit:
-
-- requires reference A1, saturation, and multiplier cleanliness as run integrity;
-- records candidate A1/saturation/multiplier violations;
-- feeds candidate violations into lifecycle advancement;
-- writes the negative artifact when references and execution integrity remain sound.
-
-`test_candidate_a1_incident_is_a_scientific_block_not_audit_corruption` protects this distinction.
-
-## Prior loop state
-
-### Actuator probability screen — closed
-
-Claude explicitly approved the exact Session-24 reviewer-corrected state:
-
-- six-point maximum sampled S-over-C1 difference: 5.0698636256 pp;
-- six-point mean: 5.0162118584 pp;
-- result is a sampled empirical envelope, not a continuous proof;
-- separate gate-crossing authorization difference: 10.8508760759 pp maximum;
-- class probability, abstention, uncertainty authorization, and continuous response remain open;
-- common RMS is a development fixture, not frozen predictive uncertainty.
-
-Do not reopen this loop without new evidence or an owner edit.
-
-### Severity/action boundary — closed
-
-The jointly approved cap-2 boundary result remains:
-
-- paired C1/S action difference below the 10-point bar for the recorded linear heads;
-- arbitrary read-outs outside the measured envelope, cap-4 behavior, class probability, abstention, uncertainty, and calibrated authorization were not closed by that screen.
-
-The new action-family screen measures cap/floor and false-authorization consequences but does not close calibrated authorization rates.
-
-### Fault headroom — closed as development direction
-
-- 0.25 remaining actuator gain has sufficient no-action headroom under the corrected deficit/reduction conversion.
-- Structural settings do not produce the required tracking deficit on the current bounded joint-space task.
-- Structural sensing remains diagnostic-only on this task unless a new in-scope mechanism and evidence change that conclusion.
-
-## Evidence boundaries that must remain separate
-
-- Development screens are not pilot, validation, frozen, or confirmatory evidence.
-- Detection, attribution, calibrated authorization, action-mechanism efficacy, and control outcome are separate gates.
-- A forced false authorization measures consequence, not false-authorization rate.
-- Positive raw recovery is not source-specific recovery.
-- An interval excluding zero does not clear a predeclared magnitude bar.
-- Unsafe high-cap recovery does not advance.
-- C1/S severity differences are irrelevant when the selected cap makes their commands identical.
-- Four physical seeds provide a sign-stability guard, not confirmatory uncertainty.
-- The current joint-space task stays in force; the withdrawn Cartesian-task proposal is preserved only as public history.
-
-## Verification at Session-25 closeout
-
-- Focused new regressions: **27 passed**
-- Full Reproducibility Packet: **329 passed**
-- New-file `compileall`: passed
-- Strict JSON parse: passed
-- Required audit fields: all passed
-- Official action screen: 100 arms, 8 workers
-- `summary.json` SHA-256: `B9D50165F0712CCCF6F6CB63B25A37BFCFBEF07E95DE22F3D58EDC6A3D38433F`
-
-## Key live files
-
-- `Claim Sheet.md`
-- `README.md`
-- `Reproducibility Packet/scripts/screen_actuator_recovery_action.py`
-- `Reproducibility Packet/tests/test_actuator_recovery_action.py`
-- `Reproducibility Packet/results/actuator_recovery_action_screen/summary.json`
-- `Reproducibility Packet/results/actuator_recovery_action_screen/actuator_recovery_action_report.md`
 - `chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`
-- `chats/Claude-Codex-Human/Better Suited Task/Better Suited Task - Active.md`
-- `agents/Codex/Session Summaries/HumanReport25.md`
 
-## Closeout/process invariants
+At Codex Session-26 closeout it had 2,408 physical UTF-8 lines. Codex's last header was:
 
-- Use only the project venv: `.\venv\Scripts\python.exe` from repo root or `..\venv\Scripts\python.exe` from `Reproducibility Packet`.
-- Active transcript appends require the hard gate: physical UTF-8 EOF, recorded pre-line count, verified unique multi-line EOF anchor, `apply_patch`, then exact post-boundary header/signature assertions.
-- Preserve append-only public and transcript history; add corrections instead of rewriting prior entries.
-- Require explicit same-state approval for review closure.
-- Run `git diff --cached --check` before committing.
-- Do not freeze config or promote a development result without the required gates.
+- `**Codex (Session 26, 2026-07-23 18:05 PDT):**` at line 2,392.
+
+Do not assume this remains the tail. Claude may have appended after closeout.
+
+## Current review state
+
+### Open: config-freeze readiness review
+
+Codex created:
+
+- `agents/Codex/Config Freeze Readiness Review.md`
+
+Owner decision:
+
+- `BLOCK_CONFIG_FREEZE_PENDING_PRECONFIRMATORY_BUILD_AND_VALIDATION`
+
+Codex handed the review to Claude for genuine first review in the active Phase-2 chat. **No same-state Claude approval existed at Session-26 closeout.**
+
+Next action:
+
+- If Claude explicitly approves the exact current review state, acknowledge and close the loop, then begin the first jointly approved implementation gate.
+- If Claude edits the review, inspect the actual changes and perform genuine owner re-review. Do not infer approval from edits, downstream use, or silence.
+
+### Closed: actuator recovery-action screen
+
+Claude Session 26 reran and explicitly approved the exact Codex Session-25 state. The loop is closed.
+
+Recorded development decision:
+
+- `BLOCK_ACTUATOR_ACTION_FAMILY_AT_SOURCE_SPECIFIC_GATE`
+- cap 3 is the strongest safe tuning-selected profile;
+- actuator-fault recovery = 16.576%;
+- healthy false-authorization benefit = 8.322%;
+- source-specific margin = 8.254 percentage points;
+- reported interval = `[8.093, 8.532]`;
+- the margin misses the fixed 10-percentage-point gate; and
+- cap 4/5 violate Amendment-A1 safety.
+
+Do not reinterpret fault recovery alone as source-specific action evidence. No actuator action family advances.
+
+### Closed: Better Suited Task redesign
+
+The proposed task redesign was withdrawn. The append-only correction is preserved, the coordination thread is concluded, and the Claim Sheet was not amended.
+
+## Config-freeze readiness result
+
+The packet is not ready for final `config.json` freeze.
+
+### Sequencing rule
+
+Use two distinct configuration states:
+
+- **DRAFT:** versioned and machine-validated for development/validation, including dataset construction, model training, hyperparameter selection, calibration, and controller-family screening.
+- **FROZEN:** complete and immutable, including the selected model/training/calibration/controller/evaluation contract, created before untouched confirmatory test generation.
+
+The old shorthand “learned heads post-freeze” cannot mean after final Claim-Sheet freeze. The Claim Sheet requires model/hyperparameter and class/abstention thresholds to be frozen before confirmatory generation.
+
+### Evidence-backed draft candidates
+
+Current development evidence supports draft candidates including:
+
+- MuJoCo cable/rod plant;
+- 17 points per link;
+- 0.1 ms physics step;
+- 500 Hz sensing;
+- `n_def = 90`;
+- gauge anchors 0.25 and 0.75;
+- 0.05 N / 0.8 Hz / one-cycle probe;
+- `W = 768`, stride 16;
+- task/contact `z = 0.200 m`;
+- no-contact reference `z = 0.100 m`;
+- Amendment-A1 roles and thresholds;
+- existing sensor-realism anchors; and
+- onset plus 5 seconds for the complete post-onset analysis horizon.
+
+These are not final confirmatory claims or a frozen config.
+
+### Seven gates before final freeze
+
+1. Machine-readable schema and draft/frozen config authority.
+2. Role-separated storage, deployable loader, split audit, and leakage audit.
+3. Multi-setting scenario/split/seed manifest including compound OOD.
+4. `TemporalAttributionNet`, `RMALatentEncoder`, capacity ladder, and five training seeds.
+5. Learned calibration, class thresholds, abstention, OOD, and uncertainty authorization.
+6. Confirmatory controller protocol after both tested action families blocked.
+7. Complete evaluation driver and auditable confirmatory manifest.
+
+At Session-26 audit time there was no machine schema JSON, frozen config JSON, identity manifest, learned temporal/RMA implementation, deployable loader, split-audit function, confirmatory CLI, complete evaluation driver, or verification artifact. Existing development outputs use `dev-*` config hashes.
+
+No `config.json` should be created until the pre-confirmatory build/validation gates close and Claude/Codex jointly approve the complete freeze state.
+
+## Recommended next implementation sequence
+
+Once the readiness review is jointly approved:
+
+1. implement the machine schema, versioned draft-config contract, role-separated persistence, deployable loading, and split/leakage audit foundation;
+2. instantiate the complete multi-setting scenario/split/seed manifest;
+3. implement and validation-select the learned models, capacity ladder, calibration, OOD, abstention, and uncertainty rules;
+4. resolve the confirmatory controller protocol and final sample size;
+5. jointly freeze the complete immutable config;
+6. generate/evaluate the untouched confirmatory roles; and
+7. proceed to Phase-3 statistics and figures.
+
+If the project chooses an information-only/detection-only confirmatory scope instead of a new recovery-action family, narrow control-outcome claims explicitly. Detection, attribution, information authorization, action authorization, and control outcome remain separate gates.
+
+## Durable technical boundaries
+
+- Development screens are not confirmatory results.
+- Shared statistics or candidate values are not a frozen config.
+- Information authorization is not action authorization.
+- Fault improvement is not source-specific recovery unless it exceeds the matched healthy false-authorization benefit under the predeclared gate.
+- A1 safety is a hard boundary.
+- C1 and S action equivalence at a selected cap does not establish general model equivalence.
+- Physical fault truth, delivered observations, estimator state, and controller authorization remain separate interfaces.
+- Confirmatory test roles must remain untouched until after the complete freeze.
+
+## Transcript append hard gate
+
+The active Phase-2 transcript has a history of mid-file insertion failure. For every append:
+
+1. read the physical UTF-8 tail;
+2. record the pre-write line count;
+3. verify the complete multi-line EOF anchor is unique;
+4. use `apply_patch` only against that exact anchor;
+5. verify the new session header occurs exactly once after the pre-write boundary; and
+6. require `git diff --numstat` to show `+N/-0` for that transcript.
+
+If any condition fails, stop and use the transcript-order monitoring workflow. Do not append using a short or non-unique anchor.
+
+## Verification and environment
+
+- Use only `.\venv\Scripts\python.exe` for Python/test commands.
+- Claude Session 26 recorded 329 passing tests while reproducing the actuator screen. Codex Session 26 did not independently rerun the suite because it changed documentation only.
+- Codex Session 26's chat delta was `+32/-0`.
+- Root `README.md` was heartbeat-checked and deliberately left unchanged: the readiness review is an internal implementation gate, not a new public technical milestone.
+- Next regular Codex progress report is Session 32.
+
+## Session-26 durable files
+
+- `agents/Codex/Config Freeze Readiness Review.md`
+- `agents/Codex/Session Summaries/HumanReport26.md`
+- `agents/Codex/README.md`
+- `chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`
+
+Read `HumanReport26.md` for the detailed audit record and exact closeout rationale.

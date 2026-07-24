@@ -6,6 +6,7 @@ This folder contains Codex-owned research, source records, and continuity for th
 
 - [`Literature Foundation.md`](Literature%20Foundation.md) — Codex's independent Phase-0 field survey. It is a concluded research input; corrections discovered later propagate into current artifacts rather than rewriting the foundation.
 - [`references.md`](references.md) — living source ledger for Codex's project work, including Phase-1 review sources. Reconcile it with Claude's independent ledger when the project bibliography is assembled.
+- [`Config Freeze Readiness Review.md`](Config%20Freeze%20Readiness%20Review.md) — Session-26 gate audit of the current Phase-2 packet. It blocks final confirmatory config freeze pending the machine-readable contract, role-separated persistence, multi-setting manifest, learned-estimator/calibration build, controller-protocol resolution, and confirmatory driver; Claude's first same-state review is open.
 
 ## Continuity and session record
 
@@ -35,6 +36,7 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`Session Summaries/HumanReport23.md`](Session%20Summaries/HumanReport23.md) — detailed record of Codex Session 23 (cap-boundary measurement review, uncertainty-role correction, empirical-envelope narrowing, fail-loud audit repair, and owner handback).
 - [`Session Summaries/HumanReport24.md`](Session%20Summaries/HumanReport24.md) — detailed record of Codex Session 24 (actuator probability-screen review, continuous-response and authorization-boundary correction, dense reviewer audit, and owner handback).
 - [`Session Summaries/HumanReport25.md`](Session%20Summaries/HumanReport25.md) — detailed record of Codex Session 25 (probability-loop close, task-redesign withdrawal acknowledgement, role-separated actuator-action screen, source-specific/lifecycle block, and owner handback).
+- [`Session Summaries/HumanReport26.md`](Session%20Summaries/HumanReport26.md) — detailed record of Codex Session 26 (actuator-action loop close, config-freeze readiness audit, draft-versus-final freeze sequencing correction, seven-gate implementation backlog, and Claude review handoff).
 - [`Progress Reports/Progress Report Session 8.md`](Progress%20Reports/Progress%20Report%20Session%208.md) — first regular every-eighth-session director update at the Accessible-Piece bar.
 - [`Progress Reports/Progress Report Session 16.md`](Progress%20Reports/Progress%20Report%20Session%2016.md) — second regular director update, covering the synchronous-probe correction, noisy pilot, real contact integration, and matched-contact BLOCK.
 - [`Progress Reports/Progress Report Session 24.md`](Progress%20Reports/Progress%20Report%20Session%2024.md) — third regular director update, covering the bounded-task redesign, information/control split, structural-action block, actuator headroom, and corrected probability-channel boundary; next regular Codex report is Session 32.
@@ -88,7 +90,7 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`../../Reproducibility Packet/results/severity_estimation_quality/severity_estimation_quality_report.md`](../../Reproducibility%20Packet/results/severity_estimation_quality/severity_estimation_quality_report.md) — development linear-read-out record: C1/S severity MAE is 0.0065/0.0076; 3 of 4 paired 0.50-gain arms straddle the cap-2 kink, so severity remains a live actuator-action route pending owner re-review.
 - [`../../Reproducibility Packet/results/actuator_recovery_action_screen/actuator_recovery_action_report.md`](../../Reproducibility%20Packet/results/actuator_recovery_action_screen/actuator_recovery_action_report.md) — 100-arm tuning/assessment development BLOCK: cap-3 recovers 16.576% on fault but also benefits healthy false authorization by 8.322%, leaving 8.254 pp; cap-4/5 profiles fail A1 safety, and C1/S are action-identical at the selected cap.
 - [`../../chats/Claude-Codex/Claim Sheet Review and Division of Labor/Summary.md`](../../chats/Claude-Codex/Claim%20Sheet%20Review%20and%20Division%20of%20Labor/Summary.md) — concluded Phase-1 review/labor summary.
-- [`../../chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`](../../chats/Claude-Codex/Phase%202%20Integration%20and%20Config%20Freeze/Phase%202%20Integration%20and%20Config%20Freeze%20-%20Active.md) — authoritative active interface/config thread; the probability-screen loop is closed, and the new actuator action-mechanism BLOCK is handed to Claude for genuine owner review. Config remains explicitly unfrozen.
+- [`../../chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`](../../chats/Claude-Codex/Phase%202%20Integration%20and%20Config%20Freeze/Phase%202%20Integration%20and%20Config%20Freeze%20-%20Active.md) — authoritative active interface/config thread; the actuator action-mechanism loop is closed, and the Session-26 config-freeze readiness review is handed to Claude for first same-state review. Config remains explicitly unfrozen.
 - [`../../chats/Claude-Codex-Human/Chat Appends/Summary.md`](../../chats/Claude-Codex-Human/Chat%20Appends/Summary.md) — concluded director coordination record for the transcript-tail failure mode and recovery rule.
 - [`../../chats/Claude-Codex-Human/Transcript Order Monitoring/Transcript Order Monitoring - Active.md`](../../chats/Claude-Codex-Human/Transcript%20Order%20Monitoring/Transcript%20Order%20Monitoring%20-%20Active.md) — active director-visible recurrence log; records verified append-only repairs and the requirement that the applied patch use the complete pre-verified EOF block.
 - [`../../chats/Claude-Codex/Phase 0 Coordination/Summary.md`](../../chats/Claude-Codex/Phase%200%20Coordination/Summary.md) — concluded Phase-0 convergence record that feeds the Claim Sheet.
@@ -98,6 +100,7 @@ This folder contains Codex-owned research, source records, and continuity for th
 
 ```text
 agents/Codex/
+├── Config Freeze Readiness Review.md
 ├── Literature Foundation.md
 ├── Progress Reports/
 │   ├── Progress Report Session 8.md
@@ -131,5 +134,6 @@ agents/Codex/
     ├── HumanReport22.md
     ├── HumanReport23.md
     ├── HumanReport24.md
-    └── HumanReport25.md
+    ├── HumanReport25.md
+    └── HumanReport26.md
 ```
