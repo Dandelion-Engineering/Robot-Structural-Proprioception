@@ -7,6 +7,10 @@ here and is imported rather than copy-pasted. Modules:
   * ``cable_plant``     -- one-control-step schema-B plant producer.
   * ``schema_types`` -- typed carriers for schema v1.0 (privileged / observed records).
   * ``rng``          -- common-random-number substreams for the matched C1-vs-S pair.
+  * ``config_contract`` -- strict draft/frozen config lifecycle, canonical hashing,
+    and pre-confirmatory readiness validation.
+  * ``storage_contract`` -- identity-manifest, role-index, whole-group split, and
+    suite-scoped deployable observation loading/auditing.
   * ``sensor_model`` -- the sensor-realism + fault-injection model (schema section C).
   * ``online_loop``  -- causal plant/sensor/policy interleaving on the control grid.
   * ``synthetic_plant`` -- a schema-conforming synthetic privileged trace, for

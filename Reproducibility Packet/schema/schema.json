@@ -1,0 +1,670 @@
+{
+  "schema_version": "1.0",
+  "status": "in_force",
+  "source_contract": "schema/schema-v1.0.md",
+  "amendments": [
+    {
+      "id": "A1",
+      "status": "in_force",
+      "effect": "contact_state[T,2] and safety_flag[T,7] fixed widths and order"
+    }
+  ],
+  "storage": {
+    "identity_manifest": "manifest.csv",
+    "payload_format": "numeric_or_unicode_npz_allow_pickle_false",
+    "role_index": "index.csv",
+    "path_rule": "project_relative_no_parent_traversal"
+  },
+  "dimensions": {
+    "T": "rollout control steps",
+    "n_def": "values.plant.n_def",
+    "n_joints": 2,
+    "n_gauges": 4,
+    "imu_width": 6,
+    "n_contact_state": 2,
+    "n_safety_flags": 7,
+    "n_known_classes": 4,
+    "N_decisions": "estimator decision steps in one rollout"
+  },
+  "suites": {
+    "deployable": [
+      "C0",
+      "C1",
+      "S"
+    ],
+    "oracle": "O",
+    "known_classes": [
+      "healthy",
+      "structure",
+      "actuator",
+      "sensor"
+    ],
+    "splits": [
+      "dev",
+      "pilot",
+      "val",
+      "test"
+    ]
+  },
+  "roles": {
+    "identity_manifest": {
+      "deployable": false,
+      "format": "csv",
+      "availability": "orchestration_and_evaluation_only",
+      "fields": {
+        "schema_version": {
+          "dtype": "unicode",
+          "shape": [],
+          "unit": "semantic_version"
+        },
+        "config_hash": {
+          "dtype": "unicode",
+          "shape": [],
+          "unit": "sha256_identity"
+        },
+        "scenario_spec_id": {
+          "dtype": "unicode",
+          "shape": [],
+          "unit": "opaque_id"
+        },
+        "pair_id": {
+          "dtype": "unicode",
+          "shape": [],
+          "unit": "opaque_id"
+        },
+        "run_id": {
+          "dtype": "unicode",
+          "shape": [],
+          "unit": "opaque_id"
+        },
+        "trajectory_spec_id": {
+          "dtype": "unicode",
+          "shape": [],
+          "unit": "opaque_id"
+        },
+        "fault_setting_id": {
+          "dtype": "unicode",
+          "shape": [],
+          "unit": "opaque_id"
+        },
+        "split_group_id": {
+          "dtype": "unicode",
+          "shape": [],
+          "unit": "opaque_id"
+        },
+        "split": {
+          "dtype": "unicode",
+          "shape": [],
+          "unit": "enum(dev,pilot,val,test)"
+        },
+        "suite": {
+          "dtype": "unicode",
+          "shape": [],
+          "unit": "enum(C0,C1,S,O)"
+        },
+        "estimator_id": {
+          "dtype": "unicode",
+          "shape": [],
+          "unit": "opaque_protocol_id"
+        },
+        "controller_id": {
+          "dtype": "unicode",
+          "shape": [],
+          "unit": "opaque_protocol_id"
+        },
+        "payload_id": {
+          "dtype": "unicode",
+          "shape": [],
+          "unit": "opaque_id"
+        },
+        "env_profile_id": {
+          "dtype": "unicode",
+          "shape": [],
+          "unit": "opaque_id"
+        },
+        "contact_profile_id": {
+          "dtype": "unicode",
+          "shape": [],
+          "unit": "opaque_id"
+        },
+        "sim_seed": {
+          "dtype": "int64",
+          "shape": [],
+          "unit": "seed"
+        },
+        "fault_seed": {
+          "dtype": "int64",
+          "shape": [],
+          "unit": "seed"
+        },
+        "sensor_seed": {
+          "dtype": "int64",
+          "shape": [],
+          "unit": "seed"
+        },
+        "controller_seed": {
+          "dtype": "int64",
+          "shape": [],
+          "unit": "seed"
+        },
+        "train_seed": {
+          "dtype": "int64",
+          "shape": [],
+          "unit": "seed"
+        }
+      }
+    },
+    "plant": {
+      "deployable": false,
+      "format": "npz",
+      "availability": "metrics_labels_and_oracle_only",
+      "fields": {
+        "step": {
+          "dtype": "int64",
+          "shape": [
+            "T"
+          ],
+          "unit": "control_step_index"
+        },
+        "t_s": {
+          "dtype": "float64",
+          "shape": [
+            "T"
+          ],
+          "unit": "s"
+        },
+        "q_true": {
+          "dtype": "float64",
+          "shape": [
+            "T",
+            2
+          ],
+          "unit": "rad"
+        },
+        "qd_true": {
+          "dtype": "float64",
+          "shape": [
+            "T",
+            2
+          ],
+          "unit": "rad/s"
+        },
+        "qdd_true": {
+          "dtype": "float64",
+          "shape": [
+            "T",
+            2
+          ],
+          "unit": "rad/s^2"
+        },
+        "tau_cmd": {
+          "dtype": "float64",
+          "shape": [
+            "T",
+            2
+          ],
+          "unit": "N*m"
+        },
+        "tau_delivered_true": {
+          "dtype": "float64",
+          "shape": [
+            "T",
+            2
+          ],
+          "unit": "N*m"
+        },
+        "deform_coords": {
+          "dtype": "float64",
+          "shape": [
+            "T",
+            "n_def"
+          ],
+          "unit": "model_defined"
+        },
+        "curvature_true": {
+          "dtype": "float64",
+          "shape": [
+            "T",
+            4
+          ],
+          "unit": "1/m"
+        },
+        "gauge_true": {
+          "dtype": "float64",
+          "shape": [
+            "T",
+            4
+          ],
+          "unit": "microstrain"
+        },
+        "imu_true": {
+          "dtype": "float64",
+          "shape": [
+            "T",
+            6
+          ],
+          "unit": "m/s^2_x3,rad/s_x3"
+        },
+        "temperature_true": {
+          "dtype": "float64",
+          "shape": [
+            "T",
+            4
+          ],
+          "unit": "degC"
+        },
+        "contact_state": {
+          "dtype": "float64",
+          "shape": [
+            "T",
+            2
+          ],
+          "unit": "N,flag",
+          "field_order": [
+            "tip_contact_force_n",
+            "tip_contact_active"
+          ]
+        },
+        "task_reference": {
+          "dtype": "float64",
+          "shape": [
+            "T",
+            2
+          ],
+          "unit": "m"
+        },
+        "true_task_output": {
+          "dtype": "float64",
+          "shape": [
+            "T",
+            2
+          ],
+          "unit": "m"
+        },
+        "tracking_error": {
+          "dtype": "float64",
+          "shape": [
+            "T",
+            2
+          ],
+          "unit": "m"
+        },
+        "tracking_error_norm": {
+          "dtype": "float64",
+          "shape": [
+            "T"
+          ],
+          "unit": "m"
+        },
+        "control_effort": {
+          "dtype": "float64",
+          "shape": [
+            "T",
+            2
+          ],
+          "unit": "N*m"
+        },
+        "saturation_flag": {
+          "dtype": "bool",
+          "shape": [
+            "T",
+            2
+          ],
+          "unit": "flag"
+        },
+        "safety_flag": {
+          "dtype": "bool",
+          "shape": [
+            "T",
+            7
+          ],
+          "unit": "flag",
+          "field_order": [
+            "joint_angle_0_exceeded",
+            "joint_angle_1_exceeded",
+            "joint_speed_0_exceeded",
+            "joint_speed_1_exceeded",
+            "tip_workspace_exceeded",
+            "gauge_abs_exceeded",
+            "tip_contact_force_exceeded"
+          ]
+        }
+      }
+    },
+    "observations": {
+      "deployable": true,
+      "format": "npz",
+      "availability": "one_static_suite_mask_over_fixed_registry",
+      "metadata_fields": {
+        "schema_version": "unicode_scalar",
+        "suite": "unicode_scalar",
+        "run_id": "unicode_scalar",
+        "pair_id": "unicode_scalar",
+        "config_hash": "unicode_scalar",
+        "split": "unicode_scalar",
+        "channel_names": "unicode[6]",
+        "suite_available_mask": "bool[6]"
+      },
+      "per_channel_arrays": {
+        "values": {
+          "dtype": "float64",
+          "shape": [
+            "T",
+            "channel_width"
+          ],
+          "unit": "channel_specific",
+          "missing_rule": "NaN"
+        },
+        "valid": {
+          "dtype": "bool",
+          "shape": [
+            "T",
+            "channel_width"
+          ],
+          "unit": "flag"
+        },
+        "measurement_time_s": {
+          "dtype": "float64",
+          "shape": [
+            "T"
+          ],
+          "unit": "s"
+        },
+        "availability_time_s": {
+          "dtype": "float64",
+          "shape": [
+            "T"
+          ],
+          "unit": "s"
+        },
+        "latency_age_s": {
+          "dtype": "float64",
+          "shape": [
+            "T"
+          ],
+          "unit": "s"
+        }
+      },
+      "channel_registry": {
+        "q_obs": {
+          "width": 2,
+          "unit": "rad",
+          "available_in": [
+            "C0",
+            "C1",
+            "S"
+          ]
+        },
+        "qd_obs": {
+          "width": 2,
+          "unit": "rad/s",
+          "available_in": [
+            "C0",
+            "C1",
+            "S"
+          ]
+        },
+        "tau_cmd": {
+          "width": 2,
+          "unit": "N*m",
+          "available_in": [
+            "C0",
+            "C1",
+            "S"
+          ]
+        },
+        "current_proxy_obs": {
+          "width": 2,
+          "unit": "N*m",
+          "available_in": [
+            "C1",
+            "S"
+          ]
+        },
+        "imu_obs": {
+          "width": 6,
+          "unit": "m/s^2_x3,rad/s_x3",
+          "available_in": [
+            "C1",
+            "S"
+          ]
+        },
+        "gauge_obs": {
+          "width": 4,
+          "unit": "microstrain",
+          "available_in": [
+            "S"
+          ]
+        }
+      }
+    },
+    "labels": {
+      "deployable": false,
+      "format": "npz",
+      "availability": "allowlisted_training_builder_and_evaluation_only",
+      "fields": {
+        "source_class": {
+          "dtype": "unicode",
+          "shape": [],
+          "unit": "enum(healthy,structure,actuator,sensor)"
+        },
+        "subtype": {
+          "dtype": "unicode",
+          "shape": [],
+          "unit": "categorical"
+        },
+        "location": {
+          "dtype": "int64",
+          "shape": [],
+          "unit": "component_index"
+        },
+        "severity": {
+          "dtype": "float64",
+          "shape": [],
+          "unit": "subtype_specific_remaining_fraction_or_bias"
+        },
+        "onset_index": {
+          "dtype": "int64",
+          "shape": [],
+          "unit": "control_step_index"
+        },
+        "onset_time_s": {
+          "dtype": "float64",
+          "shape": [],
+          "unit": "s"
+        },
+        "compound_flag": {
+          "dtype": "bool",
+          "shape": [],
+          "unit": "flag"
+        },
+        "ood_flag": {
+          "dtype": "bool",
+          "shape": [],
+          "unit": "flag"
+        }
+      }
+    },
+    "estimator_outputs": {
+      "deployable": false,
+      "format": "npz",
+      "availability": "diagnosis_evaluation_and_controller_input",
+      "fields": {
+        "step": {
+          "dtype": "int64",
+          "shape": [
+            "N_decisions"
+          ],
+          "unit": "control_step_index"
+        },
+        "decision_time_s": {
+          "dtype": "float64",
+          "shape": [
+            "N_decisions"
+          ],
+          "unit": "s"
+        },
+        "p_class": {
+          "dtype": "float64",
+          "shape": [
+            "N_decisions",
+            4
+          ],
+          "unit": "probability"
+        },
+        "unknown_score": {
+          "dtype": "float64",
+          "shape": [
+            "N_decisions"
+          ],
+          "unit": "score"
+        },
+        "abstain_decision": {
+          "dtype": "bool",
+          "shape": [
+            "N_decisions"
+          ],
+          "unit": "flag"
+        },
+        "location_out": {
+          "dtype": "int64",
+          "shape": [
+            "N_decisions"
+          ],
+          "unit": "component_index"
+        },
+        "severity_out": {
+          "dtype": "float64",
+          "shape": [
+            "N_decisions"
+          ],
+          "unit": "subtype_specific"
+        },
+        "severity_uncertainty": {
+          "dtype": "float64",
+          "shape": [
+            "N_decisions"
+          ],
+          "unit": "config_defined_nonnegative_error_scale"
+        },
+        "detection_time_s": {
+          "dtype": "float64",
+          "shape": [
+            "N_decisions"
+          ],
+          "unit": "s"
+        }
+      }
+    },
+    "controller_logs": {
+      "deployable": false,
+      "format": "npz",
+      "availability": "control_evaluation_only",
+      "fields": {
+        "step": {
+          "dtype": "int64",
+          "shape": [
+            "T"
+          ],
+          "unit": "control_step_index"
+        },
+        "t_s": {
+          "dtype": "float64",
+          "shape": [
+            "T"
+          ],
+          "unit": "s"
+        },
+        "applied_action": {
+          "dtype": "float64",
+          "shape": [
+            "T",
+            2
+          ],
+          "unit": "N*m"
+        },
+        "controller_mode": {
+          "dtype": "unicode",
+          "shape": [
+            "T"
+          ],
+          "unit": "categorical"
+        },
+        "gain_schedule": {
+          "dtype": "float64",
+          "shape": [
+            "T",
+            2
+          ],
+          "unit": "multiplier"
+        },
+        "reconfiguration_event": {
+          "dtype": "bool",
+          "shape": [
+            "T"
+          ],
+          "unit": "flag"
+        }
+      }
+    }
+  },
+  "role_indexes": {
+    "base_fields": [
+      "run_id",
+      "schema_version",
+      "config_hash",
+      "npz_path",
+      "sha256"
+    ],
+    "observation_extra_fields": [
+      "split"
+    ]
+  },
+  "invariants": {
+    "split_audit": [
+      "pair_id_maps_to_one_split",
+      "trajectory_spec_id_maps_to_one_split",
+      "fault_setting_id_maps_to_one_split",
+      "run_id_is_one_whole_rollout"
+    ],
+    "pairing": [
+      "sim_fault_sensor_seeds_shared_within_pair",
+      "estimator_controller_protocol_ids_shared_within_pair",
+      "suite_not_used_as_split_input"
+    ],
+    "causality": "availability_time_s <= decision_time_s for every model input",
+    "leakage": "deployable_loader_resolves_only_one_suite_observation_root_and_safe_index",
+    "oracle": "separate_allowlisted_interface_never_a_deployable_suite_mask"
+  },
+  "config_contract": {
+    "required_top_level": [
+      "config_version",
+      "schema_version",
+      "schema_sha256",
+      "status",
+      "confirmatory_payloads_allowed",
+      "decision",
+      "open_gates",
+      "values",
+      "config_hash"
+    ],
+    "freeze_required_paths": [
+      "values.plant",
+      "values.timing",
+      "values.sensor_model",
+      "values.scenario_manifest",
+      "values.models",
+      "values.calibration",
+      "values.controllers",
+      "values.evaluation"
+    ],
+    "draft_filename_rule": "must_not_equal_config.json",
+    "frozen_filename_rule": "must_equal_config.json",
+    "canonicalization": "utf8_json_sort_keys_compact_no_nan_omit_top_level_config_hash",
+    "draft_hash_prefix": "dev-",
+    "frozen_decision": "APPROVE_CONFIG_FREEZE",
+    "frozen_forbidden_string_prefixes": [
+      "dev-"
+    ]
+  }
+}

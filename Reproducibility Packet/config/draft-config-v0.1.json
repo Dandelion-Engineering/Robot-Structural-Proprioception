@@ -1,0 +1,88 @@
+{
+  "config_version": "0.1.0-dev",
+  "schema_version": "1.0",
+  "schema_sha256": "0dae0dd0fec4269180139efc9a4c9ce38e7f8f23d890d182dc8eb063803e942f",
+  "status": "draft",
+  "confirmatory_payloads_allowed": false,
+  "decision": "BLOCK_CONFIG_FREEZE_PENDING_PRECONFIRMATORY_BUILD_AND_VALIDATION",
+  "open_gates": [
+    "gate_2_complete_storage_and_leakage_audit",
+    "gate_3_jointly_approved_multi_setting_manifest",
+    "gate_4_matched_learned_models",
+    "gate_5_validation_calibration_and_authorization",
+    "gate_6_confirmatory_controller_protocol",
+    "gate_7_evaluation_driver_and_test_manifest"
+  ],
+  "values": {
+    "plant": {
+      "model_id": "mujoco-cable-rod-development-candidate",
+      "point_count_per_link": 17,
+      "simulation_timestep_s": 0.0001,
+      "n_def": 90,
+      "gauge_station_normalized_locations": [
+        0.25,
+        0.75
+      ],
+      "endpoint_contact_plane_z_m": 0.2,
+      "safety_thresholds": {
+        "joint_angle_abs_limit_rad": [
+          3.141592653589793,
+          3.141592653589793
+        ],
+        "joint_speed_abs_limit_rad_s": [
+          10.0,
+          10.0
+        ],
+        "tip_workspace_radius_limit_m": 0.82,
+        "gauge_abs_limit_microstrain": 500.0,
+        "tip_contact_force_limit_n": 5.0
+      }
+    },
+    "timing": {
+      "f_ctrl_hz": 500.0,
+      "control_dt_s": 0.002,
+      "window_steps": 768,
+      "stride_steps": 16,
+      "onset_convention": "first_post_change_control_step",
+      "analysis_window_s": 5.0,
+      "diagnostic_probe": {
+        "peak_force_n": 0.05,
+        "frequency_hz": 0.8,
+        "cycles": 1,
+        "envelope": "raised_cosine"
+      }
+    },
+    "sensor_model": {
+      "encoder_noise_rad": 0.0003,
+      "encoder_quant_rad": 0.0003834951969714103,
+      "encoder_latency_s": 0.0,
+      "current_noise_floor_nm": 0.001,
+      "current_noise_frac": 0.02,
+      "current_bias_nm": 0.002,
+      "current_latency_s": 0.0,
+      "imu_accel_noise": 0.02,
+      "imu_gyro_noise": 0.002,
+      "imu_accel_bias": 0.01,
+      "imu_gyro_bias": 0.001,
+      "imu_latency_s": 0.0,
+      "gauge_noise_microstrain": 1.0,
+      "thermal_microstrain_per_c": 10.0,
+      "reference_temperature_c": 25.0,
+      "gauge_bias_microstrain": 0.5,
+      "gauge_drift_microstrain_per_rt_s": 0.2,
+      "gauge_hysteresis_alpha": 0.15,
+      "gauge_quant_microstrain": 0.5,
+      "gauge_latency_s": 0.002,
+      "dropout_prob": 0.01
+    },
+    "scenario_manifest": null,
+    "models": null,
+    "calibration": null,
+    "controllers": {
+      "governance": "run_pre_registered_control_comparison_no_scope_narrowing",
+      "protocol_ids": null
+    },
+    "evaluation": null
+  },
+  "config_hash": "dev-0211f2e71a473fef3c30cd53fd0a269df45156a3d58e83097bac7a5638bf6180"
+}

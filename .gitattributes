@@ -1,0 +1,2 @@
+# Keep the byte-hashed machine schema identical across platforms and clones.
+Reproducibility?Packet/schema/schema.json text eol=lf
