@@ -1,6 +1,6 @@
 # Reproducibility Packet
 
-This is the self-contained working packet for the Robot Structural Proprioception project. The current runnable surface reproduces the mechanics feasibility gate, emits a schema-v1.0 privileged trace from the selected MuJoCo cable plant, turns that trace into a deployable sensor suite's noisy observations, and exercises the complete role-separated storage contract on a development fixture. Later pipeline stages will be added here as they become final.
+This is the self-contained working packet for the Robot Structural Proprioception project. The current runnable surface reproduces the mechanics feasibility gate, emits a schema-v1.0 privileged trace from the selected MuJoCo cable plant, turns that trace into a deployable sensor suite's noisy observations, exercises the complete role-separated storage contract on a development fixture, and validates a proposed Gate-3 scenario/split preregistration without generating payloads. Later pipeline stages will be added here as they become final.
 
 ## Requirements
 
@@ -68,6 +68,29 @@ Produces:
 - `results/data_contract_fixture/estimator_outputs/{C1,S}/index.csv`
 - `results/data_contract_fixture/controller_logs/{C1,S}/index.csv`
 - `results/data_contract_fixture/build_summary.json`
+
+## Step 2B — Validate the proposed Gate-3 scenario/split assignment
+
+Validates the self-hashed, review-pending assignment against the tracked draft
+config and expands its suite-independent reservations in memory. The proposal
+predeclares split-owned ordinary/diagnostic trajectories; healthy, structural,
+actuator, and sensor grids with held-out severities; explicit validation/test
+compound-OOD cases; payload, temperature, and endpoint-contact confounds; five
+model-training seeds; and a deterministic common-random-number rotation.
+
+```powershell
+.\.venv\Scripts\python.exe scripts\validate_gate3_assignment.py
+```
+
+The tracked proposal expands to 656 whole scenario/fault reservations: 76 dev,
+76 pilot, 168 validation, and 336 test. Test identities remain reservation-only.
+The command writes no manifest or payload, reports both generation permissions
+as `false`, and requires the exact same-state approval token
+`APPROVE_GATE3_ASSIGNMENT_V0_1`. Joint approval would authorize embedding this
+exact assignment in the draft config and building the missing generator paths;
+it would not freeze `config.json` or authorize confirmatory generation.
+
+Produces: terminal-only assignment audit results.
 
 ## Step 3 — Reproduce the mechanics gate
 
@@ -454,8 +477,8 @@ This packet reproduces the mechanics gate, detector-floor correction, safe-probe
 
 ## Current boundary
 
-This packet reproduces the selected MuJoCo cable/rod mechanics, schema-v1.0 plant and sensor interfaces, causal online loop, evaluation core, detector/reference lifecycle, interpretable residual baseline, bounded task/contact controller, and the development screens through Step 17A. Schema Amendment A1 is jointly in force. A machine-readable schema, self-hashed draft-config contract, whole-group identity-manifest audit, suite-scoped deployable observation loader, schema-driven writers/loaders for every non-observation role, and an explicit `dev|pilot|val` supervised label join now form the Gate 1–2 pre-confirmatory foundation. Step 2A exercises those boundaries end to end on a synthetic role-completeness fixture and hard-refuses `test` under the draft lifecycle. The tracked draft is explicitly non-confirmatory; no frozen `config.json`, jointly approved Gate-3 assignment, learned attribution head, or RMA head exists yet.
+This packet reproduces the selected MuJoCo cable/rod mechanics, schema-v1.0 plant and sensor interfaces, causal online loop, evaluation core, detector/reference lifecycle, interpretable residual baseline, bounded task/contact controller, and the development screens through Step 17A. Schema Amendment A1 is jointly in force. A machine-readable schema, self-hashed draft-config contract, whole-group identity-manifest audit, suite-scoped deployable observation loader, schema-driven writers/loaders for every non-observation role, and an explicit `dev|pilot|val` supervised label join now form the Gate 1–2 pre-confirmatory foundation. Step 2A exercises those boundaries end to end on a synthetic role-completeness fixture and hard-refuses `test` under the draft lifecycle. Step 2B validates a self-hashed **proposed** Gate-3 multi-setting assignment and expands its 656 whole-group reservations in memory only. It is pending exact-state joint approval, leaves both generation permissions false, and materializes zero test reservations. The tracked draft is explicitly non-confirmatory; no frozen `config.json`, jointly approved Gate-3 assignment, learned attribution head, or RMA head exists yet.
 
 On the current bounded task, the structural suite has strong development information evidence, but structural recovery is blocked because the task has no structural tracking deficit and the tested action behaves like a generic controller retune. The actuator condition has headroom, yet the new source-specific action screen also blocks: safe cap-3 misses the 10-point specificity gate and higher caps violate A1 safety. The probability result remains a sampled empirical envelope; calibrated class-probability, abstention, and uncertainty authorization, sensor-fault recovery, and evaluation-sized paired control remain open.
 
-The proposed different-task amendment was withdrawn before approval. The existing Claim Sheet remains in force, `config.json` remains unfrozen, and no development screen here is a confirmatory research result. Gate 2 still requires the real Gate-3-assigned multi-setting generator and role-completeness audit on generated MuJoCo data; the generic write/load/join path and contract fixture are now present. Gate 3 requires a jointly approved draft assignment manifest before headline-model fitting, and the packet does not yet implement the full evaluation or interactive verification artifact.
+The proposed different-task amendment was withdrawn before approval. The existing Claim Sheet remains in force, `config.json` remains unfrozen, and no development screen here is a confirmatory research result. Gate 2 still requires the real Gate-3-assigned multi-setting generator and role-completeness audit on generated MuJoCo data; the generic write/load/join path and contract fixture are now present. Gate 3 now has a complete review candidate, but remains open until Claude explicitly approves the exact tracked assignment state. Even after approval, the generator must add the assigned payload, contact-window, environment, and compound-fault paths and pass the real role-completeness audit before headline fitting. The packet does not yet implement the learned heads, full evaluation, or interactive verification artifact.

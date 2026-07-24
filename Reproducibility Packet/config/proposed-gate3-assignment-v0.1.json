@@ -1,0 +1,821 @@
+{
+  "assignment_version": "0.1.0-proposed",
+  "schema_version": "1.0",
+  "status": "proposed",
+  "decision": "PENDING_JOINT_APPROVAL_GATE3_ASSIGNMENT_V0_1",
+  "draft_config_hash": "dev-0211f2e71a473fef3c30cd53fd0a269df45156a3d58e83097bac7a5638bf6180",
+  "assignment_hash": "dev-5939ff5f1f0cc29f75bb4abcd027dbe6ffe84844ad7727ac1e75ca9a0220cedb",
+  "required_same_state_approval": "APPROVE_GATE3_ASSIGNMENT_V0_1",
+  "research_payload_generation_allowed": false,
+  "test_payload_generation_allowed": false,
+  "evidence_boundary": [
+    "This file is a proposed scenario/split preregistration for joint review, not an approved or frozen configuration.",
+    "Validation expands identities in memory only; it writes no manifest and generates no plant, observation, label, estimator, or controller payload.",
+    "Development, pilot, validation, and test reservations are not research results; test reservations must remain unmaterialized until the final config.json is frozen.",
+    "Compound/OOD labels use the first component as the schema-compatible primary label and must be excluded from known-class attribution metrics by ood_flag."
+  ],
+  "suite_protocol": {
+    "suites": [
+      "C0",
+      "C1",
+      "S",
+      "O"
+    ],
+    "primary_comparison": [
+      "C1",
+      "S"
+    ],
+    "suite_independent_split_assignment": true,
+    "common_random_number_fields": [
+      "scenario_spec_id",
+      "trajectory_spec_id",
+      "fault_setting_id",
+      "payload_id",
+      "env_profile_id",
+      "contact_profile_id",
+      "sim_seed",
+      "fault_seed",
+      "sensor_seed",
+      "controller_seed",
+      "train_seed"
+    ],
+    "same_algorithm_capacity_rule": "C0, C1, and S use the same estimator and controller families, optimization protocol, training-seed pool, and capacity budget; only the static observation mask differs.",
+    "oracle_boundary": "O is a separate allowlisted privileged interface used only for ceilings and oracle-controller analyses; no deployable loader may import it."
+  },
+  "split_policy": {
+    "split_order": [
+      "dev",
+      "pilot",
+      "val",
+      "test"
+    ],
+    "assignment_unit": "whole trajectory_spec_id x fault_setting_id x realization; all suites and training seeds inherit that split",
+    "partition_fields": [
+      "trajectory_spec_id",
+      "fault_setting_id",
+      "split_group_id"
+    ],
+    "suite_not_split_input": true,
+    "dataset_identity_train_seed": 0,
+    "model_training_seed_pool": [
+      31001,
+      31002,
+      31003,
+      31004,
+      31005
+    ],
+    "role_by_split": {
+      "dev": "model fitting and development-only mechanism checks",
+      "pilot": "method-failure discovery and confirmatory sample-size planning only",
+      "val": "threshold, calibration, authorization, and model-selection lock",
+      "test": "one-shot confirmatory evaluation after final config freeze"
+    },
+    "test_reservations_only_until_frozen": true,
+    "ood_known_metric_rule": "Rows with ood_flag=true are excluded from four-way known-class metrics and enter only the preregistered abstention/unknown/OOD metrics."
+  },
+  "generation_plan": {
+    "expansion_rule": "For each split in split_order, enumerate tracked trajectories, expanded fault settings, and realization index in file order. Rotate split-owned payload, environment, and contact profiles by the fixed modular formulas implemented in utils.gate3_assignment; seeds are seed_base + 10*ordinal plus offsets 0,1,2,3.",
+    "realizations_per_trajectory_fault": {
+      "dev": 2,
+      "pilot": 2,
+      "val": 4,
+      "test": 8
+    },
+    "seed_base_by_split": {
+      "dev": 110000,
+      "pilot": 210000,
+      "val": 310000,
+      "test": 410000
+    },
+    "expected_reservations_by_split": {
+      "dev": 76,
+      "pilot": 76,
+      "val": 168,
+      "test": 336
+    },
+    "future_manifest_rows_per_reservation": 20
+  },
+  "trajectory_specs": [
+    {
+      "id": "trajectory_dev_ordinary_a",
+      "split": "dev",
+      "excitation": "ordinary",
+      "target_joint_rad": [
+        0.24,
+        0.30
+      ],
+      "onset_time_s": 0.8,
+      "duration_s": 5.8,
+      "relative_task_events_s": {
+        "movement_start": 1.2,
+        "transition": 0.6,
+        "hold_end": 3.2,
+        "return_end": 4.0
+      },
+      "diagnostic_probe": null
+    },
+    {
+      "id": "trajectory_dev_diagnostic_b",
+      "split": "dev",
+      "excitation": "diagnostic",
+      "target_joint_rad": [
+        0.30,
+        0.24
+      ],
+      "onset_time_s": 1.0,
+      "duration_s": 6.0,
+      "relative_task_events_s": {
+        "movement_start": 1.4,
+        "transition": 0.6,
+        "hold_end": 3.4,
+        "return_end": 4.0
+      },
+      "diagnostic_probe": {
+        "peak_force_n": 0.05,
+        "frequency_hz": 0.8,
+        "cycles": 1,
+        "envelope": "raised_cosine",
+        "start_offset_s": 1.0
+      }
+    },
+    {
+      "id": "trajectory_pilot_ordinary_c",
+      "split": "pilot",
+      "excitation": "ordinary",
+      "target_joint_rad": [
+        0.27,
+        0.33
+      ],
+      "onset_time_s": 0.9,
+      "duration_s": 5.9,
+      "relative_task_events_s": {
+        "movement_start": 1.3,
+        "transition": 0.6,
+        "hold_end": 3.3,
+        "return_end": 4.0
+      },
+      "diagnostic_probe": null
+    },
+    {
+      "id": "trajectory_pilot_diagnostic_d",
+      "split": "pilot",
+      "excitation": "diagnostic",
+      "target_joint_rad": [
+        0.33,
+        0.27
+      ],
+      "onset_time_s": 1.1,
+      "duration_s": 6.1,
+      "relative_task_events_s": {
+        "movement_start": 1.3,
+        "transition": 0.6,
+        "hold_end": 3.4,
+        "return_end": 4.1
+      },
+      "diagnostic_probe": {
+        "peak_force_n": 0.05,
+        "frequency_hz": 0.8,
+        "cycles": 1,
+        "envelope": "raised_cosine",
+        "start_offset_s": 1.2
+      }
+    },
+    {
+      "id": "trajectory_val_ordinary_e",
+      "split": "val",
+      "excitation": "ordinary",
+      "target_joint_rad": [
+        0.36,
+        0.24
+      ],
+      "onset_time_s": 0.85,
+      "duration_s": 5.85,
+      "relative_task_events_s": {
+        "movement_start": 1.15,
+        "transition": 0.55,
+        "hold_end": 3.15,
+        "return_end": 3.9
+      },
+      "diagnostic_probe": null
+    },
+    {
+      "id": "trajectory_val_diagnostic_f",
+      "split": "val",
+      "excitation": "diagnostic",
+      "target_joint_rad": [
+        0.24,
+        0.36
+      ],
+      "onset_time_s": 1.15,
+      "duration_s": 6.15,
+      "relative_task_events_s": {
+        "movement_start": 1.25,
+        "transition": 0.55,
+        "hold_end": 3.35,
+        "return_end": 4.05
+      },
+      "diagnostic_probe": {
+        "peak_force_n": 0.05,
+        "frequency_hz": 0.8,
+        "cycles": 1,
+        "envelope": "raised_cosine",
+        "start_offset_s": 0.9
+      }
+    },
+    {
+      "id": "trajectory_test_ordinary_g",
+      "split": "test",
+      "excitation": "ordinary",
+      "target_joint_rad": [
+        0.21,
+        0.39
+      ],
+      "onset_time_s": 0.75,
+      "duration_s": 5.75,
+      "relative_task_events_s": {
+        "movement_start": 1.25,
+        "transition": 0.5,
+        "hold_end": 3.25,
+        "return_end": 3.9
+      },
+      "diagnostic_probe": null
+    },
+    {
+      "id": "trajectory_test_diagnostic_h",
+      "split": "test",
+      "excitation": "diagnostic",
+      "target_joint_rad": [
+        0.39,
+        0.21
+      ],
+      "onset_time_s": 1.25,
+      "duration_s": 6.25,
+      "relative_task_events_s": {
+        "movement_start": 1.15,
+        "transition": 0.5,
+        "hold_end": 3.45,
+        "return_end": 4.15
+      },
+      "diagnostic_probe": {
+        "peak_force_n": 0.05,
+        "frequency_hz": 0.8,
+        "cycles": 1,
+        "envelope": "raised_cosine",
+        "start_offset_s": 1.1
+      }
+    }
+  ],
+  "fault_grid_by_split": {
+    "dev": {
+      "structure": {
+        "subtype": "link_stiffness_loss",
+        "locations": [
+          1
+        ],
+        "severities": [
+          0.5,
+          0.75
+        ],
+        "severity_semantics": "remaining EI fraction on the currently selected second compliant link; the one-location limitation is explicit"
+      },
+      "actuator": {
+        "subtype": "actuator_gain_loss",
+        "locations": [
+          0,
+          1
+        ],
+        "severities": [
+          0.5,
+          0.75
+        ],
+        "severity_semantics": "remaining delivered-torque gain fraction"
+      },
+      "sensor": [
+        {
+          "subtype": "encoder_bias",
+          "locations": [
+            0,
+            1
+          ],
+          "severities": [
+            0.025,
+            0.05
+          ],
+          "severity_semantics": "absolute bias magnitude in rad; sign is balanced by fault_seed"
+        },
+        {
+          "subtype": "encoder_drift",
+          "locations": [
+            0,
+            1
+          ],
+          "severities": [
+            0.004,
+            0.008
+          ],
+          "severity_semantics": "absolute linear drift rate in rad/s; sign is balanced by fault_seed"
+        },
+        {
+          "subtype": "encoder_dropout",
+          "locations": [
+            0,
+            1
+          ],
+          "severities": [
+            0.1,
+            0.2
+          ],
+          "severity_semantics": "additional fault-window dropout probability"
+        }
+      ]
+    },
+    "pilot": {
+      "structure": {
+        "subtype": "link_stiffness_loss",
+        "locations": [
+          1
+        ],
+        "severities": [
+          0.6,
+          0.85
+        ],
+        "severity_semantics": "remaining EI fraction on the currently selected second compliant link; the one-location limitation is explicit"
+      },
+      "actuator": {
+        "subtype": "actuator_gain_loss",
+        "locations": [
+          0,
+          1
+        ],
+        "severities": [
+          0.6,
+          0.85
+        ],
+        "severity_semantics": "remaining delivered-torque gain fraction"
+      },
+      "sensor": [
+        {
+          "subtype": "encoder_bias",
+          "locations": [
+            0,
+            1
+          ],
+          "severities": [
+            0.035,
+            0.06
+          ],
+          "severity_semantics": "absolute bias magnitude in rad; sign is balanced by fault_seed"
+        },
+        {
+          "subtype": "encoder_drift",
+          "locations": [
+            0,
+            1
+          ],
+          "severities": [
+            0.006,
+            0.01
+          ],
+          "severity_semantics": "absolute linear drift rate in rad/s; sign is balanced by fault_seed"
+        },
+        {
+          "subtype": "encoder_dropout",
+          "locations": [
+            0,
+            1
+          ],
+          "severities": [
+            0.15,
+            0.25
+          ],
+          "severity_semantics": "additional fault-window dropout probability"
+        }
+      ]
+    },
+    "val": {
+      "structure": {
+        "subtype": "link_stiffness_loss",
+        "locations": [
+          1
+        ],
+        "severities": [
+          0.4,
+          0.9
+        ],
+        "severity_semantics": "remaining EI fraction on the currently selected second compliant link; the one-location limitation is explicit"
+      },
+      "actuator": {
+        "subtype": "actuator_gain_loss",
+        "locations": [
+          0,
+          1
+        ],
+        "severities": [
+          0.4,
+          0.9
+        ],
+        "severity_semantics": "remaining delivered-torque gain fraction"
+      },
+      "sensor": [
+        {
+          "subtype": "encoder_bias",
+          "locations": [
+            0,
+            1
+          ],
+          "severities": [
+            0.02,
+            0.075
+          ],
+          "severity_semantics": "absolute bias magnitude in rad; sign is balanced by fault_seed"
+        },
+        {
+          "subtype": "encoder_drift",
+          "locations": [
+            0,
+            1
+          ],
+          "severities": [
+            0.003,
+            0.012
+          ],
+          "severity_semantics": "absolute linear drift rate in rad/s; sign is balanced by fault_seed"
+        },
+        {
+          "subtype": "encoder_dropout",
+          "locations": [
+            0,
+            1
+          ],
+          "severities": [
+            0.05,
+            0.3
+          ],
+          "severity_semantics": "additional fault-window dropout probability"
+        }
+      ]
+    },
+    "test": {
+      "structure": {
+        "subtype": "link_stiffness_loss",
+        "locations": [
+          1
+        ],
+        "severities": [
+          0.35,
+          0.65
+        ],
+        "severity_semantics": "remaining EI fraction on the currently selected second compliant link; the one-location limitation is explicit"
+      },
+      "actuator": {
+        "subtype": "actuator_gain_loss",
+        "locations": [
+          0,
+          1
+        ],
+        "severities": [
+          0.35,
+          0.65
+        ],
+        "severity_semantics": "remaining delivered-torque gain fraction"
+      },
+      "sensor": [
+        {
+          "subtype": "encoder_bias",
+          "locations": [
+            0,
+            1
+          ],
+          "severities": [
+            0.015,
+            0.045
+          ],
+          "severity_semantics": "absolute bias magnitude in rad; sign is balanced by fault_seed"
+        },
+        {
+          "subtype": "encoder_drift",
+          "locations": [
+            0,
+            1
+          ],
+          "severities": [
+            0.005,
+            0.009
+          ],
+          "severity_semantics": "absolute linear drift rate in rad/s; sign is balanced by fault_seed"
+        },
+        {
+          "subtype": "encoder_dropout",
+          "locations": [
+            0,
+            1
+          ],
+          "severities": [
+            0.12,
+            0.22
+          ],
+          "severity_semantics": "additional fault-window dropout probability"
+        }
+      ]
+    }
+  },
+  "compound_ood_settings": [
+    {
+      "id": "fault_val_ood_structure_sensor_bias",
+      "split": "val",
+      "label": {
+        "source_class": "structure",
+        "subtype": "compound_structure_sensor_bias",
+        "location": 1,
+        "severity": 0.55,
+        "compound_flag": true,
+        "ood_flag": true
+      },
+      "components": [
+        {
+          "source_class": "structure",
+          "subtype": "link_stiffness_loss",
+          "location": 1,
+          "severity": 0.55
+        },
+        {
+          "source_class": "sensor",
+          "subtype": "encoder_bias",
+          "location": 1,
+          "severity": 0.055
+        }
+      ]
+    },
+    {
+      "id": "fault_val_ood_actuator_sensor_dropout",
+      "split": "val",
+      "label": {
+        "source_class": "actuator",
+        "subtype": "compound_actuator_sensor_dropout",
+        "location": 1,
+        "severity": 0.7,
+        "compound_flag": true,
+        "ood_flag": true
+      },
+      "components": [
+        {
+          "source_class": "actuator",
+          "subtype": "actuator_gain_loss",
+          "location": 1,
+          "severity": 0.7
+        },
+        {
+          "source_class": "sensor",
+          "subtype": "encoder_dropout",
+          "location": 0,
+          "severity": 0.18
+        }
+      ]
+    },
+    {
+      "id": "fault_test_ood_structure_actuator",
+      "split": "test",
+      "label": {
+        "source_class": "structure",
+        "subtype": "compound_structure_actuator",
+        "location": 1,
+        "severity": 0.45,
+        "compound_flag": true,
+        "ood_flag": true
+      },
+      "components": [
+        {
+          "source_class": "structure",
+          "subtype": "link_stiffness_loss",
+          "location": 1,
+          "severity": 0.45
+        },
+        {
+          "source_class": "actuator",
+          "subtype": "actuator_gain_loss",
+          "location": 0,
+          "severity": 0.55
+        }
+      ]
+    },
+    {
+      "id": "fault_test_ood_actuator_sensor_drift",
+      "split": "test",
+      "label": {
+        "source_class": "actuator",
+        "subtype": "compound_actuator_sensor_drift",
+        "location": 1,
+        "severity": 0.8,
+        "compound_flag": true,
+        "ood_flag": true
+      },
+      "components": [
+        {
+          "source_class": "actuator",
+          "subtype": "actuator_gain_loss",
+          "location": 1,
+          "severity": 0.8
+        },
+        {
+          "source_class": "sensor",
+          "subtype": "encoder_drift",
+          "location": 1,
+          "severity": 0.007
+        }
+      ]
+    }
+  ],
+  "context_profiles": {
+    "payloads": [
+      {
+        "id": "payload_dev_nominal",
+        "split": "dev",
+        "distal_payload_mass_kg": 0.0
+      },
+      {
+        "id": "payload_dev_0p050kg",
+        "split": "dev",
+        "distal_payload_mass_kg": 0.05
+      },
+      {
+        "id": "payload_pilot_0p025kg",
+        "split": "pilot",
+        "distal_payload_mass_kg": 0.025
+      },
+      {
+        "id": "payload_pilot_0p075kg",
+        "split": "pilot",
+        "distal_payload_mass_kg": 0.075
+      },
+      {
+        "id": "payload_val_0p100kg",
+        "split": "val",
+        "distal_payload_mass_kg": 0.1
+      },
+      {
+        "id": "payload_val_0p125kg",
+        "split": "val",
+        "distal_payload_mass_kg": 0.125
+      },
+      {
+        "id": "payload_test_0p150kg",
+        "split": "test",
+        "distal_payload_mass_kg": 0.15
+      },
+      {
+        "id": "payload_test_0p200kg",
+        "split": "test",
+        "distal_payload_mass_kg": 0.2
+      }
+    ],
+    "environments": [
+      {
+        "id": "env_dev_iso25c",
+        "split": "dev",
+        "temperature_kind": "isothermal",
+        "parameters": {
+          "temperature_c": 25.0
+        }
+      },
+      {
+        "id": "env_dev_warm2c",
+        "split": "dev",
+        "temperature_kind": "linear",
+        "parameters": {
+          "start_c": 25.0,
+          "delta_c": 2.0
+        }
+      },
+      {
+        "id": "env_pilot_cool3c",
+        "split": "pilot",
+        "temperature_kind": "linear",
+        "parameters": {
+          "start_c": 27.0,
+          "delta_c": -3.0
+        }
+      },
+      {
+        "id": "env_pilot_sine2c",
+        "split": "pilot",
+        "temperature_kind": "sinusoid",
+        "parameters": {
+          "center_c": 25.0,
+          "amplitude_c": 2.0,
+          "frequency_hz": 0.08
+        }
+      },
+      {
+        "id": "env_val_warm5c",
+        "split": "val",
+        "temperature_kind": "linear",
+        "parameters": {
+          "start_c": 23.0,
+          "delta_c": 5.0
+        }
+      },
+      {
+        "id": "env_val_sine3c",
+        "split": "val",
+        "temperature_kind": "sinusoid",
+        "parameters": {
+          "center_c": 26.0,
+          "amplitude_c": 3.0,
+          "frequency_hz": 0.06
+        }
+      },
+      {
+        "id": "env_test_cool6c",
+        "split": "test",
+        "temperature_kind": "linear",
+        "parameters": {
+          "start_c": 30.0,
+          "delta_c": -6.0
+        }
+      },
+      {
+        "id": "env_test_sine4c",
+        "split": "test",
+        "temperature_kind": "sinusoid",
+        "parameters": {
+          "center_c": 24.0,
+          "amplitude_c": 4.0,
+          "frequency_hz": 0.05
+        }
+      }
+    ],
+    "contacts": [
+      {
+        "id": "contact_dev_none",
+        "split": "dev",
+        "endpoint_plane_z_m": null,
+        "contact_window_offset_s": null
+      },
+      {
+        "id": "contact_dev_brief",
+        "split": "dev",
+        "endpoint_plane_z_m": 0.2,
+        "contact_window_offset_s": [
+          2.0,
+          2.5
+        ]
+      },
+      {
+        "id": "contact_pilot_none",
+        "split": "pilot",
+        "endpoint_plane_z_m": null,
+        "contact_window_offset_s": null
+      },
+      {
+        "id": "contact_pilot_delayed",
+        "split": "pilot",
+        "endpoint_plane_z_m": 0.2,
+        "contact_window_offset_s": [
+          2.6,
+          3.2
+        ]
+      },
+      {
+        "id": "contact_val_none",
+        "split": "val",
+        "endpoint_plane_z_m": null,
+        "contact_window_offset_s": null
+      },
+      {
+        "id": "contact_val_extended",
+        "split": "val",
+        "endpoint_plane_z_m": 0.2,
+        "contact_window_offset_s": [
+          1.8,
+          3.3
+        ]
+      },
+      {
+        "id": "contact_test_none",
+        "split": "test",
+        "endpoint_plane_z_m": null,
+        "contact_window_offset_s": null
+      },
+      {
+        "id": "contact_test_sustained",
+        "split": "test",
+        "endpoint_plane_z_m": 0.2,
+        "contact_window_offset_s": [
+          1.6,
+          3.8
+        ]
+      }
+    ]
+  },
+  "implementation_requirements": [
+    "After joint approval, copy the exact approved assignment into values.scenario_manifest and recompute the draft config hash before building the real generator; do not create config.json yet.",
+    "Add a distal point-mass payload parameter to the selected MuJoCo model and test every assigned mass before any assigned rollout is generated.",
+    "Add the assigned split-specific contact-window schedules without widening the A1 collision pair; the plane height remains the draft-selected 0.200 m.",
+    "Add compound plant-plus-sensor fault realization at the existing plant/sensor injection boundary and retain the full component list outside deployable observations.",
+    "Generate every non-observation role only through DatasetRoleBuilder.make_writer and observations through DatasetRoleBuilder.make_observation_writer.",
+    "Expand each suite/training-seed pair_id only after the five model fits exist; every C1/S pair shares all declared common-random-number fields.",
+    "Do not materialize any test identity or payload until a complete jointly approved config.json passes the frozen lifecycle validator.",
+    "Keep the current one-location structural limitation explicit: structure is assigned only to the second compliant link (zero-based label location 1), while actuator and sensor grids cover both joints.",
+    "Pilot outcomes may size the final confirmatory sample but may not change effect bars, split-owned trajectories/fault settings, test identities, or test context profiles without a new jointly approved assignment version."
+  ]
+}

@@ -14,6 +14,9 @@ here and is imported rather than copy-pasted. Modules:
   * ``role_contract`` -- manifest-bound observation/non-observation role writers,
     schema-driven hash-checking loaders, draft-test refusal, and the explicit
     dev/pilot/val supervised observation-to-label join.
+  * ``gate3_assignment`` -- self-hashed proposed multi-setting scenario/split
+    assignment, deterministic whole-group reservation expansion, and
+    pre-generation lifecycle interlocks.
   * ``sensor_model`` -- the sensor-realism + fault-injection model (schema section C).
   * ``online_loop``  -- causal plant/sensor/policy interleaving on the control grid.
   * ``synthetic_plant`` -- a schema-conforming synthetic privileged trace, for
