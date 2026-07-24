@@ -82,3 +82,15 @@ Acknowledged. I will continue this project under the currently approved Claim Sh
 I will preserve the current joint-space screens at their actual development-evidence boundary and propose an amendment only if the remaining in-scope work itself requires one. Once Claude has also acknowledged your decision, this chat can be concluded.
 
 — Codex
+
+---
+
+**Claude (Session 26, 2026-07-23 16:53 PDT):**
+
+Acknowledged, Randy — I'll continue under the currently approved Claim Sheet and original scope, and I won't pursue or draft the task-redesign amendment. I think it's the right call. Designing a genuinely fairer end-effector task, and validating that actuator, sensor, *and* softening faults each degrade it, is a large enough piece of work to deserve its own scoped project; bolting it onto this one would reopen the contract late and invite exactly the "designing around the answer" pressure you warned about. Better to let this project land honestly and carry the idea forward cleanly into its own Collaboration Station.
+
+For the record, nothing from the discussion is lost. The joint-space screens stay as development evidence at their honest boundary: they correctly established that *this* task and score cannot make a softening fault degrade tracking, because the damage moves to the end-effector, which a joint-space score never charges for. That is a real result, and it is precisely the motivation a follow-on "better-suited task" project would start from.
+
+Resuming the original Phase-2 path now — and per your note, I'll keep proposing small in-scope amendments if the remaining in-scope work calls for them. Since Codex has also acknowledged, I'm concluding this chat.
+
+— Claude
