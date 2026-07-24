@@ -1,185 +1,245 @@
 # Summary of Only Necessary Context
 
-**Last completed Codex session:** 27
-**Next Codex session:** 28
-**Expected next commit message:** `Codex Session 28`
+**Last completed Codex session:** 28
+**Next Codex session:** 29
+**Expected next commit message:** `Codex Session 29`
 **Project phase:** Phase 2 — Integration and Reproducibility Build
 **Final config state:** **UNFROZEN**
 **Governing decision:** `BLOCK_CONFIG_FREEZE_PENDING_PRECONFIRMATORY_BUILD_AND_VALIDATION`
 
 ## Resume from live sources
 
-Follow `AgentPrompt.md` from the beginning. Before substantive work, read:
-
-1. `Project Details/Project Details.md`;
-2. this file;
-3. all Codex chat summaries;
-4. the complete physical tail/current state of every active Codex chat;
-5. Claude's latest human report and continuity summary; and
-6. the actual repository state.
-
 Authoritative technical thread:
 
 - `chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`
 
-At Codex Session-27 closeout it had 2,502 physical UTF-8 lines. Codex's last header was:
+At Session-28 closeout it had 2,575 physical UTF-8 lines. Codex's last header was:
 
-- `**Codex (Session 27, 2026-07-23 19:26 PDT):**` at line 2,494.
+- `**Codex (Session 28 Gate-2 write-path handoff, 2026-07-23 20:26 PDT):**` at line 2,551.
 
-Do not assume this remains the tail. Claude may append or change implementation after closeout.
+Do not assume this remains the tail. Claude may append or change files after closeout. Read the physical transcript tail and actual Git state before deciding whether the review target is unchanged.
 
-## Current review state
+## Review state
 
-### Open: Gate-1 / Gate-2-foundation implementation
+### Open: Gate-2 role write/load/join path
 
-Codex Session 27 implemented and handed Claude the exact state of:
+Codex Session 28 created:
 
-- root `.gitattributes` (one LF rule for the byte-hashed schema);
+- `Reproducibility Packet/scripts/utils/role_contract.py`
+- `Reproducibility Packet/scripts/build_data_contract_fixture.py`
+- `Reproducibility Packet/tests/test_role_contract.py`
+
+It also updated:
+
+- `Reproducibility Packet/README.md`
+- `Reproducibility Packet/scripts/utils/__init__.py`
+
+Requested response:
+
+- `APPROVE_GATE2_ROLE_WRITE_PATH`; or
+- `BLOCK_GATE2_ROLE_WRITE_PATH` with file/line findings.
+
+Current owner state:
+
+- `APPROVED_BY_CODEX`
+
+Reviewer edits, handoffs, downstream use, and silence are not approval. If Claude edits any review-target file, inspect the actual state and perform genuine owner re-review before approving it.
+
+### Closed: Gate-1 / Gate-2-foundation implementation
+
+Claude Session 28 explicitly approved the exact unchanged Session-27 state:
+
+- root `.gitattributes`;
 - `Reproducibility Packet/schema/schema.json`;
 - `Reproducibility Packet/config/draft-config-v0.1.json`;
 - `Reproducibility Packet/scripts/utils/config_contract.py`;
 - `Reproducibility Packet/scripts/utils/storage_contract.py`;
 - `Reproducibility Packet/scripts/validate_data_contract.py`;
 - `Reproducibility Packet/tests/test_data_contract.py`;
-- packet runbook and shared-utils documentation.
+- associated packet documentation.
 
-Requested response:
+Codex acknowledged that approval in the live transcript. Gate 1 is now jointly approved as complete. This does not approve final config freeze.
 
-- `APPROVE_GATE1_GATE2_FOUNDATION`; or
-- `BLOCK_GATE1_GATE2_FOUNDATION` with a specific mismatch.
+### Closed: earlier loops
 
-Codex owner assessment:
+- config-freeze readiness review;
+- actuator recovery-action review;
+- all earlier recorded same-state review loops.
 
-- **Gate 1 implementation is complete pending Claude's review.**
-- **Gate 2 remains BLOCKED overall.**
+## Session-28 implementation state
 
-The Gate-2 foundation now covers the identity manifest, exact role indexes, suite-scoped deployable observation loading, and core split/leakage/path/hash/mask/dtype/timing audits. It does **not** yet include the live multi-setting manifest/data builder, allowlisted supervised training join, non-observation role payload builders/evaluators, or end-to-end generator.
+### Generic role contract
 
-If Claude explicitly approves the exact unchanged state, acknowledge and close the loop. If Claude edits files, inspect the actual diff and perform genuine owner re-review. Edits, downstream use, and silence are not approval.
+`scripts/utils/role_contract.py` provides:
 
-### Closed: config-freeze readiness review
+- exact machine-schema key, dtype, shape, dimension, and semantic validation for plant, labels, estimator outputs, and controller logs;
+- `RolePayloadWriter` for manifest-bound non-observation NPZ payloads and hash indexes;
+- `ObservationRoleWriter` for manifest/pair/split/suite/config-bound `ObservedRecord` payloads;
+- `RolePayloadLoader` for safe-root path, SHA-256, exact-key, schema, and semantic revalidation;
+- `DatasetRoleBuilder` for already assigned, complete C1/S manifests;
+- hard refusal of any `test` assignment while the config remains draft; and
+- `SupervisedTrainingJoin` restricted to a nonempty subset of `dev|pilot|val`.
 
-Claude Session 27 explicitly approved the exact Session-26 state of:
+The join yields only:
 
-- `agents/Codex/Config Freeze Readiness Review.md`
+- `run_id`;
+- one suite's `ObservedRecord`; and
+- the exact label target.
 
-Codex acknowledged that approval. The loop is closed, but its decision remains:
+It does not attach the manifest, privileged plant truth, provenance, estimator outputs, or controller logs. The deployable boundary remains the jointly approved `DeployableObservationLoader`, which receives only one `observations/<suite>` root.
 
-- `BLOCK_CONFIG_FREEZE_PENDING_PRECONFIRMATORY_BUILD_AND_VALIDATION`
+### Synthetic role-completeness fixture
 
-Closing review authorized the implementation backlog; it did not authorize a final config freeze.
+`scripts/build_data_contract_fixture.py`:
 
-## Shared decisions now in force
+- consumes the tracked schema and draft config;
+- creates two complete matched C1/S pairs;
+- assigns one pair to `dev` and one to `val`;
+- keeps trajectory, fault-setting, and split groups disjoint;
+- writes plant, observations, labels, estimator outputs, and controller logs;
+- publishes the path-free manifest and all exact role indexes;
+- reopens and audits every payload;
+- exercises both suite-specific supervised joins;
+- refuses an existing output root; and
+- writes a strict JSON summary with an explicit contract-only evidence boundary.
 
-### Gate-6 controller governance
+This fixture is synthetic infrastructure. It is not:
 
-Run the in-contract four-arm comparison:
+- the complete Gate-3 assignment;
+- generated research data;
+- a headline model fit;
+- a validation result; or
+- a confirmatory artifact.
+
+### Verification
+
+Session-28 results from the repository virtual environment:
+
+```text
+focused role-contract tests: 11 passed in 0.32s
+full packet suite: 358 passed in 9.86s
+two independent builds: 30/30 files byte-identical
+manifest rows: 4
+manifest test assignments: 0
+summary test_payloads: 0
+compileall: pass
+CLI-help smoke test: pass
+git diff --check: pass
+```
+
+No fixture output was written into the repository. At closeout:
+
+- `Reproducibility Packet/config.json` did not exist;
+- the repository contained zero `.npz` files; and
+- `.gitignore` required no change.
+
+Use the repository virtual environment explicitly. From `Reproducibility Packet/`:
+
+```powershell
+..\venv\Scripts\python.exe -m pytest tests\test_role_contract.py -q
+..\venv\Scripts\python.exe -m pytest tests\ -q
+..\venv\Scripts\python.exe -m compileall -q scripts tests
+```
+
+## Gate status and next dependency
+
+### Gate 1
+
+- jointly approved as complete.
+
+### Gate 2
+
+- still **BLOCKED overall**.
+
+Completed foundation:
+
+- machine schema;
+- draft/frozen config lifecycle;
+- path-free identity manifest and role indexes;
+- whole-group/CRN/audit invariants;
+- suite-scoped deployable observation loader;
+- generic schema-driven role writers/loaders;
+- non-test supervised label join;
+- deterministic synthetic role-completeness fixture.
+
+Still required:
+
+- the complete jointly approved Gate-3 scenario/fault/trajectory assignment;
+- the real multi-setting MuJoCo generator driven by that assignment;
+- role-completeness audit on the generated research data.
+
+Do not claim Gate 2 complete based on the synthetic fixture.
+
+### Gate 3
+
+The complete assignment requires explicit Claude/Codex same-state approval before:
+
+- any headline model is fit; or
+- the real assigned dataset is generated.
+
+The reviewable assignment must cover:
+
+- known-class severity/location grids;
+- compound/OOD holdout;
+- trajectories and payloads;
+- environment/contact profiles;
+- onset/excitation roles;
+- whole trajectory and whole fault-setting splits;
+- seeds; and
+- suite-matched comparison groups.
+
+The assignment checkpoint is distinct from the later final immutable config freeze.
+
+### Gates 4–7
+
+Claude's model/calibration/evaluation lane waits on the approved Gate-3 assignment. CUDA readiness is already recorded (`torch==2.11.0+cu128`, RTX 5060 Ti, `sm_120`), but toolchain readiness is not model-fit authorization.
+
+The Gate-6 protocol remains the in-contract four arms:
 
 - no-action/detection-only;
 - transparent attribution-driven;
-- RMA; and
+- RMA;
 - oracle.
 
-Do not narrow the experiment to information-only and do not retune the blocked action families post hoc. An information-only scope would require an amendment; no such amendment is being taken.
+Do not narrow the project to information-only or post-hoc retune the blocked action families without an amendment.
 
-### Gate-3 pre-fit checkpoint
-
-The complete scenario/fault/trajectory assignment manifest requires explicit Claude/Codex same-state approval **before any headline model is fit**. This checkpoint must cover the multi-setting grids, compound/OOD holdout, trajectories, payloads, environment/contact profiles, onsets/excitation roles, whole-group splits, and seeds.
-
-It is distinct from the later final immutable config freeze.
-
-### Gate-4 environment
-
-Claude Session 27 recorded a successful CUDA build:
-
-- `torch==2.11.0+cu128`;
-- RTX 5060 Ti recognized;
-- `sm_120` kernel and autograd verified.
-
-This removes the toolchain uncertainty only. It does not authorize model fitting before the Gate-3 assignment approval.
-
-## Session-27 foundation state
-
-### Machine schema and config
-
-`schema/schema.json` renders schema v1.0 + A1 with exact roles, dtypes, shapes, units, availability, fixed registry/masks, A1 field order, sparse estimator-decision persistence, indexes, and invariants.
-
-The root `.gitattributes` pins this byte-hashed schema file to LF so its hash is stable across Windows, Linux, archives, and fresh clones.
-
-`severity_uncertainty` remains a `config_defined_nonnegative_error_scale`. Gate 5 still owns the exact reviewed statistic.
+## Config and claim boundaries
 
 The tracked draft:
 
-- is named `config/draft-config-v0.1.json`;
+- is `Reproducibility Packet/config/draft-config-v0.1.json`;
 - has `status=draft`;
 - reports `confirmatory=False`;
 - has hash `dev-0211f2e71a473fef3c30cd53fd0a269df45156a3d58e83097bac7a5638bf6180`;
-- keeps Gates 2–7 explicit;
-- retains unresolved design/model/calibration/evaluation objects as open; and
+- keeps Gates 2–7 open; and
 - cannot authorize confirmatory work.
 
-No `config.json` exists.
+No `config.json` exists. Keep it absent until every freeze gate closes and both agents explicitly approve the exact final state.
 
-The validator rejects draft, wrong-name, wrong-schema, partial/null/empty, hash-mismatched, development-marked, or non-approved frozen-shaped state for confirmatory callers. A frozen state requires the exact decision `APPROVE_CONFIG_FREEZE`, zero open gates, no `dev-` values, complete required objects, and a raw canonical 64-hex hash.
+Durable boundaries:
 
-### Storage and leakage boundary
+- development screens and synthetic fixtures are not confirmatory results;
+- a draft hash is not a frozen config;
+- detection, attribution, information authorization, action authorization, and control outcome are distinct;
+- fault improvement is not source-specific recovery unless it clears the matched healthy false-authorization gate;
+- A1 safety is hard;
+- the sampled probability envelope is not a continuous proof;
+- physical truth, observations, labels, estimator state, and controller authorization remain role-separated;
+- `test` remains untouched until after complete final freeze.
 
-The schema-A identity manifest and role indexes enforce:
+## Immediate next steps
 
-- one complete rollout per `run_id`;
-- one config identity;
-- whole-pair, trajectory, fault-setting, and split-group assignments;
-- C1/S CRN and protocol agreement;
-- safe path-free identities and role-relative `.npz` paths;
-- exact index headers and SHA-256 values.
+Session 29 should:
 
-The deployable loader receives one `observations/<suite>` root. It rejects shared/sibling roots, identity or target columns, label/privileged/extra payload fields, traversal, wrong identities, hash tampering, unavailable-channel values, mask/order violations, dtype drift, and causal-latency inconsistency.
+1. inspect Claude's exact review response and the actual review-target files;
+2. close `APPROVE_GATE2_ROLE_WRITE_PATH` only if approval is explicit and the state is unchanged;
+3. otherwise address supported file/line findings and re-hand off the exact corrected state;
+4. prepare the complete Gate-3 multi-setting assignment as a reviewable preregistration artifact;
+5. obtain explicit same-state assignment approval before model fitting or real assigned generation;
+6. then connect the approved assignment to the real multi-setting MuJoCo generator and role-completeness audit;
+7. keep `config.json` absent and all `test` roles untouched.
 
-## Verification
-
-Use only `.\venv\Scripts\python.exe`.
-
-Session-27 results:
-
-```text
-Config OK: status=draft, config_hash=dev-0211f2e71a473fef3c30cd53fd0a269df45156a3d58e83097bac7a5638bf6180, confirmatory=False
-18 passed in 0.17s
-347 passed in 8.57s
-```
-
-The full packet test command was:
-
-```powershell
-..\venv\Scripts\python.exe -m pytest tests\ -q
-```
-
-run from `Reproducibility Packet/`.
-
-## Next implementation sequence
-
-After closing or correcting the open foundation review:
-
-1. finish Gate 2 with the live data/manifest builder, allowlisted supervised join, role writers/evaluators, and end-to-end audits;
-2. draft the complete Gate-3 multi-setting assignment;
-3. obtain explicit same-state approval of that assignment before headline fitting;
-4. implement and validation-select the matched temporal/RMA models, capacity ladder, calibration, OOD, abstention, and uncertainty rules;
-5. complete the four-arm controller protocol and final sample-size decision;
-6. jointly freeze the complete immutable `config.json`;
-7. generate/evaluate untouched confirmatory roles; and
-8. proceed to Phase-3 statistics and artifacts.
-
-`test` roles remain untouched until after the complete final freeze.
-
-## Durable claim boundaries
-
-- Development screens are not confirmatory results.
-- A draft hash or shared candidate is not a frozen config.
-- Detection, attribution, information authorization, action authorization, and control outcome are distinct.
-- Fault improvement is not source-specific recovery unless it clears the matched healthy false-authorization gate.
-- A1 safety is hard.
-- The sampled probability envelope is not a continuous proof.
-- Physical truth, observations, targets, estimator state, and controller authorization remain role-separated.
-- The current foundation is infrastructure, not a research result.
+The next regular Codex progress report is Session 32.
 
 ## Transcript append hard gate
 
@@ -189,14 +249,13 @@ For every append to the active Phase-2 transcript:
 2. record the pre-write line count;
 3. verify the complete multi-line EOF anchor is unique;
 4. use `apply_patch` only against that exact anchor;
-5. verify the new header occurs exactly once after the boundary; and
-6. require `git diff --numstat` to show `+N/-0`.
+5. verify the new header occurs exactly once after the boundary;
+6. verify it is physically last; and
+7. require `git diff --numstat` to show `+N/-0`.
 
-Session-27 transcript delta was `+58/-0`. No recurrence was logged in transcript-order monitoring.
+Session-28 transcript delta was `+40/-0`. No recurrence was logged in transcript-order monitoring.
 
-## Public and closeout boundary
+## Public and detailed records
 
-- Root `README.md` was intentionally unchanged: the foundation is awaiting review, changes no scientific result, and is not a phase transition.
-- `.gitignore` required no change; `.gitattributes` contains only the LF rule for the byte-hashed machine schema.
-- Next regular Codex progress report is Session 32.
-- Read `agents/Codex/Session Summaries/HumanReport27.md` for the detailed implementation and audit record.
+- Root `README.md` was intentionally unchanged because this is an unreviewed infrastructure increment, not a scientific milestone or phase transition.
+- Read `agents/Codex/Session Summaries/HumanReport28.md` for the detailed design, verification, and file record.

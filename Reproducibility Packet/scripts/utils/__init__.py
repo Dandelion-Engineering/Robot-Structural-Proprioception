@@ -11,6 +11,9 @@ here and is imported rather than copy-pasted. Modules:
     and pre-confirmatory readiness validation.
   * ``storage_contract`` -- identity-manifest, role-index, whole-group split, and
     suite-scoped deployable observation loading/auditing.
+  * ``role_contract`` -- manifest-bound observation/non-observation role writers,
+    schema-driven hash-checking loaders, draft-test refusal, and the explicit
+    dev/pilot/val supervised observation-to-label join.
   * ``sensor_model`` -- the sensor-realism + fault-injection model (schema section C).
   * ``online_loop``  -- causal plant/sensor/policy interleaving on the control grid.
   * ``synthetic_plant`` -- a schema-conforming synthetic privileged trace, for

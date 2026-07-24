@@ -1,6 +1,6 @@
 # Reproducibility Packet
 
-This is the self-contained working packet for the Robot Structural Proprioception project. The current runnable surface reproduces the mechanics feasibility gate, emits a schema-v1.0 privileged trace from the selected MuJoCo cable plant, and turns that trace into a deployable sensor suite's noisy observations. Later pipeline stages will be added here as they become final.
+This is the self-contained working packet for the Robot Structural Proprioception project. The current runnable surface reproduces the mechanics feasibility gate, emits a schema-v1.0 privileged trace from the selected MuJoCo cable plant, turns that trace into a deployable sensor suite's noisy observations, and exercises the complete role-separated storage contract on a development fixture. Later pipeline stages will be added here as they become final.
 
 ## Requirements
 
@@ -30,7 +30,7 @@ Runs the packet's whole test suite. Every module, screen, metric, and seam in th
 
 The suite covers model compilation, independent deformation-state availability, localized stiffness-fault construction, schema-facing output shapes, synchronous-feature and coefficient-reference correctness, the safe-probe, optional-contact-profile, matched-contact-pilot, bounded-task/contact, bounded noisy held-decision, structural-recovery-action, fault-tracking-deficit, severity-estimation-quality, cap-boundary, class-probability-channel, and actuator-recovery-action screen functions, the noisy healthy-reference pilot's causal window/reference logic, the estimator front and severity read-out, the interpretable recovery controller and its shared seam regression, the linear system-ID residual baseline's role separation, suite-leakage guard, and real causal-seam integration, the plant/sensor interfaces, and the two-layer evaluation metrics and paired bootstrap.
 
-It also covers the pre-confirmatory data contract: strict config canonicalization and self-hashing, draft/frozen lifecycle refusal, whole-group split integrity, matched C1/S common-random-number identity, role-file hashes, suite-scoped deployable loading, unavailable-channel masking, and rejection of labels, privileged truth, provenance, or extra payload keys at the observation boundary. The tracked draft can be checked directly:
+It also covers the pre-confirmatory data contract: strict config canonicalization and self-hashing, draft/frozen lifecycle refusal, whole-group split integrity, matched C1/S common-random-number identity, manifest-bound writers and hash-checking loaders for every persisted role, suite-scoped deployable loading, unavailable-channel masking, an explicit non-test supervised label join, and rejection of labels, privileged truth, provenance, or extra payload keys at the observation boundary. The tracked draft can be checked directly:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\validate_data_contract.py --schema schema\schema.json --config config\draft-config-v0.1.json
@@ -41,6 +41,33 @@ This command must report `status=draft` and `confirmatory=False`. It deliberatel
 This deliberately runs the directory rather than an enumerated file list: an enumerated list goes stale silently every time a screen is added, and a test file the runbook never names is a test file an outside reader never runs. Step 18 is a focused subset for anyone debugging one area; it is not a substitute for this step.
 
 Produces: terminal test and contract-validation results.
+
+## Step 2A — Exercise the complete role-separated storage contract
+
+Builds a small synthetic `dev`/`val` fixture through the same path-free manifest,
+per-role roots, exact indexes, payload hashes, suite-scoped observation loaders,
+and allowlisted observation-to-label join required by the eventual assigned
+dataset. It writes plant, C1/S observations, labels, estimator outputs, and
+controller logs for two complete matched pairs. The fixture is explicitly
+contract-only: it is not a Gate-3 assignment, model fit, validation result, or
+confirmatory dataset.
+
+```powershell
+.\.venv\Scripts\python.exe scripts\build_data_contract_fixture.py --output-root results\data_contract_fixture
+```
+
+The command fails if the output exists, any role violates `schema.json`, a
+payload/index hash or identity mismatches, a training join requests `test`, or
+the draft config attempts to materialize any `test` assignment.
+
+Produces:
+
+- `results/data_contract_fixture/manifest.csv`
+- `results/data_contract_fixture/{plant,labels}/index.csv`
+- `results/data_contract_fixture/observations/{C1,S}/index.csv`
+- `results/data_contract_fixture/estimator_outputs/{C1,S}/index.csv`
+- `results/data_contract_fixture/controller_logs/{C1,S}/index.csv`
+- `results/data_contract_fixture/build_summary.json`
 
 ## Step 3 — Reproduce the mechanics gate
 
@@ -427,8 +454,8 @@ This packet reproduces the mechanics gate, detector-floor correction, safe-probe
 
 ## Current boundary
 
-This packet reproduces the selected MuJoCo cable/rod mechanics, schema-v1.0 plant and sensor interfaces, causal online loop, evaluation core, detector/reference lifecycle, interpretable residual baseline, bounded task/contact controller, and the development screens through Step 17A. Schema Amendment A1 is jointly in force. A machine-readable schema, self-hashed draft-config contract, whole-group identity-manifest audit, role-file hash audit, and suite-scoped deployable observation loader now form the Gate 1–2 pre-confirmatory foundation. The tracked draft is explicitly non-confirmatory; no frozen `config.json`, populated live identity manifest, data generator, learned attribution head, or RMA head exists yet.
+This packet reproduces the selected MuJoCo cable/rod mechanics, schema-v1.0 plant and sensor interfaces, causal online loop, evaluation core, detector/reference lifecycle, interpretable residual baseline, bounded task/contact controller, and the development screens through Step 17A. Schema Amendment A1 is jointly in force. A machine-readable schema, self-hashed draft-config contract, whole-group identity-manifest audit, suite-scoped deployable observation loader, schema-driven writers/loaders for every non-observation role, and an explicit `dev|pilot|val` supervised label join now form the Gate 1–2 pre-confirmatory foundation. Step 2A exercises those boundaries end to end on a synthetic role-completeness fixture and hard-refuses `test` under the draft lifecycle. The tracked draft is explicitly non-confirmatory; no frozen `config.json`, jointly approved Gate-3 assignment, learned attribution head, or RMA head exists yet.
 
 On the current bounded task, the structural suite has strong development information evidence, but structural recovery is blocked because the task has no structural tracking deficit and the tested action behaves like a generic controller retune. The actuator condition has headroom, yet the new source-specific action screen also blocks: safe cap-3 misses the 10-point specificity gate and higher caps violate A1 safety. The probability result remains a sampled empirical envelope; calibrated class-probability, abstention, and uncertainty authorization, sensor-fault recovery, and evaluation-sized paired control remain open.
 
-The proposed different-task amendment was withdrawn before approval. The existing Claim Sheet remains in force, `config.json` remains unfrozen, and no development screen here is a confirmatory research result. Gate 2 still requires the live manifest/data-building path, Gate 3 requires a jointly approved draft assignment manifest before headline-model fitting, and the packet does not yet implement the full evaluation or interactive verification artifact.
+The proposed different-task amendment was withdrawn before approval. The existing Claim Sheet remains in force, `config.json` remains unfrozen, and no development screen here is a confirmatory research result. Gate 2 still requires the real Gate-3-assigned multi-setting generator and role-completeness audit on generated MuJoCo data; the generic write/load/join path and contract fixture are now present. Gate 3 requires a jointly approved draft assignment manifest before headline-model fitting, and the packet does not yet implement the full evaluation or interactive verification artifact.
