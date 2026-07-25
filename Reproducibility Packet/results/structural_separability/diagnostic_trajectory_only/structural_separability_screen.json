@@ -1,0 +1,1659 @@
+{
+  "config_hash": "dev-712abf27c3f8f3c331ae9b76e3f22c48857334cc15a81e819718165e47753e56",
+  "contrast_order": [
+    "structure_rem_ei_0.75",
+    "structure_rem_ei_0.50",
+    "actuator_rem_gain_0.50"
+  ],
+  "contrasts": {
+    "actuator_rem_gain_0.50": {
+      "C1": {
+        "interpretable": {
+          "fault_mean_score": 1.7863960748742067,
+          "healthy_mean_score": 1.0907386061373359,
+          "median_paired_ratio": 1.6257403163746553,
+          "paired_sign_test": {
+            "n_pairs": 4,
+            "n_positive": 4,
+            "p_value": 0.125
+          },
+          "per_cell": [
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_0p050kg|env_dev_iso25c|contact_dev_none",
+              "fault": 1.3697682077993878,
+              "healthy": 0.7516044511743722
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_0p050kg|env_dev_warm2c|contact_dev_brief",
+              "fault": 1.3590647860295075,
+              "healthy": 0.8899846089411462
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_nominal|env_dev_iso25c|contact_dev_brief",
+              "fault": 2.2032200875729155,
+              "healthy": 1.3031183018642258
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_nominal|env_dev_warm2c|contact_dev_none",
+              "fault": 2.2135312180950155,
+              "healthy": 1.4182470625695989
+            }
+          ],
+          "run_auroc": 0.875
+        },
+        "learned": {
+          "c_grid": [
+            0.01,
+            0.1,
+            1.0
+          ],
+          "n_features": 324,
+          "n_windows": 224,
+          "paired_sign_test": {
+            "n_pairs": 4,
+            "n_positive": 3,
+            "p_value": 0.625
+          },
+          "per_cell_score_difference": [
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_0p050kg|env_dev_iso25c|contact_dev_none",
+              "fault_minus_healthy": 0.5753241817649196
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_0p050kg|env_dev_warm2c|contact_dev_brief",
+              "fault_minus_healthy": -0.16818051169800347
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_nominal|env_dev_iso25c|contact_dev_brief",
+              "fault_minus_healthy": 3.0266339015116586
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_nominal|env_dev_warm2c|contact_dev_none",
+              "fault_minus_healthy": 3.833974046293668
+            }
+          ],
+          "run_auroc_best_over_grid": 0.875,
+          "selected_C": 0.01
+        },
+        "per_channel": [
+          {
+            "column": "q_obs[0]",
+            "effect_over_healthy_spread": 0.12691645042103547,
+            "median_relative_change": -0.02224115775254151,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 0,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "q_obs[1]",
+            "effect_over_healthy_spread": 0.7658188601614667,
+            "median_relative_change": 0.06535648600806025,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 2,
+              "p_value": 1.0
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "qd_obs[0]",
+            "effect_over_healthy_spread": 0.42338994946158537,
+            "median_relative_change": -0.0026140751716398868,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 2,
+              "p_value": 1.0
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "qd_obs[1]",
+            "effect_over_healthy_spread": 2.1171997081495793,
+            "median_relative_change": 0.28976128013939884,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 4,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "tau_cmd[0]",
+            "effect_over_healthy_spread": 1.8796236555169406,
+            "median_relative_change": -0.12812190196374396,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 0,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "tau_cmd[1]",
+            "effect_over_healthy_spread": 8.349283365617747,
+            "median_relative_change": 0.6071676858827252,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 4,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "current_proxy_obs[0]",
+            "effect_over_healthy_spread": 1.243700467830733,
+            "median_relative_change": -0.1473186316441182,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 1,
+              "p_value": 0.625
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "current_proxy_obs[1]",
+            "effect_over_healthy_spread": 11.060556531807478,
+            "median_relative_change": 0.5610900411249418,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 4,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[0]",
+            "effect_over_healthy_spread": 1.1518220554132452,
+            "median_relative_change": -0.20391280265006778,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 0,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[1]",
+            "effect_over_healthy_spread": 2.569475309307578,
+            "median_relative_change": 0.030408347990433456,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 3,
+              "p_value": 0.625
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[2]",
+            "effect_over_healthy_spread": 0.5589934783322933,
+            "median_relative_change": -0.3615560578974376,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 0,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[3]",
+            "effect_over_healthy_spread": 26.612135217677558,
+            "median_relative_change": 0.09471594246792886,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 3,
+              "p_value": 0.625
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[4]",
+            "effect_over_healthy_spread": 1.2622657782897189,
+            "median_relative_change": 0.2556002640753645,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 4,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[5]",
+            "effect_over_healthy_spread": 3.447568045284221,
+            "median_relative_change": -0.003509924521196589,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 2,
+              "p_value": 1.0
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "gauge_obs[0]",
+            "effect_over_healthy_spread": NaN,
+            "median_relative_change": NaN,
+            "paired_sign_test": {
+              "n_pairs": 0,
+              "n_positive": 0,
+              "p_value": 1.0
+            },
+            "s_exclusive": true
+          },
+          {
+            "column": "gauge_obs[1]",
+            "effect_over_healthy_spread": NaN,
+            "median_relative_change": NaN,
+            "paired_sign_test": {
+              "n_pairs": 0,
+              "n_positive": 0,
+              "p_value": 1.0
+            },
+            "s_exclusive": true
+          },
+          {
+            "column": "gauge_obs[2]",
+            "effect_over_healthy_spread": NaN,
+            "median_relative_change": NaN,
+            "paired_sign_test": {
+              "n_pairs": 0,
+              "n_positive": 0,
+              "p_value": 1.0
+            },
+            "s_exclusive": true
+          },
+          {
+            "column": "gauge_obs[3]",
+            "effect_over_healthy_spread": NaN,
+            "median_relative_change": NaN,
+            "paired_sign_test": {
+              "n_pairs": 0,
+              "n_positive": 0,
+              "p_value": 1.0
+            },
+            "s_exclusive": true
+          }
+        ]
+      },
+      "S": {
+        "interpretable": {
+          "fault_mean_score": 1.6728929833544073,
+          "healthy_mean_score": 1.0826700287057216,
+          "median_paired_ratio": 1.5390717086802872,
+          "paired_sign_test": {
+            "n_pairs": 4,
+            "n_positive": 4,
+            "p_value": 0.125
+          },
+          "per_cell": [
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_0p050kg|env_dev_iso25c|contact_dev_none",
+              "fault": 1.3286753291341018,
+              "healthy": 0.7896316834132022
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_0p050kg|env_dev_warm2c|contact_dev_brief",
+              "fault": 1.3107850924107765,
+              "healthy": 0.8751314450580242
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_nominal|env_dev_iso25c|contact_dev_brief",
+              "fault": 2.006987551743655,
+              "healthy": 1.2699813886751534
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_nominal|env_dev_warm2c|contact_dev_none",
+              "fault": 2.0451239601290965,
+              "healthy": 1.3959355976765064
+            }
+          ],
+          "run_auroc": 0.875
+        },
+        "learned": {
+          "c_grid": [
+            0.01,
+            0.1,
+            1.0
+          ],
+          "n_features": 324,
+          "n_windows": 224,
+          "paired_sign_test": {
+            "n_pairs": 4,
+            "n_positive": 3,
+            "p_value": 0.625
+          },
+          "per_cell_score_difference": [
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_0p050kg|env_dev_iso25c|contact_dev_none",
+              "fault_minus_healthy": 0.2889746249138865
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_0p050kg|env_dev_warm2c|contact_dev_brief",
+              "fault_minus_healthy": -0.9326635279651657
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_nominal|env_dev_iso25c|contact_dev_brief",
+              "fault_minus_healthy": 2.925606139740267
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_nominal|env_dev_warm2c|contact_dev_none",
+              "fault_minus_healthy": 4.062747729864187
+            }
+          ],
+          "run_auroc_best_over_grid": 0.75,
+          "selected_C": 0.01
+        },
+        "per_channel": [
+          {
+            "column": "q_obs[0]",
+            "effect_over_healthy_spread": 0.12691645042103547,
+            "median_relative_change": -0.02224115775254151,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 0,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "q_obs[1]",
+            "effect_over_healthy_spread": 0.7658188601614667,
+            "median_relative_change": 0.06535648600806025,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 2,
+              "p_value": 1.0
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "qd_obs[0]",
+            "effect_over_healthy_spread": 0.42338994946158537,
+            "median_relative_change": -0.0026140751716398868,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 2,
+              "p_value": 1.0
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "qd_obs[1]",
+            "effect_over_healthy_spread": 2.1171997081495793,
+            "median_relative_change": 0.28976128013939884,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 4,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "tau_cmd[0]",
+            "effect_over_healthy_spread": 1.8796236555169406,
+            "median_relative_change": -0.12812190196374396,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 0,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "tau_cmd[1]",
+            "effect_over_healthy_spread": 8.349283365617747,
+            "median_relative_change": 0.6071676858827252,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 4,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "current_proxy_obs[0]",
+            "effect_over_healthy_spread": 1.243700467830733,
+            "median_relative_change": -0.1473186316441182,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 1,
+              "p_value": 0.625
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "current_proxy_obs[1]",
+            "effect_over_healthy_spread": 11.060556531807478,
+            "median_relative_change": 0.5610900411249418,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 4,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[0]",
+            "effect_over_healthy_spread": 1.1518220554132452,
+            "median_relative_change": -0.20391280265006778,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 0,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[1]",
+            "effect_over_healthy_spread": 2.569475309307578,
+            "median_relative_change": 0.030408347990433456,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 3,
+              "p_value": 0.625
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[2]",
+            "effect_over_healthy_spread": 0.5589934783322933,
+            "median_relative_change": -0.3615560578974376,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 0,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[3]",
+            "effect_over_healthy_spread": 26.612135217677558,
+            "median_relative_change": 0.09471594246792886,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 3,
+              "p_value": 0.625
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[4]",
+            "effect_over_healthy_spread": 1.2622657782897189,
+            "median_relative_change": 0.2556002640753645,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 4,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[5]",
+            "effect_over_healthy_spread": 3.447568045284221,
+            "median_relative_change": -0.003509924521196589,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 2,
+              "p_value": 1.0
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "gauge_obs[0]",
+            "effect_over_healthy_spread": 0.0995922733985313,
+            "median_relative_change": -0.04547238718296427,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 0,
+              "p_value": 0.125
+            },
+            "s_exclusive": true
+          },
+          {
+            "column": "gauge_obs[1]",
+            "effect_over_healthy_spread": 0.08278909311975122,
+            "median_relative_change": -0.018753993953819156,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 1,
+              "p_value": 0.625
+            },
+            "s_exclusive": true
+          },
+          {
+            "column": "gauge_obs[2]",
+            "effect_over_healthy_spread": 0.11976385001114283,
+            "median_relative_change": 0.03866097279716845,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 2,
+              "p_value": 1.0
+            },
+            "s_exclusive": true
+          },
+          {
+            "column": "gauge_obs[3]",
+            "effect_over_healthy_spread": 0.0477405512072158,
+            "median_relative_change": 0.011155596404383713,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 3,
+              "p_value": 0.625
+            },
+            "s_exclusive": true
+          }
+        ]
+      }
+    },
+    "structure_rem_ei_0.50": {
+      "C1": {
+        "interpretable": {
+          "fault_mean_score": 1.0599071336383201,
+          "healthy_mean_score": 1.0907386061373359,
+          "median_paired_ratio": 0.9723093511344576,
+          "paired_sign_test": {
+            "n_pairs": 4,
+            "n_positive": 1,
+            "p_value": 0.625
+          },
+          "per_cell": [
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_0p050kg|env_dev_iso25c|contact_dev_none",
+              "fault": 0.8103312176859502,
+              "healthy": 0.7516044511743722
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_0p050kg|env_dev_warm2c|contact_dev_brief",
+              "fault": 0.8595944225439215,
+              "healthy": 0.8899846089411462
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_nominal|env_dev_iso25c|contact_dev_brief",
+              "fault": 1.2754473270227915,
+              "healthy": 1.3031183018642258
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_nominal|env_dev_warm2c|contact_dev_none",
+              "fault": 1.294255567300617,
+              "healthy": 1.4182470625695989
+            }
+          ],
+          "run_auroc": 0.375
+        },
+        "learned": {
+          "c_grid": [
+            0.01,
+            0.1,
+            1.0
+          ],
+          "n_features": 324,
+          "n_windows": 224,
+          "paired_sign_test": {
+            "n_pairs": 4,
+            "n_positive": 2,
+            "p_value": 1.0
+          },
+          "per_cell_score_difference": [
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_0p050kg|env_dev_iso25c|contact_dev_none",
+              "fault_minus_healthy": 0.310325356568541
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_0p050kg|env_dev_warm2c|contact_dev_brief",
+              "fault_minus_healthy": -1.6400141014990663
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_nominal|env_dev_iso25c|contact_dev_brief",
+              "fault_minus_healthy": -1.9309477825643786
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_nominal|env_dev_warm2c|contact_dev_none",
+              "fault_minus_healthy": 1.5111179685967555
+            }
+          ],
+          "run_auroc_best_over_grid": 0.375,
+          "selected_C": 0.01
+        },
+        "per_channel": [
+          {
+            "column": "q_obs[0]",
+            "effect_over_healthy_spread": 0.010997258476638095,
+            "median_relative_change": 0.0016624685320728752,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 3,
+              "p_value": 0.625
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "q_obs[1]",
+            "effect_over_healthy_spread": 0.008088387527389655,
+            "median_relative_change": -0.0008498540845794996,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 0,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "qd_obs[0]",
+            "effect_over_healthy_spread": 0.46418792187209823,
+            "median_relative_change": 0.002970504997698724,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 2,
+              "p_value": 1.0
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "qd_obs[1]",
+            "effect_over_healthy_spread": 0.19098896934000173,
+            "median_relative_change": -0.009562912623208603,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 2,
+              "p_value": 1.0
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "tau_cmd[0]",
+            "effect_over_healthy_spread": 0.02210523534453273,
+            "median_relative_change": 0.000715112502636865,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 3,
+              "p_value": 0.625
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "tau_cmd[1]",
+            "effect_over_healthy_spread": 0.034275858936623584,
+            "median_relative_change": -0.001949904965341129,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 1,
+              "p_value": 0.625
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "current_proxy_obs[0]",
+            "effect_over_healthy_spread": 0.733022760082711,
+            "median_relative_change": -0.039829630929374374,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 0,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "current_proxy_obs[1]",
+            "effect_over_healthy_spread": 2.7468742429928708,
+            "median_relative_change": 0.06189495994387746,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 3,
+              "p_value": 0.625
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[0]",
+            "effect_over_healthy_spread": 0.4182756250030823,
+            "median_relative_change": -0.0797985100680753,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 0,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[1]",
+            "effect_over_healthy_spread": 3.1471711838850878,
+            "median_relative_change": 0.04685947363362079,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 3,
+              "p_value": 0.625
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[2]",
+            "effect_over_healthy_spread": 0.5167152558124845,
+            "median_relative_change": -0.33482773108463537,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 0,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[3]",
+            "effect_over_healthy_spread": 45.13139279385213,
+            "median_relative_change": 0.17860934785913793,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 4,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[4]",
+            "effect_over_healthy_spread": 0.02677717939743518,
+            "median_relative_change": -0.0007176313373425606,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 2,
+              "p_value": 1.0
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[5]",
+            "effect_over_healthy_spread": 1.4316005625825812,
+            "median_relative_change": 0.03624260884770477,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 3,
+              "p_value": 0.625
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "gauge_obs[0]",
+            "effect_over_healthy_spread": NaN,
+            "median_relative_change": NaN,
+            "paired_sign_test": {
+              "n_pairs": 0,
+              "n_positive": 0,
+              "p_value": 1.0
+            },
+            "s_exclusive": true
+          },
+          {
+            "column": "gauge_obs[1]",
+            "effect_over_healthy_spread": NaN,
+            "median_relative_change": NaN,
+            "paired_sign_test": {
+              "n_pairs": 0,
+              "n_positive": 0,
+              "p_value": 1.0
+            },
+            "s_exclusive": true
+          },
+          {
+            "column": "gauge_obs[2]",
+            "effect_over_healthy_spread": NaN,
+            "median_relative_change": NaN,
+            "paired_sign_test": {
+              "n_pairs": 0,
+              "n_positive": 0,
+              "p_value": 1.0
+            },
+            "s_exclusive": true
+          },
+          {
+            "column": "gauge_obs[3]",
+            "effect_over_healthy_spread": NaN,
+            "median_relative_change": NaN,
+            "paired_sign_test": {
+              "n_pairs": 0,
+              "n_positive": 0,
+              "p_value": 1.0
+            },
+            "s_exclusive": true
+          }
+        ]
+      },
+      "S": {
+        "interpretable": {
+          "fault_mean_score": 1.1286676114790608,
+          "healthy_mean_score": 1.0826700287057216,
+          "median_paired_ratio": 1.0453834787682033,
+          "paired_sign_test": {
+            "n_pairs": 4,
+            "n_positive": 3,
+            "p_value": 0.625
+          },
+          "per_cell": [
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_0p050kg|env_dev_iso25c|contact_dev_none",
+              "fault": 0.8953596935931178,
+              "healthy": 0.7896316834132022
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_0p050kg|env_dev_warm2c|contact_dev_brief",
+              "fault": 0.909099390498506,
+              "healthy": 0.8751314450580242
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_nominal|env_dev_iso25c|contact_dev_brief",
+              "fault": 1.3359598165057334,
+              "healthy": 1.2699813886751534
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_nominal|env_dev_warm2c|contact_dev_none",
+              "fault": 1.374251545318886,
+              "healthy": 1.3959355976765064
+            }
+          ],
+          "run_auroc": 0.625
+        },
+        "learned": {
+          "c_grid": [
+            0.01,
+            0.1,
+            1.0
+          ],
+          "n_features": 324,
+          "n_windows": 224,
+          "paired_sign_test": {
+            "n_pairs": 4,
+            "n_positive": 2,
+            "p_value": 1.0
+          },
+          "per_cell_score_difference": [
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_0p050kg|env_dev_iso25c|contact_dev_none",
+              "fault_minus_healthy": 0.3236253754039188
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_0p050kg|env_dev_warm2c|contact_dev_brief",
+              "fault_minus_healthy": -1.55890731477652
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_nominal|env_dev_iso25c|contact_dev_brief",
+              "fault_minus_healthy": -2.373973700740161
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_nominal|env_dev_warm2c|contact_dev_none",
+              "fault_minus_healthy": 1.8909643711391086
+            }
+          ],
+          "run_auroc_best_over_grid": 0.5,
+          "selected_C": 0.01
+        },
+        "per_channel": [
+          {
+            "column": "q_obs[0]",
+            "effect_over_healthy_spread": 0.010997258476638095,
+            "median_relative_change": 0.0016624685320728752,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 3,
+              "p_value": 0.625
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "q_obs[1]",
+            "effect_over_healthy_spread": 0.008088387527389655,
+            "median_relative_change": -0.0008498540845794996,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 0,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "qd_obs[0]",
+            "effect_over_healthy_spread": 0.46418792187209823,
+            "median_relative_change": 0.002970504997698724,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 2,
+              "p_value": 1.0
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "qd_obs[1]",
+            "effect_over_healthy_spread": 0.19098896934000173,
+            "median_relative_change": -0.009562912623208603,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 2,
+              "p_value": 1.0
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "tau_cmd[0]",
+            "effect_over_healthy_spread": 0.02210523534453273,
+            "median_relative_change": 0.000715112502636865,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 3,
+              "p_value": 0.625
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "tau_cmd[1]",
+            "effect_over_healthy_spread": 0.034275858936623584,
+            "median_relative_change": -0.001949904965341129,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 1,
+              "p_value": 0.625
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "current_proxy_obs[0]",
+            "effect_over_healthy_spread": 0.733022760082711,
+            "median_relative_change": -0.039829630929374374,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 0,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "current_proxy_obs[1]",
+            "effect_over_healthy_spread": 2.7468742429928708,
+            "median_relative_change": 0.06189495994387746,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 3,
+              "p_value": 0.625
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[0]",
+            "effect_over_healthy_spread": 0.4182756250030823,
+            "median_relative_change": -0.0797985100680753,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 0,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[1]",
+            "effect_over_healthy_spread": 3.1471711838850878,
+            "median_relative_change": 0.04685947363362079,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 3,
+              "p_value": 0.625
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[2]",
+            "effect_over_healthy_spread": 0.5167152558124845,
+            "median_relative_change": -0.33482773108463537,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 0,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[3]",
+            "effect_over_healthy_spread": 45.13139279385213,
+            "median_relative_change": 0.17860934785913793,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 4,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[4]",
+            "effect_over_healthy_spread": 0.02677717939743518,
+            "median_relative_change": -0.0007176313373425606,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 2,
+              "p_value": 1.0
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[5]",
+            "effect_over_healthy_spread": 1.4316005625825812,
+            "median_relative_change": 0.03624260884770477,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 3,
+              "p_value": 0.625
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "gauge_obs[0]",
+            "effect_over_healthy_spread": 0.12146619629037109,
+            "median_relative_change": 0.008235723054825436,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 3,
+              "p_value": 0.625
+            },
+            "s_exclusive": true
+          },
+          {
+            "column": "gauge_obs[1]",
+            "effect_over_healthy_spread": 0.1215656491872712,
+            "median_relative_change": 0.022006412145177186,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 2,
+              "p_value": 1.0
+            },
+            "s_exclusive": true
+          },
+          {
+            "column": "gauge_obs[2]",
+            "effect_over_healthy_spread": 0.10629359914826406,
+            "median_relative_change": 0.029613141271335228,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 2,
+              "p_value": 1.0
+            },
+            "s_exclusive": true
+          },
+          {
+            "column": "gauge_obs[3]",
+            "effect_over_healthy_spread": 0.037795390606327826,
+            "median_relative_change": 0.03192892708909988,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 3,
+              "p_value": 0.625
+            },
+            "s_exclusive": true
+          }
+        ]
+      }
+    },
+    "structure_rem_ei_0.75": {
+      "C1": {
+        "interpretable": {
+          "fault_mean_score": 1.050482414993221,
+          "healthy_mean_score": 1.0907386061373359,
+          "median_paired_ratio": 0.9793835719727166,
+          "paired_sign_test": {
+            "n_pairs": 4,
+            "n_positive": 1,
+            "p_value": 0.625
+          },
+          "per_cell": [
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_0p050kg|env_dev_iso25c|contact_dev_none",
+              "fault": 0.770294643289981,
+              "healthy": 0.7516044511743722
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_0p050kg|env_dev_warm2c|contact_dev_brief",
+              "fault": 0.8775230945334889,
+              "healthy": 0.8899846089411462
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_nominal|env_dev_iso25c|contact_dev_brief",
+              "fault": 1.2676332016269303,
+              "healthy": 1.3031183018642258
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_nominal|env_dev_warm2c|contact_dev_none",
+              "fault": 1.2864787205224844,
+              "healthy": 1.4182470625695989
+            }
+          ],
+          "run_auroc": 0.375
+        },
+        "learned": {
+          "c_grid": [
+            0.01,
+            0.1,
+            1.0
+          ],
+          "n_features": 324,
+          "n_windows": 224,
+          "paired_sign_test": {
+            "n_pairs": 4,
+            "n_positive": 0,
+            "p_value": 0.125
+          },
+          "per_cell_score_difference": [
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_0p050kg|env_dev_iso25c|contact_dev_none",
+              "fault_minus_healthy": -0.5349192871399511
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_0p050kg|env_dev_warm2c|contact_dev_brief",
+              "fault_minus_healthy": -4.220461221550137
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_nominal|env_dev_iso25c|contact_dev_brief",
+              "fault_minus_healthy": -5.228716611678475
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_nominal|env_dev_warm2c|contact_dev_none",
+              "fault_minus_healthy": -6.156115448659614
+            }
+          ],
+          "permutation_null": {
+            "max": 0.875,
+            "mean": 0.5546875,
+            "n_patterns": 16,
+            "p_value": 1.0,
+            "q95": 0.875
+          },
+          "run_auroc_best_over_grid": 0.0,
+          "selected_C": 0.01
+        },
+        "per_channel": [
+          {
+            "column": "q_obs[0]",
+            "effect_over_healthy_spread": 0.007155378247678075,
+            "median_relative_change": 0.000696205072850151,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 3,
+              "p_value": 0.625
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "q_obs[1]",
+            "effect_over_healthy_spread": 0.01139607220133299,
+            "median_relative_change": -0.00018620949823612123,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 2,
+              "p_value": 1.0
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "qd_obs[0]",
+            "effect_over_healthy_spread": 0.45449676598890704,
+            "median_relative_change": 0.01854523147658039,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 4,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "qd_obs[1]",
+            "effect_over_healthy_spread": 0.23148507646562383,
+            "median_relative_change": -0.03402116094697955,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 1,
+              "p_value": 0.625
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "tau_cmd[0]",
+            "effect_over_healthy_spread": 0.04473851032725361,
+            "median_relative_change": 0.0009235708893717801,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 2,
+              "p_value": 1.0
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "tau_cmd[1]",
+            "effect_over_healthy_spread": 0.04070391586276015,
+            "median_relative_change": -0.0015691471561051927,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 2,
+              "p_value": 1.0
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "current_proxy_obs[0]",
+            "effect_over_healthy_spread": 0.6809744105976572,
+            "median_relative_change": -0.031782281059564606,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 1,
+              "p_value": 0.625
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "current_proxy_obs[1]",
+            "effect_over_healthy_spread": 0.7891081854584594,
+            "median_relative_change": -0.017297566773048757,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 2,
+              "p_value": 1.0
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[0]",
+            "effect_over_healthy_spread": 0.22893772044854668,
+            "median_relative_change": -0.03589938354730865,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 0,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[1]",
+            "effect_over_healthy_spread": 1.1605110875349693,
+            "median_relative_change": -0.037703723247527916,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 1,
+              "p_value": 0.625
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[2]",
+            "effect_over_healthy_spread": 0.24613783286585506,
+            "median_relative_change": -0.14461830820872346,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 0,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[3]",
+            "effect_over_healthy_spread": 2.0795038039044167,
+            "median_relative_change": -1.9138064743815715e-05,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 2,
+              "p_value": 1.0
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[4]",
+            "effect_over_healthy_spread": 0.032161343208324464,
+            "median_relative_change": -0.0020959315023003668,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 2,
+              "p_value": 1.0
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[5]",
+            "effect_over_healthy_spread": 2.05030780416645,
+            "median_relative_change": 0.02079687789396991,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 3,
+              "p_value": 0.625
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "gauge_obs[0]",
+            "effect_over_healthy_spread": NaN,
+            "median_relative_change": NaN,
+            "paired_sign_test": {
+              "n_pairs": 0,
+              "n_positive": 0,
+              "p_value": 1.0
+            },
+            "s_exclusive": true
+          },
+          {
+            "column": "gauge_obs[1]",
+            "effect_over_healthy_spread": NaN,
+            "median_relative_change": NaN,
+            "paired_sign_test": {
+              "n_pairs": 0,
+              "n_positive": 0,
+              "p_value": 1.0
+            },
+            "s_exclusive": true
+          },
+          {
+            "column": "gauge_obs[2]",
+            "effect_over_healthy_spread": NaN,
+            "median_relative_change": NaN,
+            "paired_sign_test": {
+              "n_pairs": 0,
+              "n_positive": 0,
+              "p_value": 1.0
+            },
+            "s_exclusive": true
+          },
+          {
+            "column": "gauge_obs[3]",
+            "effect_over_healthy_spread": NaN,
+            "median_relative_change": NaN,
+            "paired_sign_test": {
+              "n_pairs": 0,
+              "n_positive": 0,
+              "p_value": 1.0
+            },
+            "s_exclusive": true
+          }
+        ]
+      },
+      "S": {
+        "interpretable": {
+          "fault_mean_score": 1.055528996453299,
+          "healthy_mean_score": 1.0826700287057216,
+          "median_paired_ratio": 0.9917578638954414,
+          "paired_sign_test": {
+            "n_pairs": 4,
+            "n_positive": 2,
+            "p_value": 1.0
+          },
+          "per_cell": [
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_0p050kg|env_dev_iso25c|contact_dev_none",
+              "fault": 0.8112475645175513,
+              "healthy": 0.7896316834132022
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_0p050kg|env_dev_warm2c|contact_dev_brief",
+              "fault": 0.8775403000867109,
+              "healthy": 0.8751314450580242
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_nominal|env_dev_iso25c|contact_dev_brief",
+              "fault": 1.2455509651221779,
+              "healthy": 1.2699813886751534
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_nominal|env_dev_warm2c|contact_dev_none",
+              "fault": 1.287777156086756,
+              "healthy": 1.3959355976765064
+            }
+          ],
+          "run_auroc": 0.5
+        },
+        "learned": {
+          "c_grid": [
+            0.01,
+            0.1,
+            1.0
+          ],
+          "n_features": 324,
+          "n_windows": 224,
+          "paired_sign_test": {
+            "n_pairs": 4,
+            "n_positive": 0,
+            "p_value": 0.125
+          },
+          "per_cell_score_difference": [
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_0p050kg|env_dev_iso25c|contact_dev_none",
+              "fault_minus_healthy": -0.5025100443743206
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_0p050kg|env_dev_warm2c|contact_dev_brief",
+              "fault_minus_healthy": -4.521585896555921
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_nominal|env_dev_iso25c|contact_dev_brief",
+              "fault_minus_healthy": -6.015001299473018
+            },
+            {
+              "cell": "trajectory_dev_diagnostic_b|payload_dev_nominal|env_dev_warm2c|contact_dev_none",
+              "fault_minus_healthy": -7.049103367207566
+            }
+          ],
+          "permutation_null": {
+            "max": 0.8125,
+            "mean": 0.5078125,
+            "n_patterns": 16,
+            "p_value": 1.0,
+            "q95": 0.8125
+          },
+          "run_auroc_best_over_grid": 0.0,
+          "selected_C": 0.01
+        },
+        "per_channel": [
+          {
+            "column": "q_obs[0]",
+            "effect_over_healthy_spread": 0.007155378247678075,
+            "median_relative_change": 0.000696205072850151,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 3,
+              "p_value": 0.625
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "q_obs[1]",
+            "effect_over_healthy_spread": 0.01139607220133299,
+            "median_relative_change": -0.00018620949823612123,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 2,
+              "p_value": 1.0
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "qd_obs[0]",
+            "effect_over_healthy_spread": 0.45449676598890704,
+            "median_relative_change": 0.01854523147658039,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 4,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "qd_obs[1]",
+            "effect_over_healthy_spread": 0.23148507646562383,
+            "median_relative_change": -0.03402116094697955,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 1,
+              "p_value": 0.625
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "tau_cmd[0]",
+            "effect_over_healthy_spread": 0.04473851032725361,
+            "median_relative_change": 0.0009235708893717801,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 2,
+              "p_value": 1.0
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "tau_cmd[1]",
+            "effect_over_healthy_spread": 0.04070391586276015,
+            "median_relative_change": -0.0015691471561051927,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 2,
+              "p_value": 1.0
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "current_proxy_obs[0]",
+            "effect_over_healthy_spread": 0.6809744105976572,
+            "median_relative_change": -0.031782281059564606,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 1,
+              "p_value": 0.625
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "current_proxy_obs[1]",
+            "effect_over_healthy_spread": 0.7891081854584594,
+            "median_relative_change": -0.017297566773048757,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 2,
+              "p_value": 1.0
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[0]",
+            "effect_over_healthy_spread": 0.22893772044854668,
+            "median_relative_change": -0.03589938354730865,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 0,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[1]",
+            "effect_over_healthy_spread": 1.1605110875349693,
+            "median_relative_change": -0.037703723247527916,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 1,
+              "p_value": 0.625
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[2]",
+            "effect_over_healthy_spread": 0.24613783286585506,
+            "median_relative_change": -0.14461830820872346,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 0,
+              "p_value": 0.125
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[3]",
+            "effect_over_healthy_spread": 2.0795038039044167,
+            "median_relative_change": -1.9138064743815715e-05,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 2,
+              "p_value": 1.0
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[4]",
+            "effect_over_healthy_spread": 0.032161343208324464,
+            "median_relative_change": -0.0020959315023003668,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 2,
+              "p_value": 1.0
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "imu_obs[5]",
+            "effect_over_healthy_spread": 2.05030780416645,
+            "median_relative_change": 0.02079687789396991,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 3,
+              "p_value": 0.625
+            },
+            "s_exclusive": false
+          },
+          {
+            "column": "gauge_obs[0]",
+            "effect_over_healthy_spread": 0.08898506177699984,
+            "median_relative_change": -0.03589764570378351,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 1,
+              "p_value": 0.625
+            },
+            "s_exclusive": true
+          },
+          {
+            "column": "gauge_obs[1]",
+            "effect_over_healthy_spread": 0.17449449643492024,
+            "median_relative_change": 0.009020554845817843,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 2,
+              "p_value": 1.0
+            },
+            "s_exclusive": true
+          },
+          {
+            "column": "gauge_obs[2]",
+            "effect_over_healthy_spread": 0.05466589085344206,
+            "median_relative_change": 0.02617635088760476,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 3,
+              "p_value": 0.625
+            },
+            "s_exclusive": true
+          },
+          {
+            "column": "gauge_obs[3]",
+            "effect_over_healthy_spread": 0.10406236821003835,
+            "median_relative_change": 0.004562701688395623,
+            "paired_sign_test": {
+              "n_pairs": 4,
+              "n_positive": 2,
+              "p_value": 1.0
+            },
+            "s_exclusive": true
+          }
+        ]
+      }
+    }
+  },
+  "dataset_root": "C:\\Users\\cresp\\Documents\\Dandelion Engineering\\Robot Structural Proprioception\\data\\gate3-base-dev-pilot-val-c1-s",
+  "generated_utc": "2026-07-25T02:34:42Z",
+  "n_cells": 4,
+  "screen": "development_structural_separability",
+  "split": "dev",
+  "stride": 64,
+  "suites": [
+    "C1",
+    "S"
+  ],
+  "trajectory_filter": "diagnostic",
+  "window_steps": 768,
+  "windows_per_run": [
+    28
+  ]
+}
