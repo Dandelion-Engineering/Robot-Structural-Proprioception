@@ -1,6 +1,6 @@
 # Summary of Only Necessary Context — Codex
 
-**Last completed Codex session:** 34
+**Last completed Codex session:** 35
 **Date:** 2026-07-25
 **Current phase:** Phase 2 — Integration and Reproducibility Build
 **Primary active thread:** `chats/Claude-Codex/Phase 2 Integration and Config
@@ -8,29 +8,32 @@ Freeze/Phase 2 Integration and Config Freeze - Active.md`
 
 ## Resume here
 
-Gate 4 is stopped on a corrected Claim-Sheet amendment proposal:
+Gate 4 is stopped on a third, text-only Amendment-A2 proposal state:
 
 ```text
-BLOCK_AMENDMENT_A2_PROPOSAL
+BLOCK_AMENDMENT_A2_PROPOSAL_V2_PENDING_EXECUTABLE_PROTOCOL_AND_STRATUM_MAP
 BLOCK_CONFIG_FREEZE_PENDING_PRECONFIRMATORY_BUILD_AND_VALIDATION
 ```
 
-Claude's Session-34 proposal correctly identified that the current structural
-fault settings do not support an interpretable hypothesis test. Codex
-independently reproduced that finding. Codex nevertheless blocked the exact
-proposal because:
+Claude Session 35 corrected the two formulations Codex blocked in Session 34:
 
-1. it promoted an eight-context **development-only** diagnostic into a stated
-   result for all 472 delivered development/pilot/validation reservations; and
-2. it declared four-way macro-F1 “per band” even though only the structural
-   class has proposed mild/severe membership.
+1. the mild-stratum evidence statement is now limited to the assigned
+   development contexts at remaining EI 0.75 and 0.50; and
+2. conditional Case B now defines the four-way row population, shared
+   non-structural rows, weights, dependence, one model per suite, one
+   confirmatory decision, and non-confirmatory secondary result.
 
-Claude's next required action is a corrected short A2 proposal, not an
-implementation. Codex should review the exact replacement and return an
-explicit approval or specific block. No Claim-Sheet edit, replacement
-assignment, data regeneration, Gate-4 fit, or final-config work is authorized
-until that proposal converges and the later written amendment is jointly
-approved at the same state.
+Those components are accepted for reuse.
+
+Codex Session 35 still blocked the exact proposal because the unrun Protocol P
+does not yet define an executable trajectory universe or a prospective mapping
+from its two development severities to the different pilot/validation/test
+severity grids. Its four-gauge scalar and its proposed test-contact offsets
+also require exact pinning.
+
+Claude's next action is a corrected **proposal text only**. Do not run Protocol
+P, edit the Claim Sheet, build a replacement assignment, generate amended data,
+fit Gate-4 models, or create final config before that text converges.
 
 ## Gate state
 
@@ -45,18 +48,17 @@ Gate-2 real primary C1/S generator/base roles:
   complete and exact-state review closed
 
 Gate-2 bounded generator hardening:
-  complete and exact-state review closed by Claude Session 34 token
-  APPROVE_GATE2_GENERATOR_HARDENING
+  complete and exact-state review closed
 
 Gate 2 overall:
   open only for later Gate-4 estimator-output/controller-log roles
 
 Gate 3:
   complete and jointly approved at the current pre-A2 assignment
-  any A2 replacement will require a new exact assignment/review loop
+  any A2 replacement requires a new exact assignment/review loop
 
 Gate 4:
-  BLOCKED on corrected AMENDMENT_A2
+  BLOCKED on executable Protocol P and corrected AMENDMENT A2
 
 Gates 5–7:
   open
@@ -102,72 +104,254 @@ The ignored local dataset root is:
 
 `data/gate3-base-dev-pilot-val-c1-s`
 
-It is approximately 3.86 GB. Do not call it a final amended dataset. If a
-corrected A2 amendment and replacement assignment receive joint approval,
-Codex has chosen **full regeneration from zero** rather than changing the
-expansion order or silently reusing these payloads under a new config hash.
-The present set should then be recorded as a superseded pre-amendment set in
-the packet exclusion trail. Do not delete it before the replacement is approved
-and the provenance/retention action is explicit.
+It is approximately 3.86 GB. It is a pre-amendment non-test dataset, not a
+final amended dataset. Do not delete or relabel it while A2 is unresolved.
 
-## Session-34 separability reproduction
+If a written A2 amendment and replacement assignment later receive joint
+same-state approval, the selected provenance policy is **full regeneration
+from zero**. The current set then becomes a named superseded pre-amendment set
+in the exclusion trail. No current payload is silently reused under a changed
+config hash.
 
-Claude added:
+## What Claude Session 35 changed
 
-- `Reproducibility Packet/scripts/screen_structural_separability.py`;
-- pooled results under
-  `Reproducibility Packet/results/structural_separability/pooled_trajectories/`;
-  and
-- diagnostic-only results under
-  `Reproducibility Packet/results/structural_separability/diagnostic_trajectory_only/`.
+### Ramp audit
 
-Codex regenerated both analyses from the retained dataset with:
+Claude found that the approved assignment pins probe strength, frequency,
+cycles and raised-cosine envelope but not ramp width.
 
-`.\venv\Scripts\python.exe`
-
-The independent outputs were written under the ignored root:
-
-`tmp/codex-session34-a2-review/`
-
-After excluding only `generated_utc` and the absolute `dataset_root` string,
-every substantive top-level JSON field exactly matched the tracked output for
-both variants:
+The mismatch is confirmed in code:
 
 ```text
-config_hash
-contrast_order
-contrasts
-n_cells
-screen
-split
-stride
-suites
-trajectory_filter
-window_steps
-windows_per_run
+screen_synchronous_safe_probe.py:
+  default ramp_period_fraction = 0.125
+
+assignment_generator.py:
+  finite delivered ramp = duration / 2
+  equivalent ramp fraction = 0.5
 ```
 
-Decision-relevant pooled results:
+Claude reports that the delivered 0.5-fraction ramp produces a much weaker
+structural signal at the same 0.05 N than the screened 0.125-fraction ramp, but
+permits more amplitude before closed-loop instability. Claude therefore
+withdrew the Session-34 “2x–40x too mild” characterization and proposed
+development-only Protocol P to jointly select ramp, amplitude and which
+structural severities clear the margin.
+
+Codex independently verified the field/code mismatch, but did not replay the 32
+mechanics rollouts behind Claude's numerical Findings B–C. Retain those findings
+only at their stated development-mechanics scope until further independent
+verification is needed.
+
+The Session-34 structural-separability result itself remains valid for the data
+that were actually delivered. Both suites saw the same excitation, the current
+development structural settings do not support the planned S-versus-C1
+hypothesis test, and the actuator positive control separates. This is a method
+feasibility stop, not a hypothesis result.
+
+### Sign-test report correction
+
+Claude corrected `screen_structural_separability.py` so the exact two-sided
+sign-test floor is derived from `n_cells`.
 
 ```text
-contrast / suite              interpretable AUROC   learned AUROC
-structure EI 0.75 / C1        0.453                  0.250
-structure EI 0.75 / S         0.469                  0.172
-structure EI 0.50 / C1        0.469                  0.750
-structure EI 0.50 / S         0.578                  0.703
-actuator gain 0.50 / C1       0.594                  0.891
-actuator gain 0.50 / S        0.500                  0.859
+pooled screen:
+  n_cells = 8
+  exact floor = 0.0078
+
+diagnostic-only screen:
+  n_cells = 4
+  exact floor = 0.125
 ```
 
-The structural result is not convincing at either development severity, S does
-not beat C1, the actuator positive control separates, and the pooled
-per-channel structural effects clearing the sign test are IMU rather than gauge
-channels. No validation or test payload was read.
+The diagnostic report now explicitly says no channel can reach `p <= 0.05` and
+that its empty attribution table is forced by cell count, not evidence of no
+channel effect. Codex reviewed and accepts this forward correction.
 
-Interpret this as:
+## Corrected components now accepted
+
+### Mild-stratum evidence statement
+
+The accepted wording is:
+
+> In the assigned development contexts at remaining EI 0.75 and 0.50, the
+> current excitation does not provide a gauge-borne structural signature that
+> supports the planned S-versus-C1 hypothesis test; the detectable structural
+> effect is instead in C1 IMU channels.
+
+The existing settings may be retained as a stratum in a future amendment, but
+the development screen is not the final result of that complete stratum.
+
+### Conditional Case-B estimand structure
+
+The accepted structure is:
+
+- primary four-way macro-F1 over all healthy, actuator and sensor rows plus
+  testable-stratum structural rows;
+- every non-structural row has weight 1 and is shared across strata;
+- one model per suite is trained on the complete manifest;
+- S and C1 use identical reservations;
+- the hierarchical bootstrap draws each shared reservation once so dependence
+  is preserved;
+- there is one confirmatory decision; and
+- the same metric on the sub-threshold stratum is secondary,
+  predeclared and non-confirmatory, not a second success route.
+
+This structure is accepted only after the structural membership mapping below
+is fully defined.
+
+## Why Protocol P is still blocked
+
+### 1. Trajectory/screening universe is contradictory
+
+The approved development trajectories are:
 
 ```text
-current structural settings fail the prerequisite feasibility gate
+trajectory_dev_ordinary_a:
+  excitation = ordinary
+  diagnostic_probe = null
+
+trajectory_dev_diagnostic_b:
+  excitation = diagnostic
+  diagnostic_probe = 0.05 N
+```
+
+`gate3_assignment.py` requires ordinary trajectories to carry no probe.
+Protocol P varies probe ramp and amplitude and requires the 0.8 Hz margin on
+**both** development trajectories.
+
+The next proposal must choose one exact contract:
+
+1. run P only on the assigned diagnostic trajectory; or
+2. define development-only probe-overlay clones of the task paths, label them
+   mechanics-screen conditions rather than dataset trajectories, and state
+   whether the canonical ordinary trajectory remains probe-free in the
+   regenerated manifest.
+
+Do not let implementation silently reinterpret “both trajectories.”
+
+### 2. Development P outcomes do not classify the other split settings
+
+The approved remaining-EI grids differ:
+
+```text
+dev:    0.50, 0.75
+pilot:  0.60, 0.85
+val:    0.40, 0.90
+test:   0.35, 0.65
+```
+
+P measures only development 0.50 and 0.75. Cases A/B nevertheless refer to all
+reserved severities and to testable versus sub-threshold structural rows.
+
+Before P runs, the next proposal must assign every role's listed setting for
+every possible P outcome. Acceptable forms:
+
+- an explicit role-by-role, branch-by-branch membership table; or
+- a numeric cutoff rule with direction, equality handling, monotonicity
+  assumption and a predeclared response to a contradictory pilot margin.
+
+The pilot may stop or bound transfer. It may not retrospectively relabel
+validation/test rows after seeing later-role results. If the current grids
+cannot support the rule, propose complete replacement grids without generating
+or reading non-development payloads.
+
+Until this exists, Case A “no stratification” and Case B's confirmatory
+population are not fully defined.
+
+### 3. Four-gauge scalar is ambiguous
+
+Protocol P says “synchronous gauge coefficient L2 distance” but does not specify
+four-gauge aggregation.
+
+The existing safe-probe statistic:
+
+1. fits intercept, trend, cosine and sine per gauge;
+2. takes the L2 norm of the cosine/sine coefficient difference per gauge; and
+3. takes the maximum across gauges.
+
+Pin the exact scalar compared with `>= 0.810 microstrain`. If the existing
+statistic is intended, state the worst-context maximum per-gauge coefficient
+norm explicitly. A joint vector norm across all gauges is different.
+
+Also define “gentlest ramp” mechanically. In the proposed set, the largest
+fraction, 0.5, appears gentlest.
+
+### 4. Contact offsets are incomplete
+
+Current assigned contact windows:
+
+```text
+dev:    [2.0, 2.5]   duration 0.5 s
+pilot:  [2.6, 3.2]   duration 0.6 s
+val:    [1.8, 3.3]   duration 1.5 s
+test:   [1.6, 3.8]   duration 2.2 s
+```
+
+The proposal says test inherits validation's **length**, but does not pin the
+test start phase and incorrectly says duration then becomes constant “across
+rungs.”
+
+The next proposal must give the exact test `contact_window_offset_s`. If only
+validation/test duration is matched, say so. If timing also matches, copy the
+full validation offset pair.
+
+## Protocol-P elements not otherwise objected to
+
+The current text proposes:
+
+```text
+ramp fractions:
+  0.125, 0.25, 0.5
+
+amplitudes:
+  0.05, 0.10, 0.15, 0.18, 0.20, 0.22, 0.25, 0.30 N
+
+hard per-development-cell checks:
+  zero A1 safety flags
+  max |qd_true| <= 8 rad/s
+  max |q_true| <= 2.5 rad
+  max |gauge_true| <= 400 microstrain
+  peak joint-0 probe torque <= 60% of torque_abs_limit[0]
+  no saturated-step increase versus zero-probe control
+
+margin:
+  W = 768 from onset
+  f = 0.8 Hz
+  matched sensor seed
+  healthy versus fault
+  every authorized development context must reach >= 0.810 microstrain
+
+selection:
+  maximize number of passing reserved development severities
+  then smallest amplitude
+  then gentlest ramp
+
+no pass:
+  Case C method failure / excitation-bounded transfer shape
+```
+
+These items remain proposal text, not an approved or executed protocol.
+
+## Current separability evidence boundary
+
+Codex Session 34 independently regenerated both tracked development analyses
+from the retained dataset and matched every substantive top-level JSON field.
+Decision-relevant pooled learned AUROCs:
+
+```text
+contrast / suite                 C1      S
+structure remaining EI 0.75      0.250   0.172
+structure remaining EI 0.50      0.750   0.703
+actuator remaining gain 0.50     0.891   0.859
+```
+
+Pooled structural effects clearing the paired channel sign test are IMU rather
+than gauge channels. Interpret this as:
+
+```text
+current delivered structural settings/excitation fail the prerequisite
+development feasibility gate
 ```
 
 Do not interpret it as:
@@ -175,74 +359,9 @@ Do not interpret it as:
 ```text
 the project hypothesis is false
 the whole mild band has a negative result
-pilot/validation confirms the development result
+pilot or validation confirms the development result
+the withdrawn 2x–40x severity claim remains valid
 ```
-
-## Exact A2 proposal review boundary
-
-Codex supports these directions:
-
-- retain the current severity settings as a mild structural stratum;
-- add a prospectively specified severe structural stratum where the mechanism
-  can clear the predeclared detection margin;
-- re-derive the diagnostic probe amplitude inside the unchanged A1 ceiling;
-- decide the confirmatory contact profile deliberately;
-- keep the joint-space task, score, controller question, and project hypothesis
-  unchanged; and
-- regenerate from zero under one coherent amended expansion/assignment.
-
-The corrected proposal must replace two formulations.
-
-### Correct mild-stratum evidence statement
-
-The current defensible statement is:
-
-> In the assigned development contexts at remaining EI 0.75 and 0.50, the
-> current excitation does not provide a gauge-borne structural signature that
-> supports the planned S-versus-C1 hypothesis test; the detectable structural
-> effect is instead in C1 IMU channels.
-
-The development screen is the disclosed reason for A2. It is not the final
-result of the complete mild stratum. The amended mild stratum requires its own
-later role-authorized analysis.
-
-### Define any per-band four-class estimand
-
-Before four-way macro-F1 can be called “per band,” the design must specify for
-every split:
-
-1. which healthy, actuator, and sensor reservations accompany each structural
-   stratum;
-2. whether non-structural rows are shared;
-3. how pairing, weighting, confidence intervals, and multiplicity preserve any
-   shared-row dependence;
-4. exact manifest membership and sample weight; and
-5. which outcome is project-level primary versus structural
-   severity-stratified secondary.
-
-The severe stratum may carry a headline complete four-class comparison only if
-that entire comparison is prospectively defined. Otherwise, severe may carry a
-headline **structural sub-comparison**, while project-level macro-F1 uses one
-fully specified manifest.
-
-### Prospective selection requirements
-
-The corrected proposal/written amendment must:
-
-- use development-authorized mechanics for severity/probe selection;
-- avoid observing replacement pilot, validation, or test outcomes during that
-  selection;
-- predeclare the candidate severity/probe grid;
-- define the 2.0x synchronous-margin rule across the assigned context
-  distribution, not a single favorable payload/contact/seed cell;
-- keep the A1 angular-rate ceiling as a hard failure boundary;
-- predeclare the no-candidate-clears action;
-- choose the replacement test contact profile without generating or reading
-  confirmatory identities/payloads;
-- synchronize Claim-Sheet Slots 11–13, split/manifest semantics, exclusion
-  trail, packet instructions, and `Accessible Claim Sheet.md`; and
-- require explicit same-state approval of the written amendment and replacement
-  assignment before generation.
 
 ## Contact-design fact that remains live
 
@@ -256,12 +375,10 @@ development / pilot / validation actual-contact runs:
 
 Assigned contact is balanced, but realized contact is fault-coupled and loudest
 in an S-exclusive gauge channel. This is not a headline result. It makes the
-confirmatory contact profile a deliberate pre-freeze decision and a Gate-7/
-Technical-Report audit item.
+confirmatory contact schedule a deliberate pre-freeze decision and later
+Gate-7/Technical-Report audit item.
 
-## Forward corrections that must not be lost
-
-### Session-33 severity row
+## Forward correction that must not be lost
 
 `agents/Codex/Session Summaries/HumanReport33.md` contains an incorrect first
 row in its measured severity table. The concluded report stays unchanged, but
@@ -273,144 +390,134 @@ the Technical Report/limitations record must use:
 
 not `0.95 | 0.0090 | 0.02x | development`.
 
-### Diagnostic sign-test report label
-
-`Reproducibility Packet/scripts/screen_structural_separability.py` line 742
-hard-codes “exact 8-cell floor (p = 0.0078)” into both reports.
-
-- It is correct for the pooled screen (`n_cells = 8`).
-- It is incorrect for the diagnostic screen (`n_cells = 4`), where a two-sided
-  sign test cannot reach 0.05.
-
-Claude should correct the report wording forward before packet lock. This is a
-label defect, not a change to the exact reproduced results or pooled no-gauge
-conclusion.
+The former diagnostic sign-test labeling problem is now fixed in Claude Session
+35 and does not need another handback.
 
 ## Verification baseline
 
-Use the repository venv, not bare system Python.
-
-Latest authoritative packet test:
+Use the repository venv, never bare system Python:
 
 ```powershell
 .\venv\Scripts\python.exe -m pytest -q "Reproducibility Packet\tests"
 ```
 
-Session-34 result:
+Codex Session-35 result:
 
 ```text
-399 passed in 10.53 s
+399 passed in 9.61 s
 ```
 
-Do not use root-wide `pytest -q` as the clean packet command: ignored
+Do not use root-wide `pytest -q` as the clean packet command. Ignored
 `tmp/session6_packet_copy/tests` duplicates three test module names and causes
-collection mismatch errors. This is workspace discovery, not a packet test
+collection mismatch errors. That is workspace discovery, not a packet test
 failure.
 
-The separability scripts emit NumPy warnings for NaN-padded channels absent
-from one suite. Outputs still complete and reproduce exactly.
+Session 35 read the approved assignment's non-development design fields to
+audit prospective mapping, but opened no pilot, validation or test payload or
+outcome.
 
 ## Transcript-order state
 
-Session 34 had a caught same-session append-placement recurrence:
-
-- the first patch matched a generic Claude separator and placed the new turn at
-  line 2,320;
-- the immediate physical-tail assertion caught it;
-- only Codex's new misplaced copy was removed before commit;
-- the original 3,969-line transcript state was restored;
-- the identical turn was appended with Claude's complete final EOF block; and
-- the final technical diff is `+137 / -0`.
-
-Final technical-transcript proof:
+Codex Session 35 appended cleanly to the technical thread:
 
 ```text
-pre-write lines:       3969
-post-write lines:      4106
-Session-34 header:     line 3971
-header count:          1
-physical last author:  Codex
+pre-write lines:        4380
+post-write lines:       4541
+Session-35 header:      line 4382
+header count:           1
+old prefix:             line-identical to HEAD
+technical diff:         +161 / -0
+physical last author:   Codex
 ```
 
-The incident is disclosed at the physical tail of
-`chats/Claude-Codex-Human/Transcript Order Monitoring/Transcript Order Monitoring - Active.md`
-with its own `+31 / -0` append proof. The clean-append streak is over.
+The complete verified Claude EOF block was used in the actual patch. No
+recurrence occurred, so the monitoring thread was not updated.
 
-For future transcript writes:
+For every future transcript append:
 
 1. read the UTF-8 physical tail;
 2. record the pre-write line count;
-3. use the **complete verified EOF block in the actual patch**, not a shorter
-   generic subset;
+3. use the complete unique EOF block in the actual patch;
 4. prove the new header occurs exactly once after that boundary;
-5. re-read the physical tail; and
+5. compare the old prefix and re-read the physical tail; and
 6. require `+N / -0` before closeout.
 
 ## Public record
 
-Root `README.md` now preserves Claude's prior proposal entry and appends a
-correction:
+Root `README.md` already has Claude's append-only Session-35 correction:
 
-- the negative screen is development-only;
-- no result exists for all 472 delivered rows or a complete mild band;
-- per-band four-class accuracy is undefined until all class membership and
-  weighting are specified;
-- coherent regeneration is pending a corrected/approved amendment; and
-- final config and confirmatory test remain untouched.
+- the ramp width was not pinned;
+- the delivered probe differed from the screened probe;
+- the “2x–40x too mild” characterization is withdrawn;
+- probe and severity selection are proposed jointly; and
+- config/test remain untouched.
 
-Do not silently rewrite the older public entry; the correction is the operative
-later record.
+Codex Session 35 added no public entry because the exact proposal block is an
+internal review state, not a new scientific result or completed milestone. Keep
+the public log lean unless the design actually converges or a new result lands.
 
 ## Review-cycle state and next actions
 
-The active technical thread is physically last with Codex's narrow block.
+The active technical thread is physically last with Codex's explicit block.
 
 Next:
 
 1. Read any new Claude turn and Claude's latest HumanReport before acting.
-2. Review the exact corrected short A2 proposal.
-3. Approve only if it fixes both the evidence statement and complete estimand.
-4. After proposal approval, review the written Claim-Sheet and Accessible
-   Claim-Sheet amendment at the exact same state.
-5. Review a replacement hash-bound assignment that implements the approved
-   severity bands/contact rule without context leakage.
-6. Only then authorize full from-zero non-test regeneration and repeat the
-   independent identity/role/CRN audit.
-7. Resume Gate 4 only after the amended development feasibility gate clears.
-8. Keep final `config.json` absent and confirmatory identity/payload count at
-   zero until Gates 2–7 close.
+2. Review the replacement text for exactly:
+   - Protocol-P trajectory/screen universe;
+   - branch-complete mapping of P outcomes to every role's structural settings;
+   - exact four-gauge statistic and ramp tie-break; and
+   - exact test contact offsets with accurate scope.
+3. Approve or block that exact proposal state explicitly.
+4. Only after proposal approval, Claude may implement and run Protocol P on the
+   authorized development-only screening universe with zero non-development
+   payload/outcome reads.
+5. Review the exact Protocol-P implementation, result and selected branch.
+6. Then review the branch-specific synchronized written Claim Sheet, Accessible
+   Claim Sheet, manifest/exclusion and packet amendment.
+7. Review the replacement hash-bound assignment at exact state.
+8. Only after the written amendment and assignment receive same-state approval
+   may the selected branch be implemented; if it advances, regenerate the
+   non-test study from zero and repeat the independent identity/role/CRN audit.
+9. Resume Gate 4 only after the amended development feasibility gate clears.
+10. Keep final `config.json` absent and confirmatory identities/payloads at zero
+   until Gates 2–7 close.
 
 No regular Codex progress report is due until Session 40 unless a playbook
-trigger requires an earlier report.
+trigger requires one earlier.
 
 ## Key files
 
-- `agents/Codex/Session Summaries/HumanReport34.md`
-- `agents/Claude/Session Summaries/HumanReport34.md`
+- `agents/Codex/Session Summaries/HumanReport35.md`
+- `agents/Claude/Session Summaries/HumanReport35.md`
 - `chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration
   and Config Freeze - Active.md`
-- `chats/Claude-Codex-Human/Transcript Order Monitoring/Transcript Order
-  Monitoring - Active.md`
 - `Claim Sheet.md`
 - `Accessible Claim Sheet.md`
 - `Reproducibility Packet/config/proposed-gate3-assignment-v0.1.json`
 - `Reproducibility Packet/config/draft-config-v0.1.json`
+- `Reproducibility Packet/scripts/utils/gate3_assignment.py`
+- `Reproducibility Packet/scripts/utils/assignment_generator.py`
+- `Reproducibility Packet/scripts/screen_synchronous_safe_probe.py`
 - `Reproducibility Packet/scripts/screen_structural_separability.py`
 - `Reproducibility Packet/results/structural_separability/`
 - `README.md`
 
 ## Non-negotiable boundaries
 
-- Development/pilot screens are not confirmatory results.
+- Development mechanics/screens are not confirmatory results.
 - The current separability failure is a feasibility result, not a hypothesis
   failure.
-- Do not call the unobserved mild stratum negative.
-- Do not call a metric per band until every class and weight in the metric is
+- Do not restore the withdrawn “2x–40x too mild” characterization.
+- Do not run Protocol P before its exact proposal is approved.
+- Do not let pilot outcomes retroactively define confirmatory stratum
+  membership.
+- Do not call a metric per stratum until every class, row and weight is
   defined.
-- Do not inspect validation/test to choose the amended design.
+- Do not inspect non-development outcomes to choose the amended design.
 - Do not materialize confirmatory identities or payloads before final freeze.
-- Reviewer edits or silence are not approval; require explicit same-state
-  approval.
+- Reviewer edits, handoffs or silence are not approval; require explicit
+  same-state approval.
 - Keep detection, attribution, information/action authorization, and control
   outcome separate.
 - Keep `config.json` absent until all remaining gates close.
