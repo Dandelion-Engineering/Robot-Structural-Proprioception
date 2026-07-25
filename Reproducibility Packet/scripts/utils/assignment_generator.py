@@ -19,10 +19,7 @@ from typing import Any, Iterable, Mapping, Sequence
 
 import numpy as np
 
-from .assignment_binding import (
-    ApprovedAssignmentBinding,
-    validate_approved_assignment_binding,
-)
+from .assignment_binding import ApprovedAssignmentBinding
 from .cable_mechanics import CableModelConfig
 from .cable_plant import CablePlant
 from .gate3_assignment import (
@@ -57,6 +54,87 @@ CONTROLLER_ID = "bounded_observed_pd_no_recovery_v1"
 
 class AssignmentGenerationError(ValueError):
     """Raised when generation could drift from the approved assignment."""
+
+
+@dataclasses.dataclass(frozen=True)
+class GenerationRuntimeParameters:
+    """Runtime constants read from the bound draft configuration authority."""
+
+    control_dt_s: float
+    f_ctrl_hz: float
+    simulation_timestep_s: float
+    point_count: int
+
+
+def _runtime_parameters(
+    binding: ApprovedAssignmentBinding,
+) -> GenerationRuntimeParameters:
+    """Read and cross-check generator timing/mechanics constants from config."""
+
+    values = binding.config.document.get("values")
+    timing = values.get("timing") if isinstance(values, Mapping) else None
+    plant = values.get("plant") if isinstance(values, Mapping) else None
+    if not isinstance(timing, Mapping) or not isinstance(plant, Mapping):
+        raise AssignmentGenerationError("bound config lacks timing or plant authority")
+    try:
+        parameters = GenerationRuntimeParameters(
+            control_dt_s=float(timing["control_dt_s"]),
+            f_ctrl_hz=float(timing["f_ctrl_hz"]),
+            simulation_timestep_s=float(plant["simulation_timestep_s"]),
+            point_count=int(plant["point_count_per_link"]),
+        )
+    except (KeyError, TypeError, ValueError) as exc:
+        raise AssignmentGenerationError(
+            "bound config timing or plant authority is malformed"
+        ) from exc
+    numeric = (
+        parameters.control_dt_s,
+        parameters.f_ctrl_hz,
+        parameters.simulation_timestep_s,
+    )
+    if not all(math.isfinite(value) and value > 0.0 for value in numeric):
+        raise AssignmentGenerationError("bound runtime constants must be finite positive")
+    if parameters.point_count < 3:
+        raise AssignmentGenerationError("bound point_count_per_link must be at least 3")
+    if not math.isclose(
+        parameters.control_dt_s * parameters.f_ctrl_hz,
+        1.0,
+        rel_tol=0.0,
+        abs_tol=1.0e-12,
+    ):
+        raise AssignmentGenerationError(
+            "bound control_dt_s and f_ctrl_hz are not reciprocal"
+        )
+    physics_steps = parameters.control_dt_s / parameters.simulation_timestep_s
+    if not math.isclose(
+        physics_steps,
+        round(physics_steps),
+        rel_tol=0.0,
+        abs_tol=1.0e-12,
+    ):
+        raise AssignmentGenerationError(
+            "bound control_dt_s is not an integer multiple of simulation_timestep_s"
+        )
+    return parameters
+
+
+def _step_index(time_s: float, control_dt_s: float) -> int:
+    """Convert a nonnegative grid-aligned time to its exact control-step index."""
+
+    if (
+        not math.isfinite(time_s)
+        or time_s < 0.0
+        or not math.isfinite(control_dt_s)
+        or control_dt_s <= 0.0
+    ):
+        raise AssignmentGenerationError("time and control_dt_s must be finite and valid")
+    raw_index = time_s / control_dt_s
+    index = int(round(raw_index))
+    if not math.isclose(raw_index, index, rel_tol=0.0, abs_tol=1.0e-9):
+        raise AssignmentGenerationError(
+            f"time {time_s} s is not aligned to control_dt_s={control_dt_s}"
+        )
+    return index
 
 
 def _catalog(items: Iterable[Mapping[str, Any]]) -> dict[str, Mapping[str, Any]]:
@@ -228,6 +306,8 @@ def _physical_config(
     assignment: Mapping[str, Any],
     reservation: ScenarioReservation,
     trajectory: Mapping[str, Any],
+    *,
+    control_dt_s: float,
 ) -> CableModelConfig:
     contexts = assignment["context_profiles"]
     payload = _catalog(contexts["payloads"])[reservation.payload_id]
@@ -258,6 +338,7 @@ def _physical_config(
             "diagnostic_tip_load_ramp_s": duration / 2.0,
         }
     return CableModelConfig(
+        control_dt_s=control_dt_s,
         distal_payload_mass_kg=float(payload["distal_payload_mass_kg"]),
         endpoint_contact_enabled=plane is not None,
         endpoint_contact_plane_z_m=0.2 if plane is None else float(plane),
@@ -293,7 +374,10 @@ def _temperature_function(
 
 
 def _fault_components(
-    assignment: Mapping[str, Any], reservation: ScenarioReservation
+    assignment: Mapping[str, Any],
+    reservation: ScenarioReservation,
+    *,
+    control_dt_s: float,
 ) -> tuple[list[FaultSpec], FaultSpec | None, Mapping[str, Any]]:
     setting = _catalog(expanded_fault_settings(assignment))[
         reservation.fault_setting_id
@@ -303,7 +387,7 @@ def _fault_components(
             reservation.trajectory_spec_id
         ]["onset_time_s"]
     )
-    onset_index = int(round(onset_s / 0.002))
+    onset_index = _step_index(onset_s, control_dt_s)
     physical: list[FaultSpec] = []
     sensor: FaultSpec | None = None
     for component in setting["components"]:
@@ -360,16 +444,25 @@ def preflight_assigned_mechanics(
     # scalar mass is a read-only mechanics check required before research generation.
     if not list(reservations):
         raise AssignmentGenerationError("mechanics preflight requires reservations")
+    runtime = _runtime_parameters(binding)
     payload_catalog = _catalog(assignment["context_profiles"]["payloads"])
     payload_ids = sorted(payload_catalog)
-    nominal = CablePlant(CableModelConfig(), point_count=17)
+    nominal = CablePlant(
+        CableModelConfig(control_dt_s=runtime.control_dt_s),
+        point_count=runtime.point_count,
+        simulation_timestep_s=runtime.simulation_timestep_s,
+    )
     nominal_mass = float(np.sum(nominal.model.body_mass))
     checked: dict[str, float] = {}
     for payload_id in payload_ids:
         payload_mass = float(payload_catalog[payload_id]["distal_payload_mass_kg"])
         plant = CablePlant(
-            CableModelConfig(distal_payload_mass_kg=payload_mass),
-            point_count=17,
+            CableModelConfig(
+                control_dt_s=runtime.control_dt_s,
+                distal_payload_mass_kg=payload_mass,
+            ),
+            point_count=runtime.point_count,
+            simulation_timestep_s=runtime.simulation_timestep_s,
         )
         realized = float(np.sum(plant.model.body_mass)) - nominal_mass
         if not np.isclose(realized, payload_mass, rtol=0.0, atol=1.0e-12):
@@ -393,6 +486,7 @@ def _generate_reservation(
     suites: tuple[str, ...],
     max_steps: int | None,
     history_steps: int,
+    runtime: GenerationRuntimeParameters,
     reservation: ScenarioReservation,
 ) -> tuple[
     str,
@@ -405,15 +499,22 @@ def _generate_reservation(
     """Generate one reservation without writing shared dataset indexes."""
 
     profile, trajectory = _profile(assignment, reservation)
-    physical_config = _physical_config(assignment, reservation, trajectory)
+    physical_config = _physical_config(
+        assignment,
+        reservation,
+        trajectory,
+        control_dt_s=runtime.control_dt_s,
+    )
     physical_faults, sensor_fault, setting = _fault_components(
-        assignment, reservation
+        assignment,
+        reservation,
+        control_dt_s=runtime.control_dt_s,
     )
     primary_fault = physical_faults[0] if physical_faults else None
     plant = CablePlant(
         physical_config,
-        point_count=17,
-        simulation_timestep_s=1.0e-4,
+        point_count=runtime.point_count,
+        simulation_timestep_s=runtime.simulation_timestep_s,
         fault=primary_fault,
         additional_faults=tuple(physical_faults[1:]),
     )
@@ -429,7 +530,10 @@ def _generate_reservation(
         split=reservation.split,
     )
     controller = ObservedJointPDController(profile)
-    full_steps = int(round(float(trajectory["duration_s"]) / 0.002))
+    full_steps = _step_index(
+        float(trajectory["duration_s"]),
+        runtime.control_dt_s,
+    )
     n_steps = full_steps if max_steps is None else min(full_steps, max_steps)
     result = run_online_rollout(
         plant,
@@ -462,7 +566,10 @@ def _generate_reservation(
         raise AssignmentGenerationError("C1/S shared-channel CRN audit failed")
 
     label = setting["label"]
-    onset_index = int(round(float(trajectory["onset_time_s"]) / 0.002))
+    onset_index = _step_index(
+        float(trajectory["onset_time_s"]),
+        runtime.control_dt_s,
+    )
     label_payload = {
         "source_class": np.asarray(label["source_class"]),
         "subtype": np.asarray(label["subtype"]),
@@ -515,6 +622,7 @@ def materialize_base_dataset(
     if workers <= 0:
         raise AssignmentGenerationError("workers must be positive")
     assignment = binding.assignment
+    runtime = _runtime_parameters(binding)
     safety_events = 0
     contact_steps = 0
     generate = functools.partial(
@@ -524,6 +632,7 @@ def materialize_base_dataset(
         tuple(suites),
         max_steps,
         int(binding.config.document["values"]["timing"]["window_steps"]),
+        runtime,
     )
     if workers == 1:
         generated = map(generate, reservations)

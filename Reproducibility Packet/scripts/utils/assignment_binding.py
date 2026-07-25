@@ -123,9 +123,9 @@ def embed_approved_assignment_document(
 def validate_approved_assignment_binding(
     config: ValidatedConfig,
     *,
-    expected_assignment: Mapping[str, Any] | None = None,
+    expected_assignment: Mapping[str, Any],
 ) -> ApprovedAssignmentBinding:
-    """Validate and return the exact approved assignment embedded in a draft."""
+    """Validate the embedded draft against the exact tracked approved assignment."""
 
     if config.status != "draft" or config.is_frozen:
         raise AssignmentBindingError("approved research generation requires a draft config")
@@ -153,7 +153,7 @@ def validate_approved_assignment_binding(
         raise AssignmentBindingError("wrapper assignment hash does not match embedded assignment")
     if expected_assignment_hash(assignment) != assignment.get("assignment_hash"):
         raise AssignmentBindingError("embedded assignment self-hash is invalid")
-    if expected_assignment is not None and dict(assignment) != dict(expected_assignment):
+    if dict(assignment) != dict(expected_assignment):
         raise AssignmentBindingError("embedded assignment differs from the tracked approved file")
 
     parent_hash = wrapper["parent_draft_config_hash"]

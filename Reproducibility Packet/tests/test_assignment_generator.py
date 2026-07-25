@@ -19,6 +19,8 @@ from utils.assignment_generator import (  # noqa: E402
     _fault_components,
     _physical_config,
     _profile,
+    _runtime_parameters,
+    _step_index,
     audit_materialized_base_dataset,
     audit_manifest_against_assignment,
     build_identity_manifest,
@@ -99,8 +101,26 @@ def test_all_authorized_payload_masses_pass_real_mujoco_preflight() -> None:
     }
 
 
+def test_generator_runtime_constants_come_from_the_bound_config() -> None:
+    """Use config timing/mechanics authority rather than duplicate literals."""
+
+    current = binding()
+    runtime = _runtime_parameters(current)
+    timing = current.config.document["values"]["timing"]
+    plant = current.config.document["values"]["plant"]
+    assert runtime.control_dt_s == timing["control_dt_s"]
+    assert runtime.f_ctrl_hz == timing["f_ctrl_hz"]
+    assert runtime.simulation_timestep_s == plant["simulation_timestep_s"]
+    assert runtime.point_count == plant["point_count_per_link"]
+    assert _step_index(1.0, runtime.control_dt_s) == 500
+    assert _step_index(1.0, 0.004) == 250
+    with pytest.raises(AssignmentGenerationError, match="not aligned"):
+        _step_index(1.001, 0.004)
+
+
 def test_assigned_contact_window_and_compound_injection_boundaries() -> None:
     document = load_assignment(ASSIGNMENT_PATH)
+    control_dt_s = _runtime_parameters(binding()).control_dt_s
     reservations = expand_reservations(document)
     contacts = {
         item["id"]: item
@@ -112,7 +132,13 @@ def test_assigned_contact_window_and_compound_injection_boundaries() -> None:
             row for row in reservations if row.contact_profile_id == contact_id
         )
         _, trajectory = _profile(document, reservation)
-        physical_config = _physical_config(document, reservation, trajectory)
+        physical_config = _physical_config(
+            document,
+            reservation,
+            trajectory,
+            control_dt_s=control_dt_s,
+        )
+        assert physical_config.control_dt_s == control_dt_s
         offsets = contact["contact_window_offset_s"]
         assert physical_config.endpoint_contact_enabled
         assert physical_config.endpoint_contact_plane_z_m == 0.2
@@ -128,9 +154,20 @@ def test_assigned_contact_window_and_compound_injection_boundaries() -> None:
         for row in reservations
         if row.fault_setting_id == "fault_val_ood_structure_sensor_bias"
     )
-    physical, sensor, setting = _fault_components(document, plant_sensor)
+    physical, sensor, setting = _fault_components(
+        document,
+        plant_sensor,
+        control_dt_s=control_dt_s,
+    )
+    _, plant_sensor_trajectory = _profile(document, plant_sensor)
+    expected_onset_index = _step_index(
+        float(plant_sensor_trajectory["onset_time_s"]),
+        control_dt_s,
+    )
     assert [fault.source_class for fault in physical] == ["structure"]
+    assert physical[0].onset_index == expected_onset_index
     assert sensor is not None and sensor.source_class == "sensor"
+    assert sensor.onset_index == expected_onset_index
     assert abs(sensor.severity) == pytest.approx(0.055)
     assert setting["label"]["ood_flag"] is True
 
@@ -139,7 +176,11 @@ def test_assigned_contact_window_and_compound_injection_boundaries() -> None:
         for row in reservations
         if row.fault_setting_id == "fault_test_ood_structure_actuator"
     )
-    physical, sensor, _ = _fault_components(document, plant_plant)
+    physical, sensor, _ = _fault_components(
+        document,
+        plant_plant,
+        control_dt_s=control_dt_s,
+    )
     assert [fault.source_class for fault in physical] == [
         "structure",
         "actuator",

@@ -38,7 +38,10 @@ def config():
 
     current = load_config(CONFIG_PATH, SCHEMA_PATH)
     if current.document["values"]["scenario_manifest"] is not None:
-        return validate_approved_assignment_binding(current).parent_config
+        return validate_approved_assignment_binding(
+            current,
+            expected_assignment=assignment(),
+        ).parent_config
     return current
 
 

@@ -124,6 +124,21 @@ compared field-by-field with the approved reservations rather than trusted
 because the generator produced it. Dataset identities use `train_seed=0`;
 the five model-fit seeds are expanded only after those five fits exist.
 
+The manifest and role indexes are suite-specific, so each matched C1/S pair
+stores its privileged plant trace once under each suite's `run_id`. Those two
+plant payloads are intentionally byte-identical and independently hash-audited;
+the duplication preserves exact per-run role binding at the cost of about
+1.4 GB in the current 472-pair build.
+
+**Quality-control exclusion record (2026-07-24):** the first full generation
+attempt was stopped after 193 of 472 reservations because its preflight had
+compiled the six research-owned payload masses but not the two test-owned
+scalar masses before the first research rollout. No test identity or payload
+was created. The ignored partial dataset was excluded and removed, the
+preflight was strengthened to compile all eight assigned masses, and the
+retained dataset was regenerated from zero. Only the chronology-correct second
+run is eligible for downstream use.
+
 `--reservation-limit` and `--max-steps` are smoke-only switches and mark their
 output `truncated_smoke_not_research_data`. The CLI accepts only
 `dev|pilot|val` and the draft lifecycle independently refuses test rows. It
@@ -540,4 +555,4 @@ This packet reproduces the selected MuJoCo cable/rod mechanics, schema-v1.0 plan
 
 On the current bounded task, the structural suite has strong development information evidence, but structural recovery is blocked because the task has no structural tracking deficit and the tested action behaves like a generic controller retune. The actuator condition has headroom, yet the new source-specific action screen also blocks: safe cap-3 misses the 10-point specificity gate and higher caps violate A1 safety. The probability result remains a sampled empirical envelope; calibrated class-probability, abstention, and uncertainty authorization, sensor-fault recovery, and evaluation-sized paired control remain open.
 
-The proposed different-task amendment was withdrawn before approval. The existing Claim Sheet remains in force, `config.json` remains unfrozen, and no development screen here is a confirmatory research result. Gate 3 is closed at the jointly approved amended hash, and the exact assignment is embedded in the draft under a one-way parent/current hash binding. Gate 2 remains open until the real generated base roles pass same-state review and the Gate-4 fits supply the still-pending estimator/controller roles. Headline fitting, validation calibration/authorization, the confirmatory controller protocol, the evaluation/test driver, and the interactive verification artifact remain later gates. Test identity and payload materialization are still zero and forbidden.
+The proposed different-task amendment was withdrawn before approval. The existing Claim Sheet remains in force, `config.json` remains unfrozen, and no development screen here is a confirmatory research result. Gate 3 is closed at the jointly approved amended hash, and the exact assignment is embedded in the draft under a one-way parent/current hash binding. The real generated base roles are jointly approved; Gate 2 remains open until the Gate-4 fits supply the still-pending estimator/controller roles. Gate-4 headline fitting is currently blocked on the delivered-dev structural separability stop/go check. Validation calibration/authorization, the confirmatory controller protocol, the evaluation/test driver, and the interactive verification artifact remain later gates. Test identity and payload materialization are still zero and forbidden.

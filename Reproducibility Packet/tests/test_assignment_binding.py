@@ -37,7 +37,10 @@ def parent_config():
 
     config = load_config(CONFIG_PATH, SCHEMA_PATH)
     if config.document["values"]["scenario_manifest"] is not None:
-        return validate_approved_assignment_binding(config).parent_config
+        return validate_approved_assignment_binding(
+            config,
+            expected_assignment=assignment(),
+        ).parent_config
     return config
 
 
@@ -85,6 +88,16 @@ def test_embedding_preserves_exact_assignment_and_removes_only_gate3(
     assert GATE3_OPEN_GATE in parent.document["open_gates"]
     assert GATE3_OPEN_GATE not in current.document["open_gates"]
     assert current.config_hash != parent.config_hash
+
+
+def test_binding_validation_requires_the_tracked_assignment_pin(
+    tmp_path: Path,
+) -> None:
+    """Refuse callers that omit the exact approved-assignment byte authority."""
+
+    current = bound_config(tmp_path)
+    with pytest.raises(TypeError, match="expected_assignment"):
+        validate_approved_assignment_binding(current)  # type: ignore[call-arg]
 
 
 def test_wrong_approval_token_is_refused() -> None:
@@ -139,7 +152,10 @@ def test_wrapper_lifecycle_tamper_is_refused(
         schema_path=SCHEMA_PATH,
     )
     with pytest.raises(AssignmentBindingError, match=message):
-        validate_approved_assignment_binding(mutated)
+        validate_approved_assignment_binding(
+            mutated,
+            expected_assignment=assignment(),
+        )
 
 
 def test_non_manifest_config_change_breaks_parent_reconstruction(tmp_path: Path) -> None:
@@ -155,7 +171,10 @@ def test_non_manifest_config_change_breaks_parent_reconstruction(tmp_path: Path)
         schema_path=SCHEMA_PATH,
     )
     with pytest.raises(AssignmentBindingError, match="reconstruct the exact"):
-        validate_approved_assignment_binding(mutated)
+        validate_approved_assignment_binding(
+            mutated,
+            expected_assignment=assignment(),
+        )
 
 
 def test_external_assignment_mismatch_is_refused(tmp_path: Path) -> None:
