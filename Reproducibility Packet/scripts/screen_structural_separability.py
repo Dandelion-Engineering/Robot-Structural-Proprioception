@@ -735,12 +735,30 @@ def build_report(results: dict) -> str:
                 f"| {contrast} | {suite} | {interp['healthy_mean_score']:.4f} | "
                 f"{interp['fault_mean_score']:.4f} | {interp['median_paired_ratio']:.3f} |"
             )
+    n_cells = int(results["n_cells"])
+    # The exact two-sided sign test over n paired cells cannot return a p-value
+    # below 2 * 2**-n, so the attainable floor is a property of the cell count and
+    # must be reported as one.  At n = 8 the floor is 0.0078 and the 0.05 listing
+    # threshold is reachable; at n = 4 it is 0.125 and nothing can ever clear 0.05.
+    sign_floor = 2.0 ** (1 - n_cells)
     lines += [
         "",
         "## Per-channel paired attribution (suite S, all 18 registry columns)",
         "",
-        "Columns whose paired sign test clears the exact 8-cell floor (p = 0.0078)",
-        "are listed; `S-excl` marks the four gauge columns S alone carries.",
+        f"Columns whose paired sign test clears p <= 0.05 are listed; the exact "
+        f"{n_cells}-cell floor is p = {sign_floor:.4f}. `S-excl` marks the four "
+        "gauge columns S alone carries.",
+    ]
+    if sign_floor > 0.05:
+        lines += [
+            "",
+            f"**No column can reach p <= 0.05 at {n_cells} paired cells.** The exact "
+            f"two-sided sign test bottoms out at {sign_floor:.4f} here, so an empty "
+            "table below is forced by the cell count and is not evidence that the "
+            "columns carry no effect. Read the pooled-trajectory screen for the "
+            "attribution question.",
+        ]
+    lines += [
         "",
         "| contrast | column | S-excl | median rel. change | effect / healthy spread | sign p |",
         "|---|---|---|---|---|---|",

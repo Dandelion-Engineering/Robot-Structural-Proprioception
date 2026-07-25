@@ -53,8 +53,9 @@ only in the fault and the sensor seed. Folds hold out a whole cell.
 
 ## Per-channel paired attribution (suite S, all 18 registry columns)
 
-Columns whose paired sign test clears the exact 8-cell floor (p = 0.0078)
-are listed; `S-excl` marks the four gauge columns S alone carries.
+Columns whose paired sign test clears p <= 0.05 are listed; the exact 4-cell floor is p = 0.1250. `S-excl` marks the four gauge columns S alone carries.
+
+**No column can reach p <= 0.05 at 4 paired cells.** The exact two-sided sign test bottoms out at 0.1250 here, so an empty table below is forced by the cell count and is not evidence that the columns carry no effect. Read the pooled-trajectory screen for the attribution question.
 
 | contrast | column | S-excl | median rel. change | effect / healthy spread | sign p |
 |---|---|---|---|---|---|

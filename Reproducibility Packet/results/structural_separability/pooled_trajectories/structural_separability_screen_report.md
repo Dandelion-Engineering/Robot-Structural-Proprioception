@@ -53,8 +53,7 @@ only in the fault and the sensor seed. Folds hold out a whole cell.
 
 ## Per-channel paired attribution (suite S, all 18 registry columns)
 
-Columns whose paired sign test clears the exact 8-cell floor (p = 0.0078)
-are listed; `S-excl` marks the four gauge columns S alone carries.
+Columns whose paired sign test clears p <= 0.05 are listed; the exact 8-cell floor is p = 0.0078. `S-excl` marks the four gauge columns S alone carries.
 
 | contrast | column | S-excl | median rel. change | effect / healthy spread | sign p |
 |---|---|---|---|---|---|
