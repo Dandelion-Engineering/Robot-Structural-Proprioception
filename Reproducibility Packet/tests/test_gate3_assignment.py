@@ -14,6 +14,9 @@ PACKET_ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS_ROOT = PACKET_ROOT / "scripts"
 sys.path.insert(0, str(SCRIPTS_ROOT))
 
+from utils.assignment_binding import (  # noqa: E402
+    validate_approved_assignment_binding,
+)
 from utils.config_contract import load_config  # noqa: E402
 import utils.gate3_assignment as gate3_assignment  # noqa: E402
 from utils.gate3_assignment import (  # noqa: E402
@@ -31,9 +34,12 @@ ASSIGNMENT_PATH = PACKET_ROOT / "config" / "proposed-gate3-assignment-v0.1.json"
 
 
 def config():
-    """Return the lifecycle-validated tracked draft."""
+    """Return the exact parent draft against which the proposal was approved."""
 
-    return load_config(CONFIG_PATH, SCHEMA_PATH)
+    current = load_config(CONFIG_PATH, SCHEMA_PATH)
+    if current.document["values"]["scenario_manifest"] is not None:
+        return validate_approved_assignment_binding(current).parent_config
+    return current
 
 
 def assignment() -> dict[str, object]:
@@ -160,6 +166,7 @@ def test_every_trajectory_fault_group_varies_all_context_axes() -> None:
 def test_validator_rejects_fault_independent_trajectory_alias(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    approved_parent = config()
     original_expand = gate3_assignment.expand_reservations
 
     def trajectory_aliased_expand(document):
@@ -190,12 +197,13 @@ def test_validator_rejects_fault_independent_trajectory_alias(
         trajectory_aliased_expand,
     )
     with pytest.raises(Gate3AssignmentError, match="must vary both profiles"):
-        gate3_assignment.validate_assignment(assignment(), config())
+        gate3_assignment.validate_assignment(assignment(), approved_parent)
 
 
 def test_validator_rejects_fault_conditioned_context_cells(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    approved_parent = config()
     original_expand = gate3_assignment.expand_reservations
 
     def leaky_expand(document):
@@ -222,7 +230,7 @@ def test_validator_rejects_fault_conditioned_context_cells(
         Gate3AssignmentError,
         match="identical context-cell distribution",
     ):
-        gate3_assignment.validate_assignment(assignment(), config())
+        gate3_assignment.validate_assignment(assignment(), approved_parent)
 
 
 def test_expanded_grid_covers_known_classes_and_held_out_compounds() -> None:

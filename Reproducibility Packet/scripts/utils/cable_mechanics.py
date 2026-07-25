@@ -44,6 +44,8 @@ class CableModelConfig:
     tip_contact_force_limit_n: float = 5.0
     endpoint_contact_enabled: bool = False
     endpoint_contact_plane_z_m: float = 0.498
+    endpoint_contact_window_s: tuple[float, float] | None = None
+    distal_payload_mass_kg: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -198,6 +200,13 @@ def build_two_link_model(
         object_id(model, mujoco.mjtObj.mjOBJ_BODY, name)
         for name in cable_body_names("L2_", point_count)
     )
+    if config.distal_payload_mass_kg > 0.0:
+        _add_distal_point_mass(
+            model,
+            l2_body_ids[-1],
+            object_id(model, mujoco.mjtObj.mjOBJ_SITE, "L2_S_last"),
+            config.distal_payload_mass_kg,
+        )
     accel_sensor = object_id(model, mujoco.mjtObj.mjOBJ_SENSOR, "distal_accel")
     gyro_sensor = object_id(model, mujoco.mjtObj.mjOBJ_SENSOR, "distal_gyro")
     endpoint_geom = object_id(
@@ -220,6 +229,50 @@ def build_two_link_model(
         gyro_adr=int(model.sensor_adr[gyro_sensor]),
         softened_geoms=tuple(softened),
     )
+
+
+def _add_distal_point_mass(
+    model: mujoco.MjModel,
+    body_id: int,
+    endpoint_site_id: int,
+    payload_mass_kg: float,
+) -> None:
+    """Add a point mass at the distal site while preserving exact rigid-body inertia."""
+
+    mass = float(model.body_mass[body_id])
+    payload = float(payload_mass_kg)
+    old_com = np.asarray(model.body_ipos[body_id], dtype=float).copy()
+    point = np.asarray(model.site_pos[endpoint_site_id], dtype=float).copy()
+    total = mass + payload
+    new_com = (mass * old_com + payload * point) / total
+
+    old_quat = np.asarray(model.body_iquat[body_id], dtype=float)
+    rotation_flat = np.empty(9, dtype=float)
+    mujoco.mju_quat2Mat(rotation_flat, old_quat)
+    rotation = rotation_flat.reshape(3, 3)
+    old_tensor = rotation @ np.diag(model.body_inertia[body_id]) @ rotation.T
+
+    def parallel_axis(weight: float, offset: np.ndarray) -> np.ndarray:
+        return weight * (
+            float(offset @ offset) * np.eye(3) - np.outer(offset, offset)
+        )
+
+    combined = (
+        old_tensor
+        + parallel_axis(mass, old_com - new_com)
+        + parallel_axis(payload, point - new_com)
+    )
+    eigenvalues, eigenvectors = np.linalg.eigh(combined)
+    if np.linalg.det(eigenvectors) < 0.0:
+        eigenvectors[:, 0] *= -1.0
+    quaternion = np.empty(4, dtype=float)
+    mujoco.mju_mat2Quat(quaternion, eigenvectors.reshape(-1))
+
+    model.body_mass[body_id] = total
+    model.body_ipos[body_id] = new_com
+    model.body_inertia[body_id] = eigenvalues
+    model.body_iquat[body_id] = quaternion
+    mujoco.mj_setConst(model, mujoco.MjData(model))
 
 
 def tangent_angle(data: mujoco.MjData, body_id: int) -> float:
@@ -352,6 +405,27 @@ def validate_safety_config(config: CableModelConfig) -> None:
         raise ValueError("endpoint_contact_enabled must be boolean")
     if not np.isfinite(config.endpoint_contact_plane_z_m):
         raise ValueError("endpoint_contact_plane_z_m must be finite")
+    window = config.endpoint_contact_window_s
+    if window is not None:
+        values = np.asarray(window, dtype=float)
+        if (
+            values.shape != (2,)
+            or not np.all(np.isfinite(values))
+            or values[0] < 0.0
+            or values[1] <= values[0]
+        ):
+            raise ValueError(
+                "endpoint_contact_window_s must be finite non-negative (start, end)"
+            )
+        if not config.endpoint_contact_enabled:
+            raise ValueError(
+                "endpoint_contact_window_s requires endpoint_contact_enabled"
+            )
+    if (
+        not np.isfinite(config.distal_payload_mass_kg)
+        or config.distal_payload_mass_kg < 0.0
+    ):
+        raise ValueError("distal_payload_mass_kg must be finite and non-negative")
 
 
 def validate_diagnostic_excitation(config: CableModelConfig) -> None:

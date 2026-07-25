@@ -10,6 +10,7 @@ import argparse
 import json
 from pathlib import Path
 
+from utils.assignment_binding import validate_approved_assignment_binding
 from utils.config_contract import load_config
 from utils.gate3_assignment import load_assignment, validate_assignment
 
@@ -45,7 +46,25 @@ def main() -> int:
     args = parse_args()
     config = load_config(args.config, args.schema)
     assignment = load_assignment(args.assignment)
-    summary = validate_assignment(assignment, config)
+    if config.document["values"]["scenario_manifest"] is None:
+        summary = validate_assignment(assignment, config)
+    else:
+        binding = validate_approved_assignment_binding(
+            config,
+            expected_assignment=assignment,
+        )
+        summary = dict(binding.proposal_audit)
+        summary.update(
+            {
+                "approval_status": "jointly_approved",
+                "approved_assignment_hash": binding.assignment_hash,
+                "current_draft_config_hash": config.config_hash,
+                "research_splits_authorized": list(
+                    binding.authorized_research_splits
+                ),
+                "test_materialization_allowed": False,
+            }
+        )
     print(json.dumps(summary, indent=2, sort_keys=True))
     return 0
 

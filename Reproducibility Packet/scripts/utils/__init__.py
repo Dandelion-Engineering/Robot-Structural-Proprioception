@@ -17,6 +17,10 @@ here and is imported rather than copy-pasted. Modules:
   * ``gate3_assignment`` -- self-hashed proposed multi-setting scenario/split
     assignment, deterministic whole-group reservation expansion, and
     pre-generation lifecycle interlocks.
+  * ``assignment_binding`` -- one-way, self-hashed binding of the exact jointly
+    approved Gate-3 assignment into the still-draft research config.
+  * ``assignment_generator`` -- draft-authorized dev/pilot/val base-role
+    materialization plus direct and independent approved-reservation/role audits.
   * ``sensor_model`` -- the sensor-realism + fault-injection model (schema section C).
   * ``online_loop``  -- causal plant/sensor/policy interleaving on the control grid.
   * ``synthetic_plant`` -- a schema-conforming synthetic privileged trace, for

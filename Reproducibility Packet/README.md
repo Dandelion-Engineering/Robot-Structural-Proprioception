@@ -1,6 +1,6 @@
 # Reproducibility Packet
 
-This is the self-contained working packet for the Robot Structural Proprioception project. The current runnable surface reproduces the mechanics feasibility gate, emits a schema-v1.0 privileged trace from the selected MuJoCo cable plant, turns that trace into a deployable sensor suite's noisy observations, exercises the complete role-separated storage contract on a development fixture, and validates a proposed Gate-3 scenario/split preregistration without generating payloads. Later pipeline stages will be added here as they become final.
+This is the self-contained working packet for the Robot Structural Proprioception project. The current runnable surface reproduces the mechanics feasibility gate, emits a schema-v1.0 privileged trace from the selected MuJoCo cable plant, turns that trace into a deployable sensor suite's noisy observations, exercises the complete role-separated storage contract, validates the jointly approved Gate-3 scenario/split preregistration, and generates its draft-authorized dev/pilot/validation base roles without touching test. Later pipeline stages will be added here as they become final.
 
 ## Requirements
 
@@ -69,10 +69,11 @@ Produces:
 - `results/data_contract_fixture/controller_logs/{C1,S}/index.csv`
 - `results/data_contract_fixture/build_summary.json`
 
-## Step 2B — Validate the proposed Gate-3 scenario/split assignment
+## Step 2B — Validate the approved Gate-3 scenario/split assignment
 
-Validates the self-hashed, review-pending assignment against the tracked draft
-config and expands its suite-independent reservations in memory. The proposal
+Validates the exact self-hashed assignment against the parent draft on which it
+received same-state approval, then verifies the one-way approval wrapper now
+embedded in the rehashed current draft. The assignment
 predeclares split-owned ordinary/diagnostic trajectories; healthy, structural,
 actuator, and sensor grids with held-out severities; explicit validation/test
 compound-OOD cases; payload, temperature, and endpoint-contact confounds; five
@@ -90,13 +91,65 @@ The tracked proposal expands to 808 whole scenario/fault reservations: 152 dev,
 152 pilot, 168 validation, and 336 test. The added development/pilot repeats
 remove the conservative trajectory-to-payload alias present at the smaller
 budget. Test identities remain reservation-only.
-The command writes no manifest or payload, reports both generation permissions
-as `false`, and requires the exact same-state approval token
-`APPROVE_GATE3_ASSIGNMENT_V0_1`. Joint approval would authorize embedding this
-exact assignment in the draft config and building the missing generator paths;
-it would not freeze `config.json` or authorize confirmatory generation.
+The command writes no manifest or payload. It reports the approved assignment
+hash, parent and current draft hashes, the exact authorized research splits,
+and `test_materialization_allowed=false`. The assignment file itself remains
+byte-for-byte unchanged from review; the current draft self-hash binds it and
+the approval decision without rewriting the historical parent-hash claim.
 
 Produces: terminal-only assignment audit results.
+
+## Step 2C — Generate and audit the approved base research roles
+
+Materializes the primary matched C1/S base dataset for every approved dev,
+pilot, and validation reservation. Before the first rollout, the command
+compiles and checks every assigned distal payload mass. Each rollout then uses
+the assigned bounded trajectory, temperature profile, one-pair endpoint-contact
+window, and plant/sensor fault components. Structural and actuator components
+remain in the physical plant; encoder bias, drift, and dropout remain in the
+sensor path. C1 and S share the approved random-number identities and their
+common channels are compared bit-for-bit before persistence.
+
+```powershell
+.\.venv\Scripts\python.exe scripts\generate_assignment_dataset.py `
+  --output ..\data\gate3-base-dev-pilot-val-c1-s `
+  --suites C1 S `
+  --workers 16
+```
+
+All plant and label payloads pass through
+`DatasetRoleBuilder.make_writer`; observations pass through
+`DatasetRoleBuilder.make_observation_writer`. The generated manifest is then
+compared field-by-field with the approved reservations rather than trusted
+because the generator produced it. Dataset identities use `train_seed=0`;
+the five model-fit seeds are expanded only after those five fits exist.
+
+`--reservation-limit` and `--max-steps` are smoke-only switches and mark their
+output `truncated_smoke_not_research_data`. The CLI accepts only
+`dev|pilot|val` and the draft lifecycle independently refuses test rows. It
+also refuses to overwrite an existing dataset root.
+
+Produces:
+
+- `../data/gate3-base-dev-pilot-val-c1-s/manifest.csv`
+- `../data/gate3-base-dev-pilot-val-c1-s/{plant,labels}/index.csv`
+- `../data/gate3-base-dev-pilot-val-c1-s/observations/{C1,S}/index.csv`
+- `../data/gate3-base-dev-pilot-val-c1-s/generation_audit.json`
+
+Run the independent on-disk audit after generation:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\audit_assignment_dataset.py `
+  --dataset-root ..\data\gate3-base-dev-pilot-val-c1-s
+```
+
+This reloads every indexed payload through the hash-checking loaders, rechecks
+the manifest against the approved reservations, proves every paired plant file
+is byte-identical, and compares all shared C1/S channels bit-for-bit.
+
+Estimator outputs and controller logs remain intentionally pending Gate-4
+fits; this base-role build is not a headline model fit, final `config.json`, a
+test materialization, or a confirmatory result.
 
 ## Step 3 — Reproduce the mechanics gate
 
@@ -483,8 +536,8 @@ This packet reproduces the mechanics gate, detector-floor correction, safe-probe
 
 ## Current boundary
 
-This packet reproduces the selected MuJoCo cable/rod mechanics, schema-v1.0 plant and sensor interfaces, causal online loop, evaluation core, detector/reference lifecycle, interpretable residual baseline, bounded task/contact controller, and the development screens through Step 17A. Schema Amendment A1 is jointly in force. A machine-readable schema, self-hashed draft-config contract, whole-group identity-manifest audit, suite-scoped deployable observation loader, schema-driven writers/loaders for every non-observation role, and an explicit `dev|pilot|val` supervised label join now form the Gate 1–2 pre-confirmatory foundation. Step 2A exercises those boundaries end to end on a synthetic role-completeness fixture and hard-refuses `test` under the draft lifecycle. Step 2B validates a self-hashed **proposed** Gate-3 multi-setting assignment and expands its 808 whole-group reservations in memory only. The previously approved 656-reservation state removed the fault-conditioned context leak; this owner-amended candidate adds development/pilot repeats so every fault and every trajectory/fault group receives balanced context exposure. The amended hash requires a new exact-state approval before assignment-driven generation. Both generation permissions remain false, and zero test reservations are materialized. The tracked draft is explicitly non-confirmatory; no frozen `config.json`, learned attribution head, or RMA head exists yet.
+This packet reproduces the selected MuJoCo cable/rod mechanics, schema-v1.0 plant and sensor interfaces, causal online loop, evaluation core, detector/reference lifecycle, interpretable residual baseline, bounded task/contact controller, and the development screens through Step 17A. Schema Amendment A1 is jointly in force. A machine-readable schema, self-hashed draft-config contract, whole-group identity-manifest audit, suite-scoped deployable observation loader, schema-driven writers/loaders for every non-observation role, and an explicit `dev|pilot|val` supervised label join now form the Gate 1–2 pre-confirmatory foundation. Step 2A exercises those boundaries end to end on a synthetic role-completeness fixture and hard-refuses `test` under the draft lifecycle. Step 2B validates the jointly approved 808-reservation Gate-3 assignment against its exact parent draft and the rehashed current approval wrapper. Step 2C implements the real assignment-driven base-role generator and an independent on-disk audit: exact distal payload inertia, split-owned temperature and contact windows, compound plant/sensor faults, direct approved-reservation/manifest comparison, hash-checked role loading, byte-identical paired plant truth, and bitwise shared-channel checks. The tracked draft remains explicitly non-confirmatory; no frozen `config.json`, learned attribution head, or RMA head exists yet, and test materialization remains forbidden.
 
 On the current bounded task, the structural suite has strong development information evidence, but structural recovery is blocked because the task has no structural tracking deficit and the tested action behaves like a generic controller retune. The actuator condition has headroom, yet the new source-specific action screen also blocks: safe cap-3 misses the 10-point specificity gate and higher caps violate A1 safety. The probability result remains a sampled empirical envelope; calibrated class-probability, abstention, and uncertainty authorization, sensor-fault recovery, and evaluation-sized paired control remain open.
 
-The proposed different-task amendment was withdrawn before approval. The existing Claim Sheet remains in force, `config.json` remains unfrozen, and no development screen here is a confirmatory research result. Gate 2 still requires the real Gate-3-assigned multi-setting generator and role-completeness audit on generated MuJoCo data; the generic write/load/join path and contract fixture are now present. Gate 3 was jointly approved at the prior corrected hash, then reopened only because Codex adopted the reviewer's optional repeat-budget remedy. The amended assignment must receive a new exact-state approval before generator work begins. Even after approval, the generator must add the assigned payload, contact-window, environment, and compound-fault paths and pass the real role-completeness audit before headline fitting. The packet does not yet implement the learned heads, full evaluation, or interactive verification artifact.
+The proposed different-task amendment was withdrawn before approval. The existing Claim Sheet remains in force, `config.json` remains unfrozen, and no development screen here is a confirmatory research result. Gate 3 is closed at the jointly approved amended hash, and the exact assignment is embedded in the draft under a one-way parent/current hash binding. Gate 2 remains open until the real generated base roles pass same-state review and the Gate-4 fits supply the still-pending estimator/controller roles. Headline fitting, validation calibration/authorization, the confirmatory controller protocol, the evaluation/test driver, and the interactive verification artifact remain later gates. Test identity and payload materialization are still zero and forbidden.

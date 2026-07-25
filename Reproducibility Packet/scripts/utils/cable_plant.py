@@ -49,6 +49,7 @@ class CablePlant:
         point_count: int = 17,
         simulation_timestep_s: float = 1.0e-4,
         fault: FaultSpec | None = None,
+        additional_faults: tuple[FaultSpec, ...] = (),
     ) -> None:
         """Compile the plant and validate the physical fault boundary.
 
@@ -56,8 +57,10 @@ class CablePlant:
             config: physical and excitation constants from the mechanics gate.
             point_count: cable centerline points per link (17 for the selected plant).
             simulation_timestep_s: MuJoCo integration step (0.1 ms when selected).
-            fault: healthy, structure, or actuator specification. Sensor faults are
-                rejected because they belong exclusively to the observation path.
+            fault: healthy, structure, or actuator specification.
+            additional_faults: optional second physical fault for preregistered
+                compound plant cases. At most one structure and one actuator fault
+                are accepted. Sensor faults remain observation-path only.
         """
 
         self.config = config or CableModelConfig()
@@ -66,8 +69,26 @@ class CablePlant:
         self.point_count = int(point_count)
         self.simulation_timestep_s = float(simulation_timestep_s)
         self.fault = fault or FaultSpec()
-        self.fault.validate()
-        self._validate_fault()
+        self.physical_faults = (self.fault, *tuple(additional_faults))
+        for physical_fault in self.physical_faults:
+            physical_fault.validate()
+        self._validate_faults()
+        self._structural_fault = next(
+            (
+                item
+                for item in self.physical_faults
+                if item.source_class == "structure"
+            ),
+            None,
+        )
+        self._actuator_fault = next(
+            (
+                item
+                for item in self.physical_faults
+                if item.source_class == "actuator"
+            ),
+            None,
+        )
 
         ratio = self.config.control_dt_s / self.simulation_timestep_s
         self._physics_steps_per_control = int(round(ratio))
@@ -75,13 +96,15 @@ class CablePlant:
             raise ValueError("control_dt_s must be an integer multiple of simulation_timestep_s")
 
         physical_config = self.config
-        if self.fault.source_class == "structure" and self.fault.severity > 0.0:
+        if self._structural_fault is not None:
             physical_config = replace(
-                physical_config, structural_ei_remaining=float(self.fault.severity)
+                physical_config,
+                structural_ei_remaining=float(self._structural_fault.severity),
             )
-        if self.fault.source_class == "actuator" and self.fault.severity > 0.0:
+        if self._actuator_fault is not None:
             physical_config = replace(
-                physical_config, actuator_gain_remaining=float(self.fault.severity)
+                physical_config,
+                actuator_gain_remaining=float(self._actuator_fault.severity),
             )
         self._physical_config = physical_config
 
@@ -92,7 +115,7 @@ class CablePlant:
         self._soft_model: mujoco.MjModel | None = None
         self._soft_handles: ModelHandles | None = None
         self._softened = False
-        if self.fault.source_class == "structure":
+        if self._structural_fault is not None:
             self._soft_model, self._soft_handles = build_two_link_model(
                 physical_config, self.point_count, self.simulation_timestep_s, True
             )
@@ -113,40 +136,58 @@ class CablePlant:
 
         return self._step_index
 
-    def _validate_fault(self) -> None:
+    def _validate_faults(self) -> None:
         """Reject faults that violate the plant/sensor injection boundary."""
 
-        if self.fault.source_class == "sensor":
+        sources = [item.source_class for item in self.physical_faults]
+        if "sensor" in sources:
             raise ValueError("sensor faults must be injected by SensorModel, not CablePlant")
-        if self.fault.source_class == "structure":
-            if self.fault.subtype not in {"none", "link_stiffness_loss"}:
-                raise ValueError(f"unsupported structural fault subtype: {self.fault.subtype}")
-            if self.fault.location not in {-1, 1}:
-                raise ValueError("the selected structural fault is the bounded link-2 section")
-            severity = self.fault.severity or self.config.structural_ei_remaining
-            if not 0.0 < severity <= 1.0:
-                raise ValueError("structural severity is the remaining-EI fraction in (0,1]")
-        if self.fault.source_class == "actuator":
-            if self.fault.subtype not in {"none", "actuator_gain_loss"}:
-                raise ValueError(f"unsupported actuator fault subtype: {self.fault.subtype}")
-            if not 0 <= self.fault.location < N_JOINTS:
-                raise ValueError("actuator fault location must be a joint index")
-            severity = self.fault.severity or self.config.actuator_gain_remaining
-            if not 0.0 < severity <= 1.0:
-                raise ValueError("actuator severity is the remaining-gain fraction in (0,1]")
+        if len(self.physical_faults) > 1 and "healthy" in sources:
+            raise ValueError("a healthy fault cannot accompany a physical fault")
+        for source in ("structure", "actuator"):
+            if sources.count(source) > 1:
+                raise ValueError(f"at most one {source} fault may be active")
+        if any(source not in {"healthy", "structure", "actuator"} for source in sources):
+            raise ValueError(f"unsupported physical fault source set: {sources}")
+        for physical_fault in self.physical_faults:
+            if physical_fault.source_class == "structure":
+                if physical_fault.subtype not in {"none", "link_stiffness_loss"}:
+                    raise ValueError(
+                        f"unsupported structural fault subtype: {physical_fault.subtype}"
+                    )
+                if physical_fault.location not in {-1, 1}:
+                    raise ValueError(
+                        "the selected structural fault is the bounded link-2 section"
+                    )
+                if not 0.0 < physical_fault.severity <= 1.0:
+                    raise ValueError(
+                        "structural severity is the remaining-EI fraction in (0,1]"
+                    )
+            if physical_fault.source_class == "actuator":
+                if physical_fault.subtype not in {"none", "actuator_gain_loss"}:
+                    raise ValueError(
+                        f"unsupported actuator fault subtype: {physical_fault.subtype}"
+                    )
+                if not 0 <= physical_fault.location < N_JOINTS:
+                    raise ValueError("actuator fault location must be a joint index")
+                if not 0.0 < physical_fault.severity <= 1.0:
+                    raise ValueError(
+                        "actuator severity is the remaining-gain fraction in (0,1]"
+                    )
 
-    def _fault_active(self) -> bool:
+    def _fault_active(self, fault: FaultSpec) -> bool:
         """Whether the physical fault applies to the control step being advanced."""
 
-        if self.fault.source_class == "healthy":
+        if fault.source_class == "healthy":
             return False
-        onset = max(int(self.fault.onset_index), 0)
+        onset = max(int(fault.onset_index), 0)
         return self._step_index >= onset
 
     def _activate_structural_fault_if_needed(self) -> None:
         """Swap to the topology-identical softened model at the declared boundary."""
 
-        if self.fault.source_class != "structure" or not self._fault_active() or self._softened:
+        fault = self._structural_fault
+        if fault is None or not self._fault_active(fault) or self._softened:
             return
         assert self._soft_model is not None and self._soft_handles is not None
         soft_data = mujoco.MjData(self._soft_model)
@@ -155,6 +196,29 @@ class CablePlant:
         self.data = soft_data
         self.handles = self._soft_handles
         self._softened = True
+
+    def _schedule_contact_plane(self) -> None:
+        """Enable the unchanged endpoint-plane pair only inside its assigned window."""
+
+        if not self.config.endpoint_contact_enabled:
+            return
+        window = self.config.endpoint_contact_window_s
+        time_s = float(self.data.time)
+        tolerance = 1.0e-12
+        active = window is None or (
+            window[0] - tolerance <= time_s < window[1] - tolerance
+        )
+        plane_geom = self.handles.endpoint_contact_plane_geom_id
+        if plane_geom < 0:
+            raise RuntimeError("endpoint-contact plane handle is unavailable")
+        target_z = (
+            self.config.endpoint_contact_plane_z_m
+            if active
+            else self.config.endpoint_contact_plane_z_m - 10.0
+        )
+        if float(self.model.geom_pos[plane_geom, 2]) != target_z:
+            self.model.geom_pos[plane_geom, 2] = target_z
+            mujoco.mj_forward(self.model, self.data)
 
     def _contact_state(self) -> np.ndarray:
         """Return endpoint contact force and activity from MuJoCo constraint truth.
@@ -262,12 +326,14 @@ class CablePlant:
             raise ValueError(f"temperature_c must be a finite scalar or shape-{(N_GAUGES,)} vector")
 
         self._activate_structural_fault_if_needed()
+        self._schedule_contact_plane()
         control_range = np.asarray(self.model.actuator_ctrlrange, dtype=float)
         control_effort = np.clip(command, control_range[:, 0], control_range[:, 1])
         delivered = control_effort.copy()
-        if self.fault.source_class == "actuator" and self._fault_active():
-            gain = self.fault.severity or self.config.actuator_gain_remaining
-            delivered[self.fault.location] *= gain
+        if self._actuator_fault is not None and self._fault_active(
+            self._actuator_fault
+        ):
+            delivered[self._actuator_fault.location] *= self._actuator_fault.severity
         self.data.ctrl[:] = delivered
 
         for _ in range(self._physics_steps_per_control):

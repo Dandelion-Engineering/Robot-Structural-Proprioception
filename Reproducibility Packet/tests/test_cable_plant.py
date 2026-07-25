@@ -159,6 +159,113 @@ def test_optional_endpoint_contact_records_mujoco_force_and_safety_truth() -> No
     )
 
 
+def test_distal_payload_adds_exact_mass_at_endpoint_inertial_frame() -> None:
+    """Every assigned payload value must change real MuJoCo mass properties."""
+
+    nominal = CablePlant(
+        small_config(diagnostic_tip_load_peak_n=0.0),
+        point_count=9,
+        simulation_timestep_s=2.0e-4,
+    )
+    loaded = CablePlant(
+        small_config(
+            diagnostic_tip_load_peak_n=0.0,
+            distal_payload_mass_kg=0.125,
+        ),
+        point_count=9,
+        simulation_timestep_s=2.0e-4,
+    )
+    assert float(np.sum(loaded.model.body_mass)) == pytest.approx(
+        float(np.sum(nominal.model.body_mass)) + 0.125
+    )
+    endpoint = loaded.model.site_pos[loaded.handles.l2_tip_site_id]
+    nominal_distance = np.linalg.norm(
+        nominal.model.body_ipos[nominal.handles.l2_last_body_id]
+        - nominal.model.site_pos[nominal.handles.l2_tip_site_id]
+    )
+    loaded_distance = np.linalg.norm(
+        loaded.model.body_ipos[loaded.handles.l2_last_body_id] - endpoint
+    )
+    assert loaded_distance < nominal_distance
+
+
+def test_endpoint_contact_window_never_widens_collision_pair() -> None:
+    """The plane is active only during the assigned interval and keeps one pair."""
+
+    plant = CablePlant(
+        small_config(
+            task_torque_scale=0.0,
+            endpoint_contact_enabled=True,
+            endpoint_contact_plane_z_m=0.498,
+            endpoint_contact_window_s=(0.02, 0.06),
+        ),
+        point_count=9,
+        simulation_timestep_s=2.0e-4,
+    )
+    record = plant.rollout(50, command_fn=lambda _time_s: np.zeros(2))
+    active = record.contact_state[
+        :, CONTACT_STATE_FIELDS.index("tip_contact_active")
+    ].astype(bool)
+    assert not np.any(active[:10])
+    assert np.any(active[10:30])
+    assert not np.any(active[30:])
+    assert plant.model.npair == 1
+
+
+def test_compound_structure_and_actuator_faults_share_physical_boundary() -> None:
+    """A compound plant case realizes both components without admitting sensors."""
+
+    structure = FaultSpec(
+        source_class="structure",
+        subtype="link_stiffness_loss",
+        location=1,
+        severity=0.50,
+        onset_index=0,
+    )
+    actuator = FaultSpec(
+        source_class="actuator",
+        subtype="actuator_gain_loss",
+        location=0,
+        severity=0.60,
+        onset_index=0,
+    )
+    plant = CablePlant(
+        small_config(diagnostic_tip_load_peak_n=0.0),
+        point_count=9,
+        simulation_timestep_s=2.0e-4,
+        fault=structure,
+        additional_faults=(actuator,),
+    )
+    state = plant.advance(np.array([0.2, 0.1]))
+    assert plant.handles.softened_geoms
+    np.testing.assert_allclose(state.tau_delivered_true, [0.12, 0.1])
+
+
+def test_compound_physical_faults_still_reject_sensor_component() -> None:
+    actuator = FaultSpec(
+        source_class="actuator",
+        subtype="actuator_gain_loss",
+        location=0,
+        severity=0.60,
+        onset_index=0,
+    )
+    sensor = FaultSpec(
+        source_class="sensor",
+        subtype="encoder_bias",
+        location=1,
+        severity=0.05,
+        onset_index=0,
+    )
+    with pytest.raises(ValueError, match="sensor faults"):
+        CablePlant(
+            small_config(),
+            point_count=9,
+            simulation_timestep_s=2.0e-4,
+            fault=actuator,
+            additional_faults=(sensor,),
+        )
+
+
 def test_default_rollout_honors_task_torque_scale() -> None:
     plant = CablePlant(
         small_config(task_torque_scale=0.0, diagnostic_tip_load_peak_n=0.0),
