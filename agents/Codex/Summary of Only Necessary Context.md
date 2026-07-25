@@ -1,258 +1,416 @@
-# Codex — Summary of Only Necessary Context
+# Summary of Only Necessary Context — Codex
 
-**Updated:** 2026-07-24 18:59 PDT after Codex Session 33
-**Phase:** Phase 2 — Integration and Reproducibility Build
-**Governing decision:** `BLOCK_CONFIG_FREEZE_PENDING_PRECONFIRMATORY_BUILD_AND_VALIDATION`
-**Active Gate-4 stop:** `BLOCK_GATE4_LADDER_PENDING_STRUCTURAL_SEPARABILITY_CHECK`
+**Last completed Codex session:** 34
+**Date:** 2026-07-25
+**Current phase:** Phase 2 — Integration and Reproducibility Build
+**Primary active thread:** `chats/Claude-Codex/Phase 2 Integration and Config
+Freeze/Phase 2 Integration and Config Freeze - Active.md`
 
-## Resume state
+## Resume here
 
-Gate 3 is jointly approved and closed:
+Gate 4 is stopped on a corrected Claim-Sheet amendment proposal:
 
 ```text
-assignment ID:
+BLOCK_AMENDMENT_A2_PROPOSAL
+BLOCK_CONFIG_FREEZE_PENDING_PRECONFIRMATORY_BUILD_AND_VALIDATION
+```
+
+Claude's Session-34 proposal correctly identified that the current structural
+fault settings do not support an interpretable hypothesis test. Codex
+independently reproduced that finding. Codex nevertheless blocked the exact
+proposal because:
+
+1. it promoted an eight-context **development-only** diagnostic into a stated
+   result for all 472 delivered development/pilot/validation reservations; and
+2. it declared four-way macro-F1 “per band” even though only the structural
+   class has proposed mild/severe membership.
+
+Claude's next required action is a corrected short A2 proposal, not an
+implementation. Codex should review the exact replacement and return an
+explicit approval or specific block. No Claim-Sheet edit, replacement
+assignment, data regeneration, Gate-4 fit, or final-config work is authorized
+until that proposal converges and the later written amendment is jointly
+approved at the same state.
+
+## Gate state
+
+```text
+Gate 1:
+  complete and jointly approved
+
+Gate-2 generic role write/load/join path:
+  complete and jointly approved
+
+Gate-2 real primary C1/S generator/base roles:
+  complete and exact-state review closed
+
+Gate-2 bounded generator hardening:
+  complete and exact-state review closed by Claude Session 34 token
+  APPROVE_GATE2_GENERATOR_HARDENING
+
+Gate 2 overall:
+  open only for later Gate-4 estimator-output/controller-log roles
+
+Gate 3:
+  complete and jointly approved at the current pre-A2 assignment
+  any A2 replacement will require a new exact assignment/review loop
+
+Gate 4:
+  BLOCKED on corrected AMENDMENT_A2
+
+Gates 5–7:
+  open
+
+Reproducibility Packet/config.json:
+  absent; final configuration is UNFROZEN
+
+Confirmatory test identities/payloads:
+  0 / 0
+
+Research result:
+  none
+```
+
+## Current approved machine/data state
+
+The exact pre-A2 authorities remain:
+
+```text
+approved Gate-3 assignment:
 dev-eec59ec8a296a9a4ff4909f8e7f1de91a0a8f4bf289ae1533a427d1a87bc33f1
 
-assignment file SHA-256:
-76255a8089f3e27d893b26d981cbf50e808bd75ba518c44b55c4635ec83514ae
-
-approved parent draft:
-dev-0211f2e71a473fef3c30cd53fd0a269df45156a3d58e83097bac7a5638bf6180
-
-current embedded draft:
+current embedded draft config:
 dev-712abf27c3f8f3c331ae9b76e3f22c48857334cc15a81e819718165e47753e56
+
+retained reservations / manifest rows:
+472 / 944
+
+retained plant and label payloads:
+944 / 944
+
+byte-identical C1/S plant pairs:
+472 / 472
+
+bitwise shared-channel pairs:
+472 / 472
+
+test identities or payloads:
+0
 ```
 
-The exact original Gate-2 generator and retained primary C1/S base-role state
-from Codex Session 32 is jointly approved. Claude returned:
+The ignored local dataset root is:
+
+`data/gate3-base-dev-pilot-val-c1-s`
+
+It is approximately 3.86 GB. Do not call it a final amended dataset. If a
+corrected A2 amendment and replacement assignment receive joint approval,
+Codex has chosen **full regeneration from zero** rather than changing the
+expansion order or silently reusing these payloads under a new config hash.
+The present set should then be recorded as a superseded pre-amendment set in
+the packet exclusion trail. Do not delete it before the replacement is approved
+and the provenance/retention action is explicit.
+
+## Session-34 separability reproduction
+
+Claude added:
+
+- `Reproducibility Packet/scripts/screen_structural_separability.py`;
+- pooled results under
+  `Reproducibility Packet/results/structural_separability/pooled_trajectories/`;
+  and
+- diagnostic-only results under
+  `Reproducibility Packet/results/structural_separability/diagnostic_trajectory_only/`.
+
+Codex regenerated both analyses from the retained dataset with:
+
+`.\venv\Scripts\python.exe`
+
+The independent outputs were written under the ignored root:
+
+`tmp/codex-session34-a2-review/`
+
+After excluding only `generated_utc` and the absolute `dataset_root` string,
+every substantive top-level JSON field exactly matched the tracked output for
+both variants:
 
 ```text
-APPROVE_GATE2_GENERATOR_BASE_ROLES
+config_hash
+contrast_order
+contrasts
+n_cells
+screen
+split
+stride
+suites
+trajectory_filter
+window_steps
+windows_per_run
 ```
 
-with no review-target edits after an independent on-disk audit. That review
-loop is closed. Gate 2 remains open overall because Gate-4 fits must still
-produce estimator-output/controller-log roles.
-
-Codex Session 33 created a distinct bounded hardening state. Its exact-state
-review is open:
+Decision-relevant pooled results:
 
 ```text
-APPROVE_GATE2_GENERATOR_HARDENING
+contrast / suite              interpretable AUROC   learned AUROC
+structure EI 0.75 / C1        0.453                  0.250
+structure EI 0.75 / S         0.469                  0.172
+structure EI 0.50 / C1        0.469                  0.750
+structure EI 0.50 / S         0.578                  0.703
+actuator gain 0.50 / C1       0.594                  0.891
+actuator gain 0.50 / S        0.500                  0.859
 ```
 
-or a file/line-specific block. This new loop does not reopen the original
-generator/data approval.
+The structural result is not convincing at either development severity, S does
+not beat C1, the actuator positive control separates, and the pooled
+per-channel structural effects clearing the sign test are IMU rather than gauge
+channels. No validation or test payload was read.
 
-`Reproducibility Packet/config.json` remains absent. Research materialization is
-limited to `dev|pilot|val`; test identities and payloads remain zero.
-
-## Retained local base dataset
-
-Ignored local root:
+Interpret this as:
 
 ```text
-data/gate3-base-dev-pilot-val-c1-s
+current structural settings fail the prerequisite feasibility gate
 ```
 
-The original generation and both Codex's and Claude's independent audits pass:
+Do not interpret it as:
 
 ```text
-reservations:                         472
-dev / pilot / val:                   152 / 152 / 168
-manifest rows:                       944
-plant payloads:                      944
-label payloads:                      944
-C1 / S observations:                472 / 472
-byte-identical paired plant traces: 472 / 472
-bitwise shared-channel pairs:       472 / 472
-contact-active steps:               243
-safety-flag events:                 0
-test identity/payload rows:         0
-dataset bytes:                      3,857,662,158
+the project hypothesis is false
+the whole mild band has a negative result
+pilot/validation confirms the development result
 ```
 
-The five training seeds remain unexpanded until five real Gate-4 fits exist.
-Validation data exist but do not constitute a validation result.
+## Exact A2 proposal review boundary
 
-The packet README preserves the exclusion record for the stopped 193/472
-partial attempt. Its preflight had not yet compiled the two test-owned scalar
-masses. The ignored partial root was removed, all eight masses were preflighted,
-and only the from-zero second run is downstream eligible. No test identity or
-payload was materialized in either attempt.
+Codex supports these directions:
 
-## Measured design findings governing Gate 4
+- retain the current severity settings as a mild structural stratum;
+- add a prospectively specified severe structural stratum where the mechanism
+  can clear the predeclared detection margin;
+- re-derive the diagnostic probe amplitude inside the unchanged A1 ceiling;
+- decide the confirmatory contact profile deliberately;
+- keep the joint-space task, score, controller question, and project hypothesis
+  unchanged; and
+- regenerate from zero under one coherent amended expansion/assignment.
 
-### Structural separability stop
+The corrected proposal must replace two formulations.
 
-Using matched seeds, Claude measured peak diagnostic-gauge structure-versus-
-healthy separation:
+### Correct mild-stratum evidence statement
+
+The current defensible statement is:
+
+> In the assigned development contexts at remaining EI 0.75 and 0.50, the
+> current excitation does not provide a gauge-borne structural signature that
+> supports the planned S-versus-C1 hypothesis test; the detectable structural
+> effect is instead in C1 IMU channels.
+
+The development screen is the disclosed reason for A2. It is not the final
+result of the complete mild stratum. The amended mild stratum requires its own
+later role-authorized analysis.
+
+### Define any per-band four-class estimand
+
+Before four-way macro-F1 can be called “per band,” the design must specify for
+every split:
+
+1. which healthy, actuator, and sensor reservations accompany each structural
+   stratum;
+2. whether non-structural rows are shared;
+3. how pairing, weighting, confidence intervals, and multiplicity preserve any
+   shared-row dependence;
+4. exact manifest membership and sample weight; and
+5. which outcome is project-level primary versus structural
+   severity-stratified secondary.
+
+The severe stratum may carry a headline complete four-class comparison only if
+that entire comparison is prospectively defined. Otherwise, severe may carry a
+headline **structural sub-comparison**, while project-level macro-F1 uses one
+fully specified manifest.
+
+### Prospective selection requirements
+
+The corrected proposal/written amendment must:
+
+- use development-authorized mechanics for severity/probe selection;
+- avoid observing replacement pilot, validation, or test outcomes during that
+  selection;
+- predeclare the candidate severity/probe grid;
+- define the 2.0x synchronous-margin rule across the assigned context
+  distribution, not a single favorable payload/contact/seed cell;
+- keep the A1 angular-rate ceiling as a hard failure boundary;
+- predeclare the no-candidate-clears action;
+- choose the replacement test contact profile without generating or reading
+  confirmatory identities/payloads;
+- synchronize Claim-Sheet Slots 11–13, split/manifest semantics, exclusion
+  trail, packet instructions, and `Accessible Claim Sheet.md`; and
+- require explicit same-state approval of the written amendment and replacement
+  assignment before generation.
+
+## Contact-design fact that remains live
+
+The pre-A2 472-run set assigned contact to 236 runs but realized actual plane
+contact in only 11 pilot encoder-bias/drift runs:
 
 ```text
-remaining EI   peak separation   multiple of floor   role
-0.95           0.0090 µstrain    0.02x               development
-0.85           0.0864 µstrain    0.21x               pilot
-0.75           0.1614 µstrain    0.40x               development
-0.60           0.3267 µstrain    0.81x               pilot
-0.50           0.4873 µstrain    1.20x               development
-0.40           0.7266 µstrain    1.79x               validation
-
-existing floor: 0.405 µstrain
-required 2x bar: 0.810 µstrain
+development / pilot / validation actual-contact runs:
+0 / 11 / 0
 ```
 
-Every reserved structural severity is below the existing interpretable bar.
-This is not proof that the learned raw-tensor path cannot separate structure.
-It does require a stop/go check before the full Gate-4 ladder.
+Assigned contact is balanced, but realized contact is fault-coupled and loudest
+in an S-exclusive gauge channel. This is not a headline result. It makes the
+confirmatory contact profile a deliberate pre-freeze decision and a Gate-7/
+Technical-Report audit item.
 
-Claude owns a development-only structure-versus-healthy check for C1 and S at
-both development severities, using an interpretable rung and a small learned
-probe. Do not touch validation or test for this check. If structure separates,
-record the mild-end limitation and proceed. If neither suite separates, review
-an excitation/severity amendment before validation or test are spent.
+## Forward corrections that must not be lost
 
-### Assigned versus realized contact
+### Session-33 severity row
 
-Assigned contact is balanced by design, but realized contact is currently a
-fault effect:
+`agents/Codex/Session Summaries/HumanReport33.md` contains an incorrect first
+row in its measured severity table. The concluded report stays unchanged, but
+the Technical Report/limitations record must use:
 
 ```text
-profile assigned:                 236 / 472 runs
-actual contact:                    11 / 472 runs
-development / pilot / validation:  0 / 11 / 0
-encoder bias / drift contacts:      7 / 4
-other fault/healthy contacts:       0
-scheduled-window duty cycle:    0.232%
+0.90 | 0.0544 microstrain | 0.13x | validation
 ```
 
-Bias/drift corrupt the measured joint angle, causing the controller to push the
-true arm into the plane. The resulting 2.6–3.0 N event is loudest in the
-S-exclusive gauge channel. The exposure is currently confined to pilot, so it
-does not feed fitting, calibration, or the headline comparison. If it reappears
-under the longer/heavier test contact profile, it could become an S-favouring
-shortcut.
+not `0.95 | 0.0090 | 0.02x | development`.
 
-Gate 7 and the Technical Report must distinguish balanced assigned contact from
-fault-coupled realized contact. The test contact profile is a deliberate
-pre-freeze decision, not an inherited constant.
+### Diagnostic sign-test report label
 
-## Session-33 hardening state
+`Reproducibility Packet/scripts/screen_structural_separability.py` line 742
+hard-codes “exact 8-cell floor (p = 0.0078)” into both reports.
 
-### Exact assignment pin
+- It is correct for the pooled screen (`n_cells = 8`).
+- It is incorrect for the diagnostic screen (`n_cells = 4`), where a two-sided
+  sign test cannot reach 0.05.
 
-`validate_approved_assignment_binding` now requires
-`expected_assignment`. There is no optional unpinned mode. All shipped callers
-pin the tracked approved assignment, and omission fails at the API boundary.
+Claude should correct the report wording forward before packet lock. This is a
+label defect, not a change to the exact reproduced results or pooled no-gauge
+conclusion.
 
-### Bound runtime authority
+## Verification baseline
 
-The generator now derives:
+Use the repository venv, not bare system Python.
+
+Latest authoritative packet test:
+
+```powershell
+.\venv\Scripts\python.exe -m pytest -q "Reproducibility Packet\tests"
+```
+
+Session-34 result:
 
 ```text
-control_dt_s
-f_ctrl_hz
-simulation_timestep_s
-point_count_per_link
+399 passed in 10.53 s
 ```
 
-from the validated bound draft. It checks reciprocal timing, the integer
-physics-step ratio, control-grid alignment, and point-count validity. Fault
-onset, rollout length, label onset, mechanics preflight, and the real plant all
-use this single authority. The former duplicated `0.002`, point-count, and
-simulation-step literals are gone.
+Do not use root-wide `pytest -q` as the clean packet command: ignored
+`tmp/session6_packet_copy/tests` duplicates three test module names and causes
+collection mismatch errors. This is workspace discovery, not a packet test
+failure.
 
-The retained dataset was not regenerated because the bound values still resolve
-to 500 Hz / 0.002 s / 0.0001 s / 17 points and the complete independent audit
-remains green.
+The separability scripts emit NumPy warnings for NaN-padded channels absent
+from one suite. Outputs still complete and reproduce exactly.
 
-### Exact review hashes
+## Transcript-order state
+
+Session 34 had a caught same-session append-placement recurrence:
+
+- the first patch matched a generic Claude separator and placed the new turn at
+  line 2,320;
+- the immediate physical-tail assertion caught it;
+- only Codex's new misplaced copy was removed before commit;
+- the original 3,969-line transcript state was restored;
+- the identical turn was appended with Claude's complete final EOF block; and
+- the final technical diff is `+137 / -0`.
+
+Final technical-transcript proof:
 
 ```text
-assignment_binding.py
-f189a2b35b364393e56293792c60f56ec203cd44455a6b786fd4ed05b7be217d
-
-assignment_generator.py
-e321966fd1e96f7cf3ee63db26205ac88898c03c1af513b37ea8150a18967a85
-
-test_assignment_binding.py
-1deb2921b889d5992d7b9e8e1625ac462a5794fc93fb109d957d7007cdfd99c3
-
-test_assignment_generator.py
-b61554de143229b4a52c5e10f93a633769ce2b74c295518ff0036fd7acaf8aa7
-
-test_gate3_assignment.py
-1a7c910e5910ce8b9038c4546ffc761176ff95d96bbce4a47df89d873d811efe
-
-Reproducibility Packet/README.md
-16105f153379ec8898de1fc23c407dea3ebb5ff7656054373fdf1b027ee62516
+pre-write lines:       3969
+post-write lines:      4106
+Session-34 header:     line 3971
+header count:          1
+physical last author:  Codex
 ```
 
-## Verification
+The incident is disclosed at the physical tail of
+`chats/Claude-Codex-Human/Transcript Order Monitoring/Transcript Order Monitoring - Active.md`
+with its own `+31 / -0` append proof. The clean-append streak is over.
 
-```text
-focused binding/Gate-3/generator tests: 37 passed
-full packet:                          399 passed in 9.34 s
-compileall:                           pass
-generator CLI help:                   pass
-approved-assignment CLI:              pass
-independent retained-data audit:      pass
-git diff --check:                     pass
-```
+For future transcript writes:
 
-One new test initially expected a generic 1.0 s onset; the approved validation
-trajectory uses 0.85 s. The implementation was correct. The regression now
-derives its expected onset from the approved trajectory, and focused/full
-suites pass.
+1. read the UTF-8 physical tail;
+2. record the pre-write line count;
+3. use the **complete verified EOF block in the actual patch**, not a shorter
+   generic subset;
+4. prove the new header occurs exactly once after that boundary;
+5. re-read the physical tail; and
+6. require `+N / -0` before closeout.
 
-## Gate status
+## Public record
 
-```text
-Gate 1: jointly approved complete
-Gate-2 generic role write/load/join path: jointly approved complete
-Gate-2 original generator/base roles: jointly approved complete
-Gate-2 hardening state: exact-state review open
-Gate 2 overall: open pending Gate-4-produced estimator/controller roles
-Gate 3: jointly approved complete
-Gate 4: BLOCKED pending development structural-separability check
-Gates 5–7: open
-Final config.json: absent / unfrozen
-Test identity or payload: 0
-Research result: none
-```
+Root `README.md` now preserves Claude's prior proposal entry and appends a
+correction:
 
-## Claim boundaries to preserve
+- the negative screen is development-only;
+- no result exists for all 472 delivered rows or a complete mild band;
+- per-band four-class accuracy is undefined until all class membership and
+  weighting are specified;
+- coherent regeneration is pending a corrected/approved amendment; and
+- final config and confirmatory test remain untouched.
 
-- The approved 472 reservations are infrastructure, not a fitted result.
-- Do not infer a validation result from existing validation rows.
-- Do not expand five training seeds before five real fits exist.
-- Do not bypass the structural-separability stop.
-- Do not treat assigned contact balance as realized-contact independence.
-- Do not create `config.json`.
-- Do not materialize any test identity or payload.
-- Gate 2 cannot close overall before Gate-4 estimator/controller roles exist.
-- No learned comparison, calibrated authorization, or headline result exists.
+Do not silently rewrite the older public entry; the correction is the operative
+later record.
 
-## Required next sequence
+## Review-cycle state and next actions
 
-1. Read `AgentPrompt.md` and the physical active-thread tail before work.
-2. Claude reviews the Session-33 hardening state and returns the exact
-   approve/block response.
-3. Claude runs the development-only structural separability check.
-4. Depending on that result, proceed with a recorded limitation or review an
-   excitation/severity amendment before validation/test use.
-5. Deliberately resolve the test contact profile before freeze.
-6. Gate 4 fits the matched capacity ladder across training seeds
-   `31001..31005` and produces the remaining Gate-2 roles.
-7. Gate 5 freezes validation calibration/abstention/OOD/action authorization.
-8. Gate 6 freezes the controller protocol.
-9. Gate 7 builds/reviews the evaluation driver and final test manifest.
-10. Only then create immutable `config.json` and materialize untouched test.
+The active technical thread is physically last with Codex's narrow block.
 
-## Session record and live interfaces
+Next:
 
-- `agents/Codex/Session Summaries/HumanReport33.md`
-- `chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`
+1. Read any new Claude turn and Claude's latest HumanReport before acting.
+2. Review the exact corrected short A2 proposal.
+3. Approve only if it fixes both the evidence statement and complete estimand.
+4. After proposal approval, review the written Claim-Sheet and Accessible
+   Claim-Sheet amendment at the exact same state.
+5. Review a replacement hash-bound assignment that implements the approved
+   severity bands/contact rule without context leakage.
+6. Only then authorize full from-zero non-test regeneration and repeat the
+   independent identity/role/CRN audit.
+7. Resume Gate 4 only after the amended development feasibility gate clears.
+8. Keep final `config.json` absent and confirmatory identity/payload count at
+   zero until Gates 2–7 close.
 
-Claude's Session-33 root-README milestone already records the base-role approval
-and measured design findings. Codex did not add a duplicate public entry for the
-bounded implementation hardening. The root `/data/` ignore remains adequate.
+No regular Codex progress report is due until Session 40 unless a playbook
+trigger requires an earlier report.
+
+## Key files
+
+- `agents/Codex/Session Summaries/HumanReport34.md`
+- `agents/Claude/Session Summaries/HumanReport34.md`
+- `chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration
+  and Config Freeze - Active.md`
+- `chats/Claude-Codex-Human/Transcript Order Monitoring/Transcript Order
+  Monitoring - Active.md`
+- `Claim Sheet.md`
+- `Accessible Claim Sheet.md`
+- `Reproducibility Packet/config/proposed-gate3-assignment-v0.1.json`
+- `Reproducibility Packet/config/draft-config-v0.1.json`
+- `Reproducibility Packet/scripts/screen_structural_separability.py`
+- `Reproducibility Packet/results/structural_separability/`
+- `README.md`
+
+## Non-negotiable boundaries
+
+- Development/pilot screens are not confirmatory results.
+- The current separability failure is a feasibility result, not a hypothesis
+  failure.
+- Do not call the unobserved mild stratum negative.
+- Do not call a metric per band until every class and weight in the metric is
+  defined.
+- Do not inspect validation/test to choose the amended design.
+- Do not materialize confirmatory identities or payloads before final freeze.
+- Reviewer edits or silence are not approval; require explicit same-state
+  approval.
+- Keep detection, attribution, information/action authorization, and control
+  outcome separate.
+- Keep `config.json` absent until all remaining gates close.
