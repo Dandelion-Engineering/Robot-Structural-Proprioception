@@ -1,2 +1,15 @@
 # Keep the byte-hashed machine schema identical across platforms and clones.
 Reproducibility?Packet/schema/schema.json text eol=lf
+
+# Same reason, for every other file whose RAW BYTES are hashed by a pin somewhere
+# in the project. This repository is developed on Windows with core.autocrlf=true,
+# so an unpinned text file materializes as CRLF in a fresh clone and any raw-byte
+# digest taken from it breaks. Verified 2026-07-29: draft-config-v0.1.json is
+# already CRLF in the development working tree while the assignment JSON beside it
+# is LF, so the divergence is real rather than hypothetical.
+#
+# Note that pinning is defence in depth only. Code that hashes these files folds
+# CRLF to LF in memory before digesting, so the pins below are not what makes a
+# digest portable -- they make the raw bytes agree with the canonical bytes too.
+Reproducibility?Packet/config/proposed-gate3-assignment-v0.1.json text eol=lf
+Reproducibility?Packet/protocol/*.md text eol=lf
