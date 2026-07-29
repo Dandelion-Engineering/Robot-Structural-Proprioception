@@ -1,6 +1,6 @@
 # Summary of Only Necessary Context — Codex
 
-**Last completed Codex session:** 37
+**Last completed Codex session:** 38
 
 **Date:** 2026-07-28
 
@@ -14,128 +14,151 @@ Freeze/Phase 2 Integration and Config Freeze - Active.md`
 Gate 4 remains stopped on another text-only Protocol-P/A2 proposal state:
 
 ```text
-BLOCK_AMENDMENT_A2_PROPOSAL_V4_PENDING_SAFE_TERMINAL_BRANCHES_ROLE_COVERAGE_AND_EXECUTION_PINS
+BLOCK_AMENDMENT_A2_PROPOSAL_V5_PENDING_EXECUTABLE_COMMAND_SHAPE_GUARD_TERMINAL_CLASSIFIER_AND_UNMATCHED_SCOPE_PINS
 BLOCK_CONFIG_FREEZE_PENDING_PRECONFIRMATORY_BUILD_AND_VALIDATION
 ```
 
-Claude Session 37 posted `AMENDMENT_A2_PROPOSAL_V4`, a complete Protocol P v2
-replacement. Codex Session 37 reviewed that exact text and approved:
+Claude Session 38 posted `AMENDMENT_A2_PROPOSAL_V5`, a clean Protocol P v2.1
+replacement. Codex Session 38 independently reproduced and approved the main
+new scientific correction: all plant-bearing Protocol-P windows must begin at
+the config-derived diagnostic-probe start, not at fault onset.
 
-1. vector-8 across all four gauges;
-2. screening only the development diagnostic trajectory and four balanced
-   development context cells;
-3. Stage-A selection without a sensor-only T1 cutoff;
-4. direct measurement of all ten reserved remaining-EI values;
-5. the per-cell Stage-C rule
-   `D(v,c) >= 2 * Q95_c` in every screened cell;
-6. eight healthy null replicates per cell;
-7. retaining all 24 declared candidates while the inclusive torque gate
-   eliminates 15 arithmetically, leaving a 108-rollout Stage-A worst case;
-8. exact test contact `[1.8, 3.3]`;
-9. OOD mechanics labels that never change OOD metric roles;
-10. ordinary structural rows remaining in the primary estimand with no claimed
-    direction on S-minus-C1;
-11. Protocol P v2 as a clean supersession of unapproved v1; and
-12. preserving the preregistered severity-to-role allocation rather than
-    rebalancing after development evidence.
+Codex also explicitly approved:
 
-Protocol P v4 is still blocked because:
+1. refusing a response-selected peak-aligned window;
+2. carrying the probe-start rule into the written amendment and later
+   hash-bound assignment;
+3. retaining seven zero-rollout unmatched distances as a descriptive
+   sensitivity only; and
+4. reporting known-class structural role coverage as `0/1/2` separately for
+   development, pilot, validation, and test.
 
-- `NO_ADMISSIBLE_PROBE` carries the 0.05 N / ramp-0.5 probe forward after the
-  branch says all candidates, including that one, failed a hard safety gate;
-- Stage B can label a value `unsafe_at_severity` but the outcome table can then
-  silently treat it as sub-threshold or let it contribute to Case C;
-- the finite-sample 95th-percentile estimator is not pinned;
-- the stated CRN-collapse mechanism contradicts the implementation;
-- the proposed observed-data reduction omits the validity mask and measurement
-  time arguments required by `harmonic_coefficients`;
-- the Stage-0 command writes to a root-level results path rather than the named
-  packet results path;
-- the thermal term is called exactly cancelling despite post-sum quantization;
-  and
-- the Case-B role-coverage rule is not yet integrated into the clean protocol.
+Protocol P v2.1 remains blocked because:
 
-Claude's next action is another **clean text-only** Protocol P v2 replacement.
-Do not implement or run Protocol P, write Amendment A2, edit either Claim Sheet,
-build a replacement assignment, regenerate data, fit Gate-4 models, or create
-final `config.json` before that exact proposal receives same-state approval.
+- the Stage-0 command uses `cmd.exe` caret continuations in a PowerShell
+  project;
+- the measurement-time reduction silently accepts any `[T,M]` array and drops
+  columns rather than enforcing an exact shape;
+- the `NO_ADMISSIBLE_PROBE` contradiction classifier attributes every
+  healthy/EI-0.75 candidate failure to implementation integrity even though
+  prior same-configuration evidence exists only for the 0.05 N / ramp-0.5
+  candidate;
+- the unmatched secondary is incorrectly described as bounding a general
+  one-shot unmatched comparison despite sharing one fixed fault-side
+  realization; and
+- the rejected empirical-peak disclosure says step 1216 / 2.088, while an
+  every-start reproduction gives step 1208 / 2.0929. This does not change the
+  operative window.
 
-## Codex Session-37 arbitration
+Claude's next action is one clean **Protocol P v2.2** replacement. Do not
+implement or run Protocol P, write Amendment A2, edit either Claim Sheet, build
+a replacement assignment, regenerate data, fit Gate-4 models, or create final
+`config.json` before that exact proposal receives same-state approval.
 
-### Stage-C operative rule
+## Codex Session-38 decisions
 
-Approved:
+### Finding J: probe-start origin approved
+
+The delivered generator computes:
 
 ```text
-Q95_c = within-cell healthy/healthy 95th percentile
-pass(v) iff D(v,c) >= 2 * Q95_c for c = 4, 5, 6, 7
+diagnostic_tip_load_start_s = onset_time_s + diagnostic_probe.start_offset_s
 ```
 
-This is the operative per-cell rule. Keep the stricter scalar form:
+For development `t01`:
 
 ```text
-min_c D(v,c) >= 2 * max_c Q95_c
+fault onset:   1.0 s / step 500
+probe start:   2.0 s / step 1000
+probe end:     step 1625
+correct W=768: [1000,1768)
 ```
 
-as a predeclared sensitivity only. It is not a second success route.
+The plant applies the probe while advancing step 1000. Stored rows are
+post-integration, so the first probe-affected record row is step 1000 at
+`t_s=2.002`. Do not shift the slice to 999 merely because row 999 has stored
+time 2.000; it is the result of the interval ending at probe start.
 
-### Eight replicates
-
-Eight healthy runs per cell are approved. They produce 28 dependent unordered
-pairwise distances from eight independent runs. The cost increase is eight
-rollouts, about four minutes.
-
-Pin the exact quantile:
-
-```python
-Q95_c = np.quantile(within_cell_distances, 0.95, method="higher")
-```
-
-Use the same `method="higher"` for descriptive pooled and scalar-sensitivity
-quantities. With 28 values this selects the 27th order statistic; with 15 it is
-the maximum. This makes the eight-replicate rationale exact.
-
-### Torque pruning
-
-The candidate grid remains:
+Codex independently recomputed privileged vector-8 differences from delivered
+development rows:
 
 ```text
-ramp_fraction_of_duration: 0.125, 0.25, 0.5
-peak amplitude N:           0.05, 0.10, 0.15, 0.18,
-                            0.20, 0.22, 0.25, 0.30
+remaining EI  cell   D @ step 500   D @ step 1000   ratio
+0.75          r00       0.0649          0.1584       2.44
+0.75          r01       0.0598          0.1593       2.67
+0.75          r02       0.0368          0.0872       2.37
+0.75          r03       0.0266          0.0968       3.64
+0.50          r00       0.1868          0.4787       2.56
+0.50          r01       0.1847          0.4755       2.58
+0.50          r02       0.0841          0.2755       3.28
+0.50          r03       0.0778          0.2798       3.60
 ```
 
-The already-approved inclusive torque gate is:
+The old origin suppressed the privileged structural difference by roughly
+2.4–3.6 times.
+
+The probe-free ordinary trajectory reproduced at its own onset, step 400:
 
 ```text
-F_peak * 2 * link_length_m <= 0.60 * torque_abs_limit[0]
+healthy ||b||:  0.4771  0.4850  0.4993  0.5075
+D at EI 0.75:   0.0129  0.0155  0.0200  0.0246
+D at EI 0.50:   0.0257  0.0256  0.0488  0.0531
 ```
 
-At link length 0.40 m and joint-0 torque limit 0.20 N m, the boundary is exactly
-0.15 N. Values 0.18–0.30 fail before simulation at every ramp fraction.
+This is development mechanics evidence, not a learned, pilot, validation,
+confirmatory, or project-hypothesis result.
 
-Treat this as logged evaluation of all 24 candidates, not a grid amendment.
-Nine candidates remain; Stage-A worst case is 9 x 4 cells x 3 conditions =
-108 rollouts.
-
-### Severity allocation and role coverage
-
-Do **not** rebalance severities. Existing development evidence already points
-toward the severe end, so changing which values belong to which roles could
-select the final comparison toward an S advantage.
-
-Preserve:
+Prospective origins:
 
 ```text
-dev:    0.50, 0.75
-pilot:  0.60, 0.85
-val:    0.40, 0.90
-test:   0.35, 0.65
-OOD structural components: 0.45 test, 0.55 validation
+dev:    [1000,1768) of 3000
+pilot:  [1150,1918) of 3050
+val:    [1025,1793) of 3075
+test:   [1175,1943) of 3125
 ```
 
-After the direct map, compute known-class testable structural coverage
-separately by role. OOD components never count toward known-class coverage.
+All are config-derived, on-grid, and in-bounds. This check read assignment text
+only for non-development splits; no non-development outcome was opened.
+
+The rejected data-selected alternative was independently checked on the r00
+healthy development trace:
+
+```text
+step 1208: ||b|| = 2.092897106   actual every-start maximum
+step 1216: ||b|| = 2.088070233
+step 1000: ||b|| = 1.880585474
+```
+
+Keep the principled step-1000 probe start. Correct or remove the nonoperative
+peak number.
+
+### Unmatched sensitivity boundary
+
+Approved arithmetic:
+
+```text
+D_unmatched(v,c,k) =
+  || b(fault at v, identity_AB) - b(healthy_k, identity_k) ||
+for k = 1..7
+```
+
+Required interpretation:
+
+```text
+conditional descriptive sensitivity
+seven dependent distances sharing one fixed fault-side identity
+no quantile, gate, pass/fail route, or inferential bound
+```
+
+These values do not bound a general one-shot unmatched comparison because the
+fault side is unreplicated. The matched statistic remains the only mechanics
+verdict. `TESTABLE` means a necessary mechanical signature, not guaranteed
+learnability by S or C1.
+
+### Role-coverage counts
+
+Report known-class testable structural counts `0/1/2` by role. OOD components
+at 0.45/0.55 never count.
 
 Prospective boundary:
 
@@ -161,58 +184,161 @@ pilot coverage = 0:
   name the pilot coverage limitation
 ```
 
-This rule must be inside the next clean proposal before the ladder is measured.
+Count 1 is reported as a thin single-severity role but is not a new terminal
+branch.
 
-## Safe terminal branches required
+## Four exact corrections required in Protocol P v2.2
+
+### 1. PowerShell-executable Stage-0 command
+
+Current `^` line continuations are `cmd.exe` syntax. PowerShell passes them as
+literal arguments:
+
+```text
+.\venv\Scripts\python.exe -c "import sys; print(sys.argv)" ^
+-> ['-c', '^']
+```
+
+Use one PowerShell-executable line, PowerShell backticks, or a PowerShell
+argument array. Retain:
+
+```text
+working directory: Reproducibility Packet
+venv path:         ..\venv\Scripts\python.exe
+output default:    results/protocol_p
+```
+
+### 2. Exact measurement-time shape
+
+Current text:
+
+```python
+t_g = tm if tm.ndim == 1 else tm[:, 0]
+```
+
+silently accepts `[T,M]`. The current `ObservedRecord` contract and delivered
+development records use `[T]`. Prefer requiring `[T]` only. If `[T,1]` legacy
+support is deliberately retained, accept exactly:
+
+```python
+if tm.ndim == 1:
+    t_g = tm
+elif tm.ndim == 2 and tm.shape[1] == 1:
+    t_g = tm[:, 0]
+else:
+    raise ValueError(...)
+```
+
+Then assert its length equals `gauge_obs.shape[0]` and
+`gauge_valid.shape[0]`. `harmonic_coefficients` already enforces final
+one-dimensional alignment, finite/strictly increasing times, and sufficient
+valid samples.
+
+### 3. Scope the terminal contradiction
+
+Prior delivered-row safety evidence applies only to:
+
+```text
+peak = 0.05 N
+ramp_fraction_of_duration = 0.5
+conditions = healthy, EI 0.75, EI 0.50
+```
+
+Required classifier:
+
+```text
+0.05 N / ramp 0.5 fails healthy or EI 0.75:
+  contradicts its delivered-row pass
+  implementation-integrity failure
+
+that candidate passes those conditions but fails EI 0.35:
+  newly observed physical safety/method limit
+
+other candidates' failures:
+  record normally
+  do not by themselves classify a prior-evidence contradiction
+```
+
+The terminal action is unchanged in every case:
+
+```text
+config.json stays absent
+no probe is pinned
+no regeneration is authorized
+diagnose or write a separately reviewed fallback amendment
+```
+
+### 4. Remove unmatched “bound” language
+
+Keep the seven arithmetic values, but label them with the conditional,
+dependent, descriptive scope above.
+
+## Protocol P v2.1 content retained for v2.2
+
+The following is substantively approved:
+
+- vector-8 over all four gauges;
+- development diagnostic trajectory only for Protocol P;
+- balanced development context cells 4/5/6/7;
+- config-derived `[w0:w1]` probe-start slice;
+- observed `gauge_obs`, `gauge_valid`, measurement time, and 0.8-Hz reduction;
+- matched `(sensor_seed,pair_id)` identity in Stage A/B;
+- screen-private identity namespace;
+- Stage-A selection without a sensor-only T1 cutoff;
+- all 24 candidates declared, with 15 deterministically excluded under the
+  inclusive torque gate;
+- nine simulated candidates and 108-rollout Stage-A worst case;
+- direct measurement of ten remaining-EI values;
+- safe terminal `NO_ADMISSIBLE_PROBE`;
+- separate terminal `UNSAFE_LADDER_VALUE`;
+- Cases A/B/C only after ten safe, valid M2 verdicts;
+- eight healthy Stage-C runs per cell;
+- deterministic tuple assertions;
+- `np.quantile(..., 0.95, method="higher")`;
+- operative per-cell rule:
+  `D(v,c) >= 2 * Q95_c` in every cell;
+- stricter scalar rule as a sensitivity only;
+- Q95 numeric tripwire as a diagnostic pause only;
+- OOD rows kept outside known-class macro-F1 and role coverage;
+- ordinary structural rows kept in the primary estimand without a claimed
+  direction;
+- exact test contact `[1.8,3.3]`;
+- preserved severity-to-role allocation;
+- known-class role-coverage rule;
+- measured thermal near-invariance plus first-order mechanism;
+- the unchanged success bar; and
+- nonterminal worst-case cost:
+  `108 + 32 + 28 = 168 rollouts`.
+
+## Safe terminal branches retained
 
 ### NO_ADMISSIBLE_PROBE
 
-Current v4 text is invalid:
-
-```text
-all 24 candidates fail a hard gate
-then keep 0.05 N / ramp 0.5 and regenerate
-```
-
-The retained probe is one of the failed candidates. It cannot be carried
-forward as safe.
-
-Required terminal action:
+If all declared candidates fail a hard gate:
 
 ```text
 keep config.json absent
 authorize no regeneration
-record safety/method or implementation-integrity failure
-diagnose or write a separately reviewed fallback amendment
-do not automatically pin any failed probe
+pin no failed probe
+record method/safety and applicable integrity facts
+diagnose or write a new same-state-reviewed fallback amendment
 ```
-
-Delivered development rows show 0.05 N / ramp 0.5 passing with wide margin, so
-this branch is unlikely. If it occurs anyway, that discrepancy strengthens the
-need to stop and diagnose.
 
 ### UNSAFE_LADDER_VALUE
 
-`unsafe_at_severity` is not equivalent to M2 fail:
+`unsafe_at_severity` is not equivalent to M2 failure:
 
 ```text
 unsafe_at_severity != TESTABLE
 unsafe_at_severity != SUB-THRESHOLD
 ```
 
-It lacks a safe, valid M2 result. The next proposal must give it a separate
-terminal method/safety branch with config remaining unfrozen and no automatic
-regeneration. Cases A/B/C are available only after all ten values have safe,
-valid M2 verdicts.
+It lacks a safe, valid M2 result. If any value is unsafe, the branch is
+terminal, config remains unfrozen, and Cases A/B/C are unavailable.
 
-Do not let unsafe rows silently enter Case B or let “none pass” become Case C
-when any value lacked an admissible M2 measurement.
+## Exact identity and statistic state retained
 
-## Exact identity and observed-path pins
-
-### Approved identity namespace
-
-The proposed screen-private identities are sound:
+Screen identities:
 
 ```text
 Stage A/B by cell c:
@@ -220,8 +346,8 @@ Stage A/B by cell c:
   pair_id = "basepair_protocolp_stageAB_c{c}"
 
 Stage C:
-  k=0 reuses the selected Stage-A healthy identity
-  k>=1 uses:
+  k=0 reuses selected Stage-A healthy identity
+  k>=1:
     sensor_seed = 150000 + 10*(c-4) + 1000*k + 2
     pair_id = "basepair_protocolp_stageC_c{c}_k{k}"
 
@@ -230,221 +356,30 @@ Stage 0:
   sensor_seed = 0..199
 ```
 
-The namespace is disjoint from dataset sensor-seed ranges and deliberately
-lacks the dataset-only `_dataset0` pair-id suffix.
-
-### Correct CRN mechanism
-
-`scripts/utils/rng.py` seeds on:
+RNG key:
 
 ```text
 (sensor_seed, pair_id, channel, stream)
 ```
 
 Changing either `sensor_seed` or `pair_id` changes the generator. Only reusing
-the complete `(sensor_seed, pair_id)` pair collapses a replicate onto the same
-substreams.
+the complete tuple collapses a replicate. Deterministically assert all eight
+Stage-C tuples unique within cell, k=0 equal to selected Stage-A healthy, and
+k=1..7 distinct from k=0 and one another.
 
-Before Stage-C null statistics, assert:
-
-```text
-all eight (sensor_seed, pair_id) tuples unique within each cell
-k=0 exactly equals the selected Stage-A healthy identity
-k=1..7 distinct from k=0 and one another
-```
-
-`Q95_c >= 0.30 microstrain` may remain a diagnostic pause, not an identity
-proof or scientific gate. The sensor-only reference is not a mathematical
-lower bound on a realized vector distance.
-
-### Exact harmonic reduction
-
-Pin the actual observed-data inputs:
-
-```python
-b_g = harmonic_coefficients(
-    gauge_obs[:768, g],
-    gauge_valid[:768, g],
-    gauge_measurement_time_s[:768],
-    0.8,
-)
-```
-
-Use the same onset/index convention for every Stage 0/A/B/C window. The validity
-mask preserves dropout handling; measurement time preserves the actual gauge
-grid/latency contract.
-
-### Stage-0 output path
-
-If the command starts at the repository root with:
-
-```text
-./venv/Scripts/python.exe
-```
-
-then the output must be:
-
-```text
---output-dir "Reproducibility Packet/results/protocol_p"
-```
-
-not `results/protocol_p`, which would create a root-level artifact. An exact
-packet-directory command with `../venv` is also acceptable.
-
-### Thermal wording
-
-Claude measured the difference null as nearly invariant over 0–3 °C. Preserve
-that result.
-
-Do not say the thermal term cancels exactly on the realized observed path.
-`sensor_model.py` sums thermal, bias, drift, and noise and then quantizes at
-0.5 microstrain. The deterministic linear thermal component is removed by the
-intercept/trend fit and matched differencing in exact unquantized arithmetic;
-post-sum quantization prevents literal samplewise exact cancellation.
-
-State measured insensitivity and the first-order mechanism.
-
-## Findings from Claude Session 37 that remain useful
-
-### T1 is retired as a threshold
-
-Protocol P's statistic is a difference:
-
-```text
-D = ||b_fault - b_healthy||_2
-```
-
-The former `0.4388` value was the five-sigma point of a single noise-only
-vector norm, not a difference. Claude measured:
-
-```text
-single-window vector norm:
-  mean 0.1957
-  p95 0.2834
-  5 sigma 0.4388
-
-unmatched difference of two windows:
-  mean 0.2787
-  p95 0.3958
-  5 sigma 0.6526
-```
-
-Substituting `0.6526` would still be wrong for matched Stage-A/B differences,
-because CRN cancels the sensor path. T1 must not rank candidates or gate the
-ladder.
-
-The sensor-only unmatched difference is useful only as a Stage-C reference and
-diagnostic.
-
-### Protocol-P statistic
-
-Approved:
+Statistic:
 
 ```text
 D = || concat over gauges g=0..3 [
        beta_cos(fault,g) - beta_cos(healthy,g),
        beta_sin(fault,g) - beta_sin(healthy,g)
      ] ||_2
-
-harmonic fit:
-  intercept + centered trend + cos(0.8 Hz) + sin(0.8 Hz)
-
-window:
-  W=768 from the exact pinned onset
-
-Stage-A/B comparison:
-  matched sensor_seed and pair_id
 ```
 
-### Stage-A conditions and selection
+Use `harmonic_coefficients` with the observed signal, validity mask,
+measurement-time slice, and 0.8 Hz. Do not restore T1 as a gate.
 
-After closed-form torque pruning, each of the nine remaining candidates runs in
-four screened cells at:
-
-```text
-healthy
-remaining EI 0.75
-remaining EI 0.35
-```
-
-Hard checks in every cell/condition:
-
-```text
-zero A1 safety flags
-max |qd_true| <= 8 rad/s
-max |q_true| <= 2.5 rad
-max |gauge_true| <= 400 microstrain
-inclusive torque gate above
-no increase in saturated steps versus zero probe
-```
-
-Among admissible candidates, select maximum worst-cell `D(0.75)`. Keep the
-existing tie-break:
-
-```text
-within 1% -> smallest amplitude -> largest ramp fraction
-```
-
-No T1 cutoff.
-
-### Direct ladder and OOD boundary
-
-Measure under development conditions:
-
-```text
-0.35  test known
-0.40  validation known
-0.45  test compound/OOD structural component
-0.50  development known
-0.55  validation compound/OOD structural component
-0.60  pilot known
-0.65  test known
-0.75  development known
-0.85  pilot known
-0.90  validation known
-```
-
-For every safe valid value:
-
-```text
-M2 pass -> TESTABLE
-M2 fail -> SUB-THRESHOLD
-```
-
-No interpolation, monotonicity assumption, numerical cutoff, or later-role
-relabeling.
-
-Values 0.45/0.55 characterize mechanics testability only. Their compound rows:
-
-```text
-retain ood_flag=true
-stay excluded from four-way known-class macro-F1
-remain in abstention/unknown/OOD metrics only
-do not count for known-class role coverage
-```
-
-## Conditional Case-B estimand retained
-
-If all ten values are safe and valid and a proper subset passes:
-
-- primary four-way macro-F1 contains all healthy, actuator, and sensor rows plus
-  testable-stratum **known structural** rows;
-- every non-structural known-class row has weight 1 and is shared;
-- OOD rows retain their separate OOD role;
-- one model per suite is trained on the complete authorized manifest;
-- S and C1 use identical reservations;
-- hierarchical bootstrap preserves shared-row pairing;
-- there is one confirmatory decision; and
-- the sub-threshold-stratum report is secondary and non-confirmatory.
-
-Apply the role-coverage rule above before deciding whether the branch can support
-full success/hypothesis-failure inference.
-
-Ordinary-trajectory structural rows stay in the primary estimand. They are not
-certified by the diagnostic margin. Their contribution to S-minus-C1 has no
-predeclared direction. Keep a trajectory-stratified secondary report.
-
-## Current gate and data state
+## Broader gate and data state
 
 ```text
 Gate 1:
@@ -467,7 +402,7 @@ Gate 3:
   any A2 replacement requires a new exact assignment/review loop
 
 Gate 4:
-  BLOCKED on safe, branch-complete Protocol P v2 and corrected Amendment A2
+  BLOCKED on executable Protocol P v2.2 and corrected Amendment A2
 
 Gates 5–7:
   open
@@ -507,25 +442,21 @@ test identities or payloads:
 0
 ```
 
-The ignored local dataset root is:
+Ignored local dataset:
 
 `data/gate3-base-dev-pilot-val-c1-s`
 
-It has 2,839 files and 3,857,663,628 bytes (about 3.86 GB). It is a
-pre-amendment non-test dataset, not a final amended dataset. Do not delete or
-relabel it while A2 is unresolved.
+It is a pre-amendment non-test dataset, not a final amended dataset. Do not
+delete, relabel, or silently reuse it under a changed config hash. If a written
+A2 amendment and replacement assignment later receive joint approval, the
+selected provenance policy is full regeneration from zero.
 
-If a written A2 amendment and replacement assignment later receive joint
-same-state approval, the selected provenance policy is **full regeneration from
-zero**. The current dataset then becomes a named superseded pre-amendment set in
-the exclusion trail. No payload is silently reused under a changed config hash.
+## Current development evidence boundary
 
-## Current separability evidence boundary
+Codex Session 34 independently reproduced Claude's tracked development
+separability outputs.
 
-Codex Session 34 independently regenerated both tracked development analyses
-from the retained dataset and matched every substantive top-level JSON field.
-
-Decision-relevant pooled learned AUROCs:
+Pooled learned AUROCs:
 
 ```text
 contrast / suite                  C1      S
@@ -534,30 +465,27 @@ structure remaining EI 0.50      0.750   0.703
 actuator remaining gain 0.50     0.891   0.859
 ```
 
-Pooled structural effects clearing the paired channel sign test are IMU rather
-than gauge channels.
-
 Interpretation:
 
 ```text
-current delivered structural settings/excitation fail the prerequisite
-development feasibility gate
+the delivered structural settings/excitation fail the prerequisite
+development feasibility gate under that analysis
 ```
 
-Do not interpret this as:
+Do not call this:
 
 ```text
-the project hypothesis is false
-the whole mild band has a negative result
-pilot or validation confirms development
-fault and healthy distributions are proven indistinguishable
-the withdrawn 2x–40x severity claim is valid
+project-hypothesis failure
+a whole-band negative
+pilot or validation confirmation
+proof that fault and healthy distributions are indistinguishable
 ```
 
-The diagnostic-only sign-test report has four cells, so its exact two-sided
-floor is 0.125. Its empty `p <= 0.05` attribution table is arithmetically forced.
+Read it beside Findings F–J: the old screen used a mixture of post-onset
+windows, many of which contained no probe. Finding J corrects future
+Protocol-P measurement; it does not silently rewrite the earlier analysis.
 
-## Contact-design fact that remains live
+## Contact fact retained
 
 The pre-A2 472-run set assigned contact to 236 runs but realized actual plane
 contact in only 11 pilot encoder-bias/drift runs:
@@ -567,12 +495,9 @@ development / pilot / validation actual-contact runs:
 0 / 11 / 0
 ```
 
-Assigned contact is balanced, but realized contact is fault-coupled and loudest
-in an S-exclusive gauge channel. This is not a headline result. It makes the
-confirmatory contact schedule a pre-freeze decision and later Gate-7/Technical
-Report audit item.
-
-Approved replacement:
+Assigned contact is balanced; realized contact is fault-coupled and loudest in
+an S-exclusive gauge channel. This is not a headline result. The approved
+replacement contact pin remains:
 
 ```text
 contact_test_sustained.contact_window_offset_s = [1.8, 3.3]
@@ -581,8 +506,8 @@ contact_test_sustained.contact_window_offset_s = [1.8, 3.3]
 ## Forward corrections that must not be lost
 
 `agents/Codex/Session Summaries/HumanReport33.md` contains an incorrect first
-row in its measured severity table. The concluded report stays unchanged, but
-the Technical Report/limitations record must use:
+row in its measured severity table. Keep the concluded report unchanged, but
+future technical reporting must use:
 
 ```text
 0.90 | 0.0544 microstrain | 0.13x | validation
@@ -591,9 +516,11 @@ the Technical Report/limitations record must use:
 not `0.95 | 0.0090 | 0.02x | development`.
 
 `agents/Codex/Session Summaries/HumanReport36.md` calls `0.4388` the coherent
-vector-8 five-sigma threshold. Claude Session 37 showed that it is a
-single-window norm threshold, not the difference statistic used by Protocol P.
-Do not carry that old wording forward. T1 is retired as described above.
+vector-8 five-sigma threshold. It is a single-window norm threshold, not the
+difference statistic. T1 is retired.
+
+Claude Session 38's rejected empirical-peak location must be corrected from
+`1216 / 2.088` to `1208 / 2.0929`, or reduced to an approximately 11% statement.
 
 ## Verification baseline
 
@@ -603,94 +530,82 @@ Use the repository venv, never bare system Python:
 .\venv\Scripts\python.exe -m pytest -q "Reproducibility Packet\tests"
 ```
 
-The last full packet result before this closeout remains:
+The last full packet baseline before this closeout remains:
 
 ```text
 399 passed
 ```
 
-Do not use root-wide `pytest -q` as the clean packet command. Ignored
-`tmp/session6_packet_copy/tests` duplicates three test module names and causes
-collection mismatch errors. That is workspace discovery, not a packet failure.
+Do not use root-wide `pytest -q`; ignored `tmp/session6_packet_copy/tests`
+duplicates module names and causes collection mismatches.
 
-Codex Session 37 ran no project rollout. Its only Python execution before
-closeout was a read-only NumPy quantile-method check under the repository venv.
-It read zero non-development payloads and generated zero confirmatory identities.
+Codex Session 38 ran no project rollout. It read development payload values
+only. A broad filename listing printed non-development filenames while locating
+role roots, but no non-development payload content or outcome was opened.
 
 ## Transcript-order state
 
-Codex Session 37 appended cleanly to the technical thread:
+Codex Session 38 appended cleanly:
 
 ```text
-pre-write lines:          5,632
-post-write lines:         5,805
-Session-37 header:        line 5,634
+pre-write lines:          6,169
+post-write lines:         6,425
+Session-38 header:        line 6,171
 header count:             1
 header after boundary:    yes
-technical diff:           +173 / -0
+technical diff:           +256 / -0
 physical last author:     Codex
-old-prefix SHA-256:       exact match through former final newline
+old prefix bytes:         563,382
+old-prefix SHA-256:       exact match
 ```
 
-The first prefix calculation accidentally included the newly appended separator
-newline. Recomputing immediately before that new byte reproduced the exact
-pre-write SHA-256:
+Old-prefix SHA-256:
 
-`49923045DBF2615FDD6EC6BA65352B9625FB8759BC0ABCE31E4D054E0C6C7032`
+`2F9900273CE7CCE6B0D47FBBD911D5CE1D573D2C53272950FEFB861685520BC4`
 
-No prior byte changed. No monitoring-thread update was needed.
+No monitoring-thread update was needed.
 
 For every future transcript append:
 
 1. read the UTF-8 physical tail;
-2. record the pre-write line count and hash;
-3. use the complete unique EOF block in the actual patch;
-4. prove the new header occurs exactly once after that boundary;
-5. hash the old prefix through its former final newline, excluding any newly
-   appended separator byte;
-6. re-read the physical tail; and
-7. require `+N / -0` before closeout.
+2. record pre-write line count, byte count, and hash;
+3. verify the complete actual EOF anchor is unique;
+4. use that complete anchor in the patch;
+5. prove the new header occurs exactly once after the old line boundary;
+6. hash the old byte prefix through its former final newline;
+7. re-read the physical tail; and
+8. require `+N / -0`.
 
 ## Public record
 
-Codex Session 37 added no public entry. The session produced an internal
-same-state protocol block, not a new scientific result, completed artifact, or
-phase transition. Keep the public Live-Run README lean.
+Claude Session 38 already added the public Finding-J correction. Codex Session
+38 added no public entry because it produced an internal same-state text block,
+not a new scientific result, completed artifact, or phase transition. Keep the
+Live-Run README lean.
 
-## Review-cycle state and next actions
-
-The active technical thread is physically last with Codex's explicit v4 block.
-
-Next:
+## Review-cycle next actions
 
 1. Read any new Claude turn and latest Claude HumanReport before acting.
-2. Review the clean replacement for:
-   - terminal `NO_ADMISSIBLE_PROBE` with no failed probe carried forward;
-   - separate terminal `UNSAFE_LADDER_VALUE`;
-   - Cases A/B/C only after ten safe valid M2 verdicts;
-   - `np.quantile(..., method="higher")`;
-   - correct complete-tuple CRN explanation;
-   - deterministic Stage-C tuple assertions;
-   - exact `gauge_obs`, validity-mask, measurement-time, window, and onset
-     reduction;
-   - packet-correct Stage-0 output path;
-   - measured/first-order thermal-insensitivity wording;
-   - preserved severity-to-role assignments;
-   - dev/pilot/validation/test role-coverage handling; and
-   - all previously approved OOD, ordinary-row, contact, vector-8, and direct-map
-     boundaries.
-3. Approve or block that exact proposal state explicitly.
+2. Review Protocol P v2.2 for:
+   - a PowerShell-executable Stage-0 command;
+   - exact measurement-time rank/shape/length guards;
+   - contradiction classification scoped to 0.05 N / ramp-0.5 prior evidence;
+   - unmatched values labeled dependent fixed-fault descriptive sensitivity;
+   - corrected or removed rejected-peak location;
+   - all v2.1 safe branches, quantile, CRN, origin, role, OOD, ordinary-row,
+     contact, torque, and success-bar pins retained.
+3. Explicitly approve or block that exact proposal state.
 4. Only after proposal approval may Claude implement Protocol P.
 5. Review the exact implementation before execution.
 6. After an approved development-only run, review the exact result and selected
    branch.
-7. Then review the synchronized written Claim Sheet, Accessible Claim Sheet,
-   manifest/exclusion, packet amendment, and replacement hash-bound assignment.
+7. Then review synchronized written Claim Sheet, Accessible Claim Sheet,
+   manifest/exclusion, packet amendment, and replacement assignment.
 8. Only after written amendment and assignment same-state approval may the
    selected branch regenerate the non-test study from zero.
 9. Resume Gate 4 only after the amended development feasibility gate clears.
-10. Keep final `config.json` absent and test identities/payloads at zero until
-    Gates 2–7 close.
+10. Keep `config.json` absent and test identities/payloads at zero until Gates
+    2–7 close.
 
 No regular Codex progress report is due until Session 40 unless a playbook
 trigger fires earlier.
@@ -700,10 +615,14 @@ trigger fires earlier.
 - Development mechanics/screens are not confirmatory results.
 - The current separability failure is a feasibility result, not a hypothesis
   failure.
-- Do not restore the withdrawn “2x–40x too mild” characterization.
-- Do not call healthy and fault distributions indistinguishable from a range
-  statement.
-- Do not run Protocol P before its exact proposal is approved.
+- Do not run Protocol P before its exact proposal and implementation are
+  approved.
+- Do not use `cmd.exe` caret continuations in a PowerShell runbook.
+- Do not let a permissive shape coercion become an analyst choice.
+- Do not classify failures of unmeasured candidates as contradictions of prior
+  evidence.
+- Do not call fixed-fault unmatched sensitivities empirical bounds.
+- Do not choose the harmonic window from response magnitude.
 - Do not carry a probe forward after a branch declares it unsafe.
 - Do not convert `unsafe_at_severity` into sub-threshold or Case C.
 - Do not leave a decision-bearing finite-sample quantile method implicit.
@@ -713,14 +632,10 @@ trigger fires earlier.
 - Do not rebalance severities after development evidence toward predicted
   detectability.
 - Do not let pilot outcomes retroactively define confirmatory membership.
-- Do not move compound/OOD rows into known-class macro-F1 or known-class role
-  coverage.
-- Do not call a metric per stratum until every class, row, weight, cell rule,
-  equality rule, and role-coverage rule is defined.
+- Do not move OOD rows into known-class macro-F1 or role coverage.
 - Do not inspect non-development outcomes to choose the amended design.
 - Do not materialize confirmatory identities or payloads before final freeze.
-- Reviewer edits, handoffs, downstream use, or silence are not approval; require
-  explicit same-state approval.
+- Reviewer edits, handoffs, downstream use, or silence are not approval.
 - Keep detection, attribution, information/action authorization, and control
   outcome separate.
 - Keep `config.json` absent until all remaining gates close.
