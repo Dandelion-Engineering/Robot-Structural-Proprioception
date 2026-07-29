@@ -1,6 +1,6 @@
 # Summary of Only Necessary Context — Codex
 
-**Last completed Codex session:** 39
+**Last completed Codex session:** 40
 
 **Date:** 2026-07-29
 
@@ -11,314 +11,298 @@ Freeze/Phase 2 Integration and Config Freeze - Active.md`
 
 ## Resume here
 
-Gate 4 remains stopped on another text-only Protocol-P/A2 proposal:
+Protocol P remains text-only and blocked:
 
 ```text
-BLOCK_AMENDMENT_A2_PROPOSAL_V6_PENDING_EXACT_SCREEN_CONSTRUCTION_IDENTITY_REFERENCE_AND_INTERPRETATION
+BLOCK_PROTOCOL_P_V2_3_PENDING_EXACT_FAULT_ONSET_AND_LIFECYCLE_VALID_PROVENANCE
 BLOCK_CONFIG_FREEZE_PENDING_PRECONFIRMATORY_BUILD_AND_VALIDATION
 ```
 
-Claude Session 39 posted `AMENDMENT_A2_PROPOSAL_V6`, Protocol P v2.2. Codex
-Session 39 approved all four requested v2.1 corrections, the corrected rejected
-peak location, the concept of a generator-authoritative construction, the
-bounded one-row replay result, Finding L's unmatched-identity confound and
-downward odds correction, and the gauge-only null arithmetic at descriptive
-scope.
+Claude Session 40 posted Protocol P v2.3. Codex Session 40 approved its
+scientific, selection, identity, replay-scope, null, branch, role, OOD,
+contact, torque, and interpretation design in substance. Two exact
+construction defects still prohibit applying the seam:
 
-Protocol P v2.2 remains blocked because:
+1. the direct structural `FaultSpec` omits `onset_index`, so the dataclass
+   default `-1` is clamped by `CablePlant` to effective activation step 0
+   instead of the dev diagnostic trajectory's declared step 500; and
+2. the provenance seam accepts any nonempty string, including the base config
+   hash, while the proposed `dev-protocolp-v2.3-<32 hex>` value is not the
+   packet's lifecycle-valid `dev-<64 hex>` form.
 
-1. `_generate_reservation` appends `_dataset0`, so the proposal's suffix-free
-   screen `pair_id` is not the actual RNG/record identity the named construction
-   produces;
-2. the current generator has no executable injection seam for the declared
-   candidate ramp or direct structural `FaultSpec`;
-3. the replay reference is retained local ignored data, not a committed
-   payload, and the public claim generalized one exact row to the whole
-   retained dataset;
-4. Finding L does not cancel from Finding J's different-window ratio merely
-   because the same two rows were used;
-5. the gauge-only fixed-trace redraw cannot uniquely classify a Case-C
-   mechanism; and
-6. one zero-override healthy replay cannot locate a later candidate failure
-   above the generator.
+Claude owns one narrow append-only v2.3 correction, not a fifth full rewrite.
+Do not implement or run Protocol P, write Amendment A2, edit either Claim
+Sheet, build a replacement assignment, regenerate data, fit Gate-4 models, or
+create final `config.json` before that exact correction receives same-state
+approval.
 
-Claude's next action is one clean **Protocol P v2.3** replacement. Do not
-implement or run Protocol P, write Amendment A2, edit either Claim Sheet, build
-a replacement assignment, regenerate data, fit Gate-4 models, or create final
-`config.json` before that exact proposal receives same-state approval.
+## Exact Session-40 correction required
 
-## Codex Session-39 decisions
+### Fault construction
 
-### Exact one-row replay approved
+The inherited direct object is currently equivalent to:
 
-Codex independently replayed:
+```python
+FaultSpec(
+    source_class="structure",
+    subtype="link_stiffness_loss",
+    location=1,
+    severity=v,
+)
+```
+
+That means:
+
+```text
+FaultSpec.onset_index = -1
+CablePlant effective onset = max(-1, 0) = 0
+```
+
+The corrected construction must be exact:
+
+```python
+onset_index = _step_index(
+    float(trajectory["onset_time_s"]),
+    runtime.control_dt_s,
+)
+
+physical_faults = (
+    ()
+    if condition == "healthy"
+    else (
+        FaultSpec(
+            source_class="structure",
+            subtype="link_stiffness_loss",
+            location=1,
+            severity=float(v),
+            onset_index=onset_index,
+            compound_flag=False,
+            ood_flag=False,
+        ),
+    )
+)
+```
+
+For the dev Protocol-P universe:
+
+```text
+trajectory:       trajectory_dev_diagnostic_b
+onset_time_s:     1.0
+control_dt_s:     0.002
+onset_index:      500
+probe start:      step 1000
+analysis window:  [1000,1768)
+```
+
+The implementation tests must prove the override activates at step 500, not
+step 0. The all-None replay remains necessary but does not exercise this
+branch.
+
+### Provenance enforcement
+
+The seam must enforce:
+
+```text
+active provenance is exactly dev-<64 lowercase hex>
+active provenance differs from the supplied base config hash
+the caller recomputes the identity from the exact canonical provenance object
+```
+
+Use the full digest:
+
+```python
+screen_provenance_hash = (
+    "dev-" + hashlib.sha256(canonical_json.encode("utf-8")).hexdigest()
+)
+```
+
+Reject malformed or base-equal active provenance inside
+`_generate_reservation`, not only in the Protocol-P calling script.
+
+The canonical provenance object retains:
+
+```text
+base config hash
+approved assignment identity
+complete protocol-spec identity
+stage
+cell
+condition
+exact peak / ramp / structural severity / realized-pair override
+source and screen reservation identity
+```
+
+`protocol_spec_sha256` must bind one tracked canonical artifact containing the
+complete operative state, including the seam, replay, gauge-only diagnostic,
+branch, and interpretation pins that the compact Protocol-P block references.
+“Hash of this block” is not enough without exact byte boundaries and would omit
+referenced sections.
+
+The raw assignment file currently hashes to:
+
+```text
+LF bytes:
+  76255a8089f3e27d893b26d981cbf50e808bd75ba518c44b55c4635ec83514ae
+same parsed text rendered CRLF:
+  00dacaf6277d6b274e3690ab3d3f68607eb61a22fe0df75ea8688fe4c7d4f87f
+```
+
+The file has no `eol=lf` attribute while Windows Git has
+`core.autocrlf=true`. Either pin this hash-bound file to LF before relying on
+raw bytes or replace the raw-file field with the canonical assignment-byte
+hash.
+
+### Label-stamp boundary
+
+The physical override leaves `_generate_reservation`'s returned label payload
+describing the healthy source reservation. This is non-blocking for Protocol P
+only if the implementation:
+
+- persists no screen `ObservedRecord`, label payload, manifest, or role index;
+- keys all results from the explicit Protocol-P condition rather than the
+  returned assignment label; and
+- tests that the results-only path writes no dataset-role artifact.
+
+The seam remains screen-only. Any future consumer that persists an overridden
+record must repair the label and run identity first.
+
+## Protocol P v2.3 content approved in substance
+
+The following should not be redesigned in the narrow correction:
+
+- development diagnostic trajectory only for Protocol P;
+- balanced development context cells 4/5/6/7;
+- generator-authoritative construction with a typed screen-only override seam;
+- C0-driven loop and post-hoc S observation at the same realized identity;
+- no online-S construction;
+- suffix-free screen-private realized `pair_id`;
+- matched `(sensor_seed, realized_pair_id)` in Stage A/B;
+- base reservation copied from the cell's healthy dev `t01` reservation, with
+  only `sensor_seed` and `base_pair_id` changed;
+- config-derived `[w0:w1]` probe-start slice;
+- exact measurement-time rank/width/length validation;
+- observed `gauge_obs`, `gauge_valid`, measurement time, and 0.8-Hz reduction;
+- vector-8 over all four gauges;
+- one-row replay gate with pinned local hashes and exact one-row wording;
+- 24 declared probe candidates, 15 deterministically excluded by the inclusive
+  torque rule, and nine simulated candidates;
+- 108-rollout Stage-A maximum;
+- Stage-A selection without a sensor-only T1 cutoff;
+- safe terminal `NO_ADMISSIBLE_PROBE`;
+- ten-value remaining-EI ladder;
+- separate terminal `UNSAFE_LADDER_VALUE`;
+- Cases A/B/C only after all ten values have safe, valid mechanics verdicts;
+- eight healthy Stage-C runs per cell;
+- `np.quantile(..., 0.95, method="higher")`;
+- operative rule `D(v,c) >= 2 * Q95_c` in every cell;
+- stricter scalar rule as a sensitivity only;
+- Q95 numeric tripwire as a diagnostic pause only;
+- fixed-trace gauge redraw as a conditional descriptive diagnostic only;
+- dependent fixed-fault unmatched distances at descriptive scope only;
+- ordinary structural rows retained in the primary estimand without a claimed
+  direction;
+- OOD rows outside known-class macro-F1 and role coverage;
+- exact test contact `[1.8,3.3]`;
+- preserved severity-to-role allocation;
+- known-class role-coverage rule;
+- measured thermal near-invariance plus first-order mechanism;
+- unchanged success bar; and
+- nonterminal cost `1 + 108 + 32 + 28 = 169` rollouts.
+
+## Realized screen identities retained
+
+```text
+P_SEED_BASE = 150000
+cell c in {4,5,6,7}
+r = c - 4
+
+Stage A/B:
+  sensor_seed = 150000 + 10*r + 2
+  pair_id     = basepair_protocolp_stageAB_c{c}
+
+Stage C k=0:
+  exact reuse of selected Stage-A healthy identity
+
+Stage C k>=1:
+  sensor_seed = 150000 + 10*r + 1000*k + 2
+  pair_id     = basepair_protocolp_stageC_c{c}_k{k}
+
+Stage 0:
+  pair_id = 1
+  sensor_seed = 0..199
+```
+
+The realized band `[150002,157032]` is disjoint from dev and pilot. Under the
+normal generator path, `ScenarioReservation.base_pair_id` and realized
+`pair_id` remain different objects because `_dataset0` is appended.
+
+## One-row replay scope
+
+Codex and Claude independently replayed:
 
 ```text
 scenario_dev_t01_f000_r00
 ```
 
-through the current bound draft config, approved assignment, and
-`_generate_reservation`. Result:
+through the current bound draft config, approved assignment, and default
+generator path.
+
+Codex Session 39:
 
 ```text
 elapsed:              26.971 s
 privileged fields:    20 / 20 byte-identical
-S payload arrays:     38 / 38 byte-identical
+S npz entries:        38 / 38 byte-identical
 safety events:        0
 contact steps:        0
 ```
 
-This is one-row development reproducibility evidence, not whole-dataset
-reproduction.
-
-The exact retained local references are:
+The retained local references are:
 
 ```text
-plant run:
-  scenario_dev_t01_f000_r00_S_dataset0
-  sha256 ed5b1f39f4ba535c60eb3e1b8587c7b03f59a5c3f9c1189b55635f0d49b65e45
+plant:
+  data/gate3-base-dev-pilot-val-c1-s/plant/
+  scenario_dev_t01_f000_r00_S_dataset0.npz
+  ed5b1f39f4ba535c60eb3e1b8587c7b03f59a5c3f9c1189b55635f0d49b65e45
 
-S observation run:
-  scenario_dev_t01_f000_r00_S_dataset0
-  sha256 cdde17f6d32c5d648249f4a9b343ec3f997b04c83cadacbf9d2c5f1186bb4c83
+S observation:
+  data/gate3-base-dev-pilot-val-c1-s/observations/S/
+  scenario_dev_t01_f000_r00_S_dataset0.npz
+  cdde17f6d32c5d648249f4a9b343ec3f997b04c83cadacbf9d2c5f1186bb4c83
 ```
 
-The reference lives under ignored:
+The reference is ignored local development data, not a committed payload.
+This proves one retained row, not all 472 reservations, and validates only the
+all-None/default path.
 
-`data/gate3-base-dev-pilot-val-c1-s`
+## Finding-J and null interpretation retained
 
-The replay gate must hash-check the indexed local reference before comparing
-arrays and fail loudly if it is absent or changed.
-
-The public README preserves Claude's broad entry and now carries an append-only
-Codex correction: one retained development row replayed exactly; all 472
-retained reservations were not regenerated.
-
-### Finding K: construction authority approved, exact interface blocked
-
-The real delivered construction is:
+The probe-start origin remains approved because it is config-derived, fixed
+before response, and contains the declared burst:
 
 ```text
-_generate_reservation
-  -> C0 OnlineSensorSession drives the closed loop
-  -> privileged plant trace is produced
-  -> SensorModel.observe(..., "S", ...) produces S post hoc
+w0 = round((onset_time_s + diagnostic_probe.start_offset_s) / control_dt_s)
 ```
 
-That authority is correct and must be shared by Protocol P and later Gate 7.
-An online-S construction remains untested and unauthorized.
+The measured 2.37–3.64× number is only the ratio of total unmatched-row
+four-gauge 0.8-Hz differences across two different windows. It is not a clean
+fault-effect multiplier; unmatched closed-loop divergence need not cancel
+across different time samples and the norm is nonlinear.
 
-The current function does not accept the proposal's four overrides:
-
-```text
-peak:
-  read from assignment trajectory diagnostic_probe.peak_force_n
-
-ramp:
-  _physical_config hard-codes duration / 2.0
-
-structural severity:
-  _fault_components derives it from reservation.fault_setting_id
-
-identity:
-  reservation.base_pair_id is transformed to
-  f"{base_pair_id}_dataset0"
-```
-
-Protocol P v2.3 must define a concrete typed override seam for peak, ramp,
-structural `FaultSpec`, and screen reservation identity. It must not silently
-mutate the approved assignment or stamp an altered screen run as if the base
-config hash alone fully described it.
-
-Required provenance:
+The rejected response-selected alternative remains:
 
 ```text
-base config hash
-approved assignment hash
-protocol-spec hash
-exact candidate / cell / condition overrides
-```
-
-Decision-bearing checks must use explicit exceptions, not Python `assert`.
-
-### Actual screen identities
-
-`ScenarioReservation.base_pair_id` and the RNG/record `pair_id` are different
-objects under the current generator.
-
-Example independently observed:
-
-```text
-reservation.base_pair_id:
-  basepair_dev_t01_f000_r00
-
-actual returned / ObservedRecord pair_id:
-  basepair_dev_t01_f000_r00_dataset0
-```
-
-Therefore the proposed Stage-A identity:
-
-```text
-basepair_protocolp_stageAB_c4
-```
-
-becomes, under the named function:
-
-```text
-basepair_protocolp_stageAB_c4_dataset0
-```
-
-The same transformation applies to Stage C. v2.3 must either:
-
-1. accept the suffix and update every identity table, RNG tuple, uniqueness
-   assertion, and leak explanation; or
-2. define and test a distinct suffix-free screen construction.
-
-Under the current generator, a leaked screen row cannot be said to fail because
-it lacks `_dataset0`; it has that suffix. The assignment audit should reject it
-because its base reservation/seeds/fields are absent from the approved
-reservation set.
-
-### Finding L: approved core, narrowed Finding J
-
-Approved facts:
-
-- delivered healthy and structural rows use different
-  `(sensor_seed,pair_id)` tuples;
-- because C0 sensor noise drives the controller, their plant traces diverge
-  from both fault and unmatched control-noise realizations;
-- absolute delivered-row differences are not matched fault effects;
-- Session-38 odds used an inflated signal estimate and a gauge-only incomplete
-  null estimate;
-- both errors favoured the hypothesis; and
-- Case B with dev coverage 1 and Case C are now roughly comparable rather than
-  Case B leading.
-
-Rejected statement:
-
-```text
-the confound is common to numerator and denominator,
-so the 2.37–3.64x ratio is clean
-```
-
-The two norms reduce different time windows:
-
-```text
-R = || f_probe_window + n_probe_window ||
-    / || f_onset_window + n_onset_window ||
-```
-
-The unmatched divergence need not have the same 0.8-Hz content in both
-windows, and the norm is nonlinear. Nothing cancels merely because the same
-two rows are used.
-
-Finding J's **prospective design conclusion** remains approved:
-
-```text
-all plant-bearing Protocol-P windows begin at the config-derived
-diagnostic-probe start, not fault onset and not a response-selected peak
-```
-
-The 2.37–3.64× numbers may be retained only as descriptive ratios of the total
-unmatched-row harmonic differences. Do not call them clean fault-effect
-multipliers or say the confound cancels.
-
-The rejected data-selected alternative remains:
-
-```text
-step 1208: ||b|| = 2.092897106   actual every-start maximum
-step 1000: ||b|| = 1.880585474   prospective probe-start origin
+step 1208: ||b|| = 2.092897106
+step 1000: ||b|| = 1.880585474
 gain:      11.2897%
 ```
 
 Keep step 1000.
 
-### Gauge-only Stage-C secondary
-
-Approved arithmetic:
-
-```text
-one fixed healthy k=0 plant trace per cell
-original k=0 observation plus redraws at k=1..7 identities
-all 28 within-cell pair distances
-Q95_c^gauge with np.quantile(..., 0.95, method="higher")
-```
-
-Required label:
-
-```text
-conditional descriptive healthy-null diagnostic
-one fixed plant trace
-zero authority over selection, thresholds, or verdicts
-```
-
-It may report whether and how much the full healthy null exceeds the fixed-trace
-redraw term. It may not uniquely distinguish:
-
-```text
-no mechanical signature
-vs
-closed-loop divergence dominates
-```
-
-Components may interact/cancel and one fixed trace does not identify a
-population decomposition.
-
-### Replay gate scope
-
-The replay gate validates one zero-override healthy row. It does not validate:
-
-```text
-candidate peak injection
-candidate ramp injection
-structural severity injection
-screen-private identity construction
-remEI 0.75
-all context cells
-```
-
-If the previously measured 0.05 N / ramp-0.5 candidate later contradicts its
-delivered-row safety pass, classify an implementation-integrity contradiction
-and diagnose it. Do not say the replay proves the defect lies “above the
-generator.”
-
-## Protocol P v2.2 content retained for v2.3
-
-The following is substantively approved:
-
-- PowerShell single-line Stage-0 command from packet working directory;
-- exact measurement-time rank/width/length validation;
-- vector-8 over all four gauges;
-- development diagnostic trajectory only for Protocol P;
-- balanced development context cells 4/5/6/7;
-- config-derived `[w0:w1]` probe-start slice;
-- observed `gauge_obs`, `gauge_valid`, measurement time, and 0.8-Hz reduction;
-- matched `(sensor_seed,pair_id)` identity in Stage A/B;
-- screen-private identity namespace;
-- Stage-A selection without a sensor-only T1 cutoff;
-- all 24 candidates declared, with 15 deterministically excluded under the
-  inclusive torque gate;
-- nine simulated candidates and 108-rollout Stage-A worst case;
-- direct measurement of ten remaining-EI values;
-- safe terminal `NO_ADMISSIBLE_PROBE`;
-- separate terminal `UNSAFE_LADDER_VALUE`;
-- Cases A/B/C only after ten safe, valid M2 verdicts;
-- eight healthy Stage-C runs per cell;
-- `np.quantile(..., 0.95, method="higher")`;
-- operative per-cell rule:
-  `D(v,c) >= 2 * Q95_c` in every cell;
-- stricter scalar rule as a sensitivity only;
-- Q95 numeric tripwire as a diagnostic pause only;
-- dependent fixed-fault unmatched distances at descriptive scope only;
-- OOD rows kept outside known-class macro-F1 and role coverage;
-- ordinary structural rows kept in the primary estimand without a claimed
-  direction;
-- exact test contact `[1.8,3.3]`;
-- preserved severity-to-role allocation;
-- known-class role-coverage rule;
-- measured thermal near-invariance plus first-order mechanism;
-- the unchanged success bar; and
-- nonterminal cost `1 + 108 + 32 + 28 = 169` rollouts if the replay remains.
+The fixed-trace `Q95_c^gauge` secondary may report whether and how much the
+full healthy null exceeds the redraw term for one fixed trace. It has zero
+authority over selection, thresholds, or verdicts and cannot uniquely classify
+a Case-C mechanism.
 
 ## Safe terminal branches retained
 
@@ -339,17 +323,16 @@ Prior delivered-row safety evidence applies only to:
 ```text
 peak = 0.05 N
 ramp_fraction_of_duration = 0.5
-conditions = healthy, EI 0.75, EI 0.50
+conditions = healthy, remEI 0.75, remEI 0.50
 ```
 
 Classifier:
 
 ```text
-0.05 N / ramp 0.5 fails healthy or EI 0.75:
-  implementation-integrity contradiction with delivered-row evidence
-  diagnose without pre-locating the defect
+0.05 N / ramp 0.5 fails healthy or remEI 0.75:
+  implementation-integrity contradiction requiring diagnosis
 
-that candidate passes those conditions but fails EI 0.35:
+that candidate passes those conditions but fails remEI 0.35:
   newly observed physical safety/method limit
 
 other candidates' failures:
@@ -357,17 +340,13 @@ other candidates' failures:
   do not classify prior evidence
 ```
 
+The replay gate does not localize a later override-path defect.
+
 ### UNSAFE_LADDER_VALUE
 
-`unsafe_at_severity` is not equivalent to M2 failure:
-
-```text
-unsafe_at_severity != TESTABLE
-unsafe_at_severity != SUB-THRESHOLD
-```
-
-If any value is unsafe, the branch is terminal, config remains unfrozen, and
-Cases A/B/C are unavailable.
+`unsafe_at_severity` is neither `TESTABLE` nor `SUB-THRESHOLD`. If any ladder
+value is unsafe, the branch is terminal, config remains unfrozen, and Cases
+A/B/C are unavailable.
 
 ## Role-coverage rule retained
 
@@ -395,7 +374,7 @@ pilot coverage = 0:
   name limitation
 ```
 
-Count 1 is reported as a thin role but creates no new terminal branch.
+Count 1 is a thin role but creates no new terminal branch.
 
 ## Broader gate and data state
 
@@ -420,7 +399,8 @@ Gate 3:
   any A2 replacement requires a new exact assignment/review loop
 
 Gate 4:
-  BLOCKED on executable Protocol P v2.3 and corrected Amendment A2
+  blocked on corrected Protocol P v2.3, separately reviewed implementation,
+  and later written Amendment A2
 
 Gates 5–7:
   open
@@ -439,25 +419,25 @@ Exact pre-A2 authorities:
 
 ```text
 approved Gate-3 assignment:
-dev-eec59ec8a296a9a4ff4909f8e7f1de91a0a8f4bf289ae1533a427d1a87bc33f1
+  dev-eec59ec8a296a9a4ff4909f8e7f1de91a0a8f4bf289ae1533a427d1a87bc33f1
 
 current embedded draft config:
-dev-712abf27c3f8f3c331ae9b76e3f22c48857334cc15a81e819718165e47753e56
+  dev-712abf27c3f8f3c331ae9b76e3f22c48857334cc15a81e819718165e47753e56
 
 retained reservations / manifest rows:
-472 / 944
+  472 / 944
 
 retained plant and label payloads:
-944 / 944
+  944 / 944
 
 byte-identical C1/S plant pairs:
-472 / 472
+  472 / 472
 
 bitwise shared-channel pairs:
-472 / 472
+  472 / 472
 
 test identities or payloads:
-0
+  0
 ```
 
 The ignored dataset is pre-amendment non-test data. Do not delete, relabel, or
@@ -483,24 +463,18 @@ the delivered structural settings/excitation fail the prerequisite
 development feasibility gate under that analysis
 ```
 
-Do not call this:
+Do not call this project-hypothesis failure, a whole-band negative, a
+pilot/validation confirmation, or proof that fault and healthy distributions
+are indistinguishable.
 
-```text
-project-hypothesis failure
-whole-band negative
-pilot or validation confirmation
-proof fault and healthy distributions are indistinguishable
-```
-
-The delivered structural absolute differences are additionally confounded by
-unmatched control identities. The old analysis used mixed post-onset windows,
-many containing no probe. The future Protocol-P design fixes those issues; it
-does not silently rewrite the earlier evidence.
+Delivered structural differences are confounded by unmatched control
+identities, and the old analysis used mixed post-onset windows. Protocol P
+prospectively fixes those issues; it does not rewrite the earlier evidence.
 
 ## Forward corrections that must not be lost
 
-`agents/Codex/Session Summaries/HumanReport33.md` contains an incorrect first
-row in its measured severity table. Future reporting must use:
+`HumanReport33.md` contains an incorrect first row in its measured severity
+table. Future reporting must use:
 
 ```text
 0.90 | 0.0544 microstrain | 0.13x | validation
@@ -508,11 +482,11 @@ row in its measured severity table. Future reporting must use:
 
 not `0.95 | 0.0090 | 0.02x | development`.
 
-`agents/Codex/Session Summaries/HumanReport36.md` calls `0.4388` the coherent
-vector-8 five-sigma threshold. It is a single-window norm threshold, not the
-difference statistic. T1 is retired.
+`HumanReport36.md` calls `0.4388` the coherent vector-8 five-sigma threshold.
+It is a single-window norm threshold, not the difference statistic. T1 is
+retired.
 
-Claude Session 38's original empirical-peak location is corrected to:
+Claude Session 38's empirical-peak location is corrected to:
 
 ```text
 1208 / 2.0929 / 11.2897%
@@ -521,7 +495,7 @@ Claude Session 38's original empirical-peak location is corrected to:
 Claude Session 39's “whole dataset rebuilds” public headline is corrected
 forward: one retained development row replayed exactly.
 
-Finding J's 2.37–3.64× values must be labeled total unmatched-row
+Finding J's 2.37–3.64× values must remain labeled total unmatched-row
 different-window ratios, not clean fault-signal multipliers.
 
 ## Verification baseline
@@ -532,40 +506,38 @@ Use the repository venv, never bare system Python:
 .\venv\Scripts\python.exe -m pytest -q "Reproducibility Packet\tests"
 ```
 
-Codex Session 39:
+Codex Session 40:
 
 ```text
-399 passed in 9.94s
+399 passed in 11.00s
 ```
 
-Do not use root-wide `pytest -q`; ignored
-`tmp/session6_packet_copy/tests` duplicates module names and can pollute
-collection.
+Do not use root-wide `pytest -q`; ignored duplicate test trees under `tmp/` can
+pollute collection.
 
-Codex Session 39 opened only development payload content and spent one replay
-of an already-delivered healthy development row. It opened no pilot,
-validation, or test payload content, generated no Protocol-P identity, and
-computed no Protocol-P statistic.
+Codex Session 40 opened no development/pilot/validation/test payload content,
+generated no Protocol-P identity, computed no Protocol-P statistic, and
+changed no packet source or config.
 
 ## Transcript-order state
 
-Codex Session 39 appended cleanly:
+Codex Session 40 appended cleanly:
 
 ```text
-pre-write lines:          6,853
-post-write lines:         7,107
-Session-39 header:        line 6,855
+pre-write lines:          7,769
+pre-write bytes:          645,984
+post-write lines:         7,951
+Session-40 header:        line 7,771
 header count:             1
 header after boundary:    yes
-technical diff:           +254 / -0
+technical diff:           +182 / -0
 physical last author:     Codex
-old prefix bytes:         605,109
 old-prefix SHA-256:       exact match
 ```
 
 Old-prefix SHA-256:
 
-`52E719C4580851442E87B58A0FF8D5DF26639F54B328528525128966DFB8A38C`
+`CD944A35D1714EB3192D70AC31B2ADEA79A562458F94CC8E56755CC39AB7B6A7`
 
 No monitoring-thread update was needed.
 
@@ -582,43 +554,45 @@ For every future transcript append:
 
 ## Review-cycle next actions
 
-1. Read any new Claude turn and latest Claude HumanReport before acting.
-2. Review Protocol P v2.3 for:
-   - an executable typed screen override seam;
-   - exact distinction between base and realized pair identities;
-   - correct `_dataset0` behavior or a tested suffix-free alternative;
-   - honest manifest-leak guards;
-   - base-config, assignment, protocol-spec, and per-run override provenance;
-   - hash-checked retained local replay references and one-row wording;
-   - probe-start origin retained with unmatched-row numeric scope;
-   - conditional-only gauge-null interpretation;
-   - no unsupported replay-based defect localization;
-   - explicit non-optimizable fail-loud checks; and
-   - all v2.2 safe branches, quantile, CRN, role, OOD, ordinary-row,
-     contact, torque, and success-bar pins retained.
-3. Explicitly approve or block that exact proposal state.
-4. Only after proposal approval may Claude implement Protocol P.
-5. Review the exact implementation before execution.
-6. After an approved development-only run, review the exact result and selected
-   branch.
-7. Then review synchronized written Claim Sheet, Accessible Claim Sheet,
+1. Read any new Claude turn and matching HumanReport before acting.
+2. Require one narrow correction, explicitly approved by Claude, covering:
+   - structural onset step 500;
+   - healthy empty physical-fault tuple;
+   - full lifecycle-valid base-distinct provenance;
+   - complete canonical protocol-spec identity;
+   - portable/canonical assignment byte identity; and
+   - results-only/no-label-persistence enforcement.
+3. Re-review only that exact delta plus retained v2.3 state.
+4. Only after exact proposal approval may Claude apply the seam.
+5. Review the implementation diff and branch-specific tests before any run.
+6. Only after implementation approval may the one-row replay gate run.
+7. After a passing replay, Protocol P may run development-only.
+8. Review the exact result and selected branch before written amendment work.
+9. Then review synchronized Claim Sheet, Accessible Claim Sheet,
    manifest/exclusion, packet amendment, and replacement assignment.
-8. Only after written amendment and assignment same-state approval may the
-   selected branch regenerate the non-test study from zero.
-9. Resume Gate 4 only after the amended development feasibility gate clears.
-10. Keep `config.json` absent and test identities/payloads at zero until Gates
+10. Only after written amendment and assignment same-state approval may the
+    selected branch regenerate the non-test study from zero.
+11. Resume Gate 4 only after the amended development feasibility gate clears.
+12. Keep `config.json` absent and test identities/payloads at zero until Gates
     2–7 close.
 
-Codex Session 40 requires the regular progress report after its normal work.
+The regular Codex Session-40 progress report is complete. The next regular
+report is due at Codex Session 48 unless a phase transition or approved
+amendment triggers an extra report.
 
 ## Non-negotiable boundaries
 
 - Development mechanics/screens are not confirmatory results.
 - One exact row is not whole-dataset reproduction.
+- An all-None replay does not validate a new override branch.
+- A typed `FaultSpec` without the correct onset is not the approved fault.
+- A nonempty provenance string is not proof of a base-distinct identity.
+- Hash-bound raw files require byte-stable line-ending policy.
 - A base reservation id is not the realized RNG pair id.
 - Do not mutate the approved assignment without explicit hashed provenance.
 - Do not run Protocol P before its exact proposal and implementation are
-  approved.
+  separately approved.
+- Do not persist an overridden record with a stale assignment label.
 - Do not use `cmd.exe` caret continuations in a PowerShell runbook.
 - Do not let permissive shape coercion or optimizable assertions become gates.
 - Do not classify failures of unmeasured candidates as contradictions.

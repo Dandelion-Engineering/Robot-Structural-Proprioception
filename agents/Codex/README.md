@@ -50,10 +50,12 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`Session Summaries/HumanReport37.md`](Session%20Summaries/HumanReport37.md) — detailed record of Codex Session 37 (per-cell/null-replicate and torque-pruning approvals, role-coverage arbitration, unsafe-terminal-branch block, quantile/CRN/observed-path corrections, and text-only owner handback).
 - [`Session Summaries/HumanReport38.md`](Session%20Summaries/HumanReport38.md) — detailed record of Codex Session 38 (independent probe-origin reproduction and approval, role-count approval, unmatched-sensitivity narrowing, and Protocol-P v2.1 block on PowerShell, shape-guard, terminal-classifier, and reporting-scope pins).
 - [`Session Summaries/HumanReport39.md`](Session%20Summaries/HumanReport39.md) — detailed record of Codex Session 39 (independent one-row bit-identical replay, exact generator identity/override audit, Finding-L ratio correction, gauge-null interpretation boundary, Protocol-P v2.2 block, and forward public scope correction).
+- [`Session Summaries/HumanReport40.md`](Session%20Summaries/HumanReport40.md) — detailed record of Codex Session 40 (Protocol-P v2.3 source audit, step-0 structural-onset blocker, lifecycle-invalid/permissive provenance blocker, portable-hash requirement, and narrow correction handoff).
 - [`Progress Reports/Progress Report Session 8.md`](Progress%20Reports/Progress%20Report%20Session%208.md) — first regular every-eighth-session director update at the Accessible-Piece bar.
 - [`Progress Reports/Progress Report Session 16.md`](Progress%20Reports/Progress%20Report%20Session%2016.md) — second regular director update, covering the synchronous-probe correction, noisy pilot, real contact integration, and matched-contact BLOCK.
 - [`Progress Reports/Progress Report Session 24.md`](Progress%20Reports/Progress%20Report%20Session%2024.md) — third regular director update, covering the bounded-task redesign, information/control split, structural-action block, actuator headroom, and corrected probability-channel boundary; next regular Codex report is Session 32.
-- [`Progress Reports/Progress Report Session 32.md`](Progress%20Reports/Progress%20Report%20Session%2032.md) — fourth regular director update, covering the source-specific actuator-action block, machine contract, two pre-generation design corrections, approved generator, and independently audited first real non-test dataset; next regular Codex report is Session 40.
+- [`Progress Reports/Progress Report Session 32.md`](Progress%20Reports/Progress%20Report%20Session%2032.md) — fourth regular director update, covering the source-specific actuator-action block, machine contract, two pre-generation design corrections, approved generator, and independently audited first real non-test dataset.
+- [`Progress Reports/Progress Report Session 40.md`](Progress%20Reports/Progress%20Report%20Session%2040.md) — fifth regular director update, covering the development structural-feasibility stop, Protocol-P convergence, one-row bit-exact replay, fault-onset default, and provenance enforcement boundary; next regular Codex report is Session 48.
 
 ## Shared files outside this folder
 
@@ -112,7 +114,7 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`../../Reproducibility Packet/results/severity_estimation_quality/severity_estimation_quality_report.md`](../../Reproducibility%20Packet/results/severity_estimation_quality/severity_estimation_quality_report.md) — development linear-read-out record: C1/S severity MAE is 0.0065/0.0076; 3 of 4 paired 0.50-gain arms straddle the cap-2 kink, so severity remains a live actuator-action route pending owner re-review.
 - [`../../Reproducibility Packet/results/actuator_recovery_action_screen/actuator_recovery_action_report.md`](../../Reproducibility%20Packet/results/actuator_recovery_action_screen/actuator_recovery_action_report.md) — 100-arm tuning/assessment development BLOCK: cap-3 recovers 16.576% on fault but also benefits healthy false authorization by 8.322%, leaving 8.254 pp; cap-4/5 profiles fail A1 safety, and C1/S are action-identical at the selected cap.
 - [`../../chats/Claude-Codex/Claim Sheet Review and Division of Labor/Summary.md`](../../chats/Claude-Codex/Claim%20Sheet%20Review%20and%20Division%20of%20Labor/Summary.md) — concluded Phase-1 review/labor summary.
-- [`../../chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`](../../chats/Claude-Codex/Phase%202%20Integration%20and%20Config%20Freeze/Phase%202%20Integration%20and%20Config%20Freeze%20-%20Active.md) — authoritative active interface/config thread; Gate 1, the generic Gate-2 role path, Gate 3, and the original primary C1/S generator/base roles and hardening are jointly approved. Codex Session 39 independently reproduced one retained development row byte-for-byte and approved that bounded replay evidence, but blocked Protocol P v2.2 because the named generator appends `_dataset0` to the actual RNG identity, lacks the declared ramp/severity override seam, references ignored local data as committed, overstates cancellation in Finding J's unmatched-row ratio, and over-interprets the conditional gauge-only null. Protocol P remains text-only pending one clean v2.3 replacement; config remains explicitly unfrozen.
+- [`../../chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`](../../chats/Claude-Codex/Phase%202%20Integration%20and%20Config%20Freeze/Phase%202%20Integration%20and%20Config%20Freeze%20-%20Active.md) — authoritative active interface/config thread; Gate 1, the generic Gate-2 role path, Gate 3, and the original primary C1/S generator/base roles and hardening are jointly approved. Codex Session 40 approved Protocol P v2.3's scientific, selection, branch, identity, replay-scope, and interpretation design in substance, but blocked the exact executable state because the direct structural `FaultSpec` omits `onset_index` and therefore activates at step 0, while the proposed provenance seam accepts the base hash and emits a non-lifecycle-valid truncated identity. Claude owns one narrow append-only correction; no seam implementation or Protocol-P execution is authorized and config remains explicitly unfrozen.
 - [`../../chats/Claude-Codex-Human/Chat Appends/Summary.md`](../../chats/Claude-Codex-Human/Chat%20Appends/Summary.md) — concluded director coordination record for the transcript-tail failure mode and recovery rule.
 - [`../../chats/Claude-Codex-Human/Transcript Order Monitoring/Transcript Order Monitoring - Active.md`](../../chats/Claude-Codex-Human/Transcript%20Order%20Monitoring/Transcript%20Order%20Monitoring%20-%20Active.md) — active director-visible recurrence log; records verified append-only repairs and the requirement that the applied patch use the complete pre-verified EOF block.
 - [`../../chats/Claude-Codex/Phase 0 Coordination/Summary.md`](../../chats/Claude-Codex/Phase%200%20Coordination/Summary.md) — concluded Phase-0 convergence record that feeds the Claim Sheet.
@@ -128,7 +130,8 @@ agents/Codex/
 │   ├── Progress Report Session 8.md
 │   ├── Progress Report Session 16.md
 │   ├── Progress Report Session 24.md
-│   └── Progress Report Session 32.md
+│   ├── Progress Report Session 32.md
+│   └── Progress Report Session 40.md
 ├── references.md
 ├── README.md
 ├── Summary of Only Necessary Context.md
@@ -171,5 +174,6 @@ agents/Codex/
     ├── HumanReport36.md
     ├── HumanReport37.md
     ├── HumanReport38.md
-    └── HumanReport39.md
+    ├── HumanReport39.md
+    └── HumanReport40.md
 ```
