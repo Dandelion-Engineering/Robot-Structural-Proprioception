@@ -1,6 +1,6 @@
 # Summary of Only Necessary Context — Codex
 
-**Rewritten:** 2026-07-29, Codex Session 43
+**Rewritten:** 2026-07-29, Codex Session 44
 
 **Phase:** Phase 2 — Integration and Reproducibility Build
 
@@ -11,11 +11,15 @@
 ```text
 APPROVE_PROTOCOL_P_V2_3_3_EXACT_STATE
 APPROVE_I13B_PERMANENT_PACKET_TEST_CURRENT_STATE
+APPROVE_SEAM_IMPLEMENTATION_CURRENT_STATE
+APPROVE_INACTIVE_PROVENANCE_FAIL_LOUD_GUARD_CURRENT_STATE
+DEFER_I13A_AND_RESULTS_ONLY_PERSISTENCE_GUARDS_TO_STAGE_DRIVER_REVIEW
+AUTHORIZE_ONE_ROW_REPLAY_GATE_ONLY
 BLOCK_CONFIG_FREEZE_PENDING_PRECONFIRMATORY_BUILD_AND_VALIDATION
 ```
 
-No replay or Protocol-P stage has run. No Protocol-P identity, statistic, or
-artifact exists. The confirmatory test split remains untouched at zero
+No Protocol-P replay, Stage 0/A/B/C rollout, identity, statistic, or artifact has run
+since the seam was approved. The confirmatory test split remains untouched at zero
 identities and zero payloads.
 
 ## Resume here
@@ -27,13 +31,16 @@ chats/Claude-Codex/Phase 2 Integration and Config Freeze/
   Phase 2 Integration and Config Freeze - Active.md
 ```
 
-Its physical last turn is **Codex Session 43**, beginning at line 8,885.
+Its physical last turn is **Codex Session 44**, beginning at line 9,211.
 
-Claude owns the next generator-seam implementation. Codex owns exact-state
-review of the applied code and tests. Do not take implementation ownership
-unless explicitly reassigned.
+Claude owns the next replay execution and later stage-driver implementation. Codex owns
+exact-state review. Do not take implementation ownership unless explicitly reassigned.
 
-The jointly approved Protocol-P specification is:
+The next authorized action is **only** the pinned one-row replay gate with
+`overrides=None`. Claude must post exact evidence before Stage 0. Stage 0 and Stages
+A/B/C remain unauthorized until that replay result is reviewed.
+
+## Jointly approved Protocol P
 
 ```text
 Reproducibility Packet/protocol/protocol-p-v2.3.3.md
@@ -55,15 +62,65 @@ execution:
   none
 ```
 
-The Protocol-P specification review loop is closed on that exact digest. Do
-not edit the file in place. If a later source-checkable defect requires a
-correction before execution, preserve the one-byte-state-per-version rule:
-rename to the next version, explicitly approve the replacement digest, and
-repeat same-state review.
+The specification review loop is closed on that digest. Do not edit the file in place.
+If a source-checkable defect later requires correction before execution, rename to the
+next version, explicitly approve the replacement digest, and repeat same-state review.
+
+## Jointly approved seam implementation
+
+The implementation-review loop closed in Codex Session 44 on commit:
+
+```text
+3fa806c1cae602b5e1c12e07040954b728128877
+```
+
+Exact files:
+
+```text
+Reproducibility Packet/scripts/utils/assignment_generator.py
+  git blob    1c565888edd6e538cbb281894ab6c4cdc418bb6b
+  raw sha256  07fbbe563b5a904eba2d57f58e436e84975d2891ea7ebf4cac9f24253ce5b06b
+  bytes       36,326
+  UTF-8, no BOM, pure LF
+
+Reproducibility Packet/tests/test_assignment_generator_screen_overrides.py
+  git blob    2ec96c9f995fa9e9efad0000af1d3364a4994db4
+  raw sha256  69f1df3145e58a68ceccd698e198afa030391e00adc3b8be518335a2924f0635
+  bytes       23,116
+  UTF-8, no BOM, pure LF
+  37 tests
+```
+
+The blob hashes are the checkout-EOL-stable identifiers. These source files are not
+byte-pinned in `.gitattributes`, deliberately: Protocol P does not hash them.
+
+### Approved seam behavior
+
+- `ScreenOverrides` is frozen and has five fields, all defaulting to `None`.
+- `is_active()` uses `is not None`; `physical_faults=()` remains active.
+- Probe peak must be finite and positive.
+- Ramp fraction must be finite in `(0, 0.5]`.
+- A probe override on a probe-free trajectory raises.
+- `physical_faults` replaces the derived list using `is not None`.
+- A physical-fault override on a sensor-fault reservation raises.
+- Active provenance must be nonempty, `dev-` plus exactly 64 lowercase hex, and
+  base-distinct.
+- The stamped provenance reaches both `OnlineSensorSession` and every
+  `SensorModel.observe`.
+- A supplied realized pair id is used without `_dataset0`.
+- The all-`None` path retains the original base hash, base pair plus `_dataset0`,
+  derived faults, default ramp, online C0 construction, post-hoc observations, and
+  return tuple.
+- The seam mutates no assignment catalog and writes no dataset-role artifact.
+
+Codex approved Claude's extra fail-loud guard: an otherwise inert override carrying a
+`provenance_hash` raises instead of silently discarding the identity claim and returning
+the base hash.
+
+The permanent location of the 37 seam tests is approved. They protect a generator
+contract, not a screen-local statistic.
 
 ## Permanent I13b test
-
-The jointly approved plant-contract guard is:
 
 ```text
 Reproducibility Packet/tests/test_cable_plant_softening_boundary.py
@@ -73,8 +130,6 @@ git blob:
   ca0f44743b3e7b4f4268e596fc82f6e1bbee2411
 bytes:
   6,671
-encoding/EOL:
-  UTF-8, no BOM, pure LF
 tests:
   6
 owner approval:
@@ -83,348 +138,129 @@ reviewer approval:
   Codex Session 43
 ```
 
-Claude wrote this test one step ahead of the sequence Codex had named. Codex
-accepted the deviation and approved the current state because:
-
-- Codex had already approved the permanent packet location;
-- fault activation is a plant contract, not a screen statistic;
-- the test changes no production source, generator seam, identity, artifact,
-  dataset role, or Protocol-P result; and
-- reverting and re-adding it would add churn without restoring a scientific
-  authorization boundary.
-
-The source lifecycle is:
-
-```text
-CablePlant.advance()
-  calls _activate_structural_fault_if_needed()
-  before simulating the current control step
-
-_fault_active(fault):
-  self._step_index >= max(int(fault.onset_index), 0)
-```
-
-The test checks the actual model object as well as `_softened`. After advancing
-all pre-onset steps, the nominal model remains active; the next advance swaps
-to the softened model at the declared onset. It covers onsets 1, 5, and 500,
-pins `_step_index(1.0, 0.002) == 500`, records omitted-onset activation at step
-0, and checks that a healthy plant never constructs or activates a softened
-model.
+The test checks the actual model swap as well as `_softened`, covers onsets 1, 5, and
+500, pins `_step_index(1.0, 0.002) == 500`, records omitted-onset activation at step 0,
+and checks that a healthy plant never constructs or activates a softened model.
 
 I13b must remain green before every Protocol-P stage.
 
-## Session-43 identifier corrections now approved
+## The replay-only authorization
 
-The replacement diff expanded deliberately beyond Codex's one reported token.
-All four changes are approved:
+The next action may:
 
-### 1. Stage-0 payload binding
+1. hash the two retained `.npz` references by exact raw bytes;
+2. rebuild only `scenario_dev_t01_f000_r00`;
+3. call `_generate_reservation` with `overrides=None`;
+4. require base config-hash stamping;
+5. compare all 20 privileged fields and all 38 S payload entries by array equality;
+6. remain ephemeral and write no Protocol-P screen artifact; and
+7. post exact evidence for Codex review before Stage 0.
 
-The file now computes:
-
-```text
-stage_0_canonical = canonical_json(stage_0_identity_payload)
-stage_0_identity =
-  "dev-" + hashlib.sha256(stage_0_canonical.encode("utf-8")).hexdigest()
-```
-
-The Stage-0 artifact records that same `stage_0_canonical` string object, not a
-second serialization that merely ought to agree.
-
-### 2. Per-rollout payload naming
-
-The per-rollout path now uses:
+Pinned binary inputs:
 
 ```text
-rollout_identity_payload
-rollout_canonical
+plant reference
+  data/gate3-base-dev-pilot-val-c1-s/
+    plant/scenario_dev_t01_f000_r00_S_dataset0.npz
+  bytes       3,176,122
+  raw sha256  ed5b1f39f4ba535c60eb3e1b8587c7b03f59a5c3f9c1189b55635f0d49b65e45
+
+S observation reference
+  data/gate3-base-dev-pilot-val-c1-s/
+    observations/S/scenario_dev_t01_f000_r00_S_dataset0.npz
+  bytes       929,068
+  raw sha256  cdde17f6d32c5d648249f4a9b343ec3f997b04c83cadacbf9d2c5f1186bb4c83
 ```
 
-The only remaining bare `payload` in the specification is the locally bound
-formal parameter of `canonical_json`.
+The previous one-row replay succeeded, but the newly approved seam has not yet passed
+the protocol's replay gate. Never generalize one exact row to the 472-reservation
+retained dataset.
 
-### 3. Seed-base authority
+## Deferred stage-driver gate
 
-Both operative seed formulas now use:
+I13a, I3-I8 orchestration, and the results-only persistence condition are not part of
+the low-level §3 seam. That scope boundary is approved.
 
-```text
-P_SEED_BASE = 150000
-```
+Before any Stage-A/B/C rollout, review the actual stage driver and require:
 
-The concrete values are unchanged:
+1. a closed-vocabulary `screen_physical_faults` helper;
+2. healthy requires severity absent and returns `()`;
+3. structural requires finite severity in `(0, 1]` and returns exactly one complete
+   `FaultSpec` with onset derived from trajectory time and control timestep;
+4. full field-by-field I13a equality before each rollout;
+5. a complete `ScreenOverrides` bundle rather than a partial bundle;
+6. I3 reservation-difference equality and suffix-free I4;
+7. I5-I8 identity/CRN/provenance checks;
+8. explicit Protocol-P condition keys, never the stale assignment-derived returned
+   label;
+9. no persisted `ObservedRecord`, label payload, manifest, role index, or dataset
+   payload; and
+10. a test around the real results-only output root that can fail on a wrong dataset
+    write.
 
-```text
-Stage A/B:
-  150002, 150012, 150022, 150032
+The seam can represent a partial bundle at its low-level API. That is not authorization
+for the driver to accept one.
 
-full declared band:
-  [150002, 157032]
-```
-
-### 4. I13a onset variable
-
-I13a now uses:
-
-```text
-_step_index(onset_time_s, control_dt_s)
-```
-
-matching Correction 1 and removing the undefined `dt`.
-
-No universe, statistic, threshold, selection rule, stage count, terminal
-branch, secondary, invariant meaning, role-coverage rule, OOD boundary, or
-success criterion changed.
-
-## Previously approved Protocol-P executability corrections
-
-### Hash domains
-
-The operative split remains:
-
-```text
-canonical_text_sha256:
-  protocol/protocol-p-v2.3.3.md
-  config/proposed-gate3-assignment-v0.1.json
-  strip UTF-8 BOM if present
-  fold CRLF to LF in memory
-
-raw_file_sha256:
-  retained plant .npz
-  retained S-observation .npz
-  exact raw bytes
-  no transformation
-```
-
-Independent values:
-
-```text
-assignment:
-  22,760 bytes
-  0 CRLF pairs
-  76255a8089f3e27d893b26d981cbf50e808bd75ba518c44b55c4635ec83514ae
-
-plant replay .npz:
-  3,176,122 bytes
-  18 embedded CRLF pairs
-  raw     ed5b1f39f4ba535c60eb3e1b8587c7b03f59a5c3f9c1189b55635f0d49b65e45
-  folded  638e384f3a75c4cefb360e7b7815e7a1b9f5dcd2e01c2cbb718410db9964c575
-
-S replay .npz:
-  929,068 bytes
-  1 embedded CRLF pair
-  raw     cdde17f6d32c5d648249f4a9b343ec3f997b04c83cadacbf9d2c5f1186bb4c83
-  folded  0051ea132a783264c47a370184f0d328e2ae4c3a95ad227b3cf9c181c599435e
-```
-
-The replay input is guarded by raw binary identity. The regenerated output is
-checked by array equality: 20 privileged fields plus 38 observation payload
-entries. Never claim regenerated `.npz` byte identity.
-
-### Verdict terminology
-
-`M2` and `T1` have no operative role. They appear only as retired historical
-tokens. The terms block defines `EI`, `remEI`, `D(v,c)`, `Q95_c`,
-`Q95_c^gauge`, OOD, and CRN.
-
-The authoritative mechanics rule is:
-
-```text
-pass(v) iff D(v,c) >= 2.0 * Q95_c for every screened cell c
-```
-
-The gauge-only fixed-trace redraw is descriptive only. It sets no threshold
-and gates nothing.
-
-### Provenance scopes
-
-Keep these three classes separate:
-
-```text
-replay:
-  overrides=None
-  base config hash
-  ephemeral
-  no screen artifact persisted
-
-Stage A/B/C:
-  active overrides
-  per-rollout base-distinct dev-<64 lowercase hex>
-  stamped into OnlineSensorSession and every SensorModel.observe call
-
-Stage 0:
-  no rollout or reservation
-  one artifact-level base-distinct dev-<64 lowercase hex>
-  exact canonical identity string persisted in the Stage-0 JSON
-```
-
-The replay must carry the base hash because `ObservedRecord.config_hash` is
-stored in the retained payload. A protocol-derived replay hash would break the
-comparison.
-
-Every canonical identity payload uses:
-
-```text
-sort_keys=True
-separators=(",", ":")
-ensure_ascii=False
-allow_nan=False
-```
-
-### I13 construction and behaviour
-
-I13a is a per-rollout runtime construction invariant:
-
-```text
-healthy:
-  condition is known
-  severity is absent
-  physical_faults == ()
-
-structural remEI v:
-  condition is known
-  exactly one FaultSpec
-  source_class  == "structure"
-  subtype       == "link_stiffness_loss"
-  location      == 1
-  severity      == float(v)
-  onset_index   == derived trajectory onset
-  compound_flag == False
-  ood_flag      == False
-```
-
-Unknown conditions raise. The comparison happens before the rollout and checks
-the construction itself.
-
-I13b is the approved permanent direct-plant test above. The physical-limit
-interpretation requires both passing I13a for that rollout and a passing I13b
-implementation state.
-
-## Next implementation-review gate
-
-Claude is authorized to apply the seam to:
-
-```text
-Reproducibility Packet/scripts/utils/assignment_generator.py
-```
-
-and post the exact applied working-tree diff plus focused tests. Nothing may
-run before Codex reviews and explicitly approves the exact implementation
-state.
-
-The approved specification requires:
-
-- a frozen keyword-only `ScreenOverrides`;
-- explicit probe peak and ramp overrides;
-- `physical_faults` replacement using `is not None`, so healthy `()` remains
-  an active override;
-- a suffix-free realized pair id;
-- lifecycle-valid, base-distinct provenance for every active override;
-- provenance reaching both `OnlineSensorSession` and every
-  `SensorModel.observe` call;
-- fail-loud unknown/invalid conditions and invalid override combinations;
-- no mutation of the approved assignment catalog;
-- no persistence of stale overridden labels or any dataset-role artifact;
-- exact all-`None` current behaviour for the replay path; and
-- I13a full-object construction equality before each rollout.
-
-The stale returned source label remains temporarily non-blocking only because
-Protocol P is results-only and must persist no observation, label, manifest, or
-role index. The first future consumer that persists an overridden run must make
-the label and identity reflect the override.
-
-### Exact review checklist
-
-1. Inspect the complete applied diff, not a prose description or prototype.
-2. Confirm all new parameters are keyword-only and defaults preserve current
-   behavior.
-3. Confirm `ScreenOverrides.is_active()` and the caller cannot accept a
-   provenance-only or partially specified state that bypasses validation.
-4. Confirm peak/ramp overrides reject non-finite and out-of-range values and
-   reject a probe override when no probe exists.
-5. Confirm `physical_faults=()` remains active because every guard uses
-   `is not None`, never truthiness.
-6. Confirm physical overrides reject simultaneous sensor-fault injection.
-7. Confirm the realized pair id is suffix-free on the screen path and the
-   all-`None` path retains `_dataset0`.
-8. Confirm active provenance is non-empty, `dev-` plus exactly 64 lowercase
-   hex, and differs from the base config hash.
-9. Confirm the stamped hash reaches the online control session and every
-   post-hoc observation call.
-10. Confirm the screen reservation and approved assignment document remain
-    immutable.
-11. Confirm I13a compares the complete expected `FaultSpec` object before the
-    rollout.
-12. Confirm results are keyed by the explicit Protocol-P condition and the
-    results-only path writes no observation, label, manifest, or role index.
-13. Confirm focused tests feed each guard the exact bad state it claims to
-    reject.
-14. Confirm an all-`None` invocation preserves the retained one-row replay
-    behavior before authorizing the actual replay.
-15. Run the scoped packet suite and keep I13b green.
-
-Review the exact code, not only the tests.
+The stale returned source label remains non-blocking only because Protocol P must persist
+no observation, label, manifest, or role index and must key results from its explicit
+condition. Any future consumer that persists an overridden run must correct both label
+and identity before authorization.
 
 ## Required execution order
 
 ```text
 Protocol P v2.3.3 exact-state approval                COMPLETE
 permanent I13b exact-state approval                   COMPLETE
-Claude applies generator seam and posts exact diff   NEXT
-Codex reviews exact implementation state             REQUIRED
-one-row replay gate                                   AFTER APPROVAL
-Stage 0                                               AFTER REPLAY
-Stage A                                               AFTER STAGE 0
-Stage B                                               AFTER STAGE A
-Stage C                                               AFTER STAGE B
-implementation/result/terminal-branch review          REQUIRED
+generator seam exact-state approval                   COMPLETE
+one-row replay gate                                   NEXT / ONLY AUTHORIZED ACTION
+replay evidence review                                REQUIRED BEFORE STAGE 0
+Stage 0 script and identity/persistence review        LATER
+Stage A/B/C driver review                             LATER
+Stage A                                                AFTER DRIVER APPROVAL
+Stage B                                                AFTER STAGE A
+Stage C                                                AFTER STAGE B
+result/terminal-branch review                         REQUIRED
 written Amendment A2 + replacement assignment        LATER
 from-zero non-test regeneration and re-audit          LATER
 Gates 4-7 -> joint final freeze -> confirmatory run   LATER
 ```
 
-No seam implementation is approved yet. No replay, identity, statistic,
-artifact, or screen stage is authorized yet.
+No Stage-0 script exists. No stage driver exists. No stage is authorized.
 
 ## Protocol-P design retained in substance
 
 Do not reopen these without new evidence:
 
 - universe: dev diagnostic trajectory `t01`, cells 4/5/6/7;
+- replay gate: one rollout;
 - Stage 0: 100 synthetic sensor-only paired differences, zero rollouts;
 - Stage A: 9 admissible probe candidates x 4 cells x
   `{healthy, remEI 0.75, remEI 0.35}` = 108 rollouts;
-- Stage-B ladder: 10 remEI values x 4 cells, reusing 0.75 and 0.35 from Stage
-  A, so 32 new rollouts;
-- Stage C: 8 healthy replicates per cell with k=0 reused from Stage A, so 28
-  new rollouts;
-- replay gate: 1 rollout;
-- total: 169 rollouts;
-- statistic: four-gauge matched 0.8-Hz cosine/sine coefficient difference,
-  eight concatenated entries;
-- operative null: per-cell 0.95 quantile using `method="higher"` over all 28
-  within-cell healthy pair distances;
-- selection: maximize worst-cell `D` at remEI 0.75; ties within 1% choose
-  smaller amplitude, then larger ramp fraction;
-- candidate grid: peaks 0.05-0.40 N and ramp fractions
-  `{0.125, 0.25, 0.5}`;
-- torque gate admits exactly peaks `{0.05, 0.10, 0.15}` with the inclusive
-  0.15-N boundary;
+- Stage B: 10 remaining-EI values x 4 cells, reusing 0.75 and 0.35 from Stage A,
+  so 32 new rollouts;
+- Stage C: 8 healthy replicates per cell with k=0 reused from Stage A, so 28 new
+  rollouts;
+- total plant rollouts including replay: 169;
+- statistic: four-gauge matched 0.8-Hz cosine/sine coefficient difference, eight
+  concatenated entries;
+- operative null: per-cell 0.95 quantile with `method="higher"` over all 28 within-cell
+  healthy pair distances;
+- pass rule: `D(v,c) >= 2.0 * Q95_c` in every screened cell;
+- selection: maximize worst-cell `D` at remEI 0.75; ties within 1% choose lower
+  amplitude then larger ramp fraction;
+- candidate grid: peaks 0.05-0.40 N and ramp fractions 0.125/0.25/0.5;
+- torque gate admits exactly 0.05/0.10/0.15 N, with inclusive equality at 0.15 N;
 - measurement origin: probe start, not fault onset or response-selected peak;
-- Stage-A/B signal is identity-matched; Stage-C null is unmatched and therefore
-  favours S;
+- Stage-A/B signal is identity-matched; Stage-C null is unmatched and favours S;
 - gauge-only and unmatched secondaries are descriptive only;
-- role coverage is read before ladder results and has explicit zero-role
-  non-transfer outcomes;
 - OOD 0.45/0.55 stays excluded from known-class four-way macro-F1;
-- all artifacts are development-only and ineligible for confirmatory analysis.
+- all outputs are development-only and ineligible for confirmatory analysis.
 
-The honest prior remains that remEI 0.75 likely fails widely and remEI 0.50 is
-near the boundary under earlier optimistic projections. Case B and Case C are
-roughly comparable. This is a prior, not a result.
+The honest prior remains that remEI 0.75 likely fails widely and remEI 0.50 is near the
+boundary under earlier optimistic projections. Case B and Case C remain roughly
+comparable. This is a prior, not a result.
 
 ## Role, config, and data state
-
-Current gates:
 
 ```text
 Gate 1:
@@ -440,8 +276,14 @@ Protocol P specification:
   v2.3.3 exact state jointly approved
   unrun
 
-Protocol-P seam implementation:
-  pending Claude implementation and Codex review
+Protocol-P seam:
+  exact state jointly approved
+
+Protocol-P replay:
+  authorized, not run
+
+Stage 0 and Stage A/B/C:
+  unauthorized, unimplemented
 
 Amendment A2:
   not written or approved
@@ -453,23 +295,19 @@ final config.json:
   absent
 ```
 
-The local ignored retained dataset contains 472 dev/pilot/validation
-reservations, 944 C1/S payload rows, and zero test rows. It was not regenerated.
-Exactly one development row has been replayed identically in prior work. Never
-describe that as a whole-dataset replay.
+The local ignored retained dataset contains 472 dev/pilot/validation reservations,
+944 C1/S manifest rows, and zero test rows. It was not regenerated. Exactly one
+development row was replayed in earlier diagnostic work; the approved seam still awaits
+its own replay gate.
 
-If a corrected written Amendment A2 and replacement assignment later receive
-same-state approval, Codex's standing choice is coherent from-zero
-regeneration, not an in-place patch.
-
-No confirmatory identity or payload exists. Do not inspect, generate, or imply
-test results before final freeze and authorization.
+If a corrected written Amendment A2 and replacement assignment later receive same-state
+approval, Codex's standing choice is coherent from-zero regeneration, not an in-place
+patch.
 
 ## Evidence boundary
 
-Protocol P is a pre-registered development screen for whether a structural
-fault is measurable at the delivered excitation. It cannot establish the
-project hypothesis.
+Protocol P is a pre-registered development screen for whether a structural fault is
+measurable at the delivered excitation. It cannot establish the project hypothesis.
 
 Keep separate:
 
@@ -481,16 +319,10 @@ Keep separate:
 - controller outcome; and
 - confirmatory evidence.
 
-The prior one-row replay is an implementation positive control only.
+The replay is an implementation positive control only.
 
-Prior structural-separability outputs are development diagnostics. They are
-not a pilot, validation result, confirmatory result, or frozen decision margin.
-
-The public README is append-only. Codex Session 43 added one lean milestone:
-the exact Protocol-P specification and permanent construction guard are jointly
-approved. The entry explicitly says that this authorizes seam review only; no
-replay or screen stage has run, config remains unfrozen, and the test split is
-untouched.
+Prior structural-separability outputs are development diagnostics. They are not pilot,
+validation, confirmatory, or frozen decision margins.
 
 ## Verification baseline
 
@@ -500,33 +332,23 @@ Use the repository virtual environment:
 .\venv\Scripts\python.exe -m pytest -q "Reproducibility Packet\tests"
 ```
 
-Session 43 result:
+Codex Session 44:
 
 ```text
-405 passed in 11.12 s
+focused seam tests                    37 passed in 1.37 s
+legacy generator + permanent I13b     13 passed in 0.91 s
+full packet suite                     442 passed in 12.06 s
 ```
 
-Focused I13b result:
+Do not use root-wide `pytest -q`; ignored duplicate trees under `tmp/` can pollute
+collection.
 
-```text
-6 passed in 0.55 s
-```
+Before binary replay decisions, use raw hashes only. Do not normalize `.npz` bytes.
 
-Do not use root-wide `pytest -q`; ignored duplicate trees under `tmp/` can
-pollute collection.
+Before any exact-state approval, independently compute the relevant raw bytes, BOM/EOL
+state where applicable, raw SHA-256, git blob, and git attributes.
 
-Before any exact-state protocol approval, independently compute:
-
-- raw bytes;
-- BOM presence;
-- CRLF count;
-- raw SHA-256;
-- canonical text SHA-256; and
-- `git check-attr text eol`.
-
-Before any binary replay decision, use raw hashes only.
-
-Before any commit, run:
+Before any commit:
 
 ```powershell
 git diff --check
@@ -537,27 +359,27 @@ CRLF warnings alone are not a reason to churn unrelated files.
 
 ## Transcript-order state
 
-The active transcript is append-only. Session-43 append verification:
+The active transcript is append-only. Session-44 append verification:
 
 ```text
 pre-write physical lines:
-  8,881
+  9,207
 pre-write bytes:
-  698,078
+  713,382
 pre-write sha256:
-  f97b831f6812d97a50aac776d0b0cadca5e4ae13a5a966c5fb2f7c939505dca7
+  fa74b76598595e50d7c887cb0d77b59fa8f2ee32f65596ba76cc1593c7aa13bd
 Codex header:
-  line 8,885
+  line 9,211
   count 1 total
-  count 1 after old byte boundary
+  after old boundary
 old byte prefix:
   exact
 technical diff:
-  +91 / -0
+  +129 / -0
 post-write physical lines:
-  8,972
+  9,336
 post-write bytes:
-  701,665
+  719,199
 physical last author:
   Codex
 ```
@@ -567,53 +389,59 @@ No recurrence occurred, so the monitoring thread was not updated.
 For every future append:
 
 1. read the UTF-8 physical EOF tail;
-2. record the pre-write physical line count, byte count, and hash;
+2. record pre-write physical line count, byte count, and SHA-256;
 3. verify a complete multi-line EOF anchor occurs exactly once;
-4. patch only from that complete verified anchor;
-5. verify the new header occurs exactly once after the old boundary;
+4. patch using that complete verified anchor;
+5. verify the new header occurs once after the old boundary;
 6. verify the old byte prefix is exact;
 7. reread the physical tail; and
-8. require a transcript diff of additions only.
+8. require additions-only transcript diff.
 
 If any check fails, stop and repair by dated append-only correction.
 
+## Public README
+
+The root README is a public append-only running log. Codex Session 44 added one lean
+milestone: the generator seam and its permanent guards reached exact-state approval.
+The entry explicitly says only the replay gate is next; no replay or stage has run,
+config remains unfrozen, the final test split is untouched, and the research question
+is unanswered.
+
+Do not add another public entry merely for a routine replay unless it changes the
+publicly meaningful state. Run the heartbeat each session against
+`Playbooks/live-run-readme.md`.
+
 ## Required next actions
 
-1. Read the controlling `AgentPrompt.md`, project details, this continuity file,
-   all Codex-relevant chat summaries, and the complete active transcript before
-   replying.
-2. Read the repository review-cycle playbook before reviewing the applied seam.
-3. Read Claude's newest report and inspect the exact implementation diff.
-4. Use the implementation checklist above; reproduce source and test facts
-   independently.
-5. Append an explicit same-state approve/block decision using the physical-EOF
-   hard gate.
-6. Do not authorize replay until the implementation review closes.
-7. Keep `config.json` absent and test identities/payloads at zero.
-8. Close out with Codex `HumanReport44.md`, README update if a true public
-   milestone occurs, complete continuity rewrite, hygiene checks, exact commit
-   message, and push.
+1. Read the controlling instructions, this continuity file, all Codex-relevant chat
+   summaries, and the active transcript before replying.
+2. Read Claude's newest report and exact replay evidence.
+3. Verify the two retained input hashes by raw bytes.
+4. Confirm the replay used `overrides=None`, base config hash, the pinned reservation,
+   and no persistence.
+5. Independently check equality counts: 20 privileged fields and 38 S payload entries.
+6. Append an explicit approve/block replay decision through the physical-EOF hard gate.
+7. Do not authorize Stage 0 if any replay fact differs.
+8. If replay passes, authorize only the next bounded implementation gate needed by the
+   approved protocol; do not silently authorize unreviewed stage code.
+9. Keep `config.json` absent and the test split untouched.
+10. Close out with Codex `HumanReport45.md`, README heartbeat, Codex workspace README,
+    complete continuity rewrite, hygiene checks, exact commit message, and push.
 
-The next regular Codex progress report is Session 48 unless a phase transition
-or approved written Claim Sheet amendment triggers an earlier report.
+The next regular Codex progress report is Session 48 unless a phase transition or
+approved written Claim Sheet amendment triggers one earlier.
 
 ## Non-negotiable boundaries
 
-- Approval is explicit and exact-state-specific. An edit, handoff, downstream
-  use, or silence is not approval.
+- Approval is explicit and exact-state-specific.
 - Preserve owner/reviewer lanes.
-- Never treat development, screen, pilot, fixture, or replay evidence as
-  confirmatory.
-- Never convert a safety pass into proof of correct construction.
+- Never treat development, screen, pilot, fixture, or replay evidence as confirmatory.
+- Never convert safety into proof of correct construction.
 - Never convert detection into attribution or action authority.
-- Never silently rewrite a public or transcript-facing overclaim; append a
-  correction.
+- Never silently rewrite a public or transcript-facing overclaim; append a correction.
 - Never normalize binary artifacts before exact hashing.
-- Never run the protocol from an unapproved implementation, even though the
-  specification is now approved.
-- Never run the seam, replay, stages, amendment, regeneration, or final freeze
-  out of order.
+- Never run the replay or stages from an unapproved implementation.
+- Never run stages out of order.
 - Never create final `config.json` before all required gates close jointly.
 - Never touch the test split before confirmatory authorization.
-- Use append-only transcript hard gates and preserve exact requested commit
-  messages.
+- Use append-only transcript hard gates and preserve exact requested commit messages.
