@@ -40,6 +40,7 @@ from .storage_contract import (
     DeployableObservationLoader,
     IdentityManifestRow,
     audit_identity_manifest,
+    re_full_sha256,
     read_identity_manifest,
     read_role_index,
 )
@@ -64,6 +65,101 @@ class GenerationRuntimeParameters:
     f_ctrl_hz: float
     simulation_timestep_s: float
     point_count: int
+
+
+@dataclasses.dataclass(frozen=True)
+class ScreenOverrides:
+    """Typed screen-only deviations from the approved assignment document.
+
+    Every field defaults to ``None``, which means "use the approved value", so a
+    default-constructed instance is inert and the production path is unchanged.
+    ``physical_faults`` distinguishes ``None`` (use the reservation's derived
+    fault list) from ``()`` (an explicit healthy body), so every guard on it
+    must test ``is not None`` rather than truthiness -- an empty tuple is falsy.
+
+    ``provenance_hash`` is deliberately excluded from :meth:`is_active`: it does
+    not itself change what is simulated, it records which screen produced an
+    already-deviating rollout.
+    """
+
+    probe_peak_force_n: float | None = None
+    probe_ramp_fraction_of_duration: float | None = None
+    physical_faults: tuple[FaultSpec, ...] | None = None
+    realized_pair_id: str | None = None
+    provenance_hash: str | None = None
+
+    def is_active(self) -> bool:
+        """Return whether any field deviates the simulated or realized rollout."""
+
+        return any(
+            value is not None
+            for value in (
+                self.probe_peak_force_n,
+                self.probe_ramp_fraction_of_duration,
+                self.physical_faults,
+                self.realized_pair_id,
+            )
+        )
+
+
+def screen_pair_id(
+    reservation: ScenarioReservation, overrides: ScreenOverrides | None
+) -> str:
+    """Return the realized pair id one rollout must use.
+
+    Inputs: the source reservation and its optional screen overrides. Output:
+    the override's realized pair id when supplied, else the reservation's
+    approved dataset-realized id. The dataset suffix is applied only on the
+    unoverridden path, so a screen identity is suffix-free by construction and
+    cannot collide with an approved dataset identity.
+    """
+
+    if overrides is not None and overrides.realized_pair_id is not None:
+        return str(overrides.realized_pair_id)
+    return f"{reservation.base_pair_id}_dataset0"
+
+
+def _screen_stamped_hash(
+    overrides: ScreenOverrides | None, config_hash: str
+) -> str:
+    """Return the configuration hash one rollout must stamp on its artifacts.
+
+    Inputs: the optional screen overrides and the base configuration hash.
+    Output: the base hash when no override is active, else the override's
+    validated screen provenance hash. Raises ``AssignmentGenerationError``
+    unless an active override carries a nonempty ``dev-`` prefixed provenance
+    hash whose remainder is one lowercase SHA-256 digest and which differs from
+    the base hash, so an overridden rollout can never present itself as an
+    approved-configuration rollout.
+    """
+
+    if overrides is None:
+        return config_hash
+    provenance = overrides.provenance_hash
+    if not overrides.is_active():
+        if provenance is not None:
+            raise AssignmentGenerationError(
+                "provenance_hash supplied without an active override; an inactive "
+                "override must not silently stamp the base config hash"
+            )
+        return config_hash
+    if not isinstance(provenance, str) or not provenance:
+        raise AssignmentGenerationError(
+            "an active screen override requires a nonempty provenance_hash string"
+        )
+    if not provenance.startswith("dev-"):
+        raise AssignmentGenerationError(
+            "screen provenance_hash must carry the dev- lifecycle prefix"
+        )
+    if not re_full_sha256(provenance[4:]):
+        raise AssignmentGenerationError(
+            "screen provenance_hash must be dev- plus one lowercase SHA-256 digest"
+        )
+    if provenance == config_hash:
+        raise AssignmentGenerationError(
+            "screen provenance_hash must differ from the base config hash"
+        )
+    return provenance
 
 
 def _runtime_parameters(
@@ -308,6 +404,7 @@ def _physical_config(
     trajectory: Mapping[str, Any],
     *,
     control_dt_s: float,
+    overrides: ScreenOverrides | None = None,
 ) -> CableModelConfig:
     contexts = assignment["context_profiles"]
     payload = _catalog(contexts["payloads"])[reservation.payload_id]
@@ -321,7 +418,16 @@ def _physical_config(
         else (onset + float(offsets[0]), onset + float(offsets[1]))
     )
     probe = trajectory["diagnostic_probe"]
+    peak_override = None if overrides is None else overrides.probe_peak_force_n
+    ramp_fraction_override = (
+        None if overrides is None else overrides.probe_ramp_fraction_of_duration
+    )
     if probe is None:
+        if peak_override is not None or ramp_fraction_override is not None:
+            raise AssignmentGenerationError(
+                "probe override supplied for a probe-free trajectory "
+                f"{reservation.trajectory_spec_id!r}"
+            )
         probe_values = {
             "diagnostic_tip_load_peak_n": 0.0,
             "diagnostic_tip_load_start_s": 0.0,
@@ -330,12 +436,30 @@ def _physical_config(
         }
     else:
         duration = float(probe["cycles"]) / float(probe["frequency_hz"])
+        peak_n = float(probe["peak_force_n"])
+        if peak_override is not None:
+            override_peak_n = float(peak_override)
+            if not math.isfinite(override_peak_n) or override_peak_n <= 0.0:
+                raise AssignmentGenerationError(
+                    "probe peak override must be finite and positive; got "
+                    f"{peak_override!r}"
+                )
+            peak_n = override_peak_n
+        ramp_s = duration / 2.0
+        if ramp_fraction_override is not None:
+            fraction = float(ramp_fraction_override)
+            if not math.isfinite(fraction) or not 0.0 < fraction <= 0.5:
+                raise AssignmentGenerationError(
+                    "probe ramp fraction override must be finite in (0, 0.5]; got "
+                    f"{ramp_fraction_override!r}"
+                )
+            ramp_s = duration * fraction
         probe_values = {
-            "diagnostic_tip_load_peak_n": float(probe["peak_force_n"]),
+            "diagnostic_tip_load_peak_n": peak_n,
             "diagnostic_tip_load_frequency_hz": float(probe["frequency_hz"]),
             "diagnostic_tip_load_start_s": onset + float(probe["start_offset_s"]),
             "diagnostic_tip_load_duration_s": duration,
-            "diagnostic_tip_load_ramp_s": duration / 2.0,
+            "diagnostic_tip_load_ramp_s": ramp_s,
         }
     return CableModelConfig(
         control_dt_s=control_dt_s,
@@ -488,6 +612,8 @@ def _generate_reservation(
     history_steps: int,
     runtime: GenerationRuntimeParameters,
     reservation: ScenarioReservation,
+    *,
+    overrides: ScreenOverrides | None = None,
 ) -> tuple[
     str,
     PrivilegedRecord,
@@ -498,18 +624,28 @@ def _generate_reservation(
 ]:
     """Generate one reservation without writing shared dataset indexes."""
 
+    stamped_hash = _screen_stamped_hash(overrides, config_hash)
     profile, trajectory = _profile(assignment, reservation)
     physical_config = _physical_config(
         assignment,
         reservation,
         trajectory,
         control_dt_s=runtime.control_dt_s,
+        overrides=overrides,
     )
     physical_faults, sensor_fault, setting = _fault_components(
         assignment,
         reservation,
         control_dt_s=runtime.control_dt_s,
     )
+    faults_override = None if overrides is None else overrides.physical_faults
+    if faults_override is not None:
+        if sensor_fault is not None:
+            raise AssignmentGenerationError(
+                "physical_faults override is not supported for a reservation whose "
+                f"setting {reservation.fault_setting_id!r} derives a sensor fault"
+            )
+        physical_faults = list(faults_override)
     primary_fault = physical_faults[0] if physical_faults else None
     plant = CablePlant(
         physical_config,
@@ -518,7 +654,7 @@ def _generate_reservation(
         fault=primary_fault,
         additional_faults=tuple(physical_faults[1:]),
     )
-    control_pair_id = f"{reservation.base_pair_id}_dataset0"
+    control_pair_id = screen_pair_id(reservation, overrides)
     control_sensors = OnlineSensorSession(
         "C0",
         pair_id=control_pair_id,
@@ -526,7 +662,7 @@ def _generate_reservation(
         control_dt_s=physical_config.control_dt_s,
         fault=sensor_fault,
         run_id=f"{reservation.scenario_spec_id}_control",
-        config_hash=config_hash,
+        config_hash=stamped_hash,
         split=reservation.split,
     )
     controller = ObservedJointPDController(profile)
@@ -555,7 +691,7 @@ def _generate_reservation(
             sensor_seed=reservation.sensor_seed,
             fault=sensor_fault,
             run_id=f"{reservation.scenario_spec_id}_{suite}_dataset0",
-            config_hash=config_hash,
+            config_hash=stamped_hash,
             split=reservation.split,
         )
         for suite in suites
