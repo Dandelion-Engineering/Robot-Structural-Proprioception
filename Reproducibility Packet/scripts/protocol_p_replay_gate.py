@@ -57,7 +57,8 @@ artifact.  ``_generate_reservation`` writes no manifest, role index, observation
 or dataset payload, and this script writes nothing at all - the evidence is stdout.
 That claim is not taken on trust: the script inventories the data root, the packet tree
 and the repository's top-level files before and after the rollout and reports every
-difference, which is how a stray write from any layer of the stack would surface.
+difference, which is how a stray write from any layer of the stack would surface.  Any
+added, modified or removed watched file is a gate failure.
 
 Deliberately out of scope
 -------------------------
@@ -71,9 +72,10 @@ Usage (from the Reproducibility Packet directory)
     ..\\venv\\Scripts\\python.exe scripts\\protocol_p_replay_gate.py \\
         --data-root <path to the retained dev/pilot/val dataset root>
 
-Exit status is 0 only when every pinned digest matches and every one of the 58 compared
-entries is equal.  Any failure raises ``ProtocolPError``; the protocol never uses
-``assert``, because ``python -O`` removes assertions.
+Exit status is 0 only when every pinned digest matches, every one of the 58 compared
+entries is equal and the watched filesystem scopes are unchanged.  Any failure raises
+``ProtocolPError``; the protocol never uses ``assert``, because ``python -O`` removes
+assertions.
 """
 
 from __future__ import annotations
@@ -349,7 +351,7 @@ def compare_entry(expected: np.ndarray, actual: np.ndarray) -> dict[str, Any]:
     nan_count = (
         int(np.count_nonzero(np.isnan(expected))) if expected.dtype.kind in "fc" else 0
     )
-    if not shape_equal:
+    if not shape_equal or not dtype_equal:
         values_equal = False
     elif expected.dtype.kind in "fc":
         values_equal = bool(np.array_equal(expected, actual, equal_nan=True))
@@ -411,12 +413,17 @@ def compare_payload(
     }
 
 
-def inventory(roots: Sequence[Path]) -> dict[str, tuple[int, int]]:
+def inventory(
+    roots: Sequence[Path], *, shallow_roots: Sequence[Path] = ()
+) -> dict[str, tuple[int, int]]:
     """Snapshot ``{path: (size_bytes, mtime_ns)}`` for an ephemerality check.
 
-    Inputs: directories (walked recursively) and/or individual files. Outputs: a flat
-    mapping. Purpose: the section-7 replay must write nothing; comparing two snapshots
-    across the rollout is what makes that claim falsifiable rather than assumed.
+    Inputs: recursive directories and/or individual files in ``roots``, plus directories
+    whose direct file children are watched in ``shallow_roots``. Outputs: a flat mapping.
+    Purpose: the section-7 replay must write nothing; comparing two snapshots across the
+    rollout is what makes that claim falsifiable rather than assumed. Shallow directory
+    scopes are enumerated independently before and after so a newly created top-level
+    file is visible even though it did not exist in the first snapshot.
     """
 
     found: dict[str, tuple[int, int]] = {}
@@ -428,6 +435,13 @@ def inventory(roots: Sequence[Path]) -> dict[str, tuple[int, int]]:
         if not root.is_dir():
             continue
         for path in root.rglob("*"):
+            if path.is_file():
+                stat = path.stat()
+                found[str(path)] = (stat.st_size, stat.st_mtime_ns)
+    for root in shallow_roots:
+        if not root.is_dir():
+            continue
+        for path in root.iterdir():
             if path.is_file():
                 stat = path.stat()
                 found[str(path)] = (stat.st_size, stat.st_mtime_ns)
@@ -462,6 +476,29 @@ def diff_inventory(
             key for key in before_keys & after_keys if before[key] != after[key]
         ),
     }
+
+
+def require_no_inventory_changes(changes: Mapping[str, Sequence[str]]) -> None:
+    """Fail unless an ephemerality diff is empty.
+
+    Inputs: the output of :func:`diff_inventory`. Outputs: none. Purpose: filesystem
+    effects are a replay-gate failure, not merely diagnostic text printed before an
+    unconditional pass.
+    """
+
+    changed = {
+        category: list(changes.get(category, ()))
+        for category in ("added", "modified", "removed")
+    }
+    _require(
+        not any(changed.values()),
+        "ephemerality violation: watched files changed during the replay\n"
+        + "\n".join(
+            f"    {category}: {paths}"
+            for category, paths in changed.items()
+            if paths
+        ),
+    )
 
 
 def read_manifest_row(manifest_path: Path, run_id: str) -> dict[str, str]:
@@ -683,16 +720,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
     print("  I1 PASS")
 
-    watched = [data_root, PACKET_ROOT] + [
-        path for path in REPO_ROOT.iterdir() if path.is_file()
-    ]
-    before = inventory(watched)
+    recursive_roots = [data_root, PACKET_ROOT]
+    shallow_roots = [REPO_ROOT]
+    before = inventory(recursive_roots, shallow_roots=shallow_roots)
 
     _print_header("Replay - Protocol P section 4 construction path, overrides=None")
     replay = run_replay(
         args.config.resolve(), args.schema.resolve(), args.assignment.resolve()
     )
-    after = inventory(watched)
+    after = inventory(recursive_roots, shallow_roots=shallow_roots)
     plant: PrivilegedRecord = replay["plant"]
     observation: ObservedRecord = replay["observation"]
     print(f"  base config hash   {replay['config_hash']}")
@@ -754,7 +790,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     _print_header("Ephemerality - filesystem effect of this run")
     print(
-        f"  watched {len(before):,d} files across {len(watched)} roots "
+        f"  watched {len(before):,d} files across "
+        f"{len(recursive_roots) + len(shallow_roots)} scopes "
         "(retained data root, packet tree, repository top-level files)"
     )
     changes = diff_inventory(before, after)
@@ -763,7 +800,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"  {category:9s} {len(paths)}")
         for path in paths:
             print(f"    {path}")
-    print("  (no screen artifact is written; this gate's output is stdout only)")
+    require_no_inventory_changes(changes)
+    print("  PASS - no watched file changed; this gate's output is stdout only")
 
     _print_header("Result")
     print("  REPLAY_GATE_PASS - one row, exact. Stage A's precondition is met.")

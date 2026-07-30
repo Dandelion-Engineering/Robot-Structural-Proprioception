@@ -225,6 +225,17 @@ def test_a_dtype_change_is_caught() -> None:
     assert not entry["dtype_equal"]
 
 
+def test_an_incompatible_dtype_change_is_a_protocol_failure() -> None:
+    """A float-to-string change must not escape as a NumPy ``TypeError``."""
+
+    actual = _payload()
+    actual["values__gauge_obs"] = np.full(
+        actual["values__gauge_obs"].shape, "not-a-number"
+    )
+    with pytest.raises(gate.ProtocolPError, match="values__gauge_obs"):
+        gate.compare_payload("payload", _payload(), actual, 4)
+
+
 def test_a_shape_change_is_caught() -> None:
     """A truncated array must never be compared element-wise and called equal."""
 
@@ -353,6 +364,28 @@ def test_an_undersized_snapshot_cannot_certify_that_nothing_was_written(
         gate.inventory([tmp_path])
 
 
+def test_a_new_repository_top_level_file_is_visible_to_a_shallow_scope(
+    tmp_path: Path,
+) -> None:
+    """A file absent from the first snapshot must not be absent from the watch list.
+
+    The replay watches the repository top level shallowly because MuJoCo may create a
+    root-level log. Enumerating only the files that existed before the run would miss
+    exactly that creation in a clean checkout.
+    """
+
+    recursive_root = tmp_path / "recursive"
+    recursive_root.mkdir()
+    for index in range(gate.MIN_WATCHED_FILES):
+        (recursive_root / f"f{index}.bin").write_bytes(b"x")
+    before = gate.inventory([recursive_root], shallow_roots=[tmp_path])
+    created = tmp_path / "MUJOCO_LOG.TXT"
+    created.write_text("created during rollout", encoding="utf-8")
+    after = gate.inventory([recursive_root], shallow_roots=[tmp_path])
+    changes = gate.diff_inventory(before, after)
+    assert [Path(path).name for path in changes["added"]] == ["MUJOCO_LOG.TXT"]
+
+
 def test_the_snapshot_diff_reports_additions_modifications_and_removals(
     tmp_path: Path,
 ) -> None:
@@ -364,6 +397,20 @@ def test_the_snapshot_diff_reports_additions_modifications_and_removals(
     assert changes["added"] == ["d"]
     assert changes["removed"] == ["c"]
     assert changes["modified"] == ["b"]
+
+
+@pytest.mark.parametrize("category", ["added", "modified", "removed"])
+def test_any_watched_filesystem_change_fails_the_gate(category: str) -> None:
+    """Reporting a filesystem effect cannot be followed by REPLAY_GATE_PASS."""
+
+    changes = {"added": [], "modified": [], "removed": []}
+    changes[category] = [f"{category}.bin"]
+    with pytest.raises(gate.ProtocolPError, match="ephemerality violation"):
+        gate.require_no_inventory_changes(changes)
+
+
+def test_an_empty_filesystem_diff_passes_the_ephemerality_gate() -> None:
+    gate.require_no_inventory_changes({"added": [], "modified": [], "removed": []})
 
 
 def test_the_snapshot_sees_a_real_file_appearing_under_a_watched_root(

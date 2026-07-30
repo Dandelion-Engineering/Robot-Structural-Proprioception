@@ -99,6 +99,15 @@ the approval decision without rewriting the historical parent-hash claim.
 
 Produces: terminal-only assignment audit results.
 
+`scripts/embed_approved_assignment.py` is the one-time state-transition utility that
+produced the tracked approval wrapper from the pre-approval parent draft and the exact
+approved assignment. It atomically writes a rehashed draft, removes only the Gate-3 open
+item, refuses an output named `config.json`, and never authorizes test materialization.
+It is retained so that transition remains auditable and so a future jointly approved
+replacement can use the same guarded path. It is **not** a recurring run step and must
+not be rerun against the already-embedded current draft; the command above validates the
+tracked result.
+
 ## Step 2C — Generate and audit the approved base research roles
 
 Materializes the primary matched C1/S base dataset for every approved dev,
@@ -551,14 +560,14 @@ Produces `structural_separability_screen.json` and `structural_separability_scre
 
 Protocol P is the pre-registered screen that decides whether the delivered diagnostic probe can make a structural stiffness-loss fault measurable above the healthy run-to-run null. Its specification is [`protocol/protocol-p-v2.3.3.md`](protocol/protocol-p-v2.3.3.md). Section 7 makes one-row exact reproduction a **stop-or-go precondition**: if rebuilding a single delivered reservation from the committed inputs does not reproduce the retained artifact exactly, the instrument that would produce the screen's numbers is not the instrument that produced the development dataset, and no result from it would be interpretable.
 
-The gate checks invariant I1 (every pinned digest present and unchanged, each through its own hash domain — folded text for the protocol and assignment, exact bytes for the two `.npz` references) and invariant I2 (all 20 privileged plant fields and all 38 observed payload entries equal). It writes nothing: its output is stdout, and it inventories the data root, the packet tree and the repository's top-level files before and after the rollout to show that.
+The gate checks invariant I1 (every pinned digest present and unchanged, each through its own hash domain — folded text for the protocol and assignment, exact bytes for the two `.npz` references) and invariant I2 (all 20 privileged plant fields and all 38 observed payload entries equal). It writes nothing: its output is stdout, and it inventories the data root, the packet tree and the repository's top-level files before and after the rollout. Any added, modified or removed watched file fails the gate.
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\protocol_p_replay_gate.py `
   --data-root ..\data\gate3-base-dev-pilot-val-c1-s
 ```
 
-One MuJoCo rollout, about 26 s. Exit status is 0 only when every pinned digest matches and all 58 compared entries are equal.
+One MuJoCo rollout, about 26 s. Exit status is 0 only when every pinned digest matches, all 58 compared entries are equal, and the watched filesystem scopes are unchanged.
 
 **This step needs the retained development dataset, which is not distributed with the packet** (see [`DATA.md`](DATA.md)); the two pinned reference payloads are local artifacts of the Step 2C generation, not committed data. Regenerating the dataset from Step 2C reproduces them. The gate's own comparison layer is covered portably by `tests/test_protocol_p_replay_gate.py`, which runs on a clean checkout with no dataset present.
 
