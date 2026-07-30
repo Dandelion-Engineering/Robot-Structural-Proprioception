@@ -135,6 +135,28 @@ PINNED_CLI = {
     "pair_id": 1,
 }
 
+# The three pinned CLI values that ALSO exist in the bound configuration document, with
+# the document path each must agree with.  Stage 0's identity stamps ``base_config_hash``;
+# a pin that silently disagrees with the document it stamps produces an artifact that is
+# internally reproducible and falsely bound -- the same defect class as constructing the
+# sensor model from dataclass defaults instead of from the bound block.
+#
+# Equality, never adoption.  Protocol P section 8 remains the authority for these values;
+# a divergent document is refused rather than followed, so the config cannot silently move
+# a pre-registered quantity behind the pin guard.
+#
+# The other four pins are deliberately absent because the document has no semantically
+# corresponding value.  ``pairs``, ``seed`` and ``pair_id`` are pre-registered in sections
+# 8 and 6 only.  ``thermal_ramp_c`` is an imposed per-window *linear* excursion on the
+# sensor path, inherited from the detection-floor screen; the document's nearest numeric
+# match (``env_val_sine3c.parameters.amplitude_c``) is a *sinusoidal plant-side*
+# environment for a different split and is not the same object.
+CLI_TO_BOUND_TIMING_PATH = {
+    "window": ("values", "timing", "window_steps"),
+    "f_ctrl_hz": ("values", "timing", "f_ctrl_hz"),
+    "diagnostic_hz": ("values", "timing", "diagnostic_probe", "frequency_hz"),
+}
+
 # The real-plant corroboration recorded in section 8: one delivered healthy trace per
 # cell held exactly fixed and redrawn at 8 sensor identities, giving these per-cell 0.95
 # quantiles across cells 6/4/7/5.  This is a *conditional healthy-null diagnostic*: it
@@ -214,6 +236,74 @@ def require_pinned_cli(cli: Mapping[str, Any]) -> None:
         f"\n    pinned    {canonical_json(PINNED_CLI)}"
         f"\n    requested {rendered}",
     )
+
+
+def require_bound_timing_matches_cli(
+    document: Mapping[str, Any], cli: Mapping[str, Any]
+) -> dict[str, float]:
+    """Require the bound document's timing values to equal the pre-registered pins.
+
+    Inputs: the validated configuration document and the seven decision-bearing CLI
+    values. Outputs: the bound values actually read, keyed by CLI name, so the caller can
+    disclose what was compared rather than only that it passed. Purpose: three of the
+    seven pins -- the window length, the control rate and the diagnostic probe frequency
+    -- also exist in the document whose hash the Stage-0 identity stamps. Nothing
+    connected them, so a document disagreeing on any of the three yielded an artifact
+    that was internally reproducible and falsely bound.
+
+    Equality, not adoption. Section 8 is the authority for these values; a divergent
+    document is refused rather than followed, so the configuration cannot silently move a
+    pre-registered quantity. Reading the values instead would defeat
+    :func:`require_pinned_cli`, which exists to stop exactly that substitution.
+
+    Reachability, stated honestly, and it applies equally to
+    :func:`sensor_config_from_document`. Under the pins currently in force this guard
+    cannot be reached in a failing state from any document that gets this far.
+    ``validate_approved_assignment_binding`` runs first in :func:`main` and reconstructs
+    the approved parent hash from the whole document with ``scenario_manifest`` nulled,
+    so every other ``values`` block -- ``timing`` and ``sensor_model`` included -- is
+    pinned by a chain that ends at ``assignment.draft_config_hash``, and the assignment
+    file's bytes are themselves pinned by I1. Changing ``timing`` therefore fails the
+    binding gate long before it reaches this comparison; making it pass would require a
+    new draft lineage, hence a new assignment, hence a new I1 pin.
+
+    So this defends **code**, not present-day **data**: a reordering of :func:`main`, a
+    caller that skips the binding gate, or a future driver that constructs the config
+    differently. It becomes a live data guard exactly once -- when a new draft
+    configuration is authored for the pre-confirmatory build, which is the moment the
+    lineage is re-derived and these values could legitimately move. Do not describe it
+    in the write-up as preventing a falsely bound artifact that is constructible today.
+    """
+
+    observed: dict[str, float] = {}
+    for name, path in sorted(CLI_TO_BOUND_TIMING_PATH.items()):
+        _require(name in cli, f"CLI values are missing the pinned entry {name!r}")
+        node: Any = document
+        walked: list[str] = []
+        for key in path:
+            walked.append(key)
+            _require(
+                isinstance(node, Mapping) and key in node,
+                f"config is missing {'.'.join(walked)}, which binds Stage 0's {name!r}",
+            )
+            node = node[key]
+        dotted = ".".join(path)
+        _require(
+            isinstance(node, (int, float)) and not isinstance(node, bool),
+            f"config {dotted} must be a number; got {type(node).__name__}",
+        )
+        bound = float(node)
+        _require(np.isfinite(bound), f"config {dotted} must be finite; got {node!r}")
+        pinned = float(cli[name])
+        _require(
+            bound == pinned,
+            f"bound config disagrees with pre-registered Stage 0 pin {name!r}"
+            f"\n    protocol pin   {pinned!r}"
+            f"\n    {dotted}   {bound!r}"
+            "\n    Section 8 is the authority; refusing rather than adopting the document.",
+        )
+        observed[name] = bound
+    return observed
 
 
 def sensor_config_from_document(document: Mapping[str, Any]) -> SensorConfig:
@@ -749,9 +839,13 @@ def main(argv: list[str] | None = None) -> int:
     assignment = load_assignment(args.assignment.resolve())
     binding = validate_approved_assignment_binding(config, expected_assignment=assignment)
     sensor_config = sensor_config_from_document(config.document)
+    bound_timing = require_bound_timing_matches_cli(config.document, cli)
     print(f"  base config hash   {config.config_hash}")
     print(f"  assignment hash    {binding.assignment_hash}")
     print("  sensor model       constructed from the bound config document")
+    for name, value in sorted(bound_timing.items()):
+        dotted = ".".join(CLI_TO_BOUND_TIMING_PATH[name])
+        print(f"  pin {name:14} == {dotted} == {value!r}")
 
     print("\nI8 - Stage-0 artifact-level identity")
     identity, canonical = stage_0_identity(

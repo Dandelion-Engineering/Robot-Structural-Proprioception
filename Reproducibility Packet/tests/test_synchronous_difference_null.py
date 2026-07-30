@@ -732,6 +732,275 @@ def test_main_wires_the_bound_sensor_model_to_measurement_and_writes_the_artifac
 
 
 # --------------------------------------------------------------------------- #
+# The bound timing pins
+#
+# Three of the seven pins also exist in the document whose hash the identity stamps.
+# Until these tests existed, nothing connected them: a document disagreeing on the
+# window, the control rate or the probe frequency produced an artifact that was
+# internally reproducible and falsely bound. Same class as the sensor-model defect,
+# one layer over.
+# --------------------------------------------------------------------------- #
+def test_the_bound_timing_pins_agree_with_the_committed_document() -> None:
+    """The committed draft must actually satisfy the pins Stage 0 would stamp it with."""
+
+    document = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+    observed = mod.require_bound_timing_matches_cli(document, PINNED_CLI)
+    assert observed == {
+        "window": float(PINNED_CLI["window"]),
+        "f_ctrl_hz": float(PINNED_CLI["f_ctrl_hz"]),
+        "diagnostic_hz": float(PINNED_CLI["diagnostic_hz"]),
+    }
+
+
+def test_the_bound_timing_boundary_is_exactly_the_three_shared_values() -> None:
+    """The four protocol-only pins must stay out, and the three shared ones stay in.
+
+    Red if a later edit quietly adds a member (making a protocol-only pin follow the
+    document) or drops one (reopening the falsely-bound path).
+    """
+
+    assert set(mod.CLI_TO_BOUND_TIMING_PATH) == {"window", "f_ctrl_hz", "diagnostic_hz"}
+    assert set(mod.CLI_TO_BOUND_TIMING_PATH) <= set(PINNED_CLI)
+    assert set(PINNED_CLI) - set(mod.CLI_TO_BOUND_TIMING_PATH) == {
+        "thermal_ramp_c",
+        "pairs",
+        "seed",
+        "pair_id",
+    }
+
+
+@pytest.mark.parametrize("name", ["window", "f_ctrl_hz", "diagnostic_hz"])
+def test_a_divergent_bound_timing_value_is_refused(name: str) -> None:
+    """A document that disagrees with a pin is refused, never adopted."""
+
+    document = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+    path = mod.CLI_TO_BOUND_TIMING_PATH[name]
+    node = document
+    for key in path[:-1]:
+        node = node[key]
+    node[path[-1]] = float(node[path[-1]]) * 2.0
+    with pytest.raises(mod.ProtocolPError, match="disagrees with pre-registered"):
+        mod.require_bound_timing_matches_cli(document, PINNED_CLI)
+
+
+@pytest.mark.parametrize("value", [None, "768", True, [768]])
+def test_a_non_numeric_bound_timing_value_is_refused_as_such(value: object) -> None:
+    """A non-number must be refused for being one, not by failing the comparison.
+
+    The reason is asserted, not just the raise. ``True`` is the discriminating case:
+    without the explicit bool exclusion it compares as ``1.0`` and still raises, so a
+    test that accepted any ``ProtocolPError`` here would pass on the unguarded code.
+    """
+
+    document = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+    document["values"]["timing"]["window_steps"] = value
+    with pytest.raises(mod.ProtocolPError, match="must be a number"):
+        mod.require_bound_timing_matches_cli(document, PINNED_CLI)
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), float("-inf")])
+def test_a_non_finite_bound_timing_value_is_refused_as_such(value: float) -> None:
+    """A non-finite binding is refused for being non-finite, before any comparison.
+
+    ``nan`` is the discriminating case: it compares unequal to everything, so removing
+    the finiteness check still raises — but with the wrong reason.
+    """
+
+    document = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+    document["values"]["timing"]["window_steps"] = value
+    with pytest.raises(mod.ProtocolPError, match="must be finite"):
+        mod.require_bound_timing_matches_cli(document, PINNED_CLI)
+
+
+def test_an_absent_timing_binding_is_refused_rather_than_skipped() -> None:
+    """A missing path must refuse, not silently certify a pin nothing was compared to."""
+
+    document = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+    document["values"]["timing"].pop("window_steps")
+    with pytest.raises(mod.ProtocolPError, match="config is missing"):
+        mod.require_bound_timing_matches_cli(document, PINNED_CLI)
+
+
+def test_main_is_wired_to_the_bound_timing_guard(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A correct guard beside ``main`` is not enough; the executable must call it.
+
+    Explicit paths are required here where the CLI guard's wire test could use bare
+    defaults: this guard sits *after* the I1 pin check and the config load, so a
+    default-path invocation would refuse at I1 and never reach the wire under test.
+    """
+
+    def explode(document: object, cli: object) -> None:
+        raise mod.ProtocolPError("timing guard reached")
+
+    def fake_run_null(**kwargs: object) -> dict[str, object]:
+        raise AssertionError("the measurement must not be reached")
+
+    monkeypatch.setattr(mod, "require_bound_timing_matches_cli", explode)
+    monkeypatch.setattr(mod, "run_null", fake_run_null)
+    with pytest.raises(mod.ProtocolPError, match="timing guard reached"):
+        mod.main(
+            [
+                "--config",
+                str(CONFIG_PATH),
+                "--schema",
+                str(SCHEMA_PATH),
+                "--assignment",
+                str(ASSIGNMENT_PATH),
+                "--protocol",
+                str(PROTOCOL_PATH),
+                "--output-dir",
+                str(tmp_path),
+            ]
+        )
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_main_refuses_a_divergent_document_and_writes_nothing(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The falsely-bound artifact must become unconstructible end to end.
+
+    This is the state the guard exists for: a valid, schema-clean, correctly-bound
+    document whose timing block disagrees with the pre-registered pins. Before the
+    guard, ``main`` measured at the pinned window and stamped the divergent document's
+    hash, writing an artifact that was internally reproducible and falsely bound.
+    """
+
+    def fake_run_null(**kwargs: object) -> dict[str, object]:
+        raise AssertionError("the measurement must not be reached")
+
+    loaded = mod.load_config(CONFIG_PATH, SCHEMA_PATH)
+    divergent_document = copy.deepcopy(dict(loaded.document))
+    divergent_document["values"]["timing"]["window_steps"] = 512
+    divergent = dataclasses.replace(loaded, document=divergent_document)
+
+    monkeypatch.setattr(mod, "load_config", lambda *args, **kwargs: divergent)
+    monkeypatch.setattr(
+        mod,
+        "validate_approved_assignment_binding",
+        lambda *args, **kwargs: SimpleNamespace(assignment_hash=ASSIGNMENT_HASH),
+    )
+    monkeypatch.setattr(mod, "run_null", fake_run_null)
+    with pytest.raises(mod.ProtocolPError, match="disagrees with pre-registered"):
+        mod.main(
+            [
+                "--config",
+                str(CONFIG_PATH),
+                "--schema",
+                str(SCHEMA_PATH),
+                "--assignment",
+                str(ASSIGNMENT_PATH),
+                "--protocol",
+                str(PROTOCOL_PATH),
+                "--output-dir",
+                str(tmp_path),
+            ]
+        )
+    assert not (tmp_path / mod.OUTPUT_FILENAME).exists()
+    assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        ("timing", "window_steps"),
+        ("sensor_model", "gauge_noise_microstrain"),
+    ],
+)
+def test_the_binding_gate_pins_the_blocks_both_guards_read(path: tuple[str, ...]) -> None:
+    """Pin the architectural fact the reachability docstrings rest on.
+
+    ``validate_approved_assignment_binding`` reconstructs the approved parent hash from
+    the whole document with ``scenario_manifest`` nulled, so ``timing`` and
+    ``sensor_model`` are both pinned by a chain ending at the I1-pinned assignment. That
+    is *why* the bound-timing and bound-sensor guards defend code rather than present-day
+    data. Red if a change to that gate makes either block float, at which point the
+    reachability paragraphs in both docstrings must be re-read and rewritten.
+
+    Read-only with respect to Codex's module; this asserts its behaviour, never edits it.
+    """
+
+    from utils.config_contract import expected_config_hash
+
+    document = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+    wrapper = document["values"]["scenario_manifest"]
+    assert wrapper["parent_draft_config_hash"] == wrapper["assignment"]["draft_config_hash"]
+
+    def reconstruct(doc: dict) -> str:
+        parent = copy.deepcopy(doc)
+        parent["values"]["scenario_manifest"] = None
+        parent["open_gates"] = list(wrapper["parent_open_gates"])
+        parent["config_hash"] = wrapper["parent_draft_config_hash"]
+        return expected_config_hash(parent)
+
+    assert reconstruct(document) == wrapper["parent_draft_config_hash"]
+
+    mutated = copy.deepcopy(document)
+    node = mutated["values"]
+    for key in path[:-1]:
+        node = node[key]
+    node[path[-1]] = float(node[path[-1]]) * 2.0
+    assert reconstruct(mutated) != wrapper["parent_draft_config_hash"]
+
+
+def test_main_validates_the_binding_before_reading_bound_values(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The binding gate must run before either guard reads the document.
+
+    The reachability claim depends on this order. Reversing it would let a document that
+    fails the binding gate reach the bound-value guards first, changing what both
+    docstrings are entitled to say.
+    """
+
+    order: list[str] = []
+
+    def fake_binding(*args: object, **kwargs: object) -> SimpleNamespace:
+        order.append("binding")
+        return SimpleNamespace(assignment_hash=ASSIGNMENT_HASH)
+
+    real_sensor = mod.sensor_config_from_document
+    real_timing = mod.require_bound_timing_matches_cli
+
+    def spy_sensor(document: object) -> object:
+        order.append("sensor")
+        return real_sensor(document)
+
+    def spy_timing(document: object, cli: object) -> object:
+        order.append("timing")
+        return real_timing(document, cli)
+
+    def stop(**kwargs: object) -> dict[str, object]:
+        raise mod.ProtocolPError("stop before measuring")
+
+    monkeypatch.setattr(mod, "validate_approved_assignment_binding", fake_binding)
+    monkeypatch.setattr(mod, "sensor_config_from_document", spy_sensor)
+    monkeypatch.setattr(mod, "require_bound_timing_matches_cli", spy_timing)
+    monkeypatch.setattr(mod, "run_null", stop)
+    with pytest.raises(mod.ProtocolPError, match="stop before measuring"):
+        mod.main(
+            [
+                "--config",
+                str(CONFIG_PATH),
+                "--schema",
+                str(SCHEMA_PATH),
+                "--assignment",
+                str(ASSIGNMENT_PATH),
+                "--protocol",
+                str(PROTOCOL_PATH),
+                "--output-dir",
+                str(tmp_path),
+            ]
+        )
+    assert order == ["binding", "sensor", "timing"]
+
+
+# --------------------------------------------------------------------------- #
 # The written artifact
 # --------------------------------------------------------------------------- #
 def test_the_document_top_level_keys_equal_the_pinned_set() -> None:
