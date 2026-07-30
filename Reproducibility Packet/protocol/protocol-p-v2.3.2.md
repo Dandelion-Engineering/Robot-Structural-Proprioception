@@ -1,16 +1,27 @@
-# Protocol P — v2.3.1
+# Protocol P — v2.3.2
 
 **A pre-registered screen for whether the delivered diagnostic probe can make a
 structural stiffness-loss fault detectable above the healthy run-to-run null.**
 
 | | |
 |---|---|
-| Version | v2.3.1 (= v2.3 + the three Session-41 corrections; no scientific change) |
+| Version | v2.3.2 (= v2.3.1 + the four Session-42 executability corrections; no scientific change) |
 | Author | Claude |
 | Reviewer | Codex (owns `scripts/utils/assignment_generator.py`) |
 | Status | **PENDING REVIEWER APPROVAL — NOTHING IN THIS PROTOCOL HAS BEEN RUN** |
 | Phase | 2 (Execution) |
 | Contract | `Claim Sheet.md`, schema v1.0 + Amendment A1 |
+
+**Supersedes v2.3.1** (canonical sha256
+`8c268f8f5777923e661cb44c0b6d68991bdf41bf5080ea3e229e4c101d401d76`, 29,250 bytes),
+which was approved by Claude and **blocked by Codex** on 2026-07-29 16:40 PDT under
+`BLOCK_PROTOCOL_P_V2_3_1_PENDING_BINARY_HASH_DOMAIN_AND_COMPLETE_EXECUTION_PINS`.
+v2.3.1 was **never executed** — no identity generated, no statistic computed, no
+artifact written — so nothing is bound to its digest. It survives as the immediately
+prior revision of this file in git history (committed `Claude Session 41`) and needs no
+separate archive copy. The version number is bumped rather than the file edited in
+place so that the transcript's approve/block record refers to exactly one byte-state
+per version name.
 
 ## 0. Status, scope, and what this document is for
 
@@ -33,24 +44,131 @@ Two hard scope statements:
   at the delivered excitation, which determines whether the confirmatory design has a
   testable structural stratum.
 
-### Canonical bytes and the spec hash
+### Terms used in this file
 
-Every rollout stamps a provenance digest that binds this document. The digest is over
-this file's **canonical bytes**: UTF-8, BOM stripped if present, every `\r\n` folded to
-`\n`. Folding happens in memory before hashing, so the digest is invariant to the
-checkout convention — this repository is developed on Windows with
-`core.autocrlf=true`, and an unpinned text file materializes as CRLF in a fresh clone.
-The file is additionally pinned `text eol=lf` in the root `.gitattributes` as defence
-in depth, but the fold is what makes the digest portable.
+This file is standalone: it must be executable by a reader who has seen none of the
+discussion that produced it. Every abbreviation it uses is therefore defined here.
+
+```text
+EI            flexural rigidity (elastic modulus x second moment of area), the
+              stiffness quantity a link-softening fault reduces
+remEI v       "remaining EI" — the structural fault's severity expressed as the
+              FRACTION of nominal flexural rigidity that survives. remEI 0.35 is a
+              severe fault; remEI 0.90 is mild. This is exactly
+              CableModelConfig.structural_ei_remaining, and exactly FaultSpec.severity
+              for a structural fault.
+D(v,c)        the operative statistic (§8): the L2 norm of the matched fault-minus-
+              healthy 0.8 Hz harmonic coefficient difference across four gauges, for
+              ladder value v in context cell c. 8 entries.
+Q95_c         the operative per-cell null (§8, Stage C): the 0.95 quantile,
+              method="higher", of the 28 within-cell healthy pairwise distances.
+Q95_c^gauge   the gauge-only fixed-trace redraw of that null (§9). A no-authority
+              descriptive secondary; it gates nothing and sets no threshold.
+OOD           out-of-distribution — the reserved compound/held-out settings at
+              remEI 0.45/0.55, carrying ood_flag=true and excluded from four-way
+              known-class macro-F1 (§9, "OOD role pinned").
+CRN           common random numbers — matching the sensor RNG identity across two
+              rollouts so the sensor term cancels in their difference.
+```
+
+**Two retired abbreviations are named so they cannot be silently reintroduced.**
+`T1` was a candidate Stage-A amplitude cutoff from an earlier draft; **it is retired and
+this protocol has no such cutoff** (§8, Stage A selection). `M2` was transcript
+shorthand that at different times meant two incompatible things — a descriptive
+fixed-trace gauge-only check *and* the operative mechanics rule. **Neither token denotes
+anything in this file.** Each appears only here and in Corrections 4–5, which are about
+their retirement; every object they once stood for is now named in full at every
+occurrence.
+
+### Two hash domains — text and binary are not interchangeable
+
+This protocol pins files of two different kinds, and applying the wrong helper to
+either one breaks it. The domains are disjoint and each file belongs to exactly one:
+
+```text
+canonical_text_sha256(path)        DOMAIN: tracked text
+  raw = path.read_bytes()
+  if raw.startswith(b"\xef\xbb\xbf"): raw = raw[3:]     # strip UTF-8 BOM
+  return sha256(raw.replace(b"\r\n", b"\n")).hexdigest()  # fold CRLF -> LF
+
+  applies to exactly:
+    protocol/protocol-p-v2.3.2.md              (this file)
+    config/proposed-gate3-assignment-v0.1.json
+
+raw_file_sha256(path)              DOMAIN: binary artifacts
+  return sha256(path.read_bytes()).hexdigest()          # NO transformation
+
+  applies to exactly:
+    the two retained .npz replay references (§7)
+```
+
+**Why the split is load-bearing, measured rather than argued.** A `.npz` is a ZIP
+archive of NumPy buffers. Byte pairs equal to `0d 0a` occur inside that payload as
+data, not as line endings, so folding them corrupts the file's identity. The two
+retained references contain **18** and **1** such pairs respectively, and folding
+changes both digests:
+
+```text
+plant reference          3,176,122 bytes   18 CRLF pairs
+  raw          ed5b1f39f4ba535c60eb3e1b8587c7b03f59a5c3f9c1189b55635f0d49b65e45   <- pinned
+  text-folded  638e384f3a75c4cefb360e7b7815e7a1b9f5dcd2e01c2cbb718410db9964c575
+
+S observation reference    929,068 bytes    1 CRLF pair
+  raw          cdde17f6d32c5d648249f4a9b343ec3f997b04c83cadacbf9d2c5f1186bb4c83   <- pinned
+  text-folded  0051ea132a783264c47a370184f0d328e2ae4c3a95ad227b3cf9c181c599435e
+```
+
+Both agents computed all four values independently and they agree. §7's pins are the
+**raw** digests, so routing the references through the text helper would fail I1
+deterministically before the replay ever ran.
+
+For the text domain, folding in memory makes the digest invariant to the checkout
+convention: this repository is developed on Windows with `core.autocrlf=true`, and an
+unpinned text file materializes as CRLF in a fresh clone. Both text files are
+additionally pinned `text eol=lf` in the root `.gitattributes` as defence in depth, but
+the fold is what makes the digest portable. `.gitattributes` has **no** role for the
+binary references — they are git-ignored local artifacts.
 
 This document cannot contain its own hash. The implementation reads this file,
-computes the canonical digest at run time, and records it in the results JSON for
-every rollout.
+computes its canonical text digest at run time, and records it in every artifact
+identity below.
 
-## 1. What changed in v2.3.1
+### Provenance scope — which identity each artifact carries
 
-All three corrections are executability fixes. No universe, statistic, threshold,
-stage, branch, or success criterion changed.
+`config_hash` is a stored field of the `ObservedRecord` that `SensorModel.observe`
+writes, so *what is stamped changes the artifact's bytes*. That makes the scope
+below a correctness requirement, not a convention:
+
+```text
+replay gate (§7)                  overrides=None, stamps the BASE config hash.
+                                  Ephemeral; never persisted as a screen artifact.
+                                  It MUST stamp base: the retained reference row was
+                                  generated under the base hash, so stamping anything
+                                  else changes the observation's config_hash field and
+                                  I2's 38-entry npz equality fails by construction.
+
+Stage A / B / C rollouts (§8)     active overrides, so each stamps its own
+                                  per-rollout base-distinct dev-<64 hex> provenance
+                                  (Correction 2).
+
+Stage 0 (§8)                      no rollout and no reservation, so no per-rollout
+                                  payload exists. Its written artifact still carries
+                                  one explicit artifact-level dev-<64 hex> identity
+                                  (Correction 6). No fake plant reservation is invented.
+```
+
+The v2.3.1 sentence "every rollout stamps a provenance digest that binds this
+document" was false for the replay rollout and undefined for Stage 0. It is replaced by
+the table above.
+
+## 1. Correction history
+
+**Every correction on this list is an executability fix. Across v2.3 → v2.3.1 → v2.3.2
+no universe, statistic, threshold, stage, branch, secondary, or success criterion has
+changed.** Corrections 1–3 landed in v2.3.1 and their substance is approved by both
+agents; Corrections 4–7 are new in v2.3.2 and answer Codex's four Session-41 findings.
+The list is kept rather than compressed because each entry records a measurement or a
+source fact that justifies a pin the body of this file now depends on.
 
 ### Correction 1 — the structural override must activate at the declared onset
 
@@ -65,22 +183,42 @@ Every structural override is now built by a helper that derives the onset exactl
 the committed path does, and the healthy condition is the empty tuple:
 
 ```python
-def screen_physical_faults(condition, severity, trajectory, *, control_dt_s):
+SCREEN_CONDITIONS = ("healthy", "structural")   # closed vocabulary; nothing else is legal
+
+def screen_physical_faults(condition, trajectory, *, severity=None, control_dt_s):
+    if condition not in SCREEN_CONDITIONS:
+        raise ProtocolPError(
+            f"unknown screen condition {condition!r}; expected one of {SCREEN_CONDITIONS}")
     if condition == "healthy":
+        if severity is not None:
+            raise ProtocolPError("healthy condition must not carry a severity")
         return ()
+    if severity is None:
+        raise ProtocolPError("structural condition requires an explicit severity")
+    v = float(severity)
+    if not math.isfinite(v) or not (0.0 < v <= 1.0):
+        raise ProtocolPError(f"remEI severity must be finite in (0, 1]; got {severity!r}")
     onset_index = _step_index(float(trajectory["onset_time_s"]), control_dt_s)
     return (
         FaultSpec(
             source_class="structure",
             subtype="link_stiffness_loss",
             location=1,
-            severity=float(severity),
+            severity=v,
             onset_index=onset_index,
             compound_flag=False,
             ood_flag=False,
         ),
     )
 ```
+
+Three properties of this signature are deliberate and are what Correction 7 checks.
+The condition vocabulary is a **closed set**, so a misspelling raises instead of being
+treated as structural. `severity` is **keyword-only with default `None`**, so "severity
+is absent" is an expressible and checkable state rather than an unused positional
+argument. The `(0, 1]` bound matches the plant's own structural validator
+(`cable_plant.py:124-125`), so an out-of-range severity fails at construction rather
+than deeper in MuJoCo.
 
 The empty tuple is **not** `None`, so a healthy screen row is still an *active*
 override and still requires a provenance hash. Every override guard tests
@@ -131,9 +269,26 @@ provenance != the supplied base config hash
 and the derived value uses the full digest:
 
 ```python
-canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+# CANONICAL_JSON — the single serialization rule for every identity payload in this
+# protocol. Matches the packet precedent in config_contract.canonical_json_bytes:89.
+def canonical_json(payload) -> str:
+    return json.dumps(
+        payload,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+        allow_nan=False,      # a NaN or Infinity in an identity payload must raise
+    )
+
+canonical = canonical_json(payload)
 screen_provenance_hash = "dev-" + hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 ```
+
+`allow_nan=False` is not decoration. Plain `json.dumps` defaults emit the non-standard
+tokens `NaN` / `Infinity` rather than raising, so a corrupted float reaching an identity
+payload would produce a *valid-looking* digest over an unparseable document. The packet
+already made this choice for the config hash; this protocol uses the same rule for
+every payload it digests.
 
 `payload` contains: `base_config_hash`, `assignment_canonical_sha256`,
 `assignment_hash`, `protocol_spec_sha256` (this file, §0), `stage`, `cell`,
@@ -151,16 +306,21 @@ rendering hashes to
 not hypothetical: `draft-config-v0.1.json`, in the same directory, is **already CRLF**
 in this working tree.
 
-Both pinned files are hashed through the folding helper, so the digest is portable by
+Both pinned **text** files — this document and the assignment JSON, and only those two
+(Correction 4) — are hashed through the folding helper, so the digest is portable by
 construction rather than by depending on `.gitattributes` being present and correct:
 
 ```python
-def canonical_file_sha256(path):
+def canonical_text_sha256(path):          # TEXT DOMAIN ONLY — never a .npz
     raw = Path(path).read_bytes()
     if raw.startswith(b"\xef\xbb\xbf"):
         raw = raw[3:]
     return hashlib.sha256(raw.replace(b"\r\n", b"\n")).hexdigest()
 ```
+
+The helper is named for its domain rather than for files in general, because v2.3.1's
+domain-neutral name (`canonical_file_sha256`) is what invited applying it to the binary
+replay references.
 
 The canonical assignment digest equals the raw digest in an LF checkout, so
 `76255a80...514ae` remains the operative value; it simply can no longer break in a
@@ -169,6 +329,121 @@ CRLF clone. The document-derived `assignment_hash`
 alongside it: the canonical digest is EOL-immune, the raw-byte digest catches
 whitespace or key-order changes that canonicalization would hide, and the two
 cross-check each other.
+
+### Correction 4 — the text canonicalizer must not touch the binary references
+
+v2.3.1 generalized Correction 3's folding helper to *every* pinned file, including the
+two retained `.npz` replay references in §7. That was wrong, and it was a hard-stop
+defect rather than a cosmetic one: §7's pinned values are raw digests, the references
+contain 18 and 1 embedded `0d 0a` payload byte pairs, and folding changes both digests,
+so **the operative instruction guaranteed that I1 would fail before the replay could
+run**. The protocol as written could not start.
+
+The fix is the two-domain split now stated in §0: `canonical_text_sha256` for the two
+tracked text files, `raw_file_sha256` with no transformation for the two binary
+references, each file belonging to exactly one domain. I1 is rewritten to name the
+domain per file (§10).
+
+**Scope check performed, not assumed.** Every byte pin in this protocol was enumerated
+and assigned a domain: this file (text), the assignment JSON (text), the two `.npz`
+references (binary). `draft-config-v0.1.json` is deliberately **not** byte-pinned — its
+`config_hash` is computed over `canonical_json_bytes(document)` and is therefore already
+EOL-immune — and no other file is hashed anywhere in this protocol. Exactly one domain
+error existed and it is corrected.
+
+**A distinction the split makes visible.** The replay gate now guards its *input* by
+exact binary identity and its *output* by array equality (20 privileged fields, 38 npz
+entries). These are different checks answering different questions: "is the retained
+artifact the one we pinned?" and "does regeneration reproduce its contents?" A `.npz` is
+a ZIP container, so byte-identity of a *regenerated* archive is not a property this
+protocol claims or needs; array equality is the reproduction claim.
+
+### Correction 5 — no undefined or overloaded abbreviations
+
+v2.3.1 used `M2` four times without ever defining it, and the four uses split into
+**two incompatible objects**: at Stage 0 and in the secondaries it meant a descriptive
+fixed-trace gauge-only check, while in the Case A/B/C conditions it meant the operative
+per-cell mechanics verdict. That is not a wording blemish. The gauge-only secondary is
+declared in §9 to set no threshold and gate nothing, so a reader who resolved `M2` that
+way in the Case conditions would have gated the protocol's terminal outcome on an object
+the same file says has no authority — **the document would have contradicted itself in a
+verdict-bearing sentence.**
+
+`M2` is removed entirely; each occurrence now names the object it meant. Auditing the
+whole file for that defect class found two further instances, both fixed: `T1` (used
+twice, never defined — a retired cutoff from an earlier draft) and `remEI` / `EI` (used
+throughout, never expanded). §0 now carries a terms block covering every abbreviation in
+the file, and names `T1` and `M2` as retired so neither can be reintroduced silently.
+
+### Correction 6 — provenance scope stated per artifact class
+
+§0 claimed every rollout stamps a protocol-derived provenance digest. §3 correctly says
+an `overrides=None` call stamps the base config hash, and §7 requires exactly that
+all-None path for the replay. The replay rollout therefore could not satisfy §0, and
+Stage 0 — which runs no rollout and holds no reservation — had no defined identity at
+all while §0 simultaneously declared every produced artifact a `dev-` screen artifact.
+
+§0's provenance-scope table replaces the false universal claim, and it records the
+*mechanism*: `config_hash` is a stored `ObservedRecord` field, so the replay must stamp
+base or I2's byte comparison fails by construction.
+
+**Stage 0's artifact-level identity**, pinned now because it is the one artifact this
+protocol writes without a rollout. One digest for the whole file, not per sample, over
+`CANONICAL_JSON` (Correction 2) — no plant reservation is invented:
+
+```text
+stage_0_identity_payload = {
+  "stage":                       "0",
+  "base_config_hash":            config.config_hash,
+  "assignment_canonical_sha256": canonical_text_sha256(assignment path),
+  "assignment_hash":             document-derived dev-eec59ec8...bc33f1,
+  "protocol_spec_sha256":        canonical_text_sha256(this file),
+  "cli": { "window": 768, "f_ctrl_hz": 500.0, "diagnostic_hz": 0.8,
+           "thermal_ramp_c": 3.0, "pairs": 100, "seed": 0, "pair_id": 1 },
+  "output_schema":               sorted top-level keys the script writes,
+}
+stage_0_identity = "dev-" + sha256(canonical_json(payload).encode("utf-8")).hexdigest()
+```
+
+`sensor_only_difference_null.json` records **both** `stage_0_identity` and the exact
+`canonical_json` string it was computed from, so the digest is independently
+recomputable from the artifact alone. The same `dev-` prefix keeps it permanently
+ineligible for confirmatory analysis, and the same base-distinctness requirement in I8
+applies to it.
+
+### Correction 7 — the construction check and the behavioural test are two different objects
+
+v2.3.1's I13 conflated them, and each half was defective on its own.
+
+**The runtime half was incomplete.** I13 checked the onset step, the empty-tuple healthy
+case, and the `is not None` guard style — but not that the constructed fault *is the
+requested fault*. Combined with a helper that treated every non-`"healthy"` string as
+structural and silently ignored `severity` when healthy, a misspelled condition or a
+condition/severity mismatch could produce a clean, fully admissible result **for the
+wrong body**. Correction 1's closed vocabulary and keyword-only `severity` close the
+helper side; I13a (§10) now compares the complete constructed object field by field
+against the exact expected object, and raises before the rollout.
+
+**The behavioural half was not implementable where it was placed.** I13 required
+verifying that the softened model is inactive before the onset step and active at or
+after it — as a *per-rollout runtime invariant*. It cannot be one.
+`_generate_reservation` returns
+`(control_pair_id, PrivilegedRecord, observations, label_payload, safety_count,
+contact_count)`; the `CablePlant` instance is constructed inside the call and never
+returned, so `_softened` history is unreachable from the production loop's return value.
+Verified by reading the return statement, not inferred.
+
+That check therefore becomes **I13b**, a focused implementation test that instantiates
+`CablePlant` directly and asserts the step-499/step-500 boundary once, in `tests/`. It
+is a precondition on the protocol running at all, not a per-rollout assertion.
+
+**The physical-limit label now requires both.** §9's `NO_ADMISSIBLE_PROBE` second branch
+may label a Stage-A failure a newly observed physical limit only when I13a has been
+asserted for that rollout **and** I13b is in a passing state. Session 41 measured that
+the safety gates pass with ~70x margin under both the correct and the defective onset,
+so a gate outcome carries physical meaning only once the construction has been
+established separately — by both halves, since either one alone leaves a route from a
+build mistake to a reported discovery.
 
 ## 2. Universe
 
@@ -188,8 +463,11 @@ control. Only `t01` carries a probe.
 ## 3. The seam — the code change this protocol requires
 
 Three additions to `Reproducibility Packet/scripts/utils/assignment_generator.py`, all
-keyword-only, all defaulting to current behaviour. The file is Codex's; the patch is
-posted as a diff for review before it is applied.
+keyword-only, all defaulting to current behaviour. The file is Codex's. Claude owns the
+implementation; **the applied working-tree diff plus its focused tests are posted for
+review before anything runs** — the patch is applied to the working tree first so that
+what Codex reviews is the exact bytes that will execute, not a description of them. No
+replay and no Protocol-P stage may run before that review closes.
 
 ```python
 @dataclass(frozen=True)
@@ -300,10 +578,17 @@ guard that names "pair_id" must say **which one**, base or realized.
 
 ## 7. Replay gate — a stop-or-go precondition (1 rollout)
 
-Hash both pinned references through the canonical helper. **Absent or changed ⇒ raise
-and stop** — never fall back to whatever is on disk. Rebuild
-`scenario_dev_t01_f000_r00` with `overrides=None` and require all 20 privileged array
-fields and all 38 npz payload entries equal. **Failure ⇒ Stage A does not start.**
+Hash both pinned references with **`raw_file_sha256` — exact bytes, no BOM strip, no
+CRLF fold** (§0, Correction 4). These are ZIP/NumPy binaries; the text canonicalizer
+must never be applied to them. **Absent or changed ⇒ raise and stop** — never fall back
+to whatever is on disk. Then rebuild `scenario_dev_t01_f000_r00` with `overrides=None`
+(which stamps the base config hash — see §0's provenance scope; anything else changes
+the observation's stored `config_hash` and fails the comparison below by construction)
+and require all 20 privileged array fields and all 38 npz payload entries equal.
+**Failure ⇒ Stage A does not start.**
+
+The input is guarded by exact binary identity; the output is guarded by array equality.
+Byte-identity of a *regenerated* `.npz` is not claimed.
 
 ```text
 data/gate3-base-dev-pilot-val-c1-s/   (git-ignored, local only; retained development
@@ -393,8 +678,20 @@ a PowerShell one.
 **One sample is one PAIR of four-gauge windows reduced to one scalar. 100 samples — not
 200, and emphatically not 800.** The 800-sample figure in
 `analyze_synchronous_detection_floor.py` arises because lines 241-242 append per gauge
-per realization; that is how `0.4053` became an 800-sample per-gauge number. The `T1`
-cutoff is retired. M2 is Stage 0's first real-plant corroboration.
+per realization; that is how `0.4053` became an 800-sample per-gauge number. There is no
+amplitude cutoff in this protocol (the earlier `T1` cutoff is retired; see §0).
+
+Stage 0 has no plant, so it is a purely synthetic sensor-path null. **Its one existing
+real-plant corroboration is the prior fixed-trace gauge-only check** — one delivered
+healthy trace per cell held exactly fixed and redrawn at 8 sensor identities, giving
+per-cell 0.95 quantiles of `0.3176 / 0.3555 / 0.3854 / 0.4251 µε` across cells 6/4/7/5.
+Stage 0's synthetic value of roughly `0.39` falls inside that measured real-plant range,
+which is the sense — and the only sense — in which Stage 0 is corroborated. That check is
+a **conditional healthy-null diagnostic**: it is not this protocol's operative null, it
+sets no threshold, and it gates nothing. The operative null is Stage C's `Q95_c`.
+
+The written artifact carries the Stage-0 artifact-level identity and the canonical string
+it was derived from (Correction 6), so its provenance is recomputable from the file alone.
 
 ### Stage A — admissibility and selection (108 rollouts, after the replay gate)
 
@@ -418,8 +715,9 @@ returned `PrivilegedRecord`**: zero `safety_flag` across all 7 A1 flags;
 gate; and no increase in saturated steps against zero probe amplitude (baseline 0). A
 failing candidate is dropped, its remaining cells skipped, and the drop count logged.
 
-**Selection: maximise worst-cell `D` at remEI 0.75.** No `T1` cutoff. Ties within 1%
-resolve to the smallest amplitude, then the largest ramp fraction.
+**Selection: maximise worst-cell `D` at remEI 0.75.** No amplitude cutoff of any kind
+enters selection. Ties within 1% resolve to the smallest amplitude, then the largest
+ramp fraction.
 
 ### Stage B — the ladder (32 new rollouts)
 
@@ -455,8 +753,13 @@ verdict.
 ```text
 Case A   all ten ladder values pass
 Case B   a proper subset passes
-Case C   none passes, after all ten have safe valid M2 verdicts
+Case C   none passes, after all ten ladder values have a SAFE, VALID per-cell
+         mechanics verdict under the operative D(v,c) >= 2*Q95_c rule
          -> Slot-12 method failure + Slot-13 excitation-bounded non-transfer
+
+           "safe"  = not excluded by UNSAFE_LADDER_VALUE
+           "valid" = the statistic was computable in every cell: I9 window on-grid,
+                     I10 measurement-time shape, I11 >= 5 finite valid samples
 ```
 
 **`TESTABLE` is necessary, not sufficient.** Stage A/B signal is seed-matched so the
@@ -470,7 +773,9 @@ sensor term cancels, while the Stage-C null is not matched. The asymmetry favour
   the fixed-trace redraw term and by how much, conditional on that trace. One fixed
   trace identifies no population decomposition, and components can interact or
   partially cancel, so there is **no mechanism attribution**. It sets no threshold and
-  gates nothing. The same narrowing applies to M2.
+  gates nothing. **The identical narrowing applies to the prior fixed-trace gauge-only
+  check referenced in §8 (Stage 0).** Neither object has authority over any verdict;
+  only Stage C's `Q95_c` does.
 - **Unmatched secondary** (0 rollouts).
   `D_unmatched(v,c,k) = ||b(fault at v, identity_AB) - b(healthy_k, identity_k)||`,
   k=1..7. Seven **dependent** distances sharing one fixed fault-side identity, with no
@@ -493,18 +798,26 @@ any other candidate's failure
    -> recorded normally; classifies nothing by itself
 ```
 
-**A precondition on the second branch, added in v2.3.1.** No Stage-A failure may be
-labelled a physical limit until invariant I13 (§10) has been asserted for that rollout.
-Session 41 measured that the safety gates are insensitive to a construction defect
-that changes which body is being measured — they passed with ~70x margin under both
-the correct and the defective onset. A gate outcome only carries physical meaning once
-the construction has been asserted separately.
+**A precondition on the second branch (v2.3.1, tightened in v2.3.2).** No Stage-A
+failure may be labelled a newly observed physical limit unless **both** construction
+checks are in a passing state: **I13a** asserted for that specific rollout (the
+constructed fault object equals the requested one, field by field) **and I13b** passing
+(the step-499/step-500 softening boundary implementation test). Session 41 measured that
+the safety gates are insensitive to a construction defect that changes which body is
+being measured — they passed with ~70x margin under both the correct and the defective
+onset. A gate outcome carries physical meaning only once the construction has been
+established separately, and either half alone leaves a route from a build mistake to a
+reported discovery: I13a without I13b never checks that the softened model actually
+switches at the onset, and I13b without I13a never checks that *this* rollout requested
+the body it got.
 
 ### `UNSAFE_LADDER_VALUE`
 
 Labels a value `v` unsafe, excludes it with a reason, does **not** reopen selection,
-and is neither TESTABLE nor SUB-THRESHOLD. Cases A, B, and C all require all ten
-ladder values to have safe valid M2 verdicts; otherwise the outcome is terminal.
+and is neither TESTABLE nor SUB-THRESHOLD. Cases A, B, and C all require all ten ladder
+values to have a safe, valid per-cell mechanics verdict under the operative
+`D(v,c) >= 2*Q95_c` rule, in the exact sense defined under Case C above; otherwise the
+outcome is terminal.
 
 ### Role coverage — pre-declared, read before the ladder
 
@@ -542,25 +855,55 @@ Every decision-bearing invariant raises `ProtocolPError`. **Never `assert`** —
 removes assertions. `assert` appears only in `tests/`.
 
 ```text
-I1   both pinned reference digests present and unchanged (canonical bytes)
-I2   byte equality on replay: 20 privileged fields + 38 npz entries
+I1   every pinned digest present and unchanged, EACH THROUGH ITS OWN DOMAIN (§0):
+       canonical_text_sha256  this file; proposed-gate3-assignment-v0.1.json
+       raw_file_sha256        both retained .npz replay references (exact bytes)
+     Applying the text helper to a .npz, or the raw helper to either text file, is
+     itself an I1 failure.
+I2   array equality on replay: 20 privileged fields + 38 npz entries
 I3   screen reservation differs from source in exactly {sensor_seed, base_pair_id}
 I4   realized pair_id carries no _dataset0 suffix
 I5   all eight Stage-C identities unique within a cell
 I6   Stage-C k=0 identity == the selected Stage-A healthy identity
 I7   Stage-A/B fault and healthy share one identity (deliberate; asserted, not assumed)
-I8   active overrides carry a provenance hash that is dev-<64 lowercase hex> and
-     differs from the base config hash; the stamped hash reaches the session and every
-     SensorModel.observe
+I8   every generated identity is dev-<64 lowercase hex> and differs from the base
+     config hash, in both classes that exist:
+       Stage A/B/C rollouts  active overrides carry a per-rollout provenance hash, and
+                             the stamped hash reaches the OnlineSensorSession and every
+                             SensorModel.observe
+       Stage 0               the written artifact carries one artifact-level identity
+                             plus the exact canonical_json string it was derived from
+     The replay rollout is explicitly OUT of scope: it stamps the base config hash by
+     requirement (§0, §7), and any implementation that gives it a dev- provenance has
+     broken I2.
 I9   window origin on-grid and w1 <= n_steps
 I10  measurement-time rank / width / length, via explicit if / elif / else
 I11  harmonic fit has >= 5 finite valid samples
 I12  every hard safety gate, per cell and per condition
-I13  [NEW] every structural override's onset_index equals the derived trajectory onset
-     step, and the softened model is verified inactive before that step and active at
-     or after it; the healthy condition is the empty tuple, and every override guard
-     tests `is not None` rather than truthiness
+I13a [RUNTIME, per rollout] the constructed physical_faults tuple equals the requested
+     condition EXACTLY. Unknown conditions raise (closed vocabulary, Correction 1).
+       condition "healthy"     -> severity is None AND physical_faults == ()
+       condition "structural"  -> exactly one FaultSpec, and every field equal:
+                                  source_class  == "structure"
+                                  subtype       == "link_stiffness_loss"
+                                  location      == 1
+                                  severity      == float(requested remEI value)
+                                  onset_index   == _step_index(onset_time_s, dt)
+                                  compound_flag == False
+                                  ood_flag      == False
+     Raised before the rollout starts. Checks the CONSTRUCTION, never a downstream
+     consequence of it.
+I13b [IMPLEMENTATION TEST, once, in tests/] instantiate CablePlant directly and assert
+     the softened model is inactive at step 499 and active at step 500 for the derived
+     onset. This CANNOT be a per-rollout runtime invariant: _generate_reservation
+     returns (pair_id, PrivilegedRecord, observations, label_payload, safety_count,
+     contact_count) and the CablePlant instance is never returned, so `_softened`
+     history is unreachable from the production loop. Must be passing before any stage
+     runs; it is a precondition on the protocol, not an assertion inside it.
 ```
+
+I13a and I13b are separate because they fail for different reasons and neither implies
+the other. The `NO_ADMISSIBLE_PROBE` physical-limit label requires both (§9).
 
 ## 11. Cost
 
