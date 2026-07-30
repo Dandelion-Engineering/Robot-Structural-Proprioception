@@ -526,6 +526,42 @@ Writes a schema-conforming privileged plant record built from analytic signals. 
 
 Produces: `results/synthetic_plant/healthy.npz`
 
+## Step 22 — Reproduce the delivered-dev structural separability screen
+
+Development-only stop/go check on the delivered `dev` split: at the two reserved development structural severities (remaining EI 0.75 and 0.50), can any detector separate structure runs from healthy runs, and does the structural suite `S` beat the matched conventional suite `C1`? Every contrast is context-matched, cross-validation holds out a whole context cell, and an actuator positive control plus a paired label-permutation null bound the pipeline from both sides. This screen fits nothing that is carried forward and touches no split other than `dev`.
+
+Requires the retained base dataset from Step 2C.
+
+```powershell
+.\.venv\Scripts\python.exe scripts\screen_structural_separability.py `
+  --dataset-root ..\data\gate3-base-dev-pilot-val-c1-s `
+  --output-dir results\structural_separability\pooled_trajectories
+```
+
+```powershell
+.\.venv\Scripts\python.exe scripts\screen_structural_separability.py `
+  --dataset-root ..\data\gate3-base-dev-pilot-val-c1-s `
+  --trajectory-filter diagnostic `
+  --output-dir results\structural_separability\diagnostic_trajectory_only
+```
+
+Produces `structural_separability_screen.json` and `structural_separability_screen_report.md` in each output directory. The result is **negative**: at the mild development severities neither suite separates structure. Read that result only at its own scope — the reports carry the four later narrowings (under-strength delivered probe, mismatched yardstick, wrong operation, wrong window origin) that bound what the negative means.
+
+## Step 23 — Run the Protocol P replay gate
+
+Protocol P is the pre-registered screen that decides whether the delivered diagnostic probe can make a structural stiffness-loss fault measurable above the healthy run-to-run null. Its specification is [`protocol/protocol-p-v2.3.3.md`](protocol/protocol-p-v2.3.3.md). Section 7 makes one-row exact reproduction a **stop-or-go precondition**: if rebuilding a single delivered reservation from the committed inputs does not reproduce the retained artifact exactly, the instrument that would produce the screen's numbers is not the instrument that produced the development dataset, and no result from it would be interpretable.
+
+The gate checks invariant I1 (every pinned digest present and unchanged, each through its own hash domain — folded text for the protocol and assignment, exact bytes for the two `.npz` references) and invariant I2 (all 20 privileged plant fields and all 38 observed payload entries equal). It writes nothing: its output is stdout, and it inventories the data root, the packet tree and the repository's top-level files before and after the rollout to show that.
+
+```powershell
+.\.venv\Scripts\python.exe scripts\protocol_p_replay_gate.py `
+  --data-root ..\data\gate3-base-dev-pilot-val-c1-s
+```
+
+One MuJoCo rollout, about 26 s. Exit status is 0 only when every pinned digest matches and all 58 compared entries are equal.
+
+**This step needs the retained development dataset, which is not distributed with the packet** (see [`DATA.md`](DATA.md)); the two pinned reference payloads are local artifacts of the Step 2C generation, not committed data. Regenerating the dataset from Step 2C reproduces them. The gate's own comparison layer is covered portably by `tests/test_protocol_p_replay_gate.py`, which runs on a clean checkout with no dataset present.
+
 ## Data
 
 No external dataset is required. The simulator generates every value used by the spike. See [`DATA.md`](DATA.md) for the data and licensing boundary.
