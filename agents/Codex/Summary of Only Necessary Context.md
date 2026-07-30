@@ -1,19 +1,19 @@
 # Summary of Only Necessary Context — Codex
 
-**Rewritten:** 2026-07-29, Codex Session 46
+**Rewritten:** 2026-07-30, Codex Session 47
 
 **Phase:** Phase 2 — Integration and Reproducibility Build
 
-**Config:** **UNFROZEN**; `Reproducibility Packet/config.json` is absent
+**Config:** **UNFROZEN**; final `config.json` is absent
 
 **Current decision:**
 
 ```text
-ACKNOWLEDGE_REPLAY_GATE_IMPLEMENTATION_LOOP_CLOSED
-BLOCK_STAGE_0_IMPLEMENTATION_CLAUDE_HANDOFF_STATE_ON_CONFIG_TO_MEASUREMENT_BINDING
-APPROVE_STAGE_0_IMPLEMENTATION_REVIEWER_EDITED_STATE
-REQUIRE_CLAUDE_OWNER_REREVIEW_BEFORE_STAGE_0_EXECUTION
-AFTER_LOOP_CLOSE_AUTHORIZE_STAGE_0_EXECUTION_ONLY
+APPROVE_STAGE_0_TIMING_BINDING_IMPLEMENTATION_AS_CORRECT
+BLOCK_STAGE_0_TEST_HANDOFF_STATE_ON_UNREACHABLE_END_TO_END_CLAIM_AND_REIMPLEMENTED_GATE_TEST
+APPROVE_STAGE_0_REVIEWER_EDITED_TEST_STATE
+REQUIRE_CLAUDE_OWNER_REREVIEW_AND_EXPLICIT_SAME_STATE_APPROVAL
+STAGE_0_EXECUTION_REMAINS_UNAUTHORIZED
 STAGES_A_B_C_REMAIN_UNAUTHORIZED
 BLOCK_CONFIG_FREEZE_PENDING_PRECONFIRMATORY_BUILD_AND_VALIDATION
 ```
@@ -31,27 +31,23 @@ chats/Claude-Codex/Phase 2 Integration and Config Freeze/
   Phase 2 Integration and Config Freeze - Active.md
 ```
 
-Its physical last turn is **Codex Session 46**, beginning at line 10,035.
+Its physical last turn is **Codex Session 47**, beginning at line 10,418.
 
 Claude owns the Stage-0 implementation and must genuinely owner-re-review Codex's
-five-file reviewer-edited state. Codex owns exact-state review. Do not run Stage 0 and
-do not take Stage-A/B/C driver ownership unless the active thread explicitly changes
-that authorization.
-
-The next action is only Claude's owner re-review of:
+reviewer edit to:
 
 ```text
-Reproducibility Packet/scripts/analyze_synchronous_difference_null.py
-Reproducibility Packet/scripts/utils/gauge_windows.py
-Reproducibility Packet/scripts/analyze_synchronous_detection_floor.py
 Reproducibility Packet/tests/test_synchronous_difference_null.py
-Reproducibility Packet/tests/test_gauge_windows.py
 ```
 
-The implementation loop closes only when Claude explicitly approves the same reviewer-
-edited state. After that closure, exactly one pinned Stage-0 execution is authorized.
-The result/artifact must be reviewed before any later driver work. Stage A/B/C
-implementation and execution remain unauthorized.
+The production file remains at Claude's exact Session-47 blob and is explicitly
+approved by Codex. The implementation loop closes only when Claude reopens the reviewer
+diff, verifies the two corrections, reproduces the exact state, and explicitly
+approves it. After that closure, exactly one pinned Stage-0 execution is authorized.
+Do not run Stage 0 before the owner approval. Do not implement or run Stages A/B/C.
+
+Codex's next session is Session 48, so a regular progress report is due after normal
+session work.
 
 ## Jointly approved Protocol P
 
@@ -79,8 +75,7 @@ next version, explicitly approve the replacement digest, and repeat same-state r
 
 ## Jointly approved replay gate and exact one-row result
 
-Claude Session 46 genuinely re-reviewed Codex's corrections and approved them. The
-replay-gate implementation loop is closed:
+The replay-gate implementation loop is closed:
 
 ```text
 Reproducibility Packet/scripts/protocol_p_replay_gate.py
@@ -97,24 +92,15 @@ Reproducibility Packet/tests/test_protocol_p_replay_gate.py
 
 Approved behavior:
 
-- data root and packet tree are watched recursively;
-- repository top-level files are watched as a shallow namespace re-enumerated after
-  replay;
-- any added, modified, or removed watched file raises before final PASS;
-- the report discloses a denominator and refuses a snapshot below the 100-file
-  anti-vacuity floor;
+- recursive packet/data watches plus shallow repository-top-level name discovery;
+- added, modified, or removed watched files raise before PASS;
+- the report discloses its denominator and refuses below the 100-file floor;
 - incompatible dtype drift reaches a named `ProtocolPError`;
 - `_plant_payload` remains a deliberately private shared serialization import;
 - no skip-if-absent integration test is wanted; and
 - `embed_approved_assignment.py` remains a one-time Gate-3 transition utility.
 
-Claude additionally verified the real CLI wire by creating a new repository-top-level
-file eight seconds into a replay. The gate discovered the previously unknown name,
-raised `ProtocolPError`, omitted PASS, and exited 1. That scratchpad technique should be
-rebuilt when this gate or the later stage driver changes; it should not become a
-skip-by-default permanent test.
-
-The approved replay result remains exactly one retained development row:
+The approved result remains exactly one retained development row:
 
 ```text
 run_id
@@ -152,99 +138,123 @@ S observation
   531 NaNs matched position-for-position across 5 entries
 ```
 
-This proves one-row exact construction and is an end-to-end regression on the approved
-seam's all-`None` path. It never generalizes to the retained 472-reservation dataset.
+This is a one-row construction positive control only. It never generalizes to the
+retained 472-reservation dataset.
 
-## Stage-0 implementation review is open at the owner step
+## Stage-0 implementation review is open at Claude's owner step
 
-Claude's handoff correctly implemented the four-gauge difference statistic, exact seed
-universe, Stage-0 identity/canonical string, output-schema binding, `method="higher"`
-Q95, no-authority corroboration, and a shared gauge-window helper. Codex found a blocking
-configuration wire:
+Claude Session 47 accepted Codex's Session-46 production corrections, then added a
+timing/config equality guard because three Stage-0 pins are also bound config values:
 
 ```text
-identity:
-  bound loaded base_config_hash
-
-measurement:
-  independently constructed SensorConfig() defaults
+window         768    <-> values.timing.window_steps
+f_ctrl_hz      500.0  <-> values.timing.f_ctrl_hz
+diagnostic_hz  0.8    <-> values.timing.diagnostic_probe.frequency_hz
 ```
 
-The current draft's sensor block equals the defaults exactly, so the defect changed no
-current number and all 565 handoff-state checks passed. Under a future valid sensor-model
-change, however, the identity would move while the measurement silently remained on old
-defaults.
+The other four pins are deliberately excluded. `pairs`, `seed`, and `pair_id` have no
+config counterparts. `thermal_ramp_c = 3.0` is an imposed linear sensor-path excursion,
+not the sinusoidal plant-side validation environment that happens to use amplitude
+`3.0`.
 
-Codex corrected that class and explicitly approved this exact state:
+Codex Session 47 reviewed and explicitly approved the production file unchanged:
 
 ```text
 Reproducibility Packet/scripts/analyze_synchronous_difference_null.py
-  git blob    d68b622baac53335ad4b7c58d6a8440e5dbf8904
-  raw sha256  624f3a304853a6ef25ef795f26356df2243ded16176867f8f3261bcaacf61f0e
-  bytes       34,791
-
-Reproducibility Packet/scripts/utils/gauge_windows.py
-  git blob    7f7c09da3079ff2498a7240922a77b95ed116b7b
-  raw sha256  646d8c4e3c4d7dbe76fc8d1523a9a7b4b7ccdbf2d8509589da98af1057e8d5cb
-  bytes       6,806
-
-Reproducibility Packet/scripts/analyze_synchronous_detection_floor.py
-  git blob    b99fe33357701c0a5285773146ec7986db6b7a82
-  raw sha256  ccc58d45fd05c1dab8dbf8886581d165783f9d23e9eebe4e5fc91aa91c422126
-  bytes       19,540
-
-Reproducibility Packet/tests/test_synchronous_difference_null.py
-  git blob    2dc659926090a968e07a7e7da8e65a99c7659b5f
-  raw sha256  77530d416f866df6db943b84bce3cd86bd00a6d6f9ff9d13945eeb92ab00064c
-  bytes       33,075
-  tests       81
-
-Reproducibility Packet/tests/test_gauge_windows.py
-  git blob    925b0bd842a8a2787516753217f28d06d3000c6c
-  raw sha256  cb6e49d9e6baf4541eafce9ef1c1f450eb03c95e074d380a7a4035cbaf2397f0
-  bytes       8,225
-  tests       18
+  git blob    8435c764a76cb091278ffa47f14584dbf43b40ce
+  raw sha256  4a9fc5955bb5d0f103d258525ee80f5766e0e9a46b01975c76ab895c53815b24
+  bytes       40,098
+  encoding    UTF-8, no BOM, pure LF
 ```
 
-All five were UTF-8 without BOM and pure LF in the reviewed checkout. Protocol P does
-not hash source files, so git blobs are the checkout-EOL-stable review handles and
-`.gitattributes` remains unchanged.
-
-Current corrected behavior:
+Approved production behavior:
 
 - one `PINNED_CLI` object owns the seven decision values;
-- parser defaults, the identity, and the executable guard share that object;
+- parser defaults, identity, and executable pin guard share that object;
 - tuned decision values raise before input reads or output creation, including under
   `python -O`;
 - `sensor_config_from_document()` requires an exact field set and constructs the
   measurement config from the loaded, hash-bound document;
 - `run_null()` requires that explicit config and has no default;
-- the thermal profile requires the bound `reference_temperature_c`; the duplicated
-  25 °C constant is gone;
-- the closed detection-floor screen passes its existing reference explicitly;
-- the main config→measurement→document→writer wire is tested with a deliberately
-  non-default sensor value;
-- `run_null()` is tested to respond to the supplied config;
-- the helper shortcut is compared with public `OnlineSensorSession.observe_step` gauge
-  values and validity; and
-- the helper claims the value/validity path only. Latency remains availability metadata
-  outside this helper.
+- the thermal profile requires the bound `reference_temperature_c`;
+- `require_bound_timing_matches_cli()` requires exact equality for the three shared
+  timing values and returns what it read for disclosure;
+- equality is used instead of adoption so Protocol P remains authoritative;
+- the main order is assignment binding, sensor binding, timing binding, identity,
+  measurement, then output; and
+- no output directory is created on a refused state.
 
-Verification:
+### Current-lineage reachability boundary
+
+`validate_approved_assignment_binding()` reconstructs the pre-embedding parent config
+with `scenario_manifest = None`, restores the parent open gates and parent hash, and
+recomputes the canonical config hash. Therefore, a rehashed change to either `timing`
+or `sensor_model` fails the binding gate before either bound-value guard runs.
+
+Within the current I1-pinned assignment lineage, a later valid sensor-model or timing
+change cannot merely move the artifact identity while leaving measurement stale. It
+requires a new draft lineage, replacement assignment, and new I1 pin. Both bound-value
+guards defend code today — a skipped/reordered binding gate or future caller — and
+become live data checks when the pre-confirmatory lineage is legitimately re-derived.
+Carry this qualifier into the Technical Report.
+
+### Codex's two test-evidence corrections
+
+Claude's handed-back test blob had two evidence defects:
+
+1. a test described a divergent config as currently constructible end to end even
+   though it monkeypatched the real binding gate away; and
+2. the test claiming to pin binding-gate behavior reimplemented the parent-hash
+   arithmetic locally and never called the production gate.
+
+Codex corrected them:
+
+- the bypass test now explicitly models a skipped/reordered binding gate and disclaims
+  a current end-to-end data state; and
+- the architectural test now loads the real config/assignment, requires the control
+  binding to pass, mutates timing or sensor config, rehashes the current config to avoid
+  a stale-self-hash shortcut, and requires the real production binding gate to reject
+  parent reconstruction.
+
+The reviewer-edited test state is:
 
 ```text
-focused Stage-0/helper files    99 passed in 1.45 s
-full packet suite              577 passed in 12.58 s
-compileall                      clean
-semantic mutation sweep         9 / 9 caught
-tuned --pairs 99               exit 1; no output
-tuned under python -O          exit 1; no output
+Reproducibility Packet/tests/test_synchronous_difference_null.py
+  git blob    9591c91bd6412a9dd60860e05c40fcbcccc9ff74
+  raw sha256  2fe39d831fa500d5183108ee4aed6590ac676af8beafec122b9af4919c9402ff
+  bytes       44,285
+  encoding    UTF-8, no BOM, pure LF
+  tests       99
 ```
 
-The shared helper feeds a closed screen. Any future edit must re-run
-`analyze_synchronous_detection_floor.py` to scratch and require both published outputs
-byte-identical unless a new reviewed evidence state is explicitly intended. Session 46
-verified:
+The focused total is 117 only when the unchanged 18
+`test_gauge_windows.py` tests are included. Claude's Session-47 per-file description
+`99 -> 117` is forward-corrected; the actual file moved from 81 to 99.
+
+Claude must owner-review this exact test blob and explicitly approve or edit-and-return
+it. The Session-47 handoff did not explicitly approve the extended state as a whole, so
+the next owner turn must make approval unambiguous.
+
+### Already-approved helper/floor files
+
+Do not re-review or edit without new evidence:
+
+```text
+Reproducibility Packet/scripts/utils/gauge_windows.py
+  git blob    7f7c09da3079ff2498a7240922a77b95ed116b7b
+  raw sha256  646d8c4e3c4d7dbe76fc8d1523a9a7b4b7ccdbf2d8509589da98af1057e8d5cb
+
+Reproducibility Packet/scripts/analyze_synchronous_detection_floor.py
+  git blob    b99fe33357701c0a5285773146ec7986db6b7a82
+  raw sha256  ccc58d45fd05c1dab8dbf8886581d165783f9d23e9eebe4e5fc91aa91c422126
+
+Reproducibility Packet/tests/test_gauge_windows.py
+  git blob    925b0bd842a8a2787516753217f28d06d3000c6c
+  raw sha256  cb6e49d9e6baf4541eafce9ef1c1f450eb03c95e074d380a7a4035cbaf2397f0
+  tests       18
+```
+
+The closed detection-floor artifacts remain:
 
 ```text
 summary.json
@@ -254,9 +264,13 @@ synchronous_detection_floor_report.md
   1f5cbfea807878a81237e89eabf71f07a8106b5dc111aaf04925fe9801ac08c1
 ```
 
+Any future edit to `gauge_windows.py` must re-run the closed screen to scratch and
+require both published outputs byte-identical unless a new reviewed evidence state is
+explicitly intended.
+
 ## Stage-0 pins and meaning
 
-The only authorized decision CLI after owner approval is:
+After owner approval, the only authorized decision CLI is:
 
 ```text
 window          768
@@ -268,8 +282,8 @@ seed            0
 pair_id         1
 ```
 
-Consecutive seed pairing consumes `(0,1), (2,3), ..., (198,199)`. One sample is one pair
-of four-gauge windows reduced to:
+Consecutive seed pairing consumes `(0,1), (2,3), ..., (198,199)`. One sample is one
+pair of four-gauge windows reduced to:
 
 ```text
 D = || concat_{g=0..3} (b_g(A) - b_g(B)) ||_2
@@ -280,13 +294,14 @@ difference operation. It sets no threshold, gates nothing, and cannot establish
 mechanics, detection, attribution, action authority, controller outcome, or the project
 hypothesis. Its artifact identity is `dev-` prefixed and confirmatory-ineligible.
 
-The prior fixed-trace per-cell Q95 range `0.3176 / 0.3555 / 0.3854 / 0.4251 µε` is
-corroboration only. The artifact's `q95_inside_real_plant_range` is a range statement,
-not a test. The operative null remains Stage C's `Q95_c`.
+The prior fixed-trace per-cell Q95 range
+`0.3176 / 0.3555 / 0.3854 / 0.4251 microstrain` is corroboration only.
+`q95_inside_real_plant_range` is a range statement, not a test. The operative null
+remains Stage C's `Q95_c`.
 
 ## Jointly approved generator seam
 
-The seam implementation-review loop remains closed on:
+The seam implementation-review loop remains closed:
 
 ```text
 Reproducibility Packet/scripts/utils/assignment_generator.py
@@ -323,10 +338,6 @@ git blob:
   ca0f44743b3e7b4f4268e596fc82f6e1bbee2411
 tests:
   6
-owner approval:
-  Claude Session 43
-reviewer approval:
-  Codex Session 43
 ```
 
 It checks actual model swap at onsets 1, 5, and 500, pins
@@ -336,7 +347,7 @@ green before every stage.
 
 ## Stage-driver gates after Stage 0
 
-No stage driver exists and none is authorized yet. Its later review must require:
+No Stage-A/B/C driver exists and none is authorized. Its later review must require:
 
 1. a closed-vocabulary `screen_physical_faults` helper;
 2. healthy requires severity absent and returns `()`;
@@ -380,8 +391,8 @@ Do not reopen without new evidence:
 - universe: dev diagnostic trajectory `t01`, cells 4/5/6/7;
 - replay gate: one exact row;
 - Stage 0: 100 synthetic sensor-only paired differences, zero plant rollouts;
-- Stage A: 9 candidates × 4 cells × `{healthy, remEI 0.75, remEI 0.35}` = 108;
-- Stage B: 10 remaining-EI values × 4 cells, reusing 0.75 and 0.35 = 32 new;
+- Stage A: 9 candidates x 4 cells x `{healthy, remEI 0.75, remEI 0.35}` = 108;
+- Stage B: 10 remaining-EI values x 4 cells, reusing 0.75 and 0.35 = 32 new;
 - Stage C: 8 healthy replicates per cell, reusing k=0 = 28 new;
 - total plant rollouts including replay: 169;
 - statistic: four-gauge matched 0.8-Hz cosine/sine coefficient difference, eight entries;
@@ -392,7 +403,7 @@ Do not reopen without new evidence:
 - candidate peaks 0.05-0.40 N and ramps 0.125/0.25/0.5;
 - torque gate admits only 0.05/0.10/0.15 N, including equality at 0.15 N;
 - measurement origin: probe start;
-- Stage-A/B signal identity-matched; Stage-C null unmatched and favourable to S;
+- Stage-A/B signal identity-matched; Stage-C null unmatched and favorable to S;
 - gauge-only and unmatched secondaries descriptive only;
 - OOD 0.45/0.55 excluded from known-class macro-F1; and
 - all outputs development-only and confirmatory-ineligible.
@@ -422,8 +433,8 @@ Protocol-P replay result and implementation:
   jointly approved
 
 Stage 0:
-  implemented in reviewer-edited state
-  Claude owner re-review open
+  production implementation approved by both agents in substance
+  reviewer-edited test state awaiting Claude owner re-review
   not run
 
 Stage A/B/C:
@@ -468,14 +479,14 @@ Use only the repository venv:
 .\venv\Scripts\python.exe -m pytest -q "Reproducibility Packet\tests"
 ```
 
-Codex Session 46:
+Codex Session 47:
 
 ```text
-focused Stage-0/helper tests    99 passed in 1.45 s
-full packet suite              577 passed in 12.58 s
-compileall                      clean
-semantic mutations              9 / 9 caught
-closed floor outputs            byte-identical
+Stage-0 test file                   99 passed in 1.45 s
+Stage-0 + gauge-helper files       117 passed in 1.50 s
+full packet suite                  595 passed in 12.56 s
+compileall                         clean
+accept-all binding-gate mutant     caught
 ```
 
 Do not run root-wide `pytest -q`; ignored duplicate trees under `tmp/` can pollute
@@ -495,34 +506,37 @@ CRLF warnings alone are not a reason to churn unrelated files.
 
 ## Transcript-order state
 
-The active transcript is append-only. Session-46 append verification:
+The active transcript is append-only. Session-47 append verification:
 
 ```text
 pre-write lines:
-  10,031
+  10,414
 pre-write bytes:
-  755,841
+  773,918
 pre-write sha256:
-  0099d4d7b08476663e9bced9deea1491f31ea826d1aad4276326a763660adde3
+  9a600a18950aeda8c884e021b42d2420d5e54b868802b8f94e327786e42c3e01
 Codex header:
-  line 10,035
+  line 10,418
   count 1 total
   after old boundary
 old byte prefix:
   exact
 technical diff:
-  +177 / -0
+  +159 / -0
 post-write lines:
-  10,208
+  10,573
 post-write bytes:
-  764,050
+  781,095
 post-write sha256:
-  094565356bdf1d4028b18ac20fb607e4265dca1468bed66633ee0f95f42785c8
+  b266a49416aabd3ccedbf6d12f4dfdf85c6809b38dc16b260d3926c5dd4c6104
 physical last author:
   Codex
 ```
 
-No recurrence occurred, so the monitoring thread was not updated.
+The first patch attempt changed nothing because the terminal-rendered sign-off did not
+match the stored Unicode em dash. The hard gate stopped safely; the successful patch
+used the literal UTF-8 EOF block. No recurrence occurred, so the monitoring thread was
+not updated.
 
 For every future append:
 
@@ -539,34 +553,39 @@ If any check fails, stop and repair by dated append-only correction.
 
 ## Public README
 
-The root README is a public append-only running log. Claude Session 46 already added the
-publicly meaningful state: the replay-gate loop closed, 565 checks were green at handoff,
-and Stage 0 was written but not run. Codex Session 46 changed an internal implementation
-review state without changing that public truth, producing a result, completing an
-artifact, or advancing phase. The live-run heartbeat therefore required no new entry.
+The root README is a public append-only running log. Session 47 changed an internal,
+still-open implementation-review state without producing a Stage-0 result, closing an
+artifact, or advancing phase. The live-run heartbeat therefore required no update.
 
-Do not add a public entry merely for routine owner re-approval unless it changes the
-publicly meaningful state. Run the heartbeat each session against
+Do not add a public entry merely for routine owner approval unless it changes the
+publicly meaningful state. Run the heartbeat every session against
 `Playbooks/live-run-readme.md`.
 
 ## Required next actions
 
-1. Read controlling instructions, this continuity file, all Codex-relevant chat summaries,
-   and the active transcript before replying.
+1. Read controlling instructions, this continuity file, all Codex-relevant chat
+   summaries, and the active transcript before replying.
 2. Read Claude's newest report and owner re-review turn.
-3. Verify Claude reopened the exact five reviewer-edited files and reproduced their blobs.
-4. If Claude explicitly approves those same hashes, record that the Stage-0 implementation
+3. Verify Claude reopened the reviewer diff and reproduced:
+
+   ```text
+   analyze_synchronous_difference_null.py
+     8435c764a76cb091278ffa47f14584dbf43b40ce
+
+   test_synchronous_difference_null.py
+     9591c91bd6412a9dd60860e05c40fcbcccc9ff74
+   ```
+
+4. If Claude explicitly approves that same state, record that the Stage-0 implementation
    loop is closed.
 5. Only after loop closure, allow the one pinned Stage-0 execution.
 6. Review the Stage-0 identity, canonical string, samples, distribution, output path,
    elapsed time, and no-authority boundaries before any later work.
 7. Keep Stage A/B/C and the later driver unauthorized until that result review closes.
-8. Keep `config.json` absent and the test split untouched.
-9. Close out with Codex `HumanReport47.md`, README heartbeat, Codex workspace README,
-   complete continuity rewrite, hygiene checks, exact commit message, and push.
-
-The next regular Codex progress report is Session 48 unless a phase transition or
-approved written Claim Sheet amendment triggers one earlier.
+8. Keep final `config.json` absent and the test split untouched.
+9. Write Codex's regular Session-48 progress report after normal work.
+10. Close out with the next HumanReport, README heartbeat, Codex workspace README,
+    complete continuity rewrite, hygiene checks, exact commit message, and push.
 
 ## Non-negotiable boundaries
 

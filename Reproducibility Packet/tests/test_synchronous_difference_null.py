@@ -858,16 +858,18 @@ def test_main_is_wired_to_the_bound_timing_guard(
     assert list(tmp_path.iterdir()) == []
 
 
-def test_main_refuses_a_divergent_document_and_writes_nothing(
+def test_main_guard_refuses_a_divergent_document_when_binding_is_bypassed(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The falsely-bound artifact must become unconstructible end to end.
+    """Feed the code-level guard the divergent state it exists to reject.
 
-    This is the state the guard exists for: a valid, schema-clean, correctly-bound
-    document whose timing block disagrees with the pre-registered pins. Before the
-    guard, ``main`` measured at the pinned window and stamped the divergent document's
-    hash, writing an artifact that was internally reproducible and falsely bound.
+    The real binding gate makes this state unreachable through today's data lineage.
+    Monkeypatching that gate away deliberately models the code defects named in the
+    production docstring: a caller that skips the gate, or a future reordering of
+    ``main``. Before the timing guard, that bypassed path measured at the pinned window
+    and stamped the divergent document's hash. This is a code-path test, not a claim
+    that the falsely-bound artifact is constructible end to end today.
     """
 
     def fake_run_null(**kwargs: object) -> dict[str, object]:
@@ -921,30 +923,33 @@ def test_the_binding_gate_pins_the_blocks_both_guards_read(path: tuple[str, ...]
     data. Red if a change to that gate makes either block float, at which point the
     reachability paragraphs in both docstrings must be re-read and rewritten.
 
-    Read-only with respect to Codex's module; this asserts its behaviour, never edits it.
+    Call the production gate rather than reimplementing its reconstruction arithmetic:
+    a second hash calculation would only prove that the test agrees with itself.
     """
 
+    from utils.assignment_binding import AssignmentBindingError
     from utils.config_contract import expected_config_hash
 
-    document = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
-    wrapper = document["values"]["scenario_manifest"]
-    assert wrapper["parent_draft_config_hash"] == wrapper["assignment"]["draft_config_hash"]
+    loaded = mod.load_config(CONFIG_PATH, SCHEMA_PATH)
+    assignment = mod.load_assignment(ASSIGNMENT_PATH)
+    mod.validate_approved_assignment_binding(loaded, expected_assignment=assignment)
 
-    def reconstruct(doc: dict) -> str:
-        parent = copy.deepcopy(doc)
-        parent["values"]["scenario_manifest"] = None
-        parent["open_gates"] = list(wrapper["parent_open_gates"])
-        parent["config_hash"] = wrapper["parent_draft_config_hash"]
-        return expected_config_hash(parent)
-
-    assert reconstruct(document) == wrapper["parent_draft_config_hash"]
-
-    mutated = copy.deepcopy(document)
+    mutated = copy.deepcopy(dict(loaded.document))
     node = mutated["values"]
     for key in path[:-1]:
         node = node[key]
     node[path[-1]] = float(node[path[-1]]) * 2.0
-    assert reconstruct(mutated) != wrapper["parent_draft_config_hash"]
+    mutated["config_hash"] = expected_config_hash(mutated)
+    rehashed = dataclasses.replace(
+        loaded,
+        document=mutated,
+        config_hash=str(mutated["config_hash"]),
+    )
+    with pytest.raises(AssignmentBindingError, match="reconstruct the exact"):
+        mod.validate_approved_assignment_binding(
+            rehashed,
+            expected_assignment=assignment,
+        )
 
 
 def test_main_validates_the_binding_before_reading_bound_values(
