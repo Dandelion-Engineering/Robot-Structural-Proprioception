@@ -1,27 +1,31 @@
-# Protocol P — v2.3.2
+# Protocol P — v2.3.3
 
 **A pre-registered screen for whether the delivered diagnostic probe can make a
 structural stiffness-loss fault detectable above the healthy run-to-run null.**
 
 | | |
 |---|---|
-| Version | v2.3.2 (= v2.3.1 + the four Session-42 executability corrections; no scientific change) |
+| Version | v2.3.3 (= v2.3.2 + the Session-43 identifier-binding corrections; no scientific change) |
 | Author | Claude |
 | Reviewer | Codex (owns `scripts/utils/assignment_generator.py`) |
 | Status | **PENDING REVIEWER APPROVAL — NOTHING IN THIS PROTOCOL HAS BEEN RUN** |
 | Phase | 2 (Execution) |
 | Contract | `Claim Sheet.md`, schema v1.0 + Amendment A1 |
 
-**Supersedes v2.3.1** (canonical sha256
-`8c268f8f5777923e661cb44c0b6d68991bdf41bf5080ea3e229e4c101d401d76`, 29,250 bytes),
-which was approved by Claude and **blocked by Codex** on 2026-07-29 16:40 PDT under
-`BLOCK_PROTOCOL_P_V2_3_1_PENDING_BINARY_HASH_DOMAIN_AND_COMPLETE_EXECUTION_PINS`.
-v2.3.1 was **never executed** — no identity generated, no statistic computed, no
-artifact written — so nothing is bound to its digest. It survives as the immediately
-prior revision of this file in git history (committed `Claude Session 41`) and needs no
-separate archive copy. The version number is bumped rather than the file edited in
-place so that the transcript's approve/block record refers to exactly one byte-state
-per version name.
+**Supersedes v2.3.2** (canonical sha256
+`9d25701796a039d55fcff02b68e2c665a0e492888850dd20bb1e31cf738ba6e5`, 50,169 bytes),
+which was approved by Claude and **blocked by Codex** on 2026-07-29 17:22 PDT under
+`BLOCK_PROTOCOL_P_V2_3_2_PENDING_STAGE0_IDENTITY_PAYLOAD_BINDING`. Codex confirmed in
+the same review that all four Session-41 findings are corrected in v2.3.2 and
+independently reproduced every byte measurement in §0 and §7; the block was on one new
+defect, corrected here as Correction 8.
+
+Neither v2.3.1 nor v2.3.2 was ever executed — no identity generated, no statistic
+computed, no artifact written — so nothing is bound to either digest. Each survives as
+a prior revision of this file in git history (v2.3.1 committed `Claude Session 41`,
+v2.3.2 committed `Claude Session 42`) and neither needs a separate archive copy. The
+version number is bumped and the file renamed rather than edited in place, so that the
+transcript's approve/block record refers to exactly one byte-state per version name.
 
 ## 0. Status, scope, and what this document is for
 
@@ -92,7 +96,7 @@ canonical_text_sha256(path)        DOMAIN: tracked text
   return sha256(raw.replace(b"\r\n", b"\n")).hexdigest()  # fold CRLF -> LF
 
   applies to exactly:
-    protocol/protocol-p-v2.3.2.md              (this file)
+    protocol/protocol-p-v2.3.3.md              (this file)
     config/proposed-gate3-assignment-v0.1.json
 
 raw_file_sha256(path)              DOMAIN: binary artifacts
@@ -164,11 +168,13 @@ the table above.
 ## 1. Correction history
 
 **Every correction on this list is an executability fix. Across v2.3 → v2.3.1 → v2.3.2
-no universe, statistic, threshold, stage, branch, secondary, or success criterion has
-changed.** Corrections 1–3 landed in v2.3.1 and their substance is approved by both
-agents; Corrections 4–7 are new in v2.3.2 and answer Codex's four Session-41 findings.
-The list is kept rather than compressed because each entry records a measurement or a
-source fact that justifies a pin the body of this file now depends on.
+→ v2.3.3 no universe, statistic, threshold, stage, branch, secondary, or success
+criterion has changed.** Corrections 1–3 landed in v2.3.1 and their substance is
+approved by both agents; Corrections 4–7 landed in v2.3.2 and answer Codex's four
+Session-41 findings, all four of which Codex re-verified as corrected. Correction 8 is
+new in v2.3.3 and answers Codex's single Session-42 finding. The list is kept rather
+than compressed because each entry records a measurement or a source fact that
+justifies a pin the body of this file now depends on.
 
 ### Correction 1 — the structural override must activate at the declared onset
 
@@ -280,8 +286,9 @@ def canonical_json(payload) -> str:
         allow_nan=False,      # a NaN or Infinity in an identity payload must raise
     )
 
-canonical = canonical_json(payload)
-screen_provenance_hash = "dev-" + hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+rollout_canonical = canonical_json(rollout_identity_payload)
+screen_provenance_hash = (
+    "dev-" + hashlib.sha256(rollout_canonical.encode("utf-8")).hexdigest())
 ```
 
 `allow_nan=False` is not decoration. Plain `json.dumps` defaults emit the non-standard
@@ -290,11 +297,17 @@ payload would produce a *valid-looking* digest over an unparseable document. The
 already made this choice for the config hash; this protocol uses the same rule for
 every payload it digests.
 
-`payload` contains: `base_config_hash`, `assignment_canonical_sha256`,
+`rollout_identity_payload` contains: `base_config_hash`, `assignment_canonical_sha256`,
 `assignment_hash`, `protocol_spec_sha256` (this file, §0), `stage`, `cell`,
 `condition`, `overrides` (all four values), and `reservation`
 (`scenario_spec_id`, `base_pair_id`, `sensor_seed`). The results JSON records the full
-`canonical` string per rollout, not only the digest.
+`rollout_canonical` string per rollout, not only the digest.
+
+**Both identity payloads in this protocol carry distinct, explicit names** — this one
+and Stage 0's (Correction 6) — because a generic `payload` in one operative expression
+is precisely what let the other bind to the wrong object (Correction 8). The only
+`payload` remaining in this file is `canonical_json`'s own formal parameter, which is
+locally bound by definition.
 
 ### Correction 3 — the assignment byte pin must be portable
 
@@ -402,14 +415,16 @@ stage_0_identity_payload = {
            "thermal_ramp_c": 3.0, "pairs": 100, "seed": 0, "pair_id": 1 },
   "output_schema":               sorted top-level keys the script writes,
 }
-stage_0_identity = "dev-" + sha256(canonical_json(payload).encode("utf-8")).hexdigest()
+stage_0_canonical = canonical_json(stage_0_identity_payload)
+stage_0_identity  = "dev-" + hashlib.sha256(
+                        stage_0_canonical.encode("utf-8")).hexdigest()
 ```
 
 `sensor_only_difference_null.json` records **both** `stage_0_identity` and the exact
-`canonical_json` string it was computed from, so the digest is independently
-recomputable from the artifact alone. The same `dev-` prefix keeps it permanently
-ineligible for confirmatory analysis, and the same base-distinctness requirement in I8
-applies to it.
+`stage_0_canonical` string it was hashed from — the *same* object, not a second call
+that ought to agree — so the digest is independently recomputable from the artifact
+alone. The same `dev-` prefix keeps it permanently ineligible for confirmatory
+analysis, and the same base-distinctness requirement in I8 applies to it.
 
 ### Correction 7 — the construction check and the behavioural test are two different objects
 
@@ -434,8 +449,17 @@ returned, so `_softened` history is unreachable from the production loop's retur
 Verified by reading the return statement, not inferred.
 
 That check therefore becomes **I13b**, a focused implementation test that instantiates
-`CablePlant` directly and asserts the step-499/step-500 boundary once, in `tests/`. It
-is a precondition on the protocol running at all, not a per-rollout assertion.
+`CablePlant` directly and asserts the step-499/step-500 boundary once. It is a
+precondition on the protocol running at all, not a per-rollout assertion.
+
+**Where it lives, and why (decided by Codex, Session 42).** It is a **permanent packet
+test** at `Reproducibility Packet/tests/test_cable_plant_softening_boundary.py`, not a
+Protocol-P-scoped precondition sitting beside the screen script. The activation
+boundary is a property of the **plant contract** — `CablePlant`'s
+`_activate_structural_fault_if_needed` against `FaultSpec.onset_index` — not of this
+screen's measurement, so every future consumer of the plant should keep the regression
+guard after Protocol P is over. It also would have caught the Session-41 onset defect
+on its own, before any protocol existed to be blocked.
 
 **The physical-limit label now requires both.** §9's `NO_ADMISSIBLE_PROBE` second branch
 may label a Stage-A failure a newly observed physical limit only when I13a has been
@@ -444,6 +468,48 @@ the safety gates pass with ~70x margin under both the correct and the defective 
 so a gate outcome carries physical meaning only once the construction has been
 established separately — by both halves, since either one alone leaves a route from a
 build mistake to a reported discovery.
+
+### Correction 8 — every identity expression must name the object it hashes
+
+v2.3.2's Correction 6 defined `stage_0_identity_payload` and then, in the very next
+line, hashed `canonical_json(payload)`. The name `payload` is not that object. Worse
+than an undefined name: `payload` had already been established 122 lines earlier, in
+Correction 2, as the **per-rollout** identity payload. A reader resolving the Stage-0
+expression literally either hits an undefined name or binds it to the wrong payload, so
+the one artifact this protocol writes without a rollout would not have been bound to
+the object its own specification declares.
+
+This is Correction 5's defect class — a token whose meaning lives outside the
+expression that uses it — relocated from prose into an **executable identity
+expression**, where the consequence is a wrong digest rather than a wrong reading.
+Correction 5 retired two ambiguous *abbreviations*; it did not audit *variable names*,
+which is why this survived it.
+
+**Class audit performed rather than the single instance fixed.** Every identifier
+appearing in an operative expression in this file was checked for a binding, and every
+binding checked against the object the surrounding text defines. The protocol generates
+exactly two identity digests — the per-rollout provenance hash (Correction 2) and the
+Stage-0 artifact identity (Correction 6); the replay rollout stamps base by requirement
+and generates none (§0, I8). Both are now bound to explicitly and distinctly named
+payloads, and each names the canonical string it hashes. Three further in-class
+instances were found and corrected, none of them able to change a result:
+
+```text
+Correction 2   the call site read canonical_json(payload) with `payload` bound only by
+               the prose beneath it. That generic name is the affordance the Stage-0
+               defect took. Now rollout_identity_payload / rollout_canonical.
+§6             P_SEED_BASE = 150000 was defined and then never used; both seed
+               expressions repeated the literal. A constant that looks authoritative
+               and drives nothing is the same trap as a name that points at the wrong
+               object. The expressions now use it. Every seed value is unchanged.
+§10 I13a       the onset expression read _step_index(onset_time_s, dt); `dt` is bound
+               nowhere in this file. Correction 1 writes the same call as
+               _step_index(..., control_dt_s). Now spelled the same way in both.
+```
+
+No universe, statistic, threshold, stage, branch, secondary, invariant, or success
+criterion is touched by any of the four. Nothing in this protocol had been executed
+when the defect was found, so no digest, artifact, or result is affected.
 
 ## 2. Universe
 
@@ -556,10 +622,10 @@ only through `overrides.physical_faults`. The assignment catalog is never mutate
 ```text
 P_SEED_BASE = 150000 ; cell c in {4,5,6,7} ; r = c - 4
 
-Stage A + B   sensor_seed = 150000 + 10*r + 2   -> 150002 150012 150022 150032
+Stage A + B   sensor_seed = P_SEED_BASE + 10*r + 2   -> 150002 150012 150022 150032
               pair_id     = "basepair_protocolp_stageAB_c{c}"
 Stage C k=0   reuse the Stage-A healthy rollout of the SELECTED candidate
-      k>=1    sensor_seed = 150000 + 10*r + 1000*k + 2
+      k>=1    sensor_seed = P_SEED_BASE + 10*r + 1000*k + 2
               pair_id     = "basepair_protocolp_stageC_c{c}_k{k}"
 Stage C gauge-only secondary (0 rollouts)  the k=0 trace redrawn at k=1..7
 Stage 0 (no plant)                          pair_id = 1, sensor_seed = 0..199
@@ -888,12 +954,13 @@ I13a [RUNTIME, per rollout] the constructed physical_faults tuple equals the req
                                   subtype       == "link_stiffness_loss"
                                   location      == 1
                                   severity      == float(requested remEI value)
-                                  onset_index   == _step_index(onset_time_s, dt)
+                                  onset_index   == _step_index(onset_time_s, control_dt_s)
                                   compound_flag == False
                                   ood_flag      == False
      Raised before the rollout starts. Checks the CONSTRUCTION, never a downstream
      consequence of it.
-I13b [IMPLEMENTATION TEST, once, in tests/] instantiate CablePlant directly and assert
+I13b [PERMANENT PACKET TEST, once — tests/test_cable_plant_softening_boundary.py]
+     instantiate CablePlant directly and assert
      the softened model is inactive at step 499 and active at step 500 for the derived
      onset. This CANNOT be a per-rollout runtime invariant: _generate_reservation
      returns (pair_id, PrivilegedRecord, observations, label_payload, safety_count,
