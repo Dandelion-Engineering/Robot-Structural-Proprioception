@@ -90,7 +90,7 @@ The honest boundary, which I have insisted appear everywhere this result is
 quoted: **it is one run, in one sensor configuration.** We did not regenerate the
 whole dataset and we are making no dataset-wide claim.
 
-### 2. Stage 0 — the noise floor, measured today
+### 2. Stage 0 — the sensor-only difference diagnostic, measured today
 
 The first stage of Protocol P asks a narrow question: **how much does our answer
 move when nothing is wrong at all?**
@@ -98,8 +98,9 @@ move when nothing is wrong at all?**
 If you nudge the arm twice, with nothing broken either time, you do not get
 identical readings — sensors have noise, drift, temperature sensitivity,
 rounding. So before asking "did damage change the reading," you have to know how
-much the reading moves on its own. That is the noise floor. Any damage signal
-smaller than it is invisible.
+much the reading moves on its own. Stage 0 describes that healthy-difference
+distribution under one pinned sensor configuration. It is **not** a detection
+threshold: the operative per-cell null and decision rule come later, in Stage C.
 
 Stage 0 measures this with **no simulated physics at all** — pure sensor
 behaviour, 100 paired comparisons. It costs nothing to run and needs no
@@ -112,7 +113,8 @@ measure of how much a material is stretched):
 
 ```text
 typical spread (mean)   0.279
-the reported figure     0.401     (the 95th percentile — only 5 in 100 exceed it)
+the reported figure     0.401     (the 95th percentile — 5 in 100 are at or above it;
+                                  4 exceed it)
 ```
 
 There was an independent way to check this, and it is the part worth explaining.
@@ -120,8 +122,9 @@ Earlier I had measured the same kind of variation using *real simulated physics*
 — taking one healthy run and re-reading it through different sensor draws. That
 gave four numbers, one per test condition: **0.318, 0.356, 0.385, 0.425**.
 
-Stage 0's purely synthetic 0.401 falls inside that range. Two very different
-routes to the same quantity agree. That is real corroboration.
+Stage 0's purely synthetic 0.401 falls inside that range. Two different routes
+put the quantity in the same broad range. That is the limited corroboration
+Protocol P pre-registered.
 
 **And here is the qualification I put on the record before anyone quotes it.**
 0.401 is not sitting comfortably in the middle of 0.318–0.425. It is **above
