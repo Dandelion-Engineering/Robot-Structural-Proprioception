@@ -37,17 +37,22 @@ Honesty boundaries:
 from __future__ import annotations
 
 import argparse
-import dataclasses
 import json
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 
-from utils.schema_types import N_GAUGES, PlantStepState, observable_step_sources
-from utils.sensor_model import OnlineSensorSession, SensorConfig
+from utils.gauge_windows import gauge_window, linear_thermal_profile
+from utils.schema_types import N_GAUGES
+from utils.sensor_model import SensorConfig
 from utils.synchronous import harmonic_amplitude, harmonic_design_condition_number
-from utils.synthetic_plant import synthetic_privileged_record
+
+# The sensor RNG is keyed on (sensor_seed, pair_id, channel, stream) jointly, so this
+# screen's published numbers are conditional on this pair_id.  It was an implicit
+# hard-coded constant until Session 46 lifted `gauge_window` into `utils/`; it is stated
+# here so the published value stays reproducible and is not silently re-chosen.
+SCREEN_PAIR_ID = 1
 
 
 def parse_args() -> argparse.Namespace:
@@ -162,41 +167,6 @@ def broadband_rms(window: np.ndarray, valid: np.ndarray) -> float:
     return float(np.sqrt(np.mean(np.square(x[m])))) if m.any() else 0.0
 
 
-# --------------------------------------------------------------------------- #
-# Driving the REAL gauge pathology stack over a zero/known signal.
-# --------------------------------------------------------------------------- #
-def gauge_window(*, signal_true: np.ndarray, temperature_true: np.ndarray,
-                 f_ctrl: float, sensor_seed: int, config: SensorConfig) -> tuple[np.ndarray, np.ndarray]:
-    """Run the real `OnlineSensorSession` gauge stack over a W-step signal/temperature.
-
-    `signal_true[W, N_GAUGES]` is the ideal mechanical strain injected as `gauge_true`;
-    `temperature_true[W, N_GAUGES]` is the imposed thermal profile. Returns the emitted
-    gauge values and validity `[W, N_GAUGES]`. Calls the gauge pathology directly: its
-    CRN substreams are independent of the other channels (schema A [C4]), so the gauge
-    draws are identical to a full `observe_step` while skipping the unused channels.
-    """
-
-    w = signal_true.shape[0]
-    dt = 1.0 / f_ctrl
-    base = synthetic_privileged_record(n_steps=w, f_ctrl=f_ctrl, seed=0, thermal_ramp_c=0.0)
-    session = OnlineSensorSession(
-        "S", pair_id=1, sensor_seed=sensor_seed, control_dt_s=dt, config=config
-    )
-    values = np.empty((w, N_GAUGES))
-    valid = np.empty((w, N_GAUGES), dtype=bool)
-    for i in range(w):
-        state = dataclasses.replace(
-            base.slice_step(i),
-            gauge_true=signal_true[i].copy(),
-            temperature_true=temperature_true[i].copy(),
-        )
-        assert isinstance(state, PlantStepState)
-        gv, gvalid = session._gauge(observable_step_sources(state))  # noqa: SLF001 (own lane)
-        values[i] = gv
-        valid[i] = gvalid
-    return values, valid
-
-
 def run(args: argparse.Namespace) -> dict[str, Any]:
     """Characterize the synchronous NES and the detectability of each target RMS."""
 
@@ -211,7 +181,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     t_s = np.arange(w) / f_ctrl
     config = SensorConfig()
     # Aggressive per-window thermal ramp on every gauge (conservative: real thermal is slower).
-    temp = 25.0 + np.linspace(0.0, args.thermal_ramp_c, w)[:, None] * np.ones(N_GAUGES)
+    temp = linear_thermal_profile(w, args.thermal_ramp_c)
     zero_signal = np.zeros((w, N_GAUGES))
 
     if not np.isfinite(f_ctrl) or f_ctrl <= 0.0:
@@ -236,7 +206,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     for r in range(args.realizations):
         vals, valid = gauge_window(
             signal_true=zero_signal, temperature_true=temp, f_ctrl=f_ctrl,
-            sensor_seed=args.seed + r, config=config,
+            sensor_seed=args.seed + r, pair_id=SCREEN_PAIR_ID, config=config,
         )
         for ch in range(N_GAUGES):
             null_sync.append(synchronous_amplitude(vals[:, ch], valid[:, ch], t_s, f_d))
@@ -266,7 +236,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 signal_true[:, 0] = sig  # inject on one station
                 vals, valid = gauge_window(
                     signal_true=signal_true, temperature_true=temp, f_ctrl=f_ctrl,
-                    sensor_seed=args.seed + r, config=config,
+                    sensor_seed=args.seed + r, pair_id=SCREEN_PAIR_ID, config=config,
                 )
                 amps.append(synchronous_amplitude(vals[:, 0], valid[:, 0], t_s, f_d))
             amps = np.asarray(amps)
