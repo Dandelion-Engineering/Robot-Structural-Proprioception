@@ -4,9 +4,10 @@ DEVELOPMENT / SCREEN SUPPORT. This module holds the one helper two screens share
 way to obtain emitted gauge values for a `W`-step window of *imposed* physical strain
 and temperature, without running a plant. It is not part of the confirmatory pipeline
 and produces no physical claim of its own -- what it faithfully reproduces is the
-sensor lane's pathology stack (hysteresis, thermal apparent strain, bias, random-walk
-drift, white noise, quantization, dropout and latency), which is the object both
-screens need to characterize.
+sensor lane's value-path stack (hysteresis, thermal apparent strain, bias, random-walk
+drift, white noise, quantization and dropout), which is the object both screens need
+to characterize. Latency is separate availability metadata on the full observed
+record; this helper returns values and validity only and makes no latency claim.
 
 Why it lives here rather than in either screen. Protocol P section 8 pre-registers the
 Stage-0 sensor-only difference null as reusing "the gauge-window helper lifted into
@@ -47,33 +48,37 @@ from utils.schema_types import N_GAUGES, PlantStepState, observable_step_sources
 from utils.sensor_model import OnlineSensorSession, SensorConfig
 from utils.synthetic_plant import synthetic_privileged_record
 
-# Reference temperature of the sensor model's thermal apparent-strain term (degrees C).
-# The sensor model subtracts this reference before applying its microstrain-per-degree
-# coefficient, so a profile built around it starts at zero thermal contribution.
-THERMAL_REFERENCE_C = 25.0
-
 
 def linear_thermal_profile(
-    n_steps: int, ramp_c: float, *, n_gauges: int = N_GAUGES
+    n_steps: int,
+    ramp_c: float,
+    *,
+    reference_c: float,
+    n_gauges: int = N_GAUGES,
 ) -> np.ndarray:
     """Build the per-window linear thermal profile both screens impose.
 
     Inputs: the window length in control steps, the total ramp in degrees C across that
-    window, and the number of gauge stations. Outputs: a `[n_steps, n_gauges]` array of
-    imposed temperatures rising linearly from ``THERMAL_REFERENCE_C``.
+    window, the sensor configuration's reference temperature, and the number of gauge
+    stations. Outputs: a `[n_steps, n_gauges]` array of imposed temperatures rising
+    linearly from ``reference_c``.
 
     Purpose: an aggressive linear excursion on every gauge, which is the conservative
     direction (real thermal dynamics are slower) and is a direct check that the joint
     trend/harmonic regression rejects modelled linear drift. Shared rather than
-    restated so the two screens' measurements remain comparable.
+    restated so the two screens' measurements remain comparable. ``reference_c`` is
+    required rather than duplicated as a module constant because it is part of the
+    bound ``SensorConfig`` and sets the thermal zero.
     """
 
     if n_steps < 1:
         raise ValueError("n_steps must be at least 1")
     if not np.isfinite(ramp_c):
         raise ValueError("ramp_c must be finite")
+    if not np.isfinite(reference_c):
+        raise ValueError("reference_c must be finite")
     ramp = np.linspace(0.0, ramp_c, n_steps)[:, None] * np.ones(n_gauges)
-    return THERMAL_REFERENCE_C + ramp
+    return float(reference_c) + ramp
 
 
 def gauge_window(

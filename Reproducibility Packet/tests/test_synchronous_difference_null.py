@@ -13,10 +13,14 @@ own exact-state review.
 
 from __future__ import annotations
 
+import copy
+import dataclasses
+import hashlib
 import json
 import math
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -30,19 +34,13 @@ from utils.schema_types import N_GAUGES  # noqa: E402
 
 PROTOCOL_PATH = PACKET_ROOT / "protocol" / mod.PROTOCOL_FILENAME
 ASSIGNMENT_PATH = PACKET_ROOT / "config" / mod.ASSIGNMENT_FILENAME
+CONFIG_PATH = PACKET_ROOT / "config" / "draft-config-v0.1.json"
+SCHEMA_PATH = PACKET_ROOT / "schema" / "schema.json"
 
 BASE_CONFIG_HASH = "dev-712abf27c3f8f3c331ae9b76e3f22c48857334cc15a81e819718165e47753e56"
 ASSIGNMENT_HASH = "dev-eec59ec8a296a9a4ff4909f8e7f1de91a0a8f4bf289ae1533a427d1a87bc33f1"
 
-PINNED_CLI = {
-    "window": 768,
-    "f_ctrl_hz": 500.0,
-    "diagnostic_hz": 0.8,
-    "thermal_ramp_c": 3.0,
-    "pairs": 100,
-    "seed": 0,
-    "pair_id": 1,
-}
+PINNED_CLI = dict(mod.PINNED_CLI)
 
 
 def _identity_kwargs(**overrides: object) -> dict[str, object]:
@@ -488,8 +486,15 @@ def test_the_seed_guard_accepts_the_pinned_mapping() -> None:
 # order and to dropping one element, so a truncated or re-sorted summary would be an
 # equivalent mutation and the wire test below could not go red. The fixture has to be
 # large enough for the property it checks to be discriminating.
-TINY = {"window": 640, "f_ctrl_hz": 500.0, "diagnostic_hz": 0.8, "thermal_ramp_c": 3.0,
-        "pairs": 3, "seed": 0}
+TINY = {
+    "window": 640,
+    "f_ctrl_hz": 500.0,
+    "diagnostic_hz": 0.8,
+    "thermal_ramp_c": 3.0,
+    "pairs": 3,
+    "seed": 0,
+    "sensor_config": mod.SensorConfig(),
+}
 
 
 def test_run_null_passes_pair_id_through_to_the_draws() -> None:
@@ -565,6 +570,29 @@ def test_run_null_produces_a_positive_sensor_only_difference() -> None:
     assert all(math.isfinite(value) for value in distances)
 
 
+def test_run_null_consumes_the_supplied_sensor_config() -> None:
+    """The config parameter must reach the gauge values, not merely enter the signature."""
+
+    baseline = mod.run_null(pair_id=1, **TINY)
+    changed_request = dict(TINY)
+    changed_request["sensor_config"] = dataclasses.replace(
+        mod.SensorConfig(),
+        gauge_noise_microstrain=9.0,
+    )
+    changed = mod.run_null(pair_id=1, **changed_request)
+    assert baseline["samples"]["distances"] != changed["samples"]["distances"]
+
+
+def test_run_null_refuses_an_invalid_sensor_config_through_protocol_error() -> None:
+    changed_request = dict(TINY)
+    changed_request["sensor_config"] = dataclasses.replace(
+        mod.SensorConfig(),
+        gauge_noise_microstrain=-1.0,
+    )
+    with pytest.raises(mod.ProtocolPError, match="invalid sensor_config"):
+        mod.run_null(pair_id=1, **changed_request)
+
+
 @pytest.mark.parametrize(
     ("field", "value"),
     [("window", 4), ("pairs", 1), ("f_ctrl_hz", 0.0), ("diagnostic_hz", -1.0),
@@ -577,6 +605,130 @@ def test_run_null_refuses_an_unusable_request(field: str, value: object) -> None
     request[field] = value
     with pytest.raises(mod.ProtocolPError):
         mod.run_null(pair_id=1, **request)
+
+
+# --------------------------------------------------------------------------- #
+# The bound sensor model and the command-line / artifact wires
+# --------------------------------------------------------------------------- #
+def test_the_bound_sensor_model_is_constructed_from_the_config_document() -> None:
+    """A changed bound value must reach the measurement instead of a dataclass default."""
+
+    document = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+    changed = copy.deepcopy(document)
+    changed["values"]["sensor_model"]["gauge_noise_microstrain"] = 9.0
+    sensor_config = mod.sensor_config_from_document(changed)
+    assert sensor_config.gauge_noise_microstrain == 9.0
+    assert sensor_config.gauge_noise_microstrain != mod.SensorConfig().gauge_noise_microstrain
+
+
+@pytest.mark.parametrize("mutation", ["missing", "extra"])
+def test_the_bound_sensor_model_requires_the_exact_field_set(mutation: str) -> None:
+    """Dataclass defaults must not silently fill a missing value bound by the config hash."""
+
+    sensor_values = dataclasses.asdict(mod.SensorConfig())
+    if mutation == "missing":
+        sensor_values.pop("gauge_noise_microstrain")
+    else:
+        sensor_values["unbound_parameter"] = 1.0
+    document = {"values": {"sensor_model": sensor_values}}
+    with pytest.raises(mod.ProtocolPError, match="must match SensorConfig exactly"):
+        mod.sensor_config_from_document(document)
+
+
+def test_parser_defaults_are_exactly_the_pre_registered_cli() -> None:
+    args = mod.parse_args([])
+    measured = {
+        "window": args.window,
+        "f_ctrl_hz": args.f_ctrl_hz,
+        "diagnostic_hz": args.diagnostic_hz,
+        "thermal_ramp_c": args.thermal_ramp_c,
+        "pairs": args.pairs,
+        "seed": args.seed,
+        "pair_id": args.pair_id,
+    }
+    assert measured == PINNED_CLI
+
+
+def test_a_tuned_cli_is_refused_as_stage_0() -> None:
+    changed = dict(PINNED_CLI)
+    changed["pairs"] = 99
+    with pytest.raises(mod.ProtocolPError, match="pre-registered CLI"):
+        mod.require_pinned_cli(changed)
+
+
+def test_main_is_wired_to_the_pre_registered_cli_guard(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A correct guard beside ``main`` is not enough; the executable must call it."""
+
+    def explode(cli: object) -> None:
+        raise mod.ProtocolPError("CLI guard reached")
+
+    monkeypatch.setattr(mod, "require_pinned_cli", explode)
+    with pytest.raises(mod.ProtocolPError, match="CLI guard reached"):
+        mod.main([])
+
+
+def test_main_wires_the_bound_sensor_model_to_measurement_and_writes_the_artifact(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The identity/config loader, measurement, builder and writer must be one wire.
+
+    The expensive measurement is replaced after the real text pins are checked. A
+    deliberately non-default sensor value is injected at the validated-config return
+    boundary so the example can discriminate a real document-to-measurement wire from
+    ``SensorConfig()`` defaults; assignment binding is stubbed because changing the
+    historical draft would correctly invalidate that separate gate. This is not
+    Stage-0 execution.
+    """
+
+    captured: dict[str, object] = {}
+
+    def fake_run_null(**kwargs: object) -> dict[str, object]:
+        captured.update(kwargs)
+        return _measurement([0.30, 0.35, 0.40, 0.45])
+
+    loaded = mod.load_config(CONFIG_PATH, SCHEMA_PATH)
+    counterfactual_document = copy.deepcopy(dict(loaded.document))
+    counterfactual_document["values"]["sensor_model"]["gauge_noise_microstrain"] = 9.0
+    counterfactual = dataclasses.replace(loaded, document=counterfactual_document)
+
+    monkeypatch.setattr(mod, "load_config", lambda *args, **kwargs: counterfactual)
+    monkeypatch.setattr(
+        mod,
+        "validate_approved_assignment_binding",
+        lambda *args, **kwargs: SimpleNamespace(assignment_hash=ASSIGNMENT_HASH),
+    )
+    monkeypatch.setattr(mod, "run_null", fake_run_null)
+    status = mod.main(
+        [
+            "--config",
+            str(CONFIG_PATH),
+            "--schema",
+            str(SCHEMA_PATH),
+            "--assignment",
+            str(ASSIGNMENT_PATH),
+            "--protocol",
+            str(PROTOCOL_PATH),
+            "--output-dir",
+            str(tmp_path),
+        ]
+    )
+    assert status == 0
+    bound = captured["sensor_config"]
+    assert isinstance(bound, mod.SensorConfig)
+    assert dataclasses.asdict(bound) == counterfactual_document["values"]["sensor_model"]
+    assert bound.gauge_noise_microstrain == 9.0
+    for key, value in PINNED_CLI.items():
+        assert captured[key] == value
+
+    artifact = json.loads((tmp_path / mod.OUTPUT_FILENAME).read_text(encoding="utf-8"))
+    assert artifact["inputs"]["cli"] == PINNED_CLI
+    recomputed = "dev-" + hashlib.sha256(
+        artifact["stage_0_canonical"].encode("utf-8")
+    ).hexdigest()
+    assert artifact["stage_0_identity"] == recomputed
 
 
 # --------------------------------------------------------------------------- #

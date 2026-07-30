@@ -82,7 +82,8 @@ import argparse
 import hashlib
 import json
 import sys
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from dataclasses import fields
 from pathlib import Path
 from typing import Any
 
@@ -119,6 +120,20 @@ OUTPUT_FILENAME = "sensor_only_difference_null.json"
 
 # Section 8's statistic: four gauges, each contributing a (cos, sin) pair.
 N_STATISTIC_ENTRIES = 2 * N_GAUGES
+
+# The only seven decision-bearing CLI values Protocol P section 8 authorizes. Paths are
+# intentionally outside this object: they locate the pinned inputs and output but do not
+# define the statistic. The parser reads its defaults from this one object, ``main``
+# fail-closes any deviation, and the same object enters the artifact identity.
+PINNED_CLI = {
+    "window": 768,
+    "f_ctrl_hz": 500.0,
+    "diagnostic_hz": 0.8,
+    "thermal_ramp_c": 3.0,
+    "pairs": 100,
+    "seed": 0,
+    "pair_id": 1,
+}
 
 # The real-plant corroboration recorded in section 8: one delivered healthy trace per
 # cell held exactly fixed and redrawn at 8 sensor identities, giving these per-cell 0.95
@@ -175,6 +190,63 @@ def canonical_json(payload: Any) -> str:
         ensure_ascii=False,
         allow_nan=False,
     )
+
+
+def require_pinned_cli(cli: Mapping[str, Any]) -> None:
+    """Refuse to label a tuned invocation as the pre-registered Stage 0.
+
+    Inputs: the seven decision-bearing CLI values. Outputs: none. Purpose: the protocol
+    calls these values pins, not tunable defaults. The identity records them for
+    recomputation, but provenance alone cannot turn an unapproved sensitivity run into
+    the pre-registered stage.
+    """
+
+    requested = dict(cli)
+    try:
+        rendered = canonical_json(requested)
+    except (TypeError, ValueError) as exc:
+        raise ProtocolPError(
+            f"Stage 0 CLI values must be finite canonical JSON: {exc}"
+        ) from exc
+    _require(
+        requested == PINNED_CLI,
+        "Stage 0 may run only at the seven pre-registered CLI values"
+        f"\n    pinned    {canonical_json(PINNED_CLI)}"
+        f"\n    requested {rendered}",
+    )
+
+
+def sensor_config_from_document(document: Mapping[str, Any]) -> SensorConfig:
+    """Construct the exact sensor model bound by the Stage-0 config hash.
+
+    Inputs: the validated configuration document. Outputs: one validated
+    ``SensorConfig``. Purpose: the Stage-0 identity carries ``base_config_hash``; the
+    measurement must therefore consume the sensor block from that exact document rather
+    than independently constructing defaults that only happen to match today.
+
+    The field set is exact. ``SensorConfig`` has dataclass defaults, so unpacking a
+    partial object without this guard would silently replace a missing bound value with
+    an unbound default.
+    """
+
+    values = document.get("values")
+    _require(isinstance(values, Mapping), "config values must be an object")
+    sensor_values = values.get("sensor_model")
+    _require(isinstance(sensor_values, Mapping), "config values.sensor_model must be an object")
+    expected = {field.name for field in fields(SensorConfig)}
+    actual = set(sensor_values)
+    _require(
+        actual == expected,
+        "config values.sensor_model must match SensorConfig exactly"
+        f"\n    missing {sorted(expected - actual)}"
+        f"\n    extra   {sorted(actual - expected)}",
+    )
+    try:
+        config = SensorConfig(**dict(sensor_values))
+        config.validate()
+    except (TypeError, ValueError) as exc:
+        raise ProtocolPError(f"invalid bound sensor config: {exc}") from exc
+    return config
 
 
 def pair_seeds(seed: int, pair_index: int) -> tuple[int, int]:
@@ -432,14 +504,16 @@ def run_null(
     pairs: int,
     seed: int,
     pair_id: int,
+    sensor_config: SensorConfig,
 ) -> dict[str, Any]:
     """Measure the sensor-only difference null over ``pairs`` independent seed pairs.
 
-    Inputs: the seven pre-registered CLI values. Outputs: the per-pair statistics and the
-    distribution summary. Purpose: this is Stage 0's measurement. Each pair imposes the
-    same zero mechanical strain and the same thermal profile on two different sensor
-    identities, so the resulting ``D`` is the sensor path's own contribution to the
-    protocol's statistic. Prints progress to stdout so a long run is observable.
+    Inputs: the seven pre-registered CLI values and the exact sensor configuration bound
+    by ``base_config_hash``. Outputs: the per-pair statistics and the distribution
+    summary. Purpose: this is Stage 0's measurement. Each pair imposes the same zero
+    mechanical strain and the same thermal profile on two different sensor identities,
+    so the resulting ``D`` is the sensor path's own contribution to the protocol's
+    statistic. Prints progress to stdout so a long run is observable.
     """
 
     _require(window >= 8, "window must be at least 8 samples")
@@ -454,8 +528,19 @@ def run_null(
     _require(np.isfinite(thermal_ramp_c), "thermal_ramp_c must be finite")
 
     t_s = np.arange(window) / f_ctrl_hz
-    config = SensorConfig()
-    temperature = linear_thermal_profile(window, thermal_ramp_c)
+    _require(
+        isinstance(sensor_config, SensorConfig),
+        f"sensor_config must be SensorConfig; got {type(sensor_config)!r}",
+    )
+    try:
+        sensor_config.validate()
+    except ValueError as exc:
+        raise ProtocolPError(f"invalid sensor_config: {exc}") from exc
+    temperature = linear_thermal_profile(
+        window,
+        thermal_ramp_c,
+        reference_c=sensor_config.reference_temperature_c,
+    )
     zero_signal = np.zeros((window, N_GAUGES))
 
     distances: list[float] = []
@@ -470,7 +555,7 @@ def run_null(
                 f_ctrl=f_ctrl_hz,
                 sensor_seed=member_seed,
                 pair_id=pair_id,
-                config=config,
+                config=sensor_config,
             )
             vectors.append(coefficient_vector(values, valid, t_s, diagnostic_hz))
         distances.append(difference_statistic(vectors[0], vectors[1]))
@@ -605,13 +690,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Protocol P Stage 0: the sensor-only difference null (0 rollouts).",
     )
-    parser.add_argument("--window", type=int, default=768)
-    parser.add_argument("--f-ctrl-hz", type=float, default=500.0)
-    parser.add_argument("--diagnostic-hz", type=float, default=0.8)
-    parser.add_argument("--thermal-ramp-c", type=float, default=3.0)
-    parser.add_argument("--pairs", type=int, default=100)
-    parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--pair-id", type=int, default=1)
+    parser.add_argument("--window", type=int, default=PINNED_CLI["window"])
+    parser.add_argument("--f-ctrl-hz", type=float, default=PINNED_CLI["f_ctrl_hz"])
+    parser.add_argument("--diagnostic-hz", type=float, default=PINNED_CLI["diagnostic_hz"])
+    parser.add_argument("--thermal-ramp-c", type=float, default=PINNED_CLI["thermal_ramp_c"])
+    parser.add_argument("--pairs", type=int, default=PINNED_CLI["pairs"])
+    parser.add_argument("--seed", type=int, default=PINNED_CLI["seed"])
+    parser.add_argument("--pair-id", type=int, default=PINNED_CLI["pair_id"])
     parser.add_argument(
         "--config", type=Path, default=Path("config/draft-config-v0.1.json")
     )
@@ -642,6 +727,17 @@ def main(argv: list[str] | None = None) -> int:
     print("Protocol P Stage 0 - sensor-only difference null (0 rollouts)")
     print("=" * 78)
 
+    cli = {
+        "window": int(args.window),
+        "f_ctrl_hz": float(args.f_ctrl_hz),
+        "diagnostic_hz": float(args.diagnostic_hz),
+        "thermal_ramp_c": float(args.thermal_ramp_c),
+        "pairs": int(args.pairs),
+        "seed": int(args.seed),
+        "pair_id": int(args.pair_id),
+    }
+    require_pinned_cli(cli)
+
     print("\nI1 - text-domain pins")
     digests = verify_text_pins(args.protocol.resolve(), args.assignment.resolve())
     print(f"  protocol    {digests['protocol']}")
@@ -652,18 +748,10 @@ def main(argv: list[str] | None = None) -> int:
     config = load_config(args.config.resolve(), args.schema.resolve())
     assignment = load_assignment(args.assignment.resolve())
     binding = validate_approved_assignment_binding(config, expected_assignment=assignment)
+    sensor_config = sensor_config_from_document(config.document)
     print(f"  base config hash   {config.config_hash}")
     print(f"  assignment hash    {binding.assignment_hash}")
-
-    cli = {
-        "window": int(args.window),
-        "f_ctrl_hz": float(args.f_ctrl_hz),
-        "diagnostic_hz": float(args.diagnostic_hz),
-        "thermal_ramp_c": float(args.thermal_ramp_c),
-        "pairs": int(args.pairs),
-        "seed": int(args.seed),
-        "pair_id": int(args.pair_id),
-    }
+    print("  sensor model       constructed from the bound config document")
 
     print("\nI8 - Stage-0 artifact-level identity")
     identity, canonical = stage_0_identity(
@@ -686,6 +774,7 @@ def main(argv: list[str] | None = None) -> int:
         pairs=args.pairs,
         seed=args.seed,
         pair_id=args.pair_id,
+        sensor_config=sensor_config,
     )
 
     document = build_document(

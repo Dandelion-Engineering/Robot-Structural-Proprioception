@@ -181,7 +181,11 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     t_s = np.arange(w) / f_ctrl
     config = SensorConfig()
     # Aggressive per-window thermal ramp on every gauge (conservative: real thermal is slower).
-    temp = linear_thermal_profile(w, args.thermal_ramp_c)
+    temp = linear_thermal_profile(
+        w,
+        args.thermal_ramp_c,
+        reference_c=config.reference_temperature_c,
+    )
     zero_signal = np.zeros((w, N_GAUGES))
 
     if not np.isfinite(f_ctrl) or f_ctrl <= 0.0:
