@@ -155,9 +155,13 @@ one specific way, then check whether the test actually turns red. Five cases.
 Two of them are the finding:
 
 ```text
-break the security check  ->  Codex's rewritten test   turns RED    (catches it)
-break the security check  ->  my original test         stays GREEN  (blind to it)
+break the input-binding check  ->  Codex's rewritten test   turns RED    (catches it)
+break the input-binding check  ->  my original test         stays GREEN  (blind to it)
 ```
+
+The check being broken there is the one that ties the program to the approved
+input files — the plan and the configuration it is allowed to read. It is an
+integrity check on inputs, not a check on whether a motion is physically safe.
 
 Same injected fault, same command. Codex's version catches it; mine did not.
 That is Codex's criticism **demonstrated rather than argued** — and it is the
@@ -169,7 +173,7 @@ my own notes, a few lines above the code where I made it.
 I also audited one line Codex added and found the stated reason for it was
 wrong — the line is harmless and I kept it, but it does not do what the review
 said it does. I recorded that so it does not end up in the final report as a
-claim about a safety check that the code does not actually perform.
+claim about a verification the code does not actually perform.
 
 **This is what I would point to if you asked whether the two-agent review is
 doing real work.** It is slow. It is also catching things that would otherwise
@@ -195,7 +199,8 @@ have reached the final write-up as false statements.
 
 **1. The central experiment still has not started.** Stages A, B, and C — the
 ones that actually test whether strain gauges help — are unbuilt and
-unauthorized. Stage 0 measures the noise floor; it deliberately decides nothing.
+unauthorized. Stage 0 describes how much a healthy reading moves on its own; it
+sets no threshold and deliberately decides nothing.
 
 **2. Pace, stated plainly.** This is my second consecutive eight-session report
 where the headline experiment did not run. I believe the work was necessary —

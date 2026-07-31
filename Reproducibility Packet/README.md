@@ -571,6 +571,42 @@ One MuJoCo rollout, about 26 s. Exit status is 0 only when every pinned digest m
 
 **This step needs the retained development dataset, which is not distributed with the packet** (see [`DATA.md`](DATA.md)); the two pinned reference payloads are local artifacts of the Step 2C generation, not committed data. Regenerating the dataset from Step 2C reproduces them. The gate's own comparison layer is covered portably by `tests/test_protocol_p_replay_gate.py`, which runs on a clean checkout with no dataset present.
 
+## Step 24 — Reproduce Protocol P Stage 0 (sensor-only difference null)
+
+Stage 0 is the first pre-registered measurement this project has executed. It asks the narrowest question in Protocol P: with **no plant, no mechanics, no fault and no rollout**, how far apart are two healthy four-gauge windows that differ only in their sensor draw? The answer characterizes the sensor-path component of the screen's difference statistic `D`, and nothing else.
+
+**Read this step against Step 23, because the two have opposite reader-reproducibility status.** Step 23 cannot be run from the distributed packet: it needs the retained development dataset and one MuJoCo rollout. Step 24 needs **neither a dataset nor MuJoCo**, draws every value from fixed seeds, and runs end to end on a clean checkout after Step 1.
+
+The invocation is pre-registered in [`protocol/protocol-p-v2.3.3.md`](protocol/protocol-p-v2.3.3.md) §8. All seven values are also the script's defaults; they are written out because the protocol pins them and the script refuses any other combination.
+
+```powershell
+.\.venv\Scripts\python.exe scripts\analyze_synchronous_difference_null.py `
+  --window 768 --f-ctrl-hz 500.0 --diagnostic-hz 0.8 --thermal-ramp-c 3.0 `
+  --pairs 100 --seed 0 --pair-id 1
+```
+
+Produces `results/protocol_p/sensor_only_difference_null.json`. **Zero Protocol-P rollouts.** The recorded first run is:
+
+```text
+n pairs               100      (sensor seeds 0..199, consumed once, consecutive pairing)
+mean                  0.278734
+q95, method="higher"  0.400881   <- the reported statistic, in microstrain
+identity              dev-71b332893d007036625f666589f8c74b0ac3b946b47b5186ddf8de6a2d8ce31e
+```
+
+Four boundaries govern how that number may be quoted, and all four are recorded inside the artifact itself:
+
+- **It sets no threshold and gates no decision.** The artifact's `authority` field reads `NONE`. The operative null for the screen's verdict is Stage C's per-cell `Q95_c`, which has not been measured. A damage signal smaller than `0.400881` is **not** thereby invisible; Stage 0 licenses no such statement.
+- **Its corroboration is upper-tail containment, not agreement.** The same quantity measured earlier through the simulated physics — one healthy trace re-read under different sensor draws — gave `0.3176 / 0.3555 / 0.3854 / 0.4251` across four context cells. Stage 0's `0.400881` falls inside that range, which is the pre-registered check, but it **exceeds three of the four cells** and sits about 5.7% below the range maximum. "Inside the measured real-plant range" is supported. "Agrees with the real-plant null" is not.
+- **The `dev-` prefix is permanent.** The identity is ineligible for confirmatory analysis by construction (invariant I8), and no Stage-0 value may enter the confirmatory comparison.
+- **The identity binds the inputs, not the numbers.** `stage_0_identity` is the SHA-256 of the artifact's own `stage_0_canonical` string, so any reader can recompute it from the file alone. That string covers the stage label, the base config hash, both assignment digests, the protocol digest, the seven CLI values, and the sorted output schema — it does **not** cover the measured distances or the summary statistics. It is a provenance identity over the run's inputs and shape; it is not a tamper seal over its results. Verify a result by recomputing it from `samples.distances`, which the artifact records in full.
+
+Two reader notes. `samples` is a six-key metadata dictionary (`n_pairs`, `seed_map`, `sensor_seeds_consumed`, `sensor_seeds_consumed_note`, `pair_id`, `distances`); the 100 values live in `samples.distances`, so `len(samples)` returns 6 and not 100. And `null_distribution.std` is the **population** standard deviation, not the sample one.
+
+**First-run elapsed time: not captured.** The team's session records carry only an informal order-of-magnitude note (a few seconds), which is not a measurement and is not quoted here as one. The measurement itself is unaffected — Protocol P binds no elapsed time — and a second execution was deliberately not spent to manufacture a figure for the first. Any later timing must be labelled as a separately authorized reproduction rather than as the first run.
+
+The run is deterministic given the pinned seeds and the pinned dependency versions in `requirements.txt`; no randomness is drawn outside them. Cross-platform bit-identity has **not** been measured, so compare a local run against the recorded values rather than assuming byte-identical output.
+
 ## Data
 
 No external dataset is required. The simulator generates every value used by the spike. See [`DATA.md`](DATA.md) for the data and licensing boundary.
@@ -600,4 +636,4 @@ This packet reproduces the selected MuJoCo cable/rod mechanics, schema-v1.0 plan
 
 On the current bounded task, the structural suite has strong development information evidence, but structural recovery is blocked because the task has no structural tracking deficit and the tested action behaves like a generic controller retune. The actuator condition has headroom, yet the new source-specific action screen also blocks: safe cap-3 misses the 10-point specificity gate and higher caps violate A1 safety. The probability result remains a sampled empirical envelope; calibrated class-probability, abstention, and uncertainty authorization, sensor-fault recovery, and evaluation-sized paired control remain open.
 
-The proposed different-task amendment was withdrawn before approval. The existing Claim Sheet remains in force, `config.json` remains unfrozen, and no development screen here is a confirmatory research result. Gate 3 is closed at the jointly approved amended hash, and the exact assignment is embedded in the draft under a one-way parent/current hash binding. The real generated base roles are jointly approved; Gate 2 remains open until the Gate-4 fits supply the still-pending estimator/controller roles. Gate-4 headline fitting is currently blocked on the delivered-dev structural separability stop/go check. Validation calibration/authorization, the confirmatory controller protocol, the evaluation/test driver, and the interactive verification artifact remain later gates. Test identity and payload materialization are still zero and forbidden.
+The proposed different-task amendment was withdrawn before approval. The existing Claim Sheet remains in force, `config.json` remains unfrozen, and no development screen here is a confirmatory research result. Gate 3 is closed at the jointly approved amended hash, and the exact assignment is embedded in the draft under a one-way parent/current hash binding. The real generated base roles are jointly approved; Gate 2 remains open until the Gate-4 fits supply the still-pending estimator/controller roles. Gate-4 headline fitting is currently blocked on the delivered-dev structural separability stop/go check. Protocol P's specification is jointly approved, its one-row replay gate has passed (Step 23), and its Stage 0 has been executed once at zero rollout cost (Step 24); Stage 0 has no authority over any verdict, and Stages A, B and C — the stages that actually test the research question — are unbuilt and unauthorized. Validation calibration/authorization, the confirmatory controller protocol, the evaluation/test driver, and the interactive verification artifact remain later gates. Test identity and payload materialization are still zero and forbidden.

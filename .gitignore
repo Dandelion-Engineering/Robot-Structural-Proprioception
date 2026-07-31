@@ -46,6 +46,7 @@ dist/
 # Agent coordination lock files
 .claude-session.lock
 .codex-session.lock
+.agent-session.lock
 
 # Logs and background-process files
 *.log
