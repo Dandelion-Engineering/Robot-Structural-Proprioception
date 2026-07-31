@@ -1,6 +1,6 @@
 # Summary of Only Necessary Context — Codex
 
-**Rewritten:** 2026-07-30, Codex Session 48
+**Rewritten:** 2026-07-31, Codex Session 49
 
 **Phase:** Phase 2 — Integration and Reproducibility Build
 
@@ -9,18 +9,22 @@
 **Current decision:**
 
 ```text
-APPROVE_STAGE_0_RESULT_ARTIFACT_UNCHANGED_AT_EXACT_COMMITTED_STATE
-ACCEPT_NO_PROTOCOL_VERSION_CHANGE_FOR_ROUGHLY_0_39_VS_EXECUTED_0_400881
-REQUIRE_CLAUDE_EXPLICIT_OWNER_APPROVAL_OF_THE_EXACT_RESULT_ARTIFACT
-STAGE_0_RESULT_REVIEW_REMAINS_OPEN
-REQUIRE_OWNER_REREVIEW_OF_REVIEWER_EDITED_PROGRESS_REPORT
+STAGE_0_RESULT_REVIEW_LOOP_CLOSED
+APPROVE_PROGRESS_REPORT_SESSION_48_AT_F01AA7D7
+PROGRESS_REPORT_SESSION_48_REVIEW_LOOP_CLOSED
+ACCEPT_STAGE_0_IDENTITY_BINDS_INPUTS_AND_SCHEMA_NOT_MEASURED_VALUES
+ACCEPT_NO_PROTOCOL_VERSION_CHANGE_FOR_IDENTITY_SCOPE_NARROWING
+APPROVE_PACKET_README_STEP_24_AT_REVIEWER_EDITED_9363E144
+REQUIRE_CLAUDE_OWNER_REREVIEW_OF_PACKET_README_STEP_24
+APPROVE_FORWARD_CORRECTED_PUBLIC_README_AT_F3F76F27
+REQUIRE_CLAUDE_OWNER_REREVIEW_OF_FORWARD_CORRECTED_PUBLIC_README
 STAGES_A_B_C_REMAIN_UNAUTHORIZED
 BLOCK_CONFIG_FREEZE_PENDING_PRECONFIRMATORY_BUILD_AND_VALIDATION
 ```
 
-Stage 0 **has run exactly once** at the pinned invocation and spent zero plant
-rollouts. Protocol P's plant-rollout count remains **one**, the Session-45 replay. The
-confirmatory test split remains untouched.
+Stage 0 has run exactly once at the pinned invocation and spent zero plant rollouts.
+Protocol P has spent one plant rollout total, the Session-45 replay. The confirmatory test
+split remains untouched.
 
 ## Resume here
 
@@ -31,72 +35,24 @@ chats/Claude-Codex/Phase 2 Integration and Config Freeze/
   Phase 2 Integration and Config Freeze - Active.md
 ```
 
-Its physical last turn is **Codex Session 48**, beginning at line 10,829.
+Its physical last turn is **Codex Session 49**, beginning at line 11,189.
 
-Claude's next turn has two exact-state owner tasks:
+Claude's next exact-state owner tasks are:
 
-1. re-open and explicitly approve or edit-and-return the unchanged Stage-0 result
-   artifact at Git blob
-   `31c1e6d1824c10bd5978d12c377f76cf556af03f`; and
-2. genuinely re-review and explicitly approve or edit-and-return Codex's three
-   corrections to Claude's Session-48 progress report at Git blob
-   `36ba0221540582b04f7f35029f7a38f3649a60ff`.
+1. genuinely re-open and explicitly approve or edit-and-return the reviewer-edited packet
+   README at Git blob `9363e144a0c0e957b5c0a201d3abbf47c68fe837`; and
+2. genuinely re-open and explicitly approve or edit-and-return the forward-corrected root
+   public README at Git blob `f3f76f27f48e2ed228917328bbc0462d34addc23`.
 
-The result artifact is technically approved by Codex unchanged. The result loop remains
-open only because Claude's initial result turn created, audited, and handed off the file
-without explicitly approving that exact state. Creation, self-audit, handoff, and
-silence are not approval.
+The executed Stage-0 result and Claude's Session-48 progress report are already closed at
+same-state approval. Do not reopen them without new source-checkable evidence. Do not start
+the Stage-A/B/C driver or execute any later stage until the driver receives its own explicit
+same-state approval.
 
-Do not start the Stage-A/B/C driver or add the Stage-0 packet README step until the
-result artifact receives Claude's explicit same-state approval.
-
-Codex's next session is Session 49. The next regular Codex progress report is Session 56
+Codex's next session is Session 50. The next regular Codex progress report is Session 56
 unless a phase transition or approved written Claim Sheet amendment triggers one first.
 
-## Stage-0 implementation loop is closed
-
-The jointly approved implementation state is:
-
-```text
-Reproducibility Packet/scripts/analyze_synchronous_difference_null.py
-  git blob    8435c764a76cb091278ffa47f14584dbf43b40ce
-  raw sha256  4a9fc5955bb5d0f103d258525ee80f5766e0e9a46b01975c76ab895c53815b24
-  bytes       40,098
-
-Reproducibility Packet/tests/test_synchronous_difference_null.py
-  git blob    9591c91bd6412a9dd60860e05c40fcbcccc9ff74
-  raw sha256  2fe39d831fa500d5183108ee4aed6590ac676af8beafec122b9af4919c9402ff
-  bytes       44,285
-  tests       99
-```
-
-Both are UTF-8 without BOM and pure LF in the approved state.
-
-Claude Session 48 genuinely re-reviewed Codex's two test-evidence corrections through a
-five-case mutation sweep and explicitly approved the exact two-file state before
-execution. The implementation loop is closed at round three.
-
-The three already-approved helper/floor files remain:
-
-```text
-Reproducibility Packet/scripts/utils/gauge_windows.py
-  git blob    7f7c09da3079ff2498a7240922a77b95ed116b7b
-  raw sha256  646d8c4e3c4d7dbe76fc8d1523a9a7b4b7ccdbf2d8509589da98af1057e8d5cb
-
-Reproducibility Packet/scripts/analyze_synchronous_detection_floor.py
-  git blob    b99fe33357701c0a5285773146ec7986db6b7a82
-  raw sha256  ccc58d45fd05c1dab8dbf8886581d165783f9d23e9eebe4e5fc91aa91c422126
-
-Reproducibility Packet/tests/test_gauge_windows.py
-  git blob    925b0bd842a8a2787516753217f28d06d3000c6c
-  raw sha256  cb6e49d9e6baf4541eafce9ef1c1f450eb03c95e074d380a7a4035cbaf2397f0
-  tests       18
-```
-
-The focused total is 117 across the 99-test Stage-0 file and unchanged 18-test helper
-file.
-
-## Executed Stage-0 artifact
+## Executed Stage-0 result — jointly approved
 
 ```text
 Reproducibility Packet/results/protocol_p/sensor_only_difference_null.json
@@ -106,8 +62,7 @@ Reproducibility Packet/results/protocol_p/sensor_only_difference_null.json
   raw sha256  4101c0b8dcc1c3ee01b37433ccb3563d4c1e15e5e22cd8094979645d36a40cae
 ```
 
-The JSON is not raw-byte pinned; Git normalizes the checkout to the blob above. Its
-operative identity is the digest of the embedded canonical string, not the checkout
+Its operative identity is the digest of the embedded canonical string, not the checkout
 file hash:
 
 ```text
@@ -144,24 +99,35 @@ values > q95        4
 values >= q95       5
 ```
 
-Codex Session 48 independently parsed the artifact with duplicate-key rejection and
-reproduced:
+Codex Session 48 approved the unchanged artifact after independent duplicate-key, identity,
+input-binding, digest, and distribution audits. Claude Session 49 genuinely re-reviewed it
+using standard-library Python plus hand-indexed order statistics and explicitly approved the
+same blob. The result loop is closed.
 
-- the top-level schema;
-- canonical JSON rendering;
-- `dev-` identity;
-- all seven CLI pins;
-- config self-hash;
-- assignment self-hash;
-- production assignment/config binding;
-- protocol and assignment canonical digests;
-- protocol filename, stage, and zero-rollout fields;
-- sample count, finiteness, seed range, and pair id;
-- mean, population standard deviation, min, median, max, and manual `higher` Q95;
-- fixed-trace constants and range containment; and
-- the no-authority boundary text.
+Claude's `statistics.fmean` value was `0.27873430387016523`, one ULP above the recorded
+NumPy mean because of summation order. The quantile, population standard deviation, minimum,
+median, and maximum matched exactly. Do not say every summary figure reproduced exactly
+under the alternate tool; say the result reproduced with this one-ULP mean qualification.
 
-Codex did not call `run_null()` or execute Stage 0 again.
+## Stage-0 identity scope
+
+`stage_0_identity` binds the run's inputs and output shape, not its measured values. Its
+canonical payload contains exactly:
+
+- stage label;
+- base-config hash;
+- assignment canonical digest;
+- assignment document hash;
+- protocol canonical digest;
+- seven pinned CLI values; and
+- sorted top-level output schema.
+
+It does not contain the 100 distances or the summary statistics. Two files with identical
+inputs/schema and different numbers carry the same identity. This is not a protocol defect:
+Protocol P v2.3.3 pins exactly this seven-key object and claims recomputability from the
+artifact, which holds. Write it as a provenance identity, never as a result-value seal,
+tamper seal, or certification of the measured numbers. Verify values by recomputing them
+from `samples.distances`.
 
 ## Stage-0 scientific meaning
 
@@ -171,8 +137,8 @@ Stage 0 measures:
 D = || concat_{g=0..3} (b_g(A) - b_g(B)) ||_2
 ```
 
-for 100 pairs of four-gauge windows with zero mechanical strain, the same imposed
-thermal profile, and different sensor identities.
+for 100 pairs of four-gauge windows with zero mechanical strain, the same imposed thermal
+profile, and different sensor identities.
 
 It has:
 
@@ -197,184 +163,149 @@ cell 7  0.3854
 cell 5  0.4251
 ```
 
-The executed `0.400881`:
-
-- is 2.790% above Protocol P's approximate `roughly 0.39`;
-- is inside the pre-registered `[0.3176, 0.4251]` range;
-- exceeds three of the four cell values; and
-- is 5.697% below the range maximum.
-
-No Protocol-P version change is needed. `roughly 0.39` is an approximation, not a pin;
-range containment is the pre-registered corroboration; and Stage 0 gates nothing.
-
-The only licensed language is **conditional broad-range containment**. Do not call it
-central agreement, population agreement, a test, a detection threshold, mechanics
-evidence, or evidence for the project hypothesis.
-
-The operative null remains Stage C's per-cell `Q95_c`.
+The executed `0.400881` is 2.790% above Protocol P's approximate `roughly 0.39`, remains
+inside the pre-registered range, exceeds three of the four cell values, and is 5.697% below
+the range maximum. No Protocol-P version change is needed. The licensed statement is
+conditional broad-range containment, not central agreement, population agreement, a test,
+a threshold, mechanics evidence, or evidence for the project hypothesis. The operative
+null remains Stage C's per-cell `Q95_c`.
 
 ## Missing first-run elapsed time
 
-Session 47 said elapsed time would be recorded when the approved implementation ran.
-It was not captured in the artifact, result turn, human report, or progress report.
+No trustworthy first-run timing was captured. An informal few-seconds note exists but has
+unknown provenance and is not a measurement. Protocol P binds no runtime, so this does not
+block the artifact. Do not execute Stage 0 again merely to manufacture a first-run number.
+The packet README states `First-run elapsed time: not captured`; any future timing must be
+labeled as a separate reproduction.
 
-The first-run wall clock is unknown and cannot be reconstructed from commit or transcript
-timestamps. Protocol P does not bind runtime, so this does not block the artifact.
-
-Do not execute Stage 0 again merely to manufacture a first-run number. When the packet
-README step is written after result approval, say:
+## Packet README Step 24 — reviewer approved, owner review open
 
 ```text
-first-run elapsed time: not captured
+Reproducibility Packet/README.md
+  Claude handoff blob       e525c7bea92eb259f62368b75c5ecb950e5fd370
+  Codex reviewer blob       9363e144a0c0e957b5c0a201d3abbf47c68fe837
+  review diff               +3 / -3
 ```
 
-unless a later, separately authorized reproduction is timed and clearly labeled as a
-later reproduction.
+Codex's three corrections:
 
-## Public and director-facing corrections
+1. Step 24 needs no dataset and performs no MuJoCo simulation, but importing the Stage-0
+   module loads the `mujoco` Python package transitively through shared input-binding code:
+   `protocol_p_replay_gate -> assignment_generator -> cable_plant`. Step 1 installs it.
+   Never write that Step 24 needs no physics engine/package; write zero simulation/rollout.
+2. The first-run timing paragraph is outsider-clean and no longer references internal
+   session records.
+3. The no-authority string is named at its exact path, `corroboration.authority`.
 
-Claude's new public README entry said:
+The command, pins, output, values, identity, zero-rollout cost, and evidence boundary are
+unchanged. Codex explicitly approves blob `9363e144...`. Claude must owner-review this exact
+state before the runbook loop closes.
 
-- any damage signal smaller than `0.401` is invisible; and
-- the assignment/config binding check was a safety gate.
-
-Both crossed a project boundary. Stage 0 sets no detection threshold, and input
-integrity is not physical safety or admissibility.
-
-The root public README is append-only. Codex preserved the prior entry and appended a
-dated correction that:
-
-- says `0.401` is not a detection threshold;
-- names Stage C's per-cell null and `D(v,c) >= 2 × Q95_c` rule as the later screen
-  authority;
-- calls the mutated check an assignment/configuration binding-integrity gate;
-- separates it from physical safety; and
-- clarifies that the implementation passed review before execution while the result
-  artifact is in a separate exact-state review.
-
-Codex also directly edited:
+## Session-48 progress report — loop closed
 
 ```text
 agents/Claude/Progress Reports/Progress Report Session 48.md
-  reviewer-edited git blob  36ba0221540582b04f7f35029f7a38f3649a60ff
-  review diff               +9 / -6
+  approved blob  f01aa7d7b56b9b30e8279bc221a5f0e60613ab3f
 ```
 
-The report edits:
+Claude's returned edits propagate the prior corrections through the whole director-facing
+file: Stage 0 sets no threshold; the mutation target is an input-binding integrity check,
+not physical safety; and the reviewed line is not credited with a verification it does not
+perform. Claude and Codex explicitly approve this same blob. The loop is closed.
 
-1. replace "noise floor / smaller is invisible" with the no-threshold boundary;
-2. replace "two routes agree" with limited broad-range containment; and
-3. correct "five exceed" to "five are at or above; four exceed."
+## Public README state
 
-Codex explicitly approved the reviewer-edited report. Claude must genuinely owner-review
-and explicitly approve or edit-and-return that exact state.
+Claude's 2026-07-31 entry announced joint result approval and the identity-scope finding.
+It also said every summary figure reproduced exactly and that Step 24 needs no physics
+engine. Codex preserved the entry and appended a dated correction:
+
+```text
+README.md
+  reviewer-edited blob  f3f76f27f48e2ed228917328bbc0462d34addc23
+  review diff           +2 / -0
+```
+
+The correction names the transitive MuJoCo package dependency and the one-ULP alternate-mean
+difference. Codex explicitly approves this forward-corrected state. Claude owner re-review
+remains required. Routine approval should not create another public milestone; approval in
+the active thread is enough.
+
+Do not rewrite or remove earlier dated entries. Any future public correction propagates
+forward append-only.
+
+## Jointly approved Stage-0 implementation
+
+```text
+Reproducibility Packet/scripts/analyze_synchronous_difference_null.py
+  git blob    8435c764a76cb091278ffa47f14584dbf43b40ce
+  raw sha256  4a9fc5955bb5d0f103d258525ee80f5766e0e9a46b01975c76ab895c53815b24
+
+Reproducibility Packet/tests/test_synchronous_difference_null.py
+  git blob    9591c91bd6412a9dd60860e05c40fcbcccc9ff74
+  raw sha256  2fe39d831fa500d5183108ee4aed6590ac676af8beafec122b9af4919c9402ff
+  tests       99
+```
+
+Both are UTF-8 without BOM and pure LF in the approved state. The three approved shared
+helper/floor files remain:
+
+```text
+Reproducibility Packet/scripts/utils/gauge_windows.py
+  git blob    7f7c09da3079ff2498a7240922a77b95ed116b7b
+
+Reproducibility Packet/scripts/analyze_synchronous_detection_floor.py
+  git blob    b99fe33357701c0a5285773146ec7986db6b7a82
+
+Reproducibility Packet/tests/test_gauge_windows.py
+  git blob    925b0bd842a8a2787516753217f28d06d3000c6c
+  tests       18
+```
+
+The focused total is 117. Do not edit these approved states without a new review loop.
 
 ## Jointly approved Protocol P
 
 ```text
 Reproducibility Packet/protocol/protocol-p-v2.3.3.md
-canonical sha256:
-  5689dad7ce4194b9a7dbe381006027df178997adf732f5734a77ef048bdf421f
-raw sha256:
-  5689dad7ce4194b9a7dbe381006027df178997adf732f5734a77ef048bdf421f
-bytes:
-  54,621
-encoding/EOL:
-  UTF-8, no BOM, pure LF
-git attributes:
-  text set, eol lf
-owner approval:
-  Claude Session 43
-reviewer approval:
-  Codex Session 43
+canonical sha256  5689dad7ce4194b9a7dbe381006027df178997adf732f5734a77ef048bdf421f
+raw sha256        5689dad7ce4194b9a7dbe381006027df178997adf732f5734a77ef048bdf421f
+bytes             54,621
+encoding/EOL      UTF-8, no BOM, pure LF
+owner approval    Claude Session 43
+reviewer approval Codex Session 43
 ```
 
-The specification loop is closed on that digest. Do not edit the file in place. A
-source-checkable future defect requires the next version by `git mv`, both exact-state
-approvals, and a new digest before any affected stage runs.
+The specification loop is closed. Do not edit this file in place. A source-checkable future
+defect requires the next version, both exact-state approvals, and a new digest before any
+affected stage runs.
 
-## Jointly approved replay gate and one-row result
+## Jointly approved replay gate and result
 
 ```text
 Reproducibility Packet/scripts/protocol_p_replay_gate.py
-  git blob    7d3309b7a114a20a67f5e4adf7504dad0ca0897a
-  raw sha256  3217142aabf8a13fb06fc7c68b84d3cbb0311a3b1e6d6bb5ca1c9af520495c85
+  git blob  7d3309b7a114a20a67f5e4adf7504dad0ca0897a
 
 Reproducibility Packet/tests/test_protocol_p_replay_gate.py
-  git blob    6a7e7774287d727b78ed3c9d323843c6dc1e37a3
-  raw sha256  3fbf9822a88d277e91f5e721c55a3004a8686ccd3dea2425626bcfdc0572e288
-  tests       36
+  git blob  6a7e7774287d727b78ed3c9d323843c6dc1e37a3
+  tests     36
 ```
 
-The replay result remains exactly one retained development row:
+The replay result remains one retained development row:
 
 ```text
-run_id
-  scenario_dev_t01_f000_r00_S_dataset0
-
-plant
-  20 / 20 fields equal in dtype, shape, and values
-
-S observation
-  38 / 38 entries equal in dtype, shape, and values
-  531 NaNs matched position-for-position across 5 entries
-
-identity
-  20 / 20 fields equal
-
-watched changes
-  0
+run_id       scenario_dev_t01_f000_r00_S_dataset0
+plant        20 / 20 fields equal
+S record     38 / 38 entries equal; 531 NaNs matched
+identity     20 / 20 fields equal
+watched      0 changes
 ```
 
 This is a construction positive control for one row only. It does not generalize to the
 retained 472-reservation dataset.
 
-## Jointly approved generator seam
-
-```text
-Reproducibility Packet/scripts/utils/assignment_generator.py
-  git blob    1c565888edd6e538cbb281894ab6c4cdc418bb6b
-  raw sha256  07fbbe563b5a904eba2d57f58e436e84975d2891ea7ebf4cac9f24253ce5b06b
-
-Reproducibility Packet/tests/test_assignment_generator_screen_overrides.py
-  git blob    2ec96c9f995fa9e9efad0000af1d3364a4994db4
-  raw sha256  69f1df3145e58a68ceccd698e198afa030391e00adc3b8be518335a2924f0635
-  tests       37
-```
-
-Approved behavior:
-
-- `ScreenOverrides` has five optional fields and `is_active()` uses `is not None`;
-- probe peak/ramp overrides reach the real plant and fail on invalid combinations;
-- `physical_faults=()` remains an active healthy override;
-- active provenance is nonempty, `dev-` plus 64 lowercase hex, and base-distinct;
-- provenance reaches online and post-hoc observation construction;
-- a supplied realized pair id stays suffix-free;
-- `overrides=None` preserves the base hash and `_dataset0` identity;
-- the seam mutates no assignment and writes no role artifact; and
-- inactive overrides carrying provenance raise rather than discard an identity claim.
-
-I13a, I3-I8 orchestration, and results-only persistence remain stage-driver concerns.
-
-## Permanent I13b test
-
-```text
-Reproducibility Packet/tests/test_cable_plant_softening_boundary.py
-  git blob    ca0f44743b3e7b4f4268e596fc82f6e1bbee2411
-  raw sha256  712d2165f8bd96d5e88a07e5f76c53313cb5e6aca5c6d0d21af43914c3e26ac7
-  tests       6
-```
-
-It checks model swap at onsets 1, 5, and 500, pins
-`_step_index(1.0, 0.002) == 500`, records omitted-onset activation at step 0, and checks
-that a healthy plant never constructs or activates a softened model. It must stay green
-before every plant-bearing stage.
-
 ## Stage-A/B/C driver gates
 
-No Stage-A/B/C driver exists and none is authorized.
-
-Its later implementation review must require:
+No Stage-A/B/C driver exists and none is authorized. Its implementation review must require:
 
 1. a closed-vocabulary `screen_physical_faults` helper;
 2. healthy requires severity absent and returns `()`;
@@ -398,17 +329,16 @@ permanent I13b exact-state approval                   COMPLETE
 generator seam exact-state approval                   COMPLETE
 one-row replay result                                 COMPLETE / APPROVED
 replay-gate implementation                            COMPLETE / JOINTLY APPROVED
-Stage-0 implementation                               COMPLETE / JOINTLY APPROVED
-Stage-0 execution                                    COMPLETE / RUN ONCE
-Stage-0 result artifact reviewer approval             COMPLETE / CODEX
-Stage-0 result artifact owner approval                NEXT / REQUIRED
-Stage-0 packet README step                            AFTER RESULT LOOP CLOSE
+Stage-0 implementation                                COMPLETE / JOINTLY APPROVED
+Stage-0 execution                                     COMPLETE / RUN ONCE
+Stage-0 result artifact                               COMPLETE / JOINTLY APPROVED
+Stage-0 packet README step                            REVIEWER APPROVED / OWNER REVIEW NEXT
 Stage A/B/C driver implementation and review          LATER
 Stage A                                               AFTER DRIVER APPROVAL
 Stage B                                               AFTER STAGE A
 Stage C                                               AFTER STAGE B
 result/terminal-branch review                         REQUIRED
-written Amendment A2 + replacement assignment        LATER
+written Amendment A2 + replacement assignment         LATER
 from-zero non-test regeneration and re-audit          LATER
 Gates 4-7 -> joint final freeze -> confirmatory run   LATER
 ```
@@ -424,10 +354,8 @@ Do not reopen without new evidence:
 - Stage B: 10 remaining-EI values × 4 cells, reusing 0.75 and 0.35 = 32 new;
 - Stage C: 8 healthy replicates per cell, reusing k=0 = 28 new;
 - total plant rollouts including replay: 169;
-- statistic: four-gauge matched 0.8-Hz cosine/sine coefficient difference, eight
-  entries;
-- operative null: per-cell 0.95 quantile with `method="higher"` over 28 healthy
-  distances;
+- statistic: four-gauge matched 0.8-Hz cosine/sine coefficient difference, eight entries;
+- operative null: per-cell 0.95 quantile with `method="higher"` over 28 healthy distances;
 - pass: `D(v,c) >= 2.0 × Q95_c` in every screened cell;
 - selection: maximize worst-cell `D` at remEI 0.75; 1% ties choose lower amplitude then
   larger ramp fraction;
@@ -445,51 +373,26 @@ boundary under earlier optimistic projections. That is a prior, not a result.
 ## Role, config, and data state
 
 ```text
-Gate 1:
-  closed
-
-Gate 2 generic role path and current pre-A2 base roles:
-  closed
-
-Gate 3 assignment:
-  closed for current pre-A2 design
-
-Protocol P specification:
-  v2.3.3 exact state jointly approved
-
-Protocol-P seam:
-  exact state jointly approved
-
-Protocol-P replay result and implementation:
-  jointly approved
-
-Stage 0 implementation:
-  jointly approved
-
-Stage 0 execution:
-  run once
-
-Stage 0 result:
-  reviewer approved unchanged
-  awaiting explicit owner same-state approval
-
-Stage A/B/C:
-  unauthorized and unimplemented
-
-Amendment A2:
-  not written or approved
-
-Gates 4-7:
-  open
-
-final config.json:
-  absent
+Gate 1                                      closed
+Gate 2 generic path/current pre-A2 roles   closed
+Gate 3 current pre-A2 assignment           closed
+Protocol P specification                   jointly approved
+Protocol-P seam                            jointly approved
+one-row replay result/gate                  jointly approved
+Stage-0 implementation                     jointly approved
+Stage-0 execution                          run once
+Stage-0 result                             jointly approved
+Stage-0 packet README                      reviewer approved; owner review open
+Stage A/B/C                                unauthorized and unimplemented
+Amendment A2                               not written or approved
+Gates 4-7                                  open
+final config.json                          absent
 ```
 
-The local ignored retained dataset contains 472 dev/pilot/validation reservations, 944
-C1/S manifest rows, and zero test rows. It was not regenerated. After an approved written
-Amendment A2 and replacement assignment, Codex's standing choice is coherent from-zero
-regeneration, not an in-place patch.
+The local ignored retained dataset contains 472 dev/pilot/validation reservations, 944 C1/S
+manifest rows, and zero test rows. It was not regenerated. After an approved written
+Amendment A2 and replacement assignment, use coherent from-zero regeneration, not an
+in-place patch.
 
 ## Evidence boundary
 
@@ -504,9 +407,9 @@ Keep separate:
 - controller outcome; and
 - confirmatory evidence.
 
-The replay is a one-row construction positive control. Stage 0 is a sensor-path
-diagnostic. Neither establishes mechanics, detection, attribution, action authority,
-controller outcome, or the project hypothesis.
+The replay is a one-row construction positive control. Stage 0 is a sensor-path diagnostic.
+Neither establishes mechanics, detection, attribution, action authority, controller outcome,
+or the project hypothesis.
 
 ## Verification baseline
 
@@ -516,24 +419,19 @@ Use only the repository venv:
 .\venv\Scripts\python.exe -m pytest -q "Reproducibility Packet\tests"
 ```
 
-Codex Session 48:
+Codex Session 49:
 
 ```text
-Stage-0 + gauge-helper files       117 passed in 1.36 s
-full packet suite                  595 passed in 12.51 s
-compileall                         clean
-strict artifact audit             20 / 20 PASS
-config.json                        absent
-test-named payload files           0
-.npz under results                 0
+full packet suite            595 passed in 12.26 s
+compileall                   clean
+config.json                  absent
+test-named .npz files        0
+.npz under results           0
 ```
 
 Do not run root-wide `pytest -q`; ignored duplicate trees under `tmp/` can pollute
-collection.
-
-Before binary replay decisions, use raw hashes only. Before exact-state approval,
-independently compute raw bytes, BOM/EOL state, raw SHA-256, Git blob, and Git
-attributes.
+collection. Before binary replay decisions, use raw hashes only. Before exact-state
+approval, compute raw bytes, BOM/EOL state, raw SHA-256, Git blob, and Git attributes.
 
 Before every commit:
 
@@ -546,31 +444,20 @@ CRLF warnings alone are not a reason to churn unrelated files.
 
 ## Transcript-order state
 
-The active transcript is append-only. Session-48 append verification:
+The active transcript is append-only. Session-49 append verification:
 
 ```text
-pre-write lines:
-  10,825
-pre-write bytes:
-  793,417
-pre-write sha256:
-  312d55ed78c292b66d2c1cec55d12d4aee0cb4f53ba69737cbb251684baa11a5
-Codex header:
-  line 10,829
-  count 1 total
-  after old boundary
-old byte prefix:
-  exact
-technical diff:
-  +170 / -0
-post-write lines:
-  10,995
-post-write bytes:
-  801,046
-post-write sha256:
-  17649439674b3aef51317cd11270fe527c3b89cc094ac216d2c8039034308460
-physical last author:
-  Codex
+pre-write lines       11,185
+pre-write bytes       811,471
+pre-write sha256      3a13cf6563ce62957a927e161d63ba49dac0aef301ea80f948daaac01f79c66f
+Codex header line     11,189
+Codex header count    1
+old byte prefix       exact
+technical diff        +150 / -0
+post-write lines      11,335
+post-write bytes      818,050
+post-write sha256     c64ef573966464af8fb2c71c4fe48188e0943a81e955cd12db997b3ba0828f4b
+physical last author  Codex
 ```
 
 No recurrence occurred, so the monitoring thread was not updated.
@@ -588,43 +475,19 @@ For every future append:
 
 If any check fails, stop and repair by dated append-only correction.
 
-## Public README state
-
-The Session-48 Stage-0 milestone qualified for a public entry. Claude added it before
-result review. Codex preserved it and appended a dated correction for the threshold,
-binding-versus-safety, and implementation-review-versus-result-review distinctions.
-
-Do not rewrite or remove either entry. Future public state should advance only for a
-finished artifact, phase close, or genuinely noteworthy result. Routine owner approval
-alone probably does not need another public entry unless it changes the public-facing
-meaning.
-
 ## Required next actions
 
-1. Read controlling instructions, this continuity file, all Codex-relevant chat
-   summaries, and the active transcript before replying.
+1. Read controlling instructions, this continuity file, all Codex-relevant chat summaries,
+   and the active transcript before replying.
 2. Read Claude's newest report and physical-tail owner turn.
-3. Verify Claude genuinely re-opened:
-
-   ```text
-   Reproducibility Packet/results/protocol_p/sensor_only_difference_null.json
-     31c1e6d1824c10bd5978d12c377f76cf556af03f
-
-   agents/Claude/Progress Reports/Progress Report Session 48.md
-     36ba0221540582b04f7f35029f7a38f3649a60ff
-   ```
-
-4. If Claude explicitly approves the unchanged result artifact, record the Stage-0
-   result loop closed.
-5. If Claude explicitly approves the reviewer-edited progress report, record that
-   collateral report loop closed.
-6. After result closure, allow Claude to write the Stage-0 packet README step with
-   `first-run elapsed time: not captured`.
-7. Keep Stage A/B/C unauthorized until a separate driver implementation receives
-   explicit same-state approval.
-8. Keep final `config.json` absent and the test split untouched.
-9. Close out with the next HumanReport, README heartbeat, Codex workspace README,
-   complete continuity rewrite, hygiene checks, exact commit message, and push.
+3. Verify Claude genuinely re-opened packet README blob `9363e144...` and public README
+   blob `f3f76f27...`.
+4. If Claude explicitly approves both exact states, record both loops closed.
+5. Keep Stages A/B/C unauthorized until a separate driver implementation reaches explicit
+   same-state approval.
+6. Keep final `config.json` absent and the test split untouched.
+7. Close out with HumanReport50, README heartbeat, Codex workspace README, complete
+   continuity rewrite, hygiene checks, exact commit message, and push.
 
 ## Non-negotiable boundaries
 
@@ -636,6 +499,8 @@ meaning.
 - Never convert safety into proof of correct construction.
 - Never convert detection into attribution or action authority.
 - Never treat the Stage-0 diagnostic as a detection threshold.
+- Never describe `stage_0_identity` as sealing or certifying measured result values.
+- Never claim Step 24 has no MuJoCo package dependency while the transitive import remains.
 - Never silently rewrite a public or transcript-facing overclaim; append a correction.
 - Never normalize binary artifacts before exact hashing.
 - Never run a stage from unapproved implementation.

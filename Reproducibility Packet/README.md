@@ -575,7 +575,7 @@ One MuJoCo rollout, about 26 s. Exit status is 0 only when every pinned digest m
 
 Stage 0 is the first pre-registered measurement this project has executed. It asks the narrowest question in Protocol P: with **no plant, no mechanics, no fault and no rollout**, how far apart are two healthy four-gauge windows that differ only in their sensor draw? The answer characterizes the sensor-path component of the screen's difference statistic `D`, and nothing else.
 
-**Read this step against Step 23, because the two have opposite reader-reproducibility status.** Step 23 cannot be run from the distributed packet: it needs the retained development dataset and one MuJoCo rollout. Step 24 needs **neither a dataset nor MuJoCo**, draws every value from fixed seeds, and runs end to end on a clean checkout after Step 1.
+**Read this step against Step 23, because the two have opposite reader-reproducibility status.** Step 23 cannot be run from the distributed packet: it needs the retained development dataset and one MuJoCo rollout. Step 24 needs **no dataset and performs no MuJoCo simulation**, draws every value from fixed seeds, and runs end to end on a clean checkout after Step 1. The MuJoCo Python package installed in Step 1 is still imported transitively by shared input-binding code.
 
 The invocation is pre-registered in [`protocol/protocol-p-v2.3.3.md`](protocol/protocol-p-v2.3.3.md) §8. All seven values are also the script's defaults; they are written out because the protocol pins them and the script refuses any other combination.
 
@@ -596,14 +596,14 @@ identity              dev-71b332893d007036625f666589f8c74b0ac3b946b47b5186ddf8de
 
 Four boundaries govern how that number may be quoted, and all four are recorded inside the artifact itself:
 
-- **It sets no threshold and gates no decision.** The artifact's `authority` field reads `NONE`. The operative null for the screen's verdict is Stage C's per-cell `Q95_c`, which has not been measured. A damage signal smaller than `0.400881` is **not** thereby invisible; Stage 0 licenses no such statement.
+- **It sets no threshold and gates no decision.** The artifact's `corroboration.authority` field reads `NONE`. The operative null for the screen's verdict is Stage C's per-cell `Q95_c`, which has not been measured. A damage signal smaller than `0.400881` is **not** thereby invisible; Stage 0 licenses no such statement.
 - **Its corroboration is upper-tail containment, not agreement.** The same quantity measured earlier through the simulated physics — one healthy trace re-read under different sensor draws — gave `0.3176 / 0.3555 / 0.3854 / 0.4251` across four context cells. Stage 0's `0.400881` falls inside that range, which is the pre-registered check, but it **exceeds three of the four cells** and sits about 5.7% below the range maximum. "Inside the measured real-plant range" is supported. "Agrees with the real-plant null" is not.
 - **The `dev-` prefix is permanent.** The identity is ineligible for confirmatory analysis by construction (invariant I8), and no Stage-0 value may enter the confirmatory comparison.
 - **The identity binds the inputs, not the numbers.** `stage_0_identity` is the SHA-256 of the artifact's own `stage_0_canonical` string, so any reader can recompute it from the file alone. That string covers the stage label, the base config hash, both assignment digests, the protocol digest, the seven CLI values, and the sorted output schema — it does **not** cover the measured distances or the summary statistics. It is a provenance identity over the run's inputs and shape; it is not a tamper seal over its results. Verify a result by recomputing it from `samples.distances`, which the artifact records in full.
 
 Two reader notes. `samples` is a six-key metadata dictionary (`n_pairs`, `seed_map`, `sensor_seeds_consumed`, `sensor_seeds_consumed_note`, `pair_id`, `distances`); the 100 values live in `samples.distances`, so `len(samples)` returns 6 and not 100. And `null_distribution.std` is the **population** standard deviation, not the sample one.
 
-**First-run elapsed time: not captured.** The team's session records carry only an informal order-of-magnitude note (a few seconds), which is not a measurement and is not quoted here as one. The measurement itself is unaffected — Protocol P binds no elapsed time — and a second execution was deliberately not spent to manufacture a figure for the first. Any later timing must be labelled as a separately authorized reproduction rather than as the first run.
+**First-run elapsed time: not captured.** No trustworthy timing measurement was recorded for the first run, so none is reported. The measurement itself is unaffected because Protocol P binds no elapsed time. Any later timing must be labelled as a separate reproduction rather than as the first run.
 
 The run is deterministic given the pinned seeds and the pinned dependency versions in `requirements.txt`; no randomness is drawn outside them. Cross-platform bit-identity has **not** been measured, so compare a local run against the recorded values rather than assuming byte-identical output.
 
