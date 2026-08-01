@@ -82,6 +82,7 @@ SCREEN_SOURCE_FAULT_SETTING_ID = "fault_dev_healthy"
 # Section 2: context cells 4/5/6/7 are replicates r00..r03 of that trajectory.
 SCREEN_CELLS: tuple[int, ...] = (4, 5, 6, 7)
 FIRST_SCREEN_CELL = SCREEN_CELLS[0]
+SCREEN_STAGES: tuple[str, ...] = ("A", "B", "C")
 
 # Section 5: exactly these two reservation fields may differ from the source.
 SCREEN_RESERVATION_FIELDS: tuple[str, ...] = ("sensor_seed", "base_pair_id")
@@ -267,6 +268,32 @@ def stage_c_cell_identities(cell: int) -> tuple[RolloutIdentity, ...]:
     return identities
 
 
+def require_stage_identity(stage: str, cell: int, identity: RolloutIdentity) -> None:
+    """Raise unless a rollout uses the section-6 identity for its stage and cell.
+
+    Inputs: the stage, context cell and proposed identity. Outputs: none. Purpose: I5-I7
+    constrain relations among identities, but none of those relations prevents every
+    rollout in cell 4 from consistently using cell 5's identity. This closes that
+    construction gap before the provenance object is hashed.
+    """
+
+    require(
+        stage in SCREEN_STAGES,
+        f"stage must be one of {SCREEN_STAGES}; got {stage!r}",
+    )
+    require_screen_cell(cell)
+    if stage in ("A", "B"):
+        require(
+            identity == stage_ab_identity(cell),
+            f"stage {stage} cell {cell} must use its Stage A/B identity; got {identity}",
+        )
+        return
+    require(
+        identity in stage_c_cell_identities(cell),
+        f"stage C cell {cell} must use one of its eight Stage-C identities; got {identity}",
+    )
+
+
 def require_unique_cell_identities(identities: Sequence[RolloutIdentity]) -> None:
     """I5: raise unless every identity in one cell is distinct.
 
@@ -429,17 +456,18 @@ def require_constructed_condition(
 
 
 def screen_reservation(
-    source: ScenarioReservation, *, sensor_seed: int, base_pair_id: str
+    source: ScenarioReservation, *, cell: int, sensor_seed: int, base_pair_id: str
 ) -> ScenarioReservation:
     """Section 5: derive a screen reservation from a delivered source reservation.
 
-    Inputs: the source reservation and the two replacement field values. Outputs: the
-    screen reservation. Purpose: the source fixes payload, environment and contact by
-    being the delivered ``t01`` reservation for the target cell; exactly two fields move,
-    and I3 is re-checked on the result rather than trusted from this function's body.
+    Inputs: the source reservation, target cell and two replacement field values.
+    Outputs: the screen reservation. Purpose: the source fixes payload, environment and
+    contact by being the delivered ``t01`` reservation for the target cell; exactly two
+    fields move, and I3 is re-checked on the result rather than trusted from this
+    function's body.
     """
 
-    require_screen_source(source)
+    require_screen_source(source, cell=cell)
     require(
         isinstance(sensor_seed, int) and not isinstance(sensor_seed, bool),
         f"sensor_seed must be an int; got {sensor_seed!r}",
@@ -451,13 +479,14 @@ def screen_reservation(
     return derived
 
 
-def require_screen_source(source: ScenarioReservation) -> None:
+def require_screen_source(source: ScenarioReservation, *, cell: int | None = None) -> None:
     """Raise unless a reservation is an admissible section-5 screen source.
 
-    Inputs: a candidate source reservation. Outputs: none. Purpose: section 2 screens
-    only the dev diagnostic trajectory, and section 5 requires the source to be the
-    healthy setting so that no fault is derived from the assignment; the ladder fault
-    must enter only through ``overrides.physical_faults``.
+    Inputs: a candidate source reservation and optional target cell. Outputs: none.
+    Purpose: section 2 screens only the dev diagnostic trajectory, and section 5
+    requires the source to be the healthy setting so that no fault is derived from the
+    assignment; the ladder fault must enter only through
+    ``overrides.physical_faults``.
     """
 
     require(
@@ -477,6 +506,49 @@ def require_screen_source(source: ScenarioReservation) -> None:
         source.fault_setting_id == SCREEN_SOURCE_FAULT_SETTING_ID,
         f"section 5 requires the healthy source setting "
         f"{SCREEN_SOURCE_FAULT_SETTING_ID!r}; source is {source.fault_setting_id!r}",
+    )
+    if cell is not None:
+        require_screen_cell(cell)
+        replicate = cell - FIRST_SCREEN_CELL
+        expected_scenario = f"scenario_dev_t01_f000_r{replicate:02d}"
+        expected_pair = f"basepair_dev_t01_f000_r{replicate:02d}"
+        expected_group = f"group_dev_t01_f000_r{replicate:02d}"
+        require(
+            source.scenario_spec_id == expected_scenario,
+            f"cell {cell} must use source scenario {expected_scenario!r}; got "
+            f"{source.scenario_spec_id!r}",
+        )
+        require(
+            source.base_pair_id == expected_pair,
+            f"cell {cell} must use source base pair {expected_pair!r}; got "
+            f"{source.base_pair_id!r}",
+        )
+        require(
+            source.split_group_id == expected_group,
+            f"cell {cell} must use source split group {expected_group!r}; got "
+            f"{source.split_group_id!r}",
+        )
+
+
+def require_screen_reservation_cell(
+    reservation: ScenarioReservation, *, cell: int
+) -> None:
+    """Raise unless a derived screen reservation still names the target cell source.
+
+    The derived reservation intentionally replaces ``base_pair_id``, so this check uses
+    the source ``scenario_spec_id`` that I3 preserves. The driver still obtains that
+    source from the approved assignment; this guard prevents a valid reservation for one
+    cell from being paired with another cell's identity and result key.
+    """
+
+    require_screen_source(reservation)
+    require_screen_cell(cell)
+    replicate = cell - FIRST_SCREEN_CELL
+    expected_scenario = f"scenario_dev_t01_f000_r{replicate:02d}"
+    require(
+        reservation.scenario_spec_id == expected_scenario,
+        f"cell {cell} must retain source scenario {expected_scenario!r}; got "
+        f"{reservation.scenario_spec_id!r}",
     )
 
 
@@ -522,16 +594,20 @@ def rollout_provenance(
     condition: str,
     severity: float | None,
     identity: RolloutIdentity,
+    reservation: ScenarioReservation,
+    physical_faults: Sequence[FaultSpec],
+    onset_index: int,
     probe_peak_force_n: float,
     probe_ramp_fraction_of_duration: float,
     base_config_hash: str,
     assignment_canonical_sha256: str,
+    assignment_hash: str,
     protocol_spec_sha256: str,
 ) -> tuple[str, str]:
     """I8: build one rollout's provenance identity and the string it was hashed from.
 
     Inputs: everything that distinguishes this rollout from every other one, plus the
-    three digests that pin the inputs it was built from. Outputs:
+    four digests/hashes that pin the inputs it was built from. Outputs:
     ``(provenance_hash, canonical_string)`` in that order -- the digest and the exact
     object it was computed over, returned together so the caller records the same object
     that was hashed rather than a second call that ought to agree (Correction 8).
@@ -545,41 +621,76 @@ def rollout_provenance(
     *inputs*. It is provenance, not a tamper seal over anything the rollout produces.
     """
 
-    require(isinstance(stage, str) and stage != "", f"stage must be a nonempty string; got {stage!r}")
-    require_screen_cell(cell)
+    require_stage_identity(stage, cell, identity)
     require(condition in CONDITIONS, f"unknown condition {condition!r}; vocabulary is {CONDITIONS}")
+    require_screen_reservation_cell(reservation, cell=cell)
     require_suffix_free_pair_id(identity.pair_id)
+    require(
+        reservation.sensor_seed == identity.sensor_seed,
+        "the provenance reservation's sensor_seed must equal the rollout identity",
+    )
+    require(
+        reservation.base_pair_id == identity.pair_id,
+        "the provenance reservation's base_pair_id must equal the realized pair id",
+    )
+    require_constructed_condition(
+        physical_faults,
+        condition,
+        severity=severity,
+        onset_index=onset_index,
+    )
     require(
         isinstance(base_config_hash, str) and base_config_hash != "",
         "base_config_hash must be a nonempty string",
+    )
+    require(
+        isinstance(assignment_hash, str) and assignment_hash != "",
+        "assignment_hash must be a nonempty string",
     )
     require_admissible_probe(
         peak_force_n=probe_peak_force_n,
         ramp_fraction_of_duration=probe_ramp_fraction_of_duration,
     )
 
-    payload: dict[str, Any] = {
+    rollout_identity_payload: dict[str, Any] = {
+        "base_config_hash": base_config_hash,
+        "assignment_canonical_sha256": assignment_canonical_sha256,
+        "assignment_hash": assignment_hash,
+        "protocol_spec_sha256": protocol_spec_sha256,
         "stage": stage,
         "cell": cell,
         "condition": condition,
-        "severity": None if severity is None else float(severity),
-        "sensor_seed": identity.sensor_seed,
-        "pair_id": identity.pair_id,
-        "probe_peak_force_n": float(probe_peak_force_n),
-        "probe_ramp_fraction_of_duration": float(probe_ramp_fraction_of_duration),
-        "base_config_hash": base_config_hash,
-        "assignment_canonical_sha256": assignment_canonical_sha256,
-        "protocol_spec_sha256": protocol_spec_sha256,
+        "overrides": {
+            "probe_peak_force_n": float(probe_peak_force_n),
+            "probe_ramp_fraction_of_duration": float(
+                probe_ramp_fraction_of_duration
+            ),
+            "physical_faults": [
+                {
+                    field.name: getattr(fault, field.name)
+                    for field in dataclasses.fields(FaultSpec)
+                }
+                for fault in physical_faults
+            ],
+            "realized_pair_id": identity.pair_id,
+        },
+        "reservation": {
+            "scenario_spec_id": reservation.scenario_spec_id,
+            "base_pair_id": reservation.base_pair_id,
+            "sensor_seed": reservation.sensor_seed,
+        },
     }
     try:
-        canonical = canonical_json(payload)
+        rollout_canonical = canonical_json(rollout_identity_payload)
     except (TypeError, ValueError) as exc:
         raise ProtocolPError(
             f"rollout provenance payload must be finite canonical JSON: {exc}"
         ) from exc
-    provenance = "dev-" + hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    provenance = "dev-" + hashlib.sha256(
+        rollout_canonical.encode("utf-8")
+    ).hexdigest()
     require_base_distinct_provenance(provenance, base_config_hash)
-    return provenance, canonical
+    return provenance, rollout_canonical
 
 
 def require_base_distinct_provenance(provenance: str, base_config_hash: str) -> None:
@@ -709,17 +820,20 @@ def build_overrides(
     condition: str,
     severity: float | None,
     identity: RolloutIdentity,
+    reservation: ScenarioReservation,
     probe_peak_force_n: float,
     probe_ramp_fraction_of_duration: float,
     onset_index: int,
     base_config_hash: str,
     assignment_canonical_sha256: str,
+    assignment_hash: str,
     protocol_spec_sha256: str,
 ) -> tuple[ScreenOverrides, str]:
     """Build the full typed override bundle for one screen rollout.
 
-    Inputs: the rollout's stage, cell, condition and severity, its realized identity,
-    the selected probe, the fault onset step index, and the three input digests.
+    Inputs: the rollout's stage, cell, condition and severity, its realized identity and
+    derived reservation, the selected probe, the fault onset step index, and the four
+    input digests/hashes.
     Outputs: ``(overrides, canonical_string)`` -- the bundle to pass to
     ``_generate_reservation`` and the exact provenance string its hash was computed
     over, so the driver can record the string beside the hash.
@@ -734,16 +848,23 @@ def build_overrides(
     """
 
     faults = requested_fault_specs(condition, severity=severity, onset_index=onset_index)
+    require_constructed_condition(
+        faults, condition, severity=severity, onset_index=onset_index
+    )
     provenance, canonical = rollout_provenance(
         stage=stage,
         cell=cell,
         condition=condition,
         severity=severity,
         identity=identity,
+        reservation=reservation,
+        physical_faults=faults,
+        onset_index=onset_index,
         probe_peak_force_n=probe_peak_force_n,
         probe_ramp_fraction_of_duration=probe_ramp_fraction_of_duration,
         base_config_hash=base_config_hash,
         assignment_canonical_sha256=assignment_canonical_sha256,
+        assignment_hash=assignment_hash,
         protocol_spec_sha256=protocol_spec_sha256,
     )
     overrides = ScreenOverrides(

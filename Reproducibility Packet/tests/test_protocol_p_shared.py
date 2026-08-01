@@ -116,6 +116,12 @@ def test_stage_0_shares_the_canonical_json_rule() -> None:
     assert stage_0.canonical_json is shared.canonical_json
 
 
+def test_the_gate_uses_the_shared_binary_domain_helper() -> None:
+    """The binary-domain rule moves; its replay-only digest pins stay with the gate."""
+
+    assert gate.raw_file_sha256 is shared.raw_file_sha256
+
+
 def test_the_binary_pins_stay_with_the_check_that_reads_them() -> None:
     """The two ``.npz`` pins belong to the replay gate, not to the shared module.
 

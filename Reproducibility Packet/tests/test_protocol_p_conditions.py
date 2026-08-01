@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import dataclasses
 import hashlib
+import json
 import sys
 from pathlib import Path
 
@@ -41,35 +42,41 @@ from utils.task_control import ObservedJointControllerConfig  # noqa: E402
 
 BASE_CONFIG_HASH = "dev-712abf27c3f8f3c331ae9b76e3f22c48857334cc15a81e819718165e47753e56"
 ASSIGNMENT_DIGEST = "76255a8089f3e27d893b26d981cbf50e808bd75ba518c44b55c4635ec83514ae"
+ASSIGNMENT_HASH = "dev-eec59ec8a296a9a4ff4909f8e7f1de91a0a8f4bf289ae1533a427d1a87bc33f1"
 PROTOCOL_DIGEST = "5689dad7ce4194b9a7dbe381006027df178997adf732f5734a77ef048bdf421f"
 ONSET_INDEX = 500  # dev t01: onset 1.00 s at control_dt_s 0.002
 
 
-def source_reservation(**overrides: object) -> ScenarioReservation:
+def source_reservation(cell: int = 4, **overrides: object) -> ScenarioReservation:
     """Build a delivered-shaped dev ``t01`` healthy reservation for one screened cell.
 
-    Inputs: field overrides. Outputs: a ``ScenarioReservation``. Purpose: the screen
+    Inputs: a screened cell plus field overrides. Outputs: a ``ScenarioReservation``. Purpose: the screen
     source is a real delivered reservation; this fixture carries all 15 fields with
     delivered-shaped values so that an I3 test can change a third field and see the
     guard object.
     """
 
+    replicate = cell - conditions.FIRST_SCREEN_CELL
+    payload = "payload_dev_nominal" if cell in (4, 5) else "payload_dev_0p050kg"
+    environment = "env_dev_iso25c" if cell in (4, 6) else "env_dev_warm2c"
+    contact = "contact_dev_brief" if cell in (4, 7) else "contact_dev_none"
+    seed_base = 110760 + 10 * replicate
     fields: dict[str, object] = {
         "schema_version": "1.0",
         "draft_config_hash": BASE_CONFIG_HASH,
-        "scenario_spec_id": "scenario_dev_t01_f000_r00",
-        "base_pair_id": "basepair_dev_t01_f000_r00",
+        "scenario_spec_id": f"scenario_dev_t01_f000_r{replicate:02d}",
+        "base_pair_id": f"basepair_dev_t01_f000_r{replicate:02d}",
         "trajectory_spec_id": conditions.SCREEN_TRAJECTORY_SPEC_ID,
         "fault_setting_id": conditions.SCREEN_SOURCE_FAULT_SETTING_ID,
-        "split_group_id": "group_dev_t01_f000_r00",
+        "split_group_id": f"group_dev_t01_f000_r{replicate:02d}",
         "split": conditions.SCREEN_SPLIT,
-        "payload_id": "payload_dev_nominal",
-        "env_profile_id": "env_dev_iso25c",
-        "contact_profile_id": "contact_dev_brief",
-        "sim_seed": 110760,
-        "fault_seed": 110761,
-        "sensor_seed": 110762,
-        "controller_seed": 110763,
+        "payload_id": payload,
+        "env_profile_id": environment,
+        "contact_profile_id": contact,
+        "sim_seed": seed_base,
+        "fault_seed": seed_base + 1,
+        "sensor_seed": seed_base + 2,
+        "controller_seed": seed_base + 3,
     }
     fields.update(overrides)
     return ScenarioReservation(**fields)  # type: ignore[arg-type]
@@ -402,13 +409,26 @@ def test_a_screen_reservation_moves_exactly_two_fields() -> None:
     source = source_reservation()
     identity = conditions.stage_ab_identity(4)
     screen = conditions.screen_reservation(
-        source, sensor_seed=identity.sensor_seed, base_pair_id=identity.pair_id
+        source, cell=4, sensor_seed=identity.sensor_seed, base_pair_id=identity.pair_id
     )
     assert screen.sensor_seed == identity.sensor_seed
     assert screen.base_pair_id == identity.pair_id
     for field in dataclasses.fields(ScenarioReservation):
         if field.name not in conditions.SCREEN_RESERVATION_FIELDS:
             assert getattr(screen, field.name) == getattr(source, field.name)
+
+
+def test_a_source_reservation_from_another_cell_is_refused() -> None:
+    """A valid cell-5 source cannot be relabelled as cell 4 before construction."""
+
+    identity = conditions.stage_ab_identity(4)
+    with pytest.raises(ProtocolPError, match="cell 4 must use source scenario"):
+        conditions.screen_reservation(
+            source_reservation(5),
+            cell=4,
+            sensor_seed=identity.sensor_seed,
+            base_pair_id=identity.pair_id,
+        )
 
 
 def test_a_third_changed_field_is_refused_as_i3() -> None:
@@ -490,16 +510,43 @@ def test_an_inadmissible_screen_source_is_refused(mutation: dict, expected: str)
 def provenance_kwargs(**overrides: object) -> dict:
     """Return a complete provenance argument set with optional overrides."""
 
+    cell = int(overrides.get("cell", 4))
+    stage = str(overrides.get("stage", "A"))
+    if "identity" in overrides:
+        identity = overrides["identity"]
+    elif stage == "C":
+        identity = conditions.stage_c_identity(cell, 1)
+    else:
+        identity = conditions.stage_ab_identity(cell)
+    assert isinstance(identity, conditions.RolloutIdentity)
+    reservation = conditions.screen_reservation(
+        source_reservation(cell),
+        cell=cell,
+        sensor_seed=identity.sensor_seed,
+        base_pair_id=identity.pair_id,
+    )
+    condition = str(overrides.get("condition", "structural"))
+    severity = overrides.get("severity", 0.75)
+    onset_index = int(overrides.get("onset_index", ONSET_INDEX))
+    physical_faults = conditions.requested_fault_specs(
+        condition,
+        severity=severity,  # type: ignore[arg-type]
+        onset_index=onset_index,
+    )
     kwargs: dict = {
-        "stage": "A",
-        "cell": 4,
-        "condition": "structural",
-        "severity": 0.75,
-        "identity": conditions.stage_ab_identity(4),
+        "stage": stage,
+        "cell": cell,
+        "condition": condition,
+        "severity": severity,
+        "identity": identity,
+        "reservation": reservation,
+        "physical_faults": physical_faults,
+        "onset_index": onset_index,
         "probe_peak_force_n": 0.15,
         "probe_ramp_fraction_of_duration": 0.125,
         "base_config_hash": BASE_CONFIG_HASH,
         "assignment_canonical_sha256": ASSIGNMENT_DIGEST,
+        "assignment_hash": ASSIGNMENT_HASH,
         "protocol_spec_sha256": PROTOCOL_DIGEST,
     }
     kwargs.update(overrides)
@@ -519,6 +566,52 @@ def test_the_returned_string_is_the_object_that_was_hashed() -> None:
     assert len(provenance) == 4 + 64
 
 
+def test_rollout_provenance_matches_the_protocols_exact_payload_shape() -> None:
+    """Correction 2 binds the assignment, reservation and all four override values.
+
+    A flat payload containing only the realized identity and probe values is not an
+    equivalent description: it omits the approved assignment hash, the delivered
+    scenario/base reservation, and the full fault construction including onset.
+    """
+
+    _, canonical = conditions.rollout_provenance(**provenance_kwargs())
+    payload = json.loads(canonical)
+    assert set(payload) == {
+        "base_config_hash",
+        "assignment_canonical_sha256",
+        "assignment_hash",
+        "protocol_spec_sha256",
+        "stage",
+        "cell",
+        "condition",
+        "overrides",
+        "reservation",
+    }
+    assert payload["assignment_hash"] == ASSIGNMENT_HASH
+    assert payload["reservation"] == {
+        "scenario_spec_id": "scenario_dev_t01_f000_r00",
+        "base_pair_id": "basepair_protocolp_stageAB_c4",
+        "sensor_seed": 150002,
+    }
+    assert set(payload["overrides"]) == {
+        "probe_peak_force_n",
+        "probe_ramp_fraction_of_duration",
+        "physical_faults",
+        "realized_pair_id",
+    }
+    assert payload["overrides"]["physical_faults"] == [
+        {
+            "source_class": "structure",
+            "subtype": "link_stiffness_loss",
+            "location": 1,
+            "severity": 0.75,
+            "onset_index": ONSET_INDEX,
+            "compound_flag": False,
+            "ood_flag": False,
+        }
+    ]
+
+
 def test_provenance_is_deterministic_for_one_rollout() -> None:
     """The same request must stamp the same identity on every construction."""
 
@@ -534,10 +627,14 @@ def test_provenance_is_deterministic_for_one_rollout() -> None:
         {"cell": 5},
         {"condition": "healthy", "severity": None},
         {"severity": 0.5},
-        {"identity": conditions.stage_c_identity(4, 3)},
+        {"stage": "C", "identity": conditions.stage_c_identity(4, 3)},
         {"probe_peak_force_n": 0.10},
         {"probe_ramp_fraction_of_duration": 0.25},
         {"base_config_hash": "dev-" + "0" * 64},
+        {"assignment_canonical_sha256": "1" * 64},
+        {"assignment_hash": "dev-" + "2" * 64},
+        {"protocol_spec_sha256": "3" * 64},
+        {"onset_index": ONSET_INDEX + 1},
     ],
 )
 def test_every_distinguishing_input_moves_the_provenance(mutation: dict) -> None:
@@ -546,6 +643,44 @@ def test_every_distinguishing_input_moves_the_provenance(mutation: dict) -> None
     baseline, _ = conditions.rollout_provenance(**provenance_kwargs())
     other, _ = conditions.rollout_provenance(**provenance_kwargs(**mutation))
     assert other != baseline
+
+
+@pytest.mark.parametrize(
+    "mutation,expected",
+    [
+        ({"sensor_seed": 150012}, "sensor_seed must equal"),
+        ({"base_pair_id": "basepair_protocolp_stageAB_c5"}, "base_pair_id must equal"),
+    ],
+)
+def test_the_bound_reservation_must_match_the_realized_identity(
+    mutation: dict, expected: str
+) -> None:
+    """The two nested payload objects cannot describe different rollout identities."""
+
+    kwargs = provenance_kwargs()
+    kwargs["reservation"] = dataclasses.replace(kwargs["reservation"], **mutation)
+    with pytest.raises(ProtocolPError, match=expected):
+        conditions.rollout_provenance(**kwargs)
+
+
+def test_the_bound_reservation_must_retain_the_target_cells_source() -> None:
+    """A cell-4 result cannot bind a cell-5 delivered scenario."""
+
+    kwargs = provenance_kwargs()
+    kwargs["reservation"] = dataclasses.replace(
+        kwargs["reservation"], scenario_spec_id="scenario_dev_t01_f000_r01"
+    )
+    with pytest.raises(ProtocolPError, match="must retain source scenario"):
+        conditions.rollout_provenance(**kwargs)
+
+
+def test_a_stage_a_rollout_cannot_use_a_stage_c_identity() -> None:
+    """A valid screen identity from the wrong stage remains the wrong construction."""
+
+    identity = conditions.stage_c_identity(4, 3)
+    kwargs = provenance_kwargs(identity=identity)
+    with pytest.raises(ProtocolPError, match="must use its Stage A/B identity"):
+        conditions.rollout_provenance(**kwargs)
 
 
 @pytest.mark.parametrize(
@@ -713,17 +848,33 @@ def test_a_moved_gate_constant_is_refused(kwargs: dict, expected: str) -> None:
 def bundle_kwargs(**overrides: object) -> dict:
     """Return a complete ``build_overrides`` argument set with optional overrides."""
 
+    cell = int(overrides.get("cell", 4))
+    stage = str(overrides.get("stage", "A"))
+    if "identity" in overrides:
+        identity = overrides["identity"]
+    elif stage == "C":
+        identity = conditions.stage_c_identity(cell, 1)
+    else:
+        identity = conditions.stage_ab_identity(cell)
+    assert isinstance(identity, conditions.RolloutIdentity)
     kwargs: dict = {
-        "stage": "A",
-        "cell": 4,
+        "stage": stage,
+        "cell": cell,
         "condition": "structural",
         "severity": 0.75,
-        "identity": conditions.stage_ab_identity(4),
+        "identity": identity,
+        "reservation": conditions.screen_reservation(
+            source_reservation(cell),
+            cell=cell,
+            sensor_seed=identity.sensor_seed,
+            base_pair_id=identity.pair_id,
+        ),
         "probe_peak_force_n": 0.15,
         "probe_ramp_fraction_of_duration": 0.125,
         "onset_index": ONSET_INDEX,
         "base_config_hash": BASE_CONFIG_HASH,
         "assignment_canonical_sha256": ASSIGNMENT_DIGEST,
+        "assignment_hash": ASSIGNMENT_HASH,
         "protocol_spec_sha256": PROTOCOL_DIGEST,
     }
     kwargs.update(overrides)
