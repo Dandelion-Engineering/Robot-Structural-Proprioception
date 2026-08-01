@@ -16,6 +16,7 @@ Two conventions carried from the construction layer's suite:
 
 from __future__ import annotations
 
+import dataclasses
 import sys
 from pathlib import Path
 
@@ -720,3 +721,84 @@ def test_iter_new_rows_is_the_single_definition_of_which_rows_run():
 def test_the_census_of_the_whole_inventory_matches_the_audit():
     rows = _inventory()
     assert results.census(rows) == results.require_inventory_shape(rows)
+# ---------------------------------------------------------------------------
+# The persisted physical ledger: the I12 audit record, one entry per body.
+# ---------------------------------------------------------------------------
+
+
+def test_the_ledger_report_holds_one_entry_per_body_carrying_its_gate_evidence():
+    rows = _inventory()
+    ledger = _fill_ledger(rows)
+    report = results.ledger_report(ledger)
+    assert len(report) == results.EXPECTED_PHYSICAL_ROLLOUTS == 168
+    assert [entry["rollout_provenance"] for entry in report] == list(ledger.stamps)
+    for entry in report:
+        assert set(entry) == {
+            "physical_key",
+            "cell",
+            "stage_of_origin",
+            "origin_row_key",
+            "rollout_provenance",
+            "rollout_canonical",
+            "coefficients",
+            "gate_report",
+            "n_steps",
+            "elapsed_s",
+        }
+        assert entry["gate_report"]["passed"] is True
+        assert entry["n_steps"] == 3000
+
+
+def test_the_ledger_report_normalises_the_failure_tuple_to_a_list():
+    # The in-memory document and the parsed-from-disk document must agree on types, or
+    # an assertion about one is not an assertion about the other.
+    rows = _inventory()
+    row = results.iter_new_rows(rows)[0]
+    result = dataclasses.replace(
+        _physical_result(row, stamp=_stamp(1)),
+        gate_report={"passed": False, "failures": ("saturated steps",)},
+    )
+    ledger = results.ResultsLedger()
+    ledger.record(result, base_config_hash=BASE_CONFIG_HASH)
+    entry = results.ledger_report(ledger)[0]
+    assert entry["gate_report"]["failures"] == ["saturated steps"]
+    assert isinstance(entry["gate_report"]["failures"], list)
+    # And the source object is not mutated by the report.
+    assert result.gate_report["failures"] == ("saturated steps",)
+
+
+def test_the_ledger_report_and_the_row_report_are_joinable_on_the_stamp():
+    rows = _inventory()
+    ledger = _fill_ledger(rows)
+    by_stamp = {entry["rollout_provenance"]: entry for entry in results.ledger_report(ledger)}
+    reported = [results.logical_row_report(ledger, row) for row in rows]
+    assert len(reported) == results.EXPECTED_LOGICAL_ROWS == 180
+    assert all(row["rollout_provenance"] in by_stamp for row in reported)
+    # The join is many-to-one by exactly the reuse count, which is the arithmetic the
+    # whole module exists to keep straight.
+    assert len(reported) - len(by_stamp) == results.EXPECTED_REUSED_ROWS == 12
+
+
+def test_the_physical_key_report_writes_out_all_six_key_fields():
+    rows = _inventory()
+    row = [item for item in rows if item.condition == CONDITION_STRUCTURAL][0]
+    written = results.physical_key_report(row.physical)
+    assert written == {
+        "sensor_seed": row.identity.sensor_seed,
+        "pair_id": row.identity.pair_id,
+        "condition": row.condition,
+        "severity": row.severity,
+        "probe_peak_force_n": row.probe_peak_force_n,
+        "probe_ramp_fraction_of_duration": row.probe_ramp_fraction_of_duration,
+    }
+    assert set(written) == {field.name for field in dataclasses.fields(results.PhysicalKey)}
+
+
+def test_the_physical_key_report_refuses_something_that_is_not_a_key():
+    with pytest.raises(ProtocolPError, match="expected a PhysicalKey"):
+        results.physical_key_report(("sensor_seed", 1))
+
+
+def test_the_ledger_report_refuses_something_that_is_not_a_ledger():
+    with pytest.raises(ProtocolPError, match="expected a ResultsLedger"):
+        results.ledger_report({})

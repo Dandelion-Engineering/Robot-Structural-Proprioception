@@ -231,9 +231,14 @@ def physical_key(
     """Build a :class:`PhysicalKey`, normalising the numeric fields.
 
     Inputs: the rollout identity, its condition and severity, and the selected probe.
-    Outputs: the key. Purpose: normalisation is not cosmetic -- an ``int`` 1 severity
-    and a ``float`` 1.0 severity would hash to different dataclass keys and split one
-    physical body into two ledger entries.
+    Outputs: the key. Purpose: normalisation fixes the recorded numeric *type*, which is
+    what a serialised report shows a reader and what a downstream consumer keys on.
+
+    It does **not** prevent a key split: Python already has ``1 == 1.0`` and
+    ``hash(1) == hash(1.0)``, so an ``int`` severity and a ``float`` severity deduplicate
+    into one dataclass key with or without the ``float()`` call. An earlier version of
+    this docstring claimed the opposite, and the test written against that claim could
+    never have gone red -- it asserted a property of the language, not of this function.
     """
 
     require(
@@ -858,6 +863,67 @@ def logical_row_report(
     }
 
 
+def physical_key_report(key: PhysicalKey) -> dict[str, Any]:
+    """Return one physical key as a JSON-ready mapping.
+
+    Inputs: the key. Outputs: its six fields. Purpose: the reported rows and the reported
+    physical ledger must be joinable by a reader who has only the document, so the body's
+    identity is written out rather than left implicit in a hash.
+    """
+
+    require(isinstance(key, PhysicalKey), f"expected a PhysicalKey; got {type(key)!r}")
+    return {
+        "sensor_seed": key.sensor_seed,
+        "pair_id": key.pair_id,
+        "condition": key.condition,
+        "severity": key.severity,
+        "probe_peak_force_n": key.probe_peak_force_n,
+        "probe_ramp_fraction_of_duration": key.probe_ramp_fraction_of_duration,
+    }
+
+
+def ledger_report(ledger: ResultsLedger) -> list[dict[str, Any]]:
+    """Return one entry per executed rollout, carrying its I12 evidence.
+
+    Inputs: the physical ledger. Outputs: a list of JSON-ready mappings in execution
+    order. Purpose: the hard-gate measurements, the step count and the elapsed time are
+    per *rollout*, not per reporting row, and there are 168 of the former against 180 of
+    the latter. Persisting them here rather than copying them into each logical row keeps
+    one authority per body -- twelve of the logical rows would otherwise carry a second
+    copy of an origin's gate report, which is the duplicate-authority defect this module
+    exists to prevent.
+
+    A reader joins a reported row to its rollout on ``rollout_provenance``, which the
+    ledger guarantees is a bijection with the physical keys.
+    """
+
+    require(isinstance(ledger, ResultsLedger), f"expected a ResultsLedger; got {type(ledger)!r}")
+    entries: list[dict[str, Any]] = []
+    for key in ledger.keys:
+        result = ledger.get(key)
+        # ``failures`` is a tuple on the in-memory dataclass and a list once written.
+        # Normalising here means the document a test reads in memory and the document a
+        # reader parses off disk have the same types, so an assertion about one is an
+        # assertion about the other.
+        gate_report = dict(result.gate_report)
+        gate_report["failures"] = list(gate_report["failures"])
+        entries.append(
+            {
+                "physical_key": physical_key_report(key),
+                "cell": result.cell,
+                "stage_of_origin": result.stage_of_origin,
+                "origin_row_key": list(result.origin_row_key),
+                "rollout_provenance": result.provenance_hash,
+                "rollout_canonical": result.canonical_payload,
+                "coefficients": list(result.coefficients),
+                "gate_report": gate_report,
+                "n_steps": result.n_steps,
+                "elapsed_s": result.elapsed_s,
+            }
+        )
+    return entries
+
+
 def census(rows: Sequence[LogicalRow]) -> dict[str, Any]:
     """Return a small human-readable census of an inventory.
 
@@ -912,8 +978,10 @@ __all__ = [
     "census",
     "expected_counts",
     "iter_new_rows",
+    "ledger_report",
     "logical_row_report",
     "physical_key",
+    "physical_key_report",
     "require_inventory_shape",
     "require_physical_ledger_complete",
     "require_results_only_root",

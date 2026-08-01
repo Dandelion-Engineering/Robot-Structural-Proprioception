@@ -122,6 +122,7 @@ from utils.protocol_p_results import (  # noqa: E402
     build_logical_inventory,
     census,
     iter_new_rows,
+    ledger_report,
     logical_row_report,
     physical_key,
     require_inventory_shape,
@@ -174,6 +175,27 @@ STAGE_C_DIAGNOSTIC_PAUSE_Q95 = 0.30
 TERMINAL_NO_ADMISSIBLE_PROBE = "NO_ADMISSIBLE_PROBE"
 VERDICT_TESTABLE = "TESTABLE"
 VERDICT_SUB_THRESHOLD = "SUB_THRESHOLD"
+# Section 9 names this label for a ladder value: it is excluded with a reason, is neither
+# TESTABLE nor SUB_THRESHOLD, does not reopen selection, and -- because cases A, B and C
+# all require every ladder value to have a safe verdict -- makes the outcome terminal.
+VERDICT_UNSAFE_LADDER_VALUE = "UNSAFE_LADDER_VALUE"
+TERMINAL_UNSAFE_LADDER_VALUE = VERDICT_UNSAFE_LADDER_VALUE
+
+# NOT a section-9 name.  Section 9 defines the consequence of a hard-gate failure for a
+# *ladder value* and is silent about one in a Stage-C healthy replicate, even though I12
+# scopes the gates to every cell and every condition.  The conservative reading is the
+# only one that cannot manufacture a result: an operative null built from a body that
+# violated the A1 envelope is not the pre-registered null, so the screen stops and says
+# so rather than reporting a Q95_c it cannot stand behind.  Flagged to the reviewer as a
+# driver-side label, not a protocol addition.
+TERMINAL_UNSAFE_STAGE_C_REPLICATE = "UNSAFE_STAGE_C_REPLICATE"
+
+# Section 9's NO_ADMISSIBLE_PROBE sub-branches, keyed to one named candidate.
+REFERENCE_CANDIDATE = (0.05, 0.5)
+BRANCH_IMPLEMENTATION_INTEGRITY = "IMPLEMENTATION_INTEGRITY"
+BRANCH_PHYSICAL_LIMIT = "PHYSICAL_SAFETY_OR_METHOD_LIMIT"
+BRANCH_UNCLASSIFIED = "RECORDED_ONLY_CLASSIFIES_NOTHING"
+I13B_TEST_PATH = "tests/test_cable_plant_softening_boundary.py"
 
 
 @dataclasses.dataclass(frozen=True)
@@ -728,15 +750,23 @@ def run_stage_a(
     """Run Stage A candidate by candidate, dropping any candidate that fails a gate.
 
     Inputs: the full inventory, the admissible candidates, the context, the ledger and
-    the executor. Outputs: a mapping of surviving candidates, drops with reasons, and the
-    per-candidate worst-cell statistic at the selection severity. Purpose: section 8 says
-    a failing candidate is dropped, its remaining cells skipped, and the drop count
-    logged -- so the loop is candidate-major and a gate failure breaks out of that
-    candidate rather than out of the stage.
+    the executor. Outputs: a mapping of surviving candidates, drops with reasons, the
+    rows that were actually measured, and the per-candidate worst-cell statistic at the
+    selection severity. Purpose: section 8 says a failing candidate is dropped, its
+    remaining cells skipped, and the drop count logged -- so the loop is candidate-major
+    and a gate failure breaks out of that candidate rather than out of the stage.
+
+    ``measured_rows`` is the load-bearing return value. A dropped candidate still spends
+    every rollout up to and including the one that failed, and those rollouts are real
+    measurements that the report must carry. Reconstructing the executed set downstream
+    from "which candidates survived" loses exactly those rows, which is the defect this
+    return value exists to make impossible: the function that ran the rows is the one
+    that says which rows ran.
     """
 
     survivors: list[tuple[float, float]] = []
     drops: list[dict[str, Any]] = []
+    measured: list[LogicalRow] = []
     retained_healthy: dict[tuple[float, float, int], PrivilegedRecord] = {}
 
     for candidate in candidates:
@@ -755,6 +785,7 @@ def run_stage_a(
                 execute=execute,
                 retain_plant=row.condition == CONDITION_HEALTHY,
             )
+            measured.append(row)
             if plant is not None:
                 retained_healthy[(float(candidate[0]), float(candidate[1]), row.cell)] = plant
             if not result.gate_report["passed"]:
@@ -764,6 +795,13 @@ def run_stage_a(
                     "condition": row.condition,
                     "severity": row.severity,
                     "failures": list(result.gate_report["failures"]),
+                    "rollout_provenance": result.provenance_hash,
+                    "measured_rows_for_candidate": sum(
+                        1
+                        for item in measured
+                        if (item.probe_peak_force_n, item.probe_ramp_fraction_of_duration)
+                        == (float(candidate[0]), float(candidate[1]))
+                    ),
                 }
                 break
         if dropped is None:
@@ -775,7 +813,89 @@ def run_stage_a(
         "survivors": tuple(survivors),
         "drops": drops,
         "drop_count": len(drops),
+        "measured_rows": tuple(measured),
         "retained_healthy_plants": retained_healthy,
+    }
+
+
+def classify_no_admissible_probe(drops: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """Return section 9's sub-branch for a screen in which no candidate survived.
+
+    Inputs: the Stage-A drop records. Outputs: the branch label, the reason, and the
+    construction preconditions the label depends on. Purpose: section 9 does not treat
+    ``NO_ADMISSIBLE_PROBE`` as one outcome. It splits on the reference candidate
+    ``0.05 N / ramp 0.5``: a healthy or remEI-0.75 failure there contradicts that
+    candidate's delivered-row pass and is an implementation-integrity failure carrying
+    **no** defect-localization claim; a failure only at remEI 0.35, having passed the
+    other two, is a newly observed physical safety or method limit; any other candidate's
+    failure is recorded and classifies nothing by itself.
+
+    The physical-limit branch is the one section 9 fences. It may not be asserted unless
+    both construction checks are in a passing state, so this function reports the
+    precondition rather than assuming it: I13a was asserted for that specific rollout by
+    the construction layer before it ran, and I13b is a permanent packet test this script
+    does not execute. Naming what was not checked is the point -- section 41 measured
+    that the safety gates pass with ~70x margin under a construction defect, so a gate
+    outcome carries physical meaning only once the construction is established separately.
+    """
+
+    reference = [
+        drop
+        for drop in drops
+        if tuple(float(value) for value in drop["candidate"]) == REFERENCE_CANDIDATE
+    ]
+    if not reference:
+        return {
+            "branch": BRANCH_UNCLASSIFIED,
+            "reason": (
+                f"the reference candidate {list(REFERENCE_CANDIDATE)} did not fail; "
+                "section 9 records any other candidate's failure without classifying it"
+            ),
+        }
+    drop = reference[0]
+    if drop["condition"] == CONDITION_HEALTHY or drop["severity"] == SELECTION_SEVERITY:
+        return {
+            "branch": BRANCH_IMPLEMENTATION_INTEGRITY,
+            "reason": (
+                f"the reference candidate {list(REFERENCE_CANDIDATE)} failed at condition "
+                f"{drop['condition']!r} severity {drop['severity']!r}, contradicting its "
+                "delivered-row pass; diagnosis is required before further execution"
+            ),
+            "defect_localization_claim": None,
+            "scope_note": "section 9 attaches NO defect-localization claim to this branch",
+        }
+    # Section 8 gives Stage A exactly three conditions, so the only severity that can
+    # reach here is the ladder-bottom one.  Asserted rather than assumed: a future grid
+    # change must fail loud rather than silently route a new severity into the branch
+    # section 9 fences most tightly.
+    severe = [value for value in STAGE_A_STRUCTURAL_SEVERITIES if value != SELECTION_SEVERITY]
+    _require(
+        len(severe) == 1 and drop["severity"] == severe[0],
+        f"the physical-limit branch is defined for severity {severe}; the reference "
+        f"candidate's drop records {drop['severity']!r}",
+    )
+    return {
+        "branch": BRANCH_PHYSICAL_LIMIT,
+        "reason": (
+            f"the reference candidate {list(REFERENCE_CANDIDATE)} cleared healthy and "
+            f"remEI {SELECTION_SEVERITY} and failed at severity {drop['severity']!r}"
+        ),
+        "precondition": {
+            "i13a": (
+                "asserted for that rollout before it ran: build_overrides constructs the "
+                "condition through utils.protocol_p_conditions, which refuses a "
+                "constructed fault tuple that differs from the requested one"
+            ),
+            "i13b": (
+                f"{I13B_TEST_PATH} must be passing; this script does not run it and does "
+                "not assert it"
+            ),
+            "note": (
+                "section 9 forbids the physical-limit label unless BOTH construction "
+                "checks are in a passing state; this document records the branch and its "
+                "precondition rather than certifying I13b"
+            ),
+        },
     }
 
 
@@ -870,31 +990,53 @@ def run_reuse_aware_rows(
     *,
     execute: ExecuteRollout,
     retain_healthy_plants: bool = False,
-) -> dict[tuple[Any, ...], PrivilegedRecord]:
+) -> dict[str, Any]:
     """Run the non-reused rows of a stage; skip the reused ones entirely.
 
     Inputs: the stage's rows, the context, the ledger, the executor, and whether to keep
-    the healthy plant traces. Outputs: retained plants keyed by row key. Purpose: the
-    reuse rule's behavioural half. A reused row is not merely stamped differently here --
-    it never reaches the construction layer or the generator at all, which is why the
-    driver's tests can assert a call count of zero for those twelve rows.
+    the healthy plant traces. Outputs: the retained plants and the rows whose rollout
+    failed a hard gate. Purpose: the reuse rule's behavioural half. A reused row is not
+    merely stamped differently here -- it never reaches the construction layer or the
+    generator at all, which is why the driver's tests can assert a call count of zero for
+    those twelve rows.
+
+    Section 8's "every rollout re-asserts the hard gates" is what ``unsafe`` carries. The
+    gates are *measured* in :func:`run_logical_row` for every stage, but measuring them
+    and then discarding the result is indistinguishable from never having run them: the
+    first version of this function dropped the returned :class:`PhysicalResult` on the
+    floor, and a saturated remEI-0.40 body was reported ``TESTABLE``. Returning the
+    failures rather than raising is deliberate -- section 9 excludes an unsafe ladder
+    value with a reason and the rollouts already spent must still reach the report.
     """
 
     retained: dict[tuple[Any, ...], PrivilegedRecord] = {}
+    unsafe: list[dict[str, Any]] = []
     for row in iter_new_rows(rows):
-        _, plant = run_logical_row(
+        result, plant = run_logical_row(
             row,
             context,
             ledger,
             execute=execute,
             retain_plant=retain_healthy_plants and row.condition == CONDITION_HEALTHY,
         )
+        if not result.gate_report["passed"]:
+            unsafe.append(
+                {
+                    "stage": row.stage,
+                    "cell": row.cell,
+                    "condition": row.condition,
+                    "severity": row.severity,
+                    "replicate": row.replicate,
+                    "rollout_provenance": result.provenance_hash,
+                    "failures": list(result.gate_report["failures"]),
+                }
+            )
         if plant is not None:
             retained[row.key] = plant
     for row in rows:
         if row.is_reused:
             resolve_row_provenance(ledger, row)
-    return retained
+    return {"retained_plants": retained, "unsafe": unsafe}
 
 
 def gauge_only_null(
@@ -968,6 +1110,13 @@ def stage_c_null(
     null. Carried limitation, restated wherever it is reported: 28 distances come from 8
     independent runs, so this is a U-statistic, and ``method="higher"`` places ``Q95_c``
     at the 27th of 28 order statistics.
+
+    The per-replicate gate check below is a **code guard** from :func:`run_screen`, which
+    collects every Stage-C hard-gate failure before it calls this function and terminates
+    instead. It is reachable, and tested, from a direct caller -- which is what a future
+    second consumer of the operative null would be. Its job is that the most load-bearing
+    quantity in the protocol cannot be computed from a body that violated the A1
+    envelope, whatever route the caller took to get here.
     """
 
     peak, ramp = float(selected[0]), float(selected[1])
@@ -982,6 +1131,12 @@ def stage_c_null(
                 probe_peak_force_n=peak,
                 probe_ramp_fraction_of_duration=ramp,
             )
+        )
+        _require(
+            bool(result.gate_report["passed"]),
+            f"Stage-C replicate k={k} in cell {cell} failed the hard gates "
+            f"({list(result.gate_report['failures'])}); a body that violated the A1 "
+            "envelope must not enter the operative null",
         )
         vectors.append(result.coefficients)
     distances = [
@@ -1070,6 +1225,15 @@ def build_ladder_table(
     per-cell verdict and a value verdict. Purpose: section 9's aggregation is the
     conjunction over all four cells -- ``testable iff min_c [D(v,c) - 2*Q95_c] >= 0`` --
     and no mean, median or pooled quantity enters any verdict.
+
+    A cell whose fault-side rollout failed the hard gates is labelled
+    ``UNSAFE_LADDER_VALUE`` and carries no margin verdict, and that label propagates to
+    the value: section 9 excludes an unsafe value with a reason, calls it neither
+    TESTABLE nor SUB-THRESHOLD, and does not reopen selection. The gate report is read
+    from the ledger entry for the body, so a reused ladder value is audited by the same
+    read as a Stage-B one. For the two reused values the read is forced to pass -- a
+    candidate only survives Stage A with all twelve rows clean -- and for the other eight
+    it is live.
     """
 
     peak, ramp = float(selected[0]), float(selected[1])
@@ -1078,6 +1242,7 @@ def build_ladder_table(
         severity = float(value)
         per_cell: dict[str, Any] = {}
         margins: list[float] = []
+        unsafe_cells: list[dict[str, Any]] = []
         for cell in SCREEN_CELLS:
             identity = stage_ab_identity(cell)
             healthy = ledger.get(
@@ -1102,18 +1267,52 @@ def build_ladder_table(
             distance = difference_statistic(fault.coefficients, healthy.coefficients)
             threshold = float(nulls[cell]["operative_threshold"])
             margin = distance - threshold
-            margins.append(margin)
-            per_cell[str(cell)] = {
+            entry: dict[str, Any] = {
                 "d": distance,
                 "q95_c": float(nulls[cell]["q95_c"]),
                 "operative_threshold": threshold,
-                "margin": margin,
-                "verdict": VERDICT_TESTABLE if margin >= 0.0 else VERDICT_SUB_THRESHOLD,
                 "q95_c_gauge_only": float(gauge_only[cell]["q95_gauge_only"]),
                 "d_unmatched": unmatched_secondary(
                     ledger, selected, cell=cell, severity=severity
                 ),
+                "fault_rollout_provenance": fault.provenance_hash,
+                "hard_gates_passed": bool(fault.gate_report["passed"]),
             }
+            if fault.gate_report["passed"]:
+                margins.append(margin)
+                entry["margin"] = margin
+                entry["verdict"] = (
+                    VERDICT_TESTABLE if margin >= 0.0 else VERDICT_SUB_THRESHOLD
+                )
+            else:
+                # No margin verdict is emitted for an unsafe cell.  Section 9 says the
+                # value is neither TESTABLE nor SUB-THRESHOLD, and writing a margin
+                # beside that label would invite exactly the comparison the label
+                # forbids.
+                entry["margin"] = None
+                entry["verdict"] = VERDICT_UNSAFE_LADDER_VALUE
+                entry["failures"] = list(fault.gate_report["failures"])
+                unsafe_cells.append(
+                    {"cell": cell, "failures": list(fault.gate_report["failures"])}
+                )
+            per_cell[str(cell)] = entry
+        if unsafe_cells:
+            table.append(
+                {
+                    "remaining_ei": severity,
+                    "per_cell": per_cell,
+                    "min_margin": None,
+                    "verdict": VERDICT_UNSAFE_LADDER_VALUE,
+                    "unsafe_cells": unsafe_cells,
+                    "exclusion_reason": (
+                        "one or more cells failed section 8's hard gates; section 9 "
+                        "excludes this value with a reason, does not reopen selection, "
+                        "and treats it as neither TESTABLE nor SUB-THRESHOLD"
+                    ),
+                    "aggregation": "conjunction over all four cells; no pooled quantity",
+                }
+            )
+            continue
         table.append(
             {
                 "remaining_ei": severity,
@@ -1126,6 +1325,26 @@ def build_ladder_table(
     return table
 
 
+def unsafe_ladder_values(table: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
+    """Return the ladder values section 9 excludes as unsafe.
+
+    Inputs: the ladder table. Outputs: one record per excluded value. Purpose: this is
+    the question :func:`classify_outcome` is not allowed to answer -- cases A, B and C
+    are exhaustive only *after* every value has a safe verdict, so establishing that has
+    to be a separate call whose result the caller acts on.
+    """
+
+    return [
+        {
+            "remaining_ei": row["remaining_ei"],
+            "unsafe_cells": row.get("unsafe_cells", []),
+            "exclusion_reason": row.get("exclusion_reason"),
+        }
+        for row in table
+        if row["verdict"] == VERDICT_UNSAFE_LADDER_VALUE
+    ]
+
+
 def classify_outcome(table: Sequence[Mapping[str, Any]]) -> str:
     """Return section 9's case label for a completed ladder table.
 
@@ -1133,8 +1352,21 @@ def classify_outcome(table: Sequence[Mapping[str, Any]]) -> str:
     Purpose: the three cases are exhaustive only once every ladder value has a safe,
     valid per-cell verdict; this function is therefore called after that has been
     established, never as a way of establishing it.
+
+    The refusal below is what makes that sentence checkable rather than aspirational. A
+    caller that reaches here with an excluded value gets a raise, not a case label --
+    section 9 makes such an outcome terminal, and silently classifying it would convert a
+    terminal branch into a reported result.
     """
 
+    excluded = unsafe_ladder_values(table)
+    _require(
+        not excluded,
+        f"{len(excluded)} ladder value(s) are excluded as {VERDICT_UNSAFE_LADDER_VALUE} "
+        f"({[row['remaining_ei'] for row in excluded]}); section 9's cases require every "
+        "value to have a safe verdict, so this outcome is terminal and must not be "
+        "classified",
+    )
     passes = [row["verdict"] == VERDICT_TESTABLE for row in table]
     if all(passes):
         return "CASE_A"
@@ -1252,6 +1484,11 @@ def run_screen(
     Stage A must be recorded before Stage B or C can cite it -- and the ledger's
     completeness check at the end is what turns "every row reported" into "every reported
     row resolves to a body that ran".
+
+    Every exit path -- the two terminals and the normal one -- persists the measured rows
+    and the physical ledger. A terminal branch is a result, not an absence of one: the
+    rollouts it spent are the evidence for the branch it reports, and discarding them
+    would leave the project unable to say what it paid to learn.
     """
 
     ledger = ResultsLedger()
@@ -1261,8 +1498,9 @@ def run_screen(
     plan_census = require_inventory_shape(plan_rows)
 
     stage_a = run_stage_a(plan_rows, candidates, context, ledger, execute=execute)
+    measured_stage_a = tuple(stage_a["measured_rows"])
     if not stage_a["survivors"]:
-        return {
+        body = {
             "terminal": TERMINAL_NO_ADMISSIBLE_PROBE,
             "plan_census": plan_census,
             "stage_a": {
@@ -1270,11 +1508,13 @@ def run_screen(
                 "drop_count": stage_a["drop_count"],
                 "survivors": [],
             },
+            "section_9_branch": classify_no_admissible_probe(stage_a["drops"]),
             "scope": (
                 "terminal and pins nothing: config.json stays absent and no regeneration "
                 "is triggered; the label is scoped strictly to the measured candidates"
             ),
         }
+        return _with_measured_evidence(body, ledger, measured_stage_a)
 
     selection = select_candidate(ledger, stage_a["survivors"])
     selected = tuple(selection["selected"])
@@ -1284,8 +1524,35 @@ def run_screen(
     stage_b_rows = tuple(row for row in rows if row.stage == STAGE_B)
     stage_c_rows = tuple(row for row in rows if row.stage == STAGE_C)
 
-    run_reuse_aware_rows(stage_b_rows, context, ledger, execute=execute)
-    run_reuse_aware_rows(stage_c_rows, context, ledger, execute=execute)
+    stage_b = run_reuse_aware_rows(stage_b_rows, context, ledger, execute=execute)
+    stage_c = run_reuse_aware_rows(stage_c_rows, context, ledger, execute=execute)
+
+    executed_rows = _executed_rows(rows, measured_stage_a)
+    common = {
+        "plan_census": plan_census,
+        "stage_a": {
+            "drops": stage_a["drops"],
+            "drop_count": stage_a["drop_count"],
+            "survivors": [[float(a), float(b)] for a, b in stage_a["survivors"]],
+            "selection": selection,
+        },
+    }
+
+    if stage_c["unsafe"]:
+        body = {
+            "terminal": TERMINAL_UNSAFE_STAGE_C_REPLICATE,
+            **common,
+            "unsafe_stage_c_replicates": stage_c["unsafe"],
+            "unsafe_stage_b_rollouts": stage_b["unsafe"],
+            "scope": (
+                "terminal: a Stage-C healthy replicate failed section 8's hard gates, so "
+                "the operative null Q95_c would be built from a body that violated the "
+                "A1 envelope and no per-cell mechanics verdict can be valid. Section 9 "
+                "names UNSAFE_LADDER_VALUE for a ladder value and is silent about this "
+                "case; the label is the driver's, the terminal outcome is section 9's"
+            ),
+        }
+        return _with_measured_evidence(body, ledger, executed_rows)
 
     healthy_plants = stage_a["retained_healthy_plants"]
     nulls: dict[int, Mapping[str, Any]] = {}
@@ -1301,33 +1568,96 @@ def run_screen(
         gauge_only[cell] = gauge_only_null(healthy_plants[key], context, cell)
 
     table = build_ladder_table(ledger, selected, nulls, gauge_only)
-
-    executed_rows = tuple(
-        row
-        for row in rows
-        if row.stage != STAGE_A
-        or (row.probe_peak_force_n, row.probe_ramp_fraction_of_duration)
-        in {(float(a), float(b)) for a, b in stage_a["survivors"]}
-    )
-    ledger_census = require_physical_ledger_complete(ledger, executed_rows)
-
-    return {
-        "terminal": None,
-        "plan_census": plan_census,
-        "stage_a": {
-            "drops": stage_a["drops"],
-            "drop_count": stage_a["drop_count"],
-            "survivors": [[float(a), float(b)] for a, b in stage_a["survivors"]],
-            "selection": selection,
-        },
+    excluded = unsafe_ladder_values(table)
+    stage_bodies = {
         "stage_c_nulls": {str(cell): nulls[cell] for cell in SCREEN_CELLS},
         "stage_c_gauge_only": {str(cell): gauge_only[cell] for cell in SCREEN_CELLS},
         "ladder": table,
-        "outcome_case": classify_outcome(table),
-        "ledger_census": ledger_census,
-        "rows": [logical_row_report(ledger, row) for row in executed_rows],
-        "executed_census": census(executed_rows),
     }
+
+    if excluded:
+        body = {
+            "terminal": TERMINAL_UNSAFE_LADDER_VALUE,
+            **common,
+            **stage_bodies,
+            "unsafe_ladder_values": excluded,
+            "unsafe_stage_b_rollouts": stage_b["unsafe"],
+            "scope": (
+                "terminal: section 9's cases A, B and C each require all ten ladder "
+                "values to have a safe per-cell mechanics verdict. An excluded value is "
+                "neither TESTABLE nor SUB-THRESHOLD and selection is not reopened"
+            ),
+        }
+        return _with_measured_evidence(body, ledger, executed_rows)
+
+    body = {
+        "terminal": None,
+        **common,
+        **stage_bodies,
+        "outcome_case": classify_outcome(table),
+        "unsafe_ladder_values": [],
+        "unsafe_stage_b_rollouts": stage_b["unsafe"],
+    }
+    return _with_measured_evidence(body, ledger, executed_rows)
+
+
+def _executed_rows(
+    rows: Sequence[LogicalRow], measured_stage_a: Sequence[LogicalRow]
+) -> tuple[LogicalRow, ...]:
+    """Return the rows the screen actually measured or cited, in inventory order.
+
+    Inputs: the inventory built at the real selection, and the Stage-A rows
+    :func:`run_stage_a` reports having run. Outputs: the reportable rows. Purpose: a
+    dropped candidate still spends every rollout up to and including its failure, so the
+    executed set is "the Stage-A rows that ran, plus every Stage-B and Stage-C row" --
+    **not** "every row of a surviving candidate". The earlier filter derived the set from
+    candidate survival and therefore excluded real, ledgered measurements, which the
+    completeness check then reported as unplanned surplus.
+    """
+
+    measured_keys = {row.key for row in measured_stage_a}
+    known = {row.key for row in rows}
+    unknown = measured_keys - known
+    _require(
+        not unknown,
+        f"Stage A reports {len(unknown)} measured row(s) that are not in the inventory "
+        f"built at the selected candidate: {sorted(unknown)[:3]}",
+    )
+    return tuple(row for row in rows if row.stage != STAGE_A or row.key in measured_keys)
+
+
+def _with_measured_evidence(
+    body: dict[str, Any], ledger: ResultsLedger, rows: Sequence[LogicalRow]
+) -> dict[str, Any]:
+    """Attach the reported rows, the physical ledger and the completeness census.
+
+    Inputs: a partially built results body, the ledger and the reportable rows. Outputs:
+    the body with its evidence attached. Purpose: one function does this for every exit
+    path, so a new terminal branch cannot be added that silently reports less than the
+    others. ``elapsed_s`` is summed here rather than measured again -- it is the elapsed
+    time of the approved implementation's actual run, which is what was asked for.
+    """
+
+    ledger_census = require_physical_ledger_complete(ledger, rows)
+    entries = ledger_report(ledger)
+    body["ledger_census"] = ledger_census
+    body["physical_ledger"] = entries
+    body["rows"] = [logical_row_report(ledger, row) for row in rows]
+    body["executed_census"] = census(rows)
+    body["timing"] = {
+        "rollouts": len(entries),
+        "total_rollout_elapsed_s": float(sum(entry["elapsed_s"] for entry in entries)),
+        "note": (
+            "wall-clock inside execute_rollout only; it excludes the driver's own "
+            "construction, observation and reporting time"
+        ),
+    }
+    body["row_to_rollout_join"] = (
+        "each row's rollout_provenance is the physical_ledger entry that measured it; "
+        "the ledger holds one entry per rollout and the rows include the reuses, so the "
+        "two counts differ by exactly the number of reused rows"
+    )
+    return body
 
 
 def write_results(document: Mapping[str, Any], output_dir: Path) -> Path:
@@ -1430,8 +1760,21 @@ def main(argv: Sequence[str] | None = None) -> int:
             "plan": plan,
         }
         if args.mode == "execute":
-            document["results"] = run_screen(
-                context, candidates=candidates, execute=execute_rollout
+            results = run_screen(context, candidates=candidates, execute=execute_rollout)
+            document["results"] = results
+            print()
+            print(f"terminal                {results['terminal']}")
+            print(f"outcome case            {results.get('outcome_case')}")
+            print(f"rollouts executed       {results['ledger_census']['physical_results']}")
+            print(f"rows reported           {results['executed_census']['logical_rows']}")
+            print(f"Stage-A drops           {results['stage_a']['drop_count']}")
+            print(
+                f"unsafe ladder values    "
+                f"{[row['remaining_ei'] for row in results.get('unsafe_ladder_values', [])]}"
+            )
+            print(
+                f"rollout elapsed total   "
+                f"{results['timing']['total_rollout_elapsed_s']:.1f} s"
             )
         else:
             document["results"] = None

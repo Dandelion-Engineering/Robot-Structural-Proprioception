@@ -44,6 +44,7 @@ from utils.protocol_p_conditions import (  # noqa: E402
     SCREEN_CELLS,
     admissible_candidates,
     stage_ab_identity,
+    stage_c_identity,
 )
 from utils import protocol_p_results as results  # noqa: E402
 from utils.schema_types import PrivilegedRecord  # noqa: E402
@@ -1131,3 +1132,492 @@ def test_every_candidate_failing_yields_the_terminal_branch(context):
     assert document["stage_a"]["drop_count"] == 2
     assert document["stage_a"]["survivors"] == []
     assert "pins nothing" in document["scope"]
+
+
+# ---------------------------------------------------------------------------
+# The mixed drop: the executed set is what RAN, not what survived.
+#
+# Every test below is one Codex's S54 review asked for.  The suite was fully green
+# when the defects were live, which is what makes "these states were not covered" the
+# finding rather than "the tests were wrong".
+# ---------------------------------------------------------------------------
+
+
+def _drop_first_row_of_first_candidate(context, candidates):
+    """Return a stub whose first candidate saturates on its very first Stage-A row.
+
+    Inputs: the resolved context and the candidate pair. Outputs: the configured stub.
+    Purpose: the mixed drop/survivor state -- one candidate spends exactly one rollout
+    and is dropped, the other runs its full twelve -- is the state in which "rows of
+    surviving candidates" and "rows that ran" differ, and it is the only state that
+    distinguishes them.
+    """
+
+    rows = results.build_logical_inventory(candidates=candidates, selected=candidates[-1])
+    doomed = driver.stage_a_rows_for_candidate(rows, candidates[0])[0]
+
+    def plant_for(overrides, reservation):
+        severity = (
+            None if not overrides.physical_faults else float(overrides.physical_faults[0].severity)
+        )
+        is_doomed = (
+            (float(overrides.probe_peak_force_n), float(overrides.probe_ramp_fraction_of_duration))
+            == (float(candidates[0][0]), float(candidates[0][1]))
+            and severity == doomed.severity
+            and int(reservation.sensor_seed) == int(doomed.identity.sensor_seed)
+        )
+        amplitude = 4.0 + 40.0 * float(overrides.probe_peak_force_n) * (
+            0.0 if severity is None else (1.0 - severity)
+        )
+        return _synthetic_plant(
+            amplitude=amplitude,
+            seed=int(reservation.sensor_seed) % 100_000,
+            saturated_steps=3 if is_doomed else 0,
+        )
+
+    return StubExecutor(context, plant_for=plant_for), doomed
+
+
+@pytest.fixture(scope="module")
+def mixed_drop(context):
+    """Run the whole driver once in the mixed drop/survivor state and share it."""
+
+    candidates = CANDIDATES[:2]
+    stub, doomed = _drop_first_row_of_first_candidate(context, candidates)
+    document = driver.run_screen(context, candidates=candidates, execute=stub)
+    return document, stub, doomed
+
+
+def test_a_mixed_drop_completes_instead_of_aborting_on_its_own_valid_work(mixed_drop):
+    # The whole finding in one assertion: before the fix this raised
+    # "the ledger holds 1 unplanned physical result(s)" AFTER spending all 73 rollouts.
+    document, stub, _doomed = mixed_drop
+    assert document["terminal"] is None
+    assert document["stage_a"]["drop_count"] == 1
+    assert len(stub.calls) == 73
+
+
+def test_the_mixed_drop_reports_every_rollout_it_spent(mixed_drop):
+    # 73 physical executions = 1 dropped Stage-A row + 12 surviving Stage-A + 32 Stage-B
+    # + 28 Stage-C.  85 logical rows = the one measured drop row + 84 full-path rows.
+    document, stub, _doomed = mixed_drop
+    assert document["ledger_census"] == {"physical_results": 73, "distinct_stamps": 73}
+    assert len(document["rows"]) == 85
+    assert len(document["physical_ledger"]) == 73
+    assert {call["provenance"] for call in stub.calls} == {
+        entry["rollout_provenance"] for entry in document["physical_ledger"]
+    }
+    assert {row["rollout_provenance"] for row in document["rows"]} == {
+        entry["rollout_provenance"] for entry in document["physical_ledger"]
+    }
+
+
+def test_the_dropped_candidates_measured_row_is_reported_with_its_gate_evidence(mixed_drop):
+    # The dropped row is a real measurement of a real body.  Losing it loses the only
+    # evidence for why the candidate was dropped.
+    document, _stub, doomed = mixed_drop
+    reported = [
+        row
+        for row in document["rows"]
+        if row["stage"] == results.STAGE_A
+        and row["probe_peak_force_n"] == doomed.probe_peak_force_n
+        and row["probe_ramp_fraction_of_duration"] == doomed.probe_ramp_fraction_of_duration
+    ]
+    assert len(reported) == 1
+    stamp = reported[0]["rollout_provenance"]
+    assert stamp.startswith("dev-")
+
+    entry = [item for item in document["physical_ledger"] if item["rollout_provenance"] == stamp]
+    assert len(entry) == 1
+    assert entry[0]["gate_report"]["passed"] is False
+    assert any("saturated steps" in text for text in entry[0]["gate_report"]["failures"])
+    assert document["stage_a"]["drops"][0]["rollout_provenance"] == stamp
+
+
+def test_run_stage_a_reports_every_row_it_measured_including_the_failing_one(context):
+    # The unit beneath the end-to-end test: the function that ran the rows is the one
+    # that says which rows ran.  Reconstructing that downstream is what lost them.
+    candidates = CANDIDATES[:2]
+    stub, doomed = _drop_first_row_of_first_candidate(context, candidates)
+    ledger = results.ResultsLedger()
+    rows = results.build_logical_inventory(candidates=candidates, selected=candidates[-1])
+    stage_a = driver.run_stage_a(rows, candidates, context, ledger, execute=stub)
+    measured = stage_a["measured_rows"]
+    assert len(measured) == 13
+    assert measured[0].key == doomed.key
+    assert len(ledger) == 13
+    assert {row.physical for row in measured} == set(ledger.keys)
+    assert stage_a["drops"][0]["measured_rows_for_candidate"] == 1
+
+
+def test_a_measured_row_outside_the_selected_inventory_is_refused(context):
+    # The guard on the seam between the two inventories.  Reachable from a caller that
+    # builds Stage A against one candidate list and the report against another -- which
+    # is exactly the shape of the defect that produced the surplus-entry raise.
+    rows = results.build_logical_inventory(candidates=CANDIDATES[:1], selected=CANDIDATES[0])
+    stranger = driver.stage_a_rows_for_candidate(
+        results.build_logical_inventory(candidates=CANDIDATES[:2], selected=CANDIDATES[0]),
+        CANDIDATES[1],
+    )
+    with pytest.raises(ProtocolPError, match="not in the inventory built at"):
+        driver._executed_rows(rows, stranger)
+
+
+def test_the_all_dropped_terminal_preserves_every_rollout_it_spent(context):
+    # The same class, sharper: the terminal used to return drop summaries only, so the
+    # rollouts it paid for vanished from the record entirely.
+    def plant_for(overrides, reservation):
+        return _synthetic_plant(seed=int(reservation.sensor_seed) % 100_000, saturated_steps=1)
+
+    stub = StubExecutor(context, plant_for=plant_for)
+    document = driver.run_screen(context, candidates=CANDIDATES[:2], execute=stub)
+    assert document["terminal"] == driver.TERMINAL_NO_ADMISSIBLE_PROBE
+    assert len(stub.calls) == 2
+    assert len(document["rows"]) == 2
+    assert len(document["physical_ledger"]) == 2
+    assert document["ledger_census"] == {"physical_results": 2, "distinct_stamps": 2}
+    assert all(entry["gate_report"]["passed"] is False for entry in document["physical_ledger"])
+
+
+# ---------------------------------------------------------------------------
+# Section 9's NO_ADMISSIBLE_PROBE sub-branches.
+# ---------------------------------------------------------------------------
+
+
+def test_the_terminal_document_actually_reaches_the_sub_branch_classifier(context):
+    # The wire, not the classifier.  Found by a mutation sweep: deleting the call site
+    # left every branch test green, because all three of them call
+    # classify_no_admissible_probe directly.  Third time this project has found that
+    # exact shape -- a guard with its own tests and nothing asserting the driver reaches
+    # it -- so the sweep now includes the call site of every new one.
+    def plant_for(overrides, reservation):
+        return _synthetic_plant(seed=int(reservation.sensor_seed) % 100_000, saturated_steps=1)
+
+    stub = StubExecutor(context, plant_for=plant_for)
+    # CANDIDATES[:3] includes the reference candidate section 9 keys its split to, so the
+    # branch this asserts is a real one rather than the catch-all.
+    assert driver.REFERENCE_CANDIDATE in CANDIDATES[:3]
+    document = driver.run_screen(context, candidates=CANDIDATES[:3], execute=stub)
+    assert document["terminal"] == driver.TERMINAL_NO_ADMISSIBLE_PROBE
+    branch = document["section_9_branch"]
+    assert branch["branch"] == driver.BRANCH_IMPLEMENTATION_INTEGRITY
+    assert branch["defect_localization_claim"] is None
+    assert len(stub.calls) == 3
+    assert len(document["rows"]) == 3
+
+
+def _drop(candidate, *, condition, severity):
+    return {
+        "candidate": [float(candidate[0]), float(candidate[1])],
+        "cell": 4,
+        "condition": condition,
+        "severity": severity,
+        "failures": ["synthetic"],
+        "rollout_provenance": "dev-" + "0" * 64,
+        "measured_rows_for_candidate": 1,
+    }
+
+
+@pytest.mark.parametrize(
+    "condition,severity",
+    [(CONDITION_HEALTHY, None), (CONDITION_STRUCTURAL, 0.75)],
+)
+def test_the_reference_candidate_failing_early_is_the_integrity_branch(condition, severity):
+    branch = driver.classify_no_admissible_probe(
+        [_drop(driver.REFERENCE_CANDIDATE, condition=condition, severity=severity)]
+    )
+    assert branch["branch"] == driver.BRANCH_IMPLEMENTATION_INTEGRITY
+    # Section 9 attaches no defect-localization claim to this branch, and the document
+    # has to say so rather than leaving a reader to infer where the defect is.
+    assert branch["defect_localization_claim"] is None
+    assert "NO defect-localization claim" in branch["scope_note"]
+
+
+def test_the_reference_candidate_failing_only_at_the_bottom_is_the_physical_limit_branch():
+    branch = driver.classify_no_admissible_probe(
+        [_drop(driver.REFERENCE_CANDIDATE, condition=CONDITION_STRUCTURAL, severity=0.35)]
+    )
+    assert branch["branch"] == driver.BRANCH_PHYSICAL_LIMIT
+    # The fenced branch must carry its precondition, and must not claim I13b.
+    assert "I13a" in branch["precondition"]["i13a"] or "i13a" in branch["precondition"]
+    assert driver.I13B_TEST_PATH in branch["precondition"]["i13b"]
+    assert "does not assert it" in branch["precondition"]["i13b"]
+
+
+def test_another_candidates_failure_classifies_nothing_by_itself():
+    other = CANDIDATES[0]
+    assert other != driver.REFERENCE_CANDIDATE
+    branch = driver.classify_no_admissible_probe(
+        [_drop(other, condition=CONDITION_STRUCTURAL, severity=0.35)]
+    )
+    assert branch["branch"] == driver.BRANCH_UNCLASSIFIED
+    assert "precondition" not in branch
+
+
+def test_a_severity_outside_the_stage_a_grid_is_refused_rather_than_routed(context):
+    # The physical-limit branch is the one section 9 fences most tightly.  A future grid
+    # change must fail loud here rather than silently route a new severity into it.
+    with pytest.raises(ProtocolPError, match="the physical-limit branch is defined for"):
+        driver.classify_no_admissible_probe(
+            [_drop(driver.REFERENCE_CANDIDATE, condition=CONDITION_STRUCTURAL, severity=0.55)]
+        )
+
+
+# ---------------------------------------------------------------------------
+# "Every rollout re-asserts the hard gates" -- section 8, for Stage B and Stage C.
+# ---------------------------------------------------------------------------
+
+
+def _saturate_at_severity(context, target):
+    """Return a stub that saturates exactly the rollouts at one structural severity."""
+
+    def plant_for(overrides, reservation):
+        severity = (
+            None if not overrides.physical_faults else float(overrides.physical_faults[0].severity)
+        )
+        amplitude = 4.0 + 40.0 * float(overrides.probe_peak_force_n) * (
+            0.0 if severity is None else (1.0 - severity)
+        )
+        unsafe = severity is not None and severity == target
+        return _synthetic_plant(
+            amplitude=amplitude,
+            seed=int(reservation.sensor_seed) % 100_000,
+            saturated_steps=1 if unsafe else 0,
+        )
+
+    return StubExecutor(context, plant_for=plant_for)
+
+
+@pytest.fixture(scope="module")
+def unsafe_ladder(context):
+    """Run the whole driver with one Stage-B ladder value saturating, and share it."""
+
+    stub = _saturate_at_severity(context, 0.40)
+    document = driver.run_screen(context, candidates=CANDIDATES[-1:], execute=stub)
+    return document, stub
+
+
+def test_an_unsafe_stage_b_value_is_excluded_rather_than_called_testable(unsafe_ladder):
+    # Before the fix this returned terminal=None, outcome_case='CASE_B' and a TESTABLE
+    # verdict at remEI 0.40 -- the gates were measured and then discarded.
+    document, _stub = unsafe_ladder
+    assert document["terminal"] == driver.TERMINAL_UNSAFE_LADDER_VALUE
+    assert "outcome_case" not in document
+    row = [item for item in document["ladder"] if item["remaining_ei"] == 0.40][0]
+    assert row["verdict"] == driver.VERDICT_UNSAFE_LADDER_VALUE
+    assert row["verdict"] not in (driver.VERDICT_TESTABLE, driver.VERDICT_SUB_THRESHOLD)
+    # No margin is emitted beside the exclusion: section 9 forbids the comparison.
+    assert row["min_margin"] is None
+    assert [entry["remaining_ei"] for entry in document["unsafe_ladder_values"]] == [0.40]
+
+
+def test_the_unsafe_value_is_excluded_with_a_reason_in_every_failing_cell(unsafe_ladder):
+    document, _stub = unsafe_ladder
+    row = [item for item in document["ladder"] if item["remaining_ei"] == 0.40][0]
+    assert {entry["cell"] for entry in row["unsafe_cells"]} == set(SCREEN_CELLS)
+    for cell in SCREEN_CELLS:
+        entry = row["per_cell"][str(cell)]
+        assert entry["hard_gates_passed"] is False
+        assert entry["margin"] is None
+        assert any("saturated steps" in text for text in entry["failures"])
+    assert "does not reopen selection" in row["exclusion_reason"]
+
+
+def test_the_unsafe_value_does_not_reopen_selection_or_poison_the_other_values(unsafe_ladder):
+    document, _stub = unsafe_ladder
+    assert tuple(document["stage_a"]["selection"]["selected"]) == CANDIDATES[-1]
+    others = [item for item in document["ladder"] if item["remaining_ei"] != 0.40]
+    assert len(others) == 9
+    assert all(
+        item["verdict"] in (driver.VERDICT_TESTABLE, driver.VERDICT_SUB_THRESHOLD)
+        for item in others
+    )
+    assert all(item["min_margin"] is not None for item in others)
+
+
+def test_the_unsafe_stage_b_rollouts_are_reported_individually(unsafe_ladder):
+    document, _stub = unsafe_ladder
+    unsafe = document["unsafe_stage_b_rollouts"]
+    assert len(unsafe) == len(SCREEN_CELLS)
+    assert {entry["severity"] for entry in unsafe} == {0.40}
+    assert {entry["stage"] for entry in unsafe} == {results.STAGE_B}
+    stamps = {entry["rollout_provenance"] for entry in unsafe}
+    assert stamps <= {item["rollout_provenance"] for item in document["physical_ledger"]}
+
+
+def test_the_unsafe_terminal_still_reports_every_rollout_it_spent(unsafe_ladder):
+    document, stub = unsafe_ladder
+    assert len(stub.calls) == 72
+    assert document["ledger_census"]["physical_results"] == 72
+    assert len(document["rows"]) == 84
+
+
+def test_run_reuse_aware_rows_returns_the_gate_failures_it_measured(context):
+    # The wire itself.  run_logical_row already measured these gates; the defect was that
+    # the caller dropped the returned result on the floor, which is indistinguishable
+    # from never having measured them.  This test goes red if that return is discarded.
+    candidate = CANDIDATES[-1]
+    rows = results.build_logical_inventory(candidates=(candidate,), selected=candidate)
+    stage_b = tuple(row for row in rows if row.stage == results.STAGE_B and not row.is_reused)
+    stub = _saturate_at_severity(context, 0.40)
+    outcome = driver.run_reuse_aware_rows(stage_b, context, results.ResultsLedger(), execute=stub)
+    assert len(outcome["unsafe"]) == len(SCREEN_CELLS)
+    assert {entry["severity"] for entry in outcome["unsafe"]} == {0.40}
+    assert all(entry["failures"] for entry in outcome["unsafe"])
+
+
+def test_a_failing_stage_c_replicate_never_reaches_the_operative_null(context):
+    # I12 scopes the hard gates to every cell and every condition, Stage C included.  A
+    # healthy replicate that violated the A1 envelope used to be differenced straight
+    # into Q95_c and reported as a clean row.
+    target = stage_c_identity(SCREEN_CELLS[0], 3)
+
+    def plant_for(overrides, reservation):
+        severity = (
+            None if not overrides.physical_faults else float(overrides.physical_faults[0].severity)
+        )
+        amplitude = 4.0 + 40.0 * float(overrides.probe_peak_force_n) * (
+            0.0 if severity is None else (1.0 - severity)
+        )
+        is_target = severity is None and str(overrides.realized_pair_id) == str(target.pair_id)
+        return _synthetic_plant(
+            amplitude=amplitude,
+            seed=int(reservation.sensor_seed) % 100_000,
+            safety_steps=2 if is_target else 0,
+        )
+
+    stub = StubExecutor(context, plant_for=plant_for)
+    document = driver.run_screen(context, candidates=CANDIDATES[-1:], execute=stub)
+    assert document["terminal"] == driver.TERMINAL_UNSAFE_STAGE_C_REPLICATE
+    assert "stage_c_nulls" not in document
+    assert "ladder" not in document
+    assert "outcome_case" not in document
+    unsafe = document["unsafe_stage_c_replicates"]
+    assert len(unsafe) == 1
+    assert unsafe[0]["cell"] == SCREEN_CELLS[0]
+    assert unsafe[0]["replicate"] == 3
+    # The rollouts already spent still reach the record.
+    assert document["ledger_census"]["physical_results"] == len(stub.calls) == 72
+    assert len(document["rows"]) == 84
+
+
+def test_stage_c_null_refuses_a_gate_failing_replicate_from_a_direct_caller(context):
+    # A code guard from run_screen, which terminates before reaching here.  It is live
+    # for a direct caller, which is what a second consumer of the operative null would
+    # be, and this is the state that shows it: a fully populated ledger in which exactly
+    # one replicate's recorded gate report failed.
+    candidate = CANDIDATES[0]
+    cell = SCREEN_CELLS[0]
+    target = stage_c_identity(cell, 5)
+
+    def plant_for(overrides, reservation):
+        return _synthetic_plant(
+            seed=int(reservation.sensor_seed) % 100_000,
+            safety_steps=2 if str(overrides.realized_pair_id) == str(target.pair_id) else 0,
+        )
+
+    stub = StubExecutor(context, plant_for=plant_for)
+    ledger = results.ResultsLedger()
+    rows = results.build_logical_inventory(candidates=CANDIDATES, selected=candidate)
+    for row in rows:
+        if row.cell != cell or row.is_reused:
+            continue
+        if row.stage == results.STAGE_A and (
+            row.probe_peak_force_n,
+            row.probe_ramp_fraction_of_duration,
+        ) != candidate:
+            continue
+        if row.stage in (results.STAGE_A, results.STAGE_C):
+            driver.run_logical_row(row, context, ledger, execute=stub)
+
+    with pytest.raises(ProtocolPError, match="failed the hard gates"):
+        driver.stage_c_null(ledger, candidate, cell)
+
+
+def test_classify_outcome_refuses_a_table_that_still_holds_an_excluded_value():
+    # The three cases are exhaustive only after every value has a safe verdict.  Making
+    # that a refusal is what stops a terminal outcome being reported as a case.
+    table = [
+        {"remaining_ei": 0.35, "verdict": driver.VERDICT_TESTABLE},
+        {
+            "remaining_ei": 0.40,
+            "verdict": driver.VERDICT_UNSAFE_LADDER_VALUE,
+            "unsafe_cells": [{"cell": 4, "failures": ["synthetic"]}],
+            "exclusion_reason": "synthetic",
+        },
+    ]
+    with pytest.raises(ProtocolPError, match="must not be classified"):
+        driver.classify_outcome(table)
+    assert [row["remaining_ei"] for row in driver.unsafe_ladder_values(table)] == [0.40]
+    assert driver.unsafe_ladder_values(table[:1]) == []
+
+
+# ---------------------------------------------------------------------------
+# The persisted I12 audit record.
+# ---------------------------------------------------------------------------
+
+
+def test_every_executed_rollout_persists_its_gate_report_step_count_and_elapsed_time(screened):
+    document, _stub = screened
+    ledger = document["physical_ledger"]
+    assert len(ledger) == 168
+    for entry in ledger:
+        report = entry["gate_report"]
+        assert report["passed"] is True
+        assert report["failures"] == []
+        # The margins, not just the verdict: a gate that passed with a large margin is
+        # evidence about the property, and the report has to show the number.
+        assert set(report) >= {
+            "safety_events",
+            "max_abs_q_true",
+            "max_abs_qd_true",
+            "max_abs_gauge_true",
+            "saturated_steps",
+            "contact_steps",
+        }
+        assert entry["n_steps"] > 0
+        assert entry["elapsed_s"] >= 0.0
+
+
+def test_the_clean_path_reports_a_case_label_consistent_with_its_ladder(screened):
+    # Same class as the sub-branch wire above: nothing asserted that the clean document
+    # reaches classify_outcome at all, so dropping the call would have been invisible.
+    document, _stub = screened
+    assert document["terminal"] is None
+    assert document["unsafe_ladder_values"] == []
+    passes = [row["verdict"] == driver.VERDICT_TESTABLE for row in document["ladder"]]
+    expected = "CASE_A" if all(passes) else ("CASE_B" if any(passes) else "CASE_C")
+    assert document["outcome_case"] == expected
+
+
+def test_every_reported_row_joins_to_exactly_one_physical_ledger_entry(screened):
+    document, _stub = screened
+    by_stamp = {entry["rollout_provenance"]: entry for entry in document["physical_ledger"]}
+    assert len(by_stamp) == 168
+    assert len(document["rows"]) == 180
+    for row in document["rows"]:
+        entry = by_stamp[row["rollout_provenance"]]
+        assert entry["coefficients"] == row["coefficients"]
+        assert entry["rollout_canonical"] == row["rollout_canonical"]
+        assert entry["stage_of_origin"] == row["stage_of_origin"]
+    # The twelve reuses are exactly the difference between the two counts.
+    assert len(document["rows"]) - len(by_stamp) == results.EXPECTED_REUSED_ROWS
+
+
+def test_the_gate_evidence_is_held_once_per_body_not_once_per_row(screened):
+    # The reuse rule applied to the audit record: twelve rows would otherwise carry a
+    # second copy of an origin's gate report, and a second copy is a second authority.
+    document, _stub = screened
+    assert all("gate_report" not in row for row in document["rows"])
+    assert all("elapsed_s" not in row for row in document["rows"])
+    assert "rollout_provenance" in document["row_to_rollout_join"]
+
+
+def test_the_document_reports_the_rollout_elapsed_time(screened):
+    document, _stub = screened
+    timing = document["timing"]
+    assert timing["rollouts"] == 168
+    assert timing["total_rollout_elapsed_s"] == pytest.approx(
+        sum(entry["elapsed_s"] for entry in document["physical_ledger"])
+    )
+    assert "excludes the driver's own" in timing["note"]
