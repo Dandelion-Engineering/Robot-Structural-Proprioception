@@ -35,7 +35,11 @@ from utils.assignment_generator import (  # noqa: E402
     screen_pair_id,
 )
 from utils.cable_mechanics import CableModelConfig, validate_diagnostic_excitation  # noqa: E402
-from utils.gate3_assignment import ScenarioReservation  # noqa: E402
+from utils.gate3_assignment import (  # noqa: E402
+    ScenarioReservation,
+    expand_reservations,
+    load_assignment,
+)
 from utils.protocol_p import ProtocolPError  # noqa: E402
 from utils.schema_types import FaultSpec  # noqa: E402
 from utils.task_control import ObservedJointControllerConfig  # noqa: E402
@@ -502,6 +506,59 @@ def test_an_inadmissible_screen_source_is_refused(mutation: dict, expected: str)
         conditions.require_screen_source(source_reservation(**mutation))
 
 
+@pytest.mark.parametrize(
+    "mutation,expected",
+    [
+        ({"base_pair_id": "basepair_dev_t01_f000_r01"}, "must use source base pair"),
+        ({"split_group_id": "group_dev_t01_f000_r01"}, "must use source split group"),
+    ],
+)
+def test_one_wrong_cell_field_in_an_otherwise_valid_source_is_refused(
+    mutation: dict, expected: str
+) -> None:
+    """The cell binding is three separate identifiers, and each one must be exercised.
+
+    Swapping a whole source reservation is refused by the ``scenario_spec_id`` check
+    alone, so a sweep that only swaps whole sources reports two guards it never runs.
+    These are the states that distinguish them: a source whose scenario names cell 4
+    while its base pair or split group names cell 5.
+    """
+
+    with pytest.raises(ProtocolPError, match=expected):
+        conditions.require_screen_source(source_reservation(4, **mutation), cell=4)
+
+
+def test_the_cell_binding_accepts_the_real_delivered_sources() -> None:
+    """Reachability, established against the approved assignment rather than a fixture.
+
+    Every other test in this section feeds the guard a hand-built reservation, which can
+    show only that a wrong state is refused. This one shows the complementary and more
+    dangerous half: that the four sources the driver will actually select out of the
+    I1-pinned assignment document are *accepted* for their own cell and refused for
+    every other one. If the assignment's naming or its context-cell rotation ever moves,
+    this goes red rather than the screen silently binding to a different body.
+    """
+
+    document = load_assignment(PACKET_ROOT / "config" / "proposed-gate3-assignment-v0.1.json")
+    delivered = {
+        reservation.scenario_spec_id: reservation
+        for reservation in expand_reservations(document)
+        if reservation.split == conditions.SCREEN_SPLIT
+        and reservation.trajectory_spec_id == conditions.SCREEN_TRAJECTORY_SPEC_ID
+        and reservation.fault_setting_id == conditions.SCREEN_SOURCE_FAULT_SETTING_ID
+    }
+    assert len(delivered) == len(conditions.SCREEN_CELLS)
+    for cell in conditions.SCREEN_CELLS:
+        replicate = cell - conditions.FIRST_SCREEN_CELL
+        source = delivered[f"scenario_dev_t01_f000_r{replicate:02d}"]
+        conditions.require_screen_source(source, cell=cell)
+        for other in conditions.SCREEN_CELLS:
+            if other == cell:
+                continue
+            with pytest.raises(ProtocolPError, match=f"cell {other} must use source scenario"):
+                conditions.require_screen_source(source, cell=other)
+
+
 # ---------------------------------------------------------------------------
 # I8 -- provenance
 # ---------------------------------------------------------------------------
@@ -680,6 +737,83 @@ def test_a_stage_a_rollout_cannot_use_a_stage_c_identity() -> None:
     identity = conditions.stage_c_identity(4, 3)
     kwargs = provenance_kwargs(identity=identity)
     with pytest.raises(ProtocolPError, match="must use its Stage A/B identity"):
+        conditions.rollout_provenance(**kwargs)
+
+
+@pytest.mark.parametrize(
+    "identity",
+    [
+        conditions.stage_c_identity(5, 3),
+        conditions.stage_ab_identity(5),
+        conditions.RolloutIdentity(sensor_seed=150002, pair_id="basepair_protocolp_stageC_c4_k9"),
+    ],
+)
+def test_a_stage_c_rollout_cannot_use_an_identity_from_outside_its_cell(
+    identity: object,
+) -> None:
+    """The Stage-C branch needs its own rejected states, not the Stage-A/B ones.
+
+    Stage A/B and Stage C are refused by two different raise sites, and only the first
+    was exercised. Under a weakened membership test the Stage-C branch would accept any
+    identity at all -- including cell 5's -- which is the same wrong-cell composition the
+    Stage-A/B case is written to stop, at the stage that supplies the operative null.
+    ``stage_c_identity(4, 0)`` is deliberately *not* in this list: I6 makes it the cell's
+    own Stage-A identity, so accepting it is correct.
+    """
+
+    kwargs = provenance_kwargs(stage="C", condition="healthy", severity=None, identity=identity)
+    with pytest.raises(ProtocolPError, match="one of its eight Stage-C identities"):
+        conditions.rollout_provenance(**kwargs)
+
+
+@pytest.mark.parametrize("stage", ["Z", "a", "", "AB", "stage A"])
+def test_a_stage_outside_the_closed_vocabulary_is_refused(stage: str) -> None:
+    """The vocabulary check is what stops an unknown stage falling into a real branch.
+
+    The identity here is a valid Stage-C one, which is what makes the case
+    discriminating: without the vocabulary check an unknown stage does not raise, it
+    silently takes the ``else`` branch and is accepted as Stage C, stamping a rollout
+    with a stage name the protocol never defined.
+    """
+
+    kwargs = provenance_kwargs(
+        stage=stage,
+        condition="healthy",
+        severity=None,
+        identity=conditions.stage_c_identity(4, 1),
+    )
+    with pytest.raises(ProtocolPError, match="stage must be one of"):
+        conditions.rollout_provenance(**kwargs)
+
+
+@pytest.mark.parametrize(
+    "faults,expected",
+    [
+        ((), "requires 1 fault spec"),
+        (
+            conditions.requested_fault_specs("structural", severity=0.75, onset_index=0),
+            "onset_index is 0",
+        ),
+        (
+            conditions.requested_fault_specs("structural", severity=0.50, onset_index=ONSET_INDEX),
+            "severity is 0.5",
+        ),
+    ],
+)
+def test_the_stamped_fault_tuple_must_match_the_stamped_condition(
+    faults: tuple, expected: str
+) -> None:
+    """I13a is re-checked here, and that is not redundant with ``build_overrides``.
+
+    Both call sites enforce it, so removing either one alone leaves the other standing
+    and no test notices. These states go through ``rollout_provenance`` directly, which
+    is the function that decides what the provenance digest binds -- and the second case
+    is the exact Session-41 defect: a fault that softens the body at step 0 instead of
+    the declared step 500.
+    """
+
+    kwargs = provenance_kwargs(physical_faults=faults)
+    with pytest.raises(ProtocolPError, match=expected):
         conditions.rollout_provenance(**kwargs)
 
 
