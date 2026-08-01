@@ -1,124 +1,82 @@
 # Summary of Only Necessary Context — Codex
 
-**Last rewritten:** 2026-07-31 — Codex Session 51
+**Last rewritten:** 2026-08-01 — Codex Session 52
 
 ## Resume here
 
 The project is in **Phase 2 — Execution**. The final configuration is **UNFROZEN** and `Reproducibility Packet/config/config.json` does not exist.
 
-The immediate live gate is Claude owner re-review of four Codex Session-51 reviewer-edited files:
+The shared-primitives extraction and Stage-A/B/C pre-rollout construction layer are now **jointly approved**. The exact construction state is:
 
 ```text
+Reproducibility Packet/scripts/utils/protocol_p.py
+  blob 8d9005250769b85739e5be4ddf00280f46acf71c
+
 Reproducibility Packet/scripts/utils/protocol_p_conditions.py
   blob 7fdddf0eee5e3b3f02b2db21ecb1b70728234be5
-
-Reproducibility Packet/tests/test_protocol_p_conditions.py
-  blob 9e9556b073f3d691a4699af3aac9cedffe52d643
 
 Reproducibility Packet/tests/test_protocol_p_shared.py
   blob f505877fbc43adb8c3ec2311674008f0c3b0e337
 
-README.md
-  blob 94e4e2678e63090cde71beac6c8169697cdbdcf4
+Reproducibility Packet/tests/test_protocol_p_conditions.py
+  blob 1874773e1ee8ed41bb763ca3a8a235d89e7c02e9
 ```
 
-Codex explicitly approves those exact states. Claude must genuinely re-open the feedback and edits and explicitly approve the same blobs or edit-and-return. Do **not** infer approval from Claude's prior creation/handoff. The construction/public-entry loops remain open until same-state owner approval.
+The immediate live gate is Claude owner re-review of the **public README only**:
 
-No Stage-A/B/C driver implementation, replay, or stage rollout is authorized before that owner re-review closes. After closure, Claude may implement and hand off a narrow results module plus the Stage-A/B/C driver for a new exact-state review. Execution remains separately unauthorized until that later implementation loop closes.
+```text
+README.md
+  git blob    1b2976070ace4ce173d06efef50b71b26e22c402
+  raw sha256  77636189d149d0d8e483fbddf8f18ca79a1016ce93d7ab69281172b793c640dd
+  bytes       76,618   UTF-8, no BOM, pure LF
+```
+
+Codex explicitly approves that exact state. Claude must genuinely re-open the edit and explicitly approve the same blob or edit-and-return. Do not infer approval from Claude's earlier count edit or handoff.
+
+Until that public-entry loop closes, the results module and Stage-A/B/C driver remain unauthorized to implement under the sequencing commitment already recorded in the live thread. No replay or Stage-A/B/C rollout is authorized under any current state. After README owner approval, Claude may implement and hand off the narrow results module plus driver for a new exact-state review; execution remains separately blocked until that later review loop closes.
 
 The authoritative live record is:
 
 `chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`
 
-Codex Session 51 plus its narrow review-state correction are physically last. Both appends passed the hard gate: each old prefix was byte-identical, each new header appeared exactly once after its recorded boundary, and the cumulative transcript diff is +233/−0.
+Codex Session 52 is physically last. The append passed the hard gate: the prior 871,716-byte / 12,409-line transcript prefix remained byte-identical at SHA-256 `3938bd2f...`, the new header appears exactly once at line 12,412, and the transcript diff is +128/−0.
 
-## Session-51 decision
+## Session-52 decision
 
-Claude handed off eight states. Codex approves four unchanged:
+Claude's Session 52 genuinely re-reviewed the Session-51 production repair, independently confirmed both blocking findings, approved the production module and shared-test file unchanged, and returned the construction-test file with six additions covering five previously unexercised guards.
 
-```text
-scripts/utils/protocol_p.py                         blob 8d9005250769b85739e5be4ddf00280f46acf71c
-scripts/protocol_p_replay_gate.py                   blob c6b1674990a46f097a942559fd9077041d8270de
-scripts/analyze_synchronous_difference_null.py      blob f104971d426af95ca664826cbc276228adff7963
-Reproducibility Packet/README.md                    blob ba9c067a4d7ccce4b6c29edcf588b7eeb0e8150e
-```
+Codex reviewed and approves the returned test blob `1874773e...` unchanged. The additions discriminate:
 
-Decisions:
+1. source `base_pair_id` and `split_group_id` checks independently of the scenario guard;
+2. positive reachability of all four real delivered sources from the approved assignment;
+3. Stage-C identity membership for wrong-cell and out-of-table identities;
+4. the A/B/C closed stage vocabulary with otherwise-valid Stage-C inputs; and
+5. condition/fault binding for count, onset and severity, including step 0 versus step 500.
 
-- the Stage-A/B/C construction layer is the real third consumer that triggered the pre-agreed extraction to `utils/protocol_p.py`;
-- `raw_file_sha256` correctly moves with the shared two-domain rule, while the four replay-only `.npz` pins stay in the replay gate;
-- the Stage-0 dependency correction is accurate: Stage 0 imports no MuJoCo, while the replay gate intrinsically does;
-- a small separate results module is acceptable, but the driver must prove the actual output-root integration with a real wrong-write test; and
-- the initial construction handoff was blocked and reviewer-edited before approval.
+Two construction narrowings are accepted and must be carried into the driver/reports:
 
-## Why the construction handoff was blocked
+- `require_screen_source` binds three identifier strings, while the physical context triple is bound transitively by selecting from the I1-pinned assignment document. The driver must obtain its source from that document and never construct one.
+- the `build_overrides` I13a call is presently tautological because it compares a freshly built tuple against the same construction. It models a future boundary but is not an independently live guard and must not be credited as one.
 
-### 1. The provenance object did not match Protocol P v2.3.3
+## Why the public README was edited again
 
-The approved `rollout_identity_payload` has exactly nine top-level keys:
+Claude's update from 141/736 to 155 focused / 750 packet checks was correct. The newest active-review entry nevertheless contained two stale/overbroad current-state claims:
 
-```text
-base_config_hash
-assignment_canonical_sha256
-assignment_hash
-protocol_spec_sha256
-stage
-cell
-condition
-overrides
-reservation
-```
+1. it said the approved Stage-0 measurement had been re-derived bit-for-bit after the refactor; the actual check was `run_null(pairs=2)`, reproducing only the artifact's first two pair distances;
+2. it still said the construction code was under review and unapproved, while Codex Session 52 closes that exact construction loop.
 
-Nested requirements:
+Codex reviewer-edited the active entry and live banner:
 
 ```text
-overrides:
-  probe_peak_force_n
-  probe_ramp_fraction_of_duration
-  physical_faults            # complete FaultSpec fields, including onset_index
-  realized_pair_id
-
-reservation:
-  scenario_spec_id
-  base_pair_id
-  sensor_seed
+Last updated                         2026-08-01
+construction state                  jointly approved
+driver state                        not built or approved
+post-refactor numerical check       first two pair distances only
+spent 100-pair Stage 0              not re-run
+focused / packet checks             155 / 750
 ```
 
-Claude's handoff hashed a flat object that omitted `assignment_hash`, the delivered/source reservation, and the full fault tuple. `onset_index` was absent, so the blocked step-0 fault and approved step-500 fault received the same provenance identity. The tests mirrored the implementation rather than asserting the protocol's exact key sets, so all 725 handoff-state tests passed.
-
-Codex corrected the implementation to build/hash/return one named exact `rollout_identity_payload` / `rollout_canonical` object.
-
-### 2. Valid wrong-cell/wrong-stage pieces composed successfully
-
-The local I3/I5/I6/I7 guards were individually correct but did not bind their objects together. A cell-5 source and identity could be called cell 4, and a valid Stage-C identity could be used for Stage A.
-
-Codex added fail-loud relations:
-
-- stage vocabulary exactly A/B/C;
-- Stage A/B uses the target cell's Stage-A/B identity;
-- Stage C uses one of the target cell's eight Stage-C identities;
-- screen reservation derivation requires the target cell;
-- the delivered source scenario/base pair/split group must match that cell;
-- the derived reservation retains the target cell's source scenario; and
-- derived reservation `sensor_seed` / `base_pair_id` equal the realized identity.
-
-These are pre-run construction checks and cost zero rollouts.
-
-## Session-51 verification
-
-```text
-focused construction + shared tests     141 passed in 0.73 s
-full packet suite                        736 passed in 13.04 s
-compileall                               clean
-git diff --check                         clean (checkout-EOL warnings only)
-config.json                              absent
-Stage-0 result artifact                  unchanged; not re-executed
-Protocol-P replay/stage rollouts         none in Codex Session 51
-.npz under packet results                0
-confirmatory test split                  untouched
-```
-
-No protocol specification, assignment, draft config, Stage-0 artifact, generator seam, gauge helper, detection-floor artifact, dataset payload, or confirmatory material moved.
+No settled dated entry was changed. This newest entry remains under the review-cycle playbook until Claude approves blob `1b297607...`.
 
 ## Current Protocol-P state
 
@@ -126,14 +84,15 @@ No protocol specification, assignment, draft config, Stage-0 artifact, generator
 
 - Protocol P v2.3.3 at canonical digest `5689dad7ce4194b9a7dbe381006027df178997adf732f5734a77ef048bdf421f`.
 - Permanent I13b test: nominal through step 499, structural softening active at step 500.
-- Generator `ScreenOverrides` seam and 37 permanent seam tests.
+- Generator `ScreenOverrides` seam and its permanent tests.
 - One-row replay-gate implementation and exact result: 20/20 plant fields, 38/38 S entries, 20/20 identity fields, 531 matched NaNs, zero watched filesystem effects.
-- Stage-0 implementation and helper tests.
-- Stage-0 result artifact, Git blob `31c1e6d1824c10bd5978d12c377f76cf556af03f`.
-- Packet README Step 24, now at blob `ba9c067a...`, including the no-transitive-MuJoCo correction.
-- Public README through the prior correction blob `73b124fd...`; the newest construction milestone entry is separately open at Codex reviewer blob `94e4e267...`.
+- Stage-0 implementation, helper tests, result artifact, and packet README Step 24.
+- Stage-0 result artifact at Git blob `31c1e6d1824c10bd5978d12c377f76cf556af03f`.
+- Shared Protocol-P primitives and both existing consumer refactors.
+- Stage-A/B/C pre-rollout construction module and focused tests at the blobs listed above.
+- Public README through earlier settled corrections; only the newest construction-milestone entry at `1b297607...` remains open for owner approval.
 
-### Executed evidence and its limits
+### Stage-0 executed evidence and its limits
 
 Stage 0 ran exactly once:
 
@@ -151,13 +110,20 @@ identity                 dev-71b332893d007036625f666589f8c74b0ac3b946b47b5186ddf
 authority                NONE
 ```
 
-Stage 0 is a synthetic sensor-only healthy-difference diagnostic. It sets no threshold, gates nothing, and supplies no mechanics or fault evidence. Its identity binds inputs and output shape, not measured values. It lies inside the four prior fixed-trace values `[0.3176, 0.4251]`, above three of four and about 5.7% below the maximum; this is broad-range containment, not agreement.
+Stage 0 is a synthetic sensor-only healthy-difference diagnostic. It sets no threshold, gates nothing, and supplies no mechanics or fault evidence. Its identity binds inputs and output shape, not measured values. It lies inside the four prior fixed-trace values `[0.3176, 0.4251]`, above three of four and about 5.7% below the maximum; that is broad-range containment, not agreement.
 
-The first-run Stage-0 elapsed time was not captured. Do not rerun merely to manufacture it. A later authorized timing is a separate reproduction.
+The first-run elapsed time was not captured. Do not rerun merely to manufacture it. The post-refactor `pairs=2` path reproduced only the first two recorded distances:
+
+```text
+0.17764883124109498
+0.1894914916579524
+```
+
+Do not describe that as re-derivation of the 100-pair measurement.
 
 Protocol-P plant rollouts remain one original replay for the protocol's accounting. Later replay reruns were regression checks, not new stage evidence. Stages A/B/C have not run.
 
-## Exact driver requirements after owner re-review
+## Exact driver requirements after README owner approval
 
 The driver/results handoff must show all of the following before execution can be considered:
 
@@ -173,10 +139,11 @@ The driver/results handoff must show all of the following before execution can b
 10. I10 measurement-time rank/width/length;
 11. I11 at least five finite valid harmonic samples;
 12. I12 every hard safety gate, per cell and condition, from returned `PrivilegedRecord`;
-13. no persistence of `ObservedRecord`, label payload, manifest, role index, or dataset payload; and
-14. a real driver integration test against the actual temporary results root that fails on an injected wrong write.
+13. source selection from the I1-pinned assignment document, never hand construction;
+14. no persistence of `ObservedRecord`, label payload, manifest, role index, or dataset payload; and
+15. a real driver integration test against the actual temporary results root that fails on an injected wrong write.
 
-If a separate results module is used, unit tests of that module are necessary but insufficient. The driver wire itself must be observed.
+A separate results module is acceptable, but unit tests of that module are necessary and insufficient. The real driver wire must be observed against a real temporary output root.
 
 ## Protocol-P stage design that remains fixed
 
@@ -193,13 +160,13 @@ Verdict        D(v,c) >= 2 * Q95_c for every cell; Q95 method="higher"
 Total          replay 1 + A 108 + B 32 + C 28 = 169 protocol rollouts
 ```
 
-Stage A hard gates every cell/condition: zero seven-channel safety flags; `max|qd_true| <= 8`; `max|q_true| <= 2.5`; `max|gauge_true| <= 400 microstrain`; inclusive torque gate; no increase in saturated steps versus zero probe.
+Stage A hard-gates every cell/condition: zero seven-channel safety flags; `max|qd_true| <= 8`; `max|q_true| <= 2.5`; `max|gauge_true| <= 400 microstrain`; inclusive torque gate; no increase in saturated steps versus zero probe.
 
 Selection, terminal branches, role coverage, OOD handling, matched-signal/unmatched-null asymmetry disclosure, and success bar remain exactly as Protocol P v2.3.3 states. Do not redesign them in the driver.
 
 ## Project gates behind Protocol P
 
-Even after the construction/driver loops close and the development screen runs, the project still requires:
+Even after construction/driver review closes and the development screen runs, the project still requires:
 
 - written Amendment A2 and a replacement approved assignment/config lineage if Protocol P supports it;
 - coherent regeneration of dev/pilot/validation roles;
@@ -212,12 +179,27 @@ Even after the construction/driver loops close and the development screen runs, 
 
 The current pre-A2 local dataset remains development scaffolding: 472 dev/pilot/validation pairs, zero test rows. Do not treat it as frozen or confirmatory.
 
+## Session-52 verification
+
+```text
+focused construction + shared tests     155 passed in 0.75 s
+full packet suite                        750 passed in 13.16 s
+compileall                               clean
+git diff --check                         clean (checkout-EOL warnings only)
+config.json                              absent
+Stage-0 result artifact                  unchanged; not re-executed
+Protocol-P replay/stage rollouts         none in Codex Session 52
+confirmatory test split                  untouched
+```
+
+No protocol specification, assignment, draft config, Stage-0 artifact, generator seam, gauge helper, detection-floor artifact, dataset payload, or confirmatory material moved.
+
 ## Review and evidence rules that remain load-bearing
 
 - Same-state approval is explicit. Creation, edits, handoff, downstream use and silence are not approval.
 - Development screens, pilots, fixtures, diagnostics and regression checks remain separate from frozen, confirmatory or final results.
 - Keep detection, attribution, information/action authorization, and controller outcome separate.
-- Public README running history is append-only once settled; active-review newest states may be reviewer-edited under the review-cycle playbook.
+- Public README running history is append-only once settled; the newest active-review state may be reviewer-edited under the review-cycle playbook.
 - Packet README is an outsider-clean runbook: no local paths, agents, sessions, or internal history.
 - Do not use root-wide `pytest -q`; ignored duplicate trees under `tmp/` can pollute collection. Use:
 
@@ -227,10 +209,10 @@ The current pre-A2 local dataset remains development scaffolding: 472 dev/pilot/
 
 - Do not use bare `python` or `pip`; use the project venv.
 - The confirmatory test split remains untouched: zero identities, zero payloads.
-- Transcript appends use the hard gate: capture physical UTF-8 EOF bytes/count/hash, patch only the complete verified unique EOF block, then assert old prefix exact, one new header after boundary, and additions-only diff.
+- Transcript appends use the hard gate: capture physical UTF-8 EOF bytes/count/hash, patch only the complete verified unique EOF block, then assert old prefix exact, one new header after the boundary, and additions-only diff.
 
 ## Closeout numbering
 
-- Next Codex session: **52**.
-- Next Codex human report: `agents/Codex/Session Summaries/HumanReport52.md`.
+- Next Codex session: **53**.
+- Next Codex human report: `agents/Codex/Session Summaries/HumanReport53.md`.
 - Next regular Codex progress report: **Session 56**, unless a phase transition or approved amendment triggers one sooner.
