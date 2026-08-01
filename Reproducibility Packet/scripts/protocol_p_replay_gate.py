@@ -83,7 +83,6 @@ from __future__ import annotations
 import argparse
 import csv
 import dataclasses
-import hashlib
 import sys
 import time
 from pathlib import Path
@@ -105,6 +104,16 @@ from utils.assignment_generator import (  # noqa: E402
 )
 from utils.config_contract import load_config  # noqa: E402
 from utils.gate3_assignment import load_assignment  # noqa: E402
+from utils.protocol_p import (  # noqa: E402
+    ASSIGNMENT_CANONICAL_SHA256,
+    ASSIGNMENT_FILENAME,
+    PROTOCOL_CANONICAL_SHA256,
+    PROTOCOL_FILENAME,
+    ProtocolPError,
+    canonical_text_sha256,
+    raw_file_sha256,
+)
+from utils.protocol_p import require as _require  # noqa: E402
 from utils.schema_types import ObservedRecord, PrivilegedRecord  # noqa: E402
 
 PACKET_ROOT = SCRIPT_DIR.parent
@@ -113,20 +122,13 @@ REPO_ROOT = PACKET_ROOT.parent
 # ---------------------------------------------------------------------------
 # Pinned identities.  Every value below is a pre-registered constant, not a
 # tunable: changing one changes what this gate certifies.
+#
+# The two text-domain pins, both hash-domain helpers, ``ProtocolPError`` and the
+# fail-loud ``_require`` are imported from ``utils.protocol_p`` above: they are
+# shared with every other Protocol-P consumer and there must be exactly one copy
+# of each.  The binary-domain pins below stay here, with the only check that
+# reads them.
 # ---------------------------------------------------------------------------
-
-# Text domain.  The protocol file cannot contain its own digest, so the expected
-# value is carried here; it is the digest both agents independently computed and
-# jointly approved (Claude Session 43 handoff, Codex Session 43 approval).
-PROTOCOL_FILENAME = "protocol-p-v2.3.3.md"
-PROTOCOL_CANONICAL_SHA256 = (
-    "5689dad7ce4194b9a7dbe381006027df178997adf732f5734a77ef048bdf421f"
-)
-# Pinned by Protocol P Correction 3.
-ASSIGNMENT_FILENAME = "proposed-gate3-assignment-v0.1.json"
-ASSIGNMENT_CANONICAL_SHA256 = (
-    "76255a8089f3e27d893b26d981cbf50e808bd75ba518c44b55c4635ec83514ae"
-)
 
 # Binary domain.  Pinned by Protocol P section 7.
 PLANT_REFERENCE_RAW_SHA256 = (
@@ -166,51 +168,6 @@ N_OBSERVATION_ENTRIES = 38
 # files, so anything near zero means the watch list resolved to nothing and the
 # "wrote nothing" report would be certifying an empty set.
 MIN_WATCHED_FILES = 100
-
-
-class ProtocolPError(RuntimeError):
-    """A Protocol-P invariant failed.
-
-    Protocol P section 10 requires every decision-bearing invariant to raise rather
-    than assert, because ``python -O`` removes assertions and would silently disable
-    the guard.
-    """
-
-
-def _require(condition: bool, message: str) -> None:
-    """Raise ``ProtocolPError(message)`` unless ``condition`` holds.
-
-    Inputs: a already-evaluated boolean and the message to fail with.
-    Outputs: none. Purpose: a fail-loud replacement for ``assert``.
-    """
-
-    if not condition:
-        raise ProtocolPError(message)
-
-
-def canonical_text_sha256(path: Path) -> str:
-    """Protocol P text-domain digest of ``path``.
-
-    Inputs: a path to a tracked text file. Outputs: hex SHA-256 of the file's bytes
-    after stripping a UTF-8 BOM and folding CRLF to LF, which makes the digest
-    invariant to the checkout line-ending convention.
-    """
-
-    raw = path.read_bytes()
-    if raw.startswith(b"\xef\xbb\xbf"):
-        raw = raw[3:]
-    return hashlib.sha256(raw.replace(b"\r\n", b"\n")).hexdigest()
-
-
-def raw_file_sha256(path: Path) -> str:
-    """Protocol P binary-domain digest of ``path``.
-
-    Inputs: a path to a binary artifact. Outputs: hex SHA-256 of its exact bytes with
-    no transformation whatsoever. Purpose: identity for the retained ``.npz``
-    references, whose payloads contain CRLF byte pairs as data.
-    """
-
-    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def check_pinned_digests(

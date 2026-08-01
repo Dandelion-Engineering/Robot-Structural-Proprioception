@@ -64,16 +64,22 @@ defaults, so the bare command reproduces the pinned run.  Any failure raises
 ``ProtocolPError``; the protocol never uses ``assert``, because ``python -O`` removes
 assertions.
 
-Coupling note (deliberate, flagged for review)
-----------------------------------------------
-``ProtocolPError``, ``canonical_text_sha256`` and the two text-domain digest pins are
-imported from ``protocol_p_replay_gate`` rather than re-declared.  That keeps exactly one
-implementation of the two-domain hashing rule and exactly one copy of each pinned digest
-across the protocol's scripts - the same reasoning that made the gate import the
-producer's ``_plant_payload`` instead of maintaining a second serializer.  If a third
-consumer appears (the Stage-A/B/C driver will need all of it), the right move is to
-extract them into ``utils/protocol_p.py``; that was not done now because it would edit
-the gate at the exact state both agents just approved.
+Coupling note
+-------------
+``ProtocolPError``, ``require``, ``canonical_json``, ``canonical_text_sha256`` and the
+two text-domain digest pins are imported from ``utils/protocol_p.py`` rather than
+re-declared, so there is exactly one implementation of the two-domain hashing rule, one
+implementation of CANONICAL_JSON, and one copy of each pinned digest across the
+protocol's scripts.
+
+Until Session 51 those names were imported from ``protocol_p_replay_gate``, and that
+import made this script a transitive importer of ``mujoco``: the gate imports the
+generator in order to rebuild a reservation, and the generator imports the plant.  The
+measurement here constructs no mechanics and runs no rollout, so the dependency was
+incidental rather than intrinsic, and it is now gone -- this script imports nothing that
+reaches a physics engine.  The extraction was pre-agreed for the moment a third consumer
+appeared (Codex Session 46 answer 2); the Stage-A/B/C construction layer in
+``utils/protocol_p_conditions.py`` is that consumer.
 """
 
 from __future__ import annotations
@@ -93,18 +99,20 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
-from protocol_p_replay_gate import (  # noqa: E402
+from utils.assignment_binding import validate_approved_assignment_binding  # noqa: E402
+from utils.config_contract import load_config  # noqa: E402
+from utils.gate3_assignment import load_assignment  # noqa: E402
+from utils.gauge_windows import gauge_window, linear_thermal_profile  # noqa: E402
+from utils.protocol_p import (  # noqa: E402
     ASSIGNMENT_CANONICAL_SHA256,
     ASSIGNMENT_FILENAME,
     PROTOCOL_CANONICAL_SHA256,
     PROTOCOL_FILENAME,
     ProtocolPError,
+    canonical_json,
     canonical_text_sha256,
 )
-from utils.assignment_binding import validate_approved_assignment_binding  # noqa: E402
-from utils.config_contract import load_config  # noqa: E402
-from utils.gate3_assignment import load_assignment  # noqa: E402
-from utils.gauge_windows import gauge_window, linear_thermal_profile  # noqa: E402
+from utils.protocol_p import require as _require  # noqa: E402
 from utils.schema_types import N_GAUGES  # noqa: E402
 from utils.sensor_model import SensorConfig  # noqa: E402
 from utils.synchronous import harmonic_coefficients  # noqa: E402
@@ -181,37 +189,6 @@ OUTPUT_TOP_LEVEL_KEYS = (
     "stage_0_identity",
     "statistic",
 )
-
-
-def _require(condition: bool, message: str) -> None:
-    """Raise ``ProtocolPError(message)`` unless ``condition`` holds.
-
-    Inputs: an already-evaluated boolean and the message to fail with. Outputs: none.
-    Purpose: a fail-loud replacement for ``assert``, which ``python -O`` would remove.
-    """
-
-    if not condition:
-        raise ProtocolPError(message)
-
-
-def canonical_json(payload: Any) -> str:
-    """CANONICAL_JSON - the single serialization rule for every Protocol-P identity.
-
-    Inputs: a JSON-serializable payload. Outputs: its canonical string form.
-    Purpose: pinned verbatim by Protocol P Correction 2, matching the packet precedent
-    in ``config_contract.canonical_json_bytes``. ``allow_nan=False`` is not decoration:
-    plain ``json.dumps`` emits the non-standard tokens ``NaN`` / ``Infinity`` rather
-    than raising, so a corrupted float reaching an identity payload would produce a
-    valid-looking digest over an unparseable document.
-    """
-
-    return json.dumps(
-        payload,
-        sort_keys=True,
-        separators=(",", ":"),
-        ensure_ascii=False,
-        allow_nan=False,
-    )
 
 
 def require_pinned_cli(cli: Mapping[str, Any]) -> None:
