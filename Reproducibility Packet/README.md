@@ -607,6 +607,36 @@ Two reader notes. `samples` is a six-key metadata dictionary (`n_pairs`, `seed_m
 
 The run is deterministic given the pinned seeds and the pinned dependency versions in `requirements.txt`; no randomness is drawn outside them. Cross-platform bit-identity has **not** been measured, so compare a local run against the recorded values rather than assuming byte-identical output.
 
+## Step 25 — Audit the Protocol P Stage A/B/C plan (zero rollouts)
+
+Stages A, B and C are the screen itself: Stage A measures nine admissible probe candidates in four context cells under three conditions and selects one, Stage B walks the ten-value remaining-stiffness ladder at the selected candidate, and Stage C builds the operative null from eight healthy replicates per cell. **They have not been run.** No Stage-A/B/C result artifact is distributed with this packet, and nothing in this step produces one.
+
+What this step does produce is the screen's *plan*, built by the same program that would execute it, from the same committed inputs. `--mode plan` resolves every bound input, verifies the pinned digests, derives the timing, enumerates the complete row inventory, audits its shape against the pre-registered counts, and exits **having run zero rollouts**. It is the cheapest available check that the executable form of Protocol P sections 8–9 agrees with the specification's arithmetic.
+
+```powershell
+.\.venv\Scripts\python.exe scripts\run_protocol_p_screen.py `
+  --output-dir results\protocol_p_plan --mode plan
+```
+
+`--mode plan` is the default; `--mode execute` runs the screen and is the only way to spend a rollout. Measured cost of the plan path on the reference machine: **0.30–0.33 s**, no dataset, no MuJoCo simulation. The program does import the `mujoco` package — it shares the generator that builds each rollout's request, and that generator imports the plant — so this step needs a complete install from `requirements.txt` even though it simulates nothing. (Contrast Step 24, whose script imports no MuJoCo at all.)
+
+The audited plan is:
+
+```text
+admissible candidates   9        {0.05, 0.10, 0.15} N x {0.125, 0.25, 0.5} ramp fraction
+logical rows            180      Stage A 108   Stage B 40   Stage C 32
+physical rollouts       168
+reused rows             12
+derived onset index     500      from onset_time_s = 1.0 s at control_dt_s = 0.002 s
+window                  [1000, 1768)
+```
+
+**Read 180 and 168 together; either number alone misleads.** A *logical row* is a line in the results table. A *physical rollout* is a simulation that was actually run. Twelve logical rows consume a measurement an earlier row already paid for: two of Stage B's ten ladder values are the two severities Stage A already measured at the selected candidate, and Stage C's first healthy replicate in each cell is the healthy rollout Stage A already ran there. Those twelve rows cite the original rollout's provenance stamp rather than minting a new one, so the screen's cost is 168 simulations while its results table has 180 rows. A reader auditing "one provenance stamp per rollout" against this table will find 180 stamps over 168 rollouts, and that is the designed relationship rather than a discrepancy.
+
+Two things the plan output does **not** contain. There is no selected candidate: selection is a Stage-A result, so the inventory's shape is audited at a placeholder and the artifact says so in a `placeholder_selection_note` field. And `results` is `null`, because nothing was measured.
+
+The full run is 168 rollouts. At the measured single-rollout cost of about 26 s on the reference machine that is roughly 70–80 minutes of simulation; treat that as an extrapolation from one measured rollout, not as a recorded runtime, since the screen has not been run.
+
 ## Data
 
 No external dataset is required. The simulator generates every value used by the spike. See [`DATA.md`](DATA.md) for the data and licensing boundary.

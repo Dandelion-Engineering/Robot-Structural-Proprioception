@@ -43,11 +43,15 @@ from utils.protocol_p_conditions import (  # noqa: E402
     CONDITION_STRUCTURAL,
     SCREEN_CELLS,
     admissible_candidates,
+    build_overrides,
+    require_constructed_condition,
+    requested_fault_specs,
+    screen_reservation,
     stage_ab_identity,
     stage_c_identity,
 )
 from utils import protocol_p_results as results  # noqa: E402
-from utils.schema_types import PrivilegedRecord  # noqa: E402
+from utils.schema_types import FaultSpec, PrivilegedRecord  # noqa: E402
 from utils.sensor_model import SensorModel  # noqa: E402
 
 CONFIG_PATH = PACKET_ROOT / "config" / "draft-config-v0.1.json"
@@ -1621,3 +1625,417 @@ def test_the_document_reports_the_rollout_elapsed_time(screened):
         sum(entry["elapsed_s"] for entry in document["physical_ledger"])
     )
     assert "excludes the driver's own" in timing["note"]
+
+
+# ---------------------------------------------------------------------------
+# Correction 1's pre-registered helper, and the check built on it.
+#
+# Protocol P section 1, Correction 1 names ``screen_physical_faults`` and gives its
+# signature and its fault fields.  Those literals are restated here on purpose: this is
+# the one place the pre-registration is an independent authority, and binding the
+# executable to it is what "the pre-registered text generates the pre-registered data"
+# means.  Everywhere else, restating them would be a second copy.
+# ---------------------------------------------------------------------------
+
+
+def _screen_bundle(context, *, condition, severity, onset_index, cell=None):
+    """Build a real override bundle at an arbitrary onset, for the checks below."""
+
+    cell = SCREEN_CELLS[0] if cell is None else cell
+    identity = stage_ab_identity(cell)
+    reservation = screen_reservation(
+        context.sources[cell],
+        cell=cell,
+        sensor_seed=identity.sensor_seed,
+        base_pair_id=identity.pair_id,
+    )
+    overrides, _canonical = build_overrides(
+        stage=results.STAGE_A,
+        cell=cell,
+        condition=condition,
+        severity=severity,
+        identity=identity,
+        reservation=reservation,
+        probe_peak_force_n=0.05,
+        probe_ramp_fraction_of_duration=0.125,
+        onset_index=onset_index,
+        base_config_hash=context.base_config_hash,
+        assignment_canonical_sha256=context.assignment_canonical_sha256,
+        assignment_hash=context.assignment_hash,
+        protocol_spec_sha256=context.protocol_spec_sha256,
+    )
+    return overrides
+
+
+def test_the_preregistered_helper_derives_the_onset_from_the_document(context):
+    trajectory = driver.bound_trajectory(context.assignment)
+    derived = driver.screen_onset_index(trajectory, control_dt_s=context.timing.control_dt_s)
+    assert derived == _step_index(
+        float(trajectory["onset_time_s"]), context.timing.control_dt_s
+    )
+    assert derived == context.timing.onset_index == 500
+
+
+def test_the_preregistered_helper_builds_correction_1s_exact_fault(context):
+    # The seven fields Correction 1 pins, quoted from the specification.
+    trajectory = driver.bound_trajectory(context.assignment)
+    (fault,) = driver.screen_physical_faults(
+        CONDITION_STRUCTURAL,
+        trajectory,
+        severity=0.75,
+        control_dt_s=context.timing.control_dt_s,
+    )
+    assert fault.source_class == "structure"
+    assert fault.subtype == "link_stiffness_loss"
+    assert fault.location == 1
+    assert fault.severity == 0.75
+    assert isinstance(fault.severity, float)
+    assert fault.onset_index == 500
+    assert fault.compound_flag is False
+    assert fault.ood_flag is False
+
+
+def test_the_healthy_condition_is_the_empty_tuple_and_not_none(context):
+    built = driver.screen_physical_faults(
+        CONDITION_HEALTHY,
+        driver.bound_trajectory(context.assignment),
+        control_dt_s=context.timing.control_dt_s,
+    )
+    # Correction 1: an empty tuple is an *explicit healthy body*; None would mean "use
+    # the reservation's derived faults". The empty tuple is falsy, so the distinction
+    # only survives if every guard tests ``is not None`` rather than truthiness.
+    assert built == ()
+    assert built is not None
+
+
+def test_the_screen_condition_vocabulary_is_closed(context):
+    # "the vocabulary is closed" appears at BOTH this raise site and the construction
+    # layer's, so matching it would leave this test green with the helper's own check
+    # deleted. The phrase below is unique to the helper.
+    with pytest.raises(ProtocolPError, match="unknown screen condition"):
+        driver.screen_physical_faults(
+            "structual",
+            driver.bound_trajectory(context.assignment),
+            severity=0.5,
+            control_dt_s=context.timing.control_dt_s,
+        )
+
+
+def test_the_preregistered_vocabulary_is_the_construction_layers_vocabulary():
+    # Two names for one closed set; a second definition would be a second authority.
+    assert driver.SCREEN_CONDITIONS == (CONDITION_HEALTHY, CONDITION_STRUCTURAL)
+
+
+def test_the_helper_refuses_a_healthy_condition_carrying_a_severity(context):
+    with pytest.raises(ProtocolPError, match="healthy condition takes no severity"):
+        driver.screen_physical_faults(
+            CONDITION_HEALTHY,
+            driver.bound_trajectory(context.assignment),
+            severity=0.5,
+            control_dt_s=context.timing.control_dt_s,
+        )
+
+
+def test_the_helper_refuses_a_structural_condition_without_a_severity(context):
+    # ``severity`` is keyword-only with default None precisely so that "absent" is an
+    # expressible state rather than a missing positional argument.
+    with pytest.raises(ProtocolPError, match="structural condition requires a severity"):
+        driver.screen_physical_faults(
+            CONDITION_STRUCTURAL,
+            driver.bound_trajectory(context.assignment),
+            control_dt_s=context.timing.control_dt_s,
+        )
+
+
+@pytest.mark.parametrize("severity", [0.0, -0.1, 1.5, 2.0])
+def test_the_helper_enforces_correction_1s_remaining_ei_bound(context, severity):
+    with pytest.raises(ProtocolPError, match=r"remaining-EI fraction in \(0, 1\]"):
+        driver.screen_physical_faults(
+            CONDITION_STRUCTURAL,
+            driver.bound_trajectory(context.assignment),
+            severity=severity,
+            control_dt_s=context.timing.control_dt_s,
+        )
+
+
+@pytest.mark.parametrize("severity", [float("nan"), float("inf")])
+def test_the_helper_refuses_a_non_finite_severity_by_its_own_branch(context, severity):
+    with pytest.raises(ProtocolPError, match="severity must be finite"):
+        driver.screen_physical_faults(
+            CONDITION_STRUCTURAL,
+            driver.bound_trajectory(context.assignment),
+            severity=severity,
+            control_dt_s=context.timing.control_dt_s,
+        )
+
+
+@pytest.mark.parametrize("severity", [1.0, 0.05])
+def test_the_bound_is_inclusive_at_the_top_and_admits_the_ladder_bottom(context, severity):
+    # 1.0 is the closed end of (0, 1]; 0.05 is the bottom of section 8's ladder. A ``<``
+    # at the top or a ``<=`` at the bottom would each silently change the screened set.
+    (fault,) = driver.screen_physical_faults(
+        CONDITION_STRUCTURAL,
+        driver.bound_trajectory(context.assignment),
+        severity=severity,
+        control_dt_s=context.timing.control_dt_s,
+    )
+    assert fault.severity == severity
+
+
+def test_severity_is_keyword_only_in_the_preregistered_signature(context):
+    # The signature is part of the pre-registration's executable surface: a positional
+    # severity would make "absent" indistinguishable from "not supplied".
+    with pytest.raises(TypeError):
+        driver.screen_physical_faults(
+            CONDITION_STRUCTURAL, driver.bound_trajectory(context.assignment), 0.5
+        )
+
+
+def test_the_helper_refuses_an_off_grid_onset_in_the_document(context):
+    trajectory = dict(driver.bound_trajectory(context.assignment))
+    trajectory["onset_time_s"] = 1.0001
+    with pytest.raises(ProtocolPError, match="onset derived from the trajectory document"):
+        driver.screen_physical_faults(
+            CONDITION_STRUCTURAL,
+            trajectory,
+            severity=0.75,
+            control_dt_s=context.timing.control_dt_s,
+        )
+
+
+def test_the_helper_refuses_a_trajectory_without_an_onset_time(context):
+    trajectory = {
+        key: value
+        for key, value in driver.bound_trajectory(context.assignment).items()
+        if key != "onset_time_s"
+    }
+    with pytest.raises(ProtocolPError, match="must carry 'onset_time_s'"):
+        driver.screen_onset_index(trajectory, control_dt_s=context.timing.control_dt_s)
+
+
+def test_the_helper_refuses_a_trajectory_that_is_not_a_mapping(context):
+    with pytest.raises(ProtocolPError, match="trajectory specification must be a mapping"):
+        driver.screen_onset_index(
+            [("onset_time_s", 1.0)], control_dt_s=context.timing.control_dt_s
+        )
+
+
+@pytest.mark.parametrize(
+    "condition,severity",
+    [(CONDITION_HEALTHY, None), (CONDITION_STRUCTURAL, 0.75), (CONDITION_STRUCTURAL, 0.35)],
+)
+def test_the_helper_delegates_the_fields_to_the_construction_layer(
+    context, condition, severity
+):
+    # The helper's only original content is the onset derivation; the fields come from
+    # the approved builder. Asserting the delegation is what keeps a future edit from
+    # quietly making this a second copy.
+    trajectory = driver.bound_trajectory(context.assignment)
+    assert driver.screen_physical_faults(
+        condition, trajectory, severity=severity, control_dt_s=context.timing.control_dt_s
+    ) == requested_fault_specs(
+        condition, severity=severity, onset_index=context.timing.onset_index
+    )
+
+
+def test_the_preregistered_check_refuses_a_bundle_built_at_the_wrong_onset(context):
+    # The Session-41 defect, injected into a real override bundle: the construction
+    # layer accepts it (it validates whatever onset it is given), and this check does
+    # not, because its expectation comes from the trajectory document.
+    bundle = _screen_bundle(
+        context, condition=CONDITION_STRUCTURAL, severity=0.75, onset_index=0
+    )
+    assert bundle.physical_faults[0].onset_index == 0
+    with pytest.raises(ProtocolPError, match="the onset derived from"):
+        driver.require_preregistered_faults(
+            bundle.physical_faults,
+            CONDITION_STRUCTURAL,
+            severity=0.75,
+            trajectory=driver.bound_trajectory(context.assignment),
+            control_dt_s=context.timing.control_dt_s,
+        )
+
+
+def test_the_construction_layers_own_check_accepts_that_same_wrong_onset(context):
+    # Pins the limitation the check above exists for: ``require_constructed_condition``
+    # compares a built tuple against a fresh call to the same builder with the *same*
+    # onset, so no input can make it fail. If this ever goes red the tautology has been
+    # removed and the note in the driver's docstring needs revising.
+    bundle = _screen_bundle(
+        context, condition=CONDITION_STRUCTURAL, severity=0.75, onset_index=0
+    )
+    require_constructed_condition(
+        bundle.physical_faults, CONDITION_STRUCTURAL, severity=0.75, onset_index=0
+    )
+
+
+@pytest.mark.parametrize(
+    "condition,severity",
+    [(CONDITION_HEALTHY, None), (CONDITION_STRUCTURAL, 0.75), (CONDITION_STRUCTURAL, 0.35)],
+)
+def test_the_preregistered_check_accepts_the_bundle_the_screen_will_actually_build(
+    context, condition, severity
+):
+    # A guard that refuses everything is not a guard: this is the accept side, against
+    # the real assignment document and a real override bundle.
+    bundle = _screen_bundle(
+        context,
+        condition=condition,
+        severity=severity,
+        onset_index=context.timing.onset_index,
+    )
+    driver.require_preregistered_faults(
+        bundle.physical_faults,
+        condition,
+        severity=severity,
+        trajectory=driver.bound_trajectory(context.assignment),
+        control_dt_s=context.timing.control_dt_s,
+    )
+
+
+def test_the_preregistered_check_refuses_a_none_fault_tuple(context):
+    with pytest.raises(ProtocolPError, match="requires an explicit physical_faults tuple"):
+        driver.require_preregistered_faults(
+            None,
+            CONDITION_HEALTHY,
+            severity=None,
+            trajectory=driver.bound_trajectory(context.assignment),
+            control_dt_s=context.timing.control_dt_s,
+        )
+
+
+def test_the_preregistered_check_refuses_a_healthy_bundle_carrying_a_fault(context):
+    fault = requested_fault_specs(
+        CONDITION_STRUCTURAL, severity=0.75, onset_index=500
+    )
+    with pytest.raises(ProtocolPError, match="at the document's onset requires"):
+        driver.require_preregistered_faults(
+            fault,
+            CONDITION_HEALTHY,
+            severity=None,
+            trajectory=driver.bound_trajectory(context.assignment),
+            control_dt_s=context.timing.control_dt_s,
+        )
+
+
+def test_the_preregistered_check_refuses_a_wrong_severity_in_a_valid_shaped_tuple(context):
+    # Same shape, same onset, one wrong field: the field walk is what catches it.
+    wrong = requested_fault_specs(CONDITION_STRUCTURAL, severity=0.50, onset_index=500)
+    with pytest.raises(ProtocolPError, match=r"physical_faults\[0\].severity"):
+        driver.require_preregistered_faults(
+            wrong,
+            CONDITION_STRUCTURAL,
+            severity=0.75,
+            trajectory=driver.bound_trajectory(context.assignment),
+            control_dt_s=context.timing.control_dt_s,
+        )
+
+
+def test_the_preregistered_check_refuses_a_member_that_is_not_a_faultspec(context):
+    with pytest.raises(ProtocolPError, match="must be a FaultSpec"):
+        driver.require_preregistered_faults(
+            ({"source_class": "structure"},),
+            CONDITION_STRUCTURAL,
+            severity=0.75,
+            trajectory=driver.bound_trajectory(context.assignment),
+            control_dt_s=context.timing.control_dt_s,
+        )
+
+
+def test_the_preregistered_check_is_type_strict_not_merely_equal(context):
+    # ``1 == 1.0`` in Python, so an equality-only comparison would accept an int
+    # severity where the pre-registration's builder produces a float. The recorded type
+    # is what a serialised report shows a reader, so the type check is the assertion.
+    loose = (
+        FaultSpec(
+            source_class="structure",
+            subtype="link_stiffness_loss",
+            location=1,
+            severity=1,
+            onset_index=500,
+            compound_flag=False,
+            ood_flag=False,
+        ),
+    )
+    assert loose[0].severity == 1.0
+    with pytest.raises(ProtocolPError, match=r"physical_faults\[0\].severity"):
+        driver.require_preregistered_faults(
+            loose,
+            CONDITION_STRUCTURAL,
+            severity=1.0,
+            trajectory=driver.bound_trajectory(context.assignment),
+            control_dt_s=context.timing.control_dt_s,
+        )
+
+
+def test_the_preregistered_check_is_actually_called_on_the_row_about_to_run(
+    context, monkeypatch
+):
+    # The wire test. Three call sites of this class have gone missing in this project
+    # (Sessions 44, 54, 55), each invisible to a suite that tested the guard directly.
+    called: list[tuple] = []
+
+    def recording(constructed, condition, **kwargs):
+        called.append((condition, kwargs["severity"]))
+        raise ProtocolPError("wire-test refusal from require_preregistered_faults")
+
+    monkeypatch.setattr(driver, "require_preregistered_faults", recording)
+    rows = results.build_logical_inventory(candidates=CANDIDATES, selected=CANDIDATES[0])
+    row = next(
+        r for r in rows if r.stage == results.STAGE_A and r.condition == CONDITION_STRUCTURAL
+    )
+    stub = StubExecutor(context)
+    with pytest.raises(ProtocolPError, match="wire-test refusal"):
+        driver.run_logical_row(row, context, results.ResultsLedger(), execute=stub)
+    assert called == [(row.condition, row.severity)]
+    # It runs before the body exists: no rollout was spent on the refused row.
+    assert stub.calls == []
+
+
+# ---------------------------------------------------------------------------
+# The recorded input paths.
+#
+# Found by running the script and reading its output rather than by reading the
+# script: the plan artifact carried the absolute path of the machine that produced
+# it, which the sibling Stage-0 artifact does not.
+# ---------------------------------------------------------------------------
+
+
+def test_the_recorded_config_path_is_packet_relative():
+    _resolved, inputs = driver.resolve_context(
+        config_path=CONFIG_PATH,
+        schema_path=SCHEMA_PATH,
+        assignment_path=ASSIGNMENT_PATH,
+        protocol_path=PROTOCOL_PATH,
+    )
+    assert inputs["config_path"] == "config/draft-config-v0.1.json"
+
+
+def test_no_recorded_input_is_a_machine_path():
+    # The whole block, not just the one field that was wrong: a results document that
+    # names a home directory differs between two otherwise identical reproductions.
+    _resolved, inputs = driver.resolve_context(
+        config_path=CONFIG_PATH,
+        schema_path=SCHEMA_PATH,
+        assignment_path=ASSIGNMENT_PATH,
+        protocol_path=PROTOCOL_PATH,
+    )
+    serialized = json.dumps(inputs)
+    assert str(PACKET_ROOT) not in serialized
+    assert str(PACKET_ROOT.parent) not in serialized
+
+
+def test_a_path_outside_the_packet_is_recorded_by_name_not_by_location(tmp_path):
+    # The other branch. The config that matters is identified by ``base_config_hash`` in
+    # the same block, so naming the file rather than its location loses nothing.
+    outside = tmp_path / "somewhere-else.json"
+    outside.write_text("{}", encoding="utf-8")
+    recorded = driver.packet_relative_input_path(outside)
+    assert recorded == "<outside the packet root: somewhere-else.json>"
+    assert str(tmp_path) not in recorded
+
+
+def test_a_packet_input_is_recorded_in_posix_form_on_every_platform():
+    recorded = driver.packet_relative_input_path(SCHEMA_PATH)
+    assert recorded == "schema/schema.json"
+    assert "\\" not in recorded

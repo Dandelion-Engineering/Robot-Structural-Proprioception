@@ -28,6 +28,16 @@ value it passes.  A hard-coded 500 would be numerically right today and would be
 Session-41 defect wearing a correct value: Correction 1 exists because a missing onset
 made a step-0 and a step-500 structural request indistinguishable.
 
+Correction 1 also names a helper -- ``screen_physical_faults(condition, trajectory, *,
+severity=None, control_dt_s)`` -- and that name is part of the pre-registration's
+executable surface, so this module defines it at that signature.  It is not a second
+copy of the construction layer: it derives the onset from the trajectory document and
+hands the rest to ``requested_fault_specs``.  ``require_preregistered_faults`` then
+compares the tuple a rollout will actually carry against that document-derived
+expectation, which is the same comparison ``require_constructed_condition`` makes but
+without the shared onset argument that makes the construction layer's copy of it
+tautological.
+
 **The window origin.** Section 8 pins ``w0 = round((onset_time_s + start_offset_s) /
 control_dt_s)`` and nothing in the codebase fixes it -- ``window_tensor`` refuses a full
 run and right-aligns, so the caller owns the origin.  The driver derives it through the
@@ -92,6 +102,7 @@ from utils.protocol_p import require as _require  # noqa: E402
 from utils.protocol_p_conditions import (  # noqa: E402
     CONDITION_HEALTHY,
     CONDITION_STRUCTURAL,
+    CONDITIONS as SCREEN_CONDITIONS,
     LADDER_REMAINING_EI,
     PINNED_LINK_LENGTH_M,
     PINNED_TORQUE_ABS_LIMIT_N_M,
@@ -107,6 +118,7 @@ from utils.protocol_p_conditions import (  # noqa: E402
     require_matched_identity,
     require_screen_cell,
     require_torque_gate_constants,
+    requested_fault_specs,
     screen_reservation,
     stage_ab_identity,
     stage_c_identity,
@@ -130,7 +142,7 @@ from utils.protocol_p_results import (  # noqa: E402
     require_results_only_root,
     resolve_row_provenance,
 )
-from utils.schema_types import N_GAUGES, PrivilegedRecord  # noqa: E402
+from utils.schema_types import FaultSpec, N_GAUGES, PrivilegedRecord  # noqa: E402
 from utils.sensor_model import SensorModel  # noqa: E402
 from utils.task_control import ObservedJointPDController  # noqa: E402
 
@@ -322,6 +334,139 @@ def require_derived_onset(passed_onset_index: int, timing: ScreenTiming) -> None
         f"(onset_time_s={timing.onset_time_s}, control_dt_s={timing.control_dt_s}) is "
         f"{timing.onset_index}",
     )
+
+
+def screen_onset_index(trajectory: Mapping[str, Any], *, control_dt_s: float) -> int:
+    """Derive the structural fault's onset step from the trajectory document itself.
+
+    Inputs: the bound trajectory specification and the bound control timestep. Outputs:
+    the onset step index. Purpose: this is the derivation Correction 1 is about, factored
+    out so that both the pre-registered helper below and the check that consumes it read
+    the *document* rather than a value someone else derived earlier. ``_step_index``
+    refuses an off-grid time rather than rounding it away.
+
+    This deliberately does not consult :class:`ScreenTiming`. A check that re-derives from
+    the same cached object it is checking cannot fail.
+    """
+
+    _require(
+        isinstance(trajectory, Mapping),
+        f"the trajectory specification must be a mapping; got {type(trajectory)!r}",
+    )
+    _require(
+        "onset_time_s" in trajectory,
+        f"the trajectory specification must carry 'onset_time_s'; Correction 1 derives "
+        f"the onset from {SCREEN_TRAJECTORY_SPEC_ID!r} rather than carrying a literal",
+    )
+    try:
+        return int(_step_index(float(trajectory["onset_time_s"]), float(control_dt_s)))
+    except AssignmentGenerationError as error:
+        raise ProtocolPError(
+            f"I13a: the onset derived from the trajectory document is off-grid: {error}"
+        ) from error
+
+
+def screen_physical_faults(
+    condition: str,
+    trajectory: Mapping[str, Any],
+    *,
+    severity: float | None = None,
+    control_dt_s: float,
+) -> tuple[FaultSpec, ...]:
+    """Correction 1's pre-registered helper, at its pre-registered signature.
+
+    Inputs: a condition from the closed vocabulary ``SCREEN_CONDITIONS``, the bound
+    trajectory specification, the remaining-EI severity (keyword-only, defaulting to
+    ``None``, so that "severity is absent" is an expressible and checkable state), and
+    the bound control timestep. Outputs: the ``physical_faults`` tuple the condition
+    requires -- the *empty tuple* for healthy, which means an explicit healthy body and
+    is not ``None``.
+
+    Purpose: Protocol P section 1, Correction 1 names this function and this signature.
+    Its whole content is that the onset is derived **from the trajectory document**
+    instead of accepted as an argument. ``requested_fault_specs`` in the construction
+    layer takes an ``onset_index`` and validates whatever it is given, so by construction
+    it cannot distinguish a correctly derived 500 from a hard-coded one; this helper can,
+    because it never sees a caller's onset.
+
+    The fault's *fields* are not restated here -- ``requested_fault_specs`` builds them,
+    and a second copy of that construction would be a second authority, which is the
+    defect class this project keeps finding. What binds those fields to the literals
+    Correction 1 pins is a test, not a duplicated expression.
+
+    The vocabulary check below is a **specification-fidelity guard, not the only barrier
+    to the state it names**: ``requested_fault_specs`` refuses an unknown condition
+    independently, so deleting this line changes the message and not the outcome. It is
+    kept because Correction 1 places the closed vocabulary in *this* function and the
+    pre-registration's signature is part of what is being reproduced. Do not count it as
+    coverage of the closed-set property; the construction layer's check is what makes
+    that property hold.
+    """
+
+    _require(
+        condition in SCREEN_CONDITIONS,
+        f"unknown screen condition {condition!r}; the vocabulary is closed: "
+        f"{SCREEN_CONDITIONS}",
+    )
+    onset_index = screen_onset_index(trajectory, control_dt_s=control_dt_s)
+    return requested_fault_specs(condition, severity=severity, onset_index=onset_index)
+
+
+def require_preregistered_faults(
+    constructed: Sequence[FaultSpec] | None,
+    condition: str,
+    *,
+    severity: float | None,
+    trajectory: Mapping[str, Any],
+    control_dt_s: float,
+) -> None:
+    """I13a at the driver level: what will be stamped must be what the document requires.
+
+    Inputs: the tuple the override bundle actually carries, the condition it claims to
+    be, its severity, the bound trajectory specification and the bound control timestep.
+    Outputs: none; raises before the rollout. Purpose: the construction layer's
+    ``require_constructed_condition`` compares the built tuple against a fresh call to
+    the same builder with the *same* onset argument, so no input can make it fail (see
+    the limitation recorded for Session 52). This check compares against an object built
+    from the trajectory document, so the two sides no longer share a derivation and the
+    comparison can fail.
+
+    It does not delegate to ``require_constructed_condition`` precisely because that
+    function accepts an onset argument, and accepting one is what makes it blind to the
+    defect this check exists for. What is live here is the **onset actually stamped** and
+    the condition/severity routing; the fault's other fields are produced by the same
+    builder on both sides and cancel, which is stated rather than papered over.
+    """
+
+    expected = screen_physical_faults(
+        condition, trajectory, severity=severity, control_dt_s=control_dt_s
+    )
+    _require(
+        constructed is not None,
+        f"I13a: condition {condition!r} requires an explicit physical_faults tuple; None "
+        "means 'use the reservation's derived faults', which is not a screen condition",
+    )
+    actual = tuple(constructed)
+    _require(
+        len(actual) == len(expected),
+        f"I13a: condition {condition!r} at the document's onset requires "
+        f"{len(expected)} fault spec(s); the bundle carries {len(actual)}",
+    )
+    for index, (built, want) in enumerate(zip(actual, expected)):
+        _require(
+            isinstance(built, FaultSpec),
+            f"I13a: physical_faults[{index}] must be a FaultSpec; got {type(built)!r}",
+        )
+        for field in dataclasses.fields(FaultSpec):
+            got_value = getattr(built, field.name)
+            want_value = getattr(want, field.name)
+            _require(
+                got_value == want_value and type(got_value) is type(want_value),
+                f"I13a: the bundle's physical_faults[{index}].{field.name} is "
+                f"{got_value!r} ({type(got_value).__name__}); the onset derived from "
+                f"{SCREEN_TRAJECTORY_SPEC_ID!r} requires {want_value!r} "
+                f"({type(want_value).__name__})",
+            )
 
 
 def require_window_on_grid(timing: ScreenTiming, n_steps: int) -> None:
@@ -688,6 +833,16 @@ def run_logical_row(
         assignment_canonical_sha256=context.assignment_canonical_sha256,
         assignment_hash=context.assignment_hash,
         protocol_spec_sha256=context.protocol_spec_sha256,
+    )
+    # I13a, and the last check before the body exists: the tuple this rollout will
+    # actually carry, compared against one built from the trajectory document rather
+    # than from the onset this function was handed.
+    require_preregistered_faults(
+        overrides.physical_faults,
+        row.condition,
+        severity=row.severity,
+        trajectory=bound_trajectory(context.assignment),
+        control_dt_s=context.timing.control_dt_s,
     )
     outcome = execute(
         assignment=context.assignment,
@@ -1406,6 +1561,27 @@ def build_plan(
     }
 
 
+def packet_relative_input_path(path: Path) -> str:
+    """Describe an input file without writing a machine path into a result artifact.
+
+    Inputs: a resolved input path. Outputs: the path relative to the packet root in
+    POSIX form, or a name-only marker when the file lies outside the packet. Purpose: a
+    results document that records ``C:\\Users\\<someone>\\...`` fingerprints the machine
+    that produced it and differs between two otherwise identical reproductions. Nothing
+    is lost by dropping it: the document that matters is identified in the same block by
+    ``base_config_hash``, which is computed over its canonical bytes.
+
+    The sibling Stage-0 artifact records no absolute path at all; this keeps the two
+    stages' artifacts readable the same way.
+    """
+
+    resolved = Path(path).resolve()
+    try:
+        return resolved.relative_to(PACKET_ROOT).as_posix()
+    except ValueError:
+        return f"<outside the packet root: {resolved.name}>"
+
+
 def resolve_context(
     *,
     config_path: Path,
@@ -1455,7 +1631,7 @@ def resolve_context(
         sensor_config=sensor_config_from_document(config.document),
     )
     inputs = {
-        "config_path": str(config_path),
+        "config_path": packet_relative_input_path(config_path),
         "base_config_hash": config.config_hash,
         "assignment_hash": binding.assignment_hash,
         "assignment_canonical_sha256": digests["assignment"],
