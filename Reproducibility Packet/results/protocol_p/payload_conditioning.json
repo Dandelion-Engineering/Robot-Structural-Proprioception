@@ -1,0 +1,267 @@
+{
+ "attenuation": {
+  "by_ladder_value": [
+   {
+    "attenuation_ratio": 0.5018035506719173,
+    "mean_d_heavy": 1.3448118549706214,
+    "mean_d_light": 2.679956834043745,
+    "remaining_ei": 0.35,
+    "verdict": "TESTABLE",
+    "within_level_spread_heavy": 0.011822066568485124,
+    "within_level_spread_light": 0.002325860418501178
+   },
+   {
+    "attenuation_ratio": 0.5018923990745269,
+    "mean_d_heavy": 1.08568789221018,
+    "mean_d_light": 2.1631885523912153,
+    "remaining_ei": 0.4,
+    "verdict": "TESTABLE",
+    "within_level_spread_heavy": 0.022641251512850947,
+    "within_level_spread_light": 0.012135068801465155
+   },
+   {
+    "attenuation_ratio": 0.4996386852259689,
+    "mean_d_heavy": 0.8834607452258091,
+    "mean_d_light": 1.7681992434718121,
+    "remaining_ei": 0.45,
+    "verdict": "TESTABLE",
+    "within_level_spread_heavy": 0.005786695153989146,
+    "within_level_spread_light": 0.0017761285346707127
+   },
+   {
+    "attenuation_ratio": 0.5023773219692967,
+    "mean_d_heavy": 0.7221440176503813,
+    "mean_d_light": 1.4374534559394696,
+    "remaining_ei": 0.5,
+    "verdict": "SUB_THRESHOLD",
+    "within_level_spread_heavy": 0.008049252065747737,
+    "within_level_spread_light": 0.00298537209550622
+   },
+   {
+    "attenuation_ratio": 0.48670761482913666,
+    "mean_d_heavy": 0.5801565173201804,
+    "mean_d_light": 1.192002137718453,
+    "remaining_ei": 0.55,
+    "verdict": "SUB_THRESHOLD",
+    "within_level_spread_heavy": 0.006329172196982792,
+    "within_level_spread_light": 0.005063663132773797
+   },
+   {
+    "attenuation_ratio": 0.5013103064772769,
+    "mean_d_heavy": 0.48528780813019795,
+    "mean_d_light": 0.968038761341913,
+    "remaining_ei": 0.6,
+    "verdict": "SUB_THRESHOLD",
+    "within_level_spread_heavy": 0.034823725578372065,
+    "within_level_spread_light": 0.01598927052439158
+   },
+   {
+    "attenuation_ratio": 0.49814492840671487,
+    "mean_d_heavy": 0.3827565136176668,
+    "mean_d_light": 0.7683637668296441,
+    "remaining_ei": 0.65,
+    "verdict": "SUB_THRESHOLD",
+    "within_level_spread_heavy": 0.00956449079382401,
+    "within_level_spread_light": 0.010734405446897893
+   },
+   {
+    "attenuation_ratio": 0.5225961308415344,
+    "mean_d_heavy": 0.2509254971145659,
+    "mean_d_light": 0.4801518463416512,
+    "remaining_ei": 0.75,
+    "verdict": "SUB_THRESHOLD",
+    "within_level_spread_heavy": 0.03603913794477125,
+    "within_level_spread_light": 0.023028243250378836
+   },
+   {
+    "attenuation_ratio": 0.5038469259625613,
+    "mean_d_heavy": 0.13105279428759037,
+    "mean_d_light": 0.26010438395991786,
+    "remaining_ei": 0.85,
+    "verdict": "SUB_THRESHOLD",
+    "within_level_spread_heavy": 0.12885719868058337,
+    "within_level_spread_light": 0.02815256520206854
+   },
+   {
+    "attenuation_ratio": 0.5365918313032146,
+    "mean_d_heavy": 0.08689765678548908,
+    "mean_d_light": 0.16194368180082372,
+    "remaining_ei": 0.9,
+    "verdict": "SUB_THRESHOLD",
+    "within_level_spread_heavy": 0.06813337728987662,
+    "within_level_spread_light": 0.02828126803832625
+   }
+  ],
+  "definition": "mean structural distance d over the heavier payload level divided by the mean over the lighter level, at one ladder value; environment and contact vary within each level, so the ratio is not confounded with either",
+  "extrapolation_authority": "two payload levels determine a ratio and nothing else; no functional form in payload mass is fitted, implied, or usable from this artifact",
+  "ratio_max": 0.5365918313032146,
+  "ratio_mean": 0.5054909694762149,
+  "ratio_min": 0.48670761482913666
+ },
+ "authority": "NOT PRE-REGISTERED. This read classifies nothing, opens no terminal branch, and cannot change the outcome case or the section-9 role-coverage count. It reports a scope restriction that already applied to the executed screen; it is not evidence for or against the hypothesis.",
+ "cells": {
+  "4": {
+   "contact_profile_id": "contact_dev_brief",
+   "distal_payload_mass_kg": 0.0,
+   "env_profile_id": "env_dev_iso25c",
+   "payload_id": "payload_dev_nominal",
+   "scenario_spec_id": "scenario_dev_t01_f000_r00",
+   "split": "dev"
+  },
+  "5": {
+   "contact_profile_id": "contact_dev_none",
+   "distal_payload_mass_kg": 0.0,
+   "env_profile_id": "env_dev_warm2c",
+   "payload_id": "payload_dev_nominal",
+   "scenario_spec_id": "scenario_dev_t01_f000_r01",
+   "split": "dev"
+  },
+  "6": {
+   "contact_profile_id": "contact_dev_none",
+   "distal_payload_mass_kg": 0.05,
+   "env_profile_id": "env_dev_iso25c",
+   "payload_id": "payload_dev_0p050kg",
+   "scenario_spec_id": "scenario_dev_t01_f000_r02",
+   "split": "dev"
+  },
+  "7": {
+   "contact_profile_id": "contact_dev_brief",
+   "distal_payload_mass_kg": 0.05,
+   "env_profile_id": "env_dev_warm2c",
+   "payload_id": "payload_dev_0p050kg",
+   "scenario_spec_id": "scenario_dev_t01_f000_r03",
+   "split": "dev"
+  }
+ },
+ "confirmatory_payload_coverage": {
+  "reserved_payload_masses_kg_by_split": {
+   "dev": [
+    0.0,
+    0.05
+   ],
+   "pilot": [
+    0.025,
+    0.075
+   ],
+   "test": [
+    0.15,
+    0.2
+   ],
+   "val": [
+    0.1,
+    0.125
+   ]
+  },
+  "screened_payload_masses_kg": [
+   0.0,
+   0.05
+  ],
+  "splits_reserving_unscreened_masses": {
+   "pilot": [
+    0.075
+   ],
+   "test": [
+    0.15,
+    0.2
+   ],
+   "val": [
+    0.1,
+    0.125
+   ]
+  },
+  "statement": "every ladder verdict in the executed screen was established at [0.0, 0.05] kg of distal payload and at no other mass; a split listed in splits_reserving_unscreened_masses reserves at least one payload the ladder says nothing about"
+ },
+ "inputs": {
+  "assignment_canonical_sha256": "76255a8089f3e27d893b26d981cbf50e808bd75ba518c44b55c4635ec83514ae",
+  "assignment_hash": "dev-eec59ec8a296a9a4ff4909f8e7f1de91a0a8f4bf289ae1533a427d1a87bc33f1",
+  "protocol_canonical_sha256": "5689dad7ce4194b9a7dbe381006027df178997adf732f5734a77ef048bdf421f",
+  "screen_outcome_case": "CASE_B",
+  "screen_result_canonical_sha256": "e800ae6c05c0dda0db82e2c94ab6350cd7d9e0bf544a9659fdacf2bad53999fc"
+ },
+ "null_by_payload_level": [
+  {
+   "cells": [
+    4,
+    5
+   ],
+   "distal_payload_mass_kg": 0.0,
+   "mean_q95_c": 0.4165464356091794,
+   "q95_c": [
+    0.41139870929013617,
+    0.4216941619282227
+   ]
+  },
+  {
+   "cells": [
+    6,
+    7
+   ],
+   "distal_payload_mass_kg": 0.05,
+   "mean_q95_c": 0.39900211490478243,
+   "q95_c": [
+    0.3703323698487855,
+    0.42767185996077944
+   ]
+  }
+ ],
+ "payload_levels": [
+  {
+   "cells": [
+    4,
+    5
+   ],
+   "distal_payload_mass_kg": 0.0
+  },
+  {
+   "cells": [
+    6,
+    7
+   ],
+   "distal_payload_mass_kg": 0.05
+  }
+ ],
+ "purpose": "Post-hoc diagnostic read of an executed Protocol P Stage-A/B/C screen: how the structural distance and the operative null vary with distal payload mass across the screen's own balanced two-level contrast. Derived from persisted results; zero rollouts.",
+ "rollouts_spent": 0,
+ "severity_boundary_by_cell": {
+  "4": {
+   "crossing_bracket": {
+    "first_negative_margin": -0.05855761585255581,
+    "first_negative_remaining_ei": 0.65,
+    "last_positive_margin": 0.15298045957823703,
+    "last_positive_remaining_ei": 0.6
+   },
+   "interpolation_authority": "illustration only; the margin is not known to be linear in remaining EI and the bracket is what was measured",
+   "linear_interpolation": 0.6361590837173628
+  },
+  "5": {
+   "crossing_bracket": {
+    "first_negative_margin": -0.07090059292487372,
+    "first_negative_remaining_ei": 0.65,
+    "last_positive_margin": 0.11691132066887122,
+    "last_positive_remaining_ei": 0.6
+   },
+   "interpolation_authority": "illustration only; the margin is not known to be linear in remaining EI and the bracket is what was measured",
+   "linear_interpolation": 0.6311245752284281
+  },
+  "6": {
+   "crossing_bracket": {
+    "first_negative_margin": -0.015614362434269835,
+    "first_negative_remaining_ei": 0.5,
+    "last_positive_margin": 0.14535216453480704,
+    "last_positive_remaining_ei": 0.45
+   },
+   "interpolation_authority": "illustration only; the margin is not known to be linear in remaining EI and the bracket is what was measured",
+   "linear_interpolation": 0.49514981073137354
+  },
+  "7": {
+   "crossing_bracket": {
+    "first_negative_margin": -0.13610606188409746,
+    "first_negative_remaining_ei": 0.5,
+    "last_positive_margin": 0.025560866297681284,
+    "last_positive_remaining_ei": 0.45
+   },
+   "interpolation_authority": "illustration only; the margin is not known to be linear in remaining EI and the bracket is what was measured",
+   "linear_interpolation": 0.45790540977835015
+  }
+ }
+}

@@ -669,6 +669,30 @@ Produces [`results/protocol_p/role_coverage.json`](results/protocol_p/role_cover
 
 Section 9 keys a named consequence to a zero count in dev, val or test. **Dev is at zero, which yields a role-coverage-bounded non-transfer outcome: no testable structural training support.** Zero pilot relabels nothing but disables data-driven downsizing, so the prospectively allowed maximum test replication is retained and the limitation is named. Val and test are count-1 thin single-severity roles, which open no new terminal branch. OOD severities 0.45 and 0.55 never count toward any split, even though 0.45 is `TESTABLE` on the ladder.
 
+One further read over the same artifact, also costing no rollouts, records **how much of that result is a statement about one payload**. The screen's four context cells are not exchangeable: two carry no distal payload and two carry 0.050 kg, while temperature environment and contact profile vary *within* each of those pairs rather than across them. That makes the screen a balanced two-level contrast in payload mass at every ladder value. Reproduce it with:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\analyze_protocol_p_payload_conditioning.py `
+  --screen-result results\protocol_p\stage_abc_screen.json `
+  --assignment config\proposed-gate3-assignment-v0.1.json `
+  --output-dir results\protocol_p
+```
+
+Produces [`results/protocol_p/payload_conditioning.json`](results/protocol_p/payload_conditioning.json), deterministic in the same sense as the role-coverage artifact above. **This read is not pre-registered.** It classifies nothing, opens no branch, and cannot move the outcome case or the coverage counts; the artifact says so in its own `authority` field. It exists because the size of a scope restriction is more useful written as a number than as a caveat.
+
+```text
+  remaining EI   mean d at 0.000 kg   mean d at 0.050 kg   ratio
+          0.35            2.679957             1.344812   0.5018
+          0.45            1.768199             0.883461   0.4996
+          0.75            0.480152             0.250925   0.5226
+          0.90            0.161944             0.086898   0.5366
+   ratio across all ten ladder values: 0.4867 to 0.5366
+```
+
+Fifty grams of distal payload roughly halves the structural signature at every rung, while the operative null it is measured against does not move with payload (0.4114 and 0.4217 microstrain at the lighter level, 0.3703 and 0.4277 at the heavier). Signal falls, noise does not, so detectability falls with it: the ladder's zero-margin crossing is bracketed between remaining EI 0.60 and 0.65 in the unloaded cells and between 0.45 and 0.50 in the loaded ones. Because the verdict rule is a conjunction over all four cells, the loaded cells decide every rung, and the binding cell clears remaining EI 0.45 by 2.99% of its own threshold.
+
+The consequence for reading the ladder is a scope statement, not a defect: the screen ran on development contexts by the protocol's own boundary, so every `TESTABLE` verdict was established at 0.000 and 0.050 kg and at no other mass. The reserved payloads rise across splits — pilot 0.025 and 0.075 kg, validation 0.100 and 0.125 kg, test 0.150 and 0.200 kg — so three of the four splits reserve at least one payload the ladder says nothing about. Two levels determine a ratio and nothing more: no functional form in payload mass is fitted here, and none should be read into it. What is established is the direction and its size at 0.050 kg.
+
 This is a **development-screen result**, not a test of the project's headline hypothesis. `TESTABLE` means measurable under Protocol P's matched-signal / unmatched-null comparison, which the protocol explicitly notes favours S; it is necessary, not sufficient. Read together with the coverage counts, Case B says that at the selected probe the structural signature is measurable only at damage more severe than any known-class setting reserved for development or pilot. Every result identity remains `dev-`, `config.json` remains absent, and the confirmatory test split remains untouched.
 
 ## Data
