@@ -1,152 +1,250 @@
 # Summary of Only Necessary Context — Codex
 
-**Last rewritten:** 2026-08-01 — Codex Session 56
+**Last rewritten:** 2026-08-01 — Codex Session 57
 
 ## Resume here
 
-The project is in **Phase 2 — Execution**. The final configuration is **UNFROZEN** and `Reproducibility Packet/config/config.json` does not exist. Stage 0 remains the only screen stage that has run. Stage-A/B/C execution is unauthorized; the replay and Stage 0 were not rerun in Codex Session 56; the confirmatory split is untouched.
+The project is in **Phase 2 — Execution**. The final configuration is **UNFROZEN** and
+`Reproducibility Packet/config/config.json` does not exist. The confirmatory test split is
+untouched at zero identities and zero payloads.
 
-The Protocol-P specification, replay/seam, Stage 0, shared primitives, construction layer, results layer, and Stage-A/B/C driver are now jointly approved. Claude Session 56 and Codex Session 56 explicitly approve the same revised executable states:
+Protocol P Stages A/B/C have now run once under joint authorization and produced a bounded
+**Case-B development result**. Codex has completed its exact-state result review and
+explicitly approves the artifact; Claude owns the next review turn. Do not begin written
+Amendment A2, replacement-assignment work or regeneration until the result loop closes.
 
-```text
-Reproducibility Packet/scripts/run_protocol_p_screen.py
-  blob 7668793e147a2776cb003ea90c79e76247d9b4de
-
-Reproducibility Packet/tests/test_protocol_p_driver.py
-  blob 23222d0ed03c26f57cfff5f53267ca8186a8d31a
-```
-
-The unchanged results states remain jointly approved:
+Exact result state:
 
 ```text
-Reproducibility Packet/scripts/utils/protocol_p_results.py
-  blob e84e5f9f4e6d10408873d87b81b2baef9535d50e
-
-Reproducibility Packet/tests/test_protocol_p_results.py
-  blob cbac30ed3d41c961f7d5c54c306c8a09fa1be1cd
+Reproducibility Packet/results/protocol_p/stage_abc_screen.json
+  git blob   209a87ae5daa171016d566e07ed14c7c71ef0f18
+  SHA-256    c48c2e4d3a8a84a5b10127afc2a7c0f4bacc0ae6290712546432058327008756
+  bytes      599,841
+  Codex      APPROVED
+  Claude     REVIEW REQUIRED
 ```
 
-Packet README Step 25 is open for owner re-review. Claude handed off blob `9191d4ab...`; Codex changed one phrase from “180 stamps over 168 rollouts” to “180 provenance references comprising 168 distinct stamps” and approves the reviewer-edited state:
+The run selected **0.10 N / ramp fraction 0.25**. Three Stage-A candidates failed the
+pre-registered hard gates on their first healthy cell and were dropped immediately, so
+the 168-rollout maximum spent 135 physical rollouts:
 
 ```text
-Reproducibility Packet/README.md
-  blob 9c9fa7f03de8b000580704330755f232cfdb8ef1
+Stage A                75
+Stage B                32
+Stage C                28
+physical total        135
+logical rows          147 = 135 physical + 12 reuses
+rollout elapsed       4,432.155710699968 s
+terminal              None
+outcome               CASE_B
+unsafe Stage B/C      none
 ```
 
-Claude must reopen that exact blob and explicitly approve it unchanged or return a new state. This is a runbook wording loop, not an executable code block.
+The exact ladder boundary is:
 
-The required recent-work review also found that Claude's Session-56 progress report conflated one official replay result with the physical replay count. Codex corrected the report to state that the one-row replay gate physically ran four times: Session 45's original result, Session 46's clean and injected-stray-write verification runs, and Session 51's regression run after the shared-import edit. Codex approves the reviewer-edited report at blob `39c592422639b84005a2dd7d9539171be541a84c`; Claude must genuinely owner-review it too. Stage 0 used no physics and Stages A/B/C still spent zero rollouts.
+```text
+TESTABLE in all four cells       remaining EI 0.35, 0.40, 0.45
+SUB_THRESHOLD by conjunction     remaining EI 0.50, 0.55, 0.60,
+                                 0.65, 0.75, 0.85, 0.90
+```
 
-The separate Stage-A/B/C execution-authorization decision has not been made.
+At 0.50–0.60, two cells pass and two fail. At 0.65 and milder damage, none pass. Do
+not pool those cells. Protocol P's Stage-A/B comparison is seed-matched while Stage C is
+unmatched and therefore favours S; `TESTABLE` is necessary, not sufficient. Every stamp
+is `dev-`, so this result is ineligible for confirmation.
 
 The authoritative live record is:
 
 `chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`
 
-Codex Session 56 is physically last. Two appends passed the hard gate. The main review append preserved the 945,410-byte / 13,628-line prefix at SHA-256 `a652d4df4db0ef9772d72a199cd10267f40d4541bdad7658c1496d2b3d4d3ea0` and placed its unique header at line 13,632. The later progress-report correction preserved the complete 950,681-byte / 13,741-line first-append state at SHA-256 `6c44700e277621e9706f0fad8e7b961a16326ae902efb5ebb67ce7175799141a` and placed its unique header at line 13,745. The final transcript diff is +151/−0; the file is 952,348 bytes / 13,779 lines at SHA-256 `5f127b2608f982b32f2c549a9992582fccaffea3efbd8b7b2810761adec564ef`.
-
-## Session-56 approved decisions
-
-### Document-derived I13a onset check
-
-The construction layer's `require_constructed_condition` compares a built fault tuple against a fresh tuple produced by the same builder from the same caller-supplied onset. It can catch mutation after construction but cannot prove the shared onset came from the bound trajectory document.
-
-The revised driver closes that gap:
-
-- `screen_onset_index` reads `onset_time_s` directly from the bound trajectory and converts it with `_step_index`, which refuses off-grid times;
-- `screen_physical_faults` exists at Correction 1's pre-registered signature and builds the expected tuple from that document-derived onset;
-- `require_preregistered_faults` compares the constructed tuple field by field and type by type immediately before execution; and
-- `run_logical_row` calls the check only for physical rows, before the executor. Reused rows construct nothing and never reach it.
-
-The discriminating test builds a real step-0 override bundle. The old same-input comparison accepts it when given onset 0; the new document-derived check refuses it because the trajectory requires step 500. The wire test proves the executor receives zero calls on refusal.
-
-### One production field authority plus an independent specification test
-
-The helper delegates fault-field construction to `requested_fault_specs`; it does not repeat the seven field literals in production. The test quotes Correction 1's exact fields and binds that shared builder to the specification. Runtime comparison remains live against a mutated constructed tuple, while a mutation to the shared builder's own constants is caught by the independent specification test.
-
-### Keep the redundant helper vocabulary guard
-
-`screen_physical_faults` keeps its own unknown-condition refusal because Correction 1's executable sketch places the closed-set check inside the named helper. `SCREEN_CONDITIONS` is an alias of the construction layer's one tuple, not a second definition. The code and tests explicitly state that the helper line is a specification-fidelity/message guard, not load-bearing outcome coverage.
-
-### Portable artifact path
-
-Plan/results documents no longer record the producer's absolute config path. An in-packet config is recorded as `config/draft-config-v0.1.json`; an outside-packet config is reduced to a filename marker. The same input block retains the canonical base-config hash as the identity-bearing field.
-
-### Replay sequencing accepted for the later round
-
-Codex accepted Claude's proposal in principle: the dedicated execution round should first explicitly authorize one replay-gate check, run and review that bit-level positive control, and then separately decide whether to authorize the 168 Stage-A/B/C rollouts. No replay ran in Session 56.
-
-## Verification from Session 56
+Codex Session 57 is physically last. Three appends passed the transcript hard gate. The
+final result-review append preserved the complete 971,007-byte / 14,159-line prior state
+as a byte-identical prefix, placed its unique header at line 14,163, and left the cumulative
+working diff additions-only. Final transcript state at closeout:
 
 ```text
-handed-off driver/test blobs              exact
-independent plan mode                     0.287 s; zero rollouts
-plan census                               9 candidates / 180 logical rows /
-                                          168 physical rollouts / 12 reuses
-derived onset and window                  500 / [1000, 1768)
-plan results                              null
-recorded config path                      config/draft-config-v0.1.json
-drive-letter path in plan artifact        absent
-focused driver suite                      148 passed in 96.43 s
-full packet suite                         975 passed in 110.92 s
-compileall                                clean
-Protocol-P stage rollouts                 zero
-Stage-0/replay                            not re-run
-physical replay-gate executions to date   four (none in Session 56)
-config.json                               absent
-test-named / results NPZ                  0 / 0
-confirmatory split                        untouched
+bytes     977,580
+lines     14,301
+SHA-256   ae3a5d99d074818132e62aafc46660696a743c55f9ecd0c3a8be9fba40727cf7
+diff      +297 / -0 versus HEAD before Session 57
 ```
 
-Codex also wrote the required regular `Progress Reports/Progress Report Session 56.md`.
+## Session-57 decisions
+
+### Historical physical-run count corrected to fourteen before execution
+
+Claude returned its Session-56 progress report at thirteen prior physical runs. That count
+omitted the separate all-None regression explicitly recorded in Claude `HumanReport41.md`:
+
+```text
+S39 1 + S40 1 + S41 5 + S45 4 + S46 2 + S51 1 = 14
+```
+
+Codex edited only the still-open cost paragraph and approves:
+
+```text
+agents/Claude/Progress Reports/Progress Report Session 56.md
+  returned blob          1723e54558ecb58b4194763e984357c6a8b4b7f0
+  reviewer-edited blob   5744b99d634296cf7419af500806767d07053203
+  next gate              Claude genuine owner re-review
+```
+
+Prior human reports and dated public entries were not rewritten. This session then spent
+one immediate replay plus 135 stage rollouts, so the current Protocol-P-related physical
+total is **150**.
+
+### Active-override readback uses the measurement window, not whole-run peak strain
+
+Claude correctly flagged that the replay gate uses `overrides=None` and therefore does not
+exercise the active-override physics join. Its proposed `max_abs_gauge_true` equality and
+monotonicity readback was rejected because that scalar spans all 3,000 steps, including the
+bit-identical healthy pre-onset prefix; a pre-onset peak may dominate it.
+
+The accepted zero-rollout readback uses the persisted coefficient vectors that `D` actually
+measures. For the selected healthy/remEI-0.75/remEI-0.35 rows in each cell it verifies:
+
+- canonical condition and severity;
+- one `link_stiffness_loss` at location 1 and onset step 500;
+- matched pair id and sensor seed; and
+- structural coefficients not bit-identical to healthy.
+
+All eight structural comparisons pass. Exact equality would have produced
+`INTERPRETATION_BLOCKED_PENDING_OVERRIDE_JOIN_DIAGNOSIS`; it did not. No magnitude or
+monotonicity threshold was added.
+
+### Replay and execution sequencing
+
+The already-approved I13b focused real-physics test passed first: `6 passed in 0.71 s`.
+
+Codex then authorized only the one-row replay gate. It passed immediately before the
+screen:
+
+```text
+20/20 identity fields equal
+20/20 plant fields equal
+38/38 S entries equal
+531 NaNs matched
+3,000 steps
+36.42 s
+3,176 watched files; zero changed
+scope: one retained row, overrides=None
+```
+
+Only after reviewing that pass did Codex post the separate Stage-A/B/C authorization.
+Claude had already conditionally authorized the same run. The jointly approved driver was
+then executed with no intervening code/input/config/test change.
+
+## Exact open review states
+
+```text
+Stage-A/B/C result
+  blob 209a87ae5daa171016d566e07ed14c7c71ef0f18
+  Codex approved; Claude review required
+
+Reproducibility Packet/README.md
+  blob 330282cd0afc725efa9cdcf7d6e1cdd38e1c69dc
+  Codex approved; Claude review required
+
+root README.md
+  blob c67a00c3f719b4e04e37877588550905c73a55a5
+  Codex approved; Claude review required
+  Session-57 public change is +2/-0; no dated history edited
+
+Claude Progress Report Session 56
+  blob 5744b99d634296cf7419af500806767d07053203
+  Codex approved; Claude owner re-review required
+```
+
+Packet Step 25 now includes the zero-rollout plan command, exact execute command, tracked
+result hash, 135-actual/168-maximum accounting, Case-B boundary, active-override readback
+and development-only scope. The packet current-boundary paragraph is also current.
+
+The root Live-Run README appends one milestone recording Case B, the 135-rollout cost,
+corrected readback, fourteen-before/150-now history and the non-confirmatory boundary.
+Earlier dated entries remain untouched, including the statements the newest entry corrects
+forward.
+
+## Verification from Session 57
+
+```text
+result JSON                                  strict
+physical ledger / distinct stamps           135 / 135
+logical references / reuses                  147 / 12
+references minus distinct                    12
+stamps referenced exactly twice              12
+missing / over-referenced stamps              0 / 0
+bad dev prefixes / base collisions           0 / 0
+bad 3,000-step counts / elapsed values        0 / 0
+absolute drive-path leaks                     0
+recorded config path                          config/draft-config-v0.1.json
+full packet suite                             975 passed in 116.47 s
+compileall                                    clean
+config/config.json                            absent
+confirmatory test identities                  0
+Stage 0                                       not re-run
+```
+
+The three dropped candidates were `0.10/0.125`, `0.15/0.125` and `0.15/0.25`; each
+failed on the healthy cell-4 row. Their measured failures are preserved in the result.
 
 ## Protocol-P state
 
 Jointly approved and closed:
 
-- Protocol P v2.3.3 at canonical digest `5689dad7ce4194b9a7dbe381006027df178997adf732f5734a77ef048bdf421f`;
+- Protocol P v2.3.3 at canonical digest
+  `5689dad7ce4194b9a7dbe381006027df178997adf732f5734a77ef048bdf421f`;
 - permanent I13b step-499/step-500 test;
 - generator `ScreenOverrides` seam;
-- one-row replay gate/result;
-- Stage-0 implementation, result artifact, and packet README Step 24;
-- shared Protocol-P primitives;
-- Stage-A/B/C construction layer;
-- Stage-A/B/C results layer; and
-- Stage-A/B/C driver including the document-derived onset check and portable input-path reporting at the blobs above.
+- replay-gate implementation and prior one-row exact result;
+- Stage-0 implementation and result artifact;
+- shared primitives and construction layer;
+- Stage-A/B/C results layer and driver; and
+- packet README Step-25 plan wording before the Session-57 result update.
 
 Open:
 
-- packet README Step 25 owner re-review;
-- Claude Session-56 progress-report owner re-review after the replay-count correction;
-- the separate replay/execution-authorization round;
-- the Stage-A/B/C result itself; and
-- all downstream Amendment-A2/regeneration/final-freeze work.
-
-The public README already contains Claude's Session-56 milestone. It accurately says the document-derived onset check and Step-25 plan audit exist, while all 168 physical executions remain unauthorized. Codex made no additional public entry because the reviewer wording change did not create a second public milestone.
+- Claude exact-state review of the Session-57 Stage-A/B/C result;
+- Claude review of packet Step 25 and the root public append;
+- Claude owner re-review of the fourteen-run progress-report correction;
+- written Amendment A2 after result closure;
+- replacement assignment/config lineage and coherent regeneration;
+- Gates 4–7 and joint final config approval; and
+- only then one-shot confirmatory generation/evaluation.
 
 ## Next actions
 
-1. Claude reopens packet README blob `9c9fa7f03de8b000580704330755f232cfdb8ef1` and progress-report blob `39c592422639b84005a2dd7d9539171be541a84c`, explicitly approving each unchanged or returning a new exact state.
-2. After the Step-25 loop closes, the agents enter the separate execution-authorization round; the reporting loop is not an execution prerequisite but should close normally.
-3. In that round, explicitly authorize and run the one-row replay gate immediately before measurement, then review its result.
-4. Only after a separate explicit decision may the 168 Stage-A/B/C physical rollouts run once under the approved driver.
-5. Poll the result JSON rather than a buffered log while a long execution is active.
-6. Downstream remains written Amendment A2, replacement assignment/config lineage, coherent regeneration, Gates 4–7, joint final config approval, and only then one-shot confirmatory generation/evaluation.
+1. Claude genuinely reviews result blob `209a87ae...`, packet README blob `330282cd...`,
+   root README blob `c67a00c...`, and progress-report blob `5744b99d...`; approve each
+   unchanged or return a new exact state.
+2. After the result loop closes, write Amendment A2 against the measured Case-B boundary.
+3. Review the amendment before changing assignment/config lineage.
+4. Produce the replacement assignment and coherently regenerate the superseded 3.9-GB
+   development/pilot/validation dataset from zero.
+5. Resume Gate-4 estimator/controller roles and Gates 5–7 only after lineage approval.
+6. Keep `config.json` absent and the confirmatory split untouched until joint final freeze.
 
 ## Review and evidence rules
 
-- Same-state approval is explicit. Creation, edits, handoff, downstream use, and silence are not approval.
-- Development screens, pilots, fixtures, diagnostics, and regression checks remain separate from frozen/confirmatory/final results.
-- Keep physical rollout accounting separate from logical analysis rows; reuses cite immutable origin provenance and do not mint stamps.
-- Keep detection, attribution, information/action authorization, and control outcome separate.
-- Do not use root-wide `pytest -q`; use `./venv`'s interpreter against `Reproducibility Packet/tests`.
+- Same-state approval is explicit. Creation, edits, handoff, downstream use and silence
+  are not approval.
+- Development screens, pilots, fixtures and diagnostics remain separate from frozen,
+  confirmatory and final results.
+- Keep physical rollout accounting separate from logical rows and provenance references.
+- Keep detection, attribution, information/action authorization and control outcome
+  separate.
+- Do not re-run Stage 0 or Stage A/B/C without a new explicit decision.
+- Do not use root-wide `pytest -q`; use `./venv` against `Reproducibility Packet/tests`.
 - Never use bare `python` or `pip`.
 - The confirmatory test split remains untouched: zero identities, zero payloads.
-- Transcript appends use the hard gate: capture the UTF-8 physical tail/line count/hash, patch only a verified unique complete EOF block, then assert exact old prefix, one new header after the boundary, and additions-only diff.
-- The root Live-Run README is append-only while Phase 2 remains live; do not edit earlier dated entries to make the history cleaner.
+- Transcript appends use the hard gate: exact UTF-8 physical tail/line count/hash, verified
+  unique complete EOF anchor, byte-identical old prefix, one new header after the boundary,
+  and additions-only diff.
+- The root Live-Run README is append-only while Phase 2 remains live; corrections propagate
+  forward and dated entries are never edited.
 
 ## Closeout numbering
 
-- Next Codex session: **57**.
-- Next Codex human report: `agents/Codex/Session Summaries/HumanReport57.md`.
-- Next regular Codex progress report: **Session 64**, unless a phase transition or approved amendment triggers one sooner.
+- Next Codex session: **58**.
+- Next Codex human report: `agents/Codex/Session Summaries/HumanReport58.md`.
+- Next regular Codex progress report: **Session 64**, unless a phase transition or approved
+  amendment triggers one sooner.

@@ -204,13 +204,16 @@ matters is identified in the same block by its cryptographic hash.
   was wrong, and so was the first correction of it.** The draft of this report I
   handed to Codex told you the whole protocol had cost **one** simulated run.
   Codex checked that and said four. I checked Codex's four against the session
-  records, and the real figure is **thirteen**. The breakdown, because a number
-  that has been wrong twice deserves to be shown rather than asserted:
+  records and returned thirteen. Codex's re-review found one more run in the
+  same primary record: Session 41 explicitly reports an all-None regression in
+  addition to its four onset-consequence runs. The real figure is therefore
+  **fourteen**. The breakdown, because a number that has been wrong three times
+  deserves to be shown rather than asserted:
 
   ```text
   Session 39   1   a replay of one already-delivered healthy run
   Session 40   1   confirming a patch had not changed what the simulator produces
-  Session 41   4   measuring a defect's consequence instead of arguing about it
+  Session 41   5   four measuring a defect's consequence, plus one all-None regression
   Session 45   4   the formal reproduction check: twice by me, twice by Codex
                    re-running it while reviewing that session
   Session 46   2   a clean run, and a deliberately sabotaged one the check
@@ -219,7 +222,7 @@ matters is identified in the same block by its cryptographic hash.
   ```
 
   Each of these is a single run: six seconds of simulated robot motion, about 26
-  seconds of computer time. Thirteen of them is roughly five and a half minutes.
+  seconds of computer time. Fourteen of them is roughly six minutes.
   So the discipline is genuinely intact rather than merely differently
   described — Stage 0 used no physics at all, Stages A, B and C have spent
   nothing, and the whole plan, the inventory, the reuse arithmetic, the timing

@@ -607,11 +607,11 @@ Two reader notes. `samples` is a six-key metadata dictionary (`n_pairs`, `seed_m
 
 The run is deterministic given the pinned seeds and the pinned dependency versions in `requirements.txt`; no randomness is drawn outside them. Cross-platform bit-identity has **not** been measured, so compare a local run against the recorded values rather than assuming byte-identical output.
 
-## Step 25 — Audit the Protocol P Stage A/B/C plan (zero rollouts)
+## Step 25 — Audit or reproduce the Protocol P Stage A/B/C screen
 
-Stages A, B and C are the screen itself: Stage A measures nine admissible probe candidates in four context cells under three conditions and selects one, Stage B walks the ten-value remaining-stiffness ladder at the selected candidate, and Stage C builds the operative null from eight healthy replicates per cell. **They have not been run.** No Stage-A/B/C result artifact is distributed with this packet, and nothing in this step produces one.
+Stages A, B and C are the screen itself: Stage A measures nine admissible probe candidates in four context cells under three conditions and selects one, Stage B walks the ten-value remaining-stiffness ladder at the selected candidate, and Stage C builds the operative null from eight healthy replicates per cell. The tracked reference result is [`results/protocol_p/stage_abc_screen.json`](results/protocol_p/stage_abc_screen.json), SHA-256 `c48c2e4d3a8a84a5b10127afc2a7c0f4bacc0ae6290712546432058327008756`.
 
-What this step does produce is the screen's *plan*, built by the same program that would execute it, from the same committed inputs. `--mode plan` resolves every bound input, verifies the pinned digests, derives the timing, enumerates the complete row inventory, audits its shape against the pre-registered counts, and exits **having run zero rollouts**. It is the cheapest available check that the executable form of Protocol P sections 8–9 agrees with the specification's arithmetic.
+Start with the screen's *plan*, built by the same program that executes it from the same committed inputs. `--mode plan` resolves every bound input, verifies the pinned digests, derives the timing, enumerates the complete row inventory, audits its shape against the pre-registered counts, and exits **having run zero rollouts**. It is the cheapest available check that the executable form of Protocol P sections 8–9 agrees with the specification's arithmetic.
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\run_protocol_p_screen.py `
@@ -635,7 +635,18 @@ window                  [1000, 1768)
 
 Two things the plan output does **not** contain. There is no selected candidate: selection is a Stage-A result, so the inventory's shape is audited at a placeholder and the artifact says so in a `placeholder_selection_note` field. And `results` is `null`, because nothing was measured.
 
-The full run is 168 rollouts. At the measured single-rollout cost of about 26 s on the reference machine that is roughly 70–80 minutes of simulation; treat that as an extrapolation from one measured rollout, not as a recorded runtime, since the screen has not been run.
+To reproduce the tracked result, run the same program in execute mode:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\run_protocol_p_screen.py `
+  --output-dir results\protocol_p --mode execute
+```
+
+Produces `results/protocol_p/stage_abc_screen.json`. The reference run selected **0.10 N / ramp fraction 0.25**. Three candidates failed the pre-registered hard gates on their first healthy cell and were dropped immediately, so the run spent **135 physical rollouts** rather than the plan's 168-rollout maximum: Stage A 75, Stage B 32, Stage C 28. It reports 147 logical rows because the twelve planned reuses remain present. The recorded rollout time is **4,432.16 s** inside the executor.
+
+The pre-registered outcome is **Case B: a proper subset of the stiffness ladder passes**. Remaining-EI values 0.35, 0.40 and 0.45 are `TESTABLE` in all four cells; 0.50 through 0.90 are `SUB_THRESHOLD` under the required all-cell conjunction. No Stage-B or Stage-C body violated a hard gate. The artifact's construction readback also passes in all eight selected structural comparisons: each canonical record carries the requested link-stiffness fault at onset step 500 with the matched identity and sensor seed, and neither post-onset coefficient vector is bit-identical to its healthy counterpart. This readback blocks a silent dead-override path; it adds no magnitude threshold and no monotonicity requirement.
+
+This is a **development-screen result**, not a test of the project's headline hypothesis. `TESTABLE` means measurable under Protocol P's matched-signal / unmatched-null comparison, which the protocol explicitly notes favours S; it is necessary, not sufficient. Every result identity remains `dev-`, `config.json` remains absent, and the confirmatory test split remains untouched.
 
 ## Data
 
@@ -666,4 +677,4 @@ This packet reproduces the selected MuJoCo cable/rod mechanics, schema-v1.0 plan
 
 On the current bounded task, the structural suite has strong development information evidence, but structural recovery is blocked because the task has no structural tracking deficit and the tested action behaves like a generic controller retune. The actuator condition has headroom, yet the new source-specific action screen also blocks: safe cap-3 misses the 10-point specificity gate and higher caps violate A1 safety. The probability result remains a sampled empirical envelope; calibrated class-probability, abstention, and uncertainty authorization, sensor-fault recovery, and evaluation-sized paired control remain open.
 
-The proposed different-task amendment was withdrawn before approval. The existing Claim Sheet remains in force, `config.json` remains unfrozen, and no development screen here is a confirmatory research result. Gate 3 is closed at the jointly approved amended hash, and the exact assignment is embedded in the draft under a one-way parent/current hash binding. The real generated base roles are jointly approved; Gate 2 remains open until the Gate-4 fits supply the still-pending estimator/controller roles. Gate-4 headline fitting is currently blocked on the delivered-dev structural separability stop/go check. Protocol P's specification is jointly approved, its one-row replay gate has passed (Step 23), and its Stage 0 has been executed once at zero rollout cost (Step 24); Stage 0 has no authority over any verdict, and Stages A, B and C — the stages that actually test the research question — are unbuilt and unauthorized. Validation calibration/authorization, the confirmatory controller protocol, the evaluation/test driver, and the interactive verification artifact remain later gates. Test identity and payload materialization are still zero and forbidden.
+The proposed different-task amendment was withdrawn before approval. The existing Claim Sheet remains in force, `config.json` remains unfrozen, and no development screen here is a confirmatory research result. Gate 3 is closed at the jointly approved amended hash, and the exact assignment is embedded in the draft under a one-way parent/current hash binding. The real generated base roles are jointly approved; Gate 2 remains open until the Gate-4 fits supply the still-pending estimator/controller roles. Protocol P's specification is jointly approved, its one-row replay gate has passed (Step 23), Stage 0 has been executed once at zero rollout cost (Step 24), and Stages A/B/C now record a bounded **Case-B development result** (Step 25): 0.35–0.45 remaining EI are testable in all four cells, while 0.50–0.90 are sub-threshold under the all-cell rule. That result advances the written Amendment-A2 / replacement-assignment / coherent-regeneration path; it does not freeze a configuration or authorize confirmatory materialization. Validation calibration/authorization, the confirmatory controller protocol, the evaluation/test driver, and the interactive verification artifact remain later gates. Test identity and payload materialization are still zero and forbidden.
