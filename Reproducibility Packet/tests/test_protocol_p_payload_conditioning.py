@@ -416,6 +416,72 @@ def test_a_payload_profile_that_is_not_an_object_is_refused(mutable):
         pc.compute_payload_conditioning(screen_doc, assignment_doc)
 
 
+# The two tests above reach ``require_binary_context_factors``, which runs first on the
+# document path -- not, as their wording once suggested, either payload reader.  THREE
+# sites read those same two properties, and all three emitted one sentence, one of them
+# assembled by an f-string over the factor name so that no text search of the file
+# found the collision.  Session 61 found it with a mutation sweep: neutralising any one
+# site left another to refuse with a message the test still matched, so the sites
+# survived while looking covered.  The messages are now worded per read, and the four
+# tests below reach the two sites the document path never gets to.
+
+def test_the_payload_id_map_refuses_a_missing_payload_list_in_its_own_words(assignment):
+    document = copy.deepcopy(assignment)
+    document["context_profiles"]["payloads"] = {}
+    with pytest.raises(pc.PayloadConditioningError,
+                       match="the payload id map needs a non-empty"):
+        pc.payload_masses_by_id(document)
+
+
+def test_the_payload_id_map_refuses_a_non_object_profile_in_its_own_words(assignment):
+    document = copy.deepcopy(assignment)
+    document["context_profiles"]["payloads"][0] = "payload_dev_nominal"
+    with pytest.raises(pc.PayloadConditioningError,
+                       match=r"the payload id map needs an object at "
+                             r"context_profiles\.payloads\[0\]"):
+        pc.payload_masses_by_id(document)
+
+
+def test_the_per_split_table_refuses_a_missing_payload_list_in_its_own_words(assignment):
+    document = copy.deepcopy(assignment)
+    document["context_profiles"]["payloads"] = {}
+    with pytest.raises(pc.PayloadConditioningError,
+                       match="the per-split payload table needs a non-empty"):
+        pc.payload_masses_by_split(document)
+
+
+def test_the_per_split_table_refuses_a_non_object_profile_in_its_own_words(assignment):
+    document = copy.deepcopy(assignment)
+    document["context_profiles"]["payloads"][0] = "payload_dev_nominal"
+    with pytest.raises(pc.PayloadConditioningError,
+                       match=r"the per-split payload table needs an object at "
+                             r"context_profiles\.payloads\[0\]"):
+        pc.payload_masses_by_split(document)
+
+
+@pytest.mark.parametrize("break_it", [
+    lambda doc: doc["context_profiles"].__setitem__("payloads", {}),
+    lambda doc: doc["context_profiles"]["payloads"].__setitem__(
+        0, "payload_dev_nominal"),
+])
+def test_the_three_payload_readers_do_not_share_a_refusal_sentence(assignment, break_it):
+    """Raise sites that share one sentence certify none of them.
+
+    The third site builds its message with an f-string over the factor name, so this
+    comparison — not a search of the source — is what shows the sentences differ.
+    """
+    reasons = []
+    for read in (pc.require_binary_context_factors,
+                 pc.payload_masses_by_split,
+                 pc.payload_masses_by_id):
+        document = copy.deepcopy(assignment)
+        break_it(document)
+        with pytest.raises(pc.PayloadConditioningError) as raised:
+            read(document)
+        reasons.append(str(raised.value))
+    assert len(set(reasons)) == 3, reasons
+
+
 def test_a_payload_profile_without_an_id_is_refused(mutable):
     screen_doc, assignment_doc = mutable
     assignment_doc["context_profiles"]["payloads"][0]["id"] = ""
@@ -614,6 +680,36 @@ def test_a_non_terminal_ladder_cell_with_a_failed_hard_gate_is_refused(mutable):
         "hard_gates_passed"] = False
     with pytest.raises(pc.PayloadConditioningError,
                        match="did not pass its hard gates"):
+        pc.compute_payload_conditioning(screen_doc, assignment_doc)
+
+
+@pytest.mark.parametrize("value", ["false", "no", 1, [0]])
+def test_a_truthy_non_boolean_hard_gate_flag_is_refused(mutable, value):
+    """The dangerous direction: truthy non-booleans pass the truth check.
+
+    Session 61 measured it — with the type check neutralised the analyzer ACCEPTED a
+    document whose cell 7 carried the string "false", so an unsafe cell's margin would
+    have entered the boundary read.  The truth check alone is not this guard.
+    """
+    screen_doc, assignment_doc = mutable
+    screen_doc["results"]["ladder"][0]["per_cell"]["7"][
+        "hard_gates_passed"] = value
+    with pytest.raises(pc.PayloadConditioningError,
+                       match="carries no boolean hard_gates_passed"):
+        pc.compute_payload_conditioning(screen_doc, assignment_doc)
+
+
+def test_a_cell_verdict_outside_the_closed_set_is_refused_by_name(mutable):
+    """UNSAFE_LADDER_VALUE is a real driver label, so this is a reachable state.
+
+    The margin/verdict equality check would also refuse it, but blaming the margin for
+    an unrecognised label is the wrong reason; assert the sentence that names it.
+    """
+    screen_doc, assignment_doc = mutable
+    screen_doc["results"]["ladder"][0]["per_cell"]["7"][
+        "verdict"] = "UNSAFE_LADDER_VALUE"
+    with pytest.raises(pc.PayloadConditioningError,
+                       match="carries unknown verdict 'UNSAFE_LADDER_VALUE'"):
         pc.compute_payload_conditioning(screen_doc, assignment_doc)
 
 

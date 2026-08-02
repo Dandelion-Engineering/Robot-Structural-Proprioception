@@ -245,14 +245,26 @@ def cell_reservations(results: dict) -> dict[int, str]:
 
 
 def payload_masses_by_id(assignment: dict) -> dict[str, float]:
-    """Return ``{payload_profile_id: distal_payload_mass_kg}`` from the assignment."""
+    """Return ``{payload_profile_id: distal_payload_mass_kg}`` from the assignment.
+
+    The first two checks read properties that ``require_binary_context_factors`` and
+    ``payload_masses_by_split`` also read, and both of those run ahead of this function
+    on the whole-document path -- so these two are reachable only by calling this one
+    directly, and their tests do.  Their messages name **this** read rather than the
+    shared field, because raise sites that emit the same sentence are individually
+    uncertifiable: a reason assertion passes on any of them, and neutralising one
+    leaves the others to refuse with a message the test still matches.  Measured in
+    Session 61: with one shared sentence the sites survived a mutation sweep while
+    looking covered; worded per read, each is caught.
+    """
     profiles = (assignment.get("context_profiles") or {}).get("payloads")
     require(isinstance(profiles, list) and profiles,
-            "the assignment carries no context_profiles.payloads list")
+            "the payload id map needs a non-empty context_profiles.payloads list")
     masses: dict[str, float] = {}
     for index, profile in enumerate(profiles):
         require(isinstance(profile, dict),
-                f"context_profiles.payloads[{index}] must be an object")
+                f"the payload id map needs an object at "
+                f"context_profiles.payloads[{index}]")
         identifier = profile.get("id")
         require(isinstance(identifier, str) and identifier,
                 f"context_profiles.payloads[{index}] carries no id")
@@ -274,14 +286,29 @@ def payload_masses_by_split(assignment: dict) -> dict[str, list[float]]:
     the binary-factor ones so a reason assertion can tell which fired, and their tests
     call this function directly.  They are **not** coverage of the split contract; the
     binary-factor check is what enforces it on the whole-document path.
+
+    The first two checks are redundant as well, and with a *third* site rather than a
+    second: ``require_binary_context_factors`` reads the same two properties and runs
+    ahead of this function, so on the document path neither of them is what a malformed
+    ``context_profiles.payloads`` meets.  All three sites once emitted one sentence,
+    which meant no reason assertion could distinguish them; they are now worded per
+    read and each is reached by a direct-call test.
     """
     profiles = (assignment.get("context_profiles") or {}).get("payloads")
+    # ``require_binary_context_factors`` runs before this function on the document path
+    # and builds its own message with an f-string over the factor name, which for
+    # "payloads" renders the sentence this site used to carry verbatim.  A duplicated
+    # message assembled that way is invisible to a text search of the file -- Session 61
+    # found it with a mutation sweep, one session after a docstring here claimed these
+    # messages were distinct.  Name the read.
     require(isinstance(profiles, list) and profiles,
-            "the assignment carries no context_profiles.payloads list")
+            "the per-split payload table needs a non-empty "
+            "context_profiles.payloads list")
     by_split: dict[str, list[float]] = {split: [] for split in SPLITS}
     for index, profile in enumerate(profiles):
         require(isinstance(profile, dict),
-                f"context_profiles.payloads[{index}] must be an object")
+                f"the per-split payload table needs an object at "
+                f"context_profiles.payloads[{index}]")
         split = profile.get("split")
         require(split in by_split,
                 f"payload profile {profile.get('id')!r} is assigned to unknown split "
@@ -423,13 +450,29 @@ def ladder_rows(results: dict) -> list[dict]:
                 entry.get("q95_c"),
                 f"the q95_c at remaining_ei {value} cell {cell}")
             hard_gates_passed = entry.get("hard_gates_passed")
+            # The type check is not decoration.  ``hard_gates_passed`` is the field
+            # that decides whether a cell's margin may be read at all, and the next
+            # check tests it for truth -- so any truthy non-boolean, the string
+            # "false" included, would pass that one and admit an unsafe cell's margin
+            # into the boundary read.  Measured in Session 61 by neutralising this
+            # line: the analyzer then ACCEPTED a document carrying "false".
             require(isinstance(hard_gates_passed, bool),
                     f"the ladder row at {value!r} cell {cell} carries no boolean "
                     "hard_gates_passed")
+            # A ladder value whose fault-side rollout failed the hard gates is a
+            # legitimate section-9 shape: the driver writes verdict
+            # UNSAFE_LADDER_VALUE, margin null, and continues.  This read refuses such
+            # an artifact rather than conditioning on it, because a cell with no margin
+            # has no place in an attenuation ratio.  The refusal is a scope boundary,
+            # not a claim that the artifact is corrupt.
             require(hard_gates_passed,
                     f"the non-terminal ladder row at {value!r} cell {cell} did not "
                     "pass its hard gates")
             cell_verdict = entry.get("verdict")
+            # Subsumed by the margin/verdict equality check below in the sense that
+            # neutralising it still yields a refusal -- but with a sentence that blames
+            # the margin for what is really an unrecognised label.  Kept for the
+            # reason a reader sees, and tested against its own message.
             require(cell_verdict in LADDER_VERDICTS,
                     f"the ladder row at {value!r} cell {cell} carries unknown verdict "
                     f"{cell_verdict!r}")
