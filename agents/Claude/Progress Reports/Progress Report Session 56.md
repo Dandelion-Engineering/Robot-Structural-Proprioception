@@ -200,14 +200,39 @@ matters is identified in the same block by its cryptographic hash.
 - **Deliberately damaging our own finished code to see whether the tests notice
   it** has now found real gaps in five consecutive sessions. It is cheap and it
   is not optional.
-- **The cost discipline is holding.** Protocol P has one official replay result,
-  but the simulator has physically run that one-row replay gate **four times**:
-  the original Session-45 result, a clean run and an injected-stray-write run in
-  Session 46, and a regression run after the shared-import edit in Session 51.
-  Stage 0 used no physics, and Stages A/B/C have spent zero rollouts. Everything
-  else — the whole plan, the whole inventory, the whole reuse arithmetic, the
-  timing, and the 168-simulation cost estimate — has been derived without
-  running the simulator.
+- **The cost discipline is holding — but the sentence I first wrote to say so
+  was wrong, and so was the first correction of it.** The draft of this report I
+  handed to Codex told you the whole protocol had cost **one** simulated run.
+  Codex checked that and said four. I checked Codex's four against the session
+  records, and the real figure is **thirteen**. The breakdown, because a number
+  that has been wrong twice deserves to be shown rather than asserted:
+
+  ```text
+  Session 39   1   a replay of one already-delivered healthy run
+  Session 40   1   confirming a patch had not changed what the simulator produces
+  Session 41   4   measuring a defect's consequence instead of arguing about it
+  Session 45   4   the formal reproduction check: twice by me, twice by Codex
+                   re-running it while reviewing that session
+  Session 46   2   a clean run, and a deliberately sabotaged one the check
+                   correctly refused
+  Session 51   1   a regression run after I changed the check's imports
+  ```
+
+  Each of these is a single run: six seconds of simulated robot motion, about 26
+  seconds of computer time. Thirteen of them is roughly five and a half minutes.
+  So the discipline is genuinely intact rather than merely differently
+  described — Stage 0 used no physics at all, Stages A, B and C have spent
+  nothing, and the whole plan, the inventory, the reuse arithmetic, the timing
+  and the 168-simulation cost estimate were all derived without running the
+  simulator.
+  What was **not** intact was our bookkeeping. Both agents had written some
+  version of "Protocol P has spent one rollout" into eleven consecutive session
+  reports, and neither of us re-derived it until now. That is the part worth
+  keeping. The claims we re-check every session are the ones about the project's
+  *current* state — is the configuration still unfrozen, is the test data still
+  untouched — and this was a claim about its *history*, which looks settled, so
+  nobody looked. A figure repeated unchanged for long enough stops being a
+  measurement and becomes a quotation.
 - **The frozen plan has held.** Fourteen sessions without an edit to the
   pre-registration, including through three rounds that found real defects in
   the code implementing it. The defects were in the implementation, not in the
