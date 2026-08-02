@@ -1,0 +1,103 @@
+{
+ "inputs": {
+  "assignment_canonical_sha256": "76255a8089f3e27d893b26d981cbf50e808bd75ba518c44b55c4635ec83514ae",
+  "assignment_hash": "dev-eec59ec8a296a9a4ff4909f8e7f1de91a0a8f4bf289ae1533a427d1a87bc33f1",
+  "protocol_canonical_sha256": "5689dad7ce4194b9a7dbe381006027df178997adf732f5734a77ef048bdf421f",
+  "screen_outcome_case": "CASE_B"
+ },
+ "ladder_verdicts": {
+  "0.35": "TESTABLE",
+  "0.4": "TESTABLE",
+  "0.45": "TESTABLE",
+  "0.5": "SUB_THRESHOLD",
+  "0.55": "SUB_THRESHOLD",
+  "0.6": "SUB_THRESHOLD",
+  "0.65": "SUB_THRESHOLD",
+  "0.75": "SUB_THRESHOLD",
+  "0.85": "SUB_THRESHOLD",
+  "0.9": "SUB_THRESHOLD"
+ },
+ "outcome": {
+  "authority": "the S/C1 secondary remains reportable; a role-coverage-bounded non-transfer outcome establishes neither success nor hypothesis failure",
+  "named_consequences": [
+   {
+    "consequence": "no testable structural training support",
+    "split": "dev"
+   }
+  ],
+  "pilot_note": "zero pilot relabels nothing but disables data-driven downsizing, so the prospectively allowed maximum test replication is retained and the limitation is named",
+  "role_coverage_bounded_non_transfer": true,
+  "thin_note": "count 1 is a thin single-severity role and opens no new terminal branch",
+  "thin_single_severity_roles": [
+   "test",
+   "val"
+  ],
+  "zero_count_splits": [
+   "dev"
+  ]
+ },
+ "purpose": "Protocol P section 9 role-coverage read over an executed Stage-A/B/C screen. Derived from persisted results; zero rollouts.",
+ "rollouts_spent": 0,
+ "rule": {
+  "ood_severities_excluded": [
+   0.45,
+   0.55
+  ],
+  "source": "Protocol P v2.3.3 section 9, 'Role coverage'",
+  "statement": "count known-class testable structural settings per split and report the count 0/1/2; OOD at 0.45/0.55 never counts"
+ },
+ "splits": {
+  "dev": {
+   "count": 0,
+   "known_class_structural_severities": [
+    0.5,
+    0.75
+   ],
+   "testable_severities": [],
+   "verdicts": {
+    "0.5": "SUB_THRESHOLD",
+    "0.75": "SUB_THRESHOLD"
+   }
+  },
+  "pilot": {
+   "count": 0,
+   "known_class_structural_severities": [
+    0.6,
+    0.85
+   ],
+   "testable_severities": [],
+   "verdicts": {
+    "0.6": "SUB_THRESHOLD",
+    "0.85": "SUB_THRESHOLD"
+   }
+  },
+  "test": {
+   "count": 1,
+   "known_class_structural_severities": [
+    0.35,
+    0.65
+   ],
+   "testable_severities": [
+    0.35
+   ],
+   "verdicts": {
+    "0.35": "TESTABLE",
+    "0.65": "SUB_THRESHOLD"
+   }
+  },
+  "val": {
+   "count": 1,
+   "known_class_structural_severities": [
+    0.4,
+    0.9
+   ],
+   "testable_severities": [
+    0.4
+   ],
+   "verdicts": {
+    "0.4": "TESTABLE",
+    "0.9": "SUB_THRESHOLD"
+   }
+  }
+ }
+}

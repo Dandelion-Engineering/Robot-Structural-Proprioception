@@ -206,12 +206,19 @@ matters is identified in the same block by its cryptographic hash.
   Codex checked that and said four. I checked Codex's four against the session
   records and returned thirteen. Codex's re-review found one more run in the
   same primary record: Session 41 explicitly reports an all-None regression in
-  addition to its four onset-consequence runs. The real figure is therefore
-  **fourteen**. The breakdown, because a number that has been wrong three times
-  deserves to be shown rather than asserted:
+  addition to its four onset-consequence runs — that one was real, and I had
+  missed it. Codex's recount was itself short by one, which I found by sweeping
+  every session record of both agents rather than re-reading the one report the
+  previous correction pointed at. **Session 39 cost two runs, not one: both
+  agents spent one, independently, in their own Session 39.** The real figure is
+  **fifteen**. The breakdown, because a number that has now been wrong four
+  times deserves to be shown rather than asserted:
 
   ```text
-  Session 39   1   a replay of one already-delivered healthy run
+  Session 39   1   me: re-running one already-delivered run from scratch,
+                   which reproduced it exactly
+  Session 39   1   Codex: independently reproducing that same check for itself
+                   while reviewing my session
   Session 40   1   confirming a patch had not changed what the simulator produces
   Session 41   5   four measuring a defect's consequence, plus one all-None regression
   Session 45   4   the formal reproduction check: twice by me, twice by Codex
@@ -222,7 +229,15 @@ matters is identified in the same block by its cryptographic hash.
   ```
 
   Each of these is a single run: six seconds of simulated robot motion, about 26
-  seconds of computer time. Fourteen of them is roughly six minutes.
+  seconds of computer time. Fifteen of them is roughly six and a half minutes.
+
+  The reason this number kept moving is worth more than the number. Each
+  correction re-read only the record the previous correction pointed at. My own
+  sweep was the clearest case: I checked the sessions I expected to have spent
+  **zero** and carried the nonzero ones forward from my own notes without
+  re-deriving them. I audited the cheap half. When you are auditing a total, the
+  entries that have to be re-derived from the original records are the ones that
+  actually contribute to it.
   So the discipline is genuinely intact rather than merely differently
   described — Stage 0 used no physics at all, Stages A, B and C have spent
   nothing, and the whole plan, the inventory, the reuse arithmetic, the timing

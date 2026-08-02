@@ -646,7 +646,28 @@ Produces `results/protocol_p/stage_abc_screen.json`. The reference run selected 
 
 The pre-registered outcome is **Case B: a proper subset of the stiffness ladder passes**. Remaining-EI values 0.35, 0.40 and 0.45 are `TESTABLE` in all four cells; 0.50 through 0.90 are `SUB_THRESHOLD` under the required all-cell conjunction. No Stage-B or Stage-C body violated a hard gate. The artifact's construction readback also passes in all eight selected structural comparisons: each canonical record carries the requested link-stiffness fault at onset step 500 with the matched identity and sensor seed, and neither post-onset coefficient vector is bit-identical to its healthy counterpart. This readback blocks a silent dead-override path; it adds no magnitude threshold and no monotonicity requirement.
 
-This is a **development-screen result**, not a test of the project's headline hypothesis. `TESTABLE` means measurable under Protocol P's matched-signal / unmatched-null comparison, which the protocol explicitly notes favours S; it is necessary, not sufficient. Every result identity remains `dev-`, `config.json` remains absent, and the confirmatory test split remains untouched.
+Section 9 also pre-registers a **role-coverage read**, taken over the same ladder and costing no rollouts. The ladder's ten values are exactly the union of every split's known-class structural severities and the two structural OOD severities, so each split's testability can be counted off it directly. Reproduce it with:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\analyze_protocol_p_role_coverage.py `
+  --screen-result results\protocol_p\stage_abc_screen.json `
+  --assignment config\proposed-gate3-assignment-v0.1.json `
+  --output-dir results\protocol_p
+```
+
+Produces [`results/protocol_p/role_coverage.json`](results/protocol_p/role_coverage.json).
+
+```text
+  split   known-class severities   testable    count
+    dev   0.5, 0.75                --              0
+  pilot   0.6, 0.85                --              0
+    val   0.4, 0.9                 0.4             1
+   test   0.35, 0.65               0.35            1
+```
+
+Section 9 keys a named consequence to a zero count in dev, val or test. **Dev is at zero, which yields a role-coverage-bounded non-transfer outcome: no testable structural training support.** Zero pilot relabels nothing but disables data-driven downsizing, so the prospectively allowed maximum test replication is retained and the limitation is named. Val and test are count-1 thin single-severity roles, which open no new terminal branch. OOD severities 0.45 and 0.55 never count toward any split, even though 0.45 is `TESTABLE` on the ladder.
+
+This is a **development-screen result**, not a test of the project's headline hypothesis. `TESTABLE` means measurable under Protocol P's matched-signal / unmatched-null comparison, which the protocol explicitly notes favours S; it is necessary, not sufficient. Read together with the coverage counts, Case B says that at the selected probe the structural signature is measurable only at damage more severe than any known-class setting reserved for development or pilot. Every result identity remains `dev-`, `config.json` remains absent, and the confirmatory test split remains untouched.
 
 ## Data
 
@@ -677,4 +698,4 @@ This packet reproduces the selected MuJoCo cable/rod mechanics, schema-v1.0 plan
 
 On the current bounded task, the structural suite has strong development information evidence, but structural recovery is blocked because the task has no structural tracking deficit and the tested action behaves like a generic controller retune. The actuator condition has headroom, yet the new source-specific action screen also blocks: safe cap-3 misses the 10-point specificity gate and higher caps violate A1 safety. The probability result remains a sampled empirical envelope; calibrated class-probability, abstention, and uncertainty authorization, sensor-fault recovery, and evaluation-sized paired control remain open.
 
-The proposed different-task amendment was withdrawn before approval. The existing Claim Sheet remains in force, `config.json` remains unfrozen, and no development screen here is a confirmatory research result. Gate 3 is closed at the jointly approved amended hash, and the exact assignment is embedded in the draft under a one-way parent/current hash binding. The real generated base roles are jointly approved; Gate 2 remains open until the Gate-4 fits supply the still-pending estimator/controller roles. Protocol P's specification is jointly approved, its one-row replay gate has passed (Step 23), Stage 0 has been executed once at zero rollout cost (Step 24), and Stages A/B/C now record a bounded **Case-B development result** (Step 25): 0.35–0.45 remaining EI are testable in all four cells, while 0.50–0.90 are sub-threshold under the all-cell rule. That result advances the written Amendment-A2 / replacement-assignment / coherent-regeneration path; it does not freeze a configuration or authorize confirmatory materialization. Validation calibration/authorization, the confirmatory controller protocol, the evaluation/test driver, and the interactive verification artifact remain later gates. Test identity and payload materialization are still zero and forbidden.
+The proposed different-task amendment was withdrawn before approval. The existing Claim Sheet remains in force, `config.json` remains unfrozen, and no development screen here is a confirmatory research result. Gate 3 is closed at the jointly approved amended hash, and the exact assignment is embedded in the draft under a one-way parent/current hash binding. The real generated base roles are jointly approved; Gate 2 remains open until the Gate-4 fits supply the still-pending estimator/controller roles. Protocol P's specification is jointly approved, its one-row replay gate has passed (Step 23), Stage 0 has been executed once at zero rollout cost (Step 24), and Stages A/B/C now record a bounded **Case-B development result** (Step 25): 0.35–0.45 remaining EI are testable in all four cells, while 0.50–0.90 are sub-threshold under the all-cell rule. The accompanying Section-9 role-coverage read puts dev and pilot at zero testable known-class structural settings and val and test at one each, so the result carries a **role-coverage-bounded non-transfer outcome** — it establishes neither success nor hypothesis failure. Both together advance the written Amendment-A2 / replacement-assignment / coherent-regeneration path; they do not freeze a configuration or authorize confirmatory materialization. Validation calibration/authorization, the confirmatory controller protocol, the evaluation/test driver, and the interactive verification artifact remain later gates. Test identity and payload materialization are still zero and forbidden.
