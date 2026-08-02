@@ -44,7 +44,6 @@ from utils.protocol_p import (
     PROTOCOL_CANONICAL_SHA256,
     PROTOCOL_FILENAME,
     canonical_text_sha256,
-    raw_file_sha256,
 )
 
 # Protocol P section 9 pins the OOD severities that never count toward coverage.
@@ -310,6 +309,12 @@ def compute_role_coverage(screen: dict, assignment: dict) -> dict:
             "Protocol P section 9 role-coverage read over an executed Stage-A/B/C "
             "screen. Derived from persisted results; zero rollouts."
         ),
+        # These three report the PINS rather than the screen-carried fields.  The two
+        # are equal by construction, because validate_bound_inputs has already refused
+        # any state in which they differ -- so a mutation that swaps them back is
+        # forced to produce the identical artifact and no test can make it red.  That
+        # is arithmetic, not a coverage gap, and it is recorded here so no write-up
+        # presents this line as an independently verified provenance claim.
         "inputs": {
             "screen_outcome_case": screen["results"].get("outcome_case"),
             "protocol_canonical_sha256": PROTOCOL_CANONICAL_SHA256,
@@ -332,7 +337,17 @@ def compute_role_coverage(screen: dict, assignment: dict) -> dict:
 
 
 def derive_role_coverage(screen_path: Path, assignment_path: Path) -> dict:
-    """Load, bind, and derive one role-coverage artifact from tracked inputs."""
+    """Load, bind, and derive one role-coverage artifact from tracked inputs.
+
+    The screen result is hashed through ``canonical_text_sha256`` because it is a
+    tracked TEXT document, and section 0's two hash domains are disjoint by the kind
+    of file, not by the convenience of the caller.  The raw helper is the binary
+    domain's, and on this repository (``core.autocrlf=true``) it returns the working
+    tree's CRLF rendering: measured, the same tracked screen result hashes to
+    ``c48c2e4d...`` raw and ``e800ae6c...`` canonical, so the raw value identifies one
+    checkout rather than the document, and an outside reader regenerating this artifact
+    from an LF checkout would produce a different file.
+    """
     screen_path = Path(screen_path)
     assignment_path = Path(assignment_path)
     screen = load_json(screen_path, "screen result")
@@ -348,7 +363,7 @@ def derive_role_coverage(screen_path: Path, assignment_path: Path) -> dict:
             "the tracked Protocol P file does not equal the approved canonical state")
 
     report["inputs"].update({
-        "screen_result_raw_sha256": raw_file_sha256(screen_path),
+        "screen_result_canonical_sha256": canonical_text_sha256(screen_path),
         "assignment_canonical_sha256": actual_assignment_digest,
         "protocol_canonical_sha256": actual_protocol_digest,
     })

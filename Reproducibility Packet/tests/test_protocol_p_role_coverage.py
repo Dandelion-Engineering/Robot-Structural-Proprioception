@@ -10,6 +10,7 @@ phrase unique to a single raise site.
 from __future__ import annotations
 
 import copy
+import hashlib
 import importlib.util
 import json
 import sys
@@ -318,9 +319,42 @@ def test_every_required_split_must_be_present(screen, assignment):
         rc.compute_role_coverage(bad_screen, bad_assignment)
 
 
-def test_derived_report_records_the_exact_screen_bytes():
+def test_derived_report_records_the_canonical_screen_digest():
+    """The recomputation is INDEPENDENT of the module under test.
+
+    The superseded form of this test asserted the report field against
+    ``rc.raw_file_sha256(SCREEN)`` -- the same module, the same file, so both sides
+    moved together and no choice of helper could make it red.  Here the expected value
+    is built from the bytes with the standard library alone.
+    """
+    expected = hashlib.sha256(
+        SCREEN.read_bytes().lstrip(b"\xef\xbb\xbf").replace(b"\r\n", b"\n")
+    ).hexdigest()
     report = rc.derive_role_coverage(SCREEN, ASSIGNMENT)
-    assert report["inputs"]["screen_result_raw_sha256"] == rc.raw_file_sha256(SCREEN)
+    assert report["inputs"]["screen_result_canonical_sha256"] == expected
+
+
+def test_the_recorded_screen_digest_does_not_depend_on_the_checkout(tmp_path):
+    """A CRLF checkout and an LF checkout must derive the same artifact.
+
+    This is the property the raw helper did not have: on this repository the tracked
+    screen result renders CRLF in the working tree, so a raw digest identifies one
+    checkout rather than the document, and an outside reader on an LF checkout would
+    regenerate a different role_coverage.json.
+    """
+    body = SCREEN.read_bytes().replace(b"\r\n", b"\n")
+    lf_copy = tmp_path / "screen_lf.json"
+    crlf_copy = tmp_path / "screen_crlf.json"
+    lf_copy.write_bytes(body)
+    crlf_copy.write_bytes(body.replace(b"\n", b"\r\n"))
+    assert lf_copy.read_bytes() != crlf_copy.read_bytes()
+
+    lf_report = rc.derive_role_coverage(lf_copy, ASSIGNMENT)
+    crlf_report = rc.derive_role_coverage(crlf_copy, ASSIGNMENT)
+    assert lf_report == crlf_report
+    assert (lf_report["inputs"]["screen_result_canonical_sha256"]
+            == rc.derive_role_coverage(SCREEN, ASSIGNMENT)[
+                "inputs"]["screen_result_canonical_sha256"])
 
 
 # --------------------------------------------------------------------------
@@ -337,3 +371,204 @@ def test_making_a_dev_severity_testable_clears_the_outcome(screen, assignment):
     assert report["splits"]["dev"]["count"] == 1
     assert report["outcome"]["role_coverage_bounded_non_transfer"] is False
     assert report["outcome"]["zero_count_splits"] == []
+
+
+# --------------------------------------------------------------------------
+# Session 59: the guards the reviewer added that no test made load-bearing.
+#
+# A 23-case mutation sweep over the reviewer-edited analyzer left thirteen
+# survivors.  Twelve were real -- each guard below could be deleted with the
+# whole focused suite still green, because no test constructed the one state it
+# exists to refuse.  The thirteenth (reporting the screen-carried digests instead
+# of the pinned constants) is forced by arithmetic once the pins are checked for
+# equality, and is deliberately NOT tested here.
+#
+# Each test asserts a REASON phrase unique to a single raise site (Lesson 59).
+# --------------------------------------------------------------------------
+
+def test_a_stale_assignment_self_hash_is_refused(screen, assignment):
+    """Every other branch test reseals the assignment, so nothing reached this.
+
+    A supplied assignment whose recorded self-hash does not match its own content
+    is a document somebody edited without re-deriving the hash.  It must not be
+    read as the bound assignment merely because the screen happens to name that
+    same stale value.
+    """
+    bad = copy.deepcopy(assignment)
+    bad["fault_grid_by_split"]["dev"]["structure"]["severities"] = [0.35, 0.65]
+    bad["fault_grid_by_split"]["test"]["structure"]["severities"] = [0.5, 0.75]
+    with pytest.raises(rc.RoleCoverageError, match="self-hash is invalid"):
+        rc.compute_role_coverage(copy.deepcopy(screen), bad)
+
+
+def test_a_screen_carrying_the_wrong_assignment_canonical_digest_is_refused(
+        screen, assignment):
+    """The screen's recorded canonical digest is pinned, not merely reported."""
+    bad_screen = copy.deepcopy(screen)
+    bad_screen["inputs"]["assignment_canonical_sha256"] = "0" * 64
+    with pytest.raises(rc.RoleCoverageError,
+                       match="assignment canonical digest does not equal"):
+        rc.compute_role_coverage(bad_screen, copy.deepcopy(assignment))
+
+
+def test_a_screen_carrying_the_wrong_input_protocol_digest_is_refused(
+        screen, assignment):
+    """The two protocol-digest call sites are mutually redundant, so neither is
+    testable by deletion; they are testable by CONTENT, one field at a time,
+    which is what this test and the next one do (Lesson 63)."""
+    bad_screen = copy.deepcopy(screen)
+    bad_screen["inputs"]["protocol_spec_sha256"] = "0" * 64
+    with pytest.raises(rc.RoleCoverageError,
+                       match="screen input protocol digest does not equal"):
+        rc.compute_role_coverage(bad_screen, copy.deepcopy(assignment))
+
+
+def test_a_screen_carrying_the_wrong_protocol_block_digest_is_refused(
+        screen, assignment):
+    bad_screen = copy.deepcopy(screen)
+    bad_screen["protocol"]["canonical_sha256"] = "0" * 64
+    with pytest.raises(rc.RoleCoverageError,
+                       match="screen protocol digest does not equal"):
+        rc.compute_role_coverage(bad_screen, copy.deepcopy(assignment))
+
+
+def test_an_all_testable_ladder_must_be_reported_as_case_a(screen, assignment):
+    """The independent case re-derivation was only ever exercised at CASE_B.
+
+    Inverting the CASE_A and CASE_C arms of the rule survived the sweep, because
+    the committed ladder is a proper subset and the middle arm is unchanged by the
+    inversion.  This test and the next one pin the ends.
+    """
+    flipped = copy.deepcopy(screen)
+    for row in flipped["results"]["ladder"]:
+        row["verdict"] = "TESTABLE"
+    flipped["results"]["outcome_case"] = "CASE_A"
+    report = rc.compute_role_coverage(flipped, copy.deepcopy(assignment))
+    assert report["splits"]["dev"]["count"] == 2
+
+    flipped["results"]["outcome_case"] = "CASE_C"
+    with pytest.raises(rc.RoleCoverageError, match="imply CASE_A"):
+        rc.compute_role_coverage(flipped, copy.deepcopy(assignment))
+
+
+def test_a_ladder_with_nothing_testable_must_be_reported_as_case_c(
+        screen, assignment):
+    flipped = copy.deepcopy(screen)
+    for row in flipped["results"]["ladder"]:
+        row["verdict"] = "SUB_THRESHOLD"
+    flipped["results"]["outcome_case"] = "CASE_C"
+    report = rc.compute_role_coverage(flipped, copy.deepcopy(assignment))
+    assert report["outcome"]["zero_count_splits"] == ["dev", "val", "test"]
+
+    flipped["results"]["outcome_case"] = "CASE_A"
+    with pytest.raises(rc.RoleCoverageError, match="imply CASE_C"):
+        rc.compute_role_coverage(flipped, copy.deepcopy(assignment))
+
+
+def test_moving_a_severity_between_splits_is_refused(screen, assignment):
+    """The ten-value union survives this, so only the per-split count catches it.
+
+    This is the state that separates 'exactly two known-class severities' from
+    'at least one': dev keeps one, pilot takes three, and the ladder is untouched.
+    """
+    bad_screen = copy.deepcopy(screen)
+    bad = copy.deepcopy(assignment)
+    grid = bad["fault_grid_by_split"]
+    grid["dev"]["structure"]["severities"] = [0.75]
+    grid["pilot"]["structure"]["severities"] = sorted(
+        set(grid["pilot"]["structure"]["severities"]) | {0.5})
+    _rebind_assignment(bad_screen, bad)
+    with pytest.raises(rc.RoleCoverageError, match="exactly two distinct known-class"):
+        rc.compute_role_coverage(bad_screen, bad)
+
+
+def test_a_repeated_structural_severity_in_one_split_is_refused(screen, assignment):
+    """A duplicate would be counted twice and inflate that split's coverage."""
+    bad_screen = copy.deepcopy(screen)
+    bad = copy.deepcopy(assignment)
+    bad["fault_grid_by_split"]["val"]["structure"]["severities"] = [0.4, 0.4, 0.9]
+    _rebind_assignment(bad_screen, bad)
+    with pytest.raises(rc.RoleCoverageError, match="repeats a structural severity"):
+        rc.compute_role_coverage(bad_screen, bad)
+
+
+def test_a_non_finite_ladder_value_is_refused(screen, assignment):
+    """Unreachable through load_json, which rejects the constants; reachable here."""
+    bad_screen = copy.deepcopy(screen)
+    bad_screen["results"]["ladder"][0]["remaining_ei"] = float("nan")
+    with pytest.raises(rc.RoleCoverageError, match="non-finite remaining_ei"):
+        rc.compute_role_coverage(bad_screen, copy.deepcopy(assignment))
+
+
+def test_a_non_finite_structural_severity_is_refused(assignment):
+    """Called directly, because the whole-document path can no longer reach it.
+
+    ``compute_role_coverage`` now derives the assignment's self-hash first, and that
+    derivation refuses to serialize a non-finite value -- so a document carrying one
+    raises ``Gate3AssignmentError`` from the binding step and never reaches this
+    guard.  Measured, not assumed; the companion test below pins that behaviour.
+    The guard is kept because this function is public and the failure it names is
+    the accurate one for a caller that supplies a parsed grid.
+    """
+    bad = copy.deepcopy(assignment)
+    bad["fault_grid_by_split"]["dev"]["structure"]["severities"] = [0.5, float("inf")]
+    with pytest.raises(rc.RoleCoverageError, match="non-finite structural severity"):
+        rc.structural_severities_by_split(bad)
+
+
+def test_a_non_finite_document_fails_loud_at_the_binding_step(screen, assignment):
+    """It still fails loudly -- but as a foreign exception type, so say so."""
+    bad = copy.deepcopy(assignment)
+    bad["fault_grid_by_split"]["dev"]["structure"]["severities"] = [0.5, float("inf")]
+    with pytest.raises(Exception, match="not canonical-JSON serializable"):
+        rc.compute_role_coverage(copy.deepcopy(screen), bad)
+
+
+def test_a_non_object_ladder_row_is_refused_rather_than_crashing(screen, assignment):
+    """Without the guard this raises AttributeError, not a named refusal."""
+    bad_screen = copy.deepcopy(screen)
+    bad_screen["results"]["ladder"][3] = [0.5, "TESTABLE"]
+    with pytest.raises(rc.RoleCoverageError, match="every ladder row must be an object"):
+        rc.compute_role_coverage(bad_screen, copy.deepcopy(assignment))
+
+
+def test_a_reformatted_assignment_file_is_refused_at_the_file_digest(tmp_path):
+    """Re-indenting the assignment leaves assignment_hash identical.
+
+    ``assignment_hash`` is taken over canonical JSON, so whitespace does not move
+    it and every in-memory binding check still passes.  Only the file-level
+    canonical digest distinguishes the tracked document from a re-rendered copy,
+    which is what makes this the one state that reaches that check.
+    """
+    document = json.loads(ASSIGNMENT.read_bytes())
+    reformatted = tmp_path / "assignment_reformatted.json"
+    reformatted.write_text(json.dumps(document, indent=4, ensure_ascii=False),
+                           encoding="utf-8", newline="\n")
+    assert (json.loads(reformatted.read_bytes())["assignment_hash"]
+            == document["assignment_hash"])
+    with pytest.raises(rc.RoleCoverageError,
+                       match="assignment file does not equal the approved canonical"):
+        rc.derive_role_coverage(SCREEN, reformatted)
+
+
+def test_the_tracked_protocol_file_digest_is_checked_at_derive_time(monkeypatch):
+    """Wire-test: the tracked protocol file must not be edited to test its check.
+
+    Moving the pinned constant instead does not work -- the same constant is what
+    the screen-carried digests are compared against, so the run would refuse
+    several steps earlier and the test would pass for the wrong reason.  Measured:
+    it fails with 'the screen input protocol digest does not equal ...'.  So the
+    digest of that one path is moved rather than the pin, which leaves every
+    earlier check reading the real values.
+    """
+    real = rc.canonical_text_sha256
+
+    def only_the_protocol_file_differs(path):
+        if Path(path).name == rc.PROTOCOL_FILENAME:
+            return "0" * 64
+        return real(path)
+
+    monkeypatch.setattr(rc, "canonical_text_sha256", only_the_protocol_file_differs)
+    with pytest.raises(rc.RoleCoverageError,
+                       match="tracked Protocol P file does not equal"):
+        rc.derive_role_coverage(SCREEN, ASSIGNMENT)

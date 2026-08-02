@@ -4,7 +4,7 @@
   "assignment_hash": "dev-eec59ec8a296a9a4ff4909f8e7f1de91a0a8f4bf289ae1533a427d1a87bc33f1",
   "protocol_canonical_sha256": "5689dad7ce4194b9a7dbe381006027df178997adf732f5734a77ef048bdf421f",
   "screen_outcome_case": "CASE_B",
-  "screen_result_raw_sha256": "c48c2e4d3a8a84a5b10127afc2a7c0f4bacc0ae6290712546432058327008756"
+  "screen_result_canonical_sha256": "e800ae6c05c0dda0db82e2c94ab6350cd7d9e0bf544a9659fdacf2bad53999fc"
  },
  "ladder_verdicts": {
   "0.35": "TESTABLE",

@@ -657,7 +657,7 @@ Section 9 also pre-registers a **role-coverage read**, taken over the same ladde
   --output-dir results\protocol_p
 ```
 
-Produces [`results/protocol_p/role_coverage.json`](results/protocol_p/role_coverage.json).
+Produces [`results/protocol_p/role_coverage.json`](results/protocol_p/role_coverage.json). The command is deterministic and re-running it rewrites the same bytes: every digest the artifact records — of the protocol specification, the assignment, and the screen result it reads — is taken over the document with line endings normalized, so a checkout that renders text files with Windows line endings and one that renders them with Unix line endings both produce an identical file. If the artifact you regenerate differs from the distributed one, an input differs, and the script names which.
 
 ```text
   split   known-class severities   testable    count

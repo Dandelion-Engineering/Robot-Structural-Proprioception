@@ -1,8 +1,39 @@
 # Summary of Only Necessary Context — Claude
 
-*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 58, 2026-08-02.*
+*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 59, 2026-08-02.*
 
-## THE SCREEN HAS RUN. READ THIS BLOCK FIRST.
+## S59 FIRST: THE ROLE-COVERAGE LOOP IS AT ROUND THREE AND CODEX OWNS IT
+
+```text
+S58 me    built the role-coverage script/tests/artifact       (dc0950a / eec5adc / 639e4e4)
+S58 Codex BLOCKED it on three real findings, corrected it     (980397a / a7e317b / c97e794)
+S59 me    CONFIRMED all three by construction, then found a FOURTH defect in the
+          repair plus TWELVE untested guards; corrected and handed back.
+          CODEX OWNS THE NEXT TURN.
+
+THE THREE FINDINGS (all real, all reproduced OLD-accepts / NEW-refuses side by side):
+  swap dev/test grids, union unchanged  -> my version reported zero=[test], not [dev]
+  unknown 0.35 ladder verdict           -> silently behaved as SUB_THRESHOLD
+  drop dev, fold into pilot             -> zero=[] : THE NAMED OUTCOME VANISHED
+Each run TWICE: self-hash stale, and RESEALED through expected_assignment_hash.
+Without the reseal the self-hash guard fires and the named guard is never reached.
+
+THE FOURTH DEFECT (mine to find, Codex's to have introduced):
+  derive_role_coverage hashed the screen result through raw_file_sha256 -- the
+  BINARY domain helper -- on a tracked TEXT file.
+     stage_abc_screen.json   i/lf  w/crlf   11,393 CRLF pairs in the working tree
+     raw_file_sha256         c48c2e4d...    <- what the artifact recorded
+     canonical_text_sha256   e800ae6c...    <- == sha256 of the tracked blob
+  So the artifact identified ONE CHECKOUT, not the document, and an outside reader
+  on an LF checkout regenerates a DIFFERENT tracked results file.
+  NOT an I1 violation: §0's enumeration names neither list for this file. It is the
+  wrong-domain helper for the KIND of file. Fixed to canonical_text_sha256.
+  *** c48c2e4d... IS THE NUMBER BOTH AGENTS HAVE BEEN QUOTING as "the screen result
+      sha256", including at the top of my own S58 summary. It is the CRLF rendering
+      of an LF-tracked document. Nothing depends on it; correct it forward. ***
+```
+
+## THE SUPERSEDED S58 TOP BLOCK — kept because the screen result itself is settled
 
 ```text
 CODEX RAN STAGES A/B/C IN ITS S57.  135 physical rollouts, ~74 min.  OUTCOME: CASE_B.
@@ -38,10 +69,21 @@ CONSEQUENCE FOR MY OWN LANE: Gate 4 trains structural attribution on DEV, and at
   This is a direct input to what A2's severity grid must become.
 ```
 
-**BUILT IN S58 (mine, under Codex review) — zero rollouts:**
+**THE S59 STATE OF THOSE THREE FILES (mine, edited by Codex, re-edited by me, UNDER REVIEW):**
+```text
+Reproducibility Packet/scripts/analyze_protocol_p_role_coverage.py
+Reproducibility Packet/tests/test_protocol_p_role_coverage.py       46 tests
+Reproducibility Packet/results/protocol_p/role_coverage.json   sha256 faf66a2a...
+  regenerated in S59; ONLY the provenance digest field changed.  The science is
+  UNCHANGED: dev 0 / pilot 0 / val 1 / test 1, CASE_B, same outcome + authority text.
+  The artifact is LF, zero CRLF pairs, and a second run rewrites identical bytes.
+```
+
+**THE SUPERSEDED S58 DESCRIPTION OF THEM — zero rollouts:**
 ```text
 Reproducibility Packet/scripts/analyze_protocol_p_role_coverage.py
 Reproducibility Packet/tests/test_protocol_p_role_coverage.py       24 tests
+                                (NOT 22 -- see the S59 count correction below)
 Reproducibility Packet/results/protocol_p/role_coverage.json
 Run it from the packet dir:
   ..\venv\Scripts\python.exe scripts\analyze_protocol_p_role_coverage.py `
@@ -75,7 +117,7 @@ CODEX S55: no specification bump for the Stage-C label either.  See below.
 ## Where the project is
 
 - **Phase 2 (Execution) is OPEN.** All Phase-1 gates in force. **Schema v1.0 + Amendment A1 in force.** Contract changes run through the **amendment protocol**.
-- I am **Claude**; last session was **Session 57**; next session I run is **Session 58**.
+- I am **Claude**; last session was **Session 59**; next session I run is **Session 60**.
 - **`config.json` is deliberately NOT frozen** and does not exist. All hashes are `dev-`; no `dev-` trace may enter confirmatory analysis.
 - Real data exists: `data/gate3-base-dev-pilot-val-c1-s` (3.86 GB, git-ignored, local only). 472 reservations / 944 manifest rows / C1+S / dev 152, pilot 152, val 168. **Test untouched: 0 identities, 0 payloads.** **Slated for full regeneration from zero after A2 — these 472 payloads become a superseded pre-amendment set in the packet exclusion trail. Read them; do not build on them.**
 - **STAGES A/B/C HAVE RUN — Codex's S57, 135 physical rollouts, CASE_B.** See the block at the top of this file. Stage 0 RAN in S48 at ZERO rollouts; `results/protocol_p/sensor_only_difference_null.json` is tracked and **JOINTLY APPROVED**. **The screen result is approved by both agents; the §9 role-coverage read that accompanies it is NEW IN S58 AND UNREVIEWED.**
@@ -105,27 +147,42 @@ SWEPT IN S58: both agents' S43-S56.  Every hit is a RESTATEMENT of the wrong run
 total, not a new rollout.  Codex S48/S49/S50 and Claude S50 all say "one, unchanged".
 ```
   **Not run by me in S52–S58. CODEX RAN IT ONCE IN ITS S57, immediately before the screen, at 36.42 s — REPLAY_GATE_PASS, 20/20 privileged fields, 38/38 S entries, 531 matched NaNs, 3,176 watched files, 0 added/modified/removed.** That is the eighth gate execution and it is the one the sequencing existed to produce: verified immediately before the measurement, literally. **I deliberately did not run it in S58** — nothing on its watched path changed and the measurement it guards is already spent.
-- **Progress report DONE at S56** (regular, covers S49–S56). **ITS REVIEW LOOP IS STILL OPEN AT ROUND FOUR — Codex owns my S58 return at FIFTEEN.** **NEXT REGULAR IS MY SESSION 64**, unless a phase transition or an approved written Claim-Sheet amendment fires sooner.
+- **Progress report DONE at S56** (regular, covers S49–S56). **ITS REVIEW LOOP IS CLOSED AT ROUND FIVE, blob `83c527ced4e12ce27cfbf83601c89fc0e670a3cd`** — Codex approved my S58 return unchanged in its S58; I explicitly approved that same state in S59. **NEXT REGULAR IS MY SESSION 64**, unless a phase transition or an approved written Claim-Sheet amendment fires sooner.
 
-### WHAT IS OPEN AFTER S58 — CODEX OWNS ALL OF IT
+### WHAT IS OPEN AFTER S59 — CODEX OWNS ALL OF IT
 
 ```text
-OPEN    NEW, MINE, NEVER REVIEWED:
+OPEN    MY S59 OWNER RE-REVIEW STATE, handed back.  All four together:
           Reproducibility Packet/scripts/analyze_protocol_p_role_coverage.py
-          Reproducibility Packet/tests/test_protocol_p_role_coverage.py   24 tests
+          Reproducibility Packet/tests/test_protocol_p_role_coverage.py   46 tests
           Reproducibility Packet/results/protocol_p/role_coverage.json
-        The §9 role-coverage read.  See the block at the top of this file.
-OPEN    Reproducibility Packet/README.md -- MY S58 REVIEWER EDIT, handed back.
-          Added the role-coverage section to Step 25 (command, counts table, the named
-          non-transfer outcome) and put the coverage clause into the current-boundary
-          paragraph.  Codex's pre-edit blob was 330282cd0afc725efa9cdcf7d6e1cdd38e1c69dc.
-OPEN    agents/Claude/Progress Reports/Progress Report Session 56.md
-          Codex S56 blob   39c5924226...  -> my S57 return  1723e545...  (thirteen)
-          Codex S57 blob   5744b99d634296cf7419af500806767d07053203  (fourteen)
-          -> MY S58 RETURN: FIFTEEN, with the per-agent table and the
-             "audited the cheap half" reason.  CODEX OWNS THE NEXT TURN.
-        Its S57 correction WAS RIGHT about S41's fifth run and I said so.
+          Reproducibility Packet/README.md  -- ONE added sentence under the
+            role-coverage command: regeneration is deterministic across checkouts,
+            and what a difference means.  (Codex's diagnostic-pause sentence in the
+            same file is APPROVED UNCHANGED -- see CLOSED below.)
+        I did NOT approve Codex's blobs 980397a / a7e317b / c97e794.  Reasons:
+        the raw-vs-canonical digest defect (top of this file) and TWELVE guards
+        its repair added that no test made load-bearing.
+OPEN    A QUESTION I DELIBERATELY DID NOT DECIDE.  Should tracked results JSON be
+        pinned `eol=lf` in .gitattributes?  It would make the working tree match the
+        index and kill this class at the source.  I did not do it because it changes
+        the checkout rendering of a results file Codex executed and approved, and
+        because c48c2e4d... appears in DATED public records that would then no longer
+        be reproducible by anyone following them.  CODEX RULES.
 
+CLOSED  agents/Claude/Progress Reports/Progress Report Session 56.md  83c527c...
+          ROUND FIVE, both agents approved the SAME state.  Codex S58 approved my S58
+          return unchanged; I approved it explicitly in S59.  The cost figure settled
+          at FIFTEEN pre-run / 151 total.  DO NOT REOPEN.
+CLOSED  Reproducibility Packet/README.md diagnostic-pause sentence  blob 17c91d3
+          APPROVED UNCHANGED IN S59 BY MEASUREMENT, not by reading:
+            diagnostic_pause occurs exactly 4 times in the artifact, all true
+            q95_c = 0.41139871 / 0.42169416 / 0.37033237 / 0.42767186  (cells 4/5/6/7)
+            so "0.3703 to 0.4277" is right to the digit; §8's trigger is 0.30
+          It is the clause I said in S58 deserved to exist and did not.
+CLOSED  README.md (root) Codex's dated 2026-08-02 ORDER CORRECTION  blob 833040e
+          Approved unchanged.  It is right: my S58 entry landed BEFORE the physically
+          later 2026-08-01 result entry.  I appended my S59 entry AFTER it (+2/-0).
 CLOSED  results/protocol_p/stage_abc_screen.json  209a87ae...
           APPROVE_STAGE_ABC_SCREEN_RESULT_EXACT_STATE_AS_IS -- my S58, unchanged,
           after reproducing every number from the artifact + assignment ALONE.
@@ -184,6 +241,97 @@ JOINTLY APPROVED ACROSS THE S51/S52/S53 ROUNDS -- do not re-review, do not edit:
         scripts/utils/protocol_p_conditions.py      7fdddf0eee5e3b3f02b2db21ecb1b70728234be5
         tests/test_protocol_p_shared.py             f505877f81b0f3f6a13a3d2b57e9ea5f5b2ad367  20 tests
         tests/test_protocol_p_conditions.py         1874773e1ee8ed41bb763ca3a8a235d89e7c02e9  135 collected
+```
+
+## THE S59 SESSION — confirming a reviewer's findings, then finding four more in the repair
+
+**THE ONE FACT TO CARRY ABOVE ALL OTHERS: a reviewer's repair is an artifact, and this one
+shipped a reproducibility defect plus thirteen guards no test made load-bearing — while
+being, on its three named findings, completely right.**
+
+### THE INSTRUMENT — `probe_s59_findings.py` (scratchpad), rebuild it
+
+Drives the same bad state through the PRE-REVIEW analyzer (extracted from git) and the
+CORRECTED one **in one process**, printing both verdicts. Showing only the new refusal
+proves nothing about whether the old version accepted it. Two branches per assignment
+mutation — self-hash left stale, and RESEALED — because without the reseal every mutation
+dies at the self-hash guard and the guard under test is never reached.
+
+### THE SWEEP — 13 survivors on the first honest pass
+
+```text
+FIRST PASS   23 cases |  9 caught | 13 SURVIVORS | 1 bad anchor
+SECOND PASS  24 cases | 22 caught |  1 survivor  | 1 bad anchor
+```
+
+**BEFORE THAT there was a pass that measured NOTHING: 21 cases, 21 bad anchors, 0
+verdicts** — the working tree renders these files CRLF and my anchors were written with
+`\n`. It printed a tidy summary that reads like a clean result. The sweep now detects the
+file's newline, translates every anchor, and prints which it found. **Any future sweep in
+this repo must do the same.**
+
+Twelve of the thirteen survivors were real gaps. The sharpest, and why each survived:
+
+```text
+outcome_case_rule_inverted     swapping the CASE_A and CASE_C arms is INVISIBLE on a
+                               CASE_B ladder.  No test ever built an all-TESTABLE or a
+                               nothing-TESTABLE ladder.  That check is the ONLY
+                               independent verification of the driver's own
+                               classify_outcome, and BOTH ITS ENDS WERE DEAD.
+assignment_self_hash_removed   every branch test calls _rebind_assignment, so nothing
+                               ever fed a stale self-hash.
+known_class_count_weakened     no test moved a severity BETWEEN splits while keeping the
+                               ten-value union intact.
+duplicate_severity_removed     [0.4, 0.4, 0.9] passes the length check, double-counts.
+derive_assignment_file_digest  RE-INDENTING the assignment leaves assignment_hash
+                               IDENTICAL (it is over canonical JSON, whitespace-immune),
+                               so every in-memory binding check passes and ONLY the
+                               file-level digest distinguishes the tracked document.
+                               That is the one state that reaches that check.
++ 7 more: both protocol-digest fields, screen assignment_canonical, nonfinite ei,
+          nonfinite severity, derive protocol digest, ladder_row_isinstance
+```
+
+**THE ONE REMAINING SURVIVOR IS ARITHMETIC, NOT A GAP.**
+`inputs_report_screen_carried_values_again`: `validate_bound_inputs` has already refused
+any state where the pins and the screen-carried fields differ, so swapping them back is
+FORCED to produce the identical artifact. Same shape as S54's `physical_body_count_check`.
+**Recorded in the analyzer so no write-up presents that line as verified provenance.**
+Also swept the **DOUBLE removal** of the two mutually-redundant protocol-digest call sites
+(Lesson 63); the two new content tests are what make each individually live.
+
+### TWO TESTS THAT DID NOT WORK AS FIRST WRITTEN — both reasons are load-bearing
+
+```text
+non-finite severity   compute_role_coverage derives the self-hash FIRST, and that
+                      derivation REFUSES to serialize inf -- so the whole-document path
+                      raises Gate3AssignmentError from the BINDING step and NEVER REACHES
+                      the guard.  I test structural_severities_by_split DIRECTLY and pin
+                      the foreign-exception behaviour in a companion test.
+                      *** compute_role_coverage's contract says RoleCoverageError and on
+                          this input a caller gets a DIFFERENT EXCEPTION TYPE. ***
+protocol file digest  monkeypatching PROTOCOL_CANONICAL_SHA256 does NOT test it -- the
+                      same constant is what the screen-carried digests compare against,
+                      so the run refuses several steps EARLIER and the test passes for
+                      the wrong reason.  MEASURED: "the screen input protocol digest does
+                      not equal ...".  I move the digest of that ONE PATH instead.
+```
+
+### THE S59 COUNT CORRECTION — Codex's forward correction was inverted
+
+```text
+Codex S58 (chat + HumanReport58:117-118): "your committed handoff and chat correctly said
+  22"; "the committed handoff still contains 22 test functions"; HumanReport58's 24 is
+  "a stale internal mismatch."
+MEASURED by restoring my exact S58 blobs into place and RUNNING them:
+  grep -c '^def test_'  on 89d88f2's blob        24
+  those blobs restored and run            24 passed in 0.16 s
+  975 + 24 = 999   <- my S58 full-suite figure
+  1006 - 31 = 975  <- same remainder in Codex's totals.  Both are consistent.
+So: the FILE was 24, HumanReport58 was RIGHT, and the CHAT's 22 was the stale one --
+I added two constructed tests after running the suite and before committing, and the
+report says so in the same sentence.  I wrote the stale 22, so this is not a complaint.
+Returned in the S59 chat turn.
 ```
 
 ## THE S58 SESSION — the result verified, and a pre-registered read that never existed
@@ -684,9 +832,9 @@ and BEFORE any untouched `test` payload.**
 6. **Confirmatory controller protocol** — **DECIDED S27 (both agents):** freeze the fair four-arm comparison (no-action/detection-only · transparent attribution-driven · RMA · oracle) and **RUN the pre-registered paired C1-vs-S comparison**; do NOT narrow to information-only, do NOT retune blocked families post-hoc. *(Codex owns controller; diagnosis→control seam shared.)*
 7. **Evaluation driver + confirmatory manifest** — **MINE.** One CLI owning the `[t_c,t_c+5s]` slice, role joins, paired C1/S table, exclusions, CIs; rejects `dev-`/wrong-hash/cross-role/incomplete-pair/truncated. **Must implement the pre-registered statements (a)–(y) carried below.**
 
-**The (a)–(y) driver requirements, carried verbatim in shape:** (a) `ood_flag` exclusion from known-class metrics; (b) the **degradation-ladder rule** (S30/S31); (c) **pilot→val moves one variable while val→test additionally moves half-fraction → complete factorial** — *and, under A2 pin 4, no longer moves the contact window*; (d) S33's two findings; (e) the mild-stratum development diagnostic **at its true scope** and the per-channel attribution; (f) **[S35]** the excitation discontinuity; (g) **[S36]** the yardstick discontinuity (D) + the run-to-run range statement (E) + trajectory-partial margin coverage; (h) **[S37]** the operation mismatch (F), thermal near-invariance (G) as a *property*, the amplitude ceiling (H); (i) **[S38]** the **window origin (J)** — the driver MUST use the same origin the protocol pins — plus the matched/unmatched asymmetry and role-coverage counts; (j) **[S39]** the **construction path (K)** and the **unmatched-identity confound (L)**; (k) **[S40]** distinguish **`base_pair_id` from realized `pair_id`** in every identity join, and never stamp an overridden run with the base config hash; (l) **[S41]** any file whose **raw bytes** enter an identity must be hashed through the correct-domain helper; (m) **[S42]** that helper must be chosen **by file domain**; (n) **[S43]** every identity expression must **name the object it hashes**; (o) **[S44]** test the **wires between stages**, not only each stage; (p) **[S45]** every clean report must **disclose its denominator** and refuse to report when it cannot support the claim; (q) **[S46]** every guard must be **reachable from the construction that will run**, and every fixture large enough for the defect it exposes; (r) **[S47]** every pinned literal that also lives in a bound document is checked by EQUALITY, never adoption; (s) **[S48]** every test that claims to verify a gate must CALL it and assert the REASON for a refusal; (t) **[S50]** every documented dependency must be verified against the running system; (u) **[S51]** assert a phrase UNIQUE TO ONE RAISE SITE, and construct preconditions through `utils/protocol_p_conditions.py`; (v) **[S52]** obtain the source reservation from the I1-pinned assignment and never construct one, and test per BRANCH not per guard; (w) **[S53]** record a REUSED row's provenance by CITATION, and DERIVE the fault onset; (x) **[S54]** key the results table on the PHYSICAL BODY, and make every clean-census check reachable from a state that could fail it; (y) **[S55]** derive the reported set from what was MEASURED rather than from which candidates survived, CONSUME the hard-gate report in EVERY stage, and persist the gate evidence, step count and elapsed time on EVERY exit path including terminals. **(z) [NEW S56] every check the driver makes must be given a source INDEPENDENT of the thing it checks — a comparison whose two sides are produced by the same function from the same arguments is a report of a check rather than a check — and no result artifact may record an absolute filesystem path, because a machine path identifies nothing that the artifact's own hashes do not identify better and it makes two identical reproductions differ.** **(aa) [NEW S57] every count the driver reports must distinguish OCCURRENCES from IDENTITIES — 180 provenance references over 168 distinct stamps, never "180 stamps" — and every historical figure the driver's documentation quotes must be re-derived from the primary records rather than carried from a summary; and (bb) [NEW S57] no outcome case may be reported until the healthy-vs-faulted `max_abs_gauge_true` readback has distinguished a measured null from an override that never reached the plant.**
+**The (a)–(y) driver requirements, carried verbatim in shape:** (a) `ood_flag` exclusion from known-class metrics; (b) the **degradation-ladder rule** (S30/S31); (c) **pilot→val moves one variable while val→test additionally moves half-fraction → complete factorial** — *and, under A2 pin 4, no longer moves the contact window*; (d) S33's two findings; (e) the mild-stratum development diagnostic **at its true scope** and the per-channel attribution; (f) **[S35]** the excitation discontinuity; (g) **[S36]** the yardstick discontinuity (D) + the run-to-run range statement (E) + trajectory-partial margin coverage; (h) **[S37]** the operation mismatch (F), thermal near-invariance (G) as a *property*, the amplitude ceiling (H); (i) **[S38]** the **window origin (J)** — the driver MUST use the same origin the protocol pins — plus the matched/unmatched asymmetry and role-coverage counts; (j) **[S39]** the **construction path (K)** and the **unmatched-identity confound (L)**; (k) **[S40]** distinguish **`base_pair_id` from realized `pair_id`** in every identity join, and never stamp an overridden run with the base config hash; (l) **[S41]** any file whose **raw bytes** enter an identity must be hashed through the correct-domain helper; (m) **[S42]** that helper must be chosen **by file domain**; (n) **[S43]** every identity expression must **name the object it hashes**; (o) **[S44]** test the **wires between stages**, not only each stage; (p) **[S45]** every clean report must **disclose its denominator** and refuse to report when it cannot support the claim; (q) **[S46]** every guard must be **reachable from the construction that will run**, and every fixture large enough for the defect it exposes; (r) **[S47]** every pinned literal that also lives in a bound document is checked by EQUALITY, never adoption; (s) **[S48]** every test that claims to verify a gate must CALL it and assert the REASON for a refusal; (t) **[S50]** every documented dependency must be verified against the running system; (u) **[S51]** assert a phrase UNIQUE TO ONE RAISE SITE, and construct preconditions through `utils/protocol_p_conditions.py`; (v) **[S52]** obtain the source reservation from the I1-pinned assignment and never construct one, and test per BRANCH not per guard; (w) **[S53]** record a REUSED row's provenance by CITATION, and DERIVE the fault onset; (x) **[S54]** key the results table on the PHYSICAL BODY, and make every clean-census check reachable from a state that could fail it; (y) **[S55]** derive the reported set from what was MEASURED rather than from which candidates survived, CONSUME the hard-gate report in EVERY stage, and persist the gate evidence, step count and elapsed time on EVERY exit path including terminals. **(z) [NEW S56] every check the driver makes must be given a source INDEPENDENT of the thing it checks — a comparison whose two sides are produced by the same function from the same arguments is a report of a check rather than a check — and no result artifact may record an absolute filesystem path, because a machine path identifies nothing that the artifact's own hashes do not identify better and it makes two identical reproductions differ.** **(cc) [NEW S59] every digest a result artifact records must be taken in the domain of the file's KIND — canonical for tracked text, raw only for binary — because a raw digest of a text file identifies the checkout rather than the document and makes two correct reproductions disagree; and every check a review ADDS must have a committed test that constructs the state it refuses, because a guard added during review is the least likely guard in the codebase to have one.** **(aa) [NEW S57] every count the driver reports must distinguish OCCURRENCES from IDENTITIES — 180 provenance references over 168 distinct stamps, never "180 stamps" — and every historical figure the driver's documentation quotes must be re-derived from the primary records rather than carried from a summary; and (bb) [NEW S57] no outcome case may be reported until the healthy-vs-faulted `max_abs_gauge_true` readback has distinguished a measured null from an override that never reached the plant.**
 
-**Order:** (1)✓ → (2 foundation)✓ → (2 role-write)✓ → (3 assignment)✓✓ → (2 generator + base roles)✓✓ → (2 hardening)✓✓ → (dev separability check)✓ **[NEGATIVE]** → Protocol P v2.3.3 spec ✓✓ → seam + 37 tests ✓✓ → replay gate ✓✓ → Stage-0 implementation ✓✓ → **Stage 0 RAN, S48, Q95 0.400881, zero rollouts ✓** → Stage-0 result ✓✓ → Progress Report S48 ✓✓ → packet Step 24 ✓✓ → public README ✓✓ → extraction + construction layer ✓✓ (S51–S53) → **S54 BUILD: driver + results layer + 156 tests** → **Codex S54: three BLOCKING findings** → **my S55: all three confirmed by construction and corrected, 32 tests, 32/32 sweep** → **Codex S55: ALL FOUR APPROVED AT EXACT BLOBS, Stage-C label accepted, loop CLOSED ✓✓** → **my S56: `screen_physical_faults` implemented at Correction 1's signature, the tautological I13a comparison made LIVE, the machine path removed from the artifact, packet Step 25 written, 37 tests (938 → 975), 17-case sweep** → **Codex S56: DRIVER + TESTS APPROVED AS-IS, vocabulary guard kept, pre-execution list EMPTY; reviewer edits to Step 25 and my progress report ✓✓** → **my S57: Step 25 approved unchanged after MEASURING it, progress report RETURNED at thirteen, the override-join finding** → **Codex S57: corrected the count to fourteen, REPLACED my readback rule with a post-onset coefficient check, ran the replay gate (36.42 s) and then STAGES A/B/C — 135 rollouts, CASE_B, all eight readback comparisons passed** → **my S58: every number in the result INDEPENDENTLY REPRODUCED and the artifact APPROVED UNCHANGED; §9's ROLE-COVERAGE READ FOUND UNIMPLEMENTED and built at zero rollouts — dev 0 / pilot 0 / val 1 / test 1, so the result carries a ROLE-COVERAGE-BOUNDED NON-TRANSFER outcome; count returned at fifteen; my own monotonicity claim falsified ← WE ARE HERE** → Codex reviews the role-coverage script/tests/artifact, my packet-README edit, and the fifteen state → written amendment A2 + replacement assignment (both approve) → **full regeneration from zero** → re-audit → (4/5 models+calibration) [me] → (2 remaining roles) [Codex] → (6 controller + sample-size) [shared] → **joint immutable freeze** → one-shot confirmatory generation + eval (7) → Phase 3.
+**Order:** (1)✓ → (2 foundation)✓ → (2 role-write)✓ → (3 assignment)✓✓ → (2 generator + base roles)✓✓ → (2 hardening)✓✓ → (dev separability check)✓ **[NEGATIVE]** → Protocol P v2.3.3 spec ✓✓ → seam + 37 tests ✓✓ → replay gate ✓✓ → Stage-0 implementation ✓✓ → **Stage 0 RAN, S48, Q95 0.400881, zero rollouts ✓** → Stage-0 result ✓✓ → Progress Report S48 ✓✓ → packet Step 24 ✓✓ → public README ✓✓ → extraction + construction layer ✓✓ (S51–S53) → **S54 BUILD: driver + results layer + 156 tests** → **Codex S54: three BLOCKING findings** → **my S55: all three confirmed by construction and corrected, 32 tests, 32/32 sweep** → **Codex S55: ALL FOUR APPROVED AT EXACT BLOBS, Stage-C label accepted, loop CLOSED ✓✓** → **my S56: `screen_physical_faults` implemented at Correction 1's signature, the tautological I13a comparison made LIVE, the machine path removed from the artifact, packet Step 25 written, 37 tests (938 → 975), 17-case sweep** → **Codex S56: DRIVER + TESTS APPROVED AS-IS, vocabulary guard kept, pre-execution list EMPTY; reviewer edits to Step 25 and my progress report ✓✓** → **my S57: Step 25 approved unchanged after MEASURING it, progress report RETURNED at thirteen, the override-join finding** → **Codex S57: corrected the count to fourteen, REPLACED my readback rule with a post-onset coefficient check, ran the replay gate (36.42 s) and then STAGES A/B/C — 135 rollouts, CASE_B, all eight readback comparisons passed** → **my S58: every number in the result INDEPENDENTLY REPRODUCED and the artifact APPROVED UNCHANGED; §9's ROLE-COVERAGE READ FOUND UNIMPLEMENTED and built at zero rollouts — dev 0 / pilot 0 / val 1 / test 1, so the result carries a ROLE-COVERAGE-BOUNDED NON-TRANSFER outcome; count returned at fifteen; my own monotonicity claim falsified** → **Codex S58: BLOCKED my role-coverage handoff on three real findings and corrected it** → **my S59: all three CONFIRMED by construction; a FOURTH defect found in the repair — a raw-domain digest of a tracked text file, so the artifact identified one checkout rather than the document, fixed to canonical; a 23-case sweep left 13 survivors, 12 real, closed with 12 tests, second pass 22/24; the packet-README diagnostic-pause sentence, the root-README order correction and the S56 progress report all APPROVED (that report's loop CLOSED at round five); Codex's inverted test-count correction returned at 24 ← WE ARE HERE** → Codex reviews the role-coverage script/tests/artifact, my packet-README edit, and the fifteen state → written amendment A2 + replacement assignment (both approve) → **full regeneration from zero** → re-audit → (4/5 models+calibration) [me] → (2 remaining roles) [Codex] → (6 controller + sample-size) [shared] → **joint immutable freeze** → one-shot confirmatory generation + eval (7) → Phase 3.
 
 Not freeze blockers (still required before completion): Slot-8 verification artifact; Technical Report / Accessible Piece / Study Guide Pass 2 (Phase 3); fresh-environment packet validation.
 
@@ -751,7 +899,7 @@ generation_audit.json · independent_audit.json
 - **The S44 seam inside Codex's file + `tests/test_assignment_generator_screen_overrides.py` (37 tests). APPROVED AT EXACT STATE BY CODEX (S44).** Blobs `1c565888…` and `2ec96c9f…`.
 - **`scripts/protocol_p_replay_gate.py` + `tests/test_protocol_p_replay_gate.py` (36 tests) — JOINTLY APPROVED.** **Re-run it after any generator change — it is a free bit-level regression test on the ordinary path.**
 - **STAGE 0 — JOINTLY APPROVED, RUN ONCE (S48), RESULT APPROVED (S49), RUNBOOK STEP 24 APPROVED (S50).** `scripts/analyze_synchronous_difference_null.py` + `scripts/utils/gauge_windows.py` + `tests/test_synchronous_difference_null.py` (99) + `tests/test_gauge_windows.py` (18).
-- **THE STAGE-A/B/C PROGRAM.** `scripts/utils/protocol_p_results.py` and `tests/test_protocol_p_results.py` are **JOINTLY APPROVED and UNTOUCHED SINCE** (`e84e5f9f…` / `cbac30ed…`, 77 collected). `scripts/run_protocol_p_screen.py` and `tests/test_protocol_p_driver.py` were approved at `99e2d447…` / `3f1a8106…` and then **EDITED BY ME IN S56 — both are back under exact-state review** (148 collected). **`screen_physical_faults` is now BUILT** — the last item on the pre-execution list. **Nothing else on that list remains open that I know of.**
+- **THE STAGE-A/B/C PROGRAM.** `scripts/utils/protocol_p_results.py` and `tests/test_protocol_p_results.py` are **JOINTLY APPROVED and UNTOUCHED SINCE** (`e84e5f9f…` / `cbac30ed…`, 77 collected). `scripts/run_protocol_p_screen.py` (`7668793e…`) and `tests/test_protocol_p_driver.py` (`23222d0e…`, 148 collected) are **JOINTLY APPROVED (Codex S56) AND HAVE BEEN EXECUTED ONCE (Codex S57, 135 rollouts). Do not re-run `--mode execute`.** **The only executable of mine under review is the role-coverage analyzer and its 46 tests** — see the top of this file. **Its shape is pinned to the current assignment and it must be revised, not merely re-pointed, after A2 (limitation 71).**
 
 ## Codex's OTHER lanes — reference
 
@@ -846,6 +994,9 @@ generation_audit.json · independent_audit.json
 66. **[NEW S58] §9's role-coverage read is not implemented in the driver and never was.** The executed artifact does not contain it. It is supplied by `scripts/analyze_protocol_p_role_coverage.py`, which derives it from the persisted result at zero rollout cost. **No write-up may present `CASE_B` as the complete §9 outcome without the coverage counts beside it.**
 67. **[NEW S58] The measured coverage is dev 0 / pilot 0 / val 1 / test 1, so the result carries a role-coverage-bounded non-transfer outcome.** It establishes **neither success nor hypothesis failure**. Val and test are thin single-severity roles. **Gate 4 trains structural attribution on dev, which has no testable structural setting at the selected probe** — state this whenever the forward plan is discussed.
 68. **[NEW S58] The role-coverage script's OOD-exclusion filter is a NO-OP on the current assignment** — the per-split grids never contain 0.45 or 0.55, which live only in `compound_ood_settings`. It is kept for specification fidelity and is exercised only by a **constructed** test that injects an OOD severity into a split grid. **Do not count the real-document test as coverage of that filter.** Ninth member of the redundant-guard class (37, 39, 43, 49×2, 51, 55, 59, 61).
+69. **[NEW S59] `c48c2e4d…` is the CRLF-rendering raw hash of an LF-tracked document, and both agents have quoted it as "the screen result's sha256."** The tracked blob is `e800ae6c…`, which is also what `canonical_text_sha256` returns. Nothing downstream depends on the raw value, so no result moves — but **any future sentence naming the screen result's digest must use `e800ae6c…` or say explicitly which rendering it means.** The artifact now records the canonical value. Limitation 34's rule, violated by both of us for two sessions.
+70. **[NEW S59] `compute_role_coverage` can raise a FOREIGN exception type.** A document carrying a non-finite severity dies in `expected_assignment_hash` with `Gate3AssignmentError` before reaching the analyzer's own non-finite guard, so the module's stated `RoleCoverageError` contract does not hold on that input. It still fails loudly. The non-finite-severity guard is reachable **only** by calling `structural_severities_by_split` directly, and that is how it is tested. **No write-up may say the analyzer refuses every malformed document with a named role-coverage error.**
+71. **[NEW S59] The role-coverage analyzer is pinned to the CURRENT assignment's shape and will refuse a post-A2 one.** It requires exactly the four splits and **exactly two** known-class structural severities per split, and requires the ladder to equal the union of those eight plus the two OOD values. That is correct fail-loud behaviour for a read of *this* screen, and it is deliberate — but **after A2's regeneration the script must be revised, not merely re-pointed**, and whoever does that owes the twelve S59 tests a re-check because several construct states in terms of the current grids.
 
 ## Coherence / honesty bounds (keep loud)
 
@@ -857,7 +1008,7 @@ generation_audit.json · independent_audit.json
 
 - **Simulation-only, one desktop:** Windows 11, Ryzen 7 8700F (8C/16T), RTX 5060 Ti **16 GB VRAM** (sm_120), 32 GB RAM, Python **3.12.10** in `./venv`. Free/OSS, commercial-use-friendly only.
 - **venv has:** numpy 2.5.1, scipy 1.18.0, scikit-learn 1.9.0, matplotlib 3.11.0, mujoco 3.10.0, pandas 3.0.3, control 0.10.2, gymnasium 1.3.0, pytest 9.1.1, **torch 2.11.0+cu128**. **No new dependency was added in S46–S57.**
-- **Running packet tests:** from the REPO ROOT, `./venv/Scripts/python.exe -m pytest -q "Reproducibility Packet/tests"`. **Scope pytest to that path** — a root-wide invocation collides on duplicate test module names in the ignored `tmp/session6_packet_copy/`. **Full suite 999 tests green (S58, 142.13 s; `test_protocol_p_role_coverage.py` collects 24 and 975 + 24 = 999 exactly — measured, after an earlier 997/140.51 s run taken before the two constructed tests that kill the sweep’s survivors).** Prior: 975 (S57, 122.71 s), 938 (S55, 114.30 s), 906 (S54), 750 (S53), 595 (pre-S51 baseline). **The suite is ~4x slower than pre-S54 because the driver's end-to-end test rehearses all 168 rollouts through the real SensorModel on synthetic bodies — deliberate, and it spends no MuJoCo rollout.** **Set `PYTHONIOENCODING=utf-8` for anything that prints non-ASCII** — the console is cp1252. **Use ASCII in probe scripts and in anything a gate prints.**
+- **Running packet tests:** from the REPO ROOT, `./venv/Scripts/python.exe -m pytest -q "Reproducibility Packet/tests"`. **Scope pytest to that path** — a root-wide invocation collides on duplicate test module names in the ignored `tmp/session6_packet_copy/`. **Full suite 1,021 tests green (S59, 143.00 s; `test_protocol_p_role_coverage.py` collects 46 and 975 + 46 = 1,021 exactly).** Prior: 999 (S58, 142.13 s, that file at 24 — **NOT 22; see the S59 count correction**), 975 (S57, 122.71 s), 938 (S55, 114.30 s), 906 (S54), 750 (S53), 595 (pre-S51 baseline). **The focused role-coverage file alone runs in 0.30 s, so a mutation case over it costs ~0.7 s and a 24-case sweep is seconds — sweep it freely, unlike the driver file's ~100 s per case.** **The suite is ~4x slower than pre-S54 because the driver's end-to-end test rehearses all 168 rollouts through the real SensorModel on synthetic bodies — deliberate, and it spends no MuJoCo rollout.** **Set `PYTHONIOENCODING=utf-8` for anything that prints non-ASCII** — the console is cp1252. **Use ASCII in probe scripts and in anything a gate prints.**
 - **Packet scripts are invoked FROM the packet directory** (`scripts\<name>.py`, `--output-dir results\<name>`), per its README. From the packet dir the project venv is `..\venv\Scripts\python.exe`. **In my PowerShell tool the working directory is not the repo root — use `Set-Location` or absolute paths. My Bash tool's cwd PERSISTS between calls — prefer absolute paths or re-`cd` every time.**
 - **Timings (measured S35–S56):** full packet suite ~115 s (S55/S56; ~12–13 s before the driver test landed); one MuJoCo rollout (3000 steps) **25.6–27.5 s**; a PARTIAL rollout is proportionally cheap — 480 steps ≈ 3.0 s; at reduced fidelity (`point_count=9`, `simulation_timestep_s=2e-4`) 501 control steps ≈ 0.37 s; a 200-realization sensor-only null at W=768 ~40 s; an offline re-observation ≈ instantaneous; a 3,124-file inventory ≈ instantaneous; **the driver's `--mode plan` 0.30–0.33 s [S56, measured]**; **one driver-file mutation case ≈ 100 s, so a 17-case sweep is ~28 min and belongs in the background**; a 26-case sweep over two small files ≈ 100 s. **NO figure exists for the pinned `pairs=100` Stage-0 run — see limitation 45; do not invent one.**
 - **Background jobs:** `run_in_background: true` and wait for the notification. **Python buffers stdout when redirected — use `flush=True` in the job and poll the file it writes, not a pipe.**
@@ -944,6 +1095,9 @@ generation_audit.json · independent_audit.json
 76. **(NEW S58) When auditing a total, re-derive the NONZERO entries; the zeroes cost nothing to the sum.** My S57 sweep sampled Sessions 42–44 and 47–56 — the ones I expected to be zero — and carried the nonzero sessions forward from my own summary. That is auditing the cheap half: it produces a defensible-looking sweep while leaving every entry that actually contributes to the total unchecked. The figure had by then been wrong three times and went wrong twice more. **Generalized: an audit that samples where you expect to find nothing is a measurement of your expectations.**
 77. **(NEW S58) A test written against the real committed document may be asserting a property of the DOCUMENT, not of your code.** My OOD-exclusion test passed because this assignment's per-split grids happen never to contain an OOD severity, so the filter it "covered" is a no-op — a mutation sweep caught it, reading it did not. **This is Lesson 67 (a property of the language) with the data substituted for the runtime, and the detection method is the same: ask what exact state would make it red, then construct that state rather than hoping the fixture contains it.**
 78. **(NEW S58) Verify your own instrument before reporting a discrepancy, especially a large and consistent one.** Eight `D` values all wrong by a similar amount reads as a systematic defect in the artifact; it was my lookup omitting `sensor_seed`/`pair_id`. **A discrepancy that looks too clean to be a bug usually is one — yours.**
+79. **(NEW S59) A REVIEWER'S REPAIR ARRIVES WITH THE AUTHORITY OF HAVING BEEN RIGHT, AND THAT IS EXACTLY WHY IT NEEDS THE FULL SWEEP.** Codex was right about all three of its findings, each severe, each reproduced. That correctness is *psychologically* the problem: after confirming three real defects in my own work I was primed to ratify the fix, and the fix carried a reproducibility defect plus twelve untested guards. **Being right about the diagnosis says nothing about the treatment.** Lesson 64 already said to sweep the reviewer's repair; S59 is the instance where doing it mattered, and the operative addition is *when you have just been shown to be wrong, that is the moment your review of the correction is weakest.*
+80. **(NEW S59) A GUARD ADDED DURING REVIEW IS THE LEAST LIKELY GUARD IN THE CODEBASE TO HAVE A TEST THAT CAN FAIL.** Thirteen of the repair's new guards survived deletion. The mechanism is structural, not sloppiness: a reviewer adds guards against states it constructed *ad hoc* while probing, then hands back the code — and the constructed states live in the reviewer's scratch process, not in the test file. The owner then reads the guards, agrees with each, and adds nothing. **The move: for every guard a review adds, ask which committed test constructs the state it refuses, and if the answer is "the reviewer ran one in its own session," it is not covered.** Its companion, S59's sharpest single case: **a check whose input space has three branches and whose real data sits in the middle one has both ends dead by default.**
+81. **(NEW S59) A HASH IS ONLY PROVENANCE IF IT IDENTIFIES THE DOCUMENT RATHER THAN THE COPY.** `raw_file_sha256` on a tracked text file returns whatever the checkout rendered, so two correct reproductions on two operating systems disagree — and the artifact recording it looks maximally rigorous while being maximally machine-specific. This is limitation 28/29/34's family arriving in a new place, and the general form is: **before recording a digest, ask what would have to change for it to change, and check that the answer is "the content" and not "the machine."** Its companion, and the reason it survived review: **the test that covered it called the program's own hashing function on both sides of the equals sign** — Lesson 71 recurring, this time inside a test written specifically to cover the line under review.
 
 ## Pointers
 
@@ -967,12 +1121,13 @@ Run plan mode from the packet dir:
   zero rollouts, 0.30-0.33 s, writes stage_abc_screen.json.
 `--mode execute` HAS NOW BEEN RUN ONCE, by Codex in its S57.  DO NOT RUN IT AGAIN
   without a new joint decision: it costs 135 rollouts and the result is approved.
-THE ROLE-COVERAGE READ (S58, mine, UNREVIEWED) -- zero rollouts, run from the packet dir:
+THE ROLE-COVERAGE READ (S58 mine -> S58 Codex edit -> S59 my re-edit, UNDER REVIEW,
+  CODEX OWNS THE NEXT TURN) -- zero rollouts, run from the packet dir:
   ..\venv\Scripts\python.exe scripts\analyze_protocol_p_role_coverage.py `
     --screen-result results\protocol_p\stage_abc_screen.json `
     --assignment config\proposed-gate3-assignment-v0.1.json --output-dir results\protocol_p
 ```
-- **`agents/Claude/Progress Reports/Progress Report Session 56.md` — REVIEW LOOP OPEN AT ROUND FOUR; CODEX OWNS MY S58 RETURN.** Covers S49–S56. Its honest headline is that sixteen sessions produced no measurement of the central question, and it hands the pace trade-off back to the director — **that headline is now overtaken by events: the measurement ran in Codex's S57.** **The one paragraph still in dispute is the cost bullet, and it has moved four times: one → four (Codex S56) → thirteen (my S57) → fourteen (Codex S57, right about S41's fifth run) → FIFTEEN (my S58, both agents spent one in their own S39).** The returned state carries the per-agent table and the "audited the cheap half" reason. `Progress Report Session 48.md` remains jointly approved at blob `f01aa7d7…`.
+- **`agents/Claude/Progress Reports/Progress Report Session 56.md` — REVIEW LOOP CLOSED AT ROUND FIVE, blob `83c527c…`. Do not reopen.** (Superseded description of the round history follows.) Covers S49–S56. Its honest headline is that sixteen sessions produced no measurement of the central question, and it hands the pace trade-off back to the director — **that headline is now overtaken by events: the measurement ran in Codex's S57.** **The one paragraph still in dispute is the cost bullet, and it has moved four times: one → four (Codex S56) → thirteen (my S57) → fourteen (Codex S57, right about S41's fifth run) → FIFTEEN (my S58, both agents spent one in their own S39).** The returned state carries the per-agent table and the "audited the cheap half" reason. `Progress Report Session 48.md` remains jointly approved at blob `f01aa7d7…`.
 - **The seam (APPROVED, Codex S44): `ScreenOverrides` in `Reproducibility Packet/scripts/utils/assignment_generator.py`, git blob `1c565888…`, and its tests, git blob `2ec96c9f…`.** Read spec §3 beside them.
 - **The I13b guard: `Reproducibility Packet/tests/test_cable_plant_softening_boundary.py`** — 6 tests, co-owned, **approved in place by Codex (S43)**. **The driver NAMES it as a precondition it does not itself run.**
 - Claim Sheet (in-force contract): `Claim Sheet.md` · plain-language: `Accessible Claim Sheet.md` · Study Guide Pass 1: `Study Guide/Pass 1 - Conceptual Foundation.tex`
@@ -983,11 +1138,28 @@ THE ROLE-COVERAGE READ (S58, mine, UNREVIEWED) -- zero rollouts, run from the pa
 - **CONCLUDED director chat:** `chats/Claude-Codex-Human/Better Suited Task/…- Concluded.md` — the withdrawn task-redesign directive. **A2 must stay clear of it.**
 - Director requests: `director_requests.md` (root) — entry 1 (Claim Sheet review) non-blocking, **still awaiting director reply; it is named in the S56 progress report's "what isn't working"**. Nothing else is blocked on the director.
 - My foundation `agents/Claude/Literature Foundation.md` · ledger `agents/Claude/references.md` (**no S20–S57 entries — reproduction/construction/measurement/review sessions, no external sources read**).
-- **Live-Run README (co-maintained): root `README.md` — Phase 2 / In Progress, banner 2026-08-01.** **My S57 appended ONE new entry (`+2/−0`) and edited no dated entry** — the implementation review is now closed on both sides, and the entry also carries the 180/168 measurement, the one→four→thirteen cost correction with the reason nobody re-derived it, and the override-join finding with its free readback. **My S56 appended ONE new entry (`+2/−0`) and edited no dated entry.** The deciding question was again a claim going stale: Codex's S55 entry says the program is approved by both agents at the same exact state, and I changed it. **Standing decision, recorded so it is not re-litigated: dated entries are never edited; corrections propagate forward.**
-- **Phase-2 chat:** `chats/Claude-Codex/Phase 2 Integration and Config Freeze/…- Active.md` (**14,555 lines**; Codex's S57 turns end at 14,301; **my S58 turn at 14,303, `+253/−0`**. **CODEX OWNS THE NEXT TURN: the role-coverage script/tests/artifact, my packet-README edit, and the fifteen-run progress report.** Do NOT re-ask the plan default, the Stage-0 imports, the Stage-C label, the vocabulary guard, Step 25, or the readback ruling; all six are settled. Superseded line count for reference: 14,004; Codex's S56 turn at 13,632 `+151/−0`, my S57 turn at 13,783 `+225/-0`. **Codex owns the next turn — the returned progress-report state and the readback ruling. Do NOT re-ask the plan default, the Stage-0 imports, the Stage-C label, the vocabulary guard, or Step 25; all five are settled.**).
-- **Monitoring chat:** `chats/Claude-Codex-Human/Transcript Order Monitoring/…- Active.md` (88 lines; unchanged S43–S57 — no recurrence; **streak twenty-three**: Codex's S56 commit was `+151/−0`, its two headers each occurring once, at 13,632 and 13,745, after the 13,628-line boundary, and it was physically last; my S57 append passed all four gates at `+225/−0`, header unique at 13,783, after the 13,779-line boundary). The duty is to flag recurrences, so a clean session adds no note; verify at the git level regardless.
+- **Live-Run README (co-maintained): root `README.md` — Phase 2 / In Progress, banner 2026-08-01. My S59 appended ONE new entry (`+2/−0`) at the END of the log, after Codex's dated 2026-08-02 order correction, and edited no dated entry.** It reports the three findings Codex made in my script (naming that one of them ERASED the outcome rather than changing a number), the raw-vs-canonical digest defect and why a stranger on Linux would have regenerated a different file, the tautological test, and the thirteen-survivor sweep. **The log's date order is now: … 08-02 (my S58), 08-01 (Codex S57 result), 08-02 (Codex's order correction), 08-02 (mine S59).** That is out of chronological order in the middle and Codex's correction says so; **dated entries are never edited, so it stays that way.** **Beware when appending: `README.md` is all-CRLF but a naive `find('\n\n')` insert landed my entry inside the "Follow along" section on the first attempt — verify the placement by reading it back, not by trusting the offset.** **My S57 appended ONE new entry (`+2/−0`) and edited no dated entry** — the implementation review is now closed on both sides, and the entry also carries the 180/168 measurement, the one→four→thirteen cost correction with the reason nobody re-derived it, and the override-join finding with its free readback. **My S56 appended ONE new entry (`+2/−0`) and edited no dated entry.** The deciding question was again a claim going stale: Codex's S55 entry says the program is approved by both agents at the same exact state, and I changed it. **Standing decision, recorded so it is not re-litigated: dated entries are never edited; corrections propagate forward.**
+- **Phase-2 chat:** `chats/Claude-Codex/Phase 2 Integration and Config Freeze/…- Active.md` — **NOW 14,914 lines. My S59 turn is at 14,662, `+256/−0`, header unique, physically last. CODEX OWNS THE NEXT TURN: the analyzer, its 46 tests, the regenerated artifact, my one added packet-README sentence, and the `.gitattributes` question I left to it.** Do NOT re-ask the plan default, the Stage-0 imports, the Stage-C label, the vocabulary guard, Step 25, the readback ruling, or the screen result itself; all seven are settled. **The file is MIXED-EOL** (13,401 CRLF pairs out of 14,658 LF at the S58 tail) — Codex appends LF, the older bulk is CRLF; append LF and verify `+N/−0` rather than assuming. *(Superseded state below.)* (**14,555 lines**; Codex's S57 turns end at 14,301; **my S58 turn at 14,303, `+253/−0`**. **CODEX OWNS THE NEXT TURN: the role-coverage script/tests/artifact, my packet-README edit, and the fifteen-run progress report.** Do NOT re-ask the plan default, the Stage-0 imports, the Stage-C label, the vocabulary guard, Step 25, or the readback ruling; all six are settled. Superseded line count for reference: 14,004; Codex's S56 turn at 13,632 `+151/−0`, my S57 turn at 13,783 `+225/-0`. **Codex owns the next turn — the returned progress-report state and the readback ruling. Do NOT re-ask the plan default, the Stage-0 imports, the Stage-C label, the vocabulary guard, or Step 25; all five are settled.**).
+- **Monitoring chat:** `chats/Claude-Codex-Human/Transcript Order Monitoring/…- Active.md` (88 lines; unchanged S43–S59 — no recurrence; **streak twenty-five**: my S59 append passed all four gates — 14,658-line pre-write prefix retained byte-for-byte, header unique at 14,662, physically last at the 14,914-line tail, `+256/−0`. **Note the near-miss worth carrying: my first scripted append ASSERTED the file ended with the newline it had detected and refused, correctly, because the file is mixed-EOL — the assertion is what caught it, not inspection.** Prior **streak twenty-three**: Codex's S56 commit was `+151/−0`, its two headers each occurring once, at 13,632 and 13,745, after the 13,628-line boundary, and it was physically last; my S57 append passed all four gates at `+225/−0`, header unique at 13,783, after the 13,779-line boundary). The duty is to flag recurrences, so a clean session adds no note; verify at the git level regardless.
 
-## Scratchpad (S58, NOT committed)
+## Scratchpad (S59, NOT committed)
+
+`probe_s59_findings.py` — **the instrument worth rebuilding.** Loads the pre-review
+analyzer from a git blob and the current one from the packet, then drives each constructed
+bad state through BOTH in one process and prints the two verdicts side by side. *The
+general move: to confirm a reviewer's finding, make the OLD code's acceptance and the NEW
+code's refusal appear in the same output — a refusal alone is not evidence that anything
+was ever broken.* It also runs each assignment mutation twice, stale-hash and resealed,
+because the guard under test is unreachable until the mutation is internally consistent.
+`verify_s59_mutations.py` — the sweep, in the S51/S52/S54/S55/S56/S58 template, **plus
+newline translation**: it detects the target file's line ending and rewrites every anchor,
+after a first pass returned 21 bad anchors and zero verdicts under a tidy-looking summary.
+`new_tests_s59.py` (the appended test block, kept out of the repo edit path so the append
+preserves exact bytes), `old_analyzer_s58.py` / `old_tests_s58.py` (my pre-review blobs,
+extracted with `git show` — Lesson 51), `turn_s59.md`, `log_entry_s59.txt`,
+`rc_before.json` (the idempotence control).
+
+## Scratchpad (S58, superseded)
 
 `audit_s58.py` — **the instrument worth rebuilding.** It recomputes the ENTIRE screen
 result from the artifact and the assignment ALONE, importing neither the driver nor the
