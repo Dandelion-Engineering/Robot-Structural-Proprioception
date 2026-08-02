@@ -89,6 +89,11 @@ LADDER_VERDICTS = {TESTABLE, SUB_THRESHOLD}
 # tolerance is appropriate; this guards against a float that merely renders the same.
 MASS_TOLERANCE_KG = 1e-12
 
+# Persisted decision-bearing floats are generated from the same operands written into
+# the result artifact.  This tolerance accepts serialization round-off while refusing
+# a stored margin, threshold, or null that represents a different calculation.
+NUMERIC_TOLERANCE = 1e-12
+
 
 class PayloadConditioningError(RuntimeError):
     """Raised when the inputs cannot support the payload-conditioning read."""
@@ -374,7 +379,13 @@ def cell_contexts(results: dict, assignment: dict) -> dict[int, dict]:
 
 
 def ladder_rows(results: dict) -> list[dict]:
-    """Return the ten ladder rows, each with a verdict and four per-cell entries."""
+    """Return ten internally coherent ladder rows and their four per-cell entries.
+
+    The boundary read consumes ``d``, ``margin`` and ``operative_threshold``.  Those
+    are duplicated persisted fields, so merely checking that each is finite would let
+    a contradictory artifact move the reported zero crossing.  Re-derive every
+    decision-bearing relationship before using any of them.
+    """
     ladder = results.get("ladder")
     require(isinstance(ladder, list) and len(ladder) == 10,
             "the ladder must carry exactly ten values; got "
@@ -400,19 +411,77 @@ def ladder_rows(results: dict) -> list[dict]:
             entry = per_cell[str(cell)]
             require(isinstance(entry, dict),
                     f"the ladder row at {value!r} cell {cell} must be an object")
+            distance = require_finite_number(
+                entry.get("d"), f"the distance at remaining_ei {value} cell {cell}")
+            margin = require_finite_number(
+                entry.get("margin"),
+                f"the margin at remaining_ei {value} cell {cell}")
+            threshold = require_finite_number(
+                entry.get("operative_threshold"),
+                f"the threshold at remaining_ei {value} cell {cell}")
+            q95_c = require_finite_number(
+                entry.get("q95_c"),
+                f"the q95_c at remaining_ei {value} cell {cell}")
+            hard_gates_passed = entry.get("hard_gates_passed")
+            require(isinstance(hard_gates_passed, bool),
+                    f"the ladder row at {value!r} cell {cell} carries no boolean "
+                    "hard_gates_passed")
+            require(hard_gates_passed,
+                    f"the non-terminal ladder row at {value!r} cell {cell} did not "
+                    "pass its hard gates")
+            cell_verdict = entry.get("verdict")
+            require(cell_verdict in LADDER_VERDICTS,
+                    f"the ladder row at {value!r} cell {cell} carries unknown verdict "
+                    f"{cell_verdict!r}")
+            require(math.isclose(
+                        threshold, 2.0 * q95_c,
+                        rel_tol=NUMERIC_TOLERANCE,
+                        abs_tol=NUMERIC_TOLERANCE),
+                    f"the threshold at remaining_ei {value} cell {cell} does not "
+                    "equal 2 * q95_c")
+            require(math.isclose(
+                        margin, distance - threshold,
+                        rel_tol=NUMERIC_TOLERANCE,
+                        abs_tol=NUMERIC_TOLERANCE),
+                    f"the margin at remaining_ei {value} cell {cell} does not equal "
+                    "d - operative_threshold")
+            expected_cell_verdict = TESTABLE if margin >= 0.0 else SUB_THRESHOLD
+            require(cell_verdict == expected_cell_verdict,
+                    f"the margin at remaining_ei {value} cell {cell} implies "
+                    f"{expected_cell_verdict}, but the per-cell verdict is "
+                    f"{cell_verdict!r}")
             entries[cell] = {
-                "d": require_finite_number(
-                    entry.get("d"), f"the distance at remaining_ei {value} cell {cell}"),
-                "margin": require_finite_number(
-                    entry.get("margin"),
-                    f"the margin at remaining_ei {value} cell {cell}"),
-                "operative_threshold": require_finite_number(
-                    entry.get("operative_threshold"),
-                    f"the threshold at remaining_ei {value} cell {cell}"),
-                "verdict": entry.get("verdict"),
+                "d": distance,
+                "margin": margin,
+                "operative_threshold": threshold,
+                "q95_c": q95_c,
+                "verdict": cell_verdict,
             }
+        stored_min_margin = require_finite_number(
+            row.get("min_margin"), f"the minimum margin at remaining_ei {value}")
+        expected_min_margin = min(entry["margin"] for entry in entries.values())
+        require(math.isclose(
+                    stored_min_margin, expected_min_margin,
+                    rel_tol=NUMERIC_TOLERANCE,
+                    abs_tol=NUMERIC_TOLERANCE),
+                f"the stored minimum margin at remaining_ei {value} does not equal "
+                "the minimum per-cell margin")
+        expected_row_verdict = (
+            TESTABLE if all(entry["verdict"] == TESTABLE for entry in entries.values())
+            else SUB_THRESHOLD)
+        require(verdict == expected_row_verdict,
+                f"the per-cell conjunction at remaining_ei {value} implies "
+                f"{expected_row_verdict}, but the row verdict is {verdict!r}")
         rows.append({"remaining_ei": value, "verdict": verdict, "per_cell": entries})
     rows.sort(key=lambda row: row["remaining_ei"])
+    for cell in SCREEN_CELLS:
+        reference = rows[0]["per_cell"][cell]["q95_c"]
+        require(all(math.isclose(
+                        row["per_cell"][cell]["q95_c"], reference,
+                        rel_tol=NUMERIC_TOLERANCE,
+                        abs_tol=NUMERIC_TOLERANCE)
+                    for row in rows[1:]),
+                f"the operative q95_c changes across ladder values in cell {cell}")
     return rows
 
 
@@ -531,7 +600,7 @@ def severity_boundary_by_cell(rows: list[dict]) -> dict[int, dict]:
     return boundaries
 
 
-def null_by_payload_level(results: dict, levels: list[dict]) -> list[dict]:
+def null_by_payload_level(results: dict, levels: list[dict], rows: list[dict]) -> list[dict]:
     """Return the operative Stage-C null at each payload level.
 
     This is the control for the attenuation table.  If the null moved with payload the
@@ -550,8 +619,15 @@ def null_by_payload_level(results: dict, levels: list[dict]) -> list[dict]:
         for cell in level["cells"]:
             entry = nulls[str(cell)]
             require(isinstance(entry, dict), f"stage_c_nulls[{cell}] must be an object")
-            values.append(require_finite_number(
-                entry.get("q95_c"), f"the Stage-C null q95_c at cell {cell}"))
+            q95_c = require_finite_number(
+                entry.get("q95_c"), f"the Stage-C null q95_c at cell {cell}")
+            require(math.isclose(
+                        q95_c, rows[0]["per_cell"][cell]["q95_c"],
+                        rel_tol=NUMERIC_TOLERANCE,
+                        abs_tol=NUMERIC_TOLERANCE),
+                    f"the Stage-C null q95_c at cell {cell} does not equal the "
+                    "operative q95_c stored with the ladder")
+            values.append(q95_c)
         out.append({
             "distal_payload_mass_kg": level["distal_payload_mass_kg"],
             "cells": level["cells"],
@@ -570,12 +646,11 @@ def confirmatory_payload_coverage(contexts: dict[int, dict],
     read with, stated as numbers instead of as a caveat.
     """
     screened = sorted({contexts[cell]["distal_payload_mass_kg"] for cell in SCREEN_CELLS})
-    lowest, highest = screened[0], screened[-1]
     outside: dict[str, list[float]] = {}
     for split in SPLITS:
         beyond = [mass for mass in by_split[split]
-                  if mass < lowest - MASS_TOLERANCE_KG
-                  or mass > highest + MASS_TOLERANCE_KG]
+                  if not any(abs(mass - observed) <= MASS_TOLERANCE_KG
+                             for observed in screened)]
         if beyond:
             outside[split] = beyond
     return {
@@ -643,7 +718,7 @@ def compute_payload_conditioning(screen: dict, assignment: dict) -> dict:
                 "two payload levels determine a ratio and nothing else; no functional "
                 "form in payload mass is fitted, implied, or usable from this artifact"),
         },
-        "null_by_payload_level": null_by_payload_level(results, levels),
+        "null_by_payload_level": null_by_payload_level(results, levels, rows),
         "severity_boundary_by_cell": {
             str(cell): value
             for cell, value in severity_boundary_by_cell(rows).items()

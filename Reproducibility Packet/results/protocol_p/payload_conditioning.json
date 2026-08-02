@@ -158,6 +158,7 @@
   ],
   "splits_reserving_unscreened_masses": {
    "pilot": [
+    0.025,
     0.075
    ],
    "test": [

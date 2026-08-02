@@ -76,6 +76,20 @@ def _ledger_entry(screen_doc, index=0):
     return entry, payload, write
 
 
+def _set_entry_margin(entry, margin):
+    """Set a coherent synthetic margin, distance and per-cell verdict."""
+    entry["margin"] = margin
+    entry["d"] = entry["operative_threshold"] + margin
+    entry["verdict"] = pc.TESTABLE if margin >= 0.0 else pc.SUB_THRESHOLD
+
+
+def _refresh_row_decision(row):
+    """Recompute the duplicated row decision fields after a synthetic cell edit."""
+    margins = [entry["margin"] for entry in row["per_cell"].values()]
+    row["min_margin"] = min(margins)
+    row["verdict"] = pc.TESTABLE if min(margins) >= 0.0 else pc.SUB_THRESHOLD
+
+
 # --------------------------------------------------------------------------
 # The accept side, against the real committed documents.
 # --------------------------------------------------------------------------
@@ -164,7 +178,8 @@ def test_pilot_val_and_test_reserve_payload_masses_the_screen_never_ran(report):
     coverage = report["confirmatory_payload_coverage"]
     assert coverage["screened_payload_masses_kg"] == [0.0, 0.05]
     assert coverage["splits_reserving_unscreened_masses"] == {
-        "pilot": [0.075], "val": [0.1, 0.125], "test": [0.15, 0.2]}
+        "pilot": [0.025, 0.075], "val": [0.1, 0.125],
+        "test": [0.15, 0.2]}
     assert "dev" not in coverage["splits_reserving_unscreened_masses"]
 
 
@@ -567,6 +582,71 @@ def test_a_non_finite_threshold_is_refused(mutable):
         pc.compute_payload_conditioning(screen_doc, assignment_doc)
 
 
+def test_a_margin_inconsistent_with_distance_and_threshold_is_refused(mutable):
+    """A contradictory duplicate field must not move the reported boundary."""
+    screen_doc, assignment_doc = mutable
+    screen_doc["results"]["ladder"][0]["per_cell"]["7"]["margin"] = -999.0
+    with pytest.raises(pc.PayloadConditioningError,
+                       match="does not equal d - operative_threshold"):
+        pc.compute_payload_conditioning(screen_doc, assignment_doc)
+
+
+def test_a_threshold_inconsistent_with_the_operative_null_is_refused(mutable):
+    screen_doc, assignment_doc = mutable
+    screen_doc["results"]["ladder"][0]["per_cell"]["7"][
+        "operative_threshold"] += 0.01
+    with pytest.raises(pc.PayloadConditioningError, match=r"does not equal 2 \* q95_c"):
+        pc.compute_payload_conditioning(screen_doc, assignment_doc)
+
+
+def test_a_per_cell_verdict_inconsistent_with_its_margin_is_refused(mutable):
+    screen_doc, assignment_doc = mutable
+    screen_doc["results"]["ladder"][0]["per_cell"]["7"][
+        "verdict"] = pc.SUB_THRESHOLD
+    with pytest.raises(pc.PayloadConditioningError,
+                       match="implies TESTABLE, but the per-cell verdict"):
+        pc.compute_payload_conditioning(screen_doc, assignment_doc)
+
+
+def test_a_non_terminal_ladder_cell_with_a_failed_hard_gate_is_refused(mutable):
+    screen_doc, assignment_doc = mutable
+    screen_doc["results"]["ladder"][0]["per_cell"]["7"][
+        "hard_gates_passed"] = False
+    with pytest.raises(pc.PayloadConditioningError,
+                       match="did not pass its hard gates"):
+        pc.compute_payload_conditioning(screen_doc, assignment_doc)
+
+
+def test_a_stored_minimum_margin_inconsistent_with_the_cells_is_refused(mutable):
+    screen_doc, assignment_doc = mutable
+    screen_doc["results"]["ladder"][0]["min_margin"] += 0.01
+    with pytest.raises(pc.PayloadConditioningError,
+                       match="does not equal the minimum per-cell margin"):
+        pc.compute_payload_conditioning(screen_doc, assignment_doc)
+
+
+def test_a_row_verdict_inconsistent_with_the_per_cell_conjunction_is_refused(mutable):
+    screen_doc, assignment_doc = mutable
+    screen_doc["results"]["ladder"][0]["verdict"] = pc.SUB_THRESHOLD
+    with pytest.raises(pc.PayloadConditioningError,
+                       match="per-cell conjunction.*implies TESTABLE"):
+        pc.compute_payload_conditioning(screen_doc, assignment_doc)
+
+
+def test_a_q95_that_changes_across_ladder_values_is_refused(mutable):
+    """Keep each local equation coherent so only the across-row guard can fire."""
+    screen_doc, assignment_doc = mutable
+    entry = screen_doc["results"]["ladder"][1]["per_cell"]["7"]
+    entry["q95_c"] += 0.01
+    entry["operative_threshold"] = 2.0 * entry["q95_c"]
+    entry["margin"] = entry["d"] - entry["operative_threshold"]
+    screen_doc["results"]["ladder"][1]["min_margin"] = min(
+        cell["margin"] for cell in screen_doc["results"]["ladder"][1]["per_cell"].values())
+    with pytest.raises(pc.PayloadConditioningError,
+                       match="operative q95_c changes across ladder values"):
+        pc.compute_payload_conditioning(screen_doc, assignment_doc)
+
+
 def _contexts(masses, environments=None, contacts=None):
     """Build a four-cell context map for the direct ``payload_levels`` tests."""
     environments = environments or {4: "e0", 5: "e1", 6: "e0", 7: "e1"}
@@ -701,7 +781,9 @@ def test_a_level_whose_cells_share_a_contact_profile_is_refused_as_confounded(mu
 def test_a_zero_reference_distance_is_refused_rather_than_dividing(mutable):
     screen_doc, assignment_doc = mutable
     for cell in ("4", "5"):
-        screen_doc["results"]["ladder"][0]["per_cell"][cell]["d"] = 0.0
+        entry = screen_doc["results"]["ladder"][0]["per_cell"][cell]
+        _set_entry_margin(entry, -entry["operative_threshold"])
+    _refresh_row_decision(screen_doc["results"]["ladder"][0])
     with pytest.raises(pc.PayloadConditioningError,
                        match="an attenuation ratio needs a"):
         pc.compute_payload_conditioning(screen_doc, assignment_doc)
@@ -746,6 +828,14 @@ def test_a_non_finite_stage_c_null_is_refused(mutable):
         pc.compute_payload_conditioning(screen_doc, assignment_doc)
 
 
+def test_a_stage_c_null_inconsistent_with_the_ladder_is_refused(mutable):
+    screen_doc, assignment_doc = mutable
+    screen_doc["results"]["stage_c_nulls"]["7"]["q95_c"] += 0.01
+    with pytest.raises(pc.PayloadConditioningError,
+                       match="does not equal the operative q95_c stored with the ladder"):
+        pc.compute_payload_conditioning(screen_doc, assignment_doc)
+
+
 # --------------------------------------------------------------------------
 # Both ends of the two branches whose real-data value sits at one end.
 # --------------------------------------------------------------------------
@@ -755,7 +845,8 @@ def test_a_cell_whose_margin_never_crosses_reports_no_bracket(mutable):
     screen_doc, assignment_doc = mutable
     for row in screen_doc["results"]["ladder"]:
         for cell in ("4", "5", "6", "7"):
-            row["per_cell"][cell]["margin"] = 1.0
+            _set_entry_margin(row["per_cell"][cell], 1.0)
+        _refresh_row_decision(row)
     report = pc.compute_payload_conditioning(screen_doc, assignment_doc)
     for cell in ("4", "5", "6", "7"):
         entry = report["severity_boundary_by_cell"][cell]
@@ -766,11 +857,13 @@ def test_a_cell_whose_margin_never_crosses_reports_no_bracket(mutable):
 def test_a_margin_that_recrosses_reports_only_the_first_crossing(mutable):
     """Ascending remaining EI; a later sign change must not overwrite the first."""
     screen_doc, assignment_doc = mutable
-    margins = {0.35: 1.0, 0.4: -1.0, 0.45: 1.0, 0.5: -1.0, 0.55: 1.0,
-               0.6: 1.0, 0.65: 1.0, 0.75: 1.0, 0.85: 1.0, 0.9: 1.0}
+    margins = {0.35: 0.1, 0.4: -0.1, 0.45: 0.1, 0.5: -0.1, 0.55: 0.1,
+               0.6: 0.1, 0.65: 0.1, 0.75: 0.1, 0.85: 0.1, 0.9: 0.1}
     for row in screen_doc["results"]["ladder"]:
         for cell in ("4", "5", "6", "7"):
-            row["per_cell"][cell]["margin"] = margins[row["remaining_ei"]]
+            _set_entry_margin(
+                row["per_cell"][cell], margins[row["remaining_ei"]])
+        _refresh_row_decision(row)
     report = pc.compute_payload_conditioning(screen_doc, assignment_doc)
     bracket = report["severity_boundary_by_cell"]["4"]["crossing_bracket"]
     assert bracket["last_positive_remaining_ei"] == 0.35
@@ -800,8 +893,10 @@ def test_a_margin_of_exactly_zero_counts_as_the_last_positive(mutable):
     for row in screen_doc["results"]["ladder"]:
         for cell in ("4", "5", "6", "7"):
             value = row["remaining_ei"]
-            row["per_cell"][cell]["margin"] = (
-                1.0 if value < 0.45 else 0.0 if value == 0.45 else -1.0)
+            _set_entry_margin(
+                row["per_cell"][cell],
+                0.1 if value < 0.45 else 0.0 if value == 0.45 else -0.1)
+        _refresh_row_decision(row)
     report = pc.compute_payload_conditioning(screen_doc, assignment_doc)
     bracket = report["severity_boundary_by_cell"]["4"]["crossing_bracket"]
     assert bracket["last_positive_remaining_ei"] == 0.45
