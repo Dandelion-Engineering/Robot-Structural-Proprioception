@@ -646,6 +646,8 @@ Produces `results/protocol_p/stage_abc_screen.json`. The reference run selected 
 
 The pre-registered outcome is **Case B: a proper subset of the stiffness ladder passes**. Remaining-EI values 0.35, 0.40 and 0.45 are `TESTABLE` in all four cells; 0.50 through 0.90 are `SUB_THRESHOLD` under the required all-cell conjunction. No Stage-B or Stage-C body violated a hard gate. The artifact's construction readback also passes in all eight selected structural comparisons: each canonical record carries the requested link-stiffness fault at onset step 500 with the matched identity and sensor seed, and neither post-onset coefficient vector is bit-identical to its healthy counterpart. This readback blocks a silent dead-override path; it adds no magnitude threshold and no monotonicity requirement.
 
+All four Stage-C cells also set `diagnostic_pause: true`: their `Q95_c` values range from 0.3703 to 0.4277 microstrain, above Section 8's 0.30-microstrain pause trigger. The protocol gives this flag no authority over the ladder verdict or outcome case; it is recorded here as a pre-registered diagnostic caution, not a second threshold.
+
 Section 9 also pre-registers a **role-coverage read**, taken over the same ladder and costing no rollouts. The ladder's ten values are exactly the union of every split's known-class structural severities and the two structural OOD severities, so each split's testability can be counted off it directly. Reproduce it with:
 
 ```powershell

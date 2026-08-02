@@ -18,6 +18,8 @@ from pathlib import Path
 import pytest
 
 PACKET_ROOT = Path(__file__).resolve().parents[1]
+SCRIPTS_ROOT = PACKET_ROOT / "scripts"
+sys.path.insert(0, str(SCRIPTS_ROOT))
 SCRIPT = PACKET_ROOT / "scripts" / "analyze_protocol_p_role_coverage.py"
 SCREEN = PACKET_ROOT / "results" / "protocol_p" / "stage_abc_screen.json"
 ASSIGNMENT = PACKET_ROOT / "config" / "proposed-gate3-assignment-v0.1.json"
@@ -33,6 +35,12 @@ def _load_module():
 
 
 rc = _load_module()
+
+
+def _rebind_assignment(screen, assignment):
+    """Bind a constructed assignment to a constructed screen for branch tests."""
+    assignment["assignment_hash"] = rc.expected_assignment_hash(assignment)
+    screen["inputs"]["assignment_hash"] = assignment["assignment_hash"]
 
 
 @pytest.fixture(scope="module")
@@ -109,9 +117,11 @@ def test_an_ood_severity_inside_a_split_grid_is_excluded_from_the_count(
     the named non-transfer outcome would silently clear -- an OOD label deciding a
     known-class role. Section 9: 'OOD at 0.45/0.55 never counts.'
     """
+    doctored_screen = copy.deepcopy(screen)
     doctored = copy.deepcopy(assignment)
     doctored["fault_grid_by_split"]["dev"]["structure"]["severities"] = [0.45, 0.5, 0.75]
-    report = rc.compute_role_coverage(screen, doctored)
+    _rebind_assignment(doctored_screen, doctored)
+    report = rc.compute_role_coverage(doctored_screen, doctored)
     assert report["splits"]["dev"]["known_class_structural_severities"] == [0.5, 0.75]
     assert report["splits"]["dev"]["count"] == 0
     assert report["outcome"]["role_coverage_bounded_non_transfer"] is True
@@ -124,13 +134,15 @@ def test_a_split_with_only_ood_severities_is_refused(screen, assignment):
     all-OOD and its two known-class severities are moved to pilot, so the
     ladder-union check still passes and execution reaches the empty-known guard.
     """
+    doctored_screen = copy.deepcopy(screen)
     doctored = copy.deepcopy(assignment)
     doctored["fault_grid_by_split"]["dev"]["structure"]["severities"] = [0.45, 0.55]
     doctored["fault_grid_by_split"]["pilot"]["structure"]["severities"] = [
         0.5, 0.6, 0.75, 0.85]
+    _rebind_assignment(doctored_screen, doctored)
     with pytest.raises(rc.RoleCoverageError,
-                       match="has no known-class structural severity"):
-        rc.compute_role_coverage(screen, doctored)
+                       match="exactly two distinct known-class structural severities"):
+        rc.compute_role_coverage(doctored_screen, doctored)
 
 
 def test_the_read_spends_no_rollouts(report):
@@ -187,15 +199,18 @@ def test_a_repeated_ladder_value_is_refused(screen, assignment):
 
 def test_a_severity_absent_from_the_ladder_is_refused(screen, assignment):
     """The silent-zero hazard: a split severity off the ladder must not read as 0."""
+    bad_screen = copy.deepcopy(screen)
     bad = copy.deepcopy(assignment)
     bad["fault_grid_by_split"]["dev"]["structure"]["severities"] = [0.5, 0.7]
+    _rebind_assignment(bad_screen, bad)
     with pytest.raises(rc.RoleCoverageError, match="is not the union of the per-split"):
-        rc.compute_role_coverage(screen, bad)
+        rc.compute_role_coverage(bad_screen, bad)
 
 
 def test_moved_ood_severities_are_refused_by_equality_not_adopted(screen, assignment):
     """Lesson 46: a pinned value that also lives in a bound document is checked
     by EQUALITY. If the assignment moves the OOD pair, the read must stop."""
+    bad_screen = copy.deepcopy(screen)
     bad = copy.deepcopy(assignment)
     for entry in bad["compound_ood_settings"]:
         if entry["label"].get("source_class") == "structure":
@@ -203,8 +218,9 @@ def test_moved_ood_severities_are_refused_by_equality_not_adopted(screen, assign
             for component in entry["components"]:
                 if component["source_class"] == "structure":
                     component["severity"] = 0.5
+    _rebind_assignment(bad_screen, bad)
     with pytest.raises(rc.RoleCoverageError, match="do not equal the protocol's pinned"):
-        rc.compute_role_coverage(screen, bad)
+        rc.compute_role_coverage(bad_screen, bad)
 
 
 def test_a_missing_verdict_is_refused(screen, assignment):
@@ -215,10 +231,12 @@ def test_a_missing_verdict_is_refused(screen, assignment):
 
 
 def test_a_missing_fault_grid_is_refused(screen, assignment):
+    bad_screen = copy.deepcopy(screen)
     bad = copy.deepcopy(assignment)
     del bad["fault_grid_by_split"]
+    _rebind_assignment(bad_screen, bad)
     with pytest.raises(rc.RoleCoverageError, match="no fault_grid_by_split"):
-        rc.compute_role_coverage(screen, bad)
+        rc.compute_role_coverage(bad_screen, bad)
 
 
 def test_a_results_free_artifact_is_refused(screen, assignment):
@@ -245,6 +263,64 @@ def test_load_json_names_a_malformed_file(tmp_path):
     bad.write_text("{not json", encoding="utf-8")
     with pytest.raises(rc.RoleCoverageError, match="not strict JSON"):
         rc.load_json(bad, "screen result")
+
+
+@pytest.mark.parametrize(
+    "payload, reason",
+    [
+        ('{"value": NaN}', "non-finite JSON constant"),
+        ('{"value": 1, "value": 2}', "duplicate JSON key"),
+    ],
+)
+def test_load_json_refuses_non_strict_json(tmp_path, payload, reason):
+    bad = tmp_path / "bad.json"
+    bad.write_text(payload, encoding="utf-8")
+    with pytest.raises(rc.RoleCoverageError, match=reason):
+        rc.load_json(bad, "screen result")
+
+
+def test_a_different_self_hashed_assignment_cannot_borrow_the_screen_binding(
+        screen, assignment):
+    """The split map cannot move while the output keeps the approved hash."""
+    bad = copy.deepcopy(assignment)
+    bad["fault_grid_by_split"]["dev"]["structure"]["severities"], bad[
+        "fault_grid_by_split"]["test"]["structure"]["severities"] = (
+            bad["fault_grid_by_split"]["test"]["structure"]["severities"],
+            bad["fault_grid_by_split"]["dev"]["structure"]["severities"],
+        )
+    bad["assignment_hash"] = rc.expected_assignment_hash(bad)
+    with pytest.raises(rc.RoleCoverageError, match="does not equal the assignment bound"):
+        rc.compute_role_coverage(screen, bad)
+
+
+def test_an_unknown_ladder_verdict_is_refused(screen, assignment):
+    bad = copy.deepcopy(screen)
+    bad["results"]["ladder"][0]["verdict"] = "UNRECOGNIZED"
+    with pytest.raises(rc.RoleCoverageError, match="carries unknown verdict"):
+        rc.compute_role_coverage(bad, assignment)
+
+
+def test_the_reported_case_must_match_the_ladder(screen, assignment):
+    bad = copy.deepcopy(screen)
+    bad["results"]["outcome_case"] = "CASE_A"
+    with pytest.raises(rc.RoleCoverageError, match="ladder verdicts imply CASE_B"):
+        rc.compute_role_coverage(bad, assignment)
+
+
+def test_every_required_split_must_be_present(screen, assignment):
+    bad_screen = copy.deepcopy(screen)
+    bad_assignment = copy.deepcopy(assignment)
+    bad_assignment["fault_grid_by_split"]["pilot"]["structure"]["severities"] += (
+        bad_assignment["fault_grid_by_split"]["dev"]["structure"]["severities"])
+    del bad_assignment["fault_grid_by_split"]["dev"]
+    _rebind_assignment(bad_screen, bad_assignment)
+    with pytest.raises(rc.RoleCoverageError, match="must define exactly"):
+        rc.compute_role_coverage(bad_screen, bad_assignment)
+
+
+def test_derived_report_records_the_exact_screen_bytes():
+    report = rc.derive_role_coverage(SCREEN, ASSIGNMENT)
+    assert report["inputs"]["screen_result_raw_sha256"] == rc.raw_file_sha256(SCREEN)
 
 
 # --------------------------------------------------------------------------

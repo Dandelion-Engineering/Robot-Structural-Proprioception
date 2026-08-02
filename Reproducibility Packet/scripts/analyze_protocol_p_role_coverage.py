@@ -34,8 +34,18 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 from pathlib import Path
 from typing import Any
+
+from utils.gate3_assignment import expected_assignment_hash
+from utils.protocol_p import (
+    ASSIGNMENT_CANONICAL_SHA256,
+    PROTOCOL_CANONICAL_SHA256,
+    PROTOCOL_FILENAME,
+    canonical_text_sha256,
+    raw_file_sha256,
+)
 
 # Protocol P section 9 pins the OOD severities that never count toward coverage.
 # Checked by EQUALITY against the assignment document, never adopted from it.
@@ -49,6 +59,9 @@ ZERO_CONSEQUENCES = {
 }
 
 TESTABLE = "TESTABLE"
+SUB_THRESHOLD = "SUB_THRESHOLD"
+LADDER_VERDICTS = {TESTABLE, SUB_THRESHOLD}
+SPLITS = ("dev", "pilot", "val", "test")
 
 
 class RoleCoverageError(RuntimeError):
@@ -65,14 +78,72 @@ def require(condition: bool, message: str) -> None:
         raise RoleCoverageError(message)
 
 
+class _StrictJSONError(ValueError):
+    """Internal marker for duplicate keys and non-finite JSON constants."""
+
+
 def load_json(path: Path, label: str) -> Any:
-    """Load and return the JSON document at ``path``, failing loudly by ``label``."""
+    """Load strict JSON at ``path``, failing loudly and naming ``label``."""
     if not path.is_file():
         raise RoleCoverageError(f"the {label} does not exist: {path}")
+
+    def reject_constant(value: str) -> None:
+        raise _StrictJSONError(f"non-finite JSON constant is forbidden: {value}")
+
+    def unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        document: dict[str, Any] = {}
+        for key, value in pairs:
+            if key in document:
+                raise _StrictJSONError(f"duplicate JSON key is forbidden: {key}")
+            document[key] = value
+        return document
+
     try:
-        return json.loads(path.read_bytes())
-    except json.JSONDecodeError as exc:
+        return json.loads(
+            path.read_text(encoding="utf-8"),
+            parse_constant=reject_constant,
+            object_pairs_hook=unique_object,
+        )
+    except (json.JSONDecodeError, UnicodeDecodeError, _StrictJSONError) as exc:
         raise RoleCoverageError(f"the {label} is not strict JSON: {path}: {exc}") from exc
+
+
+def validate_bound_inputs(screen: dict, assignment: dict) -> None:
+    """Require the exact approved protocol/assignment state bound by the screen.
+
+    A coverage count is a join between the ladder and the split assignment.  Without
+    this check, a different assignment with the same ten-value union can change which
+    split reads zero while the output still reports the approved assignment's hash.
+    """
+    require(isinstance(screen, dict), "the screen result must be a JSON object")
+    require(isinstance(assignment, dict), "the assignment must be a JSON object")
+    inputs = screen.get("inputs")
+    protocol = screen.get("protocol")
+    require(isinstance(inputs, dict), "the screen carries no inputs object")
+    require(isinstance(protocol, dict), "the screen carries no protocol object")
+
+    require(
+        inputs.get("protocol_spec_sha256") == PROTOCOL_CANONICAL_SHA256,
+        "the screen input protocol digest does not equal the approved Protocol P pin",
+    )
+    require(
+        protocol.get("canonical_sha256") == PROTOCOL_CANONICAL_SHA256,
+        "the screen protocol digest does not equal the approved Protocol P pin",
+    )
+    require(
+        inputs.get("assignment_canonical_sha256") == ASSIGNMENT_CANONICAL_SHA256,
+        "the screen assignment canonical digest does not equal the approved pin",
+    )
+
+    actual_assignment_hash = expected_assignment_hash(assignment)
+    require(
+        assignment.get("assignment_hash") == actual_assignment_hash,
+        "the supplied assignment's self-hash is invalid",
+    )
+    require(
+        inputs.get("assignment_hash") == actual_assignment_hash,
+        "the supplied assignment does not equal the assignment bound by the screen",
+    )
 
 
 def ladder_verdicts(screen: dict) -> dict[float, str]:
@@ -97,15 +168,30 @@ def ladder_verdicts(screen: dict) -> dict[float, str]:
 
     verdicts: dict[float, str] = {}
     for row in ladder:
+        require(isinstance(row, dict), "every ladder row must be an object")
         value = row.get("remaining_ei")
         verdict = row.get("verdict")
         require(isinstance(value, (int, float)) and not isinstance(value, bool),
                 f"a ladder row has a non-numeric remaining_ei: {value!r}")
+        require(math.isfinite(float(value)),
+                f"a ladder row has a non-finite remaining_ei: {value!r}")
         require(isinstance(verdict, str) and verdict,
                 f"the ladder row at {value!r} carries no verdict")
+        require(verdict in LADDER_VERDICTS,
+                f"the ladder row at {value!r} carries unknown verdict {verdict!r}")
         require(float(value) not in verdicts,
                 f"the ladder repeats remaining_ei {value!r}")
         verdicts[float(value)] = verdict
+
+    n_testable = sum(verdict == TESTABLE for verdict in verdicts.values())
+    expected_case = (
+        "CASE_A" if n_testable == len(verdicts)
+        else "CASE_C" if n_testable == 0
+        else "CASE_B"
+    )
+    require(results.get("outcome_case") == expected_case,
+            f"the ladder verdicts imply {expected_case}, but the screen reports "
+            f"{results.get('outcome_case')!r}")
     return verdicts
 
 
@@ -114,13 +200,29 @@ def structural_severities_by_split(assignment: dict) -> dict[str, list[float]]:
     grid = assignment.get("fault_grid_by_split")
     require(isinstance(grid, dict) and grid,
             "the assignment carries no fault_grid_by_split object")
+    require(set(grid) == set(SPLITS),
+            f"fault_grid_by_split must define exactly {SPLITS}; got {sorted(grid)}")
     out: dict[str, list[float]] = {}
-    for split, entry in grid.items():
-        structure = (entry or {}).get("structure") or {}
+    for split in SPLITS:
+        entry = grid[split]
+        require(isinstance(entry, dict), f"split {split!r} must be an object")
+        structure = entry.get("structure") or {}
+        require(isinstance(structure, dict),
+                f"split {split!r} structure must be an object")
         severities = structure.get("severities")
         require(isinstance(severities, list) and severities,
                 f"split {split!r} carries no structural severity list")
-        out[split] = sorted(float(s) for s in severities)
+        parsed: list[float] = []
+        for severity in severities:
+            require(isinstance(severity, (int, float)) and not isinstance(severity, bool),
+                    f"split {split!r} has non-numeric structural severity {severity!r}")
+            value = float(severity)
+            require(math.isfinite(value),
+                    f"split {split!r} has non-finite structural severity {severity!r}")
+            parsed.append(value)
+        require(len(parsed) == len(set(parsed)),
+                f"split {split!r} repeats a structural severity")
+        out[split] = sorted(parsed)
     return out
 
 
@@ -143,6 +245,7 @@ def structural_ood_severities(assignment: dict) -> list[float]:
 
 def compute_role_coverage(screen: dict, assignment: dict) -> dict:
     """Compute the section-9 role-coverage read. Costs zero rollouts."""
+    validate_bound_inputs(screen, assignment)
     verdicts = ladder_verdicts(screen)
     by_split = structural_severities_by_split(assignment)
     ood = structural_ood_severities(assignment)
@@ -160,9 +263,12 @@ def compute_role_coverage(screen: dict, assignment: dict) -> dict:
             f"vs expected {expected_ladder}")
 
     splits: dict[str, dict] = {}
-    for split, severities in by_split.items():
+    for split in SPLITS:
+        severities = by_split[split]
         known = [s for s in severities if s not in set(ood)]
-        require(known, f"split {split!r} has no known-class structural severity")
+        require(len(known) == 2,
+                f"split {split!r} must have exactly two distinct known-class "
+                f"structural severities; got {known}")
         testable = [s for s in known if verdicts[s] == TESTABLE]
         splits[split] = {
             "known_class_structural_severities": known,
@@ -206,11 +312,9 @@ def compute_role_coverage(screen: dict, assignment: dict) -> dict:
         ),
         "inputs": {
             "screen_outcome_case": screen["results"].get("outcome_case"),
-            "protocol_canonical_sha256": (screen.get("protocol") or {}).get(
-                "canonical_sha256"),
-            "assignment_hash": (screen.get("inputs") or {}).get("assignment_hash"),
-            "assignment_canonical_sha256": (screen.get("inputs") or {}).get(
-                "assignment_canonical_sha256"),
+            "protocol_canonical_sha256": PROTOCOL_CANONICAL_SHA256,
+            "assignment_hash": expected_assignment_hash(assignment),
+            "assignment_canonical_sha256": ASSIGNMENT_CANONICAL_SHA256,
         },
         "rule": {
             "source": "Protocol P v2.3.3 section 9, 'Role coverage'",
@@ -225,6 +329,30 @@ def compute_role_coverage(screen: dict, assignment: dict) -> dict:
         "outcome": outcome,
         "rollouts_spent": 0,
     }
+
+
+def derive_role_coverage(screen_path: Path, assignment_path: Path) -> dict:
+    """Load, bind, and derive one role-coverage artifact from tracked inputs."""
+    screen_path = Path(screen_path)
+    assignment_path = Path(assignment_path)
+    screen = load_json(screen_path, "screen result")
+    assignment = load_json(assignment_path, "assignment document")
+    report = compute_role_coverage(screen, assignment)
+
+    actual_assignment_digest = canonical_text_sha256(assignment_path)
+    require(actual_assignment_digest == ASSIGNMENT_CANONICAL_SHA256,
+            "the supplied assignment file does not equal the approved canonical state")
+    protocol_path = Path(__file__).resolve().parents[1] / "protocol" / PROTOCOL_FILENAME
+    actual_protocol_digest = canonical_text_sha256(protocol_path)
+    require(actual_protocol_digest == PROTOCOL_CANONICAL_SHA256,
+            "the tracked Protocol P file does not equal the approved canonical state")
+
+    report["inputs"].update({
+        "screen_result_raw_sha256": raw_file_sha256(screen_path),
+        "assignment_canonical_sha256": actual_assignment_digest,
+        "protocol_canonical_sha256": actual_protocol_digest,
+    })
+    return report
 
 
 def render(report: dict) -> str:
@@ -270,10 +398,7 @@ def main() -> None:
                         help="directory the role_coverage.json artifact is written to")
     args = parser.parse_args()
 
-    screen = load_json(Path(args.screen_result), "screen result")
-    assignment = load_json(Path(args.assignment), "assignment document")
-
-    report = compute_role_coverage(screen, assignment)
+    report = derive_role_coverage(Path(args.screen_result), Path(args.assignment))
     print(render(report), flush=True)
 
     out_dir = Path(args.output_dir)
