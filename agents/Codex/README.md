@@ -66,12 +66,14 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`Session Summaries/HumanReport53.md`](Session%20Summaries/HumanReport53.md) — detailed record of Codex Session 53 (returned public-state correction approved unchanged, public-entry loop close, independent 180-logical/168-physical inventory reproduction, origin-provenance ruling for twelve reused rows, and driver implementation authorization without execution).
 - [`Session Summaries/HumanReport54.md`](Session%20Summaries/HumanReport54.md) — detailed record of Codex Session 54 (origin-provenance design acceptance, safe plan-default/import decisions, reproduced mixed-drop ledger failure, unreachable Stage-B unsafe branch, missing persisted I12 evidence, and blocked executable-state handback).
 - [`Session Summaries/HumanReport55.md`](Session%20Summaries/HumanReport55.md) — detailed record of Codex Session 55 (corrected Protocol-P driver exact-state approval, Stage-A/B/C hard-gate/evidence review close, driver-side Stage-C terminal-label ruling, and preserved no-execution boundary).
+- [`Session Summaries/HumanReport56.md`](Session%20Summaries/HumanReport56.md) — detailed record of Codex Session 56 (document-derived onset-check approval, redundant-guard ruling, machine-path correction approval, Step-25 provenance-reference edit, progress-report replay-count correction, replay sequencing, and preserved no-execution boundary).
 - [`Progress Reports/Progress Report Session 8.md`](Progress%20Reports/Progress%20Report%20Session%208.md) — first regular every-eighth-session director update at the Accessible-Piece bar.
 - [`Progress Reports/Progress Report Session 16.md`](Progress%20Reports/Progress%20Report%20Session%2016.md) — second regular director update, covering the synchronous-probe correction, noisy pilot, real contact integration, and matched-contact BLOCK.
 - [`Progress Reports/Progress Report Session 24.md`](Progress%20Reports/Progress%20Report%20Session%2024.md) — third regular director update, covering the bounded-task redesign, information/control split, structural-action block, actuator headroom, and corrected probability-channel boundary; next regular Codex report is Session 32.
 - [`Progress Reports/Progress Report Session 32.md`](Progress%20Reports/Progress%20Report%20Session%2032.md) — fourth regular director update, covering the source-specific actuator-action block, machine contract, two pre-generation design corrections, approved generator, and independently audited first real non-test dataset.
 - [`Progress Reports/Progress Report Session 40.md`](Progress%20Reports/Progress%20Report%20Session%2040.md) — fifth regular director update, covering the development structural-feasibility stop, Protocol-P convergence, one-row bit-exact replay, fault-onset default, and provenance enforcement boundary.
-- [`Progress Reports/Progress Report Session 48.md`](Progress%20Reports/Progress%20Report%20Session%2048.md) — sixth regular director update, covering the approved Protocol-P specification and seam, one-row replay, three-round Stage-0 implementation review, executed sensor-only diagnostic, and remaining exact-state result gate; next regular Codex report is Session 56.
+- [`Progress Reports/Progress Report Session 48.md`](Progress%20Reports/Progress%20Report%20Session%2048.md) — sixth regular director update, covering the approved Protocol-P specification and seam, one-row replay, three-round Stage-0 implementation review, executed sensor-only diagnostic, and remaining exact-state result gate.
+- [`Progress Reports/Progress Report Session 56.md`](Progress%20Reports/Progress%20Report%20Session%2056.md) — seventh regular director update, covering Stage-0 closure, shared Protocol-P construction/provenance, the reviewed Stage-A/B/C driver, whole-program safety corrections, the live document-derived onset check, the physical replay-count correction, and the remaining execution gate; next regular Codex report is Session 64.
 
 ## Shared files outside this folder
 
@@ -138,11 +140,12 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`../../Reproducibility Packet/results/severity_estimation_quality/severity_estimation_quality_report.md`](../../Reproducibility%20Packet/results/severity_estimation_quality/severity_estimation_quality_report.md) — development linear-read-out record: C1/S severity MAE is 0.0065/0.0076; 3 of 4 paired 0.50-gain arms straddle the cap-2 kink, so severity remains a live actuator-action route pending owner re-review.
 - [`../../Reproducibility Packet/results/actuator_recovery_action_screen/actuator_recovery_action_report.md`](../../Reproducibility%20Packet/results/actuator_recovery_action_screen/actuator_recovery_action_report.md) — 100-arm tuning/assessment development BLOCK: cap-3 recovers 16.576% on fault but also benefits healthy false authorization by 8.322%, leaving 8.254 pp; cap-4/5 profiles fail A1 safety, and C1/S are action-identical at the selected cap.
 - [`../../chats/Claude-Codex/Claim Sheet Review and Division of Labor/Summary.md`](../../chats/Claude-Codex/Claim%20Sheet%20Review%20and%20Division%20of%20Labor/Summary.md) — concluded Phase-1 review/labor summary.
-- [`../../chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`](../../chats/Claude-Codex/Phase%202%20Integration%20and%20Config%20Freeze/Phase%202%20Integration%20and%20Config%20Freeze%20-%20Active.md) — authoritative active interface/config thread; Gate 1, the generic Gate-2 role path, Gate 3, Protocol P v2.3.3, permanent I13b, the generator seam, one-row replay, replay gate, Stage-0 implementation/result, packet Step 24, shared primitives, construction layer, and Stage-A/B/C driver/results state are jointly approved. Codex Session 55 accepts the driver-side Stage-C fail-closed label without a protocol bump. Stage execution, Amendment A2, regeneration, and final config freeze remain blocked.
+- [`../Claude/Progress Reports/Progress Report Session 56.md`](../Claude/Progress%20Reports/Progress%20Report%20Session%2056.md) — Claude-owned director report; Codex corrected one official replay result versus four physical replay-gate executions and approves reviewer-edited blob `39c5924...`, pending Claude owner re-review.
+- [`../../chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`](../../chats/Claude-Codex/Phase%202%20Integration%20and%20Config%20Freeze/Phase%202%20Integration%20and%20Config%20Freeze%20-%20Active.md) — authoritative active interface/config thread; Gate 1, the generic Gate-2 role path, Gate 3, Protocol P v2.3.3, permanent I13b, the generator seam, one-row replay, replay gate, Stage-0 implementation/result, packet Step 24, shared primitives, construction layer, and Stage-A/B/C driver/results state are jointly approved. Codex Session 56 additionally approves the document-derived onset check, machine-path correction, revised driver tests, and the documented non-load-bearing vocabulary guard. Packet Step 25 is open for Claude's owner re-review of Codex's one-line provenance-reference edit; Claude's Session-56 progress report separately awaits owner re-review after Codex corrected one official replay result versus four physical replay-gate executions. Stage execution, Amendment A2, regeneration, and final config freeze remain blocked.
 - [`../../chats/Claude-Codex-Human/Chat Appends/Summary.md`](../../chats/Claude-Codex-Human/Chat%20Appends/Summary.md) — concluded director coordination record for the transcript-tail failure mode and recovery rule.
 - [`../../chats/Claude-Codex-Human/Transcript Order Monitoring/Transcript Order Monitoring - Active.md`](../../chats/Claude-Codex-Human/Transcript%20Order%20Monitoring/Transcript%20Order%20Monitoring%20-%20Active.md) — active director-visible recurrence log; records verified append-only repairs and the requirement that the applied patch use the complete pre-verified EOF block.
 - [`../../chats/Claude-Codex/Phase 0 Coordination/Summary.md`](../../chats/Claude-Codex/Phase%200%20Coordination/Summary.md) — concluded Phase-0 convergence record that feeds the Claim Sheet.
-- [`../../README.md`](../../README.md) — public live-run status, Phase 2 / `In Progress`, preserving settled history and forward corrections. Its newest entry records joint approval of the corrected Stage-A/B/C driver while keeping all 168 physical executions unauthorized; Stage 0 remains the only completed screen stage and config remains unfrozen.
+- [`../../README.md`](../../README.md) — public live-run status, Phase 2 / `In Progress`, preserving settled history and forward corrections. Its newest entry records the live document-derived onset check, portable plan artifact, and Step-25 zero-rollout audit while keeping all 168 physical executions unauthorized; Stage 0 remains the only completed screen stage and config remains unfrozen.
 
 ## Structure
 
@@ -156,7 +159,8 @@ agents/Codex/
 │   ├── Progress Report Session 24.md
 │   ├── Progress Report Session 32.md
 │   ├── Progress Report Session 40.md
-│   └── Progress Report Session 48.md
+│   ├── Progress Report Session 48.md
+│   └── Progress Report Session 56.md
 ├── references.md
 ├── README.md
 ├── Summary of Only Necessary Context.md
@@ -215,5 +219,6 @@ agents/Codex/
     ├── HumanReport52.md
     ├── HumanReport53.md
     ├── HumanReport54.md
-    └── HumanReport55.md
+    ├── HumanReport55.md
+    └── HumanReport56.md
 ```

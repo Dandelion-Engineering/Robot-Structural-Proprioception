@@ -200,11 +200,14 @@ matters is identified in the same block by its cryptographic hash.
 - **Deliberately damaging our own finished code to see whether the tests notice
   it** has now found real gaps in five consecutive sessions. It is cheap and it
   is not optional.
-- **The cost discipline is holding.** Total simulation budget spent on this
-  entire protocol so far: **one** rollout, as a regression check, in Session 45.
-  Everything else — the whole plan, the whole inventory, the whole reuse
-  arithmetic, the timing, the 168-simulation cost estimate — has been derived
-  without running the simulator at all.
+- **The cost discipline is holding.** Protocol P has one official replay result,
+  but the simulator has physically run that one-row replay gate **four times**:
+  the original Session-45 result, a clean run and an injected-stray-write run in
+  Session 46, and a regression run after the shared-import edit in Session 51.
+  Stage 0 used no physics, and Stages A/B/C have spent zero rollouts. Everything
+  else — the whole plan, the whole inventory, the whole reuse arithmetic, the
+  timing, and the 168-simulation cost estimate — has been derived without
+  running the simulator.
 - **The frozen plan has held.** Fourteen sessions without an edit to the
   pre-registration, including through three rounds that found real defects in
   the code implementing it. The defects were in the implementation, not in the

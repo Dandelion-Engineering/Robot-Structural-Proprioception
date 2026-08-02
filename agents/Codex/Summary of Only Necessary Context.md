@@ -1,81 +1,104 @@
 # Summary of Only Necessary Context — Codex
 
-**Last rewritten:** 2026-08-01 — Codex Session 55
+**Last rewritten:** 2026-08-01 — Codex Session 56
 
 ## Resume here
 
-The project is in **Phase 2 — Execution**. The final configuration is **UNFROZEN** and `Reproducibility Packet/config/config.json` does not exist. Stage 0 remains the only screen stage that has run. Stage-A/B/C execution is unauthorized; the replay and Stage 0 were not rerun in Codex Session 55; the confirmatory split is untouched.
+The project is in **Phase 2 — Execution**. The final configuration is **UNFROZEN** and `Reproducibility Packet/config/config.json` does not exist. Stage 0 remains the only screen stage that has run. Stage-A/B/C execution is unauthorized; the replay and Stage 0 were not rerun in Codex Session 56; the confirmatory split is untouched.
 
-The Protocol-P specification, replay/seam, Stage 0, shared primitives, construction layer, and Stage-A/B/C driver/results implementation are now jointly approved. Claude Session 55 and Codex Session 55 explicitly approve the same four exact states:
+The Protocol-P specification, replay/seam, Stage 0, shared primitives, construction layer, results layer, and Stage-A/B/C driver are now jointly approved. Claude Session 56 and Codex Session 56 explicitly approve the same revised executable states:
+
+```text
+Reproducibility Packet/scripts/run_protocol_p_screen.py
+  blob 7668793e147a2776cb003ea90c79e76247d9b4de
+
+Reproducibility Packet/tests/test_protocol_p_driver.py
+  blob 23222d0ed03c26f57cfff5f53267ca8186a8d31a
+```
+
+The unchanged results states remain jointly approved:
 
 ```text
 Reproducibility Packet/scripts/utils/protocol_p_results.py
   blob e84e5f9f4e6d10408873d87b81b2baef9535d50e
 
-Reproducibility Packet/scripts/run_protocol_p_screen.py
-  blob 99e2d44744eaf7ecd2bda1a21acce1ec9ce435c4
-
 Reproducibility Packet/tests/test_protocol_p_results.py
   blob cbac30ed3d41c961f7d5c54c306c8a09fa1be1cd
-
-Reproducibility Packet/tests/test_protocol_p_driver.py
-  blob 3f1a81067116f2815f8680e6307e15e06c629db6
 ```
 
-The Session-54 block is closed. This is implementation approval only, not permission to spend the screen's 168 physical rollouts.
+Packet README Step 25 is open for owner re-review. Claude handed off blob `9191d4ab...`; Codex changed one phrase from “180 stamps over 168 rollouts” to “180 provenance references comprising 168 distinct stamps” and approves the reviewer-edited state:
+
+```text
+Reproducibility Packet/README.md
+  blob 9c9fa7f03de8b000580704330755f232cfdb8ef1
+```
+
+Claude must reopen that exact blob and explicitly approve it unchanged or return a new state. This is a runbook wording loop, not an executable code block.
+
+The required recent-work review also found that Claude's Session-56 progress report conflated one official replay result with the physical replay count. Codex corrected the report to state that the one-row replay gate physically ran four times: Session 45's original result, Session 46's clean and injected-stray-write verification runs, and Session 51's regression run after the shared-import edit. Codex approves the reviewer-edited report at blob `39c592422639b84005a2dd7d9539171be541a84c`; Claude must genuinely owner-review it too. Stage 0 used no physics and Stages A/B/C still spent zero rollouts.
+
+The separate Stage-A/B/C execution-authorization decision has not been made.
 
 The authoritative live record is:
 
 `chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`
 
-Codex Session 55 is physically last. The append passed the hard gate: the 919,779-byte / 13,337-line pre-write prefix remained byte-identical at SHA-256 `3eef7390912f6ee636c242763725796164db7fef969ab2da46f44d1f4e42cd3f`; the new header appears exactly once at line 13,341; and the transcript diff is +64/−0. The post-append file is 922,425 bytes / 13,401 lines at SHA-256 `529da52e56e1b424d80b9acc308bfb494690840feafc469cf6418110a81a0724`.
+Codex Session 56 is physically last. Two appends passed the hard gate. The main review append preserved the 945,410-byte / 13,628-line prefix at SHA-256 `a652d4df4db0ef9772d72a199cd10267f40d4541bdad7658c1496d2b3d4d3ea0` and placed its unique header at line 13,632. The later progress-report correction preserved the complete 950,681-byte / 13,741-line first-append state at SHA-256 `6c44700e277621e9706f0fad8e7b961a16326ae902efb5ebb67ce7175799141a` and placed its unique header at line 13,745. The final transcript diff is +151/−0; the file is 952,348 bytes / 13,779 lines at SHA-256 `5f127b2608f982b32f2c549a9992582fccaffea3efbd8b7b2810761adec564ef`.
 
-## Session-55 approved decisions
+## Session-56 approved decisions
 
-### Corrected driver state
+### Document-derived I13a onset check
 
-The exact four-file state now correctly implements:
+The construction layer's `require_constructed_condition` compares a built fault tuple against a fresh tuple produced by the same builder from the same caller-supplied onset. It can catch mutation after construction but cannot prove the shared onset came from the bound trajectory document.
 
-- 180 logical rows over 168 physical origins on the clean nine-candidate path;
-- twelve Stage-B/Stage-C reuse rows that cite immutable selected Stage-A origins;
-- measured Stage-A reporting, including a gate-failing row from a dropped candidate;
-- complete evidence on mixed drop/survivor and all-dropped terminal paths;
-- per-rollout I12 hard-gate propagation through Stage B and Stage C;
-- `UNSAFE_LADDER_VALUE` without a margin or Case-A/B/C classification;
-- refusal of an unsafe Stage-C healthy replicate before construction of `Q95_c`;
-- section-9 `NO_ADMISSIBLE_PROBE` integrity, physical-limit, and unclassified sub-branches;
-- one persisted physical ledger entry per executed rollout with full gate report, step count, elapsed time, provenance, canonical payload, and coefficients; and
-- one evidence attachment path shared by normal and terminal results.
+The revised driver closes that gap:
 
-### Driver-side Stage-C label
+- `screen_onset_index` reads `onset_time_s` directly from the bound trajectory and converts it with `_step_index`, which refuses off-grid times;
+- `screen_physical_faults` exists at Correction 1's pre-registered signature and builds the expected tuple from that document-derived onset;
+- `require_preregistered_faults` compares the constructed tuple field by field and type by type immediately before execution; and
+- `run_logical_row` calls the check only for physical rows, before the executor. Reused rows construct nothing and never reach it.
 
-`UNSAFE_STAGE_C_REPLICATE` is accepted without a Protocol-P v2.3.3 bump.
+The discriminating test builds a real step-0 override bundle. The old same-input comparison accepts it when given onset 0; the new document-derived check refuses it because the trajectory requires step 500. The wire test proves the executor receives zero calls on refusal.
 
-It is explicitly a driver-side fail-closed label, not a pre-registered scientific outcome. It builds no operative null, assigns no Case A/B/C, reopens no probe selection, freezes no config, and authorizes no downstream result. Section 9 already requires safe, valid per-cell mechanics verdicts before any case exists. The label merely records why that prerequisite failed while preserving the rollouts already spent.
+### One production field authority plus an independent specification test
 
-### I13b remains an external precondition
+The helper delegates fault-field construction to `requested_fault_specs`; it does not repeat the seven field literals in production. The test quotes Correction 1's exact fields and binds that shared builder to the specification. Runtime comparison remains live against a mutated constructed tuple, while a mutation to the shared builder's own constants is caught by the independent specification test.
 
-The physical-limit `NO_ADMISSIBLE_PROBE` branch names:
+### Keep the redundant helper vocabulary guard
 
-- I13a as asserted for the specific rollout by the construction layer before execution; and
-- I13b as the permanent packet test `tests/test_cable_plant_softening_boundary.py`, which the driver does not run or claim to assert.
+`screen_physical_faults` keeps its own unknown-condition refusal because Correction 1's executable sketch places the closed-set check inside the named helper. `SCREEN_CONDITIONS` is an alias of the construction layer's one tuple, not a second definition. The code and tests explicitly state that the helper line is a specification-fidelity/message guard, not load-bearing outcome coverage.
 
-That division matches Protocol P v2.3.3. The full packet suite must be passing before any stage is authorized.
+### Portable artifact path
 
-## Verification from Session 55
+Plan/results documents no longer record the producer's absolute config path. An in-packet config is recorded as `config/draft-config-v0.1.json`; an outside-packet config is reduced to a filename marker. The same input block retains the canonical base-config hash as the identity-bearing field.
+
+### Replay sequencing accepted for the later round
+
+Codex accepted Claude's proposal in principle: the dedicated execution round should first explicitly authorize one replay-gate check, run and review that bit-level positive control, and then separately decide whether to authorize the 168 Stage-A/B/C rollouts. No replay ran in Session 56.
+
+## Verification from Session 56
 
 ```text
-handed-off blobs                         exact
-full packet suite                        938 passed in 112.07 s
-compileall                               clean
-Protocol-P stage rollouts                zero
-Stage-0/replay                           not re-run
-config.json                              absent
-test-named / results .npz                0 / 0
-confirmatory split                       untouched
+handed-off driver/test blobs              exact
+independent plan mode                     0.287 s; zero rollouts
+plan census                               9 candidates / 180 logical rows /
+                                          168 physical rollouts / 12 reuses
+derived onset and window                  500 / [1000, 1768)
+plan results                              null
+recorded config path                      config/draft-config-v0.1.json
+drive-letter path in plan artifact        absent
+focused driver suite                      148 passed in 96.43 s
+full packet suite                         975 passed in 110.92 s
+compileall                                clean
+Protocol-P stage rollouts                 zero
+Stage-0/replay                            not re-run
+physical replay-gate executions to date   four (none in Session 56)
+config.json                               absent
+test-named / results NPZ                  0 / 0
+confirmatory split                        untouched
 ```
 
-No implementation, test, protocol, assignment, config, dataset, or result artifact changed in Codex Session 55. Codex appended the same-state approval to the active transcript and appended one public README milestone recording joint driver approval while preserving the no-execution boundary.
+Codex also wrote the required regular `Progress Reports/Progress Report Session 56.md`.
 
 ## Protocol-P state
 
@@ -87,23 +110,34 @@ Jointly approved and closed:
 - one-row replay gate/result;
 - Stage-0 implementation, result artifact, and packet README Step 24;
 - shared Protocol-P primitives;
-- Stage-A/B/C construction layer; and
-- Stage-A/B/C driver/results implementation at the four blobs above.
+- Stage-A/B/C construction layer;
+- Stage-A/B/C results layer; and
+- Stage-A/B/C driver including the document-derived onset check and portable input-path reporting at the blobs above.
 
-The public README now accurately says the corrected driver is jointly approved but has not run. The 168 physical screen executions remain unauthorized. Stage 0 remains the only measured screen stage.
+Open:
+
+- packet README Step 25 owner re-review;
+- Claude Session-56 progress-report owner re-review after the replay-count correction;
+- the separate replay/execution-authorization round;
+- the Stage-A/B/C result itself; and
+- all downstream Amendment-A2/regeneration/final-freeze work.
+
+The public README already contains Claude's Session-56 milestone. It accurately says the document-derived onset check and Step-25 plan audit exist, while all 168 physical executions remain unauthorized. Codex made no additional public entry because the reviewer wording change did not create a second public milestone.
 
 ## Next actions
 
-1. Claude may add the packet runbook step for the approved driver and implement `screen_physical_faults`, returning any review-bearing exact state normally.
-2. The agents separately review/close the remaining pre-execution work.
-3. Only after that closure may they make an explicit Stage-A/B/C execution-authorization decision. Implementation approval is not execution permission.
-4. If execution is authorized, the screen runs once under the approved driver; poll the result JSON rather than a buffered log, per Protocol P.
-5. Downstream remains: written Amendment A2, replacement approved assignment/config lineage, coherent regeneration, Gates 4–7, joint final config approval, and only then one-shot confirmatory generation/evaluation.
+1. Claude reopens packet README blob `9c9fa7f03de8b000580704330755f232cfdb8ef1` and progress-report blob `39c592422639b84005a2dd7d9539171be541a84c`, explicitly approving each unchanged or returning a new exact state.
+2. After the Step-25 loop closes, the agents enter the separate execution-authorization round; the reporting loop is not an execution prerequisite but should close normally.
+3. In that round, explicitly authorize and run the one-row replay gate immediately before measurement, then review its result.
+4. Only after a separate explicit decision may the 168 Stage-A/B/C physical rollouts run once under the approved driver.
+5. Poll the result JSON rather than a buffered log while a long execution is active.
+6. Downstream remains written Amendment A2, replacement assignment/config lineage, coherent regeneration, Gates 4–7, joint final config approval, and only then one-shot confirmatory generation/evaluation.
 
 ## Review and evidence rules
 
 - Same-state approval is explicit. Creation, edits, handoff, downstream use, and silence are not approval.
 - Development screens, pilots, fixtures, diagnostics, and regression checks remain separate from frozen/confirmatory/final results.
+- Keep physical rollout accounting separate from logical analysis rows; reuses cite immutable origin provenance and do not mint stamps.
 - Keep detection, attribution, information/action authorization, and control outcome separate.
 - Do not use root-wide `pytest -q`; use `./venv`'s interpreter against `Reproducibility Packet/tests`.
 - Never use bare `python` or `pip`.
@@ -113,6 +147,6 @@ The public README now accurately says the corrected driver is jointly approved b
 
 ## Closeout numbering
 
-- Next Codex session: **56**.
-- Next Codex human report: `agents/Codex/Session Summaries/HumanReport56.md`.
-- Next regular Codex progress report: **Session 56**, unless a phase transition or approved amendment triggers one sooner.
+- Next Codex session: **57**.
+- Next Codex human report: `agents/Codex/Session Summaries/HumanReport57.md`.
+- Next regular Codex progress report: **Session 64**, unless a phase transition or approved amendment triggers one sooner.
