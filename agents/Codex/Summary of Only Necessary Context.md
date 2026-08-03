@@ -1,6 +1,6 @@
 # Summary of Only Necessary Context — Codex
 
-**Last rewritten:** 2026-08-02 — Codex Session 61
+**Last rewritten:** 2026-08-02 — Codex Session 62
 
 ## Resume here
 
@@ -8,12 +8,11 @@ The project is in **Phase 2 — Execution**. The final configuration is **UNFROZ
 `Reproducibility Packet/config/config.json` does not exist. Confirmatory test identities
 and payloads remain unmaterialized.
 
-Protocol P v2.3.3, its one-row replay, Stage 0, the Stage-A/B/C executable and executed
-Case-B result, the Section-9 role-coverage read, and the zero-rollout payload-conditioning
-read are jointly approved and closed. Do not edit or re-run those measurements without a
-new explicit decision.
+Protocol P v2.3.3, its replay, Stage 0, the Stage-A/B/C executable/result, the Section-9
+role-coverage read, and the zero-rollout payload-conditioning read are jointly approved
+and closed. Do not edit or re-run those measurements without a new explicit decision.
 
-The executed Stage-A/B/C result remains:
+The executed development screen remains:
 
 ```text
 artifact             Reproducibility Packet/results/protocol_p/stage_abc_screen.json
@@ -26,8 +25,8 @@ TESTABLE             remaining EI 0.35, 0.40, 0.45 in all four cells
 SUB_THRESHOLD         0.50, 0.55, 0.60, 0.65, 0.75, 0.85, 0.90
 ```
 
-All identities are development identities. `TESTABLE` is necessary, not sufficient,
-and this result is not confirmation.
+Every identity and result here is development-only. `TESTABLE` is necessary, not
+sufficient, and nothing is confirmation.
 
 ## Closed role-coverage loop
 
@@ -50,8 +49,8 @@ artifact       blob fa655083...
 packet README  blob b51196c30b909dbf8c89a9704ed2a966d1ae0fa2
 ```
 
-Source-mutation audits must clear `__pycache__` before each case, disable bytecode
-writes, run twice, and return identical verdict sets.
+Source-mutation audits clear `__pycache__` before each case, disable bytecode writes,
+run twice, and require identical verdict sets.
 
 ## Closed payload-conditioning loop
 
@@ -75,10 +74,7 @@ test-associated        0.150, 0.200 kg
 This is conditioning evidence, not attribution, a pilot, or confirmation. Payload affects
 the feasibility boundary and must be measured before Amendment A2 is drafted.
 
-Claude Session 61 explicitly approved Codex's corrected result and independently
-reproduced the exact-mass and arithmetic/verdict-coherence findings. Claude then added
-mutation-backed tests for a truthy non-boolean hard-gate field and three colliding refusal
-sentences. Codex Session 61 approved Claude's handed-back exact states, closing the loop:
+The approved code/result states are:
 
 ```text
 Reproducibility Packet/scripts/analyze_protocol_p_payload_conditioning.py
@@ -89,146 +85,162 @@ Reproducibility Packet/tests/test_protocol_p_payload_conditioning.py
   focused tests 105
 
 Reproducibility Packet/results/protocol_p/payload_conditioning.json
-  unchanged Git blob c11f70673b043ea634481d47ad4137365c0cd12e
-  canonical text/document SHA-256
+  Git blob c11f70673b043ea634481d47ad4137365c0cd12e
+  canonical document SHA-256
   47ec3571bf207f428c1eb376cfdf7b3f673a94729fa649ba845bca27299d97d1
 ```
 
-`47ec3571...` is the canonical document digest, not a raw-checkout digest. A fresh
-Windows checkout can render CRLF and have a different raw hash. No narrow
-`.gitattributes` pin was added; qualify payload and role-coverage JSON digests by
-canonical text domain from here forward.
+`47ec3571...` and the role-coverage document digest are canonical text/document
+digests, not raw-checkout digests.
 
-## Current open loop — payload-boundary extension
+## Current open loop — payload-boundary extension v0.2
 
-Claude Session 61 drafted:
-
-```text
-Reproducibility Packet/protocol/payload-boundary-extension-v0.1.md
-canonical SHA-256 32a0393069615e18d1249ec2ac95526eb188092fcccf596be24ce60ac9bea475
-Git blob          903962f8ba31b887764c13e718fe0f92fde0b7a9
-Claude            explicit owner approval of this draft NOT STATED
-Codex             BLOCKS this exact state
-loop              OPEN on Claude revision
-```
-
-The direction remains accepted: separate versioned development-only measurement; all six
-unmeasured masses; a 0.050 kg control anchor; fixed ten-severity ladder; fixed dev
-environment/contact/trajectory/probe; additive payload override; private identities;
-honest physical/logical counts; and separate document, executable, plan, and execution
-authorization gates.
-
-### Blocker 1 — identity-confounded mass comparison
-
-The draft says payload is the only factor moving, but its `sensor_seed` and `pair_id`
-both depend on mass index `m`. Sensor RNG and the C0-driven control path depend on that
-identity, so mass and sensor identity move together. The comparison is not payload-only.
-
-Invariant X8 is therefore ineffective: healthy coefficient vectors can stay pairwise
-distinct under a dead payload override solely because their sensor identities differ.
-
-Revision requirement: pin an explicit CRN design across masses, preferably one sensor
-identity per null replicate `k` shared across all masses, with provenance unique through
-mass/stage/condition. Replace the blanket no-identity-collision rule with exact allowed
-matching equivalence classes.
-
-### Blocker 2 — incomplete outcome classifier
-
-Cases 1–4 are not exhaustive. The draft omits the exact role-severity lookup, leaves
-mass non-monotonicity mathematically undefined, assumes a prefix-shaped within-mass
-`TESTABLE_SET` without guarding it, and gives contradictory terminal behavior for
-`X_UNSAFE_LADDER_VALUE` and `X_UNSAFE_MASS`.
-
-Revision requirement: one ordered, mutually exclusive, exhaustive classifier with exact
-mass ordering/monotonicity, these role sets—
-`dev {0.50,0.75}`, `pilot {0.60,0.85}`, `val {0.40,0.90}`,
-`test {0.35,0.65}`—plus non-prefix handling and explicit stop/continue/report behavior
-on every unsafe/invalid path.
-
-### Blocker 3 — provenance, replay, and persistence not executable
-
-Stage X0 points to a Section-11 plan artifact, but Section 11 contains only cost. No
-plan/result/terminal path or schema is named. The `dev-` provenance hash has no exact
-identity payload/canonical-string definition. The 0.050 kg anchor is a new-identity
-positive control, not the requested default-path replay after changing an approved seam.
-
-Revision requirement: pin exact per-rollout provenance payload fields and canonical
-strings; exact plan/result/terminal paths, serialization and required fields; every-exit
-persistence; and a pinned one-row `overrides=None` replay or comparably exact
-default-path reproduction gate with physical cost and failure branch.
-
-### Blocker 4 — anchor cost not staged
-
-The anchor is terminal but the draft permits all seven masses to run before reading it.
-Run/persist the 0.050 kg anchor first and open the other six only on pass. State terminal
-and maximum costs, including the replay gate.
-
-No seam implementation, plan-mode run, physical rollout, or Amendment A2 draft is
-authorized from v0.1.
-
-## Verification from Codex Session 61
+Claude Session 62 accepted every Session-61 blocker, superseded v0.1 with v0.2, and
+explicitly approved its handoff state. Codex Session 62 found further connected
+executability/authority defects, directly edited the document under the review-cycle
+playbook, and explicitly approved this exact reviewer state:
 
 ```text
-focused payload-conditioning tests     105 passed in 0.69 s
-full packet suite                     1,126 passed in 121.48 s
-compileall analyzer                      clean
-fresh artifact derivation                byte-identical
-physical rollouts spent                   0
-config/config.json                        absent
+Reproducibility Packet/protocol/payload-boundary-extension-v0.2.md
+canonical SHA-256  e5192eaacef004469cfba5bcc4ff7da692e6fb828e5c33a7a2be5d8976a11a52
+Git blob          3d72e1f468f30dfea7101181558720853202f293
+bytes             69,428
+content lines     1,257
+line endings      LF
+Codex             EXPLICITLY APPROVES this exact state
+Claude            owner re-review of this exact state NOT YET STATED
+loop              OPEN on Claude owner re-review
 ```
 
-The active Phase-2 transcript is authoritative:
+Until Claude genuinely re-opens and explicitly approves that digest, **Step 2 is not
+authorized**. No seam build, `PhysicalKey` edit, executable, plan mode, replay,
+payload-boundary rollout, or Amendment A2 may start.
 
-`chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`
+### Load-bearing reviewer corrections
 
-Codex Session 61 is physically last. Its append preserved the pre-write 1,050,779 bytes
-and 15,662 content lines as a byte-identical prefix, placed the unique header at line
-15,664, and produced transcript diff `+146/-0`.
+1. **No circular provenance.** The identity payload contains the five non-provenance
+   override inputs. `ScreenOverrides.provenance_hash` is derived from that canonical
+   payload and inserted only afterwards.
+2. **Plan and replay are separate gates.** Plan mode runs X0P at zero rollouts and
+   persists pass or failure. Execute mode, only after authorization naming the plan,
+   runs `X0E -> XR -> XA -> XM-C -> XL -> XM-B -> XZ`.
+3. **The anchor does not prove the new payload field.** Its source reservation already
+   carries 0.050 kg. The anchor checks the rebuilt probe/fault/identity instrument; X8
+   is the sole payload-liveness check.
+4. **Payload liveness precedes non-anchor ladders.** All six non-anchor healthy blocks
+   run first; X8 compares seven masses within each of eight CRN identity classes; only
+   then may a non-anchor ladder run.
+5. **Replay is outside the extension ledger.** Replay stamps the base hash and is
+   recorded under `replay_gate`; explicit extension/replay/total counts preserve its
+   physical cost.
+6. **Logical joins are persisted data.** Ladder rows cite fault and healthy keys; null
+   distances cite both endpoint keys. The full plan is 126 extension rollouts, one
+   replay, eight identities, and 532 logical references.
+7. **Reduced coverage has no A2 authority.** Unsafe non-anchor masses may be preserved
+   as scoped partial evidence, but any exclusion yields
+   `X_REDUCED_MASS_COVERAGE` before shape/case rules and licenses no Option A/B/C.
+8. **Invalid statistics are explicit.** `X_INVALID_MEASUREMENT` catches invalid
+   windows, time shapes, finite-sample counts, coefficients, distances, or thresholds.
+9. **Option B uses an initial role-retaining mass prefix.** A heavier split-specific
+   role regain cannot repair a lighter role loss.
+10. **The split grid stays out of the executable.** The executable consumes pinned role
+    literals; a focused test is the sole reader that asserts equality to
+    `fault_grid_by_split`.
+
+### Accepted design judgments
+
+- CRN across masses is appropriate. Per-mass nulls still use eight identities; the
+  cross-mass nulls are matched and no inference treats them as independent.
+- `PhysicalKey.distal_payload_mass_kg` is necessary to stop silent cross-mass reuse.
+- The nine-rung anchor is accepted. The partition is identical for every
+  `tau_anchor` in `(0.021, 0.196)`; the excluded 0.50 rung lies only 2.1% of its
+  threshold from the screen boundary.
+- Safe partial evidence may continue to be collected after a non-anchor exclusion, but
+  the aggregate decision remains non-authoritative.
+
+## Codex Session-62 verification
+
+```text
+source reservation        scenario_dev_t01_f000_r02
+source payload            0.050 kg
+role map                  dev .50/.75; pilot .60/.85; val .40/.90; test .35/.65
+planned extension keys    126 / 126 distinct with mass
+CRN identities            8
+full logical references   532
+monotone prefix states    19,448 / 19,448 classified exactly once
+role-lost states with no
+  valid Option-B cap      330
+gravity                   [0, 0, 0]
+qfrc_bias                 exactly zero at the initial state
+nominal body mass         0.17280000257492067 kg
+declared mass deltas      exact within atol 1e-12
+cell-6 margins            reproduced from stage_abc_screen.json
+full packet suite         1,126 passed in 124.04 s
+physical rollouts spent   0
+plan mode run             no
+config/config.json        absent
+```
+
+The first pytest invocation was interrupted by an overly short tool timeout and emitted
+an output-stream error; it was not a test failure. The clean full rerun above passed.
 
 ## Physical-run accounting
 
 Protocol-P-related physical executions remain **151**: fifteen before Session 57, one
-Codex replay, and the 135-rollout authorized Stage-A/B/C screen. Sessions 58–61 spent
-zero rollouts. Keep physical executions separate from logical rows and provenance
-references.
+Codex replay, and the 135-rollout Stage-A/B/C screen. Sessions 58–62 spent zero
+rollouts. Keep physical executions separate from logical rows and provenance references.
+
+The payload-boundary extension's *planned* maximum is 126 extension rollouts plus one
+replay, but none has been authorized or spent.
 
 ## Next actions
 
-1. Claude revises the payload-boundary extension against all four blocker groups and
-   hands back one exact canonical digest.
-2. Codex reviews that exact document. Approval will authorize only the later seam and
-   executable build/review, not execution.
-3. After document approval, build/review the payload seam and executable at exact blobs,
-   including the corrected two-pass mutation sweep.
-4. Run plan mode only after executable approval; both agents read the plan artifact.
-5. Issue a separate explicit execution decision naming the plan digest. Until then:
-   zero rollouts.
-6. Draft Amendment A2 only after an approved extension has run and both agents have read
-   the result.
+1. Claude genuinely re-reviews Codex's document edits at canonical `e5192eaa...`.
+2. If Claude approves that exact state, the document loop closes and **only** the
+   Step-2 build/review becomes authorized.
+3. Build and exact-state review the additive `ScreenOverrides` mass field, additive
+   `PhysicalKey` mass field, and the new executable. Run the corrected two-pass
+   mutation sweep.
+4. After both agents approve the executable, run **plan mode only** (X0P, zero
+   rollouts), and both agents read the plan artifact.
+5. Issue a separate explicit execution decision naming the plan's canonical digest and
+   authorizing the one-row replay. Until then: zero rollouts.
+6. Execute once only after that decision; both agents read the result.
+7. Draft Amendment A2 only after the approved result is jointly interpreted.
 
 Keep `config.json` absent. Assignment/config lineage, regeneration, Gates 4–7, and
 confirmatory materialization remain blocked.
 
 ## Standing evidence rules
 
-- Same-state approval is explicit. Creation, edits, handoff, downstream use and silence
+- Same-state approval is explicit. Creation, edits, handoff, downstream use, and silence
   are not approval.
-- Development screens, pilots, fixtures and diagnostics remain separate from frozen,
-  confirmatory and final results.
-- Keep detection, attribution, information/action authorization and control outcome
+- Development screens, pilots, fixtures, diagnostics, and mechanics probes remain
+  separate from frozen, confirmatory, and final results.
+- Keep detection, attribution, information/action authorization, and control outcome
   separate.
 - Never use bare `python` or `pip`; use `./venv` against
   `Reproducibility Packet/tests` and never root-wide `pytest -q`.
-- Source-mutation tests must clear `__pycache__`, disable bytecode writes, run twice,
-  and return identical verdict sets.
+- Source-mutation tests clear `__pycache__`, disable bytecode writes, run twice, and
+  return identical verdict sets.
 - Transcript appends use the hard gate: exact UTF-8 physical tail/line count/hash,
   verified unique complete EOF anchor, byte-identical old prefix, one new header after
   the boundary, and additions-only diff.
 - The root Live-Run README is append-only during Phase 2. Preserve settled history and
   add only lean forward corrections or genuine public milestones.
 
+## Transcript state
+
+The authoritative active thread is:
+
+`chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`
+
+Codex Session 62 is physically last. Its append preserved the pre-write 1,074,068 bytes
+and 16,064 content lines as a byte-identical prefix, placed the unique header at line
+16,068, and produced transcript diff `+95/-0`.
+
 ## Closeout numbering
 
-- Next Codex session/report: **62** / `HumanReport62.md`.
+- Next Codex session/report: **63** / `HumanReport63.md`.
 - Next regular Codex progress report: **Session 64**, unless an approved amendment or
   phase transition triggers one sooner.

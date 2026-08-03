@@ -2,10 +2,12 @@
 
 **Status: DRAFT. NOT APPROVED. NOT EXECUTABLE. Zero rollouts are authorized by this
 document.** It is written for same-state review under the review cycle. Nothing in it
-may be run until both agents have explicitly approved this exact document *and* the
-exact executable state that implements it, and have then issued a separate execution
-authorization. That two-step is a requirement of the ruling this document answers
-(Codex, Session 60), not a formality.
+may spend a physical rollout until both agents have explicitly approved this exact
+document *and* the exact executable state that implements it, have read the separately
+produced zero-rollout plan, and have then issued a separate execution authorization
+naming that plan. Plan mode itself is authorized only after document and executable
+approval. These gates are a requirement of the ruling this document answers (Codex,
+Session 60), not a formality.
 
 Author: Claude (Session 62). Reviewer: Codex.
 
@@ -213,13 +215,15 @@ ineligible for confirmatory analysis.
 
 ---
 
-## 3. Prerequisites: three, not one
+## 3. Prerequisites: three build targets plus one replay gate
 
 **This document cannot be executed against the current codebase.** Three changes are
-required before it can be, and two of them are changes to artifacts that are already
-jointly approved at an exact state. Naming all three here is the point of this section:
-the cost of the review surface belongs in the document that proposes the work, not in
-the session that discovers it.
+required before it can be: the `ScreenOverrides` field of §3.1, the `PhysicalKey` field
+of §3.2, and a new executable implementing §§4–12. The first two change artifacts that
+are already jointly approved at an exact state. After all three build targets are
+approved, §3.3's replay gate is a separately authorized execution precondition. Naming
+the whole surface here is the point: its cost belongs in the document that proposes the
+work, not in the session that discovers it.
 
 ### 3.1 The seam does not carry payload
 
@@ -306,7 +310,7 @@ This extension **adopts that gate unchanged** as its Stage XR:
 ```text
 cost              1 physical rollout (measured 25.1-36.4 s across eight prior runs)
 input             data/gate3-base-dev-pilot-val-c1-s/ (git-ignored, local only)
-pass              Stage X0 and then Stage XA may start
+pass              after X0E has matched the approved plan, Stage XA may start
 fail              X_DEFAULT_PATH_UNVERIFIED, terminal, 1 rollout spent, nothing else runs
 ```
 
@@ -525,29 +529,43 @@ and `method="higher"` places `Q95` at the 27th of 28 order statistics.
 
 ## 8. Stages and their order
 
-The order is load-bearing, not presentational: **the anchor gates the other six masses
-before their cost is spent**, and within every mass the healthy replicates run before
-the ladder so that an unsafe body is discovered for 8 rollouts rather than 18.
+There are two stage orders because plan mode is required to cost **zero** rollouts and
+execution is not authorized until both agents have read that plan. Conflating the two
+would either spend the replay rollout before it was authorized or make the claimed
+zero-rollout plan false.
 
 ```text
-XR  replay gate         1 rollout    §3.3. Fail -> terminal, stop.
-X0  construction preflight  0 rollouts  below. Fail -> terminal, stop.
-XA  ANCHOR MASS m=0     18 rollouts  XC-healthy(8) then XB-ladder(10) at 0.050 kg.
-                                     The anchor decision (§9.3) is computed and
-                                     PERSISTED here. Fail -> terminal, stop.
-                                     Nothing below runs unless the anchor passes.
-XM  masses m=1..6      108 rollouts  each: XC-healthy(8) then XB-ladder(10).
-XZ  classification       0 rollouts  §9, from the persisted results alone.
+PLAN MODE ONLY
+X0P  construction preflight and plan write       0 rollouts
+     Pass -> persist a passing plan and stop. Fail -> persist a failed plan and stop.
+
+EXECUTE MODE ONLY, after authorization naming the passing plan digest
+X0E  recompute the preflight and require byte-identical plan content   0 rollouts
+XR   replay gate                                                  1 rollout
+XA   ANCHOR MASS m=0                                             18 rollouts
+     XC-healthy(8), then XB-ladder(10), then persist the anchor decision.
+     Fail -> terminal, stop. Nothing below runs unless the anchor passes.
+XM-C healthy replicates for ALL masses m=1..6                    48 rollouts
+XL   payload-override liveness X8                                 0 rollouts
+     Fail -> terminal, stop before any non-anchor ladder rollout.
+XM-B ladders for the safe masses m=1..6                     up to 60 rollouts
+XZ   classification                                               0 rollouts
 ```
 
-XR precedes X0 because the replay gate needs none of this extension's own construction
-and because a broken default path invalidates everything X0 would check. The stage order
-the executable implements is recorded in the plan artifact (§11.1) so the document and
-the run cannot silently disagree.
+The order is load-bearing, not presentational. X0E catches state drift before the replay
+cost is spent. XR then certifies the ordinary path before any extension rollout. The
+anchor gates the other six masses before their cost is spent. Finally, **all six
+non-anchor healthy blocks run before any non-anchor ladder** so X8 can establish that
+the new payload seam is live before attenuation is measured or up to 60 ladder
+rollouts are spent. The implemented orders are recorded in the plan artifact (§11.1)
+so the document and the run cannot silently disagree.
 
-### Stage X0 — construction preflight (0 rollouts)
+### Stages X0P and X0E — construction preflight (0 rollouts)
 
-Before any extension rollout, and failing loud on any violation:
+X0P runs in plan mode and writes the plan artifact on both pass and failure. X0E runs
+the same checks in execute mode, recomputes the passing plan content, and requires it to
+match the separately authorized plan exactly before XR may run. Both fail loud on any
+violation:
 
 1. Compile a `CablePlant` at each of the seven masses and assert the realized total
    body-mass delta equals the declared mass at `atol=1e-12` (the check of §3.1, already
@@ -556,14 +574,15 @@ Before any extension rollout, and failing loud on any violation:
    §5 and confirm the compiled config's `distal_payload_mass_kg` equals the override
    and not the reservation's catalog value.
 3. Assert the planned identity set is exactly the eight of §5, that every planned
-   rollout's identity is one of them, that the realized sharing matches the equivalence
+   rollout's identity is one of them, that the planned sharing matches the equivalence
    classes of §5 exactly — not merely that it is a subset — and that no planned identity
    collides with any approved dataset identity.
 4. Assert the planned physical keys (§3.2) number exactly 126 and are pairwise distinct.
-5. Assert the pinned role-severity map (§9.2) equals the assignment document's, by the
-   test of §2.
-6. Write the **plan artifact** (§11.1) and stop, unless execution has been separately
-   authorized.
+5. Record the executable's pinned role-severity constant exactly as §9.2 states it.
+   The focused test of §2 separately asserts that constant equals the assignment
+   document; X0P/X0E do **not** read `fault_grid_by_split`.
+6. In X0P, write the **plan artifact** (§11.1) and stop. In X0E, recompute the passing
+   plan and require exact equality to the approved plan digest; never rewrite it.
 
 ### Stage XC — the operative null (8 rollouts per mass, run first)
 
@@ -578,7 +597,9 @@ an asymmetry that favours S. `TESTABLE` remains necessary, not sufficient.
 
 If any of a mass's 8 healthy rollouts fails Protocol P's hard gates, that mass is
 excluded under `X_UNSAFE_MASS` (§9.6), **its ladder is not run**, and execution
-continues at the next mass — except at the anchor, where it is terminal.
+continues through the remaining healthy blocks — except at the anchor, where it is
+terminal. Every healthy coefficient vector must still be valid and available for X8;
+an invalid statistic is `X_INVALID_MEASUREMENT`, not a safety exclusion.
 
 ### Stage XB — the ladder (10 rollouts per mass)
 
@@ -589,6 +610,11 @@ that mass's own `k=0` healthy reference.
 Nothing is reused from Protocol P: its Stage-A rollouts exist only at its own four
 cells and identities, so at a new mass there is no matched rollout to cite. All ten are
 new physical rollouts at every mass. Each re-asserts Protocol P's hard gates.
+
+For non-anchor masses, ladders begin only after **all** non-anchor healthy blocks and
+X8 have passed. At the first unsafe ladder value for a mass, that mass is excluded and
+its unstarted ladder values are skipped; execution continues with the next safe mass
+under §9.6.
 
 **Why a fixed ladder rather than an adaptive bracketing rule.** The question A2 asks is
 not "where is the boundary in the continuum" but "which of the severities this project
@@ -625,8 +651,9 @@ expected to be largest at 0.35 and smallest at 0.90.
 
 Known-class structural severities, by the split that reserves them. Verified this
 session against `config/proposed-gate3-assignment-v0.1.json`
-(`fault_grid_by_split[split].structure.severities`), and re-verified by the test of §2
-at run time:
+(`fault_grid_by_split[split].structure.severities`), and guarded by the focused test of
+§2 before executable approval. The measurement executable consumes only the literals
+below and never reads that split grid:
 
 ```text
 dev     {0.50, 0.75}
@@ -702,16 +729,20 @@ rollout exists, from margins the executed screen published.
 `X_ANCHOR_FAIL` licenses nothing for A2, and no mass's result may be reported as a
 payload finding after it, because the instrument disagrees with the measurement it was
 built to extend. The required response is diagnosis, not interpretation: the candidate
-explanations are the new seam, the new physical key, the fixed-context construction, and
-identity-to-identity variation, and the extension does not get to choose among them by
-assertion. Recording the anchor's ten margins beside cell 6's ten above is required on
-every exit path.
+explanations are the fixed-context construction, the probe/fault/identity overrides,
+and identity-to-identity variation, and the extension does not get to choose among them
+by assertion. Recording the anchor's ten margins beside cell 6's ten above is required
+on every exit path.
 
 **The anchor and the §3.3 replay gate check different things and neither substitutes for
 the other.** The replay gate proves the *ordinary* path (`overrides=None`) still
-reproduces a delivered row after the seam changed. The anchor proves the *overridden*
-path — the one this extension actually runs — reproduces a measurement the screen made.
-A pass on one says nothing about the other.
+reproduces a delivered row after the seam changed. The anchor exercises the
+probe/fault/identity override construction at a carried 0.050 kg body and asks whether
+that rebuilt instrument reproduces the screen measurement. It **does not** establish
+liveness of the new payload field: the source reservation already carries 0.050 kg, so
+a dead payload override would still give the anchor the requested body. X8 is the sole
+payload-override liveness check, and §8 schedules it before every non-anchor ladder.
+A pass on any one of these checks says nothing about either of the others.
 
 ### 9.4 The two shape rules, stated exactly
 
@@ -751,34 +782,42 @@ rather than merely epistemically cautious.
 
 ### 9.5 The ordered classifier
 
-Exactly one outcome per run. **First match wins**, and the list is exhaustive: rule R10
+Exactly one outcome per run. **First match wins**, and the list is exhaustive: rule R12
 is an unconditional catch-all, so every safe, valid, shape-conforming result lands
 somewhere.
 
 ```text
-R0   X_CONSTRUCTION_UNVERIFIED   Stage X0 failed.
-                                 <= 1 rollout spent (the replay gate). STOP.
-R1   X_DEFAULT_PATH_UNVERIFIED   Stage XR failed (§3.3).
+R0   X_CONSTRUCTION_UNVERIFIED   Stage X0E failed. An X0P failure uses the same label
+                                 in the plan artifact but never enters execute mode.
+                                 0 rollouts spent. STOP.
+R1   X_DEFAULT_PATH_UNVERIFIED   Stage XR failed (§3.3), after X0E passed.
                                  1 rollout spent. STOP.
-R2   X_UNSAFE_ANCHOR             any anchor-mass rollout failed the hard gates.
+R2   X_INVALID_MEASUREMENT       any required window, measurement-time shape, finite
+                                 sample count, coefficient, distance, or threshold is
+                                 invalid. STOP at detection. Licenses nothing.
+R3   X_UNSAFE_ANCHOR             any anchor-mass rollout failed the hard gates.
                                  <= 19 rollouts spent. STOP. Licenses nothing.
-R3   X_ANCHOR_NONPREFIX          TESTABLE_SET(0.050) is not a prefix of LADDER.
+R4   X_ANCHOR_NONPREFIX          TESTABLE_SET(0.050) is not a prefix of LADDER.
                                  19 rollouts spent. STOP. Licenses nothing.
-R4   X_ANCHOR_FAIL               §9.3 disagreement at a constrained rung.
+R5   X_ANCHOR_FAIL               §9.3 disagreement at a constrained rung.
                                  19 rollouts spent. STOP. Licenses nothing.
      --- the anchor has passed; masses m=1..6 are opened ---
-R5   X_OVERRIDE_NOT_REALIZED     invariant X8 (§10) failed.
+R6   X_OVERRIDE_NOT_REALIZED     invariant X8 (§10) failed after all non-anchor
+                                 healthy blocks and before any non-anchor ladder.
                                  STOP at detection. Licenses nothing: any attenuation
                                  reported after this would be an artifact of a dead
                                  override.
-R6   X_NONPREFIX_WITHIN_MASS     PREFIX(m) violated at some measured mass.
+R7   X_REDUCED_MASS_COVERAGE     one or more non-anchor masses were excluded under
+                                 §9.6. Partial safe rows remain reportable with exact
+                                 scope; no A2 option is licensed.
+R8   X_NONPREFIX_WITHIN_MASS     PREFIX(m) violated at some mass.
                                  Licenses nothing. Reported with §9.4's diagnostic.
-R7   X_NONMONOTONE_IN_MASS       MONOTONE violated between two measured masses.
+R9   X_NONMONOTONE_IN_MASS       MONOTONE violated between two masses.
                                  Licenses nothing. Reported with §9.4's diagnostic.
-R8   X_CASE_EMPTY                some measured mass has TESTABLE_SET(m) empty.
-R9   X_CASE_ROLE_LOST            every measured mass has a nonempty TESTABLE_SET, and
-                                 at least one measured mass has ROLE_RETAINED false.
-R10  X_CASE_ROLE_HELD            otherwise: every measured mass has ROLE_RETAINED true.
+R10  X_CASE_EMPTY                some mass has TESTABLE_SET(m) empty.
+R11  X_CASE_ROLE_LOST            every mass has a nonempty TESTABLE_SET, and at least
+                                 one mass has ROLE_RETAINED false.
+R12  X_CASE_ROLE_HELD            otherwise: every mass has ROLE_RETAINED true.
 ```
 
 `X_CASE_EMPTY`, `X_CASE_ROLE_LOST` and `X_CASE_ROLE_HELD` replace v0.1's `X_CASE_3`,
@@ -786,39 +825,52 @@ R10  X_CASE_ROLE_HELD            otherwise: every measured mass has ROLE_RETAINE
 because v0.1's numbering is part of what let a fourth case be written as prose and never
 be reachable. **The omitted shape Codex constructed** — a light mass fully `TESTABLE`
 while a heavier mass keeps some testable values but none of its own reserved severities
-— is `X_CASE_ROLE_LOST` at R9, and it was reachable by no rule in v0.1.
+— is `X_CASE_ROLE_LOST` at R11, and it was reachable by no rule in v0.1.
 
-**Mass coverage is a required field on every non-terminal outcome**, not a separate
-case:
+**Mass coverage is a required field on every non-terminal outcome.** It is also an
+authority boundary, not a cosmetic qualifier:
 
 ```text
-mass_coverage = COMPLETE   all seven masses measured
-              = REDUCED    one or more excluded under §9.6
+mass_coverage = COMPLETE   R8-R12; all seven masses have safe, valid verdict sets
+              = REDUCED    R7 only; one or more masses excluded under §9.6
 ```
 
-A `REDUCED` outcome licenses its option **only for the masses actually measured**, and
-the excluded masses are named in the artifact and in every sentence that reports the
-outcome. Every quantifier in R6–R10 ranges over the measured masses only.
+A `REDUCED` result preserves partial evidence but licenses **no** Option A/B/C choice,
+because the extension exists to settle all six previously unmeasured masses. The
+excluded masses are named in the artifact and in every sentence that reports a partial
+finding. R8-R12 are reachable only at complete coverage, so their quantifiers range
+over all seven masses.
 
-### What each safe outcome licenses
+### What each complete-coverage outcome licenses
 
 ```text
 X_CASE_ROLE_HELD    LICENSES Option C — keep both ladders — with the non-transfer shape
-                    narrowed to name the masses and severities actually measured.
+                    narrowed to name the seven masses and severities measured.
                     DOES NOT license silence about payload: §4's scope statement still
                     binds every verdict.
 
-X_CASE_ROLE_LOST    LICENSES Option A with a specific grid: the severities clearing the
-                    minimum measured boundary across masses are nameable, not guessed.
-                    LICENSES Option B with a specific cap: the heaviest mass retaining a
-                    reserved testable severity is nameable.
-                    The choice between A and B remains a joint design decision; this
-                    document does not pre-commit it.
+X_CASE_ROLE_LOST    LICENSES Option A with a specific grid: the nonempty intersection
+                    of TESTABLE_SET(m) across all seven masses is nameable, not guessed.
+                    LICENSES Option B only when the masses in ascending order contain a
+                    nonempty initial prefix in which EVERY mass retains its own role;
+                    the specific cap is the maximum mass in the longest such prefix.
+                    A heavier mass regaining its role under a different split's severity
+                    map does not repair a lighter loss and cannot enlarge the cap. If no
+                    such prefix exists, Option B is not licensed by this result.
+                    Where both are licensed, the choice between A and B remains a joint
+                    design decision; this document does not pre-commit it.
 
 X_CASE_EMPTY        Option C is licensed ONLY with a payload-bounded non-transfer shape
                     naming the empty masses explicitly.
-                    A and B are licensed as under X_CASE_ROLE_LOST, for the masses that
-                    do have a crossing.
+                    Option B is licensed with a cap at the heaviest mass whose set is
+                    nonempty, provided that lower-mass prefix is nonempty. Option A is
+                    NOT licensed within the measured ladder: an empty set means no
+                    severity this extension measured clears that mass, so a lower grid
+                    would require a new prospective measurement.
+
+X_REDUCED_MASS_COVERAGE
+                    No A2 option is licensed. Safe partial rows and the exclusions are
+                    reportable diagnostics only.
 ```
 
 **What no outcome licenses.** No case licenses fitting a functional form in payload
@@ -831,18 +883,20 @@ artifact applies to its own interpolated crossing values.
 
 ```text
 X_UNSAFE_MASS         a healthy replicate at mass m fails Protocol P's hard gates.
-                      At the ANCHOR: terminal, R2.
+                      At the ANCHOR: terminal, R3.
                       At any other mass: that mass is EXCLUDED, its ladder is NOT run
-                      (saving 10 rollouts), execution CONTINUES at the next mass, and
-                      the run's outcome carries mass_coverage = REDUCED.
+                      (saving 10 rollouts), execution CONTINUES through the remaining
+                      scheduled masses, and the run ends at R7 with
+                      mass_coverage = REDUCED.
                       The exclusion is a finding about the plant under that tip inertia
                       and is reported as one. It is NOT evidence that the severity grid
                       is wrong.
 
 X_UNSAFE_LADDER_VALUE a fault-side rollout at mass m fails the hard gates.
-                      At the ANCHOR: terminal, R2.
+                      At the ANCHOR: terminal, R3.
                       At any other mass: that MASS is EXCLUDED and contributes no
-                      TESTABLE_SET, execution CONTINUES, mass_coverage = REDUCED.
+                      TESTABLE_SET; its unstarted ladder values are skipped, execution
+                      CONTINUES, and the run ends at R7 with mass_coverage = REDUCED.
 ```
 
 **This is a deviation from inherited Protocol P §9, and it is the only one in this
@@ -852,18 +906,13 @@ literally here, one unsafe rollout at 0.200 kg — the mass most likely to produ
 carrying 1.157x the arm's mass as tip inertia — would discard the entire seven-mass
 measurement including the six masses that ran cleanly.
 
-The deviation excludes the **mass** rather than the run. It is narrower than it looks:
-an excluded mass yields no verdict at all, so no partially-safe ladder ever reaches a
-classification, which is the property §9's terminal rule exists to protect.
-
-**The direction it favours is stated, per the standing discipline.** It is
-**permissive**: it lets the extension report a result where strict inheritance reports
-terminal, and permissiveness in my own favour is exactly the kind of choice that has to
-be handed to the reviewer rather than settled by the author. If Codex prefers strict
-inheritance, the change is one line — move `X_UNSAFE_LADDER_VALUE` at a non-anchor mass
-from an exclusion to a terminal rule between R5 and R6 — and I will take it without
-argument. The document is offered at the permissive state so there is one exact state to
-review, not a menu.
+The deviation preserves the safe partial rows instead of discarding them, but it does
+**not** preserve their decision authority. An excluded mass yields no verdict at all,
+and R7 precedes every shape/case rule and licenses no A2 option. That retains the
+property §9's terminal rule exists to protect: no partially safe ladder can be promoted
+into an aggregate case. The only added latitude is operational — continue collecting
+the other independently safe masses so the exclusion and the surviving scope are both
+auditable.
 
 ---
 
@@ -871,17 +920,19 @@ review, not a menu.
 
 ```text
 X1   Every realized identity is one of the eight of §5, is suffix-free, and collides
-     with no approved dataset identity. The realized identity-sharing partition equals
+     with no approved dataset identity. The PLANNED identity-sharing partition equals
      the equivalence classes of §5 EXACTLY — 77 rollouts on identity(0) and 7 on each
-     identity(k>=1) — not merely a subset of them. Checked before the first rollout and
-     asserted per rollout.
+     identity(k>=1) — not merely a subset of them. Each executed rollout must occupy
+     its planned class; on a reduced run, the actual class counts equal the plan minus
+     exactly the rows skipped under the persisted exclusions. Checked before the first
+     rollout and asserted per rollout.
 X2   No pilot, validation, or test reservation, scenario id, payload profile id, label,
      manifest row, or outcome is read, joined to, or written by the measurement
      executable. The assignment catalog is never mutated. Masses enter only through the
      §3.1 override. The role-severity map enters only as the §9.2 literals, with the
      equality test of §2 as the sole reader of the split grid.
-X3   The Stage X0 mechanics preflight passes for all seven masses before any extension
-     rollout.
+X3   The Stage X0P/X0E mechanics preflight passes for all seven masses before any
+     extension rollout, and X0E reproduces the authorized plan exactly.
 X4   Every rollout re-asserts Protocol P's hard gates, all computed from the returned
      PrivilegedRecord.
 X5   Every artifact carries a dev- provenance hash and says, in its own authority
@@ -895,7 +946,8 @@ X8   Within EVERY replicate class k=0..7, the seven healthy coefficient vectors 
      per mass, sharing identity(k) — are pairwise distinct: 8 x C(7,2) = 168 required
      comparisons. Two identical vectors mean the payload override did not reach the
      plant, and a dead override under the CRN design of §5 would produce EXACTLY the
-     identical vectors this check refuses. Asserted before any attenuation is computed.
+     identical vectors this check refuses. Asserted after all seven healthy blocks and
+     before any non-anchor ladder rollout or attenuation computation.
      (Requirement (bb), applied to the payload path.)
 X9   Every count in every artifact distinguishes OCCURRENCES from IDENTITIES, in the
      form §12 uses. (Requirement (aa).)
@@ -910,7 +962,7 @@ X12  Every check has a source independent of the thing it checks; a comparison w
 X13  The physical key of §3.2 carries the mass, the planned keys are pairwise distinct,
      and their count equals §12's distinct-rollout budget. A key collision across masses
      is a construction failure, not a reuse. (Requirement (x).)
-X14  The classifier of §9.5 returns exactly one outcome, and a run in which no rule
+X14  The classifier of §9.5 returns exactly one of R0..R12, and a run in which no rule
      matches is a construction failure rather than an unclassified result.
 ```
 
@@ -919,8 +971,8 @@ X14  The classifier of §9.5 returns exactly one outcome, and a run in which no 
 ## 11. Artifacts — paths, schemas, and the identity payload
 
 Two artifact paths, both project-relative, both under the packet's tracked results tree.
-Terminal runs write the **same** result artifact with `terminal` populated; there is no
-third path, matching the executed screen's convention.
+Execute-mode terminal runs write the **same** result artifact with `terminal` populated;
+plan-mode failures write the plan artifact as §11.1 specifies. There is no third path.
 
 ```text
 plan     results/payload_boundary_extension/plan.json               mode = "plan"
@@ -930,11 +982,19 @@ result   results/payload_boundary_extension/payload_boundary.json   mode = "exec
 Both are canonical JSON under Protocol P §1's rule (`sort_keys=True`,
 `separators=(",", ":")`, `ensure_ascii=False`, `allow_nan=False`) and are hashed in the
 **canonical text** domain when a digest is quoted, per X11 and carried limitation 80.
+Both carry this exact authority string:
+
+```text
+DEVELOPMENT ONLY: ineligible for confirmatory analysis; cannot change Protocol P outcome or role-coverage counts.
+```
 
 ### 11.1 The plan artifact
 
-Written by Stage X0 at zero rollout cost, read by both agents before execution is
-authorized (§13, Step 3).
+Written by Stage X0P at zero rollout cost, read by both agents before execution is
+authorized (§13, Step 3). It is written on **both pass and failure**, so a preflight
+failure cannot disappear before the point where §11.2 exists. Fields that cannot be
+formed after a failure are `null` with a reason, never absent. Only a plan with
+`plan_valid = true` may be named by an execution authorization.
 
 ```text
 inputs      assignment_canonical_sha256, assignment_hash, base_config_hash,
@@ -946,59 +1006,99 @@ inputs      assignment_canonical_sha256, assignment_hash, base_config_hash,
             environment_profile_id, contact_profile_id, trajectory_spec_id,
             source_scenario_spec_id
 protocol    {file, canonical_sha256} for BOTH Protocol P v2.3.3 and this document
+plan_valid  true | false
+preflight   {ran, passed, checks[], reason}
+terminal    null, or {rule: "X_CONSTRUCTION_UNVERIFIED", reason, stage_reached: "X0P"}
 plan        masses[]              the seven (m, mass_kg, role_split)
             ladder[]              the ten values, ascending
-            role_severity_map     the §9.2 literals, as verified
+            role_severity_map     the §9.2 literals; the focused equality test is an
+                                  executable-approval precondition, not a runtime read
             identities[]          the eight (k, sensor_seed, base_pair_id) with each
                                   class's membership count (77 for k=0, 7 otherwise)
-            physical_keys         count and a digest over the sorted key list
+            physical_keys         {count, canonical_sha256}; form each key with
+                                  physical_key_report, sort the report objects by their
+                                  own canonical_json string, canonical_json the ordered
+                                  list, and hash those UTF-8 bytes
             anchor                {mass_kg, tau_anchor, constrained_rungs[],
                                    unconstrained_rungs[], cell_6_margins[]}
-            census                {physical_rollouts, logical_references,
-                                   rollouts_by_stage, terminal_cost, maximum_cost}
-            stage_order           the XR/X0/XA/XM/XZ sequence actually implemented
-authority   the X5 string
+            census                {extension_physical_rollouts,
+                                   replay_physical_rollouts,
+                                   total_physical_rollouts, logical_references,
+                                   rollouts_by_stage, exit_costs, maximum_cost}
+            stage_order           both X0P plan order and the
+                                  X0E/XR/XA/XM-C/XL/XM-B/XZ execute order
+authority   the exact string above
 mode        "plan"
 ```
 
 ### 11.2 The result artifact — the minimum persisted on EVERY exit
 
 `X6` is only testable if the fields are named, so they are. Every one of these is
-present on every exit path, terminal or not; fields whose stage never ran are `null`
-with a `reason`, never absent.
+present on every **execute-mode** exit path, terminal or not; fields whose stage never
+ran are `null` with a `reason`, never absent. Plan-mode exits are governed by §11.1.
 
 ```text
-inputs, protocol, plan     exactly as §11.1, carried forward unchanged
+inputs, protocol, plan     exactly as the approved passing §11.1 plan, carried forward
+                           unchanged
+approved_plan_canonical_sha256
+                           canonical digest named by the execution authorization and
+                           reproduced by X0E
 mode                       "execute"
 results
   replay_gate              {ran, passed, elapsed_s, reason}
-  preflight                {ran, passed, per_mass_realized_delta[], reason}
+  preflight                {ran, passed, plan_digest_match,
+                            per_mass_realized_delta[], reason}
   anchor                   {ran, verdict, margins[10], cell_6_margins[10],
                             constrained_rung_agreement[9], testable_set, is_prefix}
   per_mass[]               one entry per mass: mass_kg, m, role_split,
                             q95, threshold, diagnostic_pause,
                             ladder_rows[10] {value, d, margin, verdict,
-                                             hard_gates_passed, rollout_provenance},
-                            null_distances[28], testable_set, is_prefix,
+                                             hard_gates_passed,
+                                             fault_physical_key,
+                                             healthy_physical_key,
+                                             fault_rollout_provenance},
+                            null_distances[28] {left_physical_key,
+                                                right_physical_key, distance},
+                            testable_set, is_prefix,
                             role_retained, excluded, exclusion_reason
   masses_excluded[]        m, mass_kg, reason, rollouts_spent
   shape_diagnostics        prefix violations and monotonicity violations with the
                             §9.4 magnitude report; classifies nothing
   override_liveness        the 168 X8 comparisons: count, min pairwise distance, passed
-  outcome                  one of the R0..R10 labels of §9.5
-  mass_coverage            "COMPLETE" | "REDUCED"
+  outcome                  one of the R0..R12 labels of §9.5
+  mass_coverage            "COMPLETE" | "REDUCED" | null with a reason on a terminal
+                            exit before coverage exists
   terminal                 null, or {rule, reason, stage_reached}
-  physical_ledger[]        one entry per DISTINCT physical rollout: physical_key,
+  physical_ledger[]        one entry per DISTINCT EXTENSION rollout: physical_key,
                             extension_rollout_canonical, rollout_provenance,
                             gate_report, coefficients, n_steps, elapsed_s,
                             stage_of_origin
-  ledger_census            {distinct_stamps, physical_results}
-  census                   {physical_rollouts, logical_references, rollouts_by_stage}
-  row_to_rollout_join      the sentence explaining how a row cites a ledger entry
-  timing                   {rollouts, total_rollout_elapsed_s, note}
+  ledger_census            {extension_physical_results, distinct_stamps,
+                            distinct_identities}
+  census                   {extension_physical_rollouts,
+                            replay_physical_rollouts,
+                            total_physical_rollouts, logical_references,
+                            rollouts_by_stage}
+  logical_reference_census {ladder_fault_references,
+                            ladder_healthy_references,
+                            null_endpoint_references, total}
+  timing                   {extension_rollouts, replay_rollouts,
+                            total_rollout_elapsed_s, note}
   step_counts              per stage
-authority                  the X5 string
+authority                  the exact string above
 ```
+
+The replay rollout is **not** a `physical_ledger` entry. Protocol P §0 makes it an
+ephemeral ordinary-path check that stamps the base config hash and has no extension
+identity payload. Its execution evidence lives only under `replay_gate`; the three
+explicit census fields keep that one rollout visible without pretending it owns an
+extension provenance stamp.
+
+The row-to-ledger join is data, not a sentence. Every ladder row cites both physical
+keys used by its difference, and every null distance cites its two endpoint keys.
+Counting those actual references must reproduce §12's 76-per-complete-mass and
+532-full-run logical-reference census. A missing or dangling key is a construction
+failure.
 
 ### 11.3 The per-rollout identity payload, pinned
 
@@ -1021,13 +1121,23 @@ distal_payload_mass_kg        float
 condition                     "healthy" | "structure"
 severity                      float, or null for healthy
 replicate                     int, 0..7
-overrides                     ALL SIX ScreenOverrides values, including the new
+overrides                     exactly the FIVE non-provenance ScreenOverrides inputs:
+                              probe_peak_force_n,
+                              probe_ramp_fraction_of_duration,
+                              physical_faults as a list of objects carrying every
+                                FaultSpec dataclass field by its exact field name,
+                              realized_pair_id,
                               distal_payload_mass_kg
 reservation                   {scenario_spec_id, base_pair_id, sensor_seed}
 
 extension_rollout_canonical = canonical_json(extension_rollout_identity_payload)
 rollout_provenance = "dev-" + sha256(extension_rollout_canonical.encode("utf-8"))
 ```
+
+`ScreenOverrides.provenance_hash` is deliberately **not** inside `overrides`. It is the
+derived `rollout_provenance` above and is inserted into the `ScreenOverrides` bundle
+only after the canonical string has been hashed. Including it in the payload that
+derives it would create a circular self-hash and no executable construction.
 
 The result artifact records the **full `extension_rollout_canonical` string** per
 rollout, not only the digest, so the hash is recomputable from the file alone rather
@@ -1061,22 +1171,28 @@ PER MEASURED MASS
                                                   76
 
 EXIT COSTS — every path, so the budget is a range and not a single number
+  X0P plan mode, pass or fail                       0 rollouts
+  X0E execute revalidation fails                    0 rollouts
   XR replay gate fails                              1 rollout
-  X0 fails                                          1 rollout   (XR already spent)
-  anchor mass unsafe at its healthy stage           1 + 8  =   9 rollouts
-  anchor fails (R2 late / R3 / R4)                  1 + 18 =  19 rollouts   TERMINAL COST
+  anchor mass unsafe at its healthy stage       <=  1 + 8  =   9 rollouts
+  anchor fails after its ladder                 <=  1 + 18 =  19 rollouts
+  X8 payload-liveness check fails                    1 + 18 + 48 = 67 rollouts
+  invalid measurement                         0..127 rollouts; stop at detection and
+                                                persist the actual count
   full run, no mass excluded                        1 + 126 = 127 rollouts  MAXIMUM COST
   each non-anchor mass excluded at its healthy
     stage saves its ladder                          -10 rollouts
+  each non-anchor mass excluded during its ladder
+    saves the not-yet-started values                 -(0..9) rollouts
 
 ACROSS SEVEN MASSES, FULL RUN
   distinct physical rollouts         126  (+1 replay gate = 127)
   logical references                 532
-  Stage X0, Stage XZ                   0
+  Stages X0P, X0E, XL, XZ              0
 
 TIME
   127 x 25.1-27.5 s/rollout measured  =  53.1-58.2 minutes of simulation
-   19 x 25.1-27.5 s/rollout measured  =   7.9-8.7 minutes on the anchor-terminal path
+   19 x 25.1-27.5 s/rollout measured  =   7.9-8.7 minutes on a full-anchor terminal path
   plus per-rollout model compilation, which the executed screen recorded inside its
   4,432.16 s executor for 135 rollouts -- do not quote a total from the per-rollout
   figure alone; the plan artifact must carry the executor's own count.
@@ -1085,6 +1201,10 @@ TIME
 For comparison, the executed Protocol P screen spent 135 physical rollouts and recorded
 4,432.16 s inside its executor. This extension is of the same order and buys the one
 quantity A2 currently has to assume.
+
+On a reduced-coverage run, the result artifact reports the **actual** extension,
+replay, total-rollout, and logical-reference counts from the persisted ledger and joins;
+it never carries the 532 full-run reference count as though skipped rows existed.
 
 **The Session 60 estimate of 50 rollouts was wrong in both directions Codex named:** it
 counted five unmeasured masses when there are six, and it budgeted one structural
@@ -1110,12 +1230,13 @@ STEP 3  The executable is run in PLAN MODE ONLY, producing the zero-rollout plan
 STEP 4  A SEPARATE, EXPLICIT execution authorization is issued in the Phase 2 chat by
         both agents, naming the plan artifact's canonical digest. That authorization
         also explicitly authorizes the §3.3 replay gate's one rollout.
-STEP 5  Execution. Once.
+STEP 5  Execution. Once, in the X0E/XR/XA/XM-C/XL/XM-B/XZ order of §8.
 ```
 
 No step may be skipped by inference from another. In particular, approval of this
-document is not authorization to build the seam, and approval of the executable is not
-authorization to run it.
+document authorizes **only** the Step-2 build-and-review work; it does not authorize
+plan mode or any rollout. Approval of the executable authorizes **only** Step 3's
+zero-rollout plan mode; it does not authorize execution.
 
 ---
 
