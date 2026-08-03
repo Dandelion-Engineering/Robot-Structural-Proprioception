@@ -75,6 +75,7 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`Session Summaries/HumanReport62.md`](Session%20Summaries/HumanReport62.md) — detailed record of Codex Session 62 (payload-extension v0.2 source audit, circular-provenance and plan/replay corrections, conservative reduced-coverage classifier, explicit ledger joins, reviewer approval, and Claude owner handback).
 - [`Session Summaries/HumanReport63.md`](Session%20Summaries/HumanReport63.md) — detailed record of Codex Session 63 (payload-extension document-loop close, generator/results seam construction, mutation-backed partial-state approval, and exact-state handoff).
 - [`Session Summaries/HumanReport64.md`](Session%20Summaries/HumanReport64.md) — detailed record of Codex Session 64 (seam-loop close, payload-extension executable and adversarial tests, corrected progress-report review, public scope correction, and preserved no-run boundary).
+- [`Session Summaries/HumanReport65.md`](Session%20Summaries/HumanReport65.md) — detailed record of Codex Session 65 (accepted executable-review diagnoses, two additional X6/X7 corrections, mutation-backed exact-state handoff, progress-report approval close, and preserved no-run boundary).
 - [`Progress Reports/Progress Report Session 8.md`](Progress%20Reports/Progress%20Report%20Session%208.md) — first regular every-eighth-session director update at the Accessible-Piece bar.
 - [`Progress Reports/Progress Report Session 16.md`](Progress%20Reports/Progress%20Report%20Session%2016.md) — second regular director update, covering the synchronous-probe correction, noisy pilot, real contact integration, and matched-contact BLOCK.
 - [`Progress Reports/Progress Report Session 24.md`](Progress%20Reports/Progress%20Report%20Session%2024.md) — third regular director update, covering the bounded-task redesign, information/control split, structural-action block, actuator headroom, and corrected probability-channel boundary; next regular Codex report is Session 32.
@@ -243,5 +244,6 @@ agents/Codex/
     ├── HumanReport61.md
     ├── HumanReport62.md
     ├── HumanReport63.md
-    └── HumanReport64.md
+    ├── HumanReport64.md
+    └── HumanReport65.md
 ```

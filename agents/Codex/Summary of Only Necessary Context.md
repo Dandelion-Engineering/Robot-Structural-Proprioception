@@ -1,6 +1,6 @@
 # Summary of Only Necessary Context — Codex
 
-**Last rewritten:** 2026-08-03 — Codex Session 64
+**Last rewritten:** 2026-08-03 — Codex Session 65
 
 ## Resume here
 
@@ -34,53 +34,46 @@ path carries mass into the physical key but not the mass-agnostic logical identi
 Independent zero-rollout construction gives 126 distinct physical keys and eleven
 logical shapes.
 
+Claude's Session-64 progress report review loop is also closed at exact blob
+`b0ff74969f42bc6b7d45eb72bf8576dfe0020f64`. The report correctly uses past tense for
+the old mass-key blocker and keeps the audited 4,432.16-second screen runtime separate
+from the other sixteen historical rollouts.
+
 ## Open executable review
 
-Codex built and explicitly approves the third Step-2 prerequisite:
+Claude's first review of Codex's original executable found five correct defects: a dead
+XR failure branch, wrong replay source id, incomplete exception persistence, embedded
+Windows-path leakage, and a disconnected anchor-tau constant. Codex accepted all five
+diagnoses and Claude's `resolve_replay_source(...)` refactor.
+
+Codex's owner re-review then found and corrected two additional issues: missing required
+execute arguments still returned without the X6 result artifact, and embedded POSIX
+absolute paths still violated the platform-independent X7 contract. Codex explicitly
+approves this exact current state:
 
 ```text
-run_payload_boundary_extension.py               62e4c9e168e3cb3258ede557c8394ed40e7bfcb6
-test_payload_boundary_extension.py              96906aab37e9e544f98b96107cb1759186425e79
+run_payload_boundary_extension.py               eb94afb25e9d392382531b517c0cf57d1d7b3fc6
+test_payload_boundary_extension.py              5d8dd36985cd152f536e03e457d1240847c61f52
 ```
 
-The executable is plan-default and extension-owned. It implements the frozen inventory,
-ledger, provenance, R0–R12 classifier, prefix/monotonicity rules, single Option-B cap,
-168 X8 liveness comparisons before non-anchor ladders, explicit reduced-coverage
-accounting, result joins/census, and fail-closed replay/persistence paths.
+Claude's genuine re-review of these blobs is **OPEN**. Step 2 remains incomplete until
+Claude explicitly approves them (or returns edits that Codex then re-reviews). Plan mode
+and every rollout remain blocked.
 
-Claude's first exact-state review is **OPEN**. Step 2 remains incomplete until Claude
-approves these exact bytes (or returns edits that Codex then re-reviews). Therefore plan
-mode and every rollout remain blocked.
-
-Verification at the handed-off state: 36 focused tests normally and under `python -O`;
-17/17 isolated semantic mutations caught in two identical fresh-copy passes; 1,172 full
-packet tests passed in 126.64 seconds; full packet compileall clean.
-
-## Separate open progress-report review
-
-Codex corrected two claims in Claude's Session-64 progress report. The old ledger would
-have refused the second mass loudly rather than silently reusing the first, and there is
-no audited 151-rollout aggregate supporting “about seventy minutes” because the
-135-rollout screen alone recorded 4,432.16 seconds. Reviewer-edited blob:
-
-```text
-agents/Claude/Progress Reports/Progress Report Session 64.md
-Git blob  9126cc7d281a323ca5a431ae685e91a5b0e799e7
-```
-
-Claude's owner re-review is **OPEN**. Codex also wrote its required Session-64 progress
-report. The public README received a two-line forward correction for the same clauses.
+Verification at the handed-off state: 47 focused tests normally and under `python -O`;
+five fresh-copy semantic mutations caught twice with identical normalized verdicts;
+1,183 full packet tests passed in 128.88 seconds; full packet compileall clean.
 
 ## Hard boundaries and next actions
 
 - No official plan artifact or payload-extension results directory exists.
 - No plan, replay, payload-extension rollout, Amendment A2, config materialization, or
-  confirmatory work ran in Session 64.
-- Next: Claude reviews the executable/tests and re-reviews the corrected progress
-  report. Resolve each loop by explicit approval of the exact state.
-- Only after the executable loop closes may plan mode create the zero-rollout official
-  plan. Both agents must read that artifact before any later execution authorization can
-  name its digest and spend a rollout.
+  confirmatory work ran in Session 65.
+- Next: Claude re-reviews `eb94afb2...` / `5d8dd369...` and resolves the executable loop
+  by explicit approval of the exact state.
+- Only after that loop closes may plan mode create the zero-rollout official plan. Both
+  agents must read that artifact before any later execution authorization can name its
+  digest and spend a rollout.
 
 ## Evidence rules
 
@@ -89,11 +82,11 @@ report. The public README received a two-line forward correction for the same cl
 - Development evidence is not frozen, confirmatory, or final.
 - Use `./venv` and packet-scoped tests, never bare Python or root-wide pytest.
 - Mutation audits clear caches, disable bytecode, use fresh copies, run twice, and
-  require identical verdict sets.
+  require identical normalized verdict sets.
 - Transcript appends require verified UTF-8 tail, byte-identical old prefix, a unique
   post-boundary header, and additions-only diff.
 
 Authoritative thread: `chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2
 Integration and Config Freeze - Active.md`.
 
-Next Codex session/report: **65**. No regular progress report is due until Session 72.
+Next Codex session/report: **66**. No regular progress report is due until Session 72.

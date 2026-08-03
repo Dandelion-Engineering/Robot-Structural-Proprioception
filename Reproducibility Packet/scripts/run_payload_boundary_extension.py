@@ -573,6 +573,9 @@ def failed_plan_document(reason: str) -> dict[str, Any]:
 
 
 _WINDOWS_ABSOLUTE = re.compile(r"(?:[A-Za-z]:[\\/]|\\\\)[^\s'\"<>|]*")
+_POSIX_ABSOLUTE = re.compile(
+    r"(^|[\s:=('\"\[])(/(?!/)[^\s'\"<>|)\],;]+)"
+)
 
 
 def scrub_machine_paths(text: str) -> str:
@@ -584,18 +587,21 @@ def scrub_machine_paths(text: str) -> str:
     string *is* a path, which no real message is -- every one of them embeds the path in
     prose, so the guard passes and the path is published.
 
-    Paths under the repository become ``<repo>``-relative; any other Windows or UNC
-    absolute path is reduced to its final component.  A bare POSIX-rooted path inside
-    prose is deliberately **not** rewritten, because a slash-run is not distinguishable
-    from ordinary text; the accompanying test therefore checks the written artifact
-    rather than trusting this function to be exhaustive.
+    Paths under the repository become ``<repo>``-relative; any other Windows, UNC, or
+    POSIX absolute path is reduced to its final component.  The POSIX form requires a
+    token boundary and refuses ``//`` so ordinary prose, ratios, and URLs are not paths.
     """
 
     scrubbed = str(text)
     for rendering in (str(REPO_ROOT), REPO_ROOT.as_posix()):
         scrubbed = scrubbed.replace(rendering, "<repo>")
-    return _WINDOWS_ABSOLUTE.sub(
+    scrubbed = _WINDOWS_ABSOLUTE.sub(
         lambda match: PureWindowsPath(match.group(0)).name or "<path>", scrubbed
+    )
+    return _POSIX_ABSOLUTE.sub(
+        lambda match: match.group(1)
+        + (PurePosixPath(match.group(2)).name or "<path>"),
+        scrubbed,
     )
 
 
@@ -1670,7 +1676,19 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0 if document["plan_valid"] else 1
 
     if args.approved_plan_sha256 is None or args.data_root is None:
-        print("FAILED: execute mode requires --approved-plan-sha256 and --data-root")
+        missing = [
+            name for name, value in (
+                ("--approved-plan-sha256", args.approved_plan_sha256),
+                ("--data-root", args.data_root),
+            )
+            if value is None
+        ]
+        reason = "execute mode requires " + " and ".join(missing)
+        persist_execute_failure(
+            output_dir, None, args.approved_plan_sha256,
+            outcome=OUTCOME_CONSTRUCTION, stage="X0E", reason=reason,
+        )
+        print(f"FAILED: {reason}")
         return 1
     try:
         approved = strict_read_json(plan_path)

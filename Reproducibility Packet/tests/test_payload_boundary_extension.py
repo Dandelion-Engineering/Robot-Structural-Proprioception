@@ -630,6 +630,35 @@ def test_no_execute_mode_exit_leaves_the_run_unrecorded(tmp_path, plan):
     assert unbound["results"]["terminal"]["stage_reached"] == "X0E"
 
 
+@pytest.mark.parametrize(
+    "required_args,missing_name",
+    [
+        (["--data-root", "unused"], "--approved-plan-sha256"),
+        (["--approved-plan-sha256", "0" * 64], "--data-root"),
+    ],
+)
+def test_missing_execute_authority_or_data_root_is_persisted(
+    tmp_path, required_args, missing_name
+):
+    """X6 includes CLI refusals before the plan is read, not only later failures."""
+
+    output = tmp_path / missing_name.removeprefix("--")
+    code = x.main([
+        "--mode", "execute", "--output-dir", str(output),
+        "--config", str(PACKET / "config" / "draft-config-v0.1.json"),
+        "--schema", str(PACKET / "schema" / "schema.json"),
+        "--assignment", str(PACKET / "config" / "proposed-gate3-assignment-v0.1.json"),
+        "--protocol", str(PACKET / "protocol" / "protocol-p-v2.3.3.md"),
+        "--extension", str(PACKET / "protocol" / "payload-boundary-extension-v0.2.md"),
+        *required_args,
+    ])
+    assert code == 1
+    written = json.loads((output / x.RESULT_FILENAME).read_text(encoding="utf-8"))
+    assert written["results"]["outcome"] == x.OUTCOME_CONSTRUCTION
+    assert written["results"]["terminal"]["stage_reached"] == "X0E"
+    assert missing_name in written["results"]["terminal"]["reason"]
+
+
 def test_persisted_reasons_carry_no_machine_path(tmp_path, plan):
     """X7 is about what the artifact records, not about whether a string IS a path."""
 
@@ -662,6 +691,10 @@ def test_scrubber_rewrites_a_path_inside_a_sentence_and_leaves_prose_alone():
     assert x.scrub_machine_paths("XA -> XM-C -> XL -> XM-B -> XZ") == (
         "XA -> XM-C -> XL -> XM-B -> XZ"
     )
+    posix = "ProtocolPError: pinned input is absent: /home/person/data/plant/row.npz"
+    posix_scrubbed = x.scrub_machine_paths(posix)
+    assert "/home/person" not in posix_scrubbed
+    assert not re.search(r"(?:^|[\s:=('])/(?!/)", posix_scrubbed)
 
 
 def test_a_non_protocolp_error_still_persists_the_rollouts_already_spent(context, plan):
