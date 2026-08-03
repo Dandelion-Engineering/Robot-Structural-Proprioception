@@ -502,7 +502,7 @@ def test_failed_plan_persists_a_classified_reason():
     canonical_json(plan)
 
 
-def test_strict_json_refuses_duplicate_keys_and_nonfinite_tokens(tmp_path):
+def test_strict_json_refuses_duplicate_nonfinite_non_utf8_and_deep_values(tmp_path):
     duplicate = tmp_path / "duplicate.json"
     duplicate.write_text('{"x":1,"x":2}', encoding="utf-8")
     with pytest.raises(ProtocolPError, match="duplicate JSON key"):
@@ -511,6 +511,22 @@ def test_strict_json_refuses_duplicate_keys_and_nonfinite_tokens(tmp_path):
     nonfinite.write_text('{"x":NaN}', encoding="utf-8")
     with pytest.raises(ProtocolPError, match="non-finite JSON token"):
         x.strict_read_json(nonfinite)
+    overflow = tmp_path / "overflow.json"
+    overflow.write_text('{"x":1e9999}', encoding="utf-8")
+    with pytest.raises(ProtocolPError, match="not canonical UTF-8 data"):
+        x.strict_read_json(overflow)
+    surrogate = tmp_path / "surrogate.json"
+    surrogate.write_text('{"x":"\\ud800"}', encoding="ascii")
+    with pytest.raises(ProtocolPError, match="not canonical UTF-8 data"):
+        x.strict_read_json(surrogate)
+    too_deep = tmp_path / "too-deep.json"
+    too_deep.write_text(
+        '{"x":' + '[' * (x.MAX_PLAN_JSON_DEPTH + 1) + '0'
+        + ']' * (x.MAX_PLAN_JSON_DEPTH + 1) + '}',
+        encoding="ascii",
+    )
+    with pytest.raises(ProtocolPError, match="exceeds maximum nesting depth"):
+        x.strict_read_json(too_deep)
 
 
 def test_canonical_writer_refuses_absolute_windows_path(tmp_path):
@@ -631,6 +647,40 @@ def test_no_execute_mode_exit_leaves_the_run_unrecorded(tmp_path, plan):
 
 
 @pytest.mark.parametrize(
+    "payload", [
+        '{"x":1e9999}',
+        '{"x":"\\ud800"}',
+        '{"x":' + '[' * 990 + '0' + ']' * 990 + '}',
+    ],
+    ids=("overflowing-number", "lone-surrogate", "excessive-depth"),
+)
+def test_an_unserializable_foreign_plan_still_persists_the_refusal(tmp_path, payload):
+    """A read must fail before foreign content can poison the X6 failure writer."""
+
+    plan_path = tmp_path / "foreign.json"
+    plan_path.write_text(payload, encoding="ascii")
+    output = tmp_path / "out"
+    assert x.main([
+        "--mode", "execute", "--output-dir", str(output),
+        "--plan", str(plan_path), "--approved-plan-sha256", "0" * 64,
+        "--data-root", str(tmp_path),
+        "--config", str(PACKET / "config" / "draft-config-v0.1.json"),
+        "--schema", str(PACKET / "schema" / "schema.json"),
+        "--assignment", str(PACKET / "config" / "proposed-gate3-assignment-v0.1.json"),
+        "--protocol", str(PACKET / "protocol" / "protocol-p-v2.3.3.md"),
+        "--extension", str(PACKET / "protocol" / "payload-boundary-extension-v0.2.md"),
+    ]) == 1
+    written = json.loads((output / x.RESULT_FILENAME).read_text(encoding="utf-8"))
+    assert written["results"]["outcome"] == x.OUTCOME_CONSTRUCTION
+    assert written["results"]["terminal"]["stage_reached"] == "X0E"
+    reason = written["results"]["terminal"]["reason"]
+    assert (
+        "not canonical UTF-8 data" in reason
+        or "exceeds maximum nesting depth" in reason
+    )
+
+
+@pytest.mark.parametrize(
     "required_args,missing_name",
     [
         (["--data-root", "unused"], "--approved-plan-sha256"),
@@ -668,7 +718,10 @@ _FOREIGN_PLANS = [
     ("windows-key", {"mode": "plan", "plan_valid": True, "terminal": None,
                      "inputs": {r"C:\Users\person\config.json": "foreign"}}),
     ("posix-key", {"mode": "plan", "plan_valid": True, "terminal": None,
-                   "inputs": {"/home/person/plan.json": "foreign"}}),
+                    "inputs": {"/home/person/plan.json": "foreign"}}),
+    ("embedded-windows", {"mode": "plan", "plan_valid": True, "terminal": None,
+                           "inputs": {"note":
+                                      r"opaque-prefixC:\Users\person\config.json"}}),
 ]
 
 
@@ -872,6 +925,13 @@ def test_scrubber_rewrites_a_path_inside_a_sentence_and_leaves_prose_alone():
     posix_scrubbed = x.scrub_machine_paths(posix)
     assert "/home/person" not in posix_scrubbed
     assert not re.search(r"(?:^|[\s:=('])/(?!/)", posix_scrubbed)
+    # A Windows path can follow opaque prose with no delimiter.  A boundary on the drive
+    # letter misses it even though the backslash makes this unambiguously a filesystem
+    # path rather than a URI scheme.
+    embedded = r"ProtocolPError: opaque-prefixC:\Users\person\plant\row.npz"
+    embedded_scrubbed = x.scrub_machine_paths(embedded)
+    assert "person" not in embedded_scrubbed
+    assert embedded_scrubbed.endswith("row.npz")
 
 
 _SCRUBBER_ALPHABET = ("/", "\\", "C", ":", "x", " ", ".", "1")
@@ -890,6 +950,7 @@ def test_the_scrubber_output_is_never_absolute_to_either_flavour():
     for length in range(1, 6):
         for combo in itertools.product(_SCRUBBER_ALPHABET, repeat=length):
             scrubbed = x.scrub_machine_paths("".join(combo))
+            assert not x._records_absolute_path(scrubbed), combo
             assert not PureWindowsPath(scrubbed).is_absolute(), combo
             assert not PurePosixPath(scrubbed).is_absolute(), combo
 
@@ -997,6 +1058,9 @@ _AUTHORIZED_SHAPED_PLANS = [
     ("value", {"inputs": {"config_path": r"C:\PRIVATE\config.json"}}),
     ("key", {"inputs": {r"C:\PRIVATE\config.json": "foreign"}}),
     ("posix-value", {"plan": {"note": "/PRIVATE/plan.json"}}),
+    ("embedded-windows", {"inputs": {
+        "note": r"opaque-prefixC:\PRIVATE\config.json"
+    }}),
 ]
 
 
@@ -1052,7 +1116,8 @@ def test_the_gate_and_the_writer_ask_one_function_the_same_question():
     """
 
     for probe in ({"a": r"C:\dir\row.npz"}, {r"C:\dir\row.npz": "a"},
-                  {"a": ["b", {"c": "/dir/row.npz"}]}, {"a": "//host/share"}):
+                  {"a": ["b", {"c": "/dir/row.npz"}]}, {"a": "//host/share"},
+                  {"a": r"opaque-prefixC:\PRIVATE\row.npz"}):
         assert x.absolute_path_strings(probe), probe
         with pytest.raises(ProtocolPError, match="X7: result artifact contains"):
             x.write_canonical_document(Path("unused"), probe)

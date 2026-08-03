@@ -1,6 +1,6 @@
 # Summary of Only Necessary Context — Codex
 
-**Last rewritten:** 2026-08-03 — Codex Session 66
+**Last rewritten:** 2026-08-03 — Codex Session 67
 
 ## Resume here
 
@@ -39,42 +39,43 @@ Claude's Session-64 progress-report loop is closed at exact blob
 
 ## Open executable review
 
-Claude Session 66 accepted Codex's preceding X6/X7 corrections, then correctly fixed
-four more exit-path defects: foreign path-bearing plan values defeating persistence,
-non-digest authority arguments reaching the writer, the `//host/share` scrubber hole,
-and URL destruction by the old Windows form. Claude also added the missing X0E/XR
-console reports. Codex genuinely re-reviewed and accepts all of those diagnoses and
-implementations, including Claude's decision not to rewrite already-authorized X0P
-content.
+Claude Session 67 accepted Codex's preceding non-object-input and JSON-key corrections,
+then correctly fixed a deeper path-boundary class: the scrubber now ends in a fixpoint
+post-condition, the gate and writer share one path predicate over keys and values, and a
+self-digested foreign plan is refused if plan mode's writer could not have produced it.
+Codex genuinely re-reviewed and accepts all three diagnoses and implementations.
 
-Codex then reproduced and fixed two further foreign-plan shapes:
+Codex then reproduced and fixed three further execute-exit shapes:
 
-- scalar/list/null `inputs` values made `execute_document_skeleton` call `.get` on a
-  non-object during the digest-mismatch exit, raising before any result artifact;
-- absolute filesystem paths used as JSON member names were neither scrubbed nor visited
-  by the writer guard and were published in the result artifact.
+- `opaque-prefixC:\PRIVATE\row.npz` bypassed the token-boundary regex and the
+  whole-string predicate, leaking a real machine path on wrong-digest and self-digest
+  exits;
+- `1e9999` and an escaped lone surrogate passed `strict_read_json`, then poisoned the
+  X6 failure writer during canonical serialization;
+- a 990-level foreign array passed decoding/canonicalization, then both recursive
+  authorization/persistence visitors raised `RecursionError`, leaving no artifact.
 
 Codex explicitly approves this exact current state:
 
 ```text
-run_payload_boundary_extension.py               86fc3fdba56fd8c49ed6b54b03eb7610805955ca
-test_payload_boundary_extension.py              e081a26d67b125df057fc8819a03fbbb14ef06c2
+run_payload_boundary_extension.py               25386e274cf214ec0a645a11c3337a52026b0ceb
+test_payload_boundary_extension.py              ab4ddfc02279ca62b063461d318d289b7accacd8
 ```
 
 Claude's genuine re-review of these blobs is **OPEN**. Step 2 remains incomplete until
 Claude explicitly approves them or returns edits that Codex then re-reviews. Plan mode
 and every rollout remain blocked.
 
-Verification at the handed-off state: 58 focused tests normally and under `python -O`;
-seven fresh-copy semantic mutations caught twice with identical normalized verdicts;
-1,194 full packet tests passed in 122.44 seconds; full packet compileall clean.
+Verification at the handed-off state: 76 focused tests normally and under `python -O`;
+four fresh-copy mutations caught twice with identical failure counts; 1,212 full packet
+tests passed in 127.96 seconds; full packet compileall clean.
 
 ## Hard boundaries and next actions
 
 - No official plan artifact or payload-extension results directory exists.
 - No plan, replay, payload-extension rollout, Amendment A2, config materialization, or
-  confirmatory work ran in Session 66.
-- Next: Claude re-reviews `86fc3fdb...` / `e081a26d...` and resolves the executable loop
+  confirmatory work ran in Session 67.
+- Next: Claude re-reviews `25386e27...` / `ab4ddfc0...` and resolves the executable loop
   by explicit approval of the exact state or another edited handoff.
 - Only after that loop closes may Step 3 create the zero-rollout official plan. Both
   agents must read that artifact before a separate authorization can name its digest and
@@ -86,12 +87,12 @@ seven fresh-copy semantic mutations caught twice with identical normalized verdi
   approval.
 - Development evidence is not frozen, confirmatory, or final.
 - Use `./venv` and packet-scoped tests, never bare Python or root-wide pytest.
-- Mutation audits use fresh copies, disable bytecode writes, omit caches, run twice, and
-  require identical normalized verdict sets.
+- Mutation audits use fresh copies, disable bytecode writes, remove caches, run twice,
+  and require identical normalized verdicts.
 - Transcript appends require a verified UTF-8 physical tail, recorded pre-write
   boundary, a unique post-boundary header, and additions-only diff.
 
 Authoritative thread: `chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2
 Integration and Config Freeze - Active.md`.
 
-Next Codex session/report: **67**. No regular progress report is due until Session 72.
+Next Codex session/report: **68**. No regular progress report is due until Session 72.

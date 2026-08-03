@@ -573,10 +573,14 @@ def failed_plan_document(reason: str) -> dict[str, Any]:
 
 
 _PLAN_DIGEST = re.compile(r"[0-9a-f]{64}")
-# The drive letter must itself sit at a token boundary.  Without the lookbehind the
-# scheme separator of every URL matches -- "https://host/x" reads as drive "s" -- and a
-# URL inside a reason is silently rewritten to its last path component.
-_WINDOWS_ABSOLUTE = re.compile(r"(?:(?<![A-Za-z0-9])[A-Za-z]:[\\/]|\\\\)[^\s'\"<>|]*")
+MAX_PLAN_JSON_DEPTH = 64
+# A backslash-rooted drive needs no token boundary: URI schemes use forward slashes, and
+# requiring a boundary lets ``opaque-prefixC:\\private\\row.npz`` publish a real machine
+# path inside prose.  The forward-slash form keeps the boundary because otherwise the
+# scheme separator of every URL matches -- "https://host/x" reads as drive "s".
+_WINDOWS_ABSOLUTE = re.compile(
+    r"(?:[A-Za-z]:\\|(?<![A-Za-z0-9])[A-Za-z]:/|\\\\)[^\s'\"<>|]*"
+)
 # Two POSIX forms.  "//host/share" is the forward-slash rendering of a UNC path and both
 # PurePath flavours call it absolute, so it must be scrubbed; the lookbehind is what
 # separates it from "scheme://", which must not be.  The single-slash form takes any
@@ -587,6 +591,22 @@ _POSIX_ABSOLUTE = re.compile(
     r"((?<![A-Za-z0-9+.\-]:)//[^\s'\"<>|)\],;/][^\s'\"<>|)\],;]*"
     r"|/(?!/)[^\s'\"<>|)\],;]+)"
 )
+
+
+def _records_absolute_path(text: str) -> bool:
+    """Return whether one persisted string records an absolute filesystem path.
+
+    The writer contract concerns the whole recorded string, not only whether that string
+    *is itself* a path.  The regex forms detect paths embedded in prose; the ``PurePath``
+    forms catch bare roots and path spellings outside those enumerated forms.
+    """
+
+    return (
+        _WINDOWS_ABSOLUTE.search(text) is not None
+        or _POSIX_ABSOLUTE.search(text) is not None
+        or PureWindowsPath(text).is_absolute()
+        or PurePosixPath(text).is_absolute()
+    )
 
 
 def scrub_machine_paths(text: str) -> str:
@@ -636,10 +656,19 @@ def scrub_machine_paths(text: str) -> str:
     # flavour -- so this runs to a FIXPOINT.  Each pass is required to shorten the string
     # strictly, which bounds the loop by the input length; a pass that cannot shorten it
     # yields the whole value instead of returning something the writer would refuse.
-    while PureWindowsPath(scrubbed).is_absolute() or PurePosixPath(scrubbed).is_absolute():
+    while _records_absolute_path(scrubbed):
+        windows_rooted = PureWindowsPath(scrubbed).is_absolute()
+        posix_rooted = PurePosixPath(scrubbed).is_absolute()
+        # The regex substitutions above normally remove every embedded form.  Keep the
+        # post-condition load-bearing if either substitution is later weakened: an
+        # embedded survivor cannot be reduced with ``PurePath.name`` because the WHOLE
+        # prose string is relative, so refuse the whole foreign value instead of leaking.
+        if not windows_rooted and not posix_rooted:
+            scrubbed = "<path>"
+            break
         reduced = (
             PureWindowsPath(scrubbed).name
-            if PureWindowsPath(scrubbed).is_absolute()
+            if windows_rooted
             else PurePosixPath(scrubbed).name
         )
         # ``not reduced`` is the live half: a bare root reduces to the empty string.
@@ -667,7 +696,7 @@ def canonical_document_sha256(document: Mapping[str, Any]) -> str:
 
 
 def absolute_path_strings(value: Any) -> list[str]:
-    """Return every string in a JSON-shaped value that ``PurePath`` calls absolute.
+    """Return every string in a JSON-shaped value that records an absolute path.
 
     Inputs: any JSON-shaped value.  Outputs: the offending strings, in document order,
     from BOTH object-member names and values.
@@ -685,9 +714,7 @@ def absolute_path_strings(value: Any) -> list[str]:
     elif isinstance(value, Sequence) and not isinstance(value, (str, bytes)):
         for child in value:
             found.extend(absolute_path_strings(child))
-    elif isinstance(value, str) and (
-        PureWindowsPath(value).is_absolute() or PurePosixPath(value).is_absolute()
-    ):
+    elif isinstance(value, str) and _records_absolute_path(value):
         found.append(value)
     return found
 
@@ -1620,7 +1647,7 @@ def run_replay_gate(
 
 
 def strict_read_json(path: Path) -> Any:
-    """Read strict JSON, refusing duplicate keys and non-finite tokens."""
+    """Read JSON that can be represented by the packet's canonical UTF-8 rule."""
 
     def pairs(items: Sequence[tuple[str, Any]]) -> dict[str, Any]:
         """Build one object while refusing a repeated member name."""
@@ -1633,11 +1660,44 @@ def strict_read_json(path: Path) -> Any:
         return result
 
     try:
-        return json.loads(path.read_text(encoding="utf-8-sig"), object_pairs_hook=pairs,
-                          parse_constant=lambda token: (_ for _ in ()).throw(
-                              ProtocolPError(f"non-finite JSON token {token!r}")))
+        document = json.loads(
+            path.read_text(encoding="utf-8-sig"),
+            object_pairs_hook=pairs,
+            parse_constant=lambda token: (_ for _ in ()).throw(
+                ProtocolPError(f"non-finite JSON token {token!r}")
+            ),
+        )
     except (OSError, UnicodeError, json.JSONDecodeError) as error:
         raise ProtocolPError(f"could not read strict JSON {path.name}: {error}") from error
+    # The authorization and failure-persistence visitors are deliberately recursive for
+    # clarity.  A foreign plan can otherwise sit in the narrow range that Python's JSON
+    # decoder accepts but those visitors cannot traverse; the authorization failure then
+    # enters the scrubber, raises ``RecursionError`` again, and defeats X6.  Measure depth
+    # iteratively here and reject far above the official plan's actual depth.
+    stack: list[tuple[Any, int]] = [(document, 0)]
+    while stack:
+        value, depth = stack.pop()
+        _require(
+            depth <= MAX_PLAN_JSON_DEPTH,
+            f"strict JSON {path.name} exceeds maximum nesting depth "
+            f"{MAX_PLAN_JSON_DEPTH}",
+        )
+        if isinstance(value, Mapping):
+            stack.extend((child, depth + 1) for child in value.values())
+        elif isinstance(value, Sequence) and not isinstance(value, (str, bytes)):
+            stack.extend((child, depth + 1) for child in value)
+    # ``json.loads`` accepts two values the packet cannot persist: an exponent that
+    # overflows to ``inf`` without using the literal token ``Infinity``, and an escaped
+    # lone surrogate that cannot be encoded as UTF-8.  Reject both at the read boundary;
+    # otherwise authorization fails later and the X6 failure writer crashes on the same
+    # value, leaving no artifact at all.
+    try:
+        canonical_json(document).encode("utf-8")
+    except (TypeError, ValueError, UnicodeError) as error:
+        raise ProtocolPError(
+            f"strict JSON {path.name} is not canonical UTF-8 data: {error}"
+        ) from error
+    return document
 
 
 def require_authorized_plan(
