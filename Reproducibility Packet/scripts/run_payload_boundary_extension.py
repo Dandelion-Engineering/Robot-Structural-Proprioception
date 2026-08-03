@@ -40,6 +40,7 @@ from protocol_p_replay_gate import (  # noqa: E402
     N_PRIVILEGED_FIELDS,
     REPLAY_SUITE,
     RUN_ID as REPLAY_RUN_ID,
+    SCENARIO_SPEC_ID as REPLAY_SCENARIO_SPEC_ID,
     check_pinned_digests,
     compare_manifest_row,
     compare_payload,
@@ -203,6 +204,33 @@ CELL_6_MARGINS = (0.612096, 0.357314, 0.145352, -0.015614, -0.158672,
                   -0.246927, -0.356078, -0.485218, -0.601168, -0.650807)
 ANCHOR_CONSTRAINED_RUNGS = (0.35, 0.40, 0.45, 0.55, 0.60, 0.65, 0.75, 0.85, 0.90)
 ANCHOR_UNCONSTRAINED_RUNGS = (0.50,)
+
+
+def _tau_anchor_partition(tau: float) -> tuple[tuple[float, ...], tuple[float, ...]]:
+    """Split the ladder by section 9.3's rule: |margin| / threshold against tau.
+
+    The ``>=`` boundary is exact but unreachable at the pinned margins: the ratios are
+    0.021 and 0.196 either side of tau = 0.10 and none of the ten equals it, so the
+    ``<`` / ``<=`` distinction decides nothing here and a mutation of it survives.
+    """
+
+    ratios = [abs(margin) / CELL_6_THRESHOLD for margin in CELL_6_MARGINS]
+    return (
+        tuple(value for value, ratio in zip(LADDER, ratios) if ratio >= tau),
+        tuple(value for value, ratio in zip(LADDER, ratios) if ratio < tau),
+    )
+
+
+# TAU_ANCHOR must PRODUCE the partition rather than sit beside it.  A constant that looks
+# authoritative and drives nothing is the trap this project has already recorded; without
+# this the two tuples could drift from the tau the plan artifact publishes and nothing
+# would notice.
+_require(
+    _tau_anchor_partition(TAU_ANCHOR)
+    == (ANCHOR_CONSTRAINED_RUNGS, ANCHOR_UNCONSTRAINED_RUNGS),
+    f"the pinned anchor partition is not the one tau_anchor={TAU_ANCHOR} produces from "
+    f"the pinned cell-6 margins: {_tau_anchor_partition(TAU_ANCHOR)}",
+)
 
 
 def identity_for(k: int) -> RolloutIdentity:
@@ -529,6 +557,7 @@ def build_plan_document(context: ExtensionContext) -> dict[str, Any]:
 def failed_plan_document(reason: str) -> dict[str, Any]:
     """Return §11.1's persisted plan-mode failure shape."""
 
+    reason = scrub_machine_paths(reason)
     unavailable = {"value": None, "reason": str(reason)}
     return {
         "inputs": unavailable,
@@ -541,6 +570,39 @@ def failed_plan_document(reason: str) -> dict[str, Any]:
         "authority": AUTHORITY,
         "mode": "plan",
     }
+
+
+_WINDOWS_ABSOLUTE = re.compile(r"(?:[A-Za-z]:[\\/]|\\\\)[^\s'\"<>|]*")
+
+
+def scrub_machine_paths(text: str) -> str:
+    """Rewrite absolute filesystem paths that appear inside a persisted message.
+
+    Inputs: one message.  Outputs: the same message with machine paths removed.
+    Purpose: X7 forbids a result artifact from recording an absolute path, and a refusal
+    sentence that quotes one is still a recording.  The writer's own guard asks whether a
+    string *is* a path, which no real message is -- every one of them embeds the path in
+    prose, so the guard passes and the path is published.
+
+    Paths under the repository become ``<repo>``-relative; any other Windows or UNC
+    absolute path is reduced to its final component.  A bare POSIX-rooted path inside
+    prose is deliberately **not** rewritten, because a slash-run is not distinguishable
+    from ordinary text; the accompanying test therefore checks the written artifact
+    rather than trusting this function to be exhaustive.
+    """
+
+    scrubbed = str(text)
+    for rendering in (str(REPO_ROOT), REPO_ROOT.as_posix()):
+        scrubbed = scrubbed.replace(rendering, "<repo>")
+    return _WINDOWS_ABSOLUTE.sub(
+        lambda match: PureWindowsPath(match.group(0)).name or "<path>", scrubbed
+    )
+
+
+def describe_error(error: BaseException) -> str:
+    """Return one scrubbed ``Type: message`` string safe to persist in an artifact."""
+
+    return scrub_machine_paths(f"{type(error).__name__}: {error}")
 
 
 def canonical_document_sha256(document: Mapping[str, Any]) -> str:
@@ -748,7 +810,7 @@ def measure_row(
             coefficients=None,
             n_steps=None,
             elapsed_s=float(time.perf_counter() - started),
-            error=f"{type(error).__name__}: {error}",
+            error=describe_error(error),
         )
     ledger.record(result)
     return result
@@ -1148,6 +1210,7 @@ def _finish(
     """Persist exactly one R0-R12 outcome and all evidence accumulated so far."""
 
     _require(outcome in OUTCOMES, f"X14: unknown classifier result {outcome!r}")
+    reason = None if reason is None else scrub_machine_paths(reason)
     results = document["results"]
     results["outcome"] = outcome
     results["mass_coverage"] = mass_coverage
@@ -1329,14 +1392,19 @@ def run_extension(
         results["shape_diagnostics"] = diagnostics
         return _finish(document, ledger, outcome=outcome, stage="XZ", reason=None,
                        replay_rollouts=1, mass_coverage=coverage)
-    except ProtocolPError as error:
+    except Exception as error:
+        # Broad on purpose: this handler owns the ledger, so it is the only place that can
+        # persist the rollouts already spent.  ProtocolPError is not the only class that
+        # reaches here -- the override construction raises AssignmentGenerationError,
+        # which is a ValueError -- and an escape would discard every rollout's evidence.
         for mass in MASS_CELLS:
             results["per_mass"][mass.m] = _populate_mass_entry(
                 mass, healthy[mass.m], ladders[mass.m],
                 excluded_reason=exclusions.get(mass.m),
             )
         return _finish(document, ledger, outcome=OUTCOME_INVALID,
-                       stage="measurement", reason=str(error), replay_rollouts=1)
+                       stage="measurement", reason=describe_error(error),
+                       replay_rollouts=1)
 
 
 class ReplayGateFailure(ProtocolPError):
@@ -1348,6 +1416,53 @@ class ReplayGateFailure(ProtocolPError):
         super().__init__(message)
         self.rollout_spent = int(rollout_spent)
         self.elapsed_s = float(elapsed_s)
+
+
+def resolve_replay_source(context: ExtensionContext) -> tuple[Any, Any]:
+    """Return the delivered reservation and manifest row Protocol P section 7 replays.
+
+    Inputs: the bound extension context.  Outputs: ``(reservation, identity_row)``.
+    Purpose: every check that must hold *before* the gate spends its one rollout lives
+    here, so the whole pre-rollout surface is reachable by a test at zero cost.
+
+    The scenario id is **imported** from the approved gate rather than re-typed.  A
+    pinned literal that also lives in a bound module is checked by equality, never by
+    adoption; a re-typed copy names a different delivered row and the divergence is
+    invisible until the rollout is already spent.
+    """
+
+    # CODE GUARD, not a runtime check: the gate module derives RUN_ID from
+    # SCENARIO_SPEC_ID, so while both are imported no reachable state fails this.  It
+    # goes live the moment either is re-typed here, which is the defect it exists for.
+    # It survives a mutation sweep by construction; never count it as coverage.
+    _require(REPLAY_RUN_ID.startswith(f"{REPLAY_SCENARIO_SPEC_ID}_"),
+             f"replay run id {REPLAY_RUN_ID!r} does not name the gate's scenario "
+             f"{REPLAY_SCENARIO_SPEC_ID!r}")
+    rows, reservations = build_identity_manifest(
+        context.binding, splits=("dev",), suites=("C0", "C1", "S")
+    )
+    selected = [
+        item for item in reservations
+        if item.scenario_spec_id == REPLAY_SCENARIO_SPEC_ID
+    ]
+    _require(
+        len(selected) == 1,
+        "replay source reservation is not unique in the dev manifest",
+    )
+    identity_rows = [row for row in rows if row.run_id == REPLAY_RUN_ID]
+    _require(
+        len(identity_rows) == 1,
+        "replay identity row is not unique in the dev manifest",
+    )
+    # Live only in combination with the line above: with the scenario id imported the
+    # equality is forced, and removing this check alone changes nothing.  Removing BOTH
+    # -- a re-typed scenario id and no pair-id check -- is the state that reaches a
+    # rollout against the wrong delivered row, and the swept double removal is caught.
+    _require(
+        screen_pair_id(selected[0], None) == identity_rows[0].pair_id,
+        "overrides=None does not reproduce the delivered pair id",
+    )
+    return selected[0], identity_rows[0]
 
 
 def run_replay_gate(
@@ -1367,27 +1482,7 @@ def run_replay_gate(
         )
         watched_recursive = [data_root, PACKET_ROOT]
         before = inventory(watched_recursive, shallow_roots=[REPO_ROOT])
-        rows, reservations = build_identity_manifest(
-            context.binding, splits=("dev",), suites=("C0", "C1", "S")
-        )
-        selected = [
-            item for item in reservations
-            if item.scenario_spec_id == "scenario_dev_t00_f000_r00"
-        ]
-        _require(
-            len(selected) == 1,
-            "replay source reservation is not unique in the dev manifest",
-        )
-        identity_rows = [row for row in rows if row.run_id == REPLAY_RUN_ID]
-        _require(
-            len(identity_rows) == 1,
-            "replay identity row is not unique in the dev manifest",
-        )
-        reservation = selected[0]
-        _require(
-            screen_pair_id(reservation, None) == identity_rows[0].pair_id,
-            "overrides=None does not reproduce the delivered pair id",
-        )
+        reservation, identity_row = resolve_replay_source(context)
         rollout_started = time.perf_counter()
         rollout_spent = 1
         control_pair_id, plant, observations, _labels, safety_events, contact_steps = (
@@ -1404,7 +1499,7 @@ def run_replay_gate(
         )
         rollout_elapsed = time.perf_counter() - rollout_started
         _require(
-            control_pair_id == identity_rows[0].pair_id,
+            control_pair_id == identity_row.pair_id,
             "replay realized the wrong pair id",
         )
         _require(set(observations) == {REPLAY_SUITE}, "replay returned the wrong suite set")
@@ -1415,7 +1510,7 @@ def run_replay_gate(
                     _require(retained is None, "retained replay manifest row is duplicated")
                     retained = dict(item)
         _require(retained is not None, "retained replay manifest row is absent")
-        compare_manifest_row(retained, identity_rows[0])
+        compare_manifest_row(retained, identity_row)
         observation = observations[REPLAY_SUITE]
         _require(
             observation.config_hash == context.base_config_hash,
@@ -1443,7 +1538,7 @@ def run_replay_gate(
         if rollout_spent and rollout_elapsed == 0.0:
             rollout_elapsed = time.perf_counter() - rollout_started
         raise ReplayGateFailure(
-            f"{type(error).__name__}: {error}",
+            describe_error(error),
             rollout_spent=rollout_spent,
             elapsed_s=rollout_elapsed,
         ) from error
@@ -1515,6 +1610,30 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+def persist_execute_failure(
+    output_dir: Path, plan_document: Any, approved_plan_digest: Any,
+    *, outcome: str, stage: str, reason: str,
+) -> None:
+    """X6: write the execute-mode artifact for a failure that precedes any measurement.
+
+    Inputs: the output directory, whatever plan content exists, the digest the caller
+    named, and the classified failure.  Outputs: none; the artifact is written.
+    Purpose: §11.2 requires the field set on EVERY execute-mode exit, and an exit that
+    prints to the console and returns leaves no record that the run was attempted.
+    """
+
+    document = execute_document_skeleton(
+        plan_document if isinstance(plan_document, Mapping) else {}, approved_plan_digest
+    )
+    document["results"]["preflight"] = {
+        "ran": True, "passed": False, "plan_digest_match": False,
+        "per_mass_realized_delta": None, "reason": reason,
+    }
+    final = _finish(document, ExtensionLedger(), outcome=outcome, stage=stage,
+                    reason=reason, replay_rollouts=0)
+    write_canonical_document(output_dir / RESULT_FILENAME, final)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Write a zero-rollout plan, or execute once against an explicitly named plan."""
 
@@ -1529,8 +1648,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
     except Exception as error:
         if args.mode == "plan":
-            document = failed_plan_document(f"{type(error).__name__}: {error}")
+            document = failed_plan_document(describe_error(error))
             write_canonical_document(output_dir / PLAN_FILENAME, document)
+        else:
+            persist_execute_failure(
+                output_dir, None, args.approved_plan_sha256,
+                outcome=OUTCOME_CONSTRUCTION, stage="X0E", reason=describe_error(error),
+            )
         print(f"FAILED: {error}")
         return 1
 
@@ -1538,7 +1662,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         try:
             document = build_plan_document(context)
         except Exception as error:
-            document = failed_plan_document(f"{type(error).__name__}: {error}")
+            document = failed_plan_document(describe_error(error))
         written = write_canonical_document(output_dir / PLAN_FILENAME, document)
         print(f"plan_valid={document['plan_valid']} rollouts=0")
         print(f"canonical_sha256={canonical_document_sha256(document)}")
@@ -1551,29 +1675,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         approved = strict_read_json(plan_path)
     except Exception as error:
+        persist_execute_failure(
+            output_dir, None, args.approved_plan_sha256,
+            outcome=OUTCOME_CONSTRUCTION, stage="X0E", reason=describe_error(error),
+        )
         print(f"FAILED: {error}")
         return 1
     try:
         approved_digest = require_authorized_plan(approved, args.approved_plan_sha256)
     except Exception as error:
-        if isinstance(approved, Mapping):
-            failed = execute_document_skeleton(approved, args.approved_plan_sha256)
-            failed["results"]["preflight"] = {
-                "ran": True,
-                "passed": False,
-                "plan_digest_match": False,
-                "per_mass_realized_delta": None,
-                "reason": str(error),
-            }
-            failed = _finish(
-                failed,
-                ExtensionLedger(),
-                outcome=OUTCOME_CONSTRUCTION,
-                stage="X0E",
-                reason=str(error),
-                replay_rollouts=0,
-            )
-            write_canonical_document(output_dir / RESULT_FILENAME, failed)
+        persist_execute_failure(
+            output_dir, approved, args.approved_plan_sha256,
+            outcome=OUTCOME_CONSTRUCTION, stage="X0E", reason=describe_error(error),
+        )
         print(f"FAILED: {error}")
         return 1
     document = execute_document_skeleton(approved, args.approved_plan_sha256)
@@ -1582,11 +1696,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         _require(canonical_json(recomputed) == canonical_json(approved),
                  "X0E recomputed plan content differs from the approved plan")
     except Exception as error:
-        replay_rollouts = int(getattr(error, "rollout_spent", 0))
-        replay_elapsed = float(getattr(error, "elapsed_s", 0.0))
         document["results"]["preflight"] = {
             "ran": True, "passed": False, "plan_digest_match": False,
-            "per_mass_realized_delta": None, "reason": f"{type(error).__name__}: {error}",
+            "per_mass_realized_delta": None, "reason": describe_error(error),
         }
         final = _finish(document, ExtensionLedger(), outcome=OUTCOME_CONSTRUCTION,
                         stage="X0E", reason=document["results"]["preflight"]["reason"],
@@ -1600,6 +1712,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             protocol_path=args.protocol.resolve(),
         )
     except Exception as error:
+        # The gate raises ReplayGateFailure carrying whether its one rollout was actually
+        # spent.  Read them off THIS exception: taking them from anywhere else reports a
+        # cost the run did not incur, or loses one it did.
+        replay_rollouts = int(getattr(error, "rollout_spent", 0))
+        replay_elapsed = float(getattr(error, "elapsed_s", 0.0))
         document["results"]["preflight"] = {
             "ran": True, "passed": True, "plan_digest_match": True,
             "per_mass_realized_delta": recomputed["preflight"]["per_mass_realized_delta"],
@@ -1607,14 +1724,38 @@ def main(argv: Sequence[str] | None = None) -> int:
         }
         document["results"]["replay_gate"] = {
             "ran": True, "passed": False, "elapsed_s": replay_elapsed,
-            "reason": str(error),
+            "reason": describe_error(error),
         }
         final = _finish(document, ExtensionLedger(), outcome=OUTCOME_REPLAY,
                         stage="XR", reason=document["results"]["replay_gate"]["reason"],
                         replay_rollouts=replay_rollouts)
         write_canonical_document(output_dir / RESULT_FILENAME, final)
         return 1
-    final = run_extension(context, approved, approved_digest, replay)
+    try:
+        final = run_extension(context, approved, approved_digest, replay)
+    except Exception as error:
+        # run_extension classifies every measurement failure itself and owns the ledger.
+        # Reaching here means the artifact assembly itself failed, so the ledger is gone
+        # and the census below is NOT a rollout count -- the reason says so rather than
+        # letting a zero be read as "nothing ran".
+        document["results"]["preflight"] = {
+            "ran": True, "passed": True, "plan_digest_match": True,
+            "per_mass_realized_delta": recomputed["preflight"]["per_mass_realized_delta"],
+            "reason": None,
+        }
+        document["results"]["replay_gate"] = dict(replay)
+        final = _finish(
+            document, ExtensionLedger(), outcome=OUTCOME_INVALID, stage="measurement",
+            reason=(
+                "result assembly failed after the measurement stages; the rollout counts "
+                "in this artifact are UNKNOWN rather than zero: "
+                + describe_error(error)
+            ),
+            replay_rollouts=1,
+        )
+        write_canonical_document(output_dir / RESULT_FILENAME, final)
+        print(f"FAILED: {error}")
+        return 1
     written = write_canonical_document(output_dir / RESULT_FILENAME, final)
     print(f"outcome={final['results']['outcome']}")
     print(f"rollouts={final['results']['census']['total_physical_rollouts']}")

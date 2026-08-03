@@ -7,6 +7,7 @@ import hashlib
 import importlib.util
 import itertools
 import json
+import re
 import sys
 from collections import Counter
 from pathlib import Path
@@ -515,3 +516,216 @@ def test_strict_json_refuses_duplicate_keys_and_nonfinite_tokens(tmp_path):
 def test_canonical_writer_refuses_absolute_windows_path(tmp_path):
     with pytest.raises(ProtocolPError, match="absolute filesystem path"):
         x.write_canonical_document(tmp_path / "bad.json", {"path": r"C:\\Users\\person"})
+
+
+# --- Session 65 review additions -------------------------------------------------
+#
+# Every test below constructs a state the previous state of this executable accepted,
+# and each one is red against it.  They cover main()'s execute-mode exits, which no
+# test reached before: the whole region was unexercised, which is exactly where an
+# unbound name and a re-typed scenario id survived.
+
+
+def test_replay_source_is_the_approved_gate_scenario_not_a_retyped_literal(context):
+    """The pre-rollout half of the replay gate, driven at zero rollout cost."""
+
+    from protocol_p_replay_gate import RUN_ID, SCENARIO_SPEC_ID
+    from utils.assignment_generator import screen_pair_id
+
+    assert x.REPLAY_SCENARIO_SPEC_ID is SCENARIO_SPEC_ID
+    assert x.REPLAY_RUN_ID.startswith(f"{SCENARIO_SPEC_ID}_")
+    reservation, identity_row = x.resolve_replay_source(context)
+    assert reservation.scenario_spec_id == SCENARIO_SPEC_ID == "scenario_dev_t01_f000_r00"
+    assert identity_row.run_id == RUN_ID
+    # This equality is the check the gate makes before it spends its rollout.  Selecting
+    # any other delivered reservation fails here, one step after a unique-match check
+    # that a wrong-but-existing scenario id passes.
+    assert screen_pair_id(reservation, None) == identity_row.pair_id
+
+
+def test_no_scenario_id_is_retyped_anywhere_in_the_executable():
+    source = (SCRIPTS / "run_payload_boundary_extension.py").read_text(encoding="utf-8")
+    assert "scenario_dev_t0" not in source
+
+
+def _write_plan(tmp_path, plan):
+    path = tmp_path / "plan.json"
+    x.write_canonical_document(path, plan)
+    return path, x.canonical_document_sha256(plan)
+
+
+def test_replay_failure_persists_the_terminal_artifact_and_the_true_rollout_count(
+    tmp_path, plan
+):
+    """R1 must leave a record; the previous state raised UnboundLocalError instead."""
+
+    plan_path, digest = _write_plan(tmp_path, plan)
+    code = x.main([
+        "--mode", "execute",
+        "--output-dir", str(tmp_path),
+        "--plan", str(plan_path),
+        "--approved-plan-sha256", digest,
+        "--data-root", str(tmp_path / "absent_data_root"),
+        "--config", str(PACKET / "config" / "draft-config-v0.1.json"),
+        "--schema", str(PACKET / "schema" / "schema.json"),
+        "--assignment", str(PACKET / "config" / "proposed-gate3-assignment-v0.1.json"),
+        "--protocol", str(PACKET / "protocol" / "protocol-p-v2.3.3.md"),
+        "--extension", str(PACKET / "protocol" / "payload-boundary-extension-v0.2.md"),
+    ])
+    assert code == 1
+    written = json.loads((tmp_path / x.RESULT_FILENAME).read_text(encoding="utf-8"))
+    results = written["results"]
+    assert results["outcome"] == x.OUTCOME_REPLAY
+    assert results["terminal"]["stage_reached"] == "XR"
+    assert results["preflight"] == {
+        "ran": True, "passed": True, "plan_digest_match": True,
+        "per_mass_realized_delta": plan["preflight"]["per_mass_realized_delta"],
+        "reason": None,
+    }
+    assert results["replay_gate"]["ran"] is True
+    assert results["replay_gate"]["passed"] is False
+    # The gate failed on an absent pinned input, so its rollout was never spent.  A
+    # hard-coded 1 here would report a cost the run did not incur.
+    assert results["replay_gate"]["elapsed_s"] == 0.0
+    assert results["census"]["replay_physical_rollouts"] == 0
+    assert results["census"]["total_physical_rollouts"] == 0
+    assert set(results) == set(
+        x.execute_document_skeleton(plan, digest)["results"]
+    )
+
+
+def test_no_execute_mode_exit_leaves_the_run_unrecorded(tmp_path, plan):
+    """Both pre-X0E execute exits persist an R0 artifact rather than only printing."""
+
+    missing = tmp_path / "no_plan_here" / "plan.json"
+    missing.parent.mkdir()
+    assert x.main([
+        "--mode", "execute", "--output-dir", str(tmp_path / "a"),
+        "--plan", str(missing), "--approved-plan-sha256", "0" * 64,
+        "--data-root", str(tmp_path),
+        "--config", str(PACKET / "config" / "draft-config-v0.1.json"),
+        "--schema", str(PACKET / "schema" / "schema.json"),
+        "--assignment", str(PACKET / "config" / "proposed-gate3-assignment-v0.1.json"),
+        "--protocol", str(PACKET / "protocol" / "protocol-p-v2.3.3.md"),
+        "--extension", str(PACKET / "protocol" / "payload-boundary-extension-v0.2.md"),
+    ]) == 1
+    absent_plan = json.loads(
+        (tmp_path / "a" / x.RESULT_FILENAME).read_text(encoding="utf-8")
+    )
+    assert absent_plan["results"]["outcome"] == x.OUTCOME_CONSTRUCTION
+    assert absent_plan["results"]["terminal"]["stage_reached"] == "X0E"
+
+    assert x.main([
+        "--mode", "execute", "--output-dir", str(tmp_path / "b"),
+        "--plan", str(missing), "--approved-plan-sha256", "0" * 64,
+        "--data-root", str(tmp_path),
+        "--config", str(PACKET / "config" / "draft-config-v0.1.json"),
+        "--schema", str(PACKET / "schema" / "schema.json"),
+        "--assignment", str(PACKET / "config" / "proposed-gate3-assignment-v0.1.json"),
+        "--protocol", str(PACKET / "protocol" / "protocol-p-v2.3.3.md"),
+        "--extension", str(tmp_path / "not-the-extension.md"),
+    ]) == 1
+    unbound = json.loads((tmp_path / "b" / x.RESULT_FILENAME).read_text(encoding="utf-8"))
+    assert unbound["results"]["outcome"] == x.OUTCOME_CONSTRUCTION
+    assert unbound["results"]["terminal"]["stage_reached"] == "X0E"
+
+
+def test_persisted_reasons_carry_no_machine_path(tmp_path, plan):
+    """X7 is about what the artifact records, not about whether a string IS a path."""
+
+    plan_path, digest = _write_plan(tmp_path, plan)
+    x.main([
+        "--mode", "execute", "--output-dir", str(tmp_path),
+        "--plan", str(plan_path), "--approved-plan-sha256", digest,
+        "--data-root", str(tmp_path / "absent_data_root"),
+        "--config", str(PACKET / "config" / "draft-config-v0.1.json"),
+        "--schema", str(PACKET / "schema" / "schema.json"),
+        "--assignment", str(PACKET / "config" / "proposed-gate3-assignment-v0.1.json"),
+        "--protocol", str(PACKET / "protocol" / "protocol-p-v2.3.3.md"),
+        "--extension", str(PACKET / "protocol" / "payload-boundary-extension-v0.2.md"),
+    ])
+    raw = (tmp_path / x.RESULT_FILENAME).read_text(encoding="utf-8")
+    # The reason quotes the absent pinned input, which is an absolute path mid-sentence.
+    # The writer's own guard asks whether a string IS a path and passes every such
+    # sentence, so the artifact is what has to be checked.
+    assert "absent" in raw
+    assert not re.search(r"[A-Za-z]:[\\/]", raw)
+    assert str(PACKET.drive) not in raw or PACKET.drive == ""
+
+
+def test_scrubber_rewrites_a_path_inside_a_sentence_and_leaves_prose_alone():
+    quoted = rf"ProtocolPError: pinned input is absent: {PACKET}\plant\row.npz"
+    assert not Path(quoted).is_absolute()  # the writer's guard cannot see this
+    scrubbed = x.scrub_machine_paths(quoted)
+    assert "<repo>" in scrubbed
+    assert not re.search(r"[A-Za-z]:[\\/]", scrubbed)
+    assert x.scrub_machine_paths("XA -> XM-C -> XL -> XM-B -> XZ") == (
+        "XA -> XM-C -> XL -> XM-B -> XZ"
+    )
+
+
+def test_a_non_protocolp_error_still_persists_the_rollouts_already_spent(context, plan):
+    """The measurement loop owns the ledger, so its handler has to be broad.
+
+    ``AssignmentGenerationError`` is a ``ValueError``, not a ``ProtocolPError``, and the
+    override construction raises it for real.  A narrow handler discards every rollout
+    already spent -- up to 126 of them, roughly an hour of simulation.
+    """
+
+    from utils.assignment_generator import AssignmentGenerationError
+
+    base = _fake_runner()
+    stop = x.ExtensionRow(x.MASS_CELLS[0], x.CONDITION_HEALTHY, None, 5)
+
+    def run(row, ctx, ledger):
+        if row.key == stop.key:
+            raise AssignmentGenerationError("synthetic construction failure")
+        return base(row, ctx, ledger)
+
+    document = x.run_extension(
+        context, plan, x.canonical_document_sha256(plan), _replay(), run_row=run
+    )
+    results = document["results"]
+    assert results["outcome"] == x.OUTCOME_INVALID
+    assert results["terminal"]["stage_reached"] == "measurement"
+    assert "synthetic construction failure" in results["terminal"]["reason"]
+    assert results["census"]["extension_physical_rollouts"] == 5
+    assert len(results["physical_ledger"]) == 5
+
+
+def test_tau_anchor_produces_the_partition_rather_than_sitting_beside_it():
+    assert x._tau_anchor_partition(x.TAU_ANCHOR) == (
+        x.ANCHOR_CONSTRAINED_RUNGS, x.ANCHOR_UNCONSTRAINED_RUNGS
+    )
+    # The document's stability claim: any tau in (0.021, 0.196) gives this partition,
+    # and a tau outside it does not.  Both directions are constructed, not asserted.
+    assert x._tau_anchor_partition(0.022) == x._tau_anchor_partition(0.195)
+    assert x._tau_anchor_partition(0.195) == (
+        x.ANCHOR_CONSTRAINED_RUNGS, x.ANCHOR_UNCONSTRAINED_RUNGS
+    )
+    # Outside the stable interval the partition really does move: at tau = 0.30 the
+    # 0.196 rung at 0.45 and the 0.214 rung at 0.55 drop out of the constrained set.
+    assert x._tau_anchor_partition(0.30)[1] == (0.45, 0.50, 0.55)
+    assert x._tau_anchor_partition(0.0)[1] == ()
+
+
+def test_cell_6_anchor_pins_equal_the_approved_screen_artifact():
+    """Requirement (r): a literal that also lives in a bound document is checked."""
+
+    screen = json.loads(
+        (PACKET / "results" / "protocol_p" / "stage_abc_screen.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    cell = screen["results"]["stage_c_nulls"]["6"]
+    assert round(cell["q95_c"], 8) == x.CELL_6_Q95
+    assert round(cell["operative_threshold"], 8) == x.CELL_6_THRESHOLD
+    ladder = screen["results"]["ladder"]
+    assert len(ladder) == len(x.LADDER)
+    for index, entry in enumerate(ladder):
+        row = entry["per_cell"]["6"]
+        assert round(row["d"], 6) == x.CELL_6_D[index]
+        assert round(row["margin"], 6) == x.CELL_6_MARGINS[index]
+        # The anchor comparison uses only the sign, so the sign is what must be exact.
+        assert (x.CELL_6_MARGINS[index] >= 0.0) == (row["margin"] >= 0.0)
+        assert x.cell_6_margin_rows()[index]["verdict"] == row["verdict"]

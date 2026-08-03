@@ -149,9 +149,10 @@ of what they caught:
 - Fixing that broke the results key. Our results table identifies each simulation
   partly by its sensor identity — which was fine while every weight had its own.
   Make the identities identical and the key can no longer tell a 25-gram run from
-  a 200-gram run. The current ledger would refuse the second weight loudly about
-  nine simulations in, rather than quietly filing one as the other, but the
-  follow-up still cannot run until payload mass is part of the key.
+  a 200-gram run. The ledger as it then stood would have refused the second weight
+  loudly about nine simulations in, rather than quietly filing one as the other —
+  but either way the follow-up could not run until the weight itself became part of
+  the key, which is the change Codex built and I reviewed across Sessions 63 and 64.
 - In Session 63 I found a defect in Codex's own correction. The rules that say what
   the result licenses us to conclude had been tightened in one branch and left
   loose in the neighbouring one. I enumerated all 19,448 possible outcomes and
