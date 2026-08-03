@@ -874,6 +874,192 @@ def test_scrubber_rewrites_a_path_inside_a_sentence_and_leaves_prose_alone():
     assert not re.search(r"(?:^|[\s:=('])/(?!/)", posix_scrubbed)
 
 
+_SCRUBBER_ALPHABET = ("/", "\\", "C", ":", "x", " ", ".", "1")
+
+
+def test_the_scrubber_output_is_never_absolute_to_either_flavour():
+    """The scrubber's contract is the WRITER'S GUARD, so state it as that predicate.
+
+    The two patterns are an enumeration of path spellings and the guard is a predicate
+    over ``PurePath``.  Wherever they disagree, X7 fires while X6 is writing the record
+    and the artifact is destroyed -- so the property is a post-condition, and the way to
+    check a post-condition is to enumerate the input space rather than pick examples.
+    Over 37,448 strings this was measured at 1,358 counterexamples before the fix.
+    """
+
+    for length in range(1, 6):
+        for combo in itertools.product(_SCRUBBER_ALPHABET, repeat=length):
+            scrubbed = x.scrub_machine_paths("".join(combo))
+            assert not PureWindowsPath(scrubbed).is_absolute(), combo
+            assert not PurePosixPath(scrubbed).is_absolute(), combo
+
+
+def test_the_two_families_the_patterns_cannot_match_are_reduced_not_left_alone():
+    """Pin the MECHANISM of each family, not only that the post-condition now holds.
+
+    A later edit could satisfy the enumeration above by making the fallback swallow
+    everything.  These cases fix what each family must become.
+    """
+
+    # (1) A bare root: no path component follows the separator, so neither pattern has
+    # anything to match, and nothing survives the reduction either.
+    for root in ("/", "//", "///", "\\\\"):
+        assert x.scrub_machine_paths(root) == "<path>"
+    # (2) A drive letter PurePath accepts and "[A-Za-z]" does not.  The path is real and
+    # its directory portion must still be removed rather than published.
+    for drive in ("1", ".", ":", " "):
+        assert x.scrub_machine_paths(rf"{drive}:\PRIVATE\row.npz") == "row.npz"
+    # The reduction must use the flavour that calls the string absolute: the POSIX parser
+    # sees no separator at all in a Windows-rooted string, so ITS name is the whole value.
+    assert PurePosixPath(r"1:\PRIVATE\row.npz").name == r"1:\PRIVATE\row.npz"
+    # And one reduction per flavour is not enough -- the POSIX name of "/ :\\" is " :\\",
+    # which is absolute to the OTHER flavour.  This is why the fallback is a fixpoint.
+    assert PurePosixPath("/ :\\").name == " :\\"
+    assert PureWindowsPath(" :\\").is_absolute()
+    assert x.scrub_machine_paths("/ :\\") == "<path>"
+    # Prose, ratios, arrows and URLs are untouched by the fallback, because none of them
+    # is absolute as a whole string.
+    for intact in ("probe 0.10 N / 0.25 ramp", "XA -> XM-C -> XZ",
+                   "see https://example.org/spec#x for the definition"):
+        assert x.scrub_machine_paths(intact) == intact
+
+
+_ROOTED_PLANS = [
+    ("bare-root-value", {"inputs": {"note": "/"}}),
+    ("bare-root-key", {"inputs": {"/": "note"}}),
+    ("double-slash-value", {"inputs": {"note": "//"}}),
+    ("digit-drive-value", {"inputs": {"note": r"1:\PRIVATE\row.npz"}}),
+    ("digit-drive-key", {"inputs": {r"1:\PRIVATE\row.npz": "note"}}),
+    ("nested-in-list", {"plan": {"rows": [{"note": "/"}]}}),
+]
+
+
+@pytest.mark.parametrize("flavour,foreign", _ROOTED_PLANS, ids=[p[0] for p in _ROOTED_PLANS])
+def test_a_plan_carrying_a_root_the_patterns_miss_still_persists_the_refusal(
+    tmp_path, flavour, foreign
+):
+    """X7 defeating X6 again, one layer below the scrub that was added to prevent it.
+
+    The scrub closed every path spelling the two patterns recognise.  These six shapes
+    are absolute to the writer's guard and invisible to both patterns, so before this the
+    guard raised while persisting the record it was protecting: return code ``None``, a
+    traceback, and nothing on disk.
+    """
+
+    document = {"mode": "plan", "plan_valid": True, "terminal": None}
+    document.update(foreign)
+    plan_path = tmp_path / "foreign.json"
+    plan_path.write_text(json.dumps(document), encoding="utf-8")
+    output = tmp_path / flavour
+    assert x.main([
+        "--mode", "execute", "--output-dir", str(output),
+        "--plan", str(plan_path), "--approved-plan-sha256", "0" * 64,
+        "--data-root", str(tmp_path),
+        "--config", str(PACKET / "config" / "draft-config-v0.1.json"),
+        "--schema", str(PACKET / "schema" / "schema.json"),
+        "--assignment", str(PACKET / "config" / "proposed-gate3-assignment-v0.1.json"),
+        "--protocol", str(PACKET / "protocol" / "protocol-p-v2.3.3.md"),
+        "--extension", str(PACKET / "protocol" / "payload-boundary-extension-v0.2.md"),
+    ]) == 1
+    raw = (output / x.RESULT_FILENAME).read_text(encoding="utf-8")
+    written = json.loads(raw)
+    assert written["results"]["outcome"] == x.OUTCOME_CONSTRUCTION
+    assert written["results"]["terminal"]["stage_reached"] == "X0E"
+    # The redaction stays disclosed, and the directory portion is gone.
+    assert "was scrubbed (X7)" in written["results"]["terminal"]["reason"]
+    assert "PRIVATE" not in raw
+
+
+def test_two_paths_with_one_basename_keep_both_members_of_the_evidence_record():
+    """The key-collision loop had no test that could make it red.
+
+    Redaction reduces a path to its final component, so two different machine paths used
+    as member names collapse onto one key.  Without the loop the second member overwrites
+    the first and a field of the persisted evidence disappears with no error and no
+    disclosure -- a silent exclusion inside a record whose only job is to be evidence.
+    """
+
+    collide = {r"C:\DIR_A\row.npz": 1, r"C:\DIR_B\row.npz": 2, "/DIR_C/row.npz": 3}
+    scrubbed, changed = x._scrub_embedded_strings(collide)
+    assert changed is True
+    assert len(scrubbed) == len(collide), "a member was silently dropped"
+    assert list(scrubbed.values()) == [1, 2, 3]
+    assert list(scrubbed) == [
+        "row.npz", "row.npz [redacted-key-2]", "row.npz [redacted-key-3]"
+    ]
+    # Deterministic: the same input must produce the same record every time.
+    assert x._scrub_embedded_strings(collide)[0] == scrubbed
+    # And the disclosure survives the collision path: nothing here is silent.
+    assert "DIR_A" not in json.dumps(scrubbed)
+
+
+_AUTHORIZED_SHAPED_PLANS = [
+    ("value", {"inputs": {"config_path": r"C:\PRIVATE\config.json"}}),
+    ("key", {"inputs": {r"C:\PRIVATE\config.json": "foreign"}}),
+    ("posix-value", {"plan": {"note": "/PRIVATE/plan.json"}}),
+]
+
+
+@pytest.mark.parametrize(
+    "flavour,foreign", _AUTHORIZED_SHAPED_PLANS,
+    ids=[p[0] for p in _AUTHORIZED_SHAPED_PLANS],
+)
+def test_a_plan_named_by_its_own_digest_is_refused_before_it_reaches_the_writer(
+    tmp_path, flavour, foreign
+):
+    """The authorized path embeds the plan VERBATIM, so the gate owes it a check.
+
+    Authorization is "the operator named this document's canonical digest", which a
+    foreign document can satisfy.  Everything past that point copies the plan into the
+    artifact unscrubbed, and the terminal write then raises X7 and persists nothing --
+    return code ``None``, a traceback, no record.  Refusing at the gate is not a rewrite
+    of approved content: the refusal routes to the exit that scrubs, so X6 still holds.
+    """
+
+    document = {"mode": "plan", "plan_valid": True, "terminal": None}
+    document.update(foreign)
+    digest = x.canonical_document_sha256(document)
+    plan_path = tmp_path / "authorized.json"
+    plan_path.write_text(json.dumps(document), encoding="utf-8")
+    output = tmp_path / flavour
+    assert x.main([
+        "--mode", "execute", "--output-dir", str(output),
+        "--plan", str(plan_path), "--approved-plan-sha256", digest,
+        "--data-root", str(tmp_path),
+        "--config", str(PACKET / "config" / "draft-config-v0.1.json"),
+        "--schema", str(PACKET / "schema" / "schema.json"),
+        "--assignment", str(PACKET / "config" / "proposed-gate3-assignment-v0.1.json"),
+        "--protocol", str(PACKET / "protocol" / "protocol-p-v2.3.3.md"),
+        "--extension", str(PACKET / "protocol" / "payload-boundary-extension-v0.2.md"),
+    ]) == 1
+    raw = (output / x.RESULT_FILENAME).read_text(encoding="utf-8")
+    written = json.loads(raw)
+    assert written["results"]["outcome"] == x.OUTCOME_CONSTRUCTION
+    assert written["results"]["terminal"]["stage_reached"] == "X0E"
+    # Requirement (ee): the sentence must be the GATE'S, not the writer's, as rendered.
+    reason = written["results"]["terminal"]["reason"]
+    assert "cannot be an X0P artifact this tool wrote" in reason
+    assert "result artifact contains" not in reason
+    assert "PRIVATE" not in raw
+
+
+def test_the_gate_and_the_writer_ask_one_function_the_same_question():
+    """Requirement (r): the gate exists to guarantee what the writer will accept.
+
+    Two copies of "is this absolute" would drift, and the drift is invisible until a
+    document passes one and fails the other -- which is the exact shape that destroyed
+    the artifact in the first place.
+    """
+
+    for probe in ({"a": r"C:\dir\row.npz"}, {r"C:\dir\row.npz": "a"},
+                  {"a": ["b", {"c": "/dir/row.npz"}]}, {"a": "//host/share"}):
+        assert x.absolute_path_strings(probe), probe
+        with pytest.raises(ProtocolPError, match="X7: result artifact contains"):
+            x.write_canonical_document(Path("unused"), probe)
+    # A legitimate plan trips neither, and that is the accept side.
+    assert x.absolute_path_strings({"a": "row.npz", "b": ["0.10 N / 0.25", "A -> B"]}) == []
+
+
 def test_a_non_protocolp_error_still_persists_the_rollouts_already_spent(context, plan):
     """The measurement loop owns the ledger, so its handler has to be broad.
 

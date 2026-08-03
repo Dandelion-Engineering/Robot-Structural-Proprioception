@@ -602,6 +602,11 @@ def scrub_machine_paths(text: str) -> str:
     POSIX absolute path -- including the ``//host/share`` rendering -- is reduced to its
     final component.  Both forms require a token boundary, and both refuse a URL, so
     ordinary prose, ratios, arrows and links survive unchanged.
+
+    The two patterns are an ENUMERATION of path spellings; the writer's guard is a
+    PREDICATE over ``PurePath``.  Where the two disagree the artifact is destroyed, so the
+    final step below states the scrubber's contract as that same predicate rather than as
+    a third pattern: whatever the patterns missed, the result is not absolute.
     """
 
     scrubbed = str(text)
@@ -610,11 +615,43 @@ def scrub_machine_paths(text: str) -> str:
     scrubbed = _WINDOWS_ABSOLUTE.sub(
         lambda match: PureWindowsPath(match.group(0)).name or "<path>", scrubbed
     )
-    return _POSIX_ABSOLUTE.sub(
+    scrubbed = _POSIX_ABSOLUTE.sub(
         lambda match: match.group(1)
         + (PurePosixPath(match.group(2)).name or "<path>"),
         scrubbed,
     )
+    # POST-CONDITION, and it is the writer's own guard verbatim.  Two measured families
+    # reach here: a bare root ("/", "//", "///", "/ x") that neither pattern can match
+    # because no path component follows the separator, and a drive letter PurePath accepts
+    # but "[A-Za-z]" does not (r"1:\dir\row.npz", r".:\dir\row.npz").  Both are absolute to
+    # the guard, so leaving them makes the terminal write raise and persist NOTHING -- X7
+    # defeating X6 again.  Reduce to the final component, which is what both patterns
+    # already do, and fall back to "<path>" when no component survives.
+    #
+    # Each flavour must reduce with ITS OWN parser: PurePosixPath(r"1:\dir") has no
+    # separator at all, so its ``name`` is the whole Windows-rooted string and an "or"
+    # chain hands the untouched value straight back to the guard.  Measured: that form
+    # left 63 of 37,448 enumerated strings absolute.  One reduction per flavour is also
+    # not enough -- the POSIX name of "/ :\\" is " :\\", which is absolute to the OTHER
+    # flavour -- so this runs to a FIXPOINT.  Each pass is required to shorten the string
+    # strictly, which bounds the loop by the input length; a pass that cannot shorten it
+    # yields the whole value instead of returning something the writer would refuse.
+    while PureWindowsPath(scrubbed).is_absolute() or PurePosixPath(scrubbed).is_absolute():
+        reduced = (
+            PureWindowsPath(scrubbed).name
+            if PureWindowsPath(scrubbed).is_absolute()
+            else PurePosixPath(scrubbed).name
+        )
+        # ``not reduced`` is the live half: a bare root reduces to the empty string.
+        # ``len(reduced) >= len(scrubbed)`` is ARITHMETIC, not a runtime check -- the name
+        # of an absolute path is always a strict suffix of it -- and it is kept because it
+        # makes termination a property of the code rather than of that argument.  It
+        # survives a mutation sweep by construction; never call it a live guard.
+        if not reduced or len(reduced) >= len(scrubbed):
+            scrubbed = "<path>"
+            break
+        scrubbed = reduced
+    return scrubbed
 
 
 def describe_error(error: BaseException) -> str:
@@ -629,28 +666,42 @@ def canonical_document_sha256(document: Mapping[str, Any]) -> str:
     return hashlib.sha256(canonical_json(document).encode("utf-8")).hexdigest()
 
 
+def absolute_path_strings(value: Any) -> list[str]:
+    """Return every string in a JSON-shaped value that ``PurePath`` calls absolute.
+
+    Inputs: any JSON-shaped value.  Outputs: the offending strings, in document order,
+    from BOTH object-member names and values.
+    Purpose: two places ask this question -- the writer, which refuses (X7), and the
+    authorization gate, which refuses a plan the writer would later choke on.  They ask
+    it of ONE function because a second copy could drift, and the gate exists precisely
+    to guarantee what the writer will accept.
+    """
+
+    found: list[str] = []
+    if isinstance(value, Mapping):
+        for key, child in value.items():
+            found.extend(absolute_path_strings(key))
+            found.extend(absolute_path_strings(child))
+    elif isinstance(value, Sequence) and not isinstance(value, (str, bytes)):
+        for child in value:
+            found.extend(absolute_path_strings(child))
+    elif isinstance(value, str) and (
+        PureWindowsPath(value).is_absolute() or PurePosixPath(value).is_absolute()
+    ):
+        found.append(value)
+    return found
+
+
 def write_canonical_document(path: Path, document: Mapping[str, Any]) -> Path:
     """Write canonical JSON with no machine path or non-finite token."""
 
     path.parent.mkdir(parents=True, exist_ok=True)
-    def visit(value: Any) -> None:
-        """Recursively refuse absolute paths before any JSON bytes are written."""
-
-        if isinstance(value, Mapping):
-            for key, child in value.items():
-                visit(key)
-                visit(child)
-        elif isinstance(value, Sequence) and not isinstance(value, (str, bytes)):
-            for child in value:
-                visit(child)
-        elif isinstance(value, str):
-            _require(
-                not PureWindowsPath(value).is_absolute()
-                and not PurePosixPath(value).is_absolute(),
-                f"X7: result artifact contains an absolute filesystem path: {value!r}",
-            )
-
-    visit(document)
+    offenders = absolute_path_strings(document)
+    _require(
+        not offenders,
+        "X7: result artifact contains an absolute filesystem path: "
+        + repr(offenders[0] if offenders else None),
+    )
     payload = canonical_json(document)
     path.write_text(payload, encoding="utf-8", newline="")
     return path
@@ -1606,6 +1657,21 @@ def require_authorized_plan(
     actual = canonical_document_sha256(document)
     _require(actual == authorized_digest,
              f"plan digest {actual} != authorized digest {authorized_digest}")
+    # Everything downstream of this line embeds the approved plan VERBATIM, which is
+    # deliberate: silently rewriting content both agents read and named would be worse
+    # than the risk it removes.  That decision rests on a premise -- "plan mode's own
+    # writer refuses an absolute path, so a plan this tool wrote cannot carry one" -- and
+    # a premise a gate relies on is a thing to CHECK, not to assume.  Measured before this
+    # existed: a foreign plan carrying an absolute path whose own digest is named passes
+    # authorization, and the X0E-mismatch exit then dies inside the terminal write with
+    # nothing on disk.  Refusing here is not a rewrite; the refusal routes to the exit
+    # that scrubs, so the record still gets written and it names the reason.
+    offenders = absolute_path_strings(document)
+    _require(
+        not offenders,
+        "the named plan records an absolute filesystem path and so cannot be an X0P "
+        "artifact this tool wrote: " + repr(offenders[0] if offenders else None),
+    )
     return actual
 
 
