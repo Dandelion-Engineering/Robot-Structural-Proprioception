@@ -429,6 +429,68 @@ def test_payload_mass_is_additive_normalised_and_distinguishes_physical_bodies()
     assert results.physical_key_report(heavy)["distal_payload_mass_kg"] == 0.2
 
 
+def _payload_row(mass, *, severity=0.35, replicate=None):
+    """Build one payload-boundary-shaped row: fixed identity, varying only in mass."""
+
+    return results.LogicalRow(
+        stage=results.STAGE_A,
+        cell=SCREEN_CELLS[0],
+        condition=CONDITION_STRUCTURAL,
+        severity=severity,
+        replicate=replicate,
+        probe_peak_force_n=0.10,
+        probe_ramp_fraction_of_duration=0.25,
+        identity=stage_ab_identity(SCREEN_CELLS[0]),
+        distal_payload_mass_kg=mass,
+    )
+
+
+def test_a_logical_row_carries_its_payload_mass_into_its_physical_key():
+    """The row is the only producer of a key here, so the mass has to travel through it."""
+
+    row = _payload_row(0.2)
+    assert row.physical.distal_payload_mass_kg == 0.2
+    assert results.physical_key_report(row.physical)["distal_payload_mass_kg"] == 0.2
+
+
+def test_rows_that_differ_only_in_payload_mass_are_two_bodies_the_ledger_accepts():
+    """Under common random numbers the mass is the *only* thing separating two rollouts.
+
+    This is the state the payload-boundary extension runs in: one identity, one severity,
+    one probe, seven masses.  Without the mass on the row the two keys are equal, the
+    ledger refuses the second rollout as an unbudgeted re-execution of a body it already
+    holds, and 126 planned rollouts resolve to 18 bodies.
+    """
+
+    light = _payload_row(0.025)
+    heavy = _payload_row(0.200)
+    assert light.physical != heavy.physical
+
+    ledger = results.ResultsLedger()
+    ledger.record(_physical_result(light, stamp=_stamp(1)), base_config_hash=BASE_CONFIG_HASH)
+    ledger.record(_physical_result(heavy, stamp=_stamp(2)), base_config_hash=BASE_CONFIG_HASH)
+    assert len(ledger) == 2
+    assert ledger.get(light.physical).provenance_hash == _stamp(1)
+    assert ledger.get(heavy.physical).provenance_hash == _stamp(2)
+
+
+def test_the_protocol_p_inventory_keys_exactly_as_it_did_before_the_field_existed():
+    """Additive means inert: no Protocol-P row has an override, so every mass is None."""
+
+    rows = _inventory()
+    assert all(row.distal_payload_mass_kg is None for row in rows)
+    assert all(row.physical.distal_payload_mass_kg is None for row in rows)
+    assert len({row.physical for row in rows}) == results.EXPECTED_PHYSICAL_ROLLOUTS == 168
+    for row in rows:
+        assert row.physical == results.physical_key(
+            identity=row.identity,
+            condition=row.condition,
+            severity=row.severity,
+            probe_peak_force_n=row.probe_peak_force_n,
+            probe_ramp_fraction_of_duration=row.probe_ramp_fraction_of_duration,
+        )
+
+
 def test_a_healthy_key_with_a_severity_is_refused():
     with pytest.raises(ProtocolPError, match="healthy condition takes no severity"):
         results.physical_key(

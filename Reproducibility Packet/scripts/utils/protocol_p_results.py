@@ -282,6 +282,21 @@ class LogicalRow:
     and the origin Stage-A row's key for the twelve that do not. The separation is the
     whole point: a reused row is reported under Stage B or Stage C while its
     measurement, its provenance hash and its canonical payload remain Stage A's.
+
+    ``distal_payload_mass_kg`` is additive and defaults to ``None``, which is the mass a
+    Protocol-P row carries: its body's payload comes from the reservation's catalog entry
+    and never from an override, so every one of the 180 rows keys exactly as it did
+    before the field existed. It is here because :attr:`physical` is the only path in
+    this module that *produces* a :class:`PhysicalKey`, and a key that cannot receive a
+    mass cannot distinguish bodies that differ only in one -- which is the whole reason
+    the key gained the field.
+
+    ``key`` is deliberately left alone. The payload-boundary extension nests its rows
+    under a mass rather than identifying them by a row key, so it needs the mass in the
+    *physical* key and not in the logical one; and adding an element to ``key`` would
+    move ``stage_a_origin_row_key`` and the ``reused_from`` tuples this module reports,
+    which is not an inert change. A future design that does identify rows by ``key``
+    across masses owes that change its own review.
     """
 
     stage: str
@@ -293,6 +308,7 @@ class LogicalRow:
     probe_ramp_fraction_of_duration: float
     identity: RolloutIdentity
     reused_from: tuple[Any, ...] | None = None
+    distal_payload_mass_kg: float | None = None
 
     @property
     def key(self) -> tuple[Any, ...]:
@@ -310,7 +326,13 @@ class LogicalRow:
 
     @property
     def physical(self) -> PhysicalKey:
-        """Return the physical body this row reports on."""
+        """Return the physical body this row reports on.
+
+        Every input the key takes is passed here, payload mass included. Dropping one
+        would not fail: it would produce a well-formed key for a different body, and the
+        ledger would then either refuse a legitimate second rollout or hand one row the
+        measurement of another.
+        """
 
         return physical_key(
             identity=self.identity,
@@ -318,6 +340,7 @@ class LogicalRow:
             severity=self.severity,
             probe_peak_force_n=self.probe_peak_force_n,
             probe_ramp_fraction_of_duration=self.probe_ramp_fraction_of_duration,
+            distal_payload_mass_kg=self.distal_payload_mass_kg,
         )
 
     @property
