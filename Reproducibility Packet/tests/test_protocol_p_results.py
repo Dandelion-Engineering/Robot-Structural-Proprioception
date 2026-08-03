@@ -408,6 +408,27 @@ def test_the_key_records_a_float_severity_whatever_it_was_given():
     assert type(first.sensor_seed) is int and type(first.pair_id) is str
 
 
+def test_payload_mass_is_additive_normalised_and_distinguishes_physical_bodies():
+    """CRN-identical rollouts at different masses must never share a key."""
+
+    identity = stage_ab_identity(SCREEN_CELLS[0])
+    common = {
+        "identity": identity,
+        "condition": CONDITION_STRUCTURAL,
+        "severity": 0.50,
+        "probe_peak_force_n": 0.10,
+        "probe_ramp_fraction_of_duration": 0.25,
+    }
+    legacy = results.physical_key(**common)
+    light = results.physical_key(distal_payload_mass_kg=0, **common)
+    heavy = results.physical_key(distal_payload_mass_kg=0.2, **common)
+    assert legacy.distal_payload_mass_kg is None
+    assert light.distal_payload_mass_kg == 0.0
+    assert type(light.distal_payload_mass_kg) is float
+    assert len({legacy, light, heavy}) == 3
+    assert results.physical_key_report(heavy)["distal_payload_mass_kg"] == 0.2
+
+
 def test_a_healthy_key_with_a_severity_is_refused():
     with pytest.raises(ProtocolPError, match="healthy condition takes no severity"):
         results.physical_key(
@@ -779,7 +800,7 @@ def test_the_ledger_report_and_the_row_report_are_joinable_on_the_stamp():
     assert len(reported) - len(by_stamp) == results.EXPECTED_REUSED_ROWS == 12
 
 
-def test_the_physical_key_report_writes_out_all_six_key_fields():
+def test_the_physical_key_report_writes_out_all_seven_key_fields():
     rows = _inventory()
     row = [item for item in rows if item.condition == CONDITION_STRUCTURAL][0]
     written = results.physical_key_report(row.physical)
@@ -790,6 +811,7 @@ def test_the_physical_key_report_writes_out_all_six_key_fields():
         "severity": row.severity,
         "probe_peak_force_n": row.probe_peak_force_n,
         "probe_ramp_fraction_of_duration": row.probe_ramp_fraction_of_duration,
+        "distal_payload_mass_kg": None,
     }
     assert set(written) == {field.name for field in dataclasses.fields(results.PhysicalKey)}
 

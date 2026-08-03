@@ -1,7 +1,7 @@
 """Contract tests for the generator's typed screen-override seam.
 
-The seam lets a screen deviate three things from the approved assignment
-document -- probe peak force, probe ramp fraction, and the physical fault list
+The seam lets a screen deviate the approved assignment's probe, physical fault
+list, realized identity, and distal payload mass
 -- and requires any deviating rollout to carry a suffix-free realized identity
 and a base-distinct ``dev-`` provenance hash. These are generator-contract
 guards, not screen-local measurements: any future consumer of
@@ -14,6 +14,7 @@ not only with the state it should accept.
 
 from __future__ import annotations
 
+import dataclasses
 import hashlib
 import sys
 from pathlib import Path
@@ -96,6 +97,7 @@ def test_default_overrides_are_inert_and_an_empty_fault_tuple_is_active() -> Non
     assert ScreenOverrides(probe_peak_force_n=0.05).is_active()
     assert ScreenOverrides(probe_ramp_fraction_of_duration=0.125).is_active()
     assert ScreenOverrides(realized_pair_id="basepair_screen_c4").is_active()
+    assert ScreenOverrides(distal_payload_mass_kg=0.0).is_active()
     # provenance_hash records which screen produced a deviating rollout; it does
     # not itself deviate one, so it must not make an inert override active.
     assert not ScreenOverrides(provenance_hash=SCREEN_PROVENANCE).is_active()
@@ -274,6 +276,37 @@ def test_probe_peak_override_applies_and_leaves_the_rest_fixed() -> None:
     )
 
 
+def test_payload_mass_override_is_the_sole_mass_source() -> None:
+    """The explicit scalar replaces the catalog mass and changes nothing else."""
+
+    baseline, _ = probed_physical_config(None)
+    screened, _ = probed_physical_config(
+        ScreenOverrides(distal_payload_mass_kg=0.123)
+    )
+    assert screened.distal_payload_mass_kg == 0.123
+    assert screened != baseline
+    assert dataclasses.replace(
+        screened, distal_payload_mass_kg=baseline.distal_payload_mass_kg
+    ) == baseline
+
+
+@pytest.mark.parametrize("mass", [-0.001, float("nan"), float("inf"), "not-a-mass"])
+def test_payload_mass_override_refuses_negative_or_nonfinite(mass) -> None:
+    """An invalid payload must fail before the plant is built."""
+
+    with pytest.raises(AssignmentGenerationError, match="finite and nonnegative"):
+        probed_physical_config(ScreenOverrides(distal_payload_mass_kg=mass))
+
+
+def test_zero_payload_mass_override_is_valid_and_reaches_the_config() -> None:
+    """Zero is a physical mass and must not be mistaken for an absent override."""
+
+    screened, _ = probed_physical_config(
+        ScreenOverrides(distal_payload_mass_kg=0.0)
+    )
+    assert screened.distal_payload_mass_kg == 0.0
+
+
 @pytest.mark.parametrize("peak", [0.0, -0.05, float("nan"), float("inf")])
 def test_probe_peak_override_refuses_nonpositive_or_nonfinite(peak) -> None:
     """A peak that is not finite and positive raises before the plant is built."""
@@ -337,11 +370,13 @@ def test_non_probe_overrides_are_allowed_on_a_probe_free_trajectory() -> None:
         ScreenOverrides(
             physical_faults=structural_override_faults(),
             realized_pair_id="basepair_protocolp_negative_control",
+            distal_payload_mass_kg=0.075,
             provenance_hash=SCREEN_PROVENANCE,
         )
     )
     assert config.diagnostic_tip_load_peak_n == 0.0
     assert config.diagnostic_tip_load_duration_s is None
+    assert config.distal_payload_mass_kg == 0.075
 
 
 # --------------------------------------------------------------------------

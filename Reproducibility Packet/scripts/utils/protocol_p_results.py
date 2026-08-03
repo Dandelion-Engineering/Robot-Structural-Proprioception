@@ -218,6 +218,7 @@ class PhysicalKey:
     severity: float | None
     probe_peak_force_n: float
     probe_ramp_fraction_of_duration: float
+    distal_payload_mass_kg: float | None = None
 
 
 def physical_key(
@@ -227,6 +228,7 @@ def physical_key(
     severity: float | None,
     probe_peak_force_n: float,
     probe_ramp_fraction_of_duration: float,
+    distal_payload_mass_kg: float | None = None,
 ) -> PhysicalKey:
     """Build a :class:`PhysicalKey`, normalising the numeric fields.
 
@@ -263,6 +265,11 @@ def physical_key(
         severity=None if severity is None else float(severity),
         probe_peak_force_n=float(probe_peak_force_n),
         probe_ramp_fraction_of_duration=float(probe_ramp_fraction_of_duration),
+        distal_payload_mass_kg=(
+            None
+            if distal_payload_mass_kg is None
+            else float(distal_payload_mass_kg)
+        ),
     )
 
 
@@ -866,7 +873,7 @@ def logical_row_report(
 def physical_key_report(key: PhysicalKey) -> dict[str, Any]:
     """Return one physical key as a JSON-ready mapping.
 
-    Inputs: the key. Outputs: its six fields. Purpose: the reported rows and the reported
+    Inputs: the key. Outputs: its seven fields. Purpose: the reported rows and the reported
     physical ledger must be joinable by a reader who has only the document, so the body's
     identity is written out rather than left implicit in a hash.
     """
@@ -879,6 +886,7 @@ def physical_key_report(key: PhysicalKey) -> dict[str, Any]:
         "severity": key.severity,
         "probe_peak_force_n": key.probe_peak_force_n,
         "probe_ramp_fraction_of_duration": key.probe_ramp_fraction_of_duration,
+        "distal_payload_mass_kg": key.distal_payload_mass_kg,
     }
 
 

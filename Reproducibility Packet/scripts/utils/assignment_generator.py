@@ -86,6 +86,7 @@ class ScreenOverrides:
     probe_ramp_fraction_of_duration: float | None = None
     physical_faults: tuple[FaultSpec, ...] | None = None
     realized_pair_id: str | None = None
+    distal_payload_mass_kg: float | None = None
     provenance_hash: str | None = None
 
     def is_active(self) -> bool:
@@ -98,6 +99,7 @@ class ScreenOverrides:
                 self.probe_ramp_fraction_of_duration,
                 self.physical_faults,
                 self.realized_pair_id,
+                self.distal_payload_mass_kg,
             )
         )
 
@@ -422,6 +424,24 @@ def _physical_config(
     ramp_fraction_override = (
         None if overrides is None else overrides.probe_ramp_fraction_of_duration
     )
+    payload_mass_override = (
+        None if overrides is None else overrides.distal_payload_mass_kg
+    )
+    payload_mass_kg = float(payload["distal_payload_mass_kg"])
+    if payload_mass_override is not None:
+        try:
+            override_mass_kg = float(payload_mass_override)
+        except (TypeError, ValueError) as exc:
+            raise AssignmentGenerationError(
+                "distal payload mass override must be finite and nonnegative; got "
+                f"{payload_mass_override!r}"
+            ) from exc
+        if not math.isfinite(override_mass_kg) or override_mass_kg < 0.0:
+            raise AssignmentGenerationError(
+                "distal payload mass override must be finite and nonnegative; got "
+                f"{payload_mass_override!r}"
+            )
+        payload_mass_kg = override_mass_kg
     if probe is None:
         if peak_override is not None or ramp_fraction_override is not None:
             raise AssignmentGenerationError(
@@ -463,7 +483,7 @@ def _physical_config(
         }
     return CableModelConfig(
         control_dt_s=control_dt_s,
-        distal_payload_mass_kg=float(payload["distal_payload_mass_kg"]),
+        distal_payload_mass_kg=payload_mass_kg,
         endpoint_contact_enabled=plane is not None,
         endpoint_contact_plane_z_m=0.2 if plane is None else float(plane),
         endpoint_contact_window_s=contact_window,
