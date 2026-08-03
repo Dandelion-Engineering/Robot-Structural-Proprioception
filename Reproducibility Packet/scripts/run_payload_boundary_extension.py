@@ -572,9 +572,20 @@ def failed_plan_document(reason: str) -> dict[str, Any]:
     }
 
 
-_WINDOWS_ABSOLUTE = re.compile(r"(?:[A-Za-z]:[\\/]|\\\\)[^\s'\"<>|]*")
+_PLAN_DIGEST = re.compile(r"[0-9a-f]{64}")
+# The drive letter must itself sit at a token boundary.  Without the lookbehind the
+# scheme separator of every URL matches -- "https://host/x" reads as drive "s" -- and a
+# URL inside a reason is silently rewritten to its last path component.
+_WINDOWS_ABSOLUTE = re.compile(r"(?:(?<![A-Za-z0-9])[A-Za-z]:[\\/]|\\\\)[^\s'\"<>|]*")
+# Two POSIX forms.  "//host/share" is the forward-slash rendering of a UNC path and both
+# PurePath flavours call it absolute, so it must be scrubbed; the lookbehind is what
+# separates it from "scheme://", which must not be.  The single-slash form takes any
+# token-boundary "/x", which is why the ratio "0.1 N / 0.25" and the arrow "A -> B" are
+# untouched: neither has a non-space character after the slash.
 _POSIX_ABSOLUTE = re.compile(
-    r"(^|[\s:=('\"\[])(/(?!/)[^\s'\"<>|)\],;]+)"
+    r"(^|[\s:=('\"\[])"
+    r"((?<![A-Za-z0-9+.\-]:)//[^\s'\"<>|)\],;/][^\s'\"<>|)\],;]*"
+    r"|/(?!/)[^\s'\"<>|)\],;]+)"
 )
 
 
@@ -588,8 +599,9 @@ def scrub_machine_paths(text: str) -> str:
     prose, so the guard passes and the path is published.
 
     Paths under the repository become ``<repo>``-relative; any other Windows, UNC, or
-    POSIX absolute path is reduced to its final component.  The POSIX form requires a
-    token boundary and refuses ``//`` so ordinary prose, ratios, and URLs are not paths.
+    POSIX absolute path -- including the ``//host/share`` rendering -- is reduced to its
+    final component.  Both forms require a token boundary, and both refuse a URL, so
+    ordinary prose, ratios, arrows and links survive unchanged.
     """
 
     scrubbed = str(text)
@@ -1582,7 +1594,7 @@ def require_authorized_plan(
     _require(document.get("terminal") is None, "a terminal plan artifact may not execute")
     _require(
         isinstance(authorized_digest, str)
-        and re.fullmatch(r"[0-9a-f]{64}", authorized_digest) is not None,
+        and _PLAN_DIGEST.fullmatch(authorized_digest) is not None,
         "authorized plan digest must be one lowercase SHA-256",
     )
     actual = canonical_document_sha256(document)
@@ -1616,6 +1628,33 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+def _scrub_embedded_strings(value: Any) -> tuple[Any, bool]:
+    """Scrub every string inside foreign content, reporting whether anything changed.
+
+    Inputs: any JSON-shaped value read from a file this run did not write.  Outputs: the
+    same shape with every string scrubbed, and whether any string actually changed.
+    Purpose: X6 requires the artifact on every execute exit and X7 makes the writer
+    REFUSE an absolute path, so foreign content embedded verbatim turns the terminal
+    write into an uncaught refusal that persists nothing -- X7 defeating X6.  The caller
+    discloses the redaction rather than performing it silently.
+    """
+
+    if isinstance(value, Mapping):
+        changed = False
+        scrubbed_map: dict[str, Any] = {}
+        for key, child in value.items():
+            scrubbed_map[key], child_changed = _scrub_embedded_strings(child)
+            changed = changed or child_changed
+        return scrubbed_map, changed
+    if isinstance(value, Sequence) and not isinstance(value, (str, bytes)):
+        pairs = [_scrub_embedded_strings(child) for child in value]
+        return [item for item, _ in pairs], any(flag for _, flag in pairs)
+    if isinstance(value, str):
+        scrubbed_text = scrub_machine_paths(value)
+        return scrubbed_text, scrubbed_text != value
+    return value, False
+
+
 def persist_execute_failure(
     output_dir: Path, plan_document: Any, approved_plan_digest: Any,
     *, outcome: str, stage: str, reason: str,
@@ -1626,11 +1665,31 @@ def persist_execute_failure(
     named, and the classified failure.  Outputs: none; the artifact is written.
     Purpose: §11.2 requires the field set on EVERY execute-mode exit, and an exit that
     prints to the console and returns leaves no record that the run was attempted.
+
+    Every failure this function serves is a failure to establish that the named plan is
+    the authorized one, so BOTH the plan content and the named digest are attacker- or
+    typo-shaped input.  Neither may reach the writer unscrubbed: the plan content is
+    scrubbed, and a digest that is not the pinned lowercase SHA-256 shape is recorded as
+    null.  Both redactions are named in the persisted reason.
     """
 
-    document = execute_document_skeleton(
-        plan_document if isinstance(plan_document, Mapping) else {}, approved_plan_digest
+    content, redacted = _scrub_embedded_strings(
+        plan_document if isinstance(plan_document, Mapping) else {}
     )
+    if redacted:
+        reason = (
+            reason + "; the named plan carried an absolute filesystem path, so the "
+            "content embedded in this artifact was scrubbed (X7)"
+        )
+    if not (isinstance(approved_plan_digest, str)
+            and _PLAN_DIGEST.fullmatch(approved_plan_digest)):
+        if approved_plan_digest is not None:
+            reason = (
+                reason + "; the named authority argument is not one lowercase SHA-256, "
+                "so it is recorded as null rather than published (X7)"
+            )
+        approved_plan_digest = None
+    document = execute_document_skeleton(content, approved_plan_digest)
     document["results"]["preflight"] = {
         "ran": True, "passed": False, "plan_digest_match": False,
         "per_mass_realized_delta": None, "reason": reason,
@@ -1722,6 +1781,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                         stage="X0E", reason=document["results"]["preflight"]["reason"],
                         replay_rollouts=0)
         write_canonical_document(output_dir / RESULT_FILENAME, final)
+        print(f"FAILED: {error}")
         return 1
     try:
         replay = run_replay_gate(
@@ -1748,6 +1808,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                         stage="XR", reason=document["results"]["replay_gate"]["reason"],
                         replay_rollouts=replay_rollouts)
         write_canonical_document(output_dir / RESULT_FILENAME, final)
+        print(f"FAILED: {error}")
         return 1
     try:
         final = run_extension(context, approved, approved_digest, replay)

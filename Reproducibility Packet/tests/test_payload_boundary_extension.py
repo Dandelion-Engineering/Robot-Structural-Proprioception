@@ -10,7 +10,7 @@ import json
 import re
 import sys
 from collections import Counter
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 
 import pytest
 
@@ -657,6 +657,150 @@ def test_missing_execute_authority_or_data_root_is_persisted(
     assert written["results"]["outcome"] == x.OUTCOME_CONSTRUCTION
     assert written["results"]["terminal"]["stage_reached"] == "X0E"
     assert missing_name in written["results"]["terminal"]["reason"]
+
+
+_FOREIGN_PLANS = [
+    ("windows", {"mode": "plan", "plan_valid": True, "terminal": None,
+                 "inputs": {"config_path": r"C:\Users\person\config.json"}}),
+    ("posix", {"mode": "plan", "plan_valid": True, "terminal": None,
+               "inputs": {"config_path": "config/draft-config-v0.1.json"},
+               "plan": {"note": "/home/person/plan.json"}}),
+]
+
+
+@pytest.mark.parametrize("flavour,foreign", _FOREIGN_PLANS, ids=[p[0] for p in _FOREIGN_PLANS])
+def test_a_named_plan_carrying_a_machine_path_still_persists_the_refusal(
+    tmp_path, flavour, foreign
+):
+    """X7 must not defeat X6: the terminal write cannot be the thing that fails.
+
+    ``persist_execute_failure`` embeds the named plan's own content, and the writer
+    refuses an absolute path anywhere in the document.  A plan this tool did not write
+    can carry one, so before this test the refusal escaped ``main`` uncaught and NOTHING
+    was persisted -- on the one exit whose entire purpose is "you named the wrong plan".
+    """
+
+    plan_path = tmp_path / "foreign.json"
+    plan_path.write_text(json.dumps(foreign), encoding="utf-8")
+    output = tmp_path / flavour
+    assert x.main([
+        "--mode", "execute", "--output-dir", str(output),
+        "--plan", str(plan_path), "--approved-plan-sha256", "0" * 64,
+        "--data-root", str(tmp_path),
+        "--config", str(PACKET / "config" / "draft-config-v0.1.json"),
+        "--schema", str(PACKET / "schema" / "schema.json"),
+        "--assignment", str(PACKET / "config" / "proposed-gate3-assignment-v0.1.json"),
+        "--protocol", str(PACKET / "protocol" / "protocol-p-v2.3.3.md"),
+        "--extension", str(PACKET / "protocol" / "payload-boundary-extension-v0.2.md"),
+    ]) == 1
+    raw = (output / x.RESULT_FILENAME).read_text(encoding="utf-8")
+    written = json.loads(raw)
+    assert written["results"]["outcome"] == x.OUTCOME_CONSTRUCTION
+    assert written["results"]["terminal"]["stage_reached"] == "X0E"
+    # The redaction is disclosed rather than silent, and the path itself is gone.
+    assert "was scrubbed (X7)" in written["results"]["terminal"]["reason"]
+    assert "person" not in raw
+    assert not re.search(r"[A-Za-z]:[\\/]", raw)
+
+
+def test_a_nondigest_authority_argument_is_recorded_as_null_not_published(tmp_path):
+    """The authority argument reaches the artifact before anything validates its shape."""
+
+    output = tmp_path / "authority"
+    assert x.main([
+        "--mode", "execute", "--output-dir", str(output),
+        "--approved-plan-sha256", r"C:\Users\person\not-a-digest",
+        "--config", str(PACKET / "config" / "draft-config-v0.1.json"),
+        "--schema", str(PACKET / "schema" / "schema.json"),
+        "--assignment", str(PACKET / "config" / "proposed-gate3-assignment-v0.1.json"),
+        "--protocol", str(PACKET / "protocol" / "protocol-p-v2.3.3.md"),
+        "--extension", str(PACKET / "protocol" / "payload-boundary-extension-v0.2.md"),
+    ]) == 1
+    raw = (output / x.RESULT_FILENAME).read_text(encoding="utf-8")
+    written = json.loads(raw)
+    assert written["approved_plan_canonical_sha256"] is None
+    assert "recorded as null" in written["results"]["terminal"]["reason"]
+    assert "person" not in raw
+
+
+def test_the_scrubber_removes_a_double_slash_rooted_path(tmp_path):
+    """``//host/share`` is absolute to BOTH PurePath flavours, so it must be scrubbed."""
+
+    scrubbed = x.scrub_machine_paths(
+        "ProtocolPError: pinned input is absent: //server/share/data/row.npz"
+    )
+    assert "server" not in scrubbed
+    assert scrubbed.endswith("row.npz")
+    # Nothing absolute may survive, in either flavour, for any of these renderings.
+    for raw in (r"C:\Users\person\row.npz", "C:/Users/person/row.npz",
+                r"\\server\share\row.npz", "//server/share/row.npz",
+                "/home/person/row.npz", "//home//person/row.npz"):
+        tail = x.scrub_machine_paths(f"absent: {raw}").split(": ")[-1]
+        assert not PureWindowsPath(tail).is_absolute()
+        assert not PurePosixPath(tail).is_absolute()
+        # and the writer, whose guard reads whole strings, accepts the result
+        x.write_canonical_document(tmp_path / "probe.json", {"reason": tail})
+
+
+def test_the_scrubber_leaves_a_url_intact():
+    """A URL scheme separator is not a drive letter and ``//`` is not a UNC root."""
+
+    for url in ("see https://example.org/spec#x for the definition",
+                "mirror http://host/a/b listed",
+                "clone git+ssh://host/repo.git now"):
+        assert x.scrub_machine_paths(url) == url
+        # Pin the mechanism, not only the outcome: the drive-letter form must not match
+        # inside a word, which is what turned "https://" into drive "s" before.
+        assert x._WINDOWS_ABSOLUTE.sub("<W>", url) == url
+        assert x._POSIX_ABSOLUTE.sub("<P>", url) == url
+
+
+def test_no_execute_exit_is_silent_on_the_console(tmp_path, plan, capsys):
+    """The X0E-mismatch and XR exits returned 1 with nothing printed at all.
+
+    Silent failure is the packet's named worst case.  Both branches persisted their
+    artifact correctly and told the operator nothing, and the XR one is the exit that has
+    already spent the replay rollout.  The X0E-mismatch branch had no test of any kind:
+    a plan whose OWN digest is named passes the authorization check and still fails the
+    recompute, which is exactly the state that branch exists for.
+    """
+
+    mismatched = dict(plan)
+    mismatched["plan"] = dict(mismatched["plan"])
+    mismatched["plan"]["ladder"] = list(reversed(mismatched["plan"]["ladder"]))
+    mismatched_path = tmp_path / "mismatched.json"
+    x.write_canonical_document(mismatched_path, mismatched)
+    assert x.main([
+        "--mode", "execute", "--output-dir", str(tmp_path / "x0e"),
+        "--plan", str(mismatched_path),
+        "--approved-plan-sha256", x.canonical_document_sha256(mismatched),
+        "--data-root", str(tmp_path / "absent_data_root"),
+        "--config", str(PACKET / "config" / "draft-config-v0.1.json"),
+        "--schema", str(PACKET / "schema" / "schema.json"),
+        "--assignment", str(PACKET / "config" / "proposed-gate3-assignment-v0.1.json"),
+        "--protocol", str(PACKET / "protocol" / "protocol-p-v2.3.3.md"),
+        "--extension", str(PACKET / "protocol" / "payload-boundary-extension-v0.2.md"),
+    ]) == 1
+    x0e = json.loads((tmp_path / "x0e" / x.RESULT_FILENAME).read_text(encoding="utf-8"))
+    assert x0e["results"]["outcome"] == x.OUTCOME_CONSTRUCTION
+    assert x0e["results"]["terminal"]["stage_reached"] == "X0E"
+    assert "differs from the approved plan" in x0e["results"]["terminal"]["reason"]
+    assert "FAILED" in capsys.readouterr().out
+
+    plan_path, digest = _write_plan(tmp_path, plan)
+    assert x.main([
+        "--mode", "execute", "--output-dir", str(tmp_path / "xr"),
+        "--plan", str(plan_path), "--approved-plan-sha256", digest,
+        "--data-root", str(tmp_path / "absent_data_root"),
+        "--config", str(PACKET / "config" / "draft-config-v0.1.json"),
+        "--schema", str(PACKET / "schema" / "schema.json"),
+        "--assignment", str(PACKET / "config" / "proposed-gate3-assignment-v0.1.json"),
+        "--protocol", str(PACKET / "protocol" / "protocol-p-v2.3.3.md"),
+        "--extension", str(PACKET / "protocol" / "payload-boundary-extension-v0.2.md"),
+    ]) == 1
+    xr = json.loads((tmp_path / "xr" / x.RESULT_FILENAME).read_text(encoding="utf-8"))
+    assert xr["results"]["outcome"] == x.OUTCOME_REPLAY
+    assert "FAILED" in capsys.readouterr().out
 
 
 def test_persisted_reasons_carry_no_machine_path(tmp_path, plan):
