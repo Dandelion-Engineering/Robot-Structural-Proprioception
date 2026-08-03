@@ -609,6 +609,48 @@ def _records_absolute_path(text: str) -> bool:
     )
 
 
+def substitute_known_path_spellings(text: str) -> str:
+    """Apply both path patterns to a FIXPOINT, leaving the surrounding prose in place.
+
+    Inputs: one message.  Outputs: the message with every enumerated path spelling reduced
+    to its final component.
+    Purpose: one pass is not enough, and the shortfall is not hypothetical.  The POSIX rule
+    reduces ``/plant/\\row.npz`` to ``\\row.npz`` and re-emits it after the boundary
+    character, which BUILDS ``C:\\row.npz`` inside prose that the Windows rule had already
+    been offered and declined.  The result records a path that no reduction can remove --
+    the whole string is relative, so ``PurePath.name`` has nothing to take -- and the only
+    exit left in the caller is to discard the entire message.  MEASURED with a single pass:
+    six of the 37,448 enumerated strings, and every prose sentence of that shape, lost
+    their whole text to "<path>".  A scrubber that silently replaces a reason is worse than
+    one that truncates it, because the reader cannot tell.
+
+    This is a separate function so the caller's post-condition is checkable from outside
+    without a second copy of the substitution.
+
+    TERMINATION IS ARITHMETIC, not a runtime check.  Every match begins with a root or
+    drive separator that is not part of the component the replacement keeps, and neither
+    replacement -- a ``PurePath.name`` or the literal "<path>" -- contains a separator.
+    Each productive pass therefore strictly decreases the number of "/" and "\\"
+    characters, so there cannot be more productive passes than the message had separators
+    to begin with.
+    """
+
+    scrubbed = str(text)
+    for _ in range(scrubbed.count("/") + scrubbed.count("\\") + 1):
+        pass_input = scrubbed
+        scrubbed = _WINDOWS_ABSOLUTE.sub(
+            lambda match: PureWindowsPath(match.group(0)).name or "<path>", scrubbed
+        )
+        scrubbed = _POSIX_ABSOLUTE.sub(
+            lambda match: match.group(1)
+            + (PurePosixPath(match.group(2)).name or "<path>"),
+            scrubbed,
+        )
+        if scrubbed == pass_input:
+            break
+    return scrubbed
+
+
 def scrub_machine_paths(text: str) -> str:
     """Rewrite absolute filesystem paths that appear inside a persisted message.
 
@@ -632,14 +674,7 @@ def scrub_machine_paths(text: str) -> str:
     scrubbed = str(text)
     for rendering in (str(REPO_ROOT), REPO_ROOT.as_posix()):
         scrubbed = scrubbed.replace(rendering, "<repo>")
-    scrubbed = _WINDOWS_ABSOLUTE.sub(
-        lambda match: PureWindowsPath(match.group(0)).name or "<path>", scrubbed
-    )
-    scrubbed = _POSIX_ABSOLUTE.sub(
-        lambda match: match.group(1)
-        + (PurePosixPath(match.group(2)).name or "<path>"),
-        scrubbed,
-    )
+    scrubbed = substitute_known_path_spellings(scrubbed)
     # POST-CONDITION, and it is the writer's own guard verbatim.  Two measured families
     # reach here: a bare root ("/", "//", "///", "/ x") that neither pattern can match
     # because no path component follows the separator, and a drive letter PurePath accepts
@@ -659,10 +694,14 @@ def scrub_machine_paths(text: str) -> str:
     while _records_absolute_path(scrubbed):
         windows_rooted = PureWindowsPath(scrubbed).is_absolute()
         posix_rooted = PurePosixPath(scrubbed).is_absolute()
-        # The regex substitutions above normally remove every embedded form.  Keep the
-        # post-condition load-bearing if either substitution is later weakened: an
-        # embedded survivor cannot be reduced with ``PurePath.name`` because the WHOLE
-        # prose string is relative, so refuse the whole foreign value instead of leaking.
+        # An EMBEDDED survivor -- a regex still matches, but the whole string is relative,
+        # so ``PurePath.name`` has nothing to take.  Discarding the message is the only
+        # way left to keep the writer's guard true, and it costs the reader the entire
+        # reason, so it is a last resort rather than a working path.  MEASURED after the
+        # substitution fixpoint above: it fires on 0 of the 37,448 enumerated strings and
+        # on none of the prose battery, where a single substitution pass left six.  It is
+        # kept because the guarantee has to hold for inputs nobody enumerated, and a
+        # mutation sweep will report it as a survivor for exactly that reason.
         if not windows_rooted and not posix_rooted:
             scrubbed = "<path>"
             break

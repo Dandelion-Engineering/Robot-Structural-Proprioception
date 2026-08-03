@@ -529,6 +529,29 @@ def test_strict_json_refuses_duplicate_nonfinite_non_utf8_and_deep_values(tmp_pa
         x.strict_read_json(too_deep)
 
 
+def test_the_depth_gate_still_admits_the_plan_this_tool_writes(tmp_path, plan):
+    """The ACCEPT side.  A guard that refuses everything is not a guard.
+
+    Nothing above can fail if ``MAX_PLAN_JSON_DEPTH`` is tightened to a value below the
+    plan document's own depth -- the refuse tests all construct one level past whatever
+    the constant says, so they stay green while execute mode begins refusing the only
+    plan it will ever legitimately be handed.  Measured: the plan document is 5 levels
+    deep and the execute skeleton is 7, against a gate of 64.
+    """
+
+    at_gate = tmp_path / "at-gate.json"
+    at_gate.write_text(
+        '{"x":' + '[' * (x.MAX_PLAN_JSON_DEPTH - 1) + '0'
+        + ']' * (x.MAX_PLAN_JSON_DEPTH - 1) + '}',
+        encoding="ascii",
+    )
+    x.strict_read_json(at_gate)
+
+    official = tmp_path / "plan.json"
+    official.write_text(canonical_json(plan), encoding="utf-8", newline="")
+    assert x.strict_read_json(official) == json.loads(canonical_json(plan))
+
+
 def test_canonical_writer_refuses_absolute_windows_path(tmp_path):
     with pytest.raises(ProtocolPError, match="absolute filesystem path"):
         x.write_canonical_document(tmp_path / "bad.json", {"path": r"C:\\Users\\person"})
@@ -646,16 +669,36 @@ def test_no_execute_mode_exit_leaves_the_run_unrecorded(tmp_path, plan):
     assert unbound["results"]["terminal"]["stage_reached"] == "X0E"
 
 
+_FOREIGN_PLAN_HEAD = '{"mode":"plan","plan_valid":true,"terminal":null,"inputs":{"note":'
+
+
 @pytest.mark.parametrize(
     "payload", [
-        '{"x":1e9999}',
-        '{"x":"\\ud800"}',
-        '{"x":' + '[' * 990 + '0' + ']' * 990 + '}',
+        _FOREIGN_PLAN_HEAD + '1e9999}}',
+        _FOREIGN_PLAN_HEAD + '"\\ud800"}}',
+        _FOREIGN_PLAN_HEAD
+        + '[' * (x.MAX_PLAN_JSON_DEPTH + 1) + '0'
+        + ']' * (x.MAX_PLAN_JSON_DEPTH + 1) + '}}',
     ],
-    ids=("overflowing-number", "lone-surrogate", "excessive-depth"),
+    ids=("overflowing-number", "lone-surrogate", "one-past-the-depth-gate"),
 )
 def test_an_unserializable_foreign_plan_still_persists_the_refusal(tmp_path, payload):
-    """A read must fail before foreign content can poison the X6 failure writer."""
+    """A read must fail before foreign content can poison the X6 failure writer.
+
+    THE OFFENDING VALUE HAS TO SIT UNDER ``inputs``.  ``execute_document_skeleton``
+    carries only ``inputs``, ``protocol`` and ``plan`` into the artifact, so a bad value
+    under any other member name never reaches ``canonical_json`` and the pre-fix code
+    writes a perfectly good artifact.  Measured against the reviewed state
+    ``5a5b0562``: ``{"x":1e9999}`` returned rc=1 WITH an artifact, while the same value
+    under ``inputs`` returned rc=None with none at all, and the lone surrogate left a
+    truncated file behind.  A fixture has to be shaped for the defect it exposes.
+
+    The depth case is a gate-existence regression, not a reproduction of a crash: the
+    recursion threshold is a property of how deep the AMBIENT stack already is, not of
+    this code.  Measured on the reviewed state: at zero extra frames a depth-960 plan
+    under ``inputs`` still wrote its artifact; at 300 extra frames depth 800 returned
+    rc=None with none.  The gate is what makes the outcome independent of the caller.
+    """
 
     plan_path = tmp_path / "foreign.json"
     plan_path.write_text(payload, encoding="ascii")
@@ -934,6 +977,35 @@ def test_scrubber_rewrites_a_path_inside_a_sentence_and_leaves_prose_alone():
     assert embedded_scrubbed.endswith("row.npz")
 
 
+_PROSE_LOSING_ITS_WHOLE_TEXT = [
+    (r"read row1C:/plant/\row.npz", "read "),
+    (r"ProtocolPError: pinned input absent at run1C:/data/\gate3.npz",
+     "ProtocolPError: pinned input absent at "),
+    (r"value 1C:/\ was rejected", "value "),
+]
+
+
+@pytest.mark.parametrize("sentence,surviving_prefix", _PROSE_LOSING_ITS_WHOLE_TEXT)
+def test_one_substitution_pass_can_build_the_path_the_other_pattern_declined(
+    sentence, surviving_prefix
+):
+    """The substitutions have to run to a FIXPOINT, and the cost of one pass is the reason.
+
+    The POSIX rule reduces ``/plant/\\row.npz`` to its final component ``\\row.npz`` and
+    re-emits it after the boundary character, which rebuilds ``C:\\row.npz`` inside prose
+    the Windows rule had already been offered and declined -- a form no reduction can
+    remove, because the WHOLE string is relative and ``PurePath.name`` has nothing to
+    take.  The only exit left is to discard the entire message.  Measured with a single
+    pass: all three sentences below returned exactly ``"<path>"`` and the reader lost the
+    reason.  That is worse than a truncated reason, because nothing discloses the loss.
+    """
+
+    scrubbed = x.scrub_machine_paths(sentence)
+    assert scrubbed != "<path>"
+    assert scrubbed.startswith(surviving_prefix)
+    assert not x._records_absolute_path(scrubbed)
+
+
 _SCRUBBER_ALPHABET = ("/", "\\", "C", ":", "x", " ", ".", "1")
 
 
@@ -953,6 +1025,31 @@ def test_the_scrubber_output_is_never_absolute_to_either_flavour():
             assert not x._records_absolute_path(scrubbed), combo
             assert not PureWindowsPath(scrubbed).is_absolute(), combo
             assert not PurePosixPath(scrubbed).is_absolute(), combo
+
+
+def test_the_whole_message_discard_is_a_last_resort_and_not_a_working_path():
+    """The enumeration above is satisfied by returning "<path>" for everything.
+
+    ``scrub_machine_paths`` ends with a branch that throws the WHOLE message away when a
+    pattern still matches but the string is not itself rooted, because nothing can be
+    reduced at that point.  It keeps the writer's guard true and it costs the reader the
+    entire reason, so the property worth pinning is that no input reaches it -- not that
+    the output is clean, which the discard guarantees trivially.  Measured with a single
+    substitution pass: six of these strings reached it.  With the fixpoint: none.
+    """
+
+    reached = []
+    for length in range(1, 6):
+        for combo in itertools.product(_SCRUBBER_ALPHABET, repeat=length):
+            source = "".join(combo)
+            after = x.substitute_known_path_spellings(source)
+            if (
+                x._records_absolute_path(after)
+                and not PureWindowsPath(after).is_absolute()
+                and not PurePosixPath(after).is_absolute()
+            ):
+                reached.append((source, after))
+    assert reached == [], reached[:6]
 
 
 def test_the_two_families_the_patterns_cannot_match_are_reduced_not_left_alone():
