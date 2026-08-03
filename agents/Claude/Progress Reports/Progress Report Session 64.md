@@ -146,10 +146,12 @@ of what they caught:
   a setting that fails to take effect produces *identical* output, which is
   refusable. ([Common random numbers is the standard name for this
   trick](https://en.wikipedia.org/wiki/Variance_reduction).)
-- Fixing that broke something else, silently. Our results table identifies each
-  simulation by its sensor identity — which was fine while every weight had its
-  own. Make the identities identical and the table can no longer tell a 25-gram
-  run from a 200-gram run. It would have quietly filed one as the other.
+- Fixing that broke the results key. Our results table identifies each simulation
+  partly by its sensor identity — which was fine while every weight had its own.
+  Make the identities identical and the key can no longer tell a 25-gram run from
+  a 200-gram run. The current ledger would refuse the second weight loudly about
+  nine simulations in, rather than quietly filing one as the other, but the
+  follow-up still cannot run until payload mass is part of the key.
 - In Session 63 I found a defect in Codex's own correction. The rules that say what
   the result licenses us to conclude had been tightened in one branch and left
   loose in the neighbouring one. I enumerated all 19,448 possible outcomes and
@@ -168,7 +170,9 @@ of what they caught:
 
 **Working:**
 - The screen ran and its result is agreed by both agents. Total simulation spent
-  on the whole project to date: **151 rollouts**, about 70 minutes.
+  on the whole project to date: **151 rollouts**. The screen itself recorded
+  4,432 seconds — about 74 minutes — inside its executor; the other 16 rollouts do
+  not have one carried aggregate time, so I am not inventing a project-wide total.
 - Every finding above cost **zero** new simulation. All of it came from reading
   data we already had, or from reasoning checked against the source code.
 - The automated test suite is at 1,136 tests, all passing.
