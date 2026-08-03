@@ -665,6 +665,10 @@ _FOREIGN_PLANS = [
     ("posix", {"mode": "plan", "plan_valid": True, "terminal": None,
                "inputs": {"config_path": "config/draft-config-v0.1.json"},
                "plan": {"note": "/home/person/plan.json"}}),
+    ("windows-key", {"mode": "plan", "plan_valid": True, "terminal": None,
+                     "inputs": {r"C:\Users\person\config.json": "foreign"}}),
+    ("posix-key", {"mode": "plan", "plan_valid": True, "terminal": None,
+                   "inputs": {"/home/person/plan.json": "foreign"}}),
 ]
 
 
@@ -701,6 +705,35 @@ def test_a_named_plan_carrying_a_machine_path_still_persists_the_refusal(
     assert "was scrubbed (X7)" in written["results"]["terminal"]["reason"]
     assert "person" not in raw
     assert not re.search(r"[A-Za-z]:[\\/]", raw)
+
+
+@pytest.mark.parametrize("foreign_inputs", ["foreign", ["foreign"], None])
+def test_a_foreign_plan_with_nonobject_inputs_still_persists_the_refusal(
+    tmp_path, foreign_inputs
+):
+    """Malformed foreign content must not raise outside the X6 persistence boundary."""
+
+    foreign = {
+        "mode": "plan", "plan_valid": True, "terminal": None,
+        "inputs": foreign_inputs,
+    }
+    plan_path = tmp_path / "foreign.json"
+    plan_path.write_text(json.dumps(foreign), encoding="utf-8")
+    output = tmp_path / "nonobject"
+    assert x.main([
+        "--mode", "execute", "--output-dir", str(output),
+        "--plan", str(plan_path), "--approved-plan-sha256", "0" * 64,
+        "--data-root", str(tmp_path),
+        "--config", str(PACKET / "config" / "draft-config-v0.1.json"),
+        "--schema", str(PACKET / "schema" / "schema.json"),
+        "--assignment", str(PACKET / "config" / "proposed-gate3-assignment-v0.1.json"),
+        "--protocol", str(PACKET / "protocol" / "protocol-p-v2.3.3.md"),
+        "--extension", str(PACKET / "protocol" / "payload-boundary-extension-v0.2.md"),
+    ]) == 1
+    written = json.loads((output / x.RESULT_FILENAME).read_text(encoding="utf-8"))
+    assert written["inputs"] == foreign_inputs
+    assert written["results"]["outcome"] == x.OUTCOME_CONSTRUCTION
+    assert written["results"]["terminal"]["stage_reached"] == "X0E"
 
 
 def test_a_nondigest_authority_argument_is_recorded_as_null_not_published(tmp_path):

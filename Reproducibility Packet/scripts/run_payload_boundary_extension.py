@@ -637,7 +637,8 @@ def write_canonical_document(path: Path, document: Mapping[str, Any]) -> Path:
         """Recursively refuse absolute paths before any JSON bytes are written."""
 
         if isinstance(value, Mapping):
-            for child in value.values():
+            for key, child in value.items():
+                visit(key)
                 visit(child)
         elif isinstance(value, Sequence) and not isinstance(value, (str, bytes)):
             for child in value:
@@ -943,8 +944,13 @@ def execute_document_skeleton(
 ) -> dict[str, Any]:
     """Return §11.2's complete execute-mode shape before any stage runs."""
 
+    # A refusal artifact may have to carry a foreign, malformed plan.  Keep its raw
+    # ``inputs`` field as evidence, but never assume that field is an object merely to
+    # build the verdict-scope placeholders: doing so lets malformed content defeat X6.
+    raw_inputs = plan_document.get("inputs")
+    input_fields = raw_inputs if isinstance(raw_inputs, Mapping) else {}
     return {
-        "inputs": plan_document.get("inputs"),
+        "inputs": raw_inputs,
         "protocol": plan_document.get("protocol"),
         "plan": plan_document.get("plan"),
         "approved_plan_canonical_sha256": approved_plan_digest,
@@ -968,19 +974,19 @@ def execute_document_skeleton(
             "outcome": None,
             "mass_coverage": None,
             "verdict_scope": {
-                "environment_profile_id": plan_document.get("inputs", {}).get(
+                "environment_profile_id": input_fields.get(
                     "environment_profile_id"
                 ),
-                "contact_profile_id": plan_document.get("inputs", {}).get(
+                "contact_profile_id": input_fields.get(
                     "contact_profile_id"
                 ),
-                "trajectory_spec_id": plan_document.get("inputs", {}).get(
+                "trajectory_spec_id": input_fields.get(
                     "trajectory_spec_id"
                 ),
-                "probe_peak_force_n": plan_document.get("inputs", {}).get(
+                "probe_peak_force_n": input_fields.get(
                     "probe_peak_force_n"
                 ),
-                "probe_ramp_fraction_of_duration": plan_document.get("inputs", {}).get(
+                "probe_ramp_fraction_of_duration": input_fields.get(
                     "probe_ramp_fraction_of_duration"
                 ),
                 "masses_measured_kg": [],
@@ -1643,7 +1649,17 @@ def _scrub_embedded_strings(value: Any) -> tuple[Any, bool]:
         changed = False
         scrubbed_map: dict[str, Any] = {}
         for key, child in value.items():
-            scrubbed_map[key], child_changed = _scrub_embedded_strings(child)
+            scrubbed_key = scrub_machine_paths(key) if isinstance(key, str) else key
+            changed = changed or scrubbed_key != key
+            # Two different machine paths can reduce to the same basename.  Preserve
+            # both fields deterministically rather than letting redaction erase one.
+            candidate = scrubbed_key
+            suffix = 2
+            while candidate in scrubbed_map:
+                candidate = f"{scrubbed_key} [redacted-key-{suffix}]"
+                suffix += 1
+                changed = True
+            scrubbed_map[candidate], child_changed = _scrub_embedded_strings(child)
             changed = changed or child_changed
         return scrubbed_map, changed
     if isinstance(value, Sequence) and not isinstance(value, (str, bytes)):
