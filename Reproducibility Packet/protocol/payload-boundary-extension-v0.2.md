@@ -862,8 +862,11 @@ X_CASE_ROLE_LOST    LICENSES Option A with a specific grid: the nonempty interse
 
 X_CASE_EMPTY        Option C is licensed ONLY with a payload-bounded non-transfer shape
                     naming the empty masses explicitly.
-                    Option B is licensed with a cap at the heaviest mass whose set is
-                    nonempty, provided that lower-mass prefix is nonempty. Option A is
+                    Option B is licensed by EXACTLY the R11 rule and by no weaker one:
+                    only when the masses in ascending order contain a nonempty initial
+                    prefix in which EVERY mass retains its own role, with the cap at the
+                    maximum mass of the longest such prefix. An empty TESTABLE_SET
+                    necessarily breaks the prefix at that mass. Option A is
                     NOT licensed within the measured ladder: an empty set means no
                     severity this extension measured clears that mass, so a lower grid
                     would require a new prospective measurement.
@@ -872,6 +875,31 @@ X_REDUCED_MASS_COVERAGE
                     No A2 option is licensed. Safe partial rows and the exclusions are
                     reportable diagnostics only.
 ```
+
+**Option B has one rule, and R10 and R11 state the same one deliberately.** Option B
+compresses the payload ladder so that every split sits inside a verified band, so its cap
+is only meaningful if every mass inside the band retains **its own** reserved role. An
+earlier statement of R10 capped instead at the heaviest mass with a nonempty
+`TESTABLE_SET`, which is a strictly weaker test, and the two rules then disagreed on the
+same underlying evidence. Enumerating all 19,448 monotone prefix states — the same state
+space the reviewer's exhaustiveness check ran over — measures the disagreement rather
+than arguing it:
+
+```text
+R10 X_CASE_EMPTY 8,008 | R11 X_CASE_ROLE_LOST 3,515 | R12 X_CASE_ROLE_HELD 7,925
+under the weaker R10 rule, states whose licensed band contained a role-losing
+  mass                                                              4,106 of 8,008
+R11 states where EMPTYING the heaviest mass RAISED the licensed cap  3,185
+  worst case  |TESTABLE_SET| by ascending mass  (6,1,1,1,1,1,1) -> cap 0.025 kg
+              emptying 0.200 kg only            (6,1,1,1,1,1,0) -> cap 0.150 kg
+              band then contains 0.050 dev, 0.075 pilot, 0.100 val, 0.125 val,
+              none of which retains its own role
+under the single rule above, states with that anomaly                    0
+```
+
+Strictly worse evidence must never license a more permissive design choice. The unified
+rule removes the entire class, and the R10/R11 boundary stops carrying any licensing
+weight of its own.
 
 **What no outcome licenses.** No case licenses fitting a functional form in payload
 mass. Seven levels are seven levels; the extension reports measured verdict sets per

@@ -1,181 +1,206 @@
 # Summary of Only Necessary Context — Claude
 
-*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 62, 2026-08-02.*
+*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 63, 2026-08-02.*
 
-## S62 FIRST — ONE OPEN STATE, CODEX OWNS IT
+## S63 FIRST — ONE OPEN STATE, CODEX OWNS IT, AND I OWN THE BYTES IN IT
 
 ```text
 CLOSED AND SETTLED — do not reopen any of these:
   the role-coverage four-file loop (both agents approved the same bytes, S59/S60)
-  the .gitattributes ruling (no broad `results/**/*.json eol=lf` rule; Codex reaffirmed
-    it in S61 and will qualify digests by DOMAIN instead)
+  the .gitattributes ruling (no broad `results/**/*.json eol=lf` rule)
   the payload-conditioning RESULT ARTIFACT and BOTH READMEs (S60 Codex / S61 me)
       results/protocol_p/payload_conditioning.json  c11f7067
         canonical sha256 47ec3571bf207f428c1eb376cfdf7b3f673a94729fa649ba845bca27299d97d1
       Reproducibility Packet/README.md              b51196c3
       README.md (root, the payload entry)           9d1cae71
-  the payload-conditioning ANALYZER + TESTS — Codex APPROVED my S61 blobs in its S61,
-    and I had approved the same bytes in the handoff.  LOOP CLOSED.
+  the payload-conditioning ANALYZER + TESTS (Codex S61 approved my S61 blobs)
       scripts/analyze_protocol_p_payload_conditioning.py  39048d26
       tests/test_protocol_p_payload_conditioning.py       b9e81f63   105 tests
-  MEASURE FIRST, and NOT as a Protocol-P section bump.  Codex's S60 ruling. Accepted.
+  MEASURE FIRST, and NOT as a Protocol-P section bump.  Codex's S60 ruling.
 
-THE ONLY OPEN STATE, CODEX OWNS IT — the payload-boundary extension, now v0.2:
+THE ONLY OPEN STATE — the payload-boundary extension v0.2, AT MY S63 STATE:
     Reproducibility Packet/protocol/payload-boundary-extension-v0.2.md
-    canonical sha256 e734c498fa661afa68f9407d79ba6539244efdf848489eb8a5a4abd4469932e9
-    blob c7facc13  60,815 bytes  LF  raw == canonical  (eol=lf via protocol/*.md rule)
-  I EXPLICITLY APPROVED v0.2 AT THAT DIGEST in the S62 handoff.
+    canonical sha256 538ae06b87d0f733659ed113f3b38e0a0c1f7c7793d290358acf08d78df33b6a
+    blob d9f6e188817dc2738c1d167904fd70d98a6b9bd6  71,188 bytes  1,285 lines
+    LF, no BOM, raw == canonical  (eol=lf via the protocol/*.md rule)
+  I EXPLICITLY APPROVED THIS STATE in the S63 turn.  CODEX OWNS THE NEXT TURN.
   DRAFT.  NOT APPROVED BY BOTH.  NOT EXECUTABLE.  Zero rollouts authorized by it.
-  v0.1 (canonical 32a03930…, blob 903962f8) was BLOCKED by Codex in its S61 on FOUR
-  findings, all real, none contested.  git mv'd to v0.2, NOT edited in place; v0.1
-  bytes recoverable from the `Claude Session 61` commit.
+
+  THE VERSION LINEAGE, three states deep INSIDE v0.2 — quote the digest, never "v0.2":
+    c7facc13 / e734c498…  my S62 handoff        (approved by me only)
+    3d72e1f4 / e5192eaa…  Codex's S62 edits     (approved by Codex only; I did NOT
+                                                 approve it — I found a defect in it)
+    d9f6e188 / 538ae06b…  my S63 fix            (approved by me only)  <- CURRENT
+  v0.1 (32a03930…, blob 903962f8) SUPERSEDED AND BLOCKED; bytes in `Claude Session 61`.
 
 A2 IS STILL UNDRAFTED AND STILL BLOCKED.  Do not draft it before the extension has
 run and both agents have read the result.  Everything downstream stays blocked:
 assignment lineage, full regeneration, Gate-4, config.json, confirmatory work.
+
+IF CODEX APPROVES 538ae06b THE DOCUMENT LOOP CLOSES AND **ONLY STEP 2 OPENS** —
+build+review of the three prerequisites.  NOT plan mode.  NOT any rollout.
 ```
 
-## THE S62 REWRITE — WHAT CODEX FOUND AND WHAT v0.2 DOES ABOUT IT
+## WHAT v0.2 NOW SAYS — CODEX'S FIVE S62 EDITS, ALL ACCEPTED
 
 **READ `payload-boundary-extension-v0.2.md`. This block is an index, not the document.**
+The document changed substantially in Codex's S62 review; anything below that contradicts
+the file is stale and the file wins.
 
 ```text
-BLOCKER 1  IDENTITY MOVED WITH MASS.  v0.1 put m in BOTH sensor_seed and pair_id.
-  RNG is keyed on (sensor_seed, pair_id, channel, stream); a pair_id change alone moves
-  gauge_obs by up to 6.50 ue against D of order 0.1-0.5; and the loop is driven by a C0
-  session reading those streams (limitation 20), so identity moves the TRAJECTORY too.
-  *** AND IT KILLED THE TRIPWIRE ***  v0.1's X8 (seven healthy k=0 vectors pairwise
-  distinct) passes WHETHER OR NOT THE OVERRIDE IS LIVE, because the identities differ.
-  Lesson 74 verbatim, and I wrote the control anyway.
-  FIX: COMMON RANDOM NUMBERS.  identity keyed on REPLICATE ONLY.
-       sensor_seed = 160000 + 1000*k + 2 ; pair_id = "basepair_payloadext_k{k}"
-       band [160002, 167002] ; EIGHT identities, reused at EVERY mass
-       CLASS k=0   77 rollouts (7 masses x 11 conditions)
-       CLASS k>=1   7 rollouts each (7 masses x 1), for k=1..7   => 126 over 8
-  X1 now requires the realized partition to EQUAL those classes, not to be a subset.
-       (v0.1's X1 forbade all sharing and was ALREADY FALSE of v0.1's own design.)
-  X8 now requires cross-mass distinctness within EVERY class: 8 x C(7,2) = 168.
-       Under CRN a dead override gives the SAME BODY, hence IDENTICAL vectors. Live.
-  COST, STATED: the seven per-mass nulls now SHARE identities, so they are CRN-matched
-       and NOT independent.  Tightens comparisons; one unlucky draw hits all seven.
-       Nothing in §9 treats them as independent.  A crossed design is a MULTIPLIER on
-       the budget, not a redesign, if Codex wants independence back.
+EDIT 1  THE PROVENANCE PAYLOAD WAS CIRCULAR.  My §11.3 required ALL SIX ScreenOverrides
+  values in extension_rollout_identity_payload.  VERIFIED S63 BY AST OVER THE SOURCE:
+  ScreenOverrides has FIVE fields and the fifth IS provenance_hash — so after the
+  additive mass field the payload would have had to contain its own digest.
+  NOW: exactly the FIVE non-provenance inputs (probe peak, probe ramp, physical_faults
+  as objects carrying every FaultSpec field BY NAME, realized_pair_id, mass);
+  provenance_hash is derived FIRST and inserted into the bundle AFTER hashing.
 
-*** THE CONSEQUENCE CODEX DID NOT NAME, AND IT IS THE DANGEROUS ONE ***
-  PhysicalKey (protocol_p_results.py:223) = (sensor_seed, pair_id, condition, severity,
-  probe_peak_force_n, probe_ramp_fraction_of_duration).  NO PAYLOAD FIELD.
-  Under CRN two masses share EVERY field and COLLAPSE TO ONE KEY.  The results layer
-  keys ROLLOUT REUSE on it -> the 0.025 kg rollout could be silently reused as the
-  0.200 kg row.  Requirement (x) exactly.  v0.2 §3.2 adds an additive
-  PhysicalKey.distal_payload_mass_kg = None (default keeps Protocol P inert).
-  SO THERE ARE **THREE** PREREQUISITES, against TWO jointly approved files:
-    ScreenOverrides sixth field (assignment_generator.py, S44 approved 1c565888/2ec96c9f)
-    PhysicalKey field            (protocol_p_results.py,  e84e5f9f / cbac30ed, 77 tests)
-    the executable
-  Key arithmetic pinned in the doc: 7 + 70 + 49 = 126 distinct keys.
+EDIT 2  THE ZERO-ROLLOUT PLAN CONTRADICTED THE STAGE ORDER.  My §13 had both agents read
+  a zero-rollout plan before authorizing; my §8 spent the replay rollout before it.
+  NOW TWO STAGE ORDERS, and this is the single most important structural change:
+    PLAN MODE     X0P only.  0 rollouts.  Writes the plan on PASS **AND ON FAILURE**.
+    EXECUTE MODE  X0E -> XR(1) -> XA(18) -> XM-C(48) -> XL(0) -> XM-B(<=60) -> XZ(0)
+  X0E recomputes the plan and must match the SEPARATELY AUTHORIZED plan digest before
+  XR may spend its rollout.  Only a plan with plan_valid=true may be named.
+  (My ordering left a failed preflight with NO artifact to land in.  That hole was mine.)
 
-BLOCKER 2  THE CLASSIFIER WAS PROSE.  Codex CONSTRUCTED an omitted shape (light mass
-  fully TESTABLE, heavy mass keeps testable values but none of its OWN reserved
-  severities) reachable by NO v0.1 rule.  Three definitions missing.  Plus a terminal
-  contradiction: I checked the source — Protocol P §9's UNSAFE_LADDER_VALUE block says
-  Cases A/B/C ALL require all ten values safe+valid, "otherwise the outcome is
-  terminal."  v0.1 said only that the value is excluded.  Straight misreading.
-  FIX: ONE ORDERED CLASSIFIER, first match wins, R10 an UNCONDITIONAL catch-all so
-  exhaustiveness is STRUCTURAL not asserted.
-    R0 X_CONSTRUCTION_UNVERIFIED  R1 X_DEFAULT_PATH_UNVERIFIED
-    R2 X_UNSAFE_ANCHOR  R3 X_ANCHOR_NONPREFIX  R4 X_ANCHOR_FAIL
-       --- anchor passed; m=1..6 opened ---
-    R5 X_OVERRIDE_NOT_REALIZED  R6 X_NONPREFIX_WITHIN_MASS  R7 X_NONMONOTONE_IN_MASS
-    R8 X_CASE_EMPTY  R9 X_CASE_ROLE_LOST  R10 X_CASE_ROLE_HELD
-  ROLE-SEVERITY MAP PINNED AS LITERALS, VERIFIED S62 against the assignment's
-    fault_grid_by_split[*].structure.severities (NOT recalled):
-       dev {0.50,0.75}  pilot {0.60,0.85}  val {0.40,0.90}  test {0.35,0.65}
-    §2 resolves the tension: the MEASUREMENT EXECUTABLE never reads the split grid; a
-    TEST asserts the literals EQUAL the document (requirement (r), never adoption).
-  MONOTONICITY: TOLERANCE REMOVED ENTIRELY.  Set inclusion:
-       for measured mu_i < mu_j, TESTABLE_SET(mu_j) SUBSET OF TESTABLE_SET(mu_i).
-    A magnitude diagnostic in units of max(Q95_i, Q95_j) is RECORDED AND CLASSIFIES
-    NOTHING, so no tolerance ever enters a verdict.
-  PREFIX(m) added and checked per mass BEFORE any bracket is read.
-  mass_coverage = COMPLETE | REDUCED is a REQUIRED FIELD, not a case.
+EDIT 3  *** THE ANCHOR CANNOT PROVE THE PAYLOAD SEAM IS LIVE. ***  VERIFIED S63 AGAINST
+  THE ASSIGNMENT: the anchor's source reservation scenario_dev_t01_f000_r02 carries
+  payload_dev_0p050kg = 0.05 kg ALREADY.  A DEAD payload override still hands the anchor
+  exactly the body it asked for.  So the anchor controls the rebuilt PROBE/FAULT/IDENTITY
+  instrument and NOTHING ELSE; X8 is the SOLE payload-liveness check.
+  THIS IS LESSON 88 RECURRING INSIDE THE FIX FOR LESSON 88.  I wrote X8 in S62 precisely
+  because a control that varies the thing it controls for is not a control, and then let
+  the anchor stand as though it exercised the new field.  Codex found it by READING THE
+  DESIGN.  NOW: all six non-anchor healthy blocks + X8 run BEFORE any non-anchor ladder,
+  so a dead seam costs 67 rollouts, not 127, and no attenuation is ever computed.
 
-BLOCKER 3  PROVENANCE / REPLAY / PERSISTENCE WERE DESCRIPTIONS.
-  §11.1/§11.2 name both paths and the MINIMUM PERSISTED FIELD SET ON EVERY EXIT:
-       results/payload_boundary_extension/plan.json            mode=plan
-       results/payload_boundary_extension/payload_boundary.json mode=execute
-    terminal runs write the RESULT path with `terminal` populated (screen convention).
-    Fields whose stage never ran are null WITH A REASON, never absent.
-  §11.3 pins `extension_rollout_identity_payload` FIELD BY FIELD (incl.
-    extension_spec_sha256, mass_index, distal_payload_mass_kg, substage, replicate, ALL
-    SIX override values, reservation triple) and requires the FULL canonical string per
-    rollout.  Under CRN two masses share `reservation` entirely and differ only in the
-    mass fields — that is what keeps 126 digests distinct over 8 identities.
-  §3.3 ADOPTS PROTOCOL P §7 REPLAY GATE UNCHANGED as Stage XR, 1 rollout, FIRST.
-    Fail -> X_DEFAULT_PATH_UNVERIFIED, terminal.  Carries limitation 63 (certifies
-    overrides=None ONLY, so NOT a substitute for the anchor and vice versa) and
-    limitation 36 (not runnable by an outside reader).
+EDIT 4  THE RESULT SCHEMA DID NOT CARRY ITS CLAIMED JOINS.  NOW every ladder row cites
+  fault_physical_key AND healthy_physical_key; every null distance cites BOTH endpoint
+  keys; logical_reference_census splits 532 into 70+70+392.  The REPLAY IS NOT A LEDGER
+  ENTRY (it stamps the base config hash and owns no extension identity), and
+  extension / replay / total rollout counts are SEPARATE FIELDS.
 
-BLOCKER 4  THE ANCHOR DID NOT GATE.  v0.2 §8 order:
-    XR(1) -> X0(0) -> XA anchor alone(18) -> XM six masses(108) -> XZ(0)
-  Within EVERY mass, XC healthy(8) runs BEFORE XB ladder(10), so an unsafe body costs
-  8 not 18.  §12 gives EVERY exit cost: 1 / 1 / 9 / 19 TERMINAL / 127 MAXIMUM.
+EDIT 5  REDUCED COVERAGE AND OPTION B HAD TOO MUCH AUTHORITY.  My permissive rule let a
+  reduced run still choose an option for the masses that ran.  Codex: a measurement whose
+  purpose is to settle ALL SIX unmeasured masses cannot settle them from five.  ACCEPTED —
+  it is stricter than what I wrote and stricter AGAINST MY OWN CONVENIENCE.
+  NOW R7 X_REDUCED_MASS_COVERAGE precedes every shape/case rule and LICENSES NOTHING;
+  R2 X_INVALID_MEASUREMENT added; the classifier is R0..R12, NOT R0..R10.
 ```
 
-## THREE S62 FINDINGS OF MY OWN — TWO ARE FACTS ABOUT THE PLANT
+**Two of Codex's edits are improvements on my text rather than repairs, and both matter to
+whoever writes the executable.** X1 is now a statement about the **planned** partition with
+realized counts allowed to differ by exactly the persisted exclusions — my version was an
+invariant a *legitimate* exclusion would have falsified, the same defect shape Codex found
+in v0.1's X1, reproduced one layer down. And the `physical_keys` digest recipe is now
+pinned end to end (form via `physical_key_report`, sort the report objects by their own
+canonical JSON, canonical-JSON the ordered list, hash those bytes) instead of "a digest
+over the sorted key list", which two implementations could not have agreed on.
+
+## THE S63 FINDING — STRICTLY WORSE EVIDENCE LICENSED A BOLDER CHOICE
+
+**This is the defect I found in Codex's own new text, and it is the reason I did not
+approve `e5192eaa`.**
+
+```text
+Codex CORRECTLY tightened Option B under R11 X_CASE_ROLE_LOST: the cap must come from an
+ascending-mass initial prefix in which EVERY mass retains its OWN reserved role, because a
+heavier mass regaining a role under a DIFFERENT split's map cannot repair a lighter loss.
+IT THEN LEFT R10 X_CASE_EMPTY STATING THE OLD, WEAKER RULE — cap at the heaviest mass with
+a nonempty TESTABLE_SET.  R10 precedes R11 and they are MUTUALLY EXCLUSIVE, so one run
+gets one rule or the other, and the two disagree on the same evidence.
+
+MEASURED, NOT ARGUED.  R9 precedes both, so MONOTONE holds at R10/R11/R12 and every
+reachable state is a non-increasing vector of 7 prefix lengths => 19,448 states.
+*** THAT IS THE SAME 19,448 CODEX'S OWN EXHAUSTIVENESS CHECK REPORTED. ***  The classifier
+was checked for COMPLETENESS; what each branch LICENSES was never checked with it.
+
+  R10 8,008 | R11 3,515 | R12 7,925  = 19,448   (my partition == Codex's total)
+  R10 states whose licensed band held a role-LOSING mass        4,106 of 8,008
+  R11 states where EMPTYING the heaviest mass RAISED the cap    3,185
+    worst case, |TESTABLE_SET| by ASCENDING MASS
+      (6,1,1,1,1,1,1) -> R11 -> cap 0.025 kg
+      (6,1,1,1,1,1,0) -> R10 -> cap 0.150 kg     only change: 0.200 kg emptied
+      band then contains 0.050 dev / 0.075 pilot / 0.100 val / 0.125 val, none of
+      which retains its own role
+  UNDER THE UNIFIED RULE                                              0 of 3,185
+
+FIX: Option B has ONE rule and R10 states it identically.  An empty TESTABLE_SET
+NECESSARILY breaks the prefix, so the R11 rule already covers the empty case.
+The counterexample and the counts went INTO §9.5, not just the chat, so a future reader
+who sees two branches stating one rule finds out why before "simplifying" one away.
+```
+
+**NOTE THE MASS ORDER TRAP.** Option B and MONOTONE are stated over **ascending MASS**, and
+mass order is NOT index order: `0.025(m1,pilot) 0.050(m0,dev) 0.075(m2,pilot)
+0.100(m3,val) 0.125(m4,val) 0.150(m5,test) 0.200(m6,test)`. Any executable or test that
+iterates `m` gets the wrong prefix.
+
+**WHAT I CHECKED AND DELIBERATELY DID NOT CHANGE.**
+
+```text
+R2 X_INVALID_MEASUREMENT aborting a run that had clean masses — CORRECT AS WRITTEN.
+  An invalid coefficient/threshold means the INSTRUMENT is broken, which is a different
+  object from a plant that is unsafe under tip inertia.  Codex's §8 sentence ("an invalid
+  statistic is X_INVALID_MEASUREMENT, not a safety exclusion") is what makes it executable.
+R7 preceding R8/R9, so a reduced run reports coverage rather than a shape violation —
+  hides NOTHING: both license nothing and shape_diagnostics is required on every
+  execute-mode exit.  The alternative would have to define "every mass" over a partial
+  set, which is the ambiguity R7 exists to remove.
+FOR THE STEP-2 BUILD, NOT A DOCUMENT CHANGE: X8 needs all 8 healthy vectors at all 7
+  masses, so a non-anchor mass excluded under X_UNSAFE_MASS MUST STILL FINISH ITS HEALTHY
+  BLOCK.  Forced in three independent places (X8's own 168 count; "every healthy
+  coefficient vector must still be valid and available for X8"; the exit-cost line
+  subtracting only the ladder's 10), so a wrong implementation fails LOUDLY.  Say it in
+  the Step-2 review anyway.
+```
+
+## THE ARITHMETIC OF THE EXTENSION — ALL RE-DERIVED S63, ALL CLOSE
+
+```text
+7 MASSES     0.050 (ANCHOR, already measured) + 0.025 0.075 0.100 0.125 0.150 0.200
+CONTEXT      FIXED: env_dev_iso25c + contact_dev_none + t01 + probe 0.10 N / ramp 0.25
+             = screen cell 6 in everything but payload mass and identity.
+IDENTITY     CRN.  sensor_seed = 160000 + 1000*k + 2 ; pair_id basepair_payloadext_k{k}
+             band [160002,167002].  EIGHT identities reused at EVERY mass.
+             CLASS k=0  77 rollouts (7 masses x 11) ; CLASS k>=1  7 each => 126 over 8
+LADDER       the same ten reserved remEI values, FIXED not adaptive
+COUNTS       7*11 + 7*7 = 126 rollouts ; 18 per mass (8 healthy FIRST, then 10 ladder)
+             7 + 70 + 49 = 126 DISTINCT PHYSICAL KEYS (needs the §3.2 mass field)
+             10 + 10 + 56 = 76 logical refs per mass ; 76*7 = 532 = 70+70+392
+             8 * C(7,2) = 168 X8 comparisons
+EXIT COSTS   X0P/X0E 0 | XR 1 | anchor-healthy <=9 | anchor-ladder <=19 | X8 fail 67
+             | full run 127 MAXIMUM | 53.1-58.2 min at 25.1-27.5 s/rollout
+INVARIANTS   X1-X14 (X13 the physical key; X14 returns exactly one of R0..R12)
+AUTHORIZATION  five steps in §13; none inferable from another.  Document approval
+             authorizes ONLY Step 2.  Executable approval authorizes ONLY plan mode.
+```
+
+**THREE PREREQUISITES, against TWO jointly approved files.** `ScreenOverrides` sixth field
+(`assignment_generator.py`, S44 approved `1c565888`/`2ec96c9f`); `PhysicalKey` seventh field
+(`protocol_p_results.py`, `e84e5f9f`/`cbac30ed`, 77 tests); the executable. Both verified
+S63 by AST: `ScreenOverrides` = 5 fields with `provenance_hash`; `PhysicalKey` =
+`(sensor_seed, pair_id, condition, severity, probe_peak_force_n,
+probe_ramp_fraction_of_duration)`, **no payload field**.
+
+## S62 FACTS ABOUT THE PLANT — STILL LOAD-BEARING, NOT RE-MEASURED S63
 
 ```text
 (a) *** THE PLANT HAS NO GRAVITY. ***  cable_mechanics.py:101 emits gravity="0 0 0".
-    model.opt.gravity == [0,0,0] ; qfrc_bias == 0 at t0.
-    Stepped the compiled model, ctrl=0, 3.0 s sim time, ALL EIGHT MASSES:
-      peak |gauge_true| = 0.0000 ue and tip radius EXACTLY 0.80000 m at every mass,
-      0.200 kg INCLUDED.   (A1 gauge limit is 500 ue; tip radius limit 0.82 m.)
-    => PAYLOAD IS PURE TIP INERTIA.  No sag, no static load, no static consumption of
-       the A1 envelope.  MY S61 SENTENCE "1.157x the mass of the whole arm, HUNG AT THE
-       TIP" carried a static reading that is FALSE HERE.  Withdrawn in v0.2 §1; the mass
-       comparison stands as a DYNAMIC perturbation.  Nominal body mass 0.172800003 kg.
-
-(b) THE PROBE SITS ~97x BELOW THE LOWEST ELASTIC MODE, so RESONANCE IS RULED OUT.
-    Linearized undamped modal estimate, zero rollouts: M from mj_fullM (note the 3.x
-    signature is mj_fullM(model, data, dst)), K by central finite differences of
-    qfrc_passive under mj_integratePos, then scipy.linalg.eigh(K, M).
-      mass    f1      f2      f3      f4      f5      f6   (Hz)
-      0.000  77.34  117.29  167.58  217.11  229.85  254.47
-      0.050  77.34   92.17  167.58  201.59  229.85  249.52
-      0.200  77.34   87.19  167.58  199.59  229.85  249.06
-      probe 0.8 Hz -> f1/probe = 96.7
-    SCOPE, stated before use: linearized about ONE configuration, undamped, and K
-    OMITS THE ELBOW `connect` EQUALITY CONSTRAINT because qfrc_passive carries plugin
-    elasticity + joint damping only.  The omission can only RAISE frequencies, so it is
-    CONSERVATIVE for the one conclusion drawn and for nothing else.  NO VERDICT RESTS
-    ON IT.  (The cable's stiffness is a PLUGIN — jnt_stiffness is all zero, which is why
-    a naive modal analysis returns an empty spectrum.)
-    TWO READINGS ONLY: payload moves NO mode onto the probe (f1/f3/f5 do not move with
-    mass at all), so the S60 attenuation's MECHANISM IS UNIDENTIFIED and v0.2 §14 says
-    so; and the modes that DO move SATURATE HARD (f2 falls 21% over 0.000->0.050 kg and
-    a further 5% over 0.050->0.200 kg) — a HINT, not evidence, that the payload effect
-    may saturate, which is an argument FOR seven measured levels over an extrapolation.
-
-(c) v0.1's ANCHOR WAS BUILT TO FAIL ON NOISE.  It demanded the anchor bracket EQUAL
-    cell 6's (0.45, 0.50) exactly.  Re-derived cell 6's OWN margins from the screen
-    artifact (Q95 = 0.37033237, threshold = 0.74066474):
-      remEI  0.35   0.40   0.45   0.50   0.55   0.60   0.65   0.75   0.85   0.90
-      |m|/th 0.826  0.482  0.196  0.021  0.214  0.333  0.481  0.655  0.812  0.879
-    CELL 6 FAILS 0.50 BY 2.1% OF ITS THRESHOLD.  Requiring a new identity to reproduce
-    the SIGN of a 2.1% margin is requiring it to reproduce noise, and the resulting
-    X_ANCHOR_FAIL would be TERMINAL and MEANINGLESS.
-    v0.2 §9.3: tau_anchor = 0.10 of threshold; CONSTRAIN THE NINE rungs at/above it;
-    leave 0.50 UNCONSTRAINED.  *** THE 0.10 DOES NO WORK: smallest constrained 0.196,
-    largest unconstrained 0.021, so ANY tau in (0.021, 0.196) GIVES THE IDENTICAL
-    PARTITION. ***  Fixed from PUBLISHED margins, before any extension datum exists.
+    Stepped at ctrl=0 for 3.0 s, ALL EIGHT MASSES: peak |gauge_true| = 0.0000 ue and tip
+    radius EXACTLY 0.80000 m, 0.200 kg included.  => PAYLOAD IS PURE TIP INERTIA.
+    No sag, no static load, no static consumption of the A1 envelope.
+    Nominal body mass 0.172800003 kg.  Limitation 82.
+(b) THE PROBE SITS ~97x BELOW THE LOWEST ELASTIC MODE (f1 77.34 Hz vs 0.8 Hz), so
+    RESONANCE IS RULED OUT.  f1/f3/f5 do not move with mass at all; f2/f4/f6 move and
+    SATURATE.  The S60 attenuation's MECHANISM IS UNIDENTIFIED.  Limitation 83.
+(c) v0.1's ANCHOR WAS BUILT TO FAIL ON NOISE.  Cell 6 fails remEI 0.50 by 2.1% of its
+    threshold.  v0.2 §9.3: tau_anchor = 0.10, constrain the NINE rungs at/above it, leave
+    0.50 unconstrained.  ANY tau in (0.021, 0.196) gives the IDENTICAL partition.
+    Fixed from PUBLISHED margins before any extension datum exists.
 ```
-
-**THE ONE DEVIATION FROM INHERITED §9, AND IT IS PERMISSIVE IN MY FAVOUR.** v0.2 §9.6:
-`X_UNSAFE_MASS` / `X_UNSAFE_LADDER_VALUE` are terminal AT THE ANCHOR and **exclude the
-mass** elsewhere (ladder not run, execution continues, `mass_coverage = REDUCED`).
-Strict inheritance would discard all seven masses because one rollout at 0.200 kg failed
-a gate. **I flagged the direction and handed the decision to Codex**; reverting is one
-line — move non-anchor `X_UNSAFE_LADDER_VALUE` to a terminal rule between R5 and R6.
-Pinned as a rule rather than offered as a menu, so there is one exact state to review.
 
 ## THE S60 HARNESS DEFECT — THE MUTATION SWEEP CAN CERTIFY AN UNTESTED GUARD
 
@@ -426,7 +451,7 @@ Settled — do not reopen, do not edit v2.3.3.  Codex S55: no bump for the Stage
 ## Where the project is
 
 - **Phase 2 (Execution) is OPEN.** All Phase-1 gates in force. **Schema v1.0 + Amendment A1 in force.** Contract changes run through the **amendment protocol**.
-- I am **Claude**; last session was **Session 62**; next session I run is **Session 63**.
+- I am **Claude**; last session was **Session 63**; next session I run is **Session 64**.
 - **`config.json` is deliberately NOT frozen** and does not exist. All hashes are `dev-`; no `dev-` trace may enter confirmatory analysis.
 - Real data exists: `data/gate3-base-dev-pilot-val-c1-s` (3.86 GB, git-ignored, local only). 472 reservations / 944 manifest rows / C1+S / dev 152, pilot 152, val 168. **Test untouched: 0 identities, 0 payloads.** **Slated for full regeneration from zero after A2 — these 472 payloads become a superseded pre-amendment set in the packet exclusion trail. Read them; do not build on them.**
 - **STAGES A/B/C HAVE RUN — Codex's S57, 135 physical rollouts, CASE_B, JOINTLY APPROVED.** Stage 0 RAN in S48 at ZERO rollouts; `results/protocol_p/sensor_only_difference_null.json` is tracked and **JOINTLY APPROVED**. The §9 role-coverage read is now **JOINTLY APPROVED** (above). The payload read's **RESULT ARTIFACT is JOINTLY APPROVED** (S60 Codex / S61 me); its **script + tests are UNDER REVIEW at my S61 blobs**.
@@ -449,7 +474,7 @@ FIFTEEN BEFORE CODEX'S S57.  Measured in S58 by sweeping BOTH agents' primary re
 NOT RUN IN S58, S59 OR S60.  Nothing on the gate's watched path changed and the
 measurement it guards is already spent.
 ```
-- **Progress report DONE at S56** (regular, covers S49–S56), **loop CLOSED at round five, blob `83c527ced4e12ce27cfbf83601c89fc0e670a3cd`. Do not reopen. NEXT REGULAR IS MY SESSION 64**, unless a phase transition or an **approved written Claim-Sheet amendment** fires sooner. **An approved A2 fires it.**
+- **Progress report DONE at S56** (regular, covers S49–S56), **loop CLOSED at round five, blob `83c527ced4e12ce27cfbf83601c89fc0e670a3cd`. Do not reopen. MY SESSION 64 IS THE NEXT REGULAR AND IT IS DUE THE VERY NEXT SESSION I RUN — write it IN ADDITION to normal session work, covering S57–S64**, or sooner if a phase transition or an **approved written Claim-Sheet amendment** fires. **An approved A2 fires it.**
 
 ## Escalation trigger — content-based, and it has now held ten times
 
@@ -577,7 +602,7 @@ and BEFORE any untouched `test` payload.**
 
 **The (a)–(dd) driver requirements, carried verbatim in shape:** (a) `ood_flag` exclusion from known-class metrics; (b) the **degradation-ladder rule** (S30/S31); (c) **pilot→val moves one variable while val→test additionally moves half-fraction → complete factorial** — *and, under A2 pin 4, no longer moves the contact window*; (d) S33's two findings; (e) the mild-stratum development diagnostic **at its true scope** and the per-channel attribution; (f) **[S35]** the excitation discontinuity; (g) **[S36]** the yardstick discontinuity (D) + the run-to-run range statement (E) + trajectory-partial margin coverage; (h) **[S37]** the operation mismatch (F), thermal near-invariance (G) as a *property*, the amplitude ceiling (H); (i) **[S38]** the **window origin (J)** — the driver MUST use the same origin the protocol pins — plus the matched/unmatched asymmetry and role-coverage counts; (j) **[S39]** the **construction path (K)** and the **unmatched-identity confound (L)**; (k) **[S40]** distinguish **`base_pair_id` from realized `pair_id`** in every identity join, and never stamp an overridden run with the base config hash; (l) **[S41]** any file whose **raw bytes** enter an identity must be hashed through the correct-domain helper; (m) **[S42]** that helper must be chosen **by file domain**; (n) **[S43]** every identity expression must **name the object it hashes**; (o) **[S44]** test the **wires between stages**, not only each stage; (p) **[S45]** every clean report must **disclose its denominator** and refuse to report when it cannot support the claim; (q) **[S46]** every guard must be **reachable from the construction that will run**, and every fixture large enough for the defect it exposes; (r) **[S47]** every pinned literal that also lives in a bound document is checked by EQUALITY, never adoption; (s) **[S48]** every test that claims to verify a gate must CALL it and assert the REASON for a refusal; (t) **[S50]** every documented dependency must be verified against the running system; (u) **[S51]** assert a phrase UNIQUE TO ONE RAISE SITE, and construct preconditions through `utils/protocol_p_conditions.py`; (v) **[S52]** obtain the source reservation from the I1-pinned assignment and never construct one, and test per BRANCH not per guard; (w) **[S53]** record a REUSED row's provenance by CITATION, and DERIVE the fault onset; (x) **[S54]** key the results table on the PHYSICAL BODY, and make every clean-census check reachable from a state that could fail it; (y) **[S55]** derive the reported set from what was MEASURED rather than from which candidates survived, CONSUME the hard-gate report in EVERY stage, and persist the gate evidence, step count and elapsed time on EVERY exit path including terminals; **(z) [S56]** every check the driver makes must be given a source INDEPENDENT of the thing it checks — a comparison whose two sides are produced by the same function from the same arguments is a report of a check rather than a check — and no result artifact may record an absolute filesystem path; **(aa) [S57]** every count must distinguish OCCURRENCES from IDENTITIES — 180 provenance references over 168 distinct stamps, never "180 stamps" — and every historical figure must be re-derived from primary records; **(bb) [S57]** no outcome case may be reported until the healthy-vs-faulted readback has distinguished a measured null from an override that never reached the plant; **(cc) [S59]** every digest a result artifact records must be taken in the domain of the file's KIND — canonical for tracked text, raw only for binary — and every check a review ADDS must have a committed test that constructs the state it refuses; **(dd) [NEW S60]** every verdict the driver reports must name the CONTEXT POPULATION it was established over, because a conjunction over context cells is a statement about exactly those cells and the confirmatory splits are not drawn from them — and no coverage count computed from those verdicts may be presented as a statement about a split's own contexts; **(ee) [NEW S61]** every refusal message must be unique to one raise site **as rendered**, not as written — a message assembled by an f-string can duplicate a literal one exactly, which no text search of the file will find, so the check is a runtime comparison of the sentences the sites actually emit. **(ff) [NEW S62]** every guard must be checked against what ELSE in the design produces its passing signal — a distinctness check over units that already differ for another reason certifies nothing — and after any change to what the design holds fixed, every downstream key, join and dedup must be re-asked what it was actually distinguishing, because a key is a claim about what makes two things different and the design just changed that claim.
 
-**Order:** (1)✓ → (2 foundation)✓ → (2 role-write)✓ → (3 assignment)✓✓ → (2 generator + base roles)✓✓ → (2 hardening)✓✓ → (dev separability check)✓ **[NEGATIVE]** → Protocol P v2.3.3 spec ✓✓ → seam + 37 tests ✓✓ → replay gate ✓✓ → Stage-0 implementation ✓✓ → **Stage 0 RAN, S48 ✓** → Stage-0 result ✓✓ → Progress Report S48 ✓✓ → packet Step 24 ✓✓ → public README ✓✓ → extraction + construction layer ✓✓ (S51–S53) → driver + results layer (S54 built, S54 blocked, S55 corrected, S55 approved ✓✓) → S56 pre-registered helper + Step 25 ✓✓ → **Codex S57: replay gate (36.42 s) then STAGES A/B/C — 135 rollouts, CASE_B ✓** → **my S58: every number independently reproduced, result APPROVED; §9's role-coverage read found UNIMPLEMENTED and built at zero rollouts — dev 0 / pilot 0 / val 1 / test 1** → **Codex S58 BLOCKED it on three real findings and corrected it** → **my S59: all three CONFIRMED; a FOURTH found in the repair (raw-domain digest of a tracked text file); 23-case sweep, 13 survivors, 12 real, closed with 12 tests** → **Codex S59 APPROVED all four states and held the loop open for my explicit approval** → **my S60: approval posted, LOOP CLOSED AT THE SAME STATE; the mutation-sweep harness found to give false verdicts and fixed; the approved analyzer re-swept clean (28/28); the payload-conditioning read built at zero rollouts** → **Codex S60 blocked the payload read on two real defects, corrected them, ruled MEASURE FIRST via a separate development-only pre-registration, and blocked A2** → **my S61: both findings confirmed independently; the result artifact and both READMEs approved at Codex's states; the sweep over Codex's repair found a SILENT GAP in one of its own new guards and a three-way message collision one copy of which is built by an f-string; script+tests returned at new blobs; the payload-boundary extension v0.1 DRAFTED** → **Codex S61 APPROVED the analyzer/tests (loop CLOSED) and BLOCKED the extension on four findings** → **my S62: all four confirmed against primary sources, none contested; v0.1 `git mv`'d to v0.2 and rewritten — CRN across masses, a SECOND prerequisite (`PhysicalKey`), one ordered exhaustive classifier, pinned artifact/provenance contracts, the anchor staged first; plus three findings of my own (zero gravity, probe 97x below the lowest mode, a noise-fragile anchor) ← WE ARE HERE** → Codex reviews v0.2 → the THREE seam/key/executable prerequisites (both approve) → plan mode → SEPARATE execution authorization → the extension RUNS → both read it → written amendment A2 + replacement assignment (both approve) → **full regeneration from zero** → re-audit → (4/5 models+calibration) [me] → (2 remaining roles) [Codex] → (6 controller + sample-size) [shared] → **joint immutable freeze** → one-shot confirmatory generation + eval (7) → Phase 3.
+**Order:** (1)✓ → (2 foundation)✓ → (2 role-write)✓ → (3 assignment)✓✓ → (2 generator + base roles)✓✓ → (2 hardening)✓✓ → (dev separability check)✓ **[NEGATIVE]** → Protocol P v2.3.3 spec ✓✓ → seam + 37 tests ✓✓ → replay gate ✓✓ → Stage-0 implementation ✓✓ → **Stage 0 RAN, S48 ✓** → Stage-0 result ✓✓ → Progress Report S48 ✓✓ → packet Step 24 ✓✓ → public README ✓✓ → extraction + construction layer ✓✓ (S51–S53) → driver + results layer (S54 built, S54 blocked, S55 corrected, S55 approved ✓✓) → S56 pre-registered helper + Step 25 ✓✓ → **Codex S57: replay gate (36.42 s) then STAGES A/B/C — 135 rollouts, CASE_B ✓** → **my S58: every number independently reproduced, result APPROVED; §9's role-coverage read found UNIMPLEMENTED and built at zero rollouts — dev 0 / pilot 0 / val 1 / test 1** → **Codex S58 BLOCKED it on three real findings and corrected it** → **my S59: all three CONFIRMED; a FOURTH found in the repair (raw-domain digest of a tracked text file); 23-case sweep, 13 survivors, 12 real, closed with 12 tests** → **Codex S59 APPROVED all four states and held the loop open for my explicit approval** → **my S60: approval posted, LOOP CLOSED AT THE SAME STATE; the mutation-sweep harness found to give false verdicts and fixed; the approved analyzer re-swept clean (28/28); the payload-conditioning read built at zero rollouts** → **Codex S60 blocked the payload read on two real defects, corrected them, ruled MEASURE FIRST via a separate development-only pre-registration, and blocked A2** → **my S61: both findings confirmed independently; the result artifact and both READMEs approved at Codex's states; the sweep over Codex's repair found a SILENT GAP in one of its own new guards and a three-way message collision one copy of which is built by an f-string; script+tests returned at new blobs; the payload-boundary extension v0.1 DRAFTED** → **Codex S61 APPROVED the analyzer/tests (loop CLOSED) and BLOCKED the extension on four findings** → **my S62: all four confirmed against primary sources, none contested; v0.1 `git mv`'d to v0.2 and rewritten — CRN across masses, a SECOND prerequisite (`PhysicalKey`), one ordered exhaustive classifier, pinned artifact/provenance contracts, the anchor staged first; plus three findings of my own (zero gravity, probe 97x below the lowest mode, a noise-fragile anchor)** → **Codex S62 made FIVE direct edits to v0.2 and approved its own state `e5192eaa` — circular provenance payload, plan/execute split, the anchor cannot prove payload liveness (its source reservation already carries 0.050 kg), result joins as data, reduced coverage licenses nothing** → **my S63: all five accepted, three verified at source; ONE NEW DEFECT found in Codex's own new text — R10 `X_CASE_EMPTY` kept the weaker Option-B rule Codex had just tightened at R11, and over all 19,448 states DELETING a result raised the licensed cap in 3,185 of them; fixed by unifying the rule (0 remain), state returned at `538ae06b` ← WE ARE HERE** → Codex reviews `538ae06b` → the THREE seam/key/executable prerequisites (both approve) → plan mode → SEPARATE execution authorization → the extension RUNS → both read it → written amendment A2 + replacement assignment (both approve) → **full regeneration from zero** → re-audit → (4/5 models+calibration) [me] → (2 remaining roles) [Codex] → (6 controller + sample-size) [shared] → **joint immutable freeze** → one-shot confirmatory generation + eval (7) → Phase 3.
 
 Not freeze blockers (still required before completion): Slot-8 verification artifact; Technical Report / Accessible Piece / Study Guide Pass 2 (Phase 3); fresh-environment packet validation.
 
@@ -756,6 +781,8 @@ generation_audit.json · independent_audit.json
 83. **[NEW S62] THE DIAGNOSTIC PROBE SITS ~97x BELOW THE LOWEST ELASTIC MODE, SO RESONANCE IS NOT THE MECHANISM.** Linearized undamped estimate: f1 = 77.34 Hz against a 0.8 Hz probe, and **f1, f3 and f5 do not move with payload at all**; only f2/f4/f6 move, and they saturate (f2 −21% over 0.000→0.050 kg, a further −5% over 0.050→0.200 kg). The estimate omits the elbow `connect` constraint, which can only raise frequencies and is therefore conservative **for that one conclusion and no other**. **The mechanism of the payload attenuation is UNIDENTIFIED.** Do not let a plausible mechanism enter a write-up unmeasured.
 84. **[NEW S62] `PhysicalKey` CARRIES NO PAYLOAD MASS.** `(sensor_seed, pair_id, condition, severity, probe_peak_force_n, probe_ramp_fraction_of_duration)` — harmless in Protocol P, where identity distinguishes the bodies, and **a silent reuse bug the moment any design shares identity across bodies**. The results layer keys rollout *reuse* on this object. Any future design that holds identity fixed while varying the body owes this key an additive field first.
 
+85. **[NEW S63] A CLASSIFIER CAN BE EXHAUSTIVE AND STILL LICENSE INCONSISTENTLY.** The extension's outcome rules were verified complete over all 19,448 reachable states — by Codex, correctly — and two mutually exclusive branches still granted different Option-B authority for the same evidence, because only one of them had been tightened. In 3,185 states **deleting the heaviest mass's result raised the licensed cap**, worst case 0.025 → 0.150 kg. **Exhaustiveness is a property of the partition; licensing is a separate property of each cell, and the check that establishes the first says nothing about the second.** Fixed by stating the rule once. Any future edit that re-splits an outcome rule owes the same enumeration.
+
 ## Coherence / honesty bounds (keep loud)
 
 - **Sensor RNG keyed on `(sensor_seed, pair_id, channel, stream)` jointly** (`utils/rng.py:76-78`). **Measured S39: a `pair_id` change alone moves `gauge_obs` by up to 6.50 µε**, against `D` of order 0.1–0.5. **Nothing else is in the key.**
@@ -766,7 +793,7 @@ generation_audit.json · independent_audit.json
 
 - **Simulation-only, one desktop:** Windows 11, Ryzen 7 8700F (8C/16T), RTX 5060 Ti **16 GB VRAM** (sm_120), 32 GB RAM, Python **3.12.10** in `./venv`. Free/OSS, commercial-use-friendly only.
 - **venv has:** numpy 2.5.1, scipy 1.18.0, scikit-learn 1.9.0, matplotlib 3.11.0, mujoco 3.10.0, pandas 3.0.3, control 0.10.2, gymnasium 1.3.0, pytest 9.1.1, **torch 2.11.0+cu128**. **No new dependency was added in S46–S61.**
-- **Running packet tests:** from the REPO ROOT, `./venv/Scripts/python.exe -m pytest -q "Reproducibility Packet/tests"`. **Scope pytest to that path** — a root-wide invocation collides on duplicate test module names in the ignored `tmp/session6_packet_copy/`. **Full suite 1,126 tests green (re-run S62, 111.94 s, NO code changed that session; S61 137.87 s; `test_protocol_p_payload_conditioning.py` collects 105 after Codex's 8 S60 additions and my 11 S61 additions, and 1,021 + 105 = 1,126 exactly).** Prior: 1,126 (Codex S61), 1,115 (Codex S60), 1,107 (my S60, 150.54 s), 1,021 (S59, 143.00 s), 999 (S58), 975 (S57), 938 (S55), 906 (S54), 750 (S53), 595 (pre-S51 baseline). **Set `PYTHONIOENCODING=utf-8` for anything that prints non-ASCII** — the console is cp1252. **Use ASCII in probe scripts and in anything a gate prints.**
+- **Running packet tests:** from the REPO ROOT, `./venv/Scripts/python.exe -m pytest -q "Reproducibility Packet/tests"`. **Scope pytest to that path** — a root-wide invocation collides on duplicate test module names in the ignored `tmp/session6_packet_copy/`. **Full suite 1,126 tests green (re-run S63, 121.30 s, NO code changed that session; S62 111.94 s; S61 137.87 s; `test_protocol_p_payload_conditioning.py` collects 105 after Codex's 8 S60 additions and my 11 S61 additions, and 1,021 + 105 = 1,126 exactly).** Prior: 1,126 (Codex S61), 1,115 (Codex S60), 1,107 (my S60, 150.54 s), 1,021 (S59, 143.00 s), 999 (S58), 975 (S57), 938 (S55), 906 (S54), 750 (S53), 595 (pre-S51 baseline). **Set `PYTHONIOENCODING=utf-8` for anything that prints non-ASCII** — the console is cp1252. **Use ASCII in probe scripts and in anything a gate prints.**
 - **MUTATION SWEEPS — MANDATORY HARNESS SHAPE AFTER S60:** clear `__pycache__` before every run **and** set `PYTHONDONTWRITEBYTECODE=1` in the subprocess env; drop `-x`; translate anchors to the target file's own newline; report bad anchors separately from survivors; restore exact bytes in a `finally` and verify the blob afterwards. **Run the whole sweep twice and require identical results** — that is the cheapest detector for a harness fault.
 - **Packet scripts are invoked FROM the packet directory** (`scripts\<name>.py`, `--output-dir results\<name>`), per its README. From the packet dir the project venv is `..\venv\Scripts\python.exe`. **In my PowerShell tool the working directory is not the repo root — use `Set-Location` or absolute paths. My Bash tool's cwd PERSISTS between calls — prefer absolute paths or re-`cd` every time.**
 - **Timings (measured S35–S60):** full packet suite ~150 s; one MuJoCo rollout (3000 steps) **25.6–27.5 s**; a PARTIAL rollout is proportionally cheap — 480 steps ≈ 3.0 s; at reduced fidelity (`point_count=9`, `simulation_timestep_s=2e-4`) 501 control steps ≈ 0.37 s; a 200-realization sensor-only null at W=768 ~40 s; an offline re-observation ≈ instantaneous; the driver's `--mode plan` 0.30–0.33 s; **one driver-file mutation case ≈ 100 s** (a 17-case sweep is ~28 min and belongs in the background); **a small-analyzer mutation case ≈ 0.5–0.7 s with the fixed harness, so a 44-case sweep is under a minute.** **NO figure exists for the pinned `pairs=100` Stage-0 run — see limitation 45; do not invent one.**
@@ -866,10 +893,12 @@ generation_audit.json · independent_audit.json
 88. **(NEW S62) A CONTROL THAT VARIES THE THING IT CONTROLS FOR IS NOT A CONTROL.** I wrote a tripwire requiring seven measurements to be pairwise distinct as evidence that a setting had reached the simulator — and gave each of the seven its own random identity, which makes them distinct for free. The check passes in exactly the state it exists to catch. Codex found it by reading the design; I would have found it only by running a dead override, which nobody was going to do. **The move: for every guard, name the failure it exists to catch, then ask what ELSE in the design produces the passing signal. If anything does, the guard is decorative.** Its companion, and the fix here: **common random numbers turn a decorative check into a real one** — hold the identity fixed and a dead setting produces *identical* output, which is refusable.
 89. **(NEW S62) FIXING THE SCIENCE CAN BREAK A KEY SOMEWHERE ELSE, AND THE BREAK IS SILENT.** Making identities common across payload masses was the right scientific fix and it immediately collapsed the results layer's physical key, because that key distinguished bodies *by identity* and nothing else. The consequence would have been one simulation silently reused as another's row — no error, no failing test, a plausible number. **The move: after changing what a design holds fixed, re-ask what every downstream key, join, cache, and dedup was actually distinguishing. A key is a claim about what makes two things different, and changing the design changes that claim.** Also: **state the tolerance-free rule when you can.** I replaced "non-monotone beyond what the null admits" with set inclusion rather than invent a threshold — a threshold in a *classifying* rule invites the argument that it was chosen to produce the outcome, and the same information survives as a diagnostic that classifies nothing.
 
+90. **(NEW S63) WHEN A REVIEWER TIGHTENS ONE BRANCH OF A RULE, THE UNTIGHTENED BRANCH BECOMES THE DEFECT — AND IT NOW LOOKS AUTHORITATIVE.** Codex correctly narrowed Option B under one outcome and left the neighbouring outcome stating the older, looser version of the same rule. The two are mutually exclusive, so nothing was internally contradictory to read; the disagreement only appears when you ask what each branch *does* with the same evidence. I found it by enumerating the whole outcome space and comparing what the two branches licensed — the same enumeration the reviewer had already run to prove the classifier complete. **The move: after any narrowing, grep for every other statement of the same rule and re-run whatever check the narrowing was supposed to satisfy across all of them; and when two branches must agree, state the rule ONCE rather than twice correctly.** Its companion, and the sharpest test I have for a licensing rule: **ask whether DELETING a result can ever license a bolder choice.** If it can, the rule is wrong regardless of how defensible each branch looks alone.
+
 ## Pointers
 
 - **Protocol P (in force, JOINTLY APPROVED): `Reproducibility Packet/protocol/protocol-p-v2.3.3.md`, canonical sha256 `5689dad7…8bdf421f`. READ THE FILE.**
-- **The payload-boundary extension (DRAFT, UNDER REVIEW, NOT EXECUTABLE): `Reproducibility Packet/protocol/payload-boundary-extension-v0.2.md`, canonical sha256 `e734c498…469932e9`, blob `c7facc13`, 60,815 bytes, LF, raw == canonical. READ THE FILE — the summary blocks above are an index, not the document. v0.1 (`32a03930…`, blob `903962f8`) is SUPERSEDED and BLOCKED; its bytes are in the `Claude Session 61` commit. Do not approve, cite, or build from v0.1.**
+- **The payload-boundary extension (DRAFT, UNDER REVIEW, NOT EXECUTABLE): `Reproducibility Packet/protocol/payload-boundary-extension-v0.2.md`, canonical sha256 `538ae06b…df33b6a`, blob `d9f6e188`, 71,188 bytes, 1,285 lines, LF, raw == canonical. **THREE STATES EXIST INSIDE v0.2 — always quote the digest: `c7facc13`/`e734c498…` my S62 handoff, `3d72e1f4`/`e5192eaa…` Codex's S62 edits (which I did NOT approve), `d9f6e188`/`538ae06b…` my S63 fix, CURRENT.** READ THE FILE — the summary blocks above are an index, not the document. v0.1 (`32a03930…`, blob `903962f8`) is SUPERSEDED and BLOCKED; its bytes are in the `Claude Session 61` commit. Do not approve, cite, or build from v0.1.**
 - **The replay gate: `scripts/protocol_p_replay_gate.py` + `tests/test_protocol_p_replay_gate.py` (36 tests).** Run from the packet dir: `..\venv\Scripts\python.exe scripts\protocol_p_replay_gate.py --data-root ..\data\gate3-base-dev-pilot-val-c1-s`. **EXECUTED EIGHT TIMES; not run S52–S60. IT CERTIFIES `overrides=None` ONLY (limitation 63).**
 - **Stage 0: `scripts/analyze_synchronous_difference_null.py` (blob `f104971d…`) + `tests/test_synchronous_difference_null.py` (99).** Pre-registered invocation from the packet dir: `..\venv\Scripts\python.exe scripts\analyze_synchronous_difference_null.py --window 768 --f-ctrl-hz 500.0 --diagnostic-hz 0.8 --thermal-ramp-c 3.0 --pairs 100 --seed 0 --pair-id 1`. **It has been spent; re-running it is NOT authorized.**
 - **The Stage-0 artifact — JOINTLY APPROVED. Tracked. DO NOT EDIT, DO NOT RE-EXECUTE.** `results/protocol_p/sensor_only_difference_null.json`, blob `31c1e6d1824c10bd5978d12c377f76cf556af03f`. **`samples` is a 6-key metadata dict; the 100 values are `samples["distances"]`. There is no top-level `authority` — the path is `corroboration.authority`.**
@@ -908,12 +937,19 @@ Run either read from the packet dir; zero rollouts, ~0.3 s each:
 - **CONCLUDED director chat:** `chats/Claude-Codex-Human/Better Suited Task/…- Concluded.md` — the withdrawn task-redesign directive. **A2 must stay clear of it.**
 - Director requests: `director_requests.md` (root) — entry 1 (Claim Sheet review) non-blocking, **still awaiting director reply**. Nothing else is blocked on the director.
 - My foundation `agents/Claude/Literature Foundation.md` · ledger `agents/Claude/references.md` (**no S20–S60 entries — reproduction/construction/measurement/review sessions, no external sources read**).
-- **Live-Run README (co-maintained): root `README.md` — Phase 2 / In Progress, banner 2026-08-02. My S62 appended ONE new entry (`+2/−0`) at the END of the log, edited no dated entry, and left the banner (same day; S61 did the same).** It reports the v0.2 rewrite in plain language — the identity confound and why the safety check could not have caught a dead setting, the results-table key that does not track payload, the zero-gravity fact (the payload is inertia, not a weight), the probe sitting ~100x below the arm's slowest vibration and what that rules out, and the control test that had been asking a measurement to reproduce noise. **The log's date order is out of chronological order in the middle and Codex's dated correction says so; dated entries are never edited, so it stays that way.** **Beware when appending: `README.md` is all-CRLF; split on `b"
+- **Live-Run README (co-maintained): root `README.md` — Phase 2 / In Progress, banner 2026-08-02. My S63 ran the heartbeat check and DELIBERATELY ADDED NOTHING: an internal review handback on a document still under review is not a public milestone, and the log already says the extension is in review — the same reasoning Codex applied to its own S62 handback. The entry belongs on the log when the loop CLOSES. My S62 appended ONE new entry (`+2/−0`) at the END of the log, edited no dated entry, and left the banner (same day; S61 did the same).** It reports the v0.2 rewrite in plain language — the identity confound and why the safety check could not have caught a dead setting, the results-table key that does not track payload, the zero-gravity fact (the payload is inertia, not a weight), the probe sitting ~100x below the arm's slowest vibration and what that rules out, and the control test that had been asking a measurement to reproduce noise. **The log's date order is out of chronological order in the middle and Codex's dated correction says so; dated entries are never edited, so it stays that way.** **Beware when appending: `README.md` is all-CRLF; split on `b"
 "`, insert before the `''/'---'/''` block that precedes `## Follow along`, and verify by reading the neighbouring lines back rather than trusting an offset.**
-- **Phase-2 chat:** `chats/Claude-Codex/Phase 2 Integration and Config Freeze/…- Active.md` — **NOW 15,918 lines. My S62 turn is at byte 1,059,356, `+256/−0`, header unique, physically last. CODEX OWNS THE NEXT TURN: the payload-boundary extension v0.2 (canonical `e734c498…`, blob `c7facc13`) and nothing else — the analyzer/tests loop is CLOSED.** The four things I explicitly asked Codex to judge: the CRN cost statement (§5), the `PhysicalKey` prerequisite against its own approved module (§3.2), the permissive per-mass exclusion rule (§9.6), and whether the nine-rung anchor is right or it wants the strict bracket back (§9.3). Do NOT re-ask the plan default, the Stage-0 imports, the Stage-C label, the vocabulary guard, Step 25, the readback ruling, the screen result, the role-coverage states, `.gitattributes`, the measure-first ruling, or the payload analyzer/tests; all eleven are settled. **The file is MIXED-EOL** — Codex appends LF, the older bulk is CRLF; append LF and verify `+N/−0` rather than assuming.
-- **Monitoring chat:** `chats/Claude-Codex-Human/Transcript Order Monitoring/…- Active.md` (88 lines; unchanged S43–S62 — no recurrence; **streak twenty-nine**: my S62 append passed all four gates — pre-write prefix retained byte-for-byte (asserted inside the writer, not inspected afterwards), header unique, physically last, `+256/−0`). The duty is to flag recurrences, so a clean session adds no note; verify at the git level regardless.
+- **Phase-2 chat:** `chats/Claude-Codex/Phase 2 Integration and Config Freeze/…- Active.md` — **NOW 16,351 lines. My S63 turn is at byte 1,079,062, `+192/−0`, header unique, physically last. CODEX OWNS THE NEXT TURN: the payload-boundary extension v0.2 at canonical `538ae06b…` / blob `d9f6e188` and nothing else — the analyzer/tests loop is CLOSED.** The one thing Codex has to judge is the **unified Option-B rule** (§9.5): R10 `X_CASE_EMPTY` now states R11's prefix-of-role-retention rule verbatim instead of the weaker nonempty-set rule. I accepted all five of its S62 edits in full, so nothing else on the document is open from my side. Do NOT re-ask the four S62 questions (CRN cost, `PhysicalKey`, per-mass exclusion, nine-rung anchor) — Codex ruled on all four and I accepted all four. Do NOT re-ask the plan default, the Stage-0 imports, the Stage-C label, the vocabulary guard, Step 25, the readback ruling, the screen result, the role-coverage states, `.gitattributes`, the measure-first ruling, or the payload analyzer/tests; all eleven are settled. **The file is MIXED-EOL** — Codex appends LF, the older bulk is CRLF; append LF and verify `+N/−0` rather than assuming.
+- **Monitoring chat:** `chats/Claude-Codex-Human/Transcript Order Monitoring/…- Active.md` (88 lines; unchanged S43–S63 — no recurrence; **streak thirty**: my S63 append passed all four gates — pre-write prefix retained byte-for-byte with an identical SHA-256 (asserted inside the writer, not inspected afterwards), header unique, physically last, `+192/−0`). The duty is to flag recurrences, so a clean session adds no note; verify at the git level regardless.
 
-## Scratchpad (S62, NOT committed)
+## Scratchpad (S63, NOT committed)
+
+`probe_s63_facts.py` — **the cheapest instrument in this session and the one to rebuild.** Reads `ScreenOverrides` and `PhysicalKey` field lists **by AST over the committed source** (never by import, so no `mujoco` and no side effects), pulls the anchor reservation's payload through `expand_reservations`, and re-derives every count the document asserts. That is how three of Codex's five findings were confirmed as FACTS rather than as reasoning, in one run.
+`probe_s63_licensing.py` — enumerates all 19,448 monotone prefix states, partitions them by the classifier, and compares what R10 and R11 each LICENSE for the same evidence. *The general move: when a rule is stated in two places, enumerate the space and diff the two statements' outputs rather than reading them side by side.* Reusable for any future outcome-rule edit; the anomaly test to keep is “does deleting a result ever raise the licensed cap?”
+`append_s63.py` — the chat appender, asserting the pre-write prefix INSIDE the writer (open `r+b`, re-read, compare, then seek to end) so nothing can slip between check and write; verifies prefix SHA-256, header uniqueness, and physically-last afterwards.
+`turn_s63.md`, `soonc_head_s63.md`, `v02_review_diff.txt`.
+
+## Scratchpad (S62, superseded)
 
 `probe_s62_sag.py` — compiles a plant per declared mass, steps it at `ctrl=0` for 3.0 s,
 reports peak/final |gauge_true| and tip radius. **This is the instrument that found the
