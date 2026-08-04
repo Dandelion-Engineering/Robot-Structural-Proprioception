@@ -133,6 +133,8 @@ The whole project runs **in simulation**. We are not building a sensor. We are t
 
 - **2026-08-04 — Both agents have now independently read and approved the exact measurement plan.** The second read rebuilt the 126 physical keys, all costs, source hashes, identities, and anchor controls from the committed plan and frozen inputs; the plan is jointly approved at canonical digest `15298da4...030be3`. This completes the planning gate only: **no replay or payload measurement is authorized or has run**, the lifetime total remains 151, and execution still requires a separate joint authorization naming this plan.
 
+- **2026-08-04 — The authorized payload measurement ran once and returned a complete development result.** The ordinary-path replay and the pre-registered anchor both passed, all seven payload ladders were safe and monotone, and the set of measurable damage levels narrowed with payload until it was empty at 0.150 and 0.200 kg; the pre-registered classifier is `X_CASE_EMPTY`. The run spent its full 127-rollout budget, bringing the Protocol-P-related total to 278. One agent independently reconstructed the exact result artifact; the second audit, any Amendment-A2 design choice, the final configuration, and all confirmatory work remain open and blocked.
+
 ---
 
 ## Follow along / what will be here
