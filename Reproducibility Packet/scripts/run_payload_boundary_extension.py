@@ -576,10 +576,15 @@ _PLAN_DIGEST = re.compile(r"[0-9a-f]{64}")
 MAX_PLAN_JSON_DEPTH = 64
 # A backslash-rooted drive needs no token boundary: URI schemes use forward slashes, and
 # requiring a boundary lets ``opaque-prefixC:\\private\\row.npz`` publish a real machine
-# path inside prose.  The forward-slash form keeps the boundary because otherwise the
-# scheme separator of every URL matches -- "https://host/x" reads as drive "s".
+# path inside prose.  It also follows the predicate's ``PureWindowsPath`` semantics:
+# ANY one-character drive prefix is accepted, not only A-Z, so an embedded
+# ``opaque-prefix1:\\private\\row.npz`` must be caught here as well as when it is the whole
+# string.  The forward-slash letter form keeps the boundary because otherwise the scheme
+# separator of every URL matches -- "https://host/x" reads as drive "s".  A non-letter
+# drive cannot begin a URI scheme, so its forward-slash form needs no such boundary.
 _WINDOWS_ABSOLUTE = re.compile(
-    r"(?:[A-Za-z]:\\|(?<![A-Za-z0-9])[A-Za-z]:/|\\\\)[^\s'\"<>|]*"
+    r"(?:[^\\/\r\n]:\\|(?<![A-Za-z0-9])[A-Za-z]:/|[^A-Za-z\\/\r\n]:/|\\\\)"
+    r"[^\s'\"<>|]*"
 )
 # Two POSIX forms.  "//host/share" is the forward-slash rendering of a UNC path and both
 # PurePath flavours call it absolute, so it must be scrubbed; the lookbehind is what
@@ -627,12 +632,12 @@ def substitute_known_path_spellings(text: str) -> str:
     This is a separate function so the caller's post-condition is checkable from outside
     without a second copy of the substitution.
 
-    TERMINATION IS ARITHMETIC, not a runtime check.  Every match begins with a root or
-    drive separator that is not part of the component the replacement keeps, and neither
-    replacement -- a ``PurePath.name`` or the literal "<path>" -- contains a separator.
-    Each productive pass therefore strictly decreases the number of "/" and "\\"
-    characters, so there cannot be more productive passes than the message had separators
-    to begin with.
+    TERMINATION IS ARITHMETIC, not a runtime check.  Every match consumes at least one
+    root or drive separator that is not part of the component the replacement keeps.
+    ``PurePosixPath.name`` can retain a backslash already present in its match, but neither
+    replacement introduces a separator that was not there.  Each productive pass therefore
+    strictly decreases the total number of "/" and "\\" characters, so there cannot be
+    more productive passes than the message had separators to begin with.
     """
 
     scrubbed = str(text)
@@ -662,8 +667,9 @@ def scrub_machine_paths(text: str) -> str:
 
     Paths under the repository become ``<repo>``-relative; any other Windows, UNC, or
     POSIX absolute path -- including the ``//host/share`` rendering -- is reduced to its
-    final component.  Both forms require a token boundary, and both refuse a URL, so
-    ordinary prose, ratios, arrows and links survive unchanged.
+    final component.  The forward-slash letter form keeps the URI-safe token boundary;
+    the other drive/root forms cannot be URL schemes.  Ordinary prose, ratios, arrows
+    and links survive unchanged.
 
     The two patterns are an ENUMERATION of path spellings; the writer's guard is a
     PREDICATE over ``PurePath``.  Where the two disagree the artifact is destroyed, so the
@@ -675,13 +681,13 @@ def scrub_machine_paths(text: str) -> str:
     for rendering in (str(REPO_ROOT), REPO_ROOT.as_posix()):
         scrubbed = scrubbed.replace(rendering, "<repo>")
     scrubbed = substitute_known_path_spellings(scrubbed)
-    # POST-CONDITION, and it is the writer's own guard verbatim.  Two measured families
-    # reach here: a bare root ("/", "//", "///", "/ x") that neither pattern can match
-    # because no path component follows the separator, and a drive letter PurePath accepts
-    # but "[A-Za-z]" does not (r"1:\dir\row.npz", r".:\dir\row.npz").  Both are absolute to
-    # the guard, so leaving them makes the terminal write raise and persist NOTHING -- X7
-    # defeating X6 again.  Reduce to the final component, which is what both patterns
-    # already do, and fall back to "<path>" when no component survives.
+    # POST-CONDITION, and it is the writer's own guard verbatim.  A bare root ("/", "//",
+    # "///", "/ x") reaches here because no path component follows the separator.  An
+    # earlier state also sent non-letter drives here only when the entire string was rooted;
+    # the shared pattern now catches those drives even when embedded in prose.  Any survivor
+    # is absolute to the guard, so leaving it makes the terminal write raise and persist
+    # NOTHING -- X7 defeating X6 again.  Reduce to the final component, which is what both
+    # patterns already do, and fall back to "<path>" when no component survives.
     #
     # Each flavour must reduce with ITS OWN parser: PurePosixPath(r"1:\dir") has no
     # separator at all, so its ``name`` is the whole Windows-rooted string and an "or"

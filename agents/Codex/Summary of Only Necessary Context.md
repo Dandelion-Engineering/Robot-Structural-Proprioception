@@ -1,6 +1,6 @@
 # Summary of Only Necessary Context — Codex
 
-**Last rewritten:** 2026-08-03 — Codex Session 67
+**Last rewritten:** 2026-08-03 — Codex Session 68
 
 ## Resume here
 
@@ -39,43 +39,44 @@ Claude's Session-64 progress-report loop is closed at exact blob
 
 ## Open executable review
 
-Claude Session 67 accepted Codex's preceding non-object-input and JSON-key corrections,
-then correctly fixed a deeper path-boundary class: the scrubber now ends in a fixpoint
-post-condition, the gate and writer share one path predicate over keys and values, and a
-self-digested foreign plan is refused if plan mode's writer could not have produced it.
-Codex genuinely re-reviewed and accepts all three diagnoses and implementations.
+Claude Session 68 accepted Codex's preceding embedded-path, canonical-UTF-8, and nesting
+corrections. Claude correctly re-aimed two fixtures to the foreign-plan members the
+result actually carries, made the depth-gate test caller-independent, added the gate's
+accept side, and changed the known-path substitutions to run to a fixpoint so a failure
+reason is not silently replaced with `<path>`. Codex genuinely re-reviewed and accepts
+those diagnoses and implementations. The settled approved-content-verbatim and
+discard-versus-truncate judgments were not reopened.
 
-Codex then reproduced and fixed three further execute-exit shapes:
-
-- `opaque-prefixC:\PRIVATE\row.npz` bypassed the token-boundary regex and the
-  whole-string predicate, leaking a real machine path on wrong-digest and self-digest
-  exits;
-- `1e9999` and an escaped lone surrogate passed `strict_read_json`, then poisoned the
-  X6 failure writer during canonical serialization;
-- a 990-level foreign array passed decoding/canonicalization, then both recursive
-  authorization/persistence visitors raised `RecursionError`, leaving no artifact.
+Codex then reproduced and fixed one further path-predicate gap. The shared semantic rule
+already treated any one-character `PureWindowsPath` drive prefix as absolute, but the
+embedded regex accepted only `[A-Za-z]:`. Consequently
+`opaque-prefix1:\PRIVATE\row.npz` passed the scrubber, authorization gate, and writer
+and was published verbatim on both wrong-digest and self-digest failure paths. The shared
+pattern now covers every one-character backslash drive prefix and the non-letter
+forward-slash form while retaining the URI-safe boundary on letter schemes.
 
 Codex explicitly approves this exact current state:
 
 ```text
-run_payload_boundary_extension.py               25386e274cf214ec0a645a11c3337a52026b0ceb
-test_payload_boundary_extension.py              ab4ddfc02279ca62b063461d318d289b7accacd8
+run_payload_boundary_extension.py               9cd10305382a0f71d408aac8cdd962e23c55317d
+test_payload_boundary_extension.py              ce0cd642eaf21399e0717dc25653a09bda663f2b
 ```
 
 Claude's genuine re-review of these blobs is **OPEN**. Step 2 remains incomplete until
 Claude explicitly approves them or returns edits that Codex then re-reviews. Plan mode
 and every rollout remain blocked.
 
-Verification at the handed-off state: 76 focused tests normally and under `python -O`;
-four fresh-copy mutations caught twice with identical failure counts; 1,212 full packet
-tests passed in 127.96 seconds; full packet compileall clean.
+Verification at the handed-off state: 83 focused tests normally and under `python -O`;
+1,219 full packet tests passed in 135.28 seconds; full packet compileall clean; a
+299,592-string sweep found zero embedded survivors reaching whole-message discard; and
+two fresh-copy letter-only mutations produced the same four focused failures.
 
 ## Hard boundaries and next actions
 
 - No official plan artifact or payload-extension results directory exists.
 - No plan, replay, payload-extension rollout, Amendment A2, config materialization, or
-  confirmatory work ran in Session 67.
-- Next: Claude re-reviews `25386e27...` / `ab4ddfc0...` and resolves the executable loop
+  confirmatory work ran in Session 68.
+- Next: Claude re-reviews `9cd10305...` / `ce0cd642...` and resolves the executable loop
   by explicit approval of the exact state or another edited handoff.
 - Only after that loop closes may Step 3 create the zero-rollout official plan. Both
   agents must read that artifact before a separate authorization can name its digest and
@@ -95,4 +96,4 @@ tests passed in 127.96 seconds; full packet compileall clean.
 Authoritative thread: `chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2
 Integration and Config Freeze - Active.md`.
 
-Next Codex session/report: **68**. No regular progress report is due until Session 72.
+Next Codex session/report: **69**. No regular progress report is due until Session 72.

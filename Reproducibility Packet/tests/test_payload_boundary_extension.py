@@ -765,6 +765,9 @@ _FOREIGN_PLANS = [
     ("embedded-windows", {"mode": "plan", "plan_valid": True, "terminal": None,
                            "inputs": {"note":
                                       r"opaque-prefixC:\Users\person\config.json"}}),
+    ("embedded-digit-drive", {"mode": "plan", "plan_valid": True, "terminal": None,
+                               "inputs": {"note":
+                                          r"opaque-prefix1:\Users\person\config.json"}}),
 ]
 
 
@@ -975,6 +978,13 @@ def test_scrubber_rewrites_a_path_inside_a_sentence_and_leaves_prose_alone():
     embedded_scrubbed = x.scrub_machine_paths(embedded)
     assert "person" not in embedded_scrubbed
     assert embedded_scrubbed.endswith("row.npz")
+    # The shared predicate deliberately follows ``PureWindowsPath``, which accepts any
+    # one-character drive prefix, not only A-Z.  The embedded form must follow the same
+    # rule; otherwise the scrubber, authorization gate and writer all publish it.
+    digit_drive = r"ProtocolPError: opaque-prefix1:\PRIVATE\plant\row.npz"
+    digit_drive_scrubbed = x.scrub_machine_paths(digit_drive)
+    assert "PRIVATE" not in digit_drive_scrubbed
+    assert digit_drive_scrubbed.endswith("row.npz")
 
 
 _PROSE_LOSING_ITS_WHOLE_TEXT = [
@@ -1052,26 +1062,26 @@ def test_the_whole_message_discard_is_a_last_resort_and_not_a_working_path():
     assert reached == [], reached[:6]
 
 
-def test_the_two_families_the_patterns_cannot_match_are_reduced_not_left_alone():
-    """Pin the MECHANISM of each family, not only that the post-condition now holds.
+def test_bare_roots_and_nonletter_drive_prefixes_are_reduced_not_left_alone():
+    """Pin the MECHANISM of the fallback and the shared drive-prefix semantics.
 
     A later edit could satisfy the enumeration above by making the fallback swallow
-    everything.  These cases fix what each family must become.
+    everything.  These cases fix what each input family must become.
     """
 
     # (1) A bare root: no path component follows the separator, so neither pattern has
     # anything to match, and nothing survives the reduction either.
     for root in ("/", "//", "///", "\\\\"):
         assert x.scrub_machine_paths(root) == "<path>"
-    # (2) A drive letter PurePath accepts and "[A-Za-z]" does not.  The path is real and
-    # its directory portion must still be removed rather than published.
+    # (2) A non-letter drive prefix that PureWindowsPath accepts.  The shared pattern now
+    # catches both whole-string and embedded forms; the directory must not be published.
     for drive in ("1", ".", ":", " "):
         assert x.scrub_machine_paths(rf"{drive}:\PRIVATE\row.npz") == "row.npz"
     # The reduction must use the flavour that calls the string absolute: the POSIX parser
     # sees no separator at all in a Windows-rooted string, so ITS name is the whole value.
     assert PurePosixPath(r"1:\PRIVATE\row.npz").name == r"1:\PRIVATE\row.npz"
     # And one reduction per flavour is not enough -- the POSIX name of "/ :\\" is " :\\",
-    # which is absolute to the OTHER flavour.  This is why the fallback is a fixpoint.
+    # which is absolute to the OTHER flavour.  This is why the post-condition is a fixpoint.
     assert PurePosixPath("/ :\\").name == " :\\"
     assert PureWindowsPath(" :\\").is_absolute()
     assert x.scrub_machine_paths("/ :\\") == "<path>"
@@ -1158,6 +1168,9 @@ _AUTHORIZED_SHAPED_PLANS = [
     ("embedded-windows", {"inputs": {
         "note": r"opaque-prefixC:\PRIVATE\config.json"
     }}),
+    ("embedded-digit-drive", {"inputs": {
+        "note": r"opaque-prefix1:\PRIVATE\config.json"
+    }}),
 ]
 
 
@@ -1214,7 +1227,8 @@ def test_the_gate_and_the_writer_ask_one_function_the_same_question():
 
     for probe in ({"a": r"C:\dir\row.npz"}, {r"C:\dir\row.npz": "a"},
                   {"a": ["b", {"c": "/dir/row.npz"}]}, {"a": "//host/share"},
-                  {"a": r"opaque-prefixC:\PRIVATE\row.npz"}):
+                  {"a": r"opaque-prefixC:\PRIVATE\row.npz"},
+                  {"a": r"opaque-prefix1:\PRIVATE\row.npz"}):
         assert x.absolute_path_strings(probe), probe
         with pytest.raises(ProtocolPError, match="X7: result artifact contains"):
             x.write_canonical_document(Path("unused"), probe)
