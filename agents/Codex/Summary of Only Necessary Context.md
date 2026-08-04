@@ -1,6 +1,6 @@
 # Summary of Only Necessary Context — Codex
 
-**Last rewritten:** 2026-08-04 — Codex Session 70
+**Last rewritten:** 2026-08-04 — Codex Session 71
 
 ## Resume here
 
@@ -36,72 +36,61 @@ zero-rollout construction gives 126 distinct physical keys and eleven logical sh
 Claude's Session-64 progress-report loop is closed at exact blob
 `b0ff74969f42bc6b7d45eb72bf8576dfe0020f64`.
 
-## Open executable review
+## Payload-extension executable loop closed
 
-Claude Session 70 genuinely re-reviewed Codex's Session-69 disclosure-only edit and kept
-it. Claude then correctly fixed two additional path-enumerator families: the former
-alphanumeric-colon UNC exemption could publish `reason://host/...` intact, and the former
-forward-drive boundary could retain a drive designator in glued prose. Claude also repaired
-a final-component test that had become green through the wrong matcher. Codex accepts all
-three diagnoses, implementations, and Claude's whitelist judgment, including keeping
-`file` outside the protected scheme list.
-
-Codex's genuine return review found one narrower implementation defect in the new
-whitelist. Each fixed lookbehind protected an allowed name merely as the suffix of a longer,
-unlisted scheme token. Thus `reasonhttps://host/PRIVATE/row.npz`,
-`prefixgit://host/PRIVATE/row.npz`, and `myssh://host/PRIVATE/row.npz` survived unchanged,
-while the shared writer predicate found no offender. This contradicted the documented rule
-that all unlisted schemes are reduced. The existing `git+ssh://` accept-side test was also
-passing only through the accidental `ssh` suffix match.
-
-Codex corrected the guard to protect complete RFC scheme tokens, explicitly added
-`git+ssh` to the whitelist, updated the stale drive-boundary documentation, and added a
-red-checked parameterized suffix contract. Codex explicitly approves this exact state:
+Claude Session 71 genuinely re-reviewed Codex's Session-70 complete-token scheme guard,
+accepted the diagnosis and implementation unchanged, then added coverage without changing
+an operational expression. Codex Session 71 accepts those additions and explicitly approves
+the same exact state Claude approved:
 
 ```text
-run_payload_boundary_extension.py               c850a4b62bf7f401fb0f0c0da65174811419690f
-test_payload_boundary_extension.py              150870f494fb6e9a57bf9678762fda29cccb8eb1
+Reproducibility Packet/scripts/run_payload_boundary_extension.py
+  Git blob  95040d9305e08da22d23d6b827c8d14cd0e5603c
+Reproducibility Packet/tests/test_payload_boundary_extension.py
+  Git blob  0d7b68fc02295c9611b80a5e9c9b58ed71123eb6
 ```
 
-Claude's genuine re-review of these blobs is **OPEN**. Step 2 remains incomplete until
-Claude explicitly approves them or returns edits that Codex then re-reviews. Plan mode and
-every rollout remain blocked.
+The final coverage pins `_URI_SCHEMES` by equality, protects named URLs after valid
+non-scheme boundaries, rejects listed names used only as suffixes of longer scheme tokens,
+and states the unlisted-scheme reduction exactly. After docstring stripping, the executable
+AST is identical to Codex's Session-70 `c850a4b6...` source.
 
-Verification at the handed-off state:
+Independent verification at the approved state:
 
-- the new contract was red for all seven schemes present in Claude's exact source state;
-- a 312-cell scheme/boundary/case matrix has zero errors;
-- 152 focused tests pass normally and under `python -O`;
-- all 1,288 packet tests pass;
+- 170 focused tests pass normally and under `python -O`;
+- all 1,306 packet tests pass;
 - full packet compileall is clean; and
-- an eleven-case fresh-copy mutation audit kills every deliberate fault in two identical
-  normalized passes with bytecode writes disabled and caches omitted.
+- three fresh-copy targeted mutations—whitelist drop, guard widening, and guard
+  narrowing—are each killed by the new contracts.
 
-## Hard boundaries and next actions
+**Step 2 is complete.** No official plan artifact or payload-extension results directory
+exists yet.
 
-- No official plan artifact or payload-extension results directory exists.
-- No plan, replay, payload-extension rollout, Amendment A2, config materialization, or
-  confirmatory work ran in Session 70.
-- Next: Claude re-reviews `c850a4b6...` / `150870f4...` and resolves the executable loop by
-  explicit approval of the exact state or another edited handoff.
-- Only after that loop closes may Step 3 create the zero-rollout official plan. Both agents
-  must read that artifact before a separate authorization can name its digest and spend the
-  one replay rollout or any of the 126 extension measurements.
+## Exact authorization boundary and next action
 
-## Evidence and workflow rules
+- The only authorized next execution step is **Step 3 zero-rollout official plan mode**.
+- Both agents must read that persisted plan artifact before any later authorization may
+  name its digest and spend the one replay rollout or any of the 126 measurements.
+- No replay, payload-extension rollout, Amendment A2, assignment replacement, config
+  materialization, or confirmatory work is authorized now.
+- Development evidence is not frozen, confirmatory, or final.
+
+## Workflow rules and evidence
 
 - Explicit same-state approval only; edits, downstream use, silence, and handoff are not
   approval.
-- Development evidence is not frozen, confirmatory, or final.
 - Use `./venv` and packet-scoped tests, never bare Python or root-wide pytest.
 - Mutation audits use fresh copies, disable bytecode writes, omit caches, run twice, and
-  require identical normalized verdicts.
+  require identical normalized verdicts when a full audit is needed.
 - Transcript appends require a verified UTF-8 physical tail, recorded pre-write boundary,
-  a unique post-boundary header, and an additions-only diff. Session 70 preserved the exact
-  1,200,793-byte prefix, placed its header once at line 18,514, and ended at line 18,620.
-- The root Live-Run README stays unchanged while this internal review loop remains open.
+  a unique post-boundary header, and an additions-only diff. Session 71 preserved the
+  1,215,349-byte / 18,788-line prefix, placed its header once at line 18,790, and ended at
+  line 18,851 with `+63/-0`.
+- The root Live-Run README now records the closed executable milestone while explicitly
+  preserving the no-plan/no-result/no-freeze boundary.
 
 Authoritative thread: `chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2
 Integration and Config Freeze - Active.md`.
 
-Next Codex session/report: **71**. No regular progress report is due until Session 72.
+Next Codex session/report: **72**. A regular every-eighth-session progress report is due
+after that session's normal work.
