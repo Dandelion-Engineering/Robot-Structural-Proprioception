@@ -1,8 +1,8 @@
 # Summary of Only Necessary Context — Claude
 
-*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 71, 2026-08-04.*
+*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 72, 2026-08-04.*
 
-## S72 FIRST — THE EXECUTABLE IS STILL THE ONLY OPEN STATE. CODEX OWNS THE TURN.
+## S73 FIRST — STEP 2 IS CLOSED, STEP 3 HAS RUN. THE PLAN ARTIFACT IS THE ONLY OPEN STATE. CODEX OWNS THE TURN.
 
 ```text
 CLOSED AND SETTLED — do not reopen any of these:
@@ -19,21 +19,36 @@ CLOSED AND SETTLED — do not reopen any of these:
       full in my S71.  The NAMES are not open.  Reopening them ESCALATES. ***
   *** THE EXTENSION DOCUMENT — canonical 538ae06b…, blob d9f6e188, FROZEN ***
       Reproducibility Packet/protocol/payload-boundary-extension-v0.2.md
-      IT AUTHORIZES STEP 2 ONLY.  Zero rollouts.  No plan mode.
-  *** THE TWO SEAM PREREQUISITES — JOINTLY APPROVED, DO NOT REOPEN ***
+  *** ALL THREE STEP-2 PREREQUISITES — JOINTLY APPROVED.  STEP 2 IS CLOSED. ***
       scripts/utils/assignment_generator.py                b7b2430a28f2617c28b0924e16ce5b71aba0bf8a
       tests/test_assignment_generator_screen_overrides.py  c23e61d386c7213f93e4623cfd3a2b8bbfa30fa4
       scripts/utils/protocol_p_results.py                  2f7c33b274bfe7ee16ecdf0dc7227ca6bd159f9c
       tests/test_protocol_p_results.py                     ad6b32fef834cb55225b6cea1ac7831f090391de
+      scripts/run_payload_boundary_extension.py            95040d9305e08da22d23d6b827c8d14cd0e5603c
+      tests/test_payload_boundary_extension.py             0d7b68fc02295c9611b80a5e9c9b58ed71123eb6  170
+      *** CODEX APPROVED THE LAST PAIR IN ITS S71 AND I HAD ALREADY APPROVED THEM.
+      BOTH APPROVALS NAME THE SAME BYTES.  THE EIGHT-ROUND LOOP IS CLOSED.  A new
+      finding in that file now propagates FORWARD; it does not reopen the loop. ***
 
-THE ONLY OPEN STATE — the THIRD prerequisite, the measurement executable:
-  scripts/run_payload_boundary_extension.py  95040d9305e08da22d23d6b827c8d14cd0e5603c
-  tests/test_payload_boundary_extension.py   0d7b68fc02295c9611b80a5e9c9b58ed71123eb6  170
-  *** MY S71 CHANGED NO OPERATIONAL EXPRESSION.  Executable AST (docstrings
-  stripped) EQUAL to Codex's c850a4b6, verified mechanically; 3,256-cell grid and
-  576-cell pair grid both give 0 differing outputs.  IF CODEX AGREES WITH THE THREE
-  COVERAGE ADDITIONS, THIS CLOSES NEXT TURN ON THOSE EXACT BYTES. ***
-  ROUND HISTORY: Codex built 62e4c9e1/96906aab (S64) -> I blocked, corrected to
+THE ONLY OPEN STATE — the Step-3 plan artifact, run and approved by me in S72:
+  Reproducibility Packet/results/payload_boundary_extension/plan.json
+  canonical sha256  15298da4c7a903bf4b62a79eb384abe1f53182972dff41c6e1387dc0ce030be3
+  git blob          04f2bccd53629d6b54895be20224a680a78325c7      5,386 bytes
+  plan_valid=true  rollouts=0  rc=0.  I READ IT AND I APPROVED IT.
+  *** CODEX OWES THE SECOND INDEPENDENT READ.  §13 Step 3 says the artifact is
+  "read by both agents" — ONE read does not discharge it. ***
+
+WHAT S73 MAY DO, AND WHAT IT MAY NOT:
+  IF Codex approved plan.json -> the STEP-4 JOINT AUTHORIZATION may be written, naming
+     15298da4…030be3 AND explicitly authorizing the §3.3 replay gate's ONE rollout.
+     NEITHER AGENT MAY ISSUE IT ALONE.  I was deliberately careful in S72 not to write
+     anything readable as half of one; do not undo that by treating my approval as half.
+  IF Codex blocked it         -> take the finding, fix, hand back.
+  UNTIL STEP 4 EXISTS         -> NO replay, NO measurement, NO A2, NO config
+     materialization, NO confirmatory work.  Step 5 needs Step 4, full stop.
+
+  THE CLOSED EIGHT-ROUND HISTORY, kept because the SHAPE is the lesson, not the blobs:
+  Codex built 62e4c9e1/96906aab (S64) -> I blocked, corrected to
   ff0cdbe6/ebdfdf83 (S65) -> Codex accepted all five, found two more, corrected to
   eb94afb2/5d8dd369 (S65) -> I accepted both, found FOUR MORE, corrected to
   431d9c08/4d194a67 (S66) -> Codex accepted all four, found TWO MORE, corrected to
@@ -56,17 +71,86 @@ THE ONLY OPEN STATE — the THIRD prerequisite, the measurement executable:
                              ONE MORE (my per-name lookbehind matched a scheme as a SUFFIX
                              of a longer unlisted token), corrected to
   c850a4b6/150870f4 (S70) -> I accepted all of it and changed NO operational expression;
-                             found THREE COVERAGE GAPS by MUTATION, corrected to above.
-  CODEX OWNS THE NEXT TURN.
-  EIGHT CONSECUTIVE ROUNDS, EVERY ONE ON NEW EVIDENCE.  Nothing has been re-litigated,
-  so the content-based escalation trigger has NOT fired.  Check that again next round.
+                             found THREE COVERAGE GAPS by MUTATION, corrected to
+  95040d93/0d7b68fc (S71) -> CODEX ACCEPTED ALL THREE AND EXPLICITLY APPROVED THESE
+                             EXACT BYTES IN ITS S71.  LOOP CLOSED AT EIGHT ROUNDS.
+  EIGHT CONSECUTIVE ROUNDS, EVERY ONE ON NEW EVIDENCE.  Nothing was ever re-litigated,
+  so the content-based escalation trigger never fired.
   *** S71 IS THE FIRST ROUND THAT FOUND NO BROKEN BEHAVIOUR — only correct behaviour with
-  nothing guarding it.  That is plausibly where this loop ENDS.  If the next round also
-  finds only coverage, say so and close rather than looking for a ninth. ***
+  nothing guarding it.  AND THAT IS EXACTLY WHERE IT ENDED — the prediction held, and
+  the prediction working is the thing to carry forward.  When a round finds only correct
+  behaviour with nothing guarding it, SAY SO and expect to close rather than hunt for
+  one more. ***
 
-STEP 2 IS INCOMPLETE until Codex approves 95040d93 / 0d7b68fc.
-NO plan mode, NO replay, NO extension rollout, NO A2, NO config materialization.
-A2 IS STILL UNDRAFTED AND STILL BLOCKED.
+A2 IS STILL UNDRAFTED AND STILL BLOCKED — correctly, on the measurement it assumes.
+```
+
+## THE S72 READ OF THE PLAN ARTIFACT — WHAT I CHECKED, AND HOW TO REBUILD IT
+
+**The artifact is what Step 4 names, so it has to survive a reader who does not trust the
+program that wrote it. Everything below was RE-DERIVED, not read. Rebuild these before
+touching anything downstream.**
+
+```text
+THE RUN
+  cd to the PACKET dir:  ..\venv\Scripts\python.exe scripts\run_payload_boundary_extension.py --mode plan
+  plan_valid=true  rollouts=0  rc=0  |  0.38 / 0.36 / 0.37 s over three runs
+  *** "ZERO ROLLOUTS" MEASURED, NOT ASSERTED.  Plan mode COMPILES EIGHT MuJoCo models
+  (one nominal + seven payload bodies) and steps none.  One rollout is 25.1-27.5 s, so
+  the clock alone rules stepping out.  Ledger stays at 151. ***
+
+RE-DERIVED FROM THE ARTIFACT'S OWN PUBLISHED FIELDS, with code that does NOT import
+the executable (built the 126 key reports from plan.masses / plan.ladder /
+plan.identities / inputs.probe_*, via physical_key_report + a hand-written two-stage
+sort-and-hash):
+  physical_keys   126 built, 126 distinct, digest 9889afa6…02385  MATCH
+  census          XA 18 + XM-C 48 + XM-B 60 = 126 = extension_physical_rollouts
+                  126 + 1 = 127 = total = maximum_cost ; (8+10) x 7 = 126
+                  (10 + 10 + 56) x 7 = 532 = logical_references
+                  every exit-cost literal 0/0/1/9/19/67/127 equals §12's table
+  anchor          |margin|/threshold >= 0.10 gives the NINE constrained rungs and {0.50}
+                  stability interval re-derives (0.0211, 0.1962) vs §9.3's (0.021, 0.196)
+                  all ten verdicts equal the SIGN of their own published margin
+  identities      sensor_seed == 160000 + 1000k + 2 for all eight; sum of membership 126
+  X7              285 strings scanned with a matcher written for the probe alone:
+                  0 offenders, and ZERO BACKSLASHES anywhere in the file
+
+PROVENANCE — the property that makes the digest usable in an authorization
+  3 runs / 2 packet roots (one a full copy at a DIFFERENT absolute path) -> BYTE-IDENTICAL
+  *** LIMITATION 80 CANNOT BITE THIS ARTIFACT AND I CHECKED WHY.  Canonical JSON with
+  separators=(",",":") emits NO NEWLINE OF EITHER KIND, so no eol filter can act.  Staged
+  it and read the index blob back: 5,386 B, byte-identical to the worktree, LF 0 CR 0.
+  Its raw and canonical digests are the SAME NUMBER in every checkout, unlike
+  payload_conditioning.json.  STILL NAME THE CANONICAL DIGEST — require_authorized_plan
+  computes it from the PARSED document, which is the domain the comparison happens in. ***
+
+THE §11.1 WALK (Lesson 75).  All 19 `inputs` fields present and EXACTLY those 19; both
+protocol digests recomputed from the files themselves and matching the frozen pins;
+plan_valid / terminal / mode / authority / 6 preflight members / 8 plan.* members present.
+  TWO FIELDS BEYOND §11.1's LITERAL LIST, both flagged so nobody later reads drift:
+    preflight.per_mass_realized_delta  named by §11.2, and execute mode READS it
+    plan.shape_audit                   named NOWHERE, and it is the field that
+                                       DISCHARGES X9 in the plan artifact.  Keep it.
+  THE MECHANICS PREFLIGHT IS A REAL CHECK: it compiles a body per mass and measures
+  sum(body_mass) - nominal at atol=1e-12.  The published values are MEASUREMENTS
+  (0.05 realizes as 0.05000000000000002, |d| ~ 2.1e-17), so a reader can apply the
+  tolerance.  IT PROVES THE OVERRIDE REACHES THE COMPILED BODY AND NOTHING MORE — with
+  no gravity in the plant, reaching the MEASURED SIGNAL is a different claim and
+  X8 REMAINS THE SOLE LIVENESS CHECK.
+
+ONE DOCUMENTATION OBSERVATION, DELIBERATELY NOT ESCALATED
+  §12's TIME block ends "the plan artifact must carry the executor's own count."  A plan
+  spends zero rollouts and has no executor; §11.1 names no timing field; §11.2 — which
+  says plan-mode exits are governed by §11.1 — carries it in timing{} and
+  physical_ledger[].elapsed_s under X6.  The word "plan" is a slip for "result".
+  I DID NOT PROPOSE A VERSION BUMP: the document is frozen, a bump costs a git mv plus
+  both approvals, and nothing operative depends on the sentence.  Recorded so the next
+  reader walking §12 against the artifact does not think a field went missing.
+
+ONE RETIRED CHECK, STATED BECAUSE A SILENT RETIREMENT IS WORSE
+  Both agents reported "results/payload_boundary_extension absent" for eight rounds.
+  NOTHING COMMITTED WAS ENFORCING IT — it was review discipline.  The full suite is green
+  now that the directory exists.  That line retires here.
 ```
 
 ## THE S71 FINDING — THE WHITELIST IS THE WHOLE DECISION AND NOTHING WAS CHECKING IT
@@ -964,7 +1048,7 @@ Settled — do not reopen, do not edit v2.3.3.  Codex S55: no bump for the Stage
 ## Where the project is
 
 - **Phase 2 (Execution) is OPEN.** All Phase-1 gates in force. **Schema v1.0 + Amendment A1 in force.** Contract changes run through the **amendment protocol**.
-- I am **Claude**; last session was **Session 71**; next session I run is **Session 72**. **SESSION 72 IS A REGULAR PROGRESS-REPORT SESSION** — write it in addition to normal session work, covering S65–S72, per `Playbooks/research-progress-report.md`.
+- I am **Claude**; last session was **Session 72**; next session I run is **Session 73**. **THE S72 PROGRESS REPORT IS WRITTEN** (`Progress Report Session 72.md`, covers S65–S72) and is **NEW AND UNREVIEWED — Codex owns the first review turn on it.** Next regular report: **Session 80**, or sooner if a phase transition or an approved written Claim-Sheet amendment fires. **An approved A2 fires it.**
 - **`config.json` is deliberately NOT frozen** and does not exist. All hashes are `dev-`; no `dev-` trace may enter confirmatory analysis.
 - Real data exists: `data/gate3-base-dev-pilot-val-c1-s` (3.86 GB, git-ignored, local only). 472 reservations / 944 manifest rows / C1+S / dev 152, pilot 152, val 168. **Test untouched: 0 identities, 0 payloads.** **Slated for full regeneration from zero after A2 — these 472 payloads become a superseded pre-amendment set in the packet exclusion trail. Read them; do not build on them.**
 - **STAGES A/B/C HAVE RUN — Codex's S57, 135 physical rollouts, CASE_B, JOINTLY APPROVED.** Stage 0 RAN in S48 at ZERO rollouts; `results/protocol_p/sensor_only_difference_null.json` is tracked and **JOINTLY APPROVED**. The §9 role-coverage read is now **JOINTLY APPROVED** (above). The payload read's **RESULT ARTIFACT is JOINTLY APPROVED** (S60 Codex / S61 me); its **script + tests are JOINTLY APPROVED (Codex S61)**.
@@ -987,7 +1071,7 @@ FIFTEEN BEFORE CODEX'S S57.  Measured in S58 by sweeping BOTH agents' primary re
 NOT RUN IN S58, S59 OR S60.  Nothing on the gate's watched path changed and the
 measurement it guards is already spent.
 ```
-- **Progress report DONE at S64** (regular, covers S57–S64) at `agents/Claude/Progress Reports/Progress Report Session 64.md`. **ITS LOOP IS OPEN AT MY S65 STATE `b0ff7496`** — Codex made two edits in its S64 (the ledger refuses a duplicate LOUDLY, not silently; and "151 rollouts, about 70 minutes" contradicted my own line 14's audited 4,432.16 s), I verified both against primary records and accepted both diagnoses AND implementations, then moved one clause out of the present tense (+4/-3) because "still cannot run until payload mass is part of the key" stopped being true in S63/S64. **Codex owns the next turn on it; I offered to take its wording.** Prior status — the S56 one ran five review rounds, so expect Codex may open one. `Progress Report Session 56.md` (S49–S56) stays closed at blob `83c527ce…`; do not reopen it. **MY NEXT REGULAR IS SESSION 72**, or sooner if a phase transition or an **approved written Claim-Sheet amendment** fires. **An approved A2 fires it.**
+- **Progress report DONE at S64** (regular, covers S57–S64) at `agents/Claude/Progress Reports/Progress Report Session 64.md`. **ITS LOOP IS OPEN AT MY S65 STATE `b0ff7496`** — Codex made two edits in its S64 (the ledger refuses a duplicate LOUDLY, not silently; and "151 rollouts, about 70 minutes" contradicted my own line 14's audited 4,432.16 s), I verified both against primary records and accepted both diagnoses AND implementations, then moved one clause out of the present tense (+4/-3) because "still cannot run until payload mass is part of the key" stopped being true in S63/S64. **Codex owns the next turn on it; I offered to take its wording.** Prior status — the S56 one ran five review rounds, so expect Codex may open one. `Progress Report Session 56.md` (S49–S56) stays closed at blob `83c527ce…`; do not reopen it. **THE S72 REGULAR IS WRITTEN** — `agents/Claude/Progress Reports/Progress Report Session 72.md`, covering S65–S72, **NEW AND UNREVIEWED, Codex owns the first review turn.** Its spine: eight complete adversarial rounds on one program, every round finding something real and each structurally below the last; then the loop closing and the program producing the zero-rollout plan. It states both halves of the trade — what the rounds bought, and that eight of my sessions produced no science — and names where I think the cost stopped being obviously worth it. **MY NEXT REGULAR IS SESSION 80.**
 
 ## Escalation trigger — content-based, and it has now held ten times
 
@@ -999,8 +1083,8 @@ the Stage-0 result, the progress report, Step 24, the public log, the extraction
 construction layers, the driver (blocked S54, corrected S55, approved S55), the S56/S57
 round, and **the role-coverage loop (blocked S58, corrected S59, approved S59, closed at
 the same state S60)**.
-**THE EXECUTABLE LOOP IS THE LONGEST YET — EIGHT FULL ROUNDS
-(S64→S65→S65→S66→S66→S67→S67→S68→S68→S69→S69→S70→S70→S71) AND STILL OPEN.** It has NOT tripped the trigger, and the reason is worth stating so a future
+**THE EXECUTABLE LOOP WAS THE LONGEST YET — EIGHT FULL ROUNDS
+(S64→S65→S65→S66→S66→S67→S67→S68→S68→S69→S69→S70→S70→S71→S71) AND IT IS NOW CLOSED.** It never tripped the trigger, and the reason is worth stating so a future
 session does not escalate on count: every round accepted the previous round's findings in
 full and blocked on NEW measured evidence, each time one structural layer below the last
 (exception handling → container type and key position → the predicate itself → what the
@@ -1013,11 +1097,12 @@ POSIX gap beats corrupting `dev/pilot/val`. THE SCHEME WHITELIST IS ALSO SETTLED
 accepted the list and `file` staying off it in its S70, and I accepted its token-exactness
 repair in full in my S71. If the NAMES come back contested, ESCALATE — that is exactly
 the shape the rule is for.**
-**S71 IS THE FIRST ROUND THAT FOUND NO BROKEN BEHAVIOUR.** Its three findings are all
-"correct code with nothing guarding it," demonstrated by mutation rather than by a failing
-test, and the executable AST did not change. That is plausibly where a loop like this
-ends. **If the next round also produces only coverage, say so and close it rather than
-hunting for a ninth.** **The S67 authorization-gate
+**S71 WAS THE FIRST ROUND THAT FOUND NO BROKEN BEHAVIOUR, AND IT WAS THE LAST ROUND.** Its
+three findings were all "correct code with nothing guarding it," demonstrated by mutation
+rather than by a failing test, with the executable AST unchanged — and I wrote down that
+this was plausibly where the loop ends. Codex approved next turn and it did. **Carry the
+heuristic: a round that finds only coverage is the signal to close, not to hunt for one
+more.** **The S67 authorization-gate
 question is SETTLED**: Codex ruled in its S67 that the gate's refusal does not reopen
 the accepted "embed approved content verbatim" scope, and I took that ruling in my
 S68 rather than re-arguing it. **If a later round reopens THAT, or reopens the
@@ -1427,10 +1512,10 @@ generation_audit.json · independent_audit.json
 
 - **Simulation-only, one desktop:** Windows 11, Ryzen 7 8700F (8C/16T), RTX 5060 Ti **16 GB VRAM** (sm_120), 32 GB RAM, Python **3.12.10** in `./venv`. Free/OSS, commercial-use-friendly only.
 - **venv has:** numpy 2.5.1, scipy 1.18.0, scikit-learn 1.9.0, matplotlib 3.11.0, mujoco 3.10.0, pandas 3.0.3, control 0.10.2, gymnasium 1.3.0, pytest 9.1.1, **torch 2.11.0+cu128**. **No new dependency was added in S46–S61.**
-- **Running packet tests:** from the REPO ROOT, `./venv/Scripts/python.exe -m pytest -q "Reproducibility Packet/tests"`. **Scope pytest to that path** — a root-wide invocation collides on duplicate test module names in the ignored `tmp/session6_packet_copy/`. **Full suite 1,306 tests green (S71, 126.03 s; Codex S70 1,288 in 123.18 s; my S70 1,277 in 127.33 s).** `test_payload_boundary_extension.py` now collects **170** — Codex handed off 36 in S64, I made it 45 in S65, Codex 47 in its S65, my S66 review made it 53, Codex's S66 made it 58, my S67 review made it 71, Codex's S67 made it 76, my S68 review made it 81, Codex's S68 made it 83, my S69 review made it 106, Codex's S69 kept it at 106 (a rename plus three added spellings), my S70 review added 35 (21 of which are one parametrization over `_URI_SCHEMES` x three letter cases), Codex's S70 added 11, and my S71 review added 18 — one equality pin, 11 boundary cases and 6 scheme-character cases. **The two closed Step-2 seam files together collect 124.** Prior: 1,217 (my S68), 1,207 (my S67), 1,189 (my S66), 1,136 (my S64), 1,133 (Codex S63), 1,126 (my S63 and Codex S61), 1,115 (Codex S60), 1,107 (my S60, 150.54 s), 1,021 (S59, 143.00 s), 999 (S58), 975 (S57), 938 (S55), 906 (S54), 750 (S53), 595 (pre-S51 baseline). **Set `PYTHONIOENCODING=utf-8` for anything that prints non-ASCII** — the console is cp1252. **Use ASCII in probe scripts and in anything a gate prints.**
+- **Running packet tests:** from the REPO ROOT, `./venv/Scripts/python.exe -m pytest -q "Reproducibility Packet/tests"`. **Scope pytest to that path** — a root-wide invocation collides on duplicate test module names in the ignored `tmp/session6_packet_copy/`. **Full suite 1,306 tests green (S72, 122.77 s WITH the new `results/payload_boundary_extension/plan.json` present — nothing asserts that directory's absence; S71 126.03 s; Codex S70 1,288 in 123.18 s).** `test_payload_boundary_extension.py` now collects **170** — Codex handed off 36 in S64, I made it 45 in S65, Codex 47 in its S65, my S66 review made it 53, Codex's S66 made it 58, my S67 review made it 71, Codex's S67 made it 76, my S68 review made it 81, Codex's S68 made it 83, my S69 review made it 106, Codex's S69 kept it at 106 (a rename plus three added spellings), my S70 review added 35 (21 of which are one parametrization over `_URI_SCHEMES` x three letter cases), Codex's S70 added 11, and my S71 review added 18 — one equality pin, 11 boundary cases and 6 scheme-character cases. **The two closed Step-2 seam files together collect 124.** Prior: 1,217 (my S68), 1,207 (my S67), 1,189 (my S66), 1,136 (my S64), 1,133 (Codex S63), 1,126 (my S63 and Codex S61), 1,115 (Codex S60), 1,107 (my S60, 150.54 s), 1,021 (S59, 143.00 s), 999 (S58), 975 (S57), 938 (S55), 906 (S54), 750 (S53), 595 (pre-S51 baseline). **Set `PYTHONIOENCODING=utf-8` for anything that prints non-ASCII** — the console is cp1252. **Use ASCII in probe scripts and in anything a gate prints.**
 - **MUTATION SWEEPS — MANDATORY HARNESS SHAPE AFTER S60:** clear `__pycache__` before every run **and** set `PYTHONDONTWRITEBYTECODE=1` in the subprocess env; drop `-x`; translate anchors to the target file's own newline; report bad anchors separately from survivors; restore exact bytes in a `finally` and verify the blob afterwards. **Run the whole sweep twice and require identical results** — that is the cheapest detector for a harness fault.
 - **Packet scripts are invoked FROM the packet directory** (`scripts\<name>.py`, `--output-dir results\<name>`), per its README. From the packet dir the project venv is `..\venv\Scripts\python.exe`. **In my PowerShell tool the working directory is not the repo root — use `Set-Location` or absolute paths. My Bash tool's cwd PERSISTS between calls — prefer absolute paths or re-`cd` every time.**
-- **Timings (measured S35–S60):** full packet suite ~150 s; one MuJoCo rollout (3000 steps) **25.6–27.5 s**; a PARTIAL rollout is proportionally cheap — 480 steps ≈ 3.0 s; at reduced fidelity (`point_count=9`, `simulation_timestep_s=2e-4`) 501 control steps ≈ 0.37 s; a 200-realization sensor-only null at W=768 ~40 s; an offline re-observation ≈ instantaneous; the driver's `--mode plan` 0.30–0.33 s; **one driver-file mutation case ≈ 100 s** (a 17-case sweep is ~28 min and belongs in the background); **a small-analyzer mutation case ≈ 0.5–0.7 s with the fixed harness, so a 44-case sweep is under a minute.** **NO figure exists for the pinned `pairs=100` Stage-0 run — see limitation 45; do not invent one.**
+- **Timings (measured S35–S60):** full packet suite ~150 s; one MuJoCo rollout (3000 steps) **25.6–27.5 s**; a PARTIAL rollout is proportionally cheap — 480 steps ≈ 3.0 s; at reduced fidelity (`point_count=9`, `simulation_timestep_s=2e-4`) 501 control steps ≈ 0.37 s; a 200-realization sensor-only null at W=768 ~40 s; an offline re-observation ≈ instantaneous; the driver's `--mode plan` 0.30–0.33 s; **the payload-extension executable's `--mode plan` 0.36–0.38 s (eight MuJoCo model compilations, zero steps)**; **one driver-file mutation case ≈ 100 s** (a 17-case sweep is ~28 min and belongs in the background); **a small-analyzer mutation case ≈ 0.5–0.7 s with the fixed harness, so a 44-case sweep is under a minute.** **NO figure exists for the pinned `pairs=100` Stage-0 run — see limitation 45; do not invent one.**
 - **Background jobs:** `run_in_background: true` and wait for the notification. **Python buffers stdout when redirected — use `flush=True` in the job and poll the file it writes, not a pipe.**
 - **PowerShell 5.1** primary (no ternary/`??`; **`^` is not a continuation**); Bash tool also available. **`bc` and `/usr/bin/time` do NOT exist in the Bash tool** — time a subprocess from Python with `time.perf_counter()`. Use `git diff --numstat` to confirm `+N/−0` after every chat turn. **A bash heredoc (`<<'PY'`) is the reliable way to run a multi-line Python script from the Bash tool; inline `-c` with `chr()`/byte literals is where I make syntax errors.**
 - **Root `.gitignore`** covers `venv/`, `/data/`, `tmp/`, `MUJOCO_LOG.TXT`, caches, model files, LaTeX aux, OS/IDE noise, and the three session locks (`.claude-session.lock`, `.codex-session.lock`, **`.agent-session.lock`** — the scheduled-task runner creates the last one at the repo root). **Root `.gitattributes`** pins `schema.json`, the assignment JSON, and **`Reproducibility?Packet/protocol/*.md`** to LF. **Packet `.gitignore`** ignores `*.npz` + caches/logs (so `results/*.json` and `*.md` ARE tracked). **Verified again S61; no change needed. The scheduled-task runner's `.agent-session.lock` is ignored and must be deleted at session end.**
@@ -1622,19 +1707,63 @@ eighteen new defects to anyone reading quickly, and in a loop this long the temp
 let a count speak for itself is real. The tests are coverage; the evidence is the sweep; a
 reader who has to work that out for themselves has been handed a worse report.
 
+100. **(NEW S72) A GENERATED ARTIFACT MUST BE CHECKABLE FROM ITS OWN CONTENTS, OR THE
+DIGEST EVERYONE SIGNS IS A DIGEST OF SOMETHING NOBODY VERIFIED.** The plan artifact exists
+to be named by an authorization, which means both agents put their signature on a
+fingerprint. The cheap version of "I read the plan" is to open it, see 126 where you
+expected 126, and approve. The version that is worth anything is to **rebuild the artifact's
+own claims out of the artifact's own published fields, with code that does not import the
+program that wrote it** — all 126 physical-key reports from `plan.masses` / `plan.ladder` /
+`plan.identities` / `inputs.probe_*`, then the two-stage sort-and-hash by hand. It matched,
+and the fact that it *could* be done is the property that makes the artifact fit to sign.
+**Ask of every artifact you are about to approve: what in here can only be checked by
+trusting the writer? Then either check it another way or say out loud that you did not.**
+
+The companion, and it is about provenance rather than arithmetic: **a digest is only a
+signature on a document if the document is the same bytes everywhere.** Three runs from two
+packet roots gave byte-identical files, and canonical JSON turned out to contain no newline
+of either kind — so unlike our other tracked result artifact, no line-ending filter can
+touch it and its raw and canonical digests are one number in every checkout. I checked that
+by staging it and reading the index blob back rather than reasoning about `.gitattributes`.
+**When a digest is about to become load-bearing, materialize the file the way a stranger
+would receive it and hash that.**
+
+Third note, and it is the smaller half of Lesson 75: **an artifact can also contain more
+than its specification names, and additive fields deserve the same sentence as missing
+ones.** Two fields here are not in §11.1's list. One is named in §11.2; the other is named
+nowhere and is the only thing discharging X9. Both are right to be there — but a reader
+walking the spec against the file would have found an unexplained difference, and the fix
+for that is to say it first.
+
+101. **(NEW S72) WHEN A REVIEW-DISCIPLINE CHECK STOPS BEING TRUE, RETIRE IT OUT LOUD.**
+Both agents reported "results/payload_boundary_extension absent" in every verification block
+for eight rounds. It was never a committed test — it was a habit, and habits that look like
+checks are the ones that quietly become false. Step 3 made it false by design. Saying "that
+line retires here, and nothing was ever enforcing it" costs one sentence and stops a future
+reader treating eight rounds of a manual assertion as eight rounds of a guarantee.
+
 ## Pointers
 
 - **Protocol P (in force, JOINTLY APPROVED): `Reproducibility Packet/protocol/protocol-p-v2.3.3.md`, canonical sha256 `5689dad7…8bdf421f`. READ THE FILE.**
 - **The payload-boundary extension — JOINTLY APPROVED AND FROZEN, NOT YET EXECUTABLE: `Reproducibility Packet/protocol/payload-boundary-extension-v0.2.md`, canonical sha256 `538ae06b…df33b6a`, blob `d9f6e188`, 71,188 bytes, 1,285 lines, LF, raw == canonical.** Approved by me S63 and by Codex S63; **DO NOT EDIT IT — a change needs a version bump and a `git mv`.** It authorizes **Step 2 only**: build and review the three prerequisites. READ THE FILE — the blocks above are an index, not the document. Superseded states, never cite or build from them: v0.1 (`32a03930…`, blob `903962f8`, bytes in `Claude Session 61`), and inside v0.2 `c7facc13`/`e734c498…` (my S62 handoff) and `3d72e1f4`/`e5192eaa…` (Codex's S62 edits, which I did not approve).
-- **THE STEP-2 STATE — TWO SEAMS CLOSED, THE EXECUTABLE OPEN AT MY S69 STATE, CODEX OWNS THE NEXT TURN.**
+- **STEP 2 IS CLOSED — ALL THREE PREREQUISITES JOINTLY APPROVED. STEP 3 HAS RUN. THE PLAN ARTIFACT IS THE OPEN STATE AND CODEX OWES THE SECOND READ.**
 ```text
+THE STEP-3 ARTIFACT — I RAN IT AND APPROVED IT IN S72; CODEX OWES THE SECOND READ:
+  Reproducibility Packet/results/payload_boundary_extension/plan.json
+  canonical sha256  15298da4c7a903bf4b62a79eb384abe1f53182972dff41c6e1387dc0ce030be3
+  git blob          04f2bccd53629d6b54895be20224a680a78325c7      5,386 bytes  TRACKED
+  Reproduce it EXACTLY (from the packet dir; overwrites in place, byte-identical):
+    ..\venv\Scripts\python.exe scripts\run_payload_boundary_extension.py --mode plan
+  A REVIEW PROBE MAY POINT --output-dir AT A SCRATCH DIR and diff the bytes.
+  DO NOT run --mode execute.  It needs --approved-plan-sha256 AND --data-root, and
+  BOTH are gated on the Step-4 joint authorization, which does not exist yet.
 JOINTLY APPROVED (me S64, Codex S64) — CLOSED, DO NOT REOPEN:
   scripts/utils/assignment_generator.py                b7b2430a28f2617c28b0924e16ce5b71aba0bf8a
   tests/test_assignment_generator_screen_overrides.py  c23e61d386c7213f93e4623cfd3a2b8bbfa30fa4
   scripts/utils/protocol_p_results.py                  2f7c33b274bfe7ee16ecdf0dc7227ca6bd159f9c
   tests/test_protocol_p_results.py                     ad6b32fef834cb55225b6cea1ac7831f090391de
   (Codex's own prior state of the last two, eaa33797 / 7361bfd8, is SUPERSEDED)
-THE THIRD PREREQUISITE — THE MEASUREMENT EXECUTABLE — OPEN AT MY S71 STATE:
+THE THIRD PREREQUISITE — THE MEASUREMENT EXECUTABLE — JOINTLY APPROVED, CLOSED S71:
   scripts/run_payload_boundary_extension.py  95040d9305e08da22d23d6b827c8d14cd0e5603c
   tests/test_payload_boundary_extension.py   0d7b68fc02295c9611b80a5e9c9b58ed71123eb6
   SUPERSEDED, never build from: 62e4c9e1/96906aab (Codex S64), ff0cdbe6/ebdfdf83 (my
@@ -1644,11 +1773,8 @@ THE THIRD PREREQUISITE — THE MEASUREMENT EXECUTABLE — OPEN AT MY S71 STATE:
   f2d9f3b1/eb10bb23 (Codex S69 — DOCUMENTATION ONLY, executable AST identical to mine),
   c7451068/485dcc3d (my S70), c850a4b6/150870f4 (Codex S70 — the LAST OPERATIONAL change;
   my S71 is AST-identical to it and differs only in docstrings and tests).
-  Run it from the packet dir; --mode plan is the DEFAULT and NOT YET AUTHORIZED:
-    ..\venv\Scripts\python.exe scripts\run_payload_boundary_extension.py --mode plan
-  A REVIEW PROBE MAY POINT --output-dir AT A SCRATCH DIR.  Never at
-  results\payload_boundary_extension — that directory must not exist until Step 3.
-STEP 2 IS INCOMPLETE UNTIL CODEX APPROVES 95040d93 / 0d7b68fc.  NOTHING RUNS.
+STEP 2 CLOSED S71.  STEP 3 RUN S72.  STEP 4 IS A SEPARATE JOINT AUTHORIZATION AND
+DOES NOT EXIST.  NOTHING DOWNSTREAM RUNS.
 ```
 - **The replay gate: `scripts/protocol_p_replay_gate.py` + `tests/test_protocol_p_replay_gate.py` (36 tests).** Run from the packet dir: `..\venv\Scripts\python.exe scripts\protocol_p_replay_gate.py --data-root ..\data\gate3-base-dev-pilot-val-c1-s`. **EXECUTED EIGHT TIMES; not run S52–S60. IT CERTIFIES `overrides=None` ONLY (limitation 63).**
 - **Stage 0: `scripts/analyze_synchronous_difference_null.py` (blob `f104971d…`) + `tests/test_synchronous_difference_null.py` (99).** Pre-registered invocation from the packet dir: `..\venv\Scripts\python.exe scripts\analyze_synchronous_difference_null.py --window 768 --f-ctrl-hz 500.0 --diagnostic-hz 0.8 --thermal-ramp-c 3.0 --pairs 100 --seed 0 --pair-id 1`. **It has been spent; re-running it is NOT authorized.**
@@ -1688,11 +1814,32 @@ Run either read from the packet dir; zero rollouts, ~0.3 s each:
 - **CONCLUDED director chat:** `chats/Claude-Codex-Human/Better Suited Task/…- Concluded.md` — the withdrawn task-redesign directive. **A2 must stay clear of it.**
 - Director requests: `director_requests.md` (root) — entry 1 (Claim Sheet review) non-blocking, **still awaiting director reply**. Nothing else is blocked on the director.
 - My foundation `agents/Claude/Literature Foundation.md` · ledger `agents/Claude/references.md` (**no S20–S60 entries — reproduction/construction/measurement/review sessions, no external sources read**).
-- **Live-Run README (co-maintained): root `README.md` — Phase 2 / In Progress, banner 2026-08-03. MY S71 RAN THE HEARTBEAT CHECK AND ADDED NOTHING — SEVENTH consecutive session, same reason: the executable loop is still open (round eight), so no artifact was finished and no phase closed. My S70 made the same call (round seven). My S69 made the same call (round six). My S68 and S67 made the same call, as did Codex for its own S66 and S68. THE ENTRY BELONGS ON THE LOG WHEN THE LOOP CLOSES, and whoever writes it owes the reader the four-round history, not just the outcome.** (Banner history: I moved it to 2026-08-03 in S64; my S62 and S63 left it because those were same-day.) **My S65 appended one entry (`+2/−0`), left the banner alone (same day), and edited no dated entry** — the bar was cleared by the first review of the executable finding it could never have completed a run. **Codex's S64 also appended a dated correction entry to its own preceding one (the loud-not-silent refusal, and the 4,432.16 s / 73.9 min screen time against the withdrawn project-wide "seventy minutes"); I read it and it is right.** My S64 appended one entry (`+3/−1` including the banner line), because the trigger my S63 note named actually fired: **the extension document loop CLOSED**. The entry covers the agreed plan, the 19,448-state licensing enumeration, the start of construction, and the payload column that existed with nothing able to fill it. **The log's date order is out of chronological order in the middle and Codex's dated correction says so; dated entries are never edited, so it stays that way.** **Beware when appending: `README.md` is all-CRLF; split on `b"\r\n"`, insert before the `''/'---'/''` block that precedes `## Follow along`, assert both anchors before writing, and read the neighbouring lines back afterwards rather than trusting an offset.**
-- **Phase-2 chat:** `chats/Claude-Codex/Phase 2 Integration and Config Freeze/…- Active.md` — **NOW 18,788 lines. My S71 turn is `+168/−0`, header unique at line 18,622, physically last, pre-write prefix retained byte-for-byte with its SHA-256 (`83b52b2e…`) asserted inside the writer. CODEX OWNS THE NEXT TURN: the executable (`95040d93` / `0d7b68fc`) and nothing else. WHAT IT HAS TO JUDGE: three COVERAGE additions to a state whose executable AST I did not change — the `_URI_SCHEMES` equality pin, the 11 accept-side boundary cases, and the 6 scheme-character refuse cases — plus three corrected docstrings. I told it that if it thinks any of the three is wrong rather than merely unnecessary, I will take its version rather than trade a round.** *(S69 record, kept: my S69 turn was `+205/−0` with prefix SHA-256 `276c7630…`. I corrected my own header stamp in place immediately after writing it (20:40 → 20:35 PDT, same byte length, every byte outside the 46-byte span compared before and after) because an estimated stamp defeats the only thing a stamp is for; that is the ONLY edit I have ever made to posted transcript content. The S69 single-slash judgment it had to rule on is now SETTLED — Codex agreed in its S69.)* **If a judgment comes back contested and one exchange does not settle it from source, ESCALATE to the director rather than trade turns.** Codex answered my S64 open question in its S64: **the executable does NOT use `LogicalRow.key` across masses** — extension rows carry their own mass-bearing logical key and their joins use the mass-bearing `PhysicalKey`, so `.key` stays as it is. **Settled; do not reopen.** The things Codex has to judge now are the five S65 corrections and, explicitly, the one structural deviation: **I lifted the replay gate's pre-rollout half into `resolve_replay_source` so it is testable at zero cost.** Do NOT re-open: the extension document (both approved `538ae06b`), the five S62 edits, the unified Option-B rule, the four S62 questions, the measure-first ruling, the payload analyzer/tests, the role-coverage states, the readback ruling, `.gitattributes`, the Stage-C label, Step 25, the screen result, or the plan default. **The file is MIXED-EOL** — Codex appends LF, the older bulk is CRLF; append LF and verify `+N/−0` rather than assuming.
-- **Monitoring chat:** `chats/Claude-Codex-Human/Transcript Order Monitoring/…- Active.md` (88 lines; unchanged S43–S71 — no recurrence; **streak FORTY-ONE**: Codex's S70 append verified at the git level in my S71 — `+110/−0`, prior content a byte-identical prefix, header unique, physically last — and my own S71 append passed all five gates. *(Prior: **streak thirty-nine**: Codex's S69 append was `+92/−0` with its header unique at line 18,257 and physically last, verified at the git level in my S70, and my S70 append passed all five gates — pre-write prefix retained byte-for-byte with an identical SHA-256 asserted *inside* the writer, header unique, physically last, `+165/−0`.)* The duty is to flag recurrences, so a clean session adds no note; verify at the git level regardless.
+- **Live-Run README (co-maintained): root `README.md` — Phase 2 / In Progress, banner 2026-08-04. MY S72 APPENDED ONE ENTRY (`+2/−0`), edited no dated entry, and left the banner alone (Codex had already advanced it to 2026-08-04 earlier the same day). THE TRIGGER FIRED: a finished artifact — the extension's plan document, the first thing the extension has produced. The entry deliberately continues Codex's own entry from hours earlier, which had told the reader "the next permitted step is a zero-simulation plan document"; mine closes that loop for them. It states what the plan fixes in advance, the 0.36–0.38 s against ~26 s per simulation, that the 126-body fingerprint was rebuilt from the plan document rather than taken from the program, and the honest boundary (no simulation, 151, second agent has not read it, nothing runs until a separate authorization names this document).** *(Prior: MY S71 RAN THE HEARTBEAT CHECK AND ADDED NOTHING — SEVENTH consecutive session, same reason: the executable loop is still open (round eight), so no artifact was finished and no phase closed. My S70 made the same call (round seven). My S69 made the same call (round six). My S68 and S67 made the same call, as did Codex for its own S66 and S68. THE ENTRY BELONGS ON THE LOG WHEN THE LOOP CLOSES, and whoever writes it owes the reader the four-round history, not just the outcome. Codex wrote that entry in its S71.)** (Banner history: I moved it to 2026-08-03 in S64; my S62 and S63 left it because those were same-day.) **My S65 appended one entry (`+2/−0`), left the banner alone (same day), and edited no dated entry** — the bar was cleared by the first review of the executable finding it could never have completed a run. **Codex's S64 also appended a dated correction entry to its own preceding one (the loud-not-silent refusal, and the 4,432.16 s / 73.9 min screen time against the withdrawn project-wide "seventy minutes"); I read it and it is right.** My S64 appended one entry (`+3/−1` including the banner line), because the trigger my S63 note named actually fired: **the extension document loop CLOSED**. The entry covers the agreed plan, the 19,448-state licensing enumeration, the start of construction, and the payload column that existed with nothing able to fill it. **The log's date order is out of chronological order in the middle and Codex's dated correction says so; dated entries are never edited, so it stays that way.** **Beware when appending: `README.md` is all-CRLF; split on `b"\r\n"`, insert before the `''/'---'/''` block that precedes `## Follow along`, assert both anchors before writing, and read the neighbouring lines back afterwards rather than trusting an offset.**
+- **Phase-2 chat:** `chats/Claude-Codex/Phase 2 Integration and Config Freeze/…- Active.md` — **NOW 19,023 lines. My S72 turn is `+172/−0`, header unique at line 18,853, physically last, pre-write prefix (1,218,243 bytes) retained byte-for-byte with its SHA-256 (`c2c077b1…`) asserted inside the writer. CODEX OWNS THE NEXT TURN: the SECOND INDEPENDENT READ of `plan.json` (`15298da4…030be3`) and nothing else. WHAT IT HAS TO JUDGE: whether the Step-3 artifact is a faithful §11.1 plan. I gave it my re-derivations, the two additive fields, and the §12 "plan artifact must carry the executor's own count" observation, and told it that if it reads that sentence as requiring a version bump, its version wins rather than trading a round. IF IT APPROVES, THE TURN AFTER THAT IS THE STEP-4 JOINT AUTHORIZATION — and I explicitly declined to write anything readable as half of one, so do not let my approval be mistaken for it.** *(S71 record, kept: my S71 turn was `+168/−0`, header unique at line 18,622, prefix SHA-256 `83b52b2e…`; Codex approved those exact blobs and closed the loop in its S71 at `+63/−0`.)* *(S69 record, kept: my S69 turn was `+205/−0` with prefix SHA-256 `276c7630…`. I corrected my own header stamp in place immediately after writing it (20:40 → 20:35 PDT, same byte length, every byte outside the 46-byte span compared before and after) because an estimated stamp defeats the only thing a stamp is for; that is the ONLY edit I have ever made to posted transcript content. The S69 single-slash judgment it had to rule on is now SETTLED — Codex agreed in its S69.)* **If a judgment comes back contested and one exchange does not settle it from source, ESCALATE to the director rather than trade turns.** Codex answered my S64 open question in its S64: **the executable does NOT use `LogicalRow.key` across masses** — extension rows carry their own mass-bearing logical key and their joins use the mass-bearing `PhysicalKey`, so `.key` stays as it is. **Settled; do not reopen.** The things Codex has to judge now are the five S65 corrections and, explicitly, the one structural deviation: **I lifted the replay gate's pre-rollout half into `resolve_replay_source` so it is testable at zero cost.** Do NOT re-open: the extension document (both approved `538ae06b`), the five S62 edits, the unified Option-B rule, the four S62 questions, the measure-first ruling, the payload analyzer/tests, the role-coverage states, the readback ruling, `.gitattributes`, the Stage-C label, Step 25, the screen result, or the plan default. **The file is MIXED-EOL** — Codex appends LF, the older bulk is CRLF; append LF and verify `+N/−0` rather than assuming.
+- **Monitoring chat:** `chats/Claude-Codex-Human/Transcript Order Monitoring/…- Active.md` (88 lines; unchanged S43–S72 — no recurrence; **streak FORTY-TWO**: Codex's S71 append verified at the git level in my S72 — commit `5250aa4`, `+63/−0`, header unique and correctly ordered after mine — and my own S72 append passed all five gates. *(Prior: **streak FORTY-ONE**: Codex's S70 append verified at the git level in my S71 — `+110/−0`, prior content a byte-identical prefix, header unique, physically last — and my own S71 append passed all five gates.)* *(Prior: **streak thirty-nine**: Codex's S69 append was `+92/−0` with its header unique at line 18,257 and physically last, verified at the git level in my S70, and my S70 append passed all five gates — pre-write prefix retained byte-for-byte with an identical SHA-256 asserted *inside* the writer, header unique, physically last, `+165/−0`.)* The duty is to flag recurrences, so a clean session adds no note; verify at the git level regardless.
 
-## Scratchpad (S71, NOT committed)
+## Scratchpad (S72, NOT committed)
+
+`probe_s72_plan.py` — **the artifact reader, and the one to rebuild first if the plan is
+ever re-reviewed.** Reads `results/payload_boundary_extension/plan.json` and, using ONLY
+fields the artifact itself publishes, rebuilds all 126 `physical_key_report` objects, sorts
+them by their own canonical JSON, hashes the ordered list, and compares against the
+published `plan.physical_keys.canonical_sha256`. It also re-derives the census, the anchor
+partition and its stability interval, and the identity-band rule, and scans every string in
+the document — object member names included — with an absolute-path regex written for the
+probe alone. **The independence is the point:** it does not import
+`run_payload_boundary_extension`, and it writes its own canonical-JSON function rather than
+importing the project's. Output on the committed artifact: 126/126, digest MATCH, every
+arithmetic check True, 285 strings scanned, 0 offenders, 0 backslashes.
+`append_s72.py` — the five-gate transcript appender (prefix SHA-256 asserted **inside** the
+writer, header uniqueness, header-after-boundary, Claude physically last, `+N/−0`).
+`readme_s72.py` — the CRLF-safe Live-Run README appender. Anchors on the
+`\r\n---\r\n\r\n## Follow along` block, asserts the anchor is unique, and reads the
+neighbouring lines back afterwards. **Do not index README lines by splitting on `\r\n`** —
+the banner's last row ends with a bare `\n`, so every index after it is off by one and I
+briefly mis-read my own entry's position because of it.
+
+## Scratchpad (S71, superseded)
 
 `slice.py` — **the enabling instrument, and the one to rebuild first.** Loads the scrubber
 layer of ANY blob of `run_payload_boundary_extension.py` by exec'ing the source slice from
