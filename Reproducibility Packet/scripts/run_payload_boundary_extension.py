@@ -612,8 +612,18 @@ _WINDOWS_ABSOLUTE = re.compile(
 # deliberately absent: "file://host/share" IS a path, and a URL that spells one out should
 # be scrubbed like any other.  Everything not listed here is treated as a path; that is the
 # disclosed cost, and the scrubber's docstring states it.
-_URI_SCHEMES = ("http", "https", "ftp", "ftps", "sftp", "ssh", "git")
-_URI_SCHEME_GUARD = "".join(f"(?<!(?i:{scheme}):)" for scheme in _URI_SCHEMES)
+_URI_SCHEMES = ("http", "https", "ftp", "ftps", "sftp", "ssh", "git", "git+ssh")
+# Protect only a COMPLETE named scheme token.  A bare ``(?<!https:)`` also protects every
+# longer unlisted token ending in that spelling: ``reasonhttps://host/private/row.npz``
+# then publishes the complete rooted UNC path even though ``reasonhttps`` is not named.
+# For each protected name, the first branch accepts text not ending in that name and the
+# second restores acceptance when the name is merely a suffix of a longer URI-scheme token.
+# The pair declines only a bounded exact name (start/non-scheme character + name + colon).
+_URI_SCHEME_GUARD = "".join(
+    rf"(?:(?<!(?i:{re.escape(scheme)}):)|"
+    rf"(?<=[A-Za-z0-9+.\-](?i:{re.escape(scheme)}):))"
+    for scheme in _URI_SCHEMES
+)
 # Two POSIX forms, and they need DIFFERENT boundaries.  "//host/share" is the forward-slash
 # rendering of a UNC path and both PurePath flavours call it absolute, so it must be
 # scrubbed; its OWN lookbehind is what separates it from "scheme://", which must not be.
@@ -742,9 +752,10 @@ def scrub_machine_paths(text: str) -> str:
 
     Paths under the repository become ``<repo>``-relative; any other Windows, UNC, or
     POSIX absolute path -- including the ``//host/share`` rendering -- is reduced to its
-    final component.  The forward-slash letter form keeps the URI-safe token boundary;
-    the other drive/root forms cannot be URL schemes.  Ordinary prose, ratios, arrows
-    and links survive unchanged.
+    final component.  The forward-slash letter form refuses the second slash of a URI
+    scheme separator instead of requiring an outer token boundary; the other drive/root
+    forms cannot be URL schemes.  Ordinary prose, ratios, arrows and links survive
+    unchanged.
 
     THREE AMBIGUITIES ARE DELIBERATELY NOT CLOSED, and each is a survivor SHAPE rather
     than a list of spellings.  First, the single-slash POSIX form is not recognized when it

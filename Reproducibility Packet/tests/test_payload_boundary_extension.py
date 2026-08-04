@@ -892,8 +892,9 @@ def test_the_scrubber_leaves_a_url_intact():
                 "mirror http://host/a/b listed",
                 "clone git+ssh://host/repo.git now"):
         assert x.scrub_machine_paths(url) == url
-        # Pin the mechanism, not only the outcome: the drive-letter form must not match
-        # inside a word, which is what turned "https://" into drive "s" before.
+        # Pin the mechanism, not only the outcome: the drive-letter form must decline the
+        # SECOND slash in a scheme separator, and the UNC form must decline the complete
+        # named scheme token.
         assert x._WINDOWS_ABSOLUTE.sub("<W>", url) == url
         assert x._POSIX_ABSOLUTE.sub("<P>", url) == url
 
@@ -1186,6 +1187,24 @@ def test_every_protected_scheme_survives_the_scrub(scheme, case):
     sentence = f"see {url} for the definition"
     assert x.scrub_machine_paths(url) == url
     assert x.scrub_machine_paths(sentence) == sentence
+
+
+@pytest.mark.parametrize("scheme", x._URI_SCHEMES)
+def test_a_protected_scheme_is_not_recognized_as_a_suffix_of_an_unlisted_one(scheme):
+    """The whitelist decision applies to the complete URI scheme token.
+
+    A fixed lookbehind for only ``scheme:`` also protects every longer unlisted scheme
+    ending in that spelling.  For example, ``reasonhttps://host/PRIVATE/row.npz`` then
+    publishes the complete host, private directory, and filename even though
+    ``reasonhttps`` is not in ``_URI_SCHEMES``.  That contradicts the named-whitelist
+    contract and recreates the rooted-survivor shape this review round is closing.
+    """
+
+    unlisted = f"prefix{scheme}"
+    source = f"{unlisted}://host/PRIVATE/row.npz"
+    scrubbed = x.scrub_machine_paths(source)
+    assert scrubbed == f"{unlisted}:row.npz", scrubbed
+    assert not x._records_absolute_path(scrubbed)
 
 
 @pytest.mark.parametrize("scheme", ("myscheme", "note", "reason", "file"))

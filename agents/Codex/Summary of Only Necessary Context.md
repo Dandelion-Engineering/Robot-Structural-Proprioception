@@ -1,6 +1,6 @@
 # Summary of Only Necessary Context — Codex
 
-**Last rewritten:** 2026-08-03 — Codex Session 69
+**Last rewritten:** 2026-08-04 — Codex Session 70
 
 ## Resume here
 
@@ -10,7 +10,7 @@ unmaterialized. Protocol P v2.3.3, its 135-rollout Stage-A/B/C screen, role-cove
 and payload-conditioning read are closed development evidence. Protocol-P-related physical
 execution remains **151 rollouts**.
 
-## Closed document, seam, and report loops
+## Closed document, seam, and result loops
 
 Both agents approve the payload-boundary extension document:
 
@@ -38,65 +38,70 @@ Claude's Session-64 progress-report loop is closed at exact blob
 
 ## Open executable review
 
-Claude Session 69 genuinely re-reviewed Codex's preceding non-letter-drive correction and
-kept it. Claude then correctly fixed three additional path-enumerator/reduction families:
-the glued forward-UNC form, backslash-rendered paths containing spaces, and mixed-separator
-final-component reduction. Claude retained the substitution fixpoint for the measured
-repeated-root mechanism and deliberately disclosed rather than closed the boundary-free
-single-slash POSIX form because widening it corrupts ordinary `dev/pilot/val`, `C1/S`, and
-ratio prose.
+Claude Session 70 genuinely re-reviewed Codex's Session-69 disclosure-only edit and kept
+it. Claude then correctly fixed two additional path-enumerator families: the former
+alphanumeric-colon UNC exemption could publish `reason://host/...` intact, and the former
+forward-drive boundary could retain a drive designator in glued prose. Claude also repaired
+a final-component test that had become green through the wrong matcher. Codex accepts all
+three diagnoses, implementations, and Claude's whitelist judgment, including keeping
+`file` outside the protected scheme list.
 
-Codex genuinely re-reviewed and accepts those diagnoses, implementations, and the
-single-slash judgment. Codex found one narrower disclosure defect: paths containing a
-space also retain a relative private-directory suffix when they use a forward drive,
-forward UNC, or mixed separators with no later backslash. This is not X7 after reduction
-because the absolute root is gone and the shared predicate returns false; it is the same
-final-component/privacy limitation at a wider boundary than the docstring and test named.
+Codex's genuine return review found one narrower implementation defect in the new
+whitelist. Each fixed lookbehind protected an allowed name merely as the suffix of a longer,
+unlisted scheme token. Thus `reasonhttps://host/PRIVATE/row.npz`,
+`prefixgit://host/PRIVATE/row.npz`, and `myssh://host/PRIVATE/row.npz` survived unchanged,
+while the shared writer predicate found no offender. This contradicted the documented rule
+that all unlisted schemes are reduced. The existing `git+ssh://` accept-side test was also
+passing only through the accidental `ssh` suffix match.
 
-Codex left executable expressions unchanged, expanded the disclosure to the two actual
-ambiguous families, and test-pinned five known survivors plus the shared post-scrub guard
-decision. After stripping comments/docstrings, the executable AST is exactly equal to
-Claude's approved `9fd723b0...` source state.
-
-Codex explicitly approves this exact current state:
+Codex corrected the guard to protect complete RFC scheme tokens, explicitly added
+`git+ssh` to the whitelist, updated the stale drive-boundary documentation, and added a
+red-checked parameterized suffix contract. Codex explicitly approves this exact state:
 
 ```text
-run_payload_boundary_extension.py               f2d9f3b1c5e7356a67a2e5d5eb0dfc34c5bc07cb
-test_payload_boundary_extension.py              eb10bb232667347bbc17553f5fa6feaab52dc68e
+run_payload_boundary_extension.py               c850a4b62bf7f401fb0f0c0da65174811419690f
+test_payload_boundary_extension.py              150870f494fb6e9a57bf9678762fda29cccb8eb1
 ```
 
 Claude's genuine re-review of these blobs is **OPEN**. Step 2 remains incomplete until
 Claude explicitly approves them or returns edits that Codex then re-reviews. Plan mode and
 every rollout remain blocked.
 
-Verification at the handed-off state: 106 focused tests normally and under `python -O`;
-1,242 full packet tests passed in 129.06 seconds; full packet compileall clean; exact
-executable-AST equality to `9fd723b0...`; and Claude's eleven-case two-pass mutation sweep
-continues to cover identical operational code.
+Verification at the handed-off state:
+
+- the new contract was red for all seven schemes present in Claude's exact source state;
+- a 312-cell scheme/boundary/case matrix has zero errors;
+- 152 focused tests pass normally and under `python -O`;
+- all 1,288 packet tests pass;
+- full packet compileall is clean; and
+- an eleven-case fresh-copy mutation audit kills every deliberate fault in two identical
+  normalized passes with bytecode writes disabled and caches omitted.
 
 ## Hard boundaries and next actions
 
 - No official plan artifact or payload-extension results directory exists.
 - No plan, replay, payload-extension rollout, Amendment A2, config materialization, or
-  confirmatory work ran in Session 69.
-- Next: Claude re-reviews `f2d9f3b1...` / `eb10bb23...` and resolves the executable loop by
+  confirmatory work ran in Session 70.
+- Next: Claude re-reviews `c850a4b6...` / `150870f4...` and resolves the executable loop by
   explicit approval of the exact state or another edited handoff.
 - Only after that loop closes may Step 3 create the zero-rollout official plan. Both agents
-  must read that artifact before a separate authorization can name its digest and spend
-  the one replay rollout or any of the 126 extension measurements.
+  must read that artifact before a separate authorization can name its digest and spend the
+  one replay rollout or any of the 126 extension measurements.
 
-## Evidence rules
+## Evidence and workflow rules
 
 - Explicit same-state approval only; edits, downstream use, silence, and handoff are not
   approval.
 - Development evidence is not frozen, confirmatory, or final.
 - Use `./venv` and packet-scoped tests, never bare Python or root-wide pytest.
-- Mutation audits use fresh copies, disable bytecode writes, remove caches, run twice, and
+- Mutation audits use fresh copies, disable bytecode writes, omit caches, run twice, and
   require identical normalized verdicts.
 - Transcript appends require a verified UTF-8 physical tail, recorded pre-write boundary,
-  a unique post-boundary header, and additions-only diff.
+  a unique post-boundary header, and an additions-only diff. Session 70 preserved the exact
+  1,200,793-byte prefix, placed its header once at line 18,514, and ended at line 18,620.
+- The root Live-Run README stays unchanged while this internal review loop remains open.
 
 Authoritative thread: `chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2
 Integration and Config Freeze - Active.md`.
 
-Next Codex session/report: **70**. No regular progress report is due until Session 72.
+Next Codex session/report: **71**. No regular progress report is due until Session 72.
