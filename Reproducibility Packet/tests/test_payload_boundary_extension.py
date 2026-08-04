@@ -1084,30 +1084,40 @@ def test_the_space_gate_stops_at_the_end_of_a_real_path(sentence, expected_tail)
     assert not x._records_absolute_path(scrubbed)
 
 
-def test_the_single_slash_posix_form_keeps_its_boundary_and_the_gap_is_disclosed():
-    """A DISCLOSED limitation, pinned so nobody closes it and corrupts the vocabulary.
+def test_ambiguous_forward_slash_boundaries_stay_disclosed_and_symmetric():
+    """DISCLOSED limitations, pinned so nobody closes them by corrupting vocabulary.
 
     Every other rooted form lost its outer token boundary once it was shown that a path
     glued to a word is published whole.  The single-slash POSIX form keeps its boundary,
-    and the two spellings below are therefore NOT covered.  The reason is measurable: a
-    boundary-free single-slash rule matches the "/" in "dev/pilot/val" and reduces the
-    whole phrase to "val".
+    and a space-containing rooted path crosses the space only when a backslash still lies
+    ahead.  The spellings below are therefore NOT fully covered.  The reason is measurable:
+    a boundary-free single-slash rule matches the "/" in "dev/pilot/val" and reduces the
+    whole phrase to "val"; a space gate widened to either separator consumes the same
+    vocabulary when it follows a real path.
 
     The gap is bounded and it is symmetric on purpose -- the writer's guard uses the same
-    pattern, so it does not refuse these spellings either.  If only one side were widened,
-    X7 would fire while X6 was writing the record, which is the failure this whole family
-    of fixes exists to prevent.
+    pattern, so after reduction it does not refuse these relative survivors either.  If
+    only one side were widened, X7 would fire while X6 was writing the record, which is the
+    failure this whole family of fixes exists to prevent.
     """
 
     # What the boundary buys, and why it is not negotiable.
     for phrase in ("dev/pilot/val", "C1/S", "1/2", "and/or"):
         assert x.scrub_machine_paths(phrase) == phrase
-    # What it costs.  Both are recorded as-is; the scrubber and the guard AGREE on that,
-    # which is what keeps the record writable.
-    for uncovered in ("opaque-prefix/PRIVATE/row.npz",
-                      "OSError: cannot open /mnt/My Data/PRIVATE/row.npz"):
-        assert "PRIVATE" in x.scrub_machine_paths(uncovered)
-        assert not x._records_absolute_path(x.scrub_machine_paths(uncovered))
+    # What it costs.  The first two remain as written and the other three retain a
+    # relative suffix; the scrubber and the guard AGREE on each survivor, which is what
+    # keeps the record writable.
+    uncovered = (
+        "opaque-prefix/PRIVATE/row.npz",
+        "OSError: cannot open /mnt/My Data/PRIVATE/row.npz",
+        "opaque-prefixD:/My Data/PRIVATE/row.npz",
+        r"opaque-prefixD:\My Data/PRIVATE/row.npz",
+        "opaque-prefix//host/My Share/PRIVATE/row.npz",
+    )
+    for source in uncovered:
+        scrubbed = x.scrub_machine_paths(source)
+        assert "PRIVATE" in scrubbed
+        assert not x._records_absolute_path(scrubbed)
     # And the covered shapes of the same family, so the gap is not read wider than it is.
     assert x.scrub_machine_paths("at /PRIVATE/row.npz") == "at row.npz"
     assert x.scrub_machine_paths("opaque-prefix//host/PRIVATE/row.npz").endswith("row.npz")

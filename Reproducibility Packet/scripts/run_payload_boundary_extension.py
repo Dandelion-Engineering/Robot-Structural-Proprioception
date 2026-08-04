@@ -591,7 +591,11 @@ MAX_PLAN_JSON_DEPTH = 64
 # this is the likeliest leak here, not an exotic one.  The gate is a BACKSLASH because
 # this project's prose vocabulary is forward-slashed ("dev/pilot/val", "C1/S",
 # "0.10 N / 0.25"), so no sentence of ours can satisfy it; measured on a prose battery,
-# which the gate leaves byte-identical.
+# which the gate leaves byte-identical.  Its deliberate cost is that a space-containing
+# path written with only forward slashes after that space, or with mixed separators whose
+# remaining separators are forward slashes, retains a RELATIVE suffix.  The scrubber
+# docstring names and bounds that limitation; widening this gate to either separator would
+# consume the ordinary forward-slashed prose it exists to preserve.
 _WINDOWS_ABSOLUTE = re.compile(
     r"(?:[^\\/\r\n]:\\|(?<![A-Za-z0-9])[A-Za-z]:/|[^A-Za-z\\/\r\n]:/|\\\\)"
     r"(?:[^\s'\"<>|]|[ ](?=[^\s'\"<>|]*\\))*"
@@ -719,16 +723,25 @@ def scrub_machine_paths(text: str) -> str:
     the other drive/root forms cannot be URL schemes.  Ordinary prose, ratios, arrows
     and links survive unchanged.
 
-    TWO SPELLINGS ARE DELIBERATELY NOT COVERED, and both are the SINGLE-SLASH POSIX form:
-    one glued to a word with no token boundary (``opaque-prefix/private/row.npz``) and one
-    containing a space (``/mnt/My Data/private/row.npz``).  Catching either means matching
-    a lone "/" after an ordinary character, which turns this project's own vocabulary into
-    nonsense -- "dev/pilot/val" becomes "val", "C1/S" becomes "C1S", "1/2" becomes "12" --
-    and a silently corrupted reason is worse than a leaked one because nothing discloses
-    it.  The cost is bounded: on a Windows host the paths that actually arise are drive- or
-    UNC-rooted and those forms are covered in both shapes.  The same gap is why the
-    writer's guard must not refuse those spellings either; if it did, X7 would fire while
-    X6 was writing the record.  Limitation, not oversight.
+    TWO AMBIGUOUS FAMILIES ARE DELIBERATELY NOT FULLY COVERED.  First, the single-slash
+    POSIX form is not recognized when it is glued to a word with no token boundary
+    (``opaque-prefix/private/row.npz``), and a POSIX path containing a space is reduced
+    only through its first space-free run (``/mnt/My Data/private/row.npz``).  Second, a
+    Windows-drive, forward-UNC, or mixed-separator path containing a space is reduced only
+    through that space unless a backslash still appears before the next whitespace
+    (``D:/My Data/private/row.npz`` and ``D:\\My Data/private/row.npz``).  In the latter
+    cases the absolute root is removed but a RELATIVE directory suffix survives.
+
+    Closing the first family means treating a forward slash after an ordinary character
+    as a root.  Closing the second means treating a forward slash in a later token as proof
+    that the preceding space belongs to the path.  Either turns this project's own
+    vocabulary into nonsense -- "dev/pilot/val" becomes "val", "C1/S" becomes "C1S",
+    "1/2" becomes "12" -- and a silently corrupted reason is worse than a leaked relative
+    suffix because nothing discloses it.  The cost is bounded: native Windows paths
+    produced by ``Path`` use backslashes and are covered even when they contain spaces;
+    repository paths are replaced exactly before either pattern runs.  The same ambiguity
+    is shared by the writer's guard on purpose; if only the guard widened, X7 would fire
+    while X6 was writing the record.  Limitation, not oversight.
 
     The two patterns are an ENUMERATION of path spellings; the writer's guard is a
     PREDICATE over ``PurePath``.  Where the two disagree the artifact is destroyed, so the
