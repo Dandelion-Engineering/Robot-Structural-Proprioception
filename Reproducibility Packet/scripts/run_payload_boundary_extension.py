@@ -776,7 +776,13 @@ def scrub_machine_paths(text: str) -> str:
     a UNC host are lexically identical, so SOME name-based decision is unavoidable, and a
     short list of protected schemes is the version whose cost can be stated.  The converse
     cost is stated too: an unlisted scheme's ``//`` form is reduced like a path, so
-    ``myscheme://host/x`` becomes ``x``.
+    ``myscheme://host/x`` becomes ``myscheme:x``: the scheme designator stays where it
+    stands and only the rooted remainder is reduced.  MEASURED -- an earlier wording here
+    said it becomes ``x``, which understated what survives, while the test that exists to
+    keep this sentence and the code together already asserted the right value, so nothing
+    could see the disagreement.  ``_URI_SCHEMES`` itself is pinned by EQUALITY in the
+    tests, because every other test about the list is parametrized over it and therefore
+    cannot see the list change.
 
     The cost is bounded on this machine: native Windows paths produced by ``Path`` use
     backslashes and are covered even when they contain spaces, and repository paths are

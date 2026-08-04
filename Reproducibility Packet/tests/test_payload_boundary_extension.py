@@ -1172,21 +1172,101 @@ def test_a_unc_path_after_a_letter_colon_is_not_mistaken_for_a_url(sentence, mar
     assert not x._records_absolute_path(scrubbed)
 
 
+def test_the_protected_scheme_list_is_pinned_by_equality_not_adopted_by_its_own_tests():
+    """THE LIST IS THE WHOLE DECISION, so something has to CHECK it rather than read it.
+
+    Every other test about the whitelist is parametrized over ``x._URI_SCHEMES``.  That
+    makes each of them a statement about whatever the list happens to say, and it makes
+    all of them blind to the list itself: drop a name and the parametrization simply
+    yields one fewer case, which is not a failure.  MEASURED against the state this pin
+    was added to, with the whole focused suite and no other change:
+
+        dropped "ftps"      -> the entire focused suite passes
+        dropped "sftp"      -> the entire focused suite passes
+        added   "ws"        -> the entire focused suite passes, and
+                               "ws://host/PRIVATE/row.npz" is then published unchanged
+
+    Dropping ``https`` or ``git+ssh`` is caught only because other tests quote those two
+    URLs as literals, and adding ``file`` or ``reason`` is caught only because they appear
+    in the hard-coded parametrization of the disclosed-cost test below.  Neither is a
+    property of the list; both are accidents of which examples got written down.
+
+    ADDING a name is the dangerous direction.  It widens what ``//host/share`` means, so
+    it publishes a complete rooted path -- the exact shape three consecutive review rounds
+    have been closing.  This is requirement (r) applied to a constant instead of a bound
+    document: equality, never adoption.
+    """
+
+    assert x._URI_SCHEMES == (
+        "http", "https", "ftp", "ftps", "sftp", "ssh", "git", "git+ssh",
+    )
+
+
 @pytest.mark.parametrize("scheme", x._URI_SCHEMES)
 @pytest.mark.parametrize("case", (str.lower, str.upper, str.title))
 def test_every_protected_scheme_survives_the_scrub(scheme, case):
-    """The accept side of the whitelist, asserted over the CONSTANT rather than examples.
+    """The accept-side BEHAVIOUR of the whitelist, over whatever the constant says.
 
-    Dropping a scheme from ``_URI_SCHEMES`` makes exactly this red, which is the point: the
-    list is the whole decision, so the test has to read it rather than restate it.  The
-    scheme match is case-insensitive because a URL's scheme is, and a reason string may
-    quote one in any case.
+    This test reads ``_URI_SCHEMES``, so it cannot see a change to the list -- that is
+    what the equality pin above is for.  What it does cover is that each listed name is
+    actually honoured by the compiled guard, in every case rendering, because the scheme
+    match is case-insensitive (a URL's scheme is, and a reason string may quote one in any
+    case) and a per-name lookbehind is easy to build in a way that only matches lower.
     """
 
     url = f"{case(scheme)}://example.org/dir/file.txt"
     sentence = f"see {url} for the definition"
     assert x.scrub_machine_paths(url) == url
     assert x.scrub_machine_paths(sentence) == sentence
+
+
+# Characters that CANNOT extend a URI scheme token, so a listed name after one of them is
+# a complete scheme and stays protected.  MEASURED over all 100 printable characters: the
+# set that mangles "https://example.org/dir/file.txt" is exactly [A-Za-z0-9+.-] plus "/",
+# and "/" is there because a leading slash is a genuine POSIX root.  Everything else --
+# these included -- leaves the URL byte-identical.
+_A_NON_SCHEME_BOUNDARY = ("(", "[", "'", '"', "=", " ", "_", ",", ";", "<", "!")
+# Characters that CAN extend one, so a listed name after one of them is only the SUFFIX of
+# a longer, unlisted token and protection must not apply.
+_A_SCHEME_TOKEN_CHARACTER = ("+", "-", ".", "0", "z", "Q")
+
+
+@pytest.mark.parametrize("boundary", _A_NON_SCHEME_BOUNDARY)
+def test_a_protected_url_survives_after_any_non_scheme_boundary_character(boundary):
+    """The accept side at the boundaries a reason string actually writes a URL at.
+
+    Every other accept-side case puts the URL after a space or at the start of the
+    string, which is one point of a boundary class with eleven members in it.  A URL in
+    parentheses, brackets or quotes is the ordinary way prose quotes one, and it is the
+    case that goes wrong if the guard's "longer token" character class is widened: with
+    ``[^\\s]`` in place of ``[A-Za-z0-9+.-]`` the whole focused suite still passes while
+    ``(https://example.org/spec)`` is published as ``(https:spec)``.  A scrubber that
+    quietly mangles the links in a refusal message is the same failure class as one that
+    quietly mangles the reason.
+    """
+
+    for scheme in x._URI_SCHEMES:
+        sentence = f"see{boundary}{scheme}://example.org/dir/file.txt for the definition"
+        assert x.scrub_machine_paths(sentence) == sentence, sentence
+
+
+@pytest.mark.parametrize("character", _A_SCHEME_TOKEN_CHARACTER)
+def test_a_protected_name_after_a_scheme_token_character_is_only_a_suffix(character):
+    """The refuse side of the same boundary, and it pins the class from the other end.
+
+    ``prefix<scheme>`` covers a letter.  Narrowing the class to ``[A-Za-z0-9]`` would
+    leave ``a.https://host/PRIVATE/row.npz`` protected -- "." is a legal scheme character,
+    so ``a.https`` is one unlisted token and the rooted UNC path would be published whole.
+    Asserting the reduced form rather than merely "changed" is what makes this a statement
+    about the boundary rather than about the substitution.
+    """
+
+    for scheme in x._URI_SCHEMES:
+        unlisted = f"a{character}{scheme}" if character in "+-." else f"{character}{scheme}"
+        source = f"{unlisted}://host/PRIVATE/row.npz"
+        scrubbed = x.scrub_machine_paths(source)
+        assert scrubbed == f"{unlisted}:row.npz", scrubbed
+        assert not x._records_absolute_path(scrubbed)
 
 
 @pytest.mark.parametrize("scheme", x._URI_SCHEMES)
@@ -1213,8 +1293,12 @@ def test_an_unlisted_scheme_is_reduced_like_a_path_and_that_is_the_disclosed_cos
 
     A URL host and a UNC host are lexically identical, so a name-based decision cannot be
     avoided -- only stated.  Everything outside ``_URI_SCHEMES`` is treated as a path, which
-    means an unlisted scheme's URL loses everything but its final component.  The scrubber's
-    docstring says so; this is the test that keeps the two together.
+    means an unlisted scheme's URL loses everything but its scheme designator and its final
+    component.  The scrubber's docstring says so; this is the test that keeps the two
+    together -- and it did not, for one round: the docstring said ``myscheme://host/x``
+    becomes ``x`` while this assertion said ``myscheme:x``, which is what the code does.
+    A disclosure that misstates its own limitation is worth less than none, so read the
+    two side by side whenever either changes.
     """
 
     scrubbed = x.scrub_machine_paths(f"{scheme}://host/dir/file.txt")
