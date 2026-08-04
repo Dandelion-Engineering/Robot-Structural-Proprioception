@@ -579,9 +579,14 @@ MAX_PLAN_JSON_DEPTH = 64
 # path inside prose.  It also follows the predicate's ``PureWindowsPath`` semantics:
 # ANY one-character drive prefix is accepted, not only A-Z, so an embedded
 # ``opaque-prefix1:\\private\\row.npz`` must be caught here as well as when it is the whole
-# string.  The forward-slash letter form keeps the boundary because otherwise the scheme
-# separator of every URL matches -- "https://host/x" reads as drive "s".  A non-letter
-# drive cannot begin a URI scheme, so its forward-slash form needs no such boundary.
+# string.  The forward-slash letter form does not keep an outer token boundary either: it
+# refuses a SECOND slash instead.  A URL's scheme separator is always "://", so
+# ``[A-Za-z]:/(?!/)`` declines "https://host/x" without needing to know where the token
+# began, while a drive path glued to prose is caught.  MEASURED on the state this replaces:
+# r"opaque-prefixC:/My Data\PRIVATE\row.npz" published as r"opaque-prefixC:My Data\PRIVATE\row.npz"
+# -- the boundary blocked this rule, the POSIX rule then matched only "/My", and the DRIVE
+# DESIGNATOR survived with the whole directory path behind it.  A non-letter drive cannot
+# begin a URI scheme, so its forward-slash form needs no such refusal.
 #
 # THE TAIL MAY CROSS A SPACE, and only when a backslash still lies ahead of the next
 # whitespace.  Without that the match stops at the first space, so a path CONTAINING one is
@@ -597,9 +602,18 @@ MAX_PLAN_JSON_DEPTH = 64
 # docstring names and bounds that limitation; widening this gate to either separator would
 # consume the ordinary forward-slashed prose it exists to preserve.
 _WINDOWS_ABSOLUTE = re.compile(
-    r"(?:[^\\/\r\n]:\\|(?<![A-Za-z0-9])[A-Za-z]:/|[^A-Za-z\\/\r\n]:/|\\\\)"
+    r"(?:[^\\/\r\n]:\\|[A-Za-z]:/(?!/)|[^A-Za-z\\/\r\n]:/|\\\\)"
     r"(?:[^\s'\"<>|]|[ ](?=[^\s'\"<>|]*\\))*"
 )
+# The schemes whose "//" belongs to a URL rather than to a UNC path.  A URL host and a UNC
+# host are LEXICALLY IDENTICAL -- "//host/share" and "//example.org/spec" differ in nothing
+# a pattern can see -- so the only thing that can separate them is the scheme name, and the
+# only honest way to use a scheme name is to NAME the ones being protected.  "file" is
+# deliberately absent: "file://host/share" IS a path, and a URL that spells one out should
+# be scrubbed like any other.  Everything not listed here is treated as a path; that is the
+# disclosed cost, and the scrubber's docstring states it.
+_URI_SCHEMES = ("http", "https", "ftp", "ftps", "sftp", "ssh", "git")
+_URI_SCHEME_GUARD = "".join(f"(?<!(?i:{scheme}):)" for scheme in _URI_SCHEMES)
 # Two POSIX forms, and they need DIFFERENT boundaries.  "//host/share" is the forward-slash
 # rendering of a UNC path and both PurePath flavours call it absolute, so it must be
 # scrubbed; its OWN lookbehind is what separates it from "scheme://", which must not be.
@@ -608,9 +622,18 @@ _WINDOWS_ABSOLUTE = re.compile(
 # its boundary, and that is a deliberate disclosed gap rather than an oversight -- see the
 # scrubber's docstring.  Neither form matches the ratio "0.1 N / 0.25" or the arrow
 # "A -> B", because both require a non-space character after the slash.
+#
+# THE UNC LOOKBEHIND NAMES SCHEMES; it used to refuse ANY alphanumeric followed by a colon.
+# That is a wider claim than "this is a URL", and it published a COMPLETE ROOTED PATH:
+# MEASURED, "reason://host/PRIVATE/row.npz" survived both patterns AND the writer's guard,
+# so the artifact was written with the host, the private directory and the file name intact.
+# Nothing about the old lookbehind was recoverable by the guard, because the guard shares
+# these patterns on purpose.  The scheme list is the narrowest thing that keeps "https://"
+# safe while treating an unrecognised "word://host/..." as what it looks like on this
+# machine: a path.
 _POSIX_ABSOLUTE = re.compile(
     r"(?P<lead>^|[\s:=('\"\[])(?P<rooted>/(?!/)[^\s'\"<>|)\],;]+)"
-    r"|(?P<unc>(?<![A-Za-z0-9+.\-]:)//[^\s'\"<>|)\],;/][^\s'\"<>|)\],;]*)"
+    r"|(?P<unc>" + _URI_SCHEME_GUARD + r"//[^\s'\"<>|)\],;/][^\s'\"<>|)\],;]*)"
 )
 
 
@@ -723,25 +746,32 @@ def scrub_machine_paths(text: str) -> str:
     the other drive/root forms cannot be URL schemes.  Ordinary prose, ratios, arrows
     and links survive unchanged.
 
-    TWO AMBIGUOUS FAMILIES ARE DELIBERATELY NOT FULLY COVERED.  First, the single-slash
-    POSIX form is not recognized when it is glued to a word with no token boundary
-    (``opaque-prefix/private/row.npz``), and a POSIX path containing a space is reduced
-    only through its first space-free run (``/mnt/My Data/private/row.npz``).  Second, a
-    Windows-drive, forward-UNC, or mixed-separator path containing a space is reduced only
-    through that space unless a backslash still appears before the next whitespace
-    (``D:/My Data/private/row.npz`` and ``D:\\My Data/private/row.npz``).  In the latter
-    cases the absolute root is removed but a RELATIVE directory suffix survives.
+    THREE AMBIGUITIES ARE DELIBERATELY NOT CLOSED, and each is a survivor SHAPE rather
+    than a list of spellings.  First, the single-slash POSIX form is not recognized when it
+    is glued to a word with no token boundary (``opaque-prefix/private/row.npz``).  Second,
+    a path containing WHITESPACE is reduced only through that whitespace unless the
+    whitespace is a space AND a backslash still appears before the next one
+    (``/mnt/My Data/private/row.npz``, ``D:/My Data/private/row.npz``, and any path whose
+    space is a tab); the absolute root is removed and a RELATIVE directory suffix survives.
+    Third, a ``//`` preceded by one of the named ``_URI_SCHEMES`` is left alone, so a URL
+    that spells out a private path under one of those schemes is published.
 
-    Closing the first family means treating a forward slash after an ordinary character
-    as a root.  Closing the second means treating a forward slash in a later token as proof
-    that the preceding space belongs to the path.  Either turns this project's own
-    vocabulary into nonsense -- "dev/pilot/val" becomes "val", "C1/S" becomes "C1S",
-    "1/2" becomes "12" -- and a silently corrupted reason is worse than a leaked relative
-    suffix because nothing discloses it.  The cost is bounded: native Windows paths
-    produced by ``Path`` use backslashes and are covered even when they contain spaces;
-    repository paths are replaced exactly before either pattern runs.  The same ambiguity
-    is shared by the writer's guard on purpose; if only the guard widened, X7 would fire
-    while X6 was writing the record.  Limitation, not oversight.
+    Closing the first means treating a forward slash after an ordinary character as a root.
+    Closing the second means treating a forward slash in a later token as proof that the
+    preceding space belongs to the path.  Either turns this project's own vocabulary into
+    nonsense -- "dev/pilot/val" becomes "val", "C1/S" becomes "C1S", "1/2" becomes "12" --
+    and a silently corrupted reason is worse than a leaked relative suffix because nothing
+    discloses it.  The third is the residue of a whitelist that has to exist: a URL host and
+    a UNC host are lexically identical, so SOME name-based decision is unavoidable, and a
+    short list of protected schemes is the version whose cost can be stated.  The converse
+    cost is stated too: an unlisted scheme's ``//`` form is reduced like a path, so
+    ``myscheme://host/x`` becomes ``x``.
+
+    The cost is bounded on this machine: native Windows paths produced by ``Path`` use
+    backslashes and are covered even when they contain spaces, and repository paths are
+    replaced exactly before either pattern runs.  Every ambiguity above is shared by the
+    writer's guard on purpose; if only the guard widened, X7 would fire while X6 was
+    writing the record.  Limitations, not oversights.
 
     The two patterns are an ENUMERATION of path spellings; the writer's guard is a
     PREDICATE over ``PurePath``.  Where the two disagree the artifact is destroyed, so the

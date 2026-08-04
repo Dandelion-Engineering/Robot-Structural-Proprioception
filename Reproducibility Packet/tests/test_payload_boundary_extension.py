@@ -1009,6 +1009,18 @@ def test_scrubber_rewrites_a_path_inside_a_sentence_and_leaves_prose_alone():
     mixed_scrubbed = x.scrub_machine_paths(mixed)
     assert "PRIVATE" not in mixed_scrubbed
     assert mixed_scrubbed.endswith("row.npz")
+    # THE SAME REDUCTION, REACHED THROUGH THE POSIX RULE.  The drive-rendered case above
+    # stopped exercising ``_final_component`` the moment the forward-slash drive form
+    # dropped its token boundary: the Windows rule now consumes it first, so the test
+    # passes for a reason that has nothing to do with the split.  A mutation sweep found
+    # exactly that -- splitting on "/" alone SURVIVED the whole focused suite.  This case
+    # carries no drive letter, so only the POSIX rule can match it, and the parent
+    # directory comes back if the reduction stops seeing backslashes.
+    posix_mixed = r"OSError: cannot open /mnt/PRIVATE\plant\row.npz"
+    posix_mixed_scrubbed = x.scrub_machine_paths(posix_mixed)
+    assert "PRIVATE" not in posix_mixed_scrubbed, posix_mixed_scrubbed
+    assert posix_mixed_scrubbed.endswith("row.npz")
+    assert x._final_component(r"/mnt/PRIVATE\row.npz") == "row.npz"
 
 
 _PATHS_CONTAINING_A_SPACE = [
@@ -1122,6 +1134,141 @@ def test_ambiguous_forward_slash_boundaries_stay_disclosed_and_symmetric():
     assert x.scrub_machine_paths("at /PRIVATE/row.npz") == "at row.npz"
     assert x.scrub_machine_paths("opaque-prefix//host/PRIVATE/row.npz").endswith("row.npz")
     assert "PRIVATE" not in x.scrub_machine_paths(r"opaque-prefixC:\PRIVATE\row.npz")
+
+
+_A_UNC_PATH_AFTER_A_LETTER_COLON = [
+    ("reason://host/PRIVATE/row.npz", True),
+    ("ProtocolPError: reason://host/PRIVATE/row.npz was rejected", True),
+    ("input://host/PRIVATE/row.npz", True),
+    ("file://host/PRIVATE/row.npz", True),
+    # A space puts this one in the DISCLOSED whitespace family, so the marker survives in a
+    # relative suffix.  It is here because the root must go even so: this exact sentence
+    # used to be published whole, host included.
+    ("note://host/My Share/PRIVATE/row.npz", False),
+]
+
+
+@pytest.mark.parametrize("sentence,marker_gone", _A_UNC_PATH_AFTER_A_LETTER_COLON)
+def test_a_unc_path_after_a_letter_colon_is_not_mistaken_for_a_url(sentence, marker_gone):
+    """A COMPLETE ROOTED PATH used to be published here, and both sides agreed to it.
+
+    The forward-UNC lookbehind refused any alphanumeric-plus-colon, which is a much wider
+    claim than "this is a URL".  Glue a real UNC path onto a word ending in a colon and
+    the pattern declined, the writer's guard -- which shares the pattern -- also declined,
+    and the artifact was written with the host, the private directory and the file name
+    intact.  What makes this test red is restoring that lookbehind: the sentence comes back
+    unchanged and the assertion below sees the marker.
+
+    ``file`` is in this list on purpose.  It is a real URI scheme and it is deliberately
+    NOT protected, because ``file://host/share`` is a path spelled as a URL.
+    """
+
+    scrubbed = x.scrub_machine_paths(sentence)
+    assert "//host" not in scrubbed, scrubbed
+    if marker_gone:
+        assert "PRIVATE" not in scrubbed, scrubbed
+    assert scrubbed != "<path>"
+    assert not x._records_absolute_path(scrubbed)
+
+
+@pytest.mark.parametrize("scheme", x._URI_SCHEMES)
+@pytest.mark.parametrize("case", (str.lower, str.upper, str.title))
+def test_every_protected_scheme_survives_the_scrub(scheme, case):
+    """The accept side of the whitelist, asserted over the CONSTANT rather than examples.
+
+    Dropping a scheme from ``_URI_SCHEMES`` makes exactly this red, which is the point: the
+    list is the whole decision, so the test has to read it rather than restate it.  The
+    scheme match is case-insensitive because a URL's scheme is, and a reason string may
+    quote one in any case.
+    """
+
+    url = f"{case(scheme)}://example.org/dir/file.txt"
+    sentence = f"see {url} for the definition"
+    assert x.scrub_machine_paths(url) == url
+    assert x.scrub_machine_paths(sentence) == sentence
+
+
+@pytest.mark.parametrize("scheme", ("myscheme", "note", "reason", "file"))
+def test_an_unlisted_scheme_is_reduced_like_a_path_and_that_is_the_disclosed_cost(scheme):
+    """THE CONVERSE COST OF THE WHITELIST, pinned so it is not discovered later as a bug.
+
+    A URL host and a UNC host are lexically identical, so a name-based decision cannot be
+    avoided -- only stated.  Everything outside ``_URI_SCHEMES`` is treated as a path, which
+    means an unlisted scheme's URL loses everything but its final component.  The scrubber's
+    docstring says so; this is the test that keeps the two together.
+    """
+
+    scrubbed = x.scrub_machine_paths(f"{scheme}://host/dir/file.txt")
+    assert scrubbed == f"{scheme}:file.txt"
+
+
+_A_DRIVE_PATH_GLUED_TO_PROSE = [
+    r"opaque-prefixC:/My Data\PRIVATE\row.npz",
+    r"run1C:/My Data\PRIVATE\row.npz",
+    r"opaque-prefixC:/PRIVATE\row.npz",
+    r"prefixD:/Program Files\PRIVATE\row.npz",
+]
+
+
+@pytest.mark.parametrize("sentence", _A_DRIVE_PATH_GLUED_TO_PROSE)
+def test_a_drive_path_glued_to_prose_leaves_no_drive_designator(sentence):
+    """The forward-slash drive form refuses a SECOND slash instead of demanding a boundary.
+
+    With the old token boundary this rule could not fire inside a word, the POSIX rule then
+    matched only the first space-free run after the drive colon, and the output kept the
+    DRIVE DESIGNATOR with the whole directory path behind it
+    (r"opaque-prefixC:My Data\\PRIVATE\\row.npz").  Restoring ``(?<![A-Za-z0-9])`` is what
+    makes this red.  A URL is still safe because its scheme separator is always "://",
+    which ``(?!/)`` declines -- that property is asserted by the scheme tests above.
+    """
+
+    scrubbed = x.scrub_machine_paths(sentence)
+    assert "PRIVATE" not in scrubbed, scrubbed
+    assert ":" not in scrubbed, scrubbed
+    assert not x._records_absolute_path(scrubbed)
+
+
+_RENDERINGS_OF_ONE_PRIVATE_PATH = (
+    r"C:\PRIVATE\row.npz", r"C:\My Data\PRIVATE\row.npz",
+    r"D:\My Data\Program Files\PRIVATE\row.npz", "C:/PRIVATE/row.npz",
+    r"C:/PRIVATE\row.npz", r"C:/My Data\PRIVATE\row.npz",
+    r"1:\PRIVATE\row.npz", r"1:\My Data\PRIVATE\row.npz", "1:/PRIVATE/row.npz",
+    r"\\host\PRIVATE\row.npz", r"\\host\My Share\PRIVATE\row.npz",
+    "//host/PRIVATE/row.npz", "///mnt/PRIVATE/row.npz",
+)
+_THINGS_THAT_CAN_PRECEDE_A_PATH = (
+    "", "opaque-prefix", "at ", "OSError: cannot open ", "reason:", "run1",
+    "ProtocolPError: pinned input is absent: ", "'", "(", "path=", "[",
+)
+_THINGS_THAT_CAN_FOLLOW_A_PATH = ("", " was rejected", ".", " for dev/pilot/val and C1/S")
+
+
+def test_no_rendering_of_a_private_path_survives_rooted_in_any_company():
+    """THE PROPERTY OVER THE SPACE, not another example.
+
+    Six consecutive review rounds found this same class one input family further out, and
+    every individual fix was correct; what was missing each time was an assertion over the
+    space of inputs.  This is that assertion: every rendering above, crossed with everything
+    that can precede and follow it in a real refusal sentence, must come back with no rooted
+    private path in it and must satisfy the writer's guard.
+
+    Deliberately NOT asserted here: that the marker is gone.  Three ambiguities are
+    disclosed in ``scrub_machine_paths`` and they leave a RELATIVE suffix; those are pinned
+    by the disclosure test above.  What this pins is the stronger property that nothing
+    ROOTED survives -- which is what X7 exists for -- so a future widening that trades a
+    disclosed relative suffix for a published root fails here.
+    """
+
+    rooted = re.compile(r"(?:[A-Za-z0-9]:[\\/]|\\\\|(?:^|[^A-Za-z0-9])//?)[^\s]*PRIVATE")
+    offenders = []
+    for rendering in _RENDERINGS_OF_ONE_PRIVATE_PATH:
+        for prefix in _THINGS_THAT_CAN_PRECEDE_A_PATH:
+            for suffix in _THINGS_THAT_CAN_FOLLOW_A_PATH:
+                source = prefix + rendering + suffix
+                scrubbed = x.scrub_machine_paths(source)
+                if rooted.search(scrubbed) or x._records_absolute_path(scrubbed):
+                    offenders.append((source, scrubbed))
+    assert not offenders, offenders[:5]
 
 
 _PROSE_LOSING_ITS_WHOLE_TEXT = [
