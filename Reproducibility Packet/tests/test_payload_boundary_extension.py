@@ -768,6 +768,17 @@ _FOREIGN_PLANS = [
     ("embedded-digit-drive", {"mode": "plan", "plan_valid": True, "terminal": None,
                                "inputs": {"note":
                                           r"opaque-prefix1:\Users\person\config.json"}}),
+    # A UNC path glued to prose: the forward-slash rendering carried an outer token
+    # boundary that the backslash rendering had already been shown not to need.
+    ("embedded-unc-forward", {"mode": "plan", "plan_valid": True, "terminal": None,
+                              "inputs": {"note":
+                                         "opaque-prefix//host/person/config.json"}}),
+    # A path with a SPACE in it -- "Program Files", "My Documents", and this repository's
+    # own parent.  The match stopped at the space, so the reduction published everything
+    # after it.
+    ("windows-path-with-a-space", {"mode": "plan", "plan_valid": True, "terminal": None,
+                                   "inputs": {"note":
+                                              r"D:\My Documents\person\config.json"}}),
 ]
 
 
@@ -985,6 +996,122 @@ def test_scrubber_rewrites_a_path_inside_a_sentence_and_leaves_prose_alone():
     digit_drive_scrubbed = x.scrub_machine_paths(digit_drive)
     assert "PRIVATE" not in digit_drive_scrubbed
     assert digit_drive_scrubbed.endswith("row.npz")
+    # A UNC path glued to prose.  The backslash rendering never needed a token boundary;
+    # the forward-slash one carried one, and its OWN scheme lookbehind is what keeps
+    # "https://" safe, so the boundary was only hiding this.
+    unc = "ProtocolPError: opaque-prefix//host/PRIVATE/plant/row.npz"
+    unc_scrubbed = x.scrub_machine_paths(unc)
+    assert "PRIVATE" not in unc_scrubbed
+    assert unc_scrubbed.endswith("row.npz")
+    # A mixed-separator path.  ``PurePosixPath`` cannot see the backslash, so its ``name``
+    # kept the parent directory; the reduction has to split on BOTH separators.
+    mixed = r"ProtocolPError: opaque-prefixC:/PRIVATE\plant\row.npz"
+    mixed_scrubbed = x.scrub_machine_paths(mixed)
+    assert "PRIVATE" not in mixed_scrubbed
+    assert mixed_scrubbed.endswith("row.npz")
+
+
+_PATHS_CONTAINING_A_SPACE = [
+    r"ProtocolPError: pinned input is absent: D:\My Data\PRIVATE\row.npz",
+    r"C:\Program Files\PRIVATE\row.npz",
+    r"OSError: cannot open \\host\My Share\PRIVATE\row.npz",
+    r"E:\A B\C D\PRIVATE\row.npz",
+]
+
+
+@pytest.mark.parametrize("sentence", _PATHS_CONTAINING_A_SPACE)
+def test_a_path_containing_a_space_is_reduced_to_its_final_component(sentence):
+    """The likeliest leak in this file, because directory names with spaces are ordinary.
+
+    The tail stopped at the first whitespace, so the substitution only ever saw the first
+    space-free RUN of the path and everything after the space stayed in the message.
+    MEASURED before the fix: r"D:\\My Data\\PRIVATE\\row.npz" became
+    r"My Data\\PRIVATE\\row.npz" -- which is RELATIVE, so neither the writer's guard nor
+    the post-condition can see it, and it is published.  "Program Files" and this
+    repository's own parent directory both contain a space.
+
+    The tail may cross a space only when a BACKSLASH still lies ahead of the next
+    whitespace.  That gate cannot fire on this project's prose, which is forward-slashed,
+    and the accept side of that claim is the next test rather than this one.
+    """
+
+    scrubbed = x.scrub_machine_paths(sentence)
+    assert "PRIVATE" not in scrubbed
+    assert scrubbed.endswith("row.npz")
+    assert scrubbed != "<path>"
+    assert not x._records_absolute_path(scrubbed)
+
+
+_PROSE_THE_SPACE_GATE_MUST_NOT_TOUCH = [
+    "XA -> XM-C -> XL -> XM-B -> XZ",
+    "probe 0.10 N / 0.25 ramp",
+    "reserved for dev/pilot/val and test",
+    "suites C1/S differ in what is observed",
+    "the ratio is 1/2 and the duty cycle 24/7",
+    "healthy/faulted readback distinguishes a measured null",
+    "see https://example.org/spec#x for the definition",
+    "no path here at all, just prose about a\\b escapes",
+]
+
+
+@pytest.mark.parametrize("sentence", _PROSE_THE_SPACE_GATE_MUST_NOT_TOUCH)
+def test_the_space_gate_leaves_this_project_s_own_vocabulary_alone(sentence):
+    """A false positive in a scrubber is worse than a leak: nothing discloses the loss."""
+
+    assert x.scrub_machine_paths(sentence) == sentence
+
+
+_PROSE_AFTER_A_REAL_PATH = [
+    (r"absent: C:\a\row.npz over dev/pilot/val", "row.npz over dev/pilot/val"),
+    (r"absent: C:\a\row.npz and/or the other one", "row.npz and/or the other one"),
+    (r"absent: C:\a\row.npz see a\b", r"row.npz see a\b"),
+    (r"absent: C:\a\row.npz vs D:\b\row.npz", "row.npz vs row.npz"),
+]
+
+
+@pytest.mark.parametrize("sentence,expected_tail", _PROSE_AFTER_A_REAL_PATH)
+def test_the_space_gate_stops_at_the_end_of_a_real_path(sentence, expected_tail):
+    """The adversarial side: a REAL path followed by a token that contains a slash.
+
+    The gate is a BACKSLASH lookahead precisely so this project's forward-slashed
+    vocabulary cannot extend a match past the end of the path.  A gate on any separator
+    would swallow "and/or" and "dev/pilot/val" here and leave a reason that reads as
+    though it had always been that short.
+    """
+
+    scrubbed = x.scrub_machine_paths(sentence)
+    assert scrubbed.endswith(expected_tail), scrubbed
+    assert not x._records_absolute_path(scrubbed)
+
+
+def test_the_single_slash_posix_form_keeps_its_boundary_and_the_gap_is_disclosed():
+    """A DISCLOSED limitation, pinned so nobody closes it and corrupts the vocabulary.
+
+    Every other rooted form lost its outer token boundary once it was shown that a path
+    glued to a word is published whole.  The single-slash POSIX form keeps its boundary,
+    and the two spellings below are therefore NOT covered.  The reason is measurable: a
+    boundary-free single-slash rule matches the "/" in "dev/pilot/val" and reduces the
+    whole phrase to "val".
+
+    The gap is bounded and it is symmetric on purpose -- the writer's guard uses the same
+    pattern, so it does not refuse these spellings either.  If only one side were widened,
+    X7 would fire while X6 was writing the record, which is the failure this whole family
+    of fixes exists to prevent.
+    """
+
+    # What the boundary buys, and why it is not negotiable.
+    for phrase in ("dev/pilot/val", "C1/S", "1/2", "and/or"):
+        assert x.scrub_machine_paths(phrase) == phrase
+    # What it costs.  Both are recorded as-is; the scrubber and the guard AGREE on that,
+    # which is what keeps the record writable.
+    for uncovered in ("opaque-prefix/PRIVATE/row.npz",
+                      "OSError: cannot open /mnt/My Data/PRIVATE/row.npz"):
+        assert "PRIVATE" in x.scrub_machine_paths(uncovered)
+        assert not x._records_absolute_path(x.scrub_machine_paths(uncovered))
+    # And the covered shapes of the same family, so the gap is not read wider than it is.
+    assert x.scrub_machine_paths("at /PRIVATE/row.npz") == "at row.npz"
+    assert x.scrub_machine_paths("opaque-prefix//host/PRIVATE/row.npz").endswith("row.npz")
+    assert "PRIVATE" not in x.scrub_machine_paths(r"opaque-prefixC:\PRIVATE\row.npz")
 
 
 _PROSE_LOSING_ITS_WHOLE_TEXT = [
@@ -992,28 +1119,57 @@ _PROSE_LOSING_ITS_WHOLE_TEXT = [
     (r"ProtocolPError: pinned input absent at run1C:/data/\gate3.npz",
      "ProtocolPError: pinned input absent at "),
     (r"value 1C:/\ was rejected", "value "),
+    ("ProtocolPError: pinned input absent at ///data/gate3.npz",
+     "ProtocolPError: pinned input absent at "),
 ]
 
 
 @pytest.mark.parametrize("sentence,surviving_prefix", _PROSE_LOSING_ITS_WHOLE_TEXT)
-def test_one_substitution_pass_can_build_the_path_the_other_pattern_declined(
+def test_a_reason_survives_the_substitution_instead_of_being_thrown_away(
     sentence, surviving_prefix
 ):
-    """The substitutions have to run to a FIXPOINT, and the cost of one pass is the reason.
+    """A rewriting rule can build the path another rule already declined, and then the
+    only exit left discards the whole reason.
 
-    The POSIX rule reduces ``/plant/\\row.npz`` to its final component ``\\row.npz`` and
-    re-emits it after the boundary character, which rebuilds ``C:\\row.npz`` inside prose
-    the Windows rule had already been offered and declined -- a form no reduction can
-    remove, because the WHOLE string is relative and ``PurePath.name`` has nothing to
-    take.  The only exit left is to discard the entire message.  Measured with a single
-    pass: all three sentences below returned exactly ``"<path>"`` and the reader lost the
-    reason.  That is worse than a truncated reason, because nothing discloses the loss.
+    The first three sentences are the Session-68 mechanism: the POSIX rule reduced
+    ``/plant/\\row.npz`` to ``\\row.npz`` and re-emitted it after the boundary character,
+    rebuilding ``C:\\row.npz`` inside prose the Windows rule had been offered and
+    declined.  That mechanism is now closed at its source -- ``_final_component`` splits
+    on BOTH separators, so the replacement cannot re-emit one -- and those three sentences
+    survive a single pass.  They are kept as regression cases, not as the demonstration.
+
+    The fourth is the mechanism that is still live and is why the fixpoint stays: a
+    repeated root reduces to ``/gate3.npz``, which is still recorded and still relative
+    as a whole.  MEASURED over the 37,448 enumerated strings with one pass: 969 remain
+    absolute and ten reach the discard exit.  Whichever the mechanism, the cost is the
+    same and it is the worst kind -- the reader gets ``"<path>"`` and nothing tells them
+    a reason was lost.
     """
 
     scrubbed = x.scrub_machine_paths(sentence)
     assert scrubbed != "<path>"
     assert scrubbed.startswith(surviving_prefix)
     assert not x._records_absolute_path(scrubbed)
+
+
+def test_one_substitution_pass_is_measurably_not_enough():
+    """The fixpoint's reason is DRIVEN, not asserted in a docstring.
+
+    ``_substitution_pass`` exists so this test can run exactly one pass and look at what
+    it leaves behind, rather than keeping a second copy of the substitution here (which
+    would agree with itself) or claiming the shortfall in prose (which stops being true
+    the moment the substitution changes -- and it did change this session).
+    """
+
+    once = x._substitution_pass("ProtocolPError: pinned input absent at ///data/gate3.npz")
+    # Still recorded, and relative as a whole -- which is the state whose ONLY exit in
+    # ``scrub_machine_paths`` throws the entire message away.
+    assert x._records_absolute_path(once)
+    assert not PureWindowsPath(once).is_absolute()
+    assert not PurePosixPath(once).is_absolute()
+    # The fixpoint takes the same input to a reason a reader can still use.
+    assert x.substitute_known_path_spellings(once) != once
+    assert x.scrub_machine_paths(once).endswith("gate3.npz")
 
 
 _SCRUBBER_ALPHABET = ("/", "\\", "C", ":", "x", " ", ".", "1")
@@ -1171,6 +1327,12 @@ _AUTHORIZED_SHAPED_PLANS = [
     ("embedded-digit-drive", {"inputs": {
         "note": r"opaque-prefix1:\PRIVATE\config.json"
     }}),
+    ("embedded-unc-forward", {"inputs": {
+        "note": "opaque-prefix//host/PRIVATE/config.json"
+    }}),
+    ("windows-path-with-a-space", {"inputs": {
+        "note": r"D:\My Documents\PRIVATE\config.json"
+    }}),
 ]
 
 
@@ -1228,7 +1390,9 @@ def test_the_gate_and_the_writer_ask_one_function_the_same_question():
     for probe in ({"a": r"C:\dir\row.npz"}, {r"C:\dir\row.npz": "a"},
                   {"a": ["b", {"c": "/dir/row.npz"}]}, {"a": "//host/share"},
                   {"a": r"opaque-prefixC:\PRIVATE\row.npz"},
-                  {"a": r"opaque-prefix1:\PRIVATE\row.npz"}):
+                  {"a": r"opaque-prefix1:\PRIVATE\row.npz"},
+                  {"a": "opaque-prefix//host/PRIVATE/row.npz"},
+                  {"a": r"D:\My Documents\PRIVATE\row.npz"}):
         assert x.absolute_path_strings(probe), probe
         with pytest.raises(ProtocolPError, match="X7: result artifact contains"):
             x.write_canonical_document(Path("unused"), probe)

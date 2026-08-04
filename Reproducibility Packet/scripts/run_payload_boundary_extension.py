@@ -582,20 +582,49 @@ MAX_PLAN_JSON_DEPTH = 64
 # string.  The forward-slash letter form keeps the boundary because otherwise the scheme
 # separator of every URL matches -- "https://host/x" reads as drive "s".  A non-letter
 # drive cannot begin a URI scheme, so its forward-slash form needs no such boundary.
+#
+# THE TAIL MAY CROSS A SPACE, and only when a backslash still lies ahead of the next
+# whitespace.  Without that the match stops at the first space, so a path CONTAINING one is
+# reduced to its first space-free run and the rest is published: MEASURED,
+# r"D:\My Data\PRIVATE\row.npz" became r"My Data\PRIVATE\row.npz".  Directory names with
+# spaces are the ordinary case -- "Program Files", and this repository's own parent -- so
+# this is the likeliest leak here, not an exotic one.  The gate is a BACKSLASH because
+# this project's prose vocabulary is forward-slashed ("dev/pilot/val", "C1/S",
+# "0.10 N / 0.25"), so no sentence of ours can satisfy it; measured on a prose battery,
+# which the gate leaves byte-identical.
 _WINDOWS_ABSOLUTE = re.compile(
     r"(?:[^\\/\r\n]:\\|(?<![A-Za-z0-9])[A-Za-z]:/|[^A-Za-z\\/\r\n]:/|\\\\)"
-    r"[^\s'\"<>|]*"
+    r"(?:[^\s'\"<>|]|[ ](?=[^\s'\"<>|]*\\))*"
 )
-# Two POSIX forms.  "//host/share" is the forward-slash rendering of a UNC path and both
-# PurePath flavours call it absolute, so it must be scrubbed; the lookbehind is what
-# separates it from "scheme://", which must not be.  The single-slash form takes any
-# token-boundary "/x", which is why the ratio "0.1 N / 0.25" and the arrow "A -> B" are
-# untouched: neither has a non-space character after the slash.
+# Two POSIX forms, and they need DIFFERENT boundaries.  "//host/share" is the forward-slash
+# rendering of a UNC path and both PurePath flavours call it absolute, so it must be
+# scrubbed; its OWN lookbehind is what separates it from "scheme://", which must not be.
+# An outer token boundary therefore bought nothing and cost the glued form: MEASURED,
+# "opaque-prefix//host/PRIVATE/row.npz" was published whole.  The single-slash form KEEPS
+# its boundary, and that is a deliberate disclosed gap rather than an oversight -- see the
+# scrubber's docstring.  Neither form matches the ratio "0.1 N / 0.25" or the arrow
+# "A -> B", because both require a non-space character after the slash.
 _POSIX_ABSOLUTE = re.compile(
-    r"(^|[\s:=('\"\[])"
-    r"((?<![A-Za-z0-9+.\-]:)//[^\s'\"<>|)\],;/][^\s'\"<>|)\],;]*"
-    r"|/(?!/)[^\s'\"<>|)\],;]+)"
+    r"(?P<lead>^|[\s:=('\"\[])(?P<rooted>/(?!/)[^\s'\"<>|)\],;]+)"
+    r"|(?P<unc>(?<![A-Za-z0-9+.\-]:)//[^\s'\"<>|)\],;/][^\s'\"<>|)\],;]*)"
 )
+
+
+def _final_component(span: str) -> str:
+    """Return one matched path span's last component under BOTH separators.
+
+    Inputs: the span a POSIX pattern matched.  Outputs: its final component, or "" when no
+    component survives.
+    Purpose: ``PurePosixPath`` cannot see a backslash, so its ``name`` for a span written
+    r"/PRIVATE\\row.npz" is the whole r"PRIVATE\\row.npz" and the parent directory is
+    published.  MEASURED: r"opaque-prefixC:/PRIVATE\\row.npz" reduced to
+    r"opaque-prefixC:PRIVATE\\row.npz".  Splitting on both separators also means this
+    replacement can never RE-EMIT a separator, which is the state the fixpoint below
+    exists to survive.
+    """
+
+    parts = [part for part in re.split(r"[\\/]", span) if part]
+    return parts[-1] if parts else ""
 
 
 def _records_absolute_path(text: str) -> bool:
@@ -614,43 +643,62 @@ def _records_absolute_path(text: str) -> bool:
     )
 
 
+def _substitution_pass(text: str) -> str:
+    """Apply each path pattern EXACTLY ONCE, leaving the surrounding prose in place.
+
+    Inputs: one message.  Outputs: the message after a single pass of both patterns.
+    Purpose: the caller runs this to a fixpoint, and one pass is measurably not enough.
+    It is a separate function so a test can DRIVE one pass and show what it leaves behind,
+    rather than asserting the shortfall in a docstring or keeping a second copy of the
+    substitution in the test file.
+    """
+
+    scrubbed = _WINDOWS_ABSOLUTE.sub(
+        lambda match: PureWindowsPath(match.group(0)).name or "<path>", text
+    )
+    return _POSIX_ABSOLUTE.sub(
+        lambda match: (match.group("lead") or "")
+        + (_final_component(match.group("rooted") or match.group("unc")) or "<path>"),
+        scrubbed,
+    )
+
+
 def substitute_known_path_spellings(text: str) -> str:
     """Apply both path patterns to a FIXPOINT, leaving the surrounding prose in place.
 
     Inputs: one message.  Outputs: the message with every enumerated path spelling reduced
     to its final component.
-    Purpose: one pass is not enough, and the shortfall is not hypothetical.  The POSIX rule
-    reduces ``/plant/\\row.npz`` to ``\\row.npz`` and re-emits it after the boundary
-    character, which BUILDS ``C:\\row.npz`` inside prose that the Windows rule had already
-    been offered and declined.  The result records a path that no reduction can remove --
-    the whole string is relative, so ``PurePath.name`` has nothing to take -- and the only
-    exit left in the caller is to discard the entire message.  MEASURED with a single pass:
-    six of the 37,448 enumerated strings, and every prose sentence of that shape, lost
-    their whole text to "<path>".  A scrubber that silently replaces a reason is worse than
-    one that truncates it, because the reader cannot tell.
+    Purpose: one pass is not enough, and the shortfall is not hypothetical.  A repeated
+    root is the surviving mechanism: one pass reduces ``///data/gate3.npz`` to
+    ``/gate3.npz`` and re-emits it after the boundary character, so the message still
+    RECORDS a rooted path while the whole string stays relative -- and the only exit left
+    in the caller is to discard the entire message.  MEASURED with a single pass over the
+    37,448 enumerated strings: 969 are still absolute afterwards and TEN of them reach
+    that discard exit.  A scrubber that silently replaces a reason is worse than one that
+    truncates it, because the reader cannot tell.
+
+    The Session-68 mechanism -- the POSIX rule re-emitting ``\\row.npz`` and rebuilding
+    ``C:\\row.npz`` inside declined prose -- is closed at its source by
+    ``_final_component``, which reduces under both separators; the three sentences that
+    demonstrated it now survive a single pass.  The fixpoint is retained because the
+    repeated-root family above still needs it and because the guarantee has to hold for
+    inputs nobody enumerated.
 
     This is a separate function so the caller's post-condition is checkable from outside
     without a second copy of the substitution.
 
     TERMINATION IS ARITHMETIC, not a runtime check.  Every match consumes at least one
-    root or drive separator that is not part of the component the replacement keeps.
-    ``PurePosixPath.name`` can retain a backslash already present in its match, but neither
-    replacement introduces a separator that was not there.  Each productive pass therefore
-    strictly decreases the total number of "/" and "\\" characters, so there cannot be
-    more productive passes than the message had separators to begin with.
+    root or drive separator, and NEITHER replacement can contain one: ``PureWindowsPath``'s
+    ``name`` and ``_final_component`` both treat "/" and "\\" as separators and return a
+    single component.  Each productive pass therefore strictly decreases the total number
+    of "/" and "\\" characters, so there cannot be more productive passes than the message
+    had separators to begin with.
     """
 
     scrubbed = str(text)
     for _ in range(scrubbed.count("/") + scrubbed.count("\\") + 1):
         pass_input = scrubbed
-        scrubbed = _WINDOWS_ABSOLUTE.sub(
-            lambda match: PureWindowsPath(match.group(0)).name or "<path>", scrubbed
-        )
-        scrubbed = _POSIX_ABSOLUTE.sub(
-            lambda match: match.group(1)
-            + (PurePosixPath(match.group(2)).name or "<path>"),
-            scrubbed,
-        )
+        scrubbed = _substitution_pass(scrubbed)
         if scrubbed == pass_input:
             break
     return scrubbed
@@ -670,6 +718,17 @@ def scrub_machine_paths(text: str) -> str:
     final component.  The forward-slash letter form keeps the URI-safe token boundary;
     the other drive/root forms cannot be URL schemes.  Ordinary prose, ratios, arrows
     and links survive unchanged.
+
+    TWO SPELLINGS ARE DELIBERATELY NOT COVERED, and both are the SINGLE-SLASH POSIX form:
+    one glued to a word with no token boundary (``opaque-prefix/private/row.npz``) and one
+    containing a space (``/mnt/My Data/private/row.npz``).  Catching either means matching
+    a lone "/" after an ordinary character, which turns this project's own vocabulary into
+    nonsense -- "dev/pilot/val" becomes "val", "C1/S" becomes "C1S", "1/2" becomes "12" --
+    and a silently corrupted reason is worse than a leaked one because nothing discloses
+    it.  The cost is bounded: on a Windows host the paths that actually arise are drive- or
+    UNC-rooted and those forms are covered in both shapes.  The same gap is why the
+    writer's guard must not refuse those spellings either; if it did, X7 would fire while
+    X6 was writing the record.  Limitation, not oversight.
 
     The two patterns are an ENUMERATION of path spellings; the writer's guard is a
     PREDICATE over ``PurePath``.  Where the two disagree the artifact is destroyed, so the

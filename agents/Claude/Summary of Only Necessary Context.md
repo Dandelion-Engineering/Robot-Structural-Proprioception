@@ -1,8 +1,8 @@
 # Summary of Only Necessary Context — Claude
 
-*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 68, 2026-08-03.*
+*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 69, 2026-08-03.*
 
-## S69 FIRST — THE EXECUTABLE IS STILL THE ONLY OPEN STATE. CODEX OWNS THE TURN.
+## S70 FIRST — THE EXECUTABLE IS STILL THE ONLY OPEN STATE. CODEX OWNS THE TURN.
 
 ```text
 CLOSED AND SETTLED — do not reopen any of these:
@@ -24,26 +24,135 @@ CLOSED AND SETTLED — do not reopen any of these:
       tests/test_protocol_p_results.py                     ad6b32fef834cb55225b6cea1ac7831f090391de
 
 THE ONLY OPEN STATE — the THIRD prerequisite, the measurement executable:
-  scripts/run_payload_boundary_extension.py  04ec936e1fd0a8b3cbe4d17c0a942f9b5632187f
-  tests/test_payload_boundary_extension.py   4979af073747dc1fd9906877709caa8bca4fa3e1  81 tests
+  scripts/run_payload_boundary_extension.py  9fd723b0d63a395338378742ad7aed3bcd52173e
+  tests/test_payload_boundary_extension.py   191d9b4df84ba88dfb38c2e86ca67a9e9b85f369  106
   ROUND HISTORY: Codex built 62e4c9e1/96906aab (S64) -> I blocked, corrected to
   ff0cdbe6/ebdfdf83 (S65) -> Codex accepted all five, found two more, corrected to
   eb94afb2/5d8dd369 (S65) -> I accepted both, found FOUR MORE, corrected to
   431d9c08/4d194a67 (S66) -> Codex accepted all four, found TWO MORE, corrected to
   86fc3fdb/e081a26d (S66) -> I accepted both, found A THIRD FAMILY, corrected to
   5a5b0562/f2f5031d (S67) -> Codex accepted all three, found THREE MORE, corrected to
-  25386e27/ab4ddfc0 (S67) -> I accepted all three, CORRECTED THE SCOPE OF TWO of them,
-                             found ONE MORE, corrected to above.
-  CODEX OWNS THE NEXT TURN.  All three of ITS S67 findings I accepted in full.
-  FIVE CONSECUTIVE ROUNDS, EVERY ONE ON NEW EVIDENCE.  Nothing has been re-litigated,
+  25386e27/ab4ddfc0 (S67) -> I accepted all three, CORRECTED THE SCOPE OF TWO, found ONE
+                             MORE (the repair discarded whole reasons), corrected to
+  04ec936e/4979af07 (S68) -> Codex accepted all of it, found ONE MORE (the embedded regex
+                             was narrower than its own PureWindowsPath semantics), to
+  9cd10305/ce0cd642 (S68) -> I accepted it, found FOUR MORE, fixed three and DISCLOSED
+                             the fourth rather than fixing it, corrected to above.
+  CODEX OWNS THE NEXT TURN.  Its S68 finding I accepted in full and kept every line.
+  SIX CONSECUTIVE ROUNDS, EVERY ONE ON NEW EVIDENCE.  Nothing has been re-litigated,
   so the content-based escalation trigger has NOT fired.  Check that again next round.
+  *** THE ONE THING THAT COULD TRIP IT: family 4 below is a JUDGMENT, not a measurement.
+  I said so in the turn and offered the DIRECTOR rather than a second round on it. ***
 
-STEP 2 IS INCOMPLETE until Codex approves 04ec936e / 4979af07.
+STEP 2 IS INCOMPLETE until Codex approves 9fd723b0 / 191d9b4d.
 NO plan mode, NO replay, NO extension rollout, NO A2, NO config materialization.
 A2 IS STILL UNDRAFTED AND STILL BLOCKED.
 ```
 
-## THE S68 FINDING — THE REPAIR CAN DISCARD THE WHOLE REASON
+## THE S69 FINDING — THE ENUMERATOR IS NARROWER THAN ITS SEMANTICS ONCE MORE, IN FOUR PLACES
+
+**The instrument was a CROSS-PRODUCT, not a reading. Eleven path renderings x thirteen
+prefixes x two suffixes = 286 sentences, all driven through BOTH agents' blobs in one
+process, each output asked two questions: does the private directory marker survive, and
+was the whole message replaced by `<path>`. Reading found nothing in three sessions; the
+grid found four families in one run — and told me which one NOT to fix.**
+
+```text
+   leaking renderings (of 286)   MINE 04ec936e 82 | CODEX 9cd10305 34 | MINE 9fd723b0 0
+
+THE POST-CONDITION CANNOT HELP WITH ANY OF THESE.  An embedded path leaves the WHOLE
+string relative, so PurePath has nothing to say and the REGEX IS THE ONLY DEFENCE.
+
+1 UNC GLUED TO PROSE — a complete absolute path published.  X7 violated.
+    "opaque-prefix//host/PRIVATE/row.npz"  published unchanged; gate PASSED on self-digest
+    The outer token boundary bought NOTHING: that alternative already carries its own
+    (?<![A-Za-z0-9+.\-]:) lookbehind, and THAT is what keeps https:// safe.  Dropped.
+
+2 A PATH CONTAINING A SPACE — *** THE LIKELIEST LEAK IN THE FILE. ***
+    r"...absent: D:\My Data\PRIVATE\row.npz" -> r"...absent: My Data\PRIVATE\row.npz"
+    r"C:\Program Files\PRIVATE\row.npz"      -> r"Program Files\PRIVATE\row.npz"
+    r"...open \\host\My Share\PRIVATE\..."   -> r"...open <path> Share\PRIVATE\row.npz"
+    The tail stopped at the first whitespace, so the substitution only ever saw the first
+    SPACE-FREE RUN.  "Program Files", "My Documents" and THIS REPO'S OWN PARENT all
+    contain a space; the repo-root replacement covers <repo> and nothing else.
+    *** SCOPE, AND IT IS NOT THE SAME AS THE OTHER THREE.  What survives is RELATIVE, so
+    the guard says false, the artifact IS written and X7 AS WRITTEN IS SATISFIED.  What
+    fails is the scrubber's own final-component contract and the reason X7 exists.  Never
+    call this an X7 violation. ***
+    FIX: the tail may cross a space only when a BACKSLASH still lies ahead of the next
+    whitespace.  The gate is a backslash because our prose is FORWARD-slashed
+    (dev/pilot/val, C1/S, 0.10 N / 0.25), so no sentence of ours can satisfy it.
+    Measured: 10-sentence vocabulary battery byte-identical; 4 adversarial sentences keep
+    their tails.  ONE input over-consumes and I NAMED IT: r"C:\a\row.npz a\b" -> "b".
+
+3 MIXED SEPARATORS — a bad REDUCTION, not a missed match.
+    r"opaque-prefixC:/PRIVATE\row.npz" -> r"opaque-prefixC:PRIVATE\row.npz"
+    PurePosixPath cannot see a backslash, so its .name for the span r"/PRIVATE\row.npz"
+    is the WHOLE r"PRIVATE\row.npz".  _final_component() splits on BOTH separators.
+
+4 *** NOT FIXED, DELIBERATELY — the single-slash POSIX form. ***
+    "opaque-prefix/PRIVATE/row.npz"  and  "/mnt/My Data/PRIVATE/row.npz"  are published.
+    Closing it means matching a lone "/" after an ordinary character, which MEASURED
+    against our own vocabulary turns dev/pilot/val -> "val", C1/S -> "C1S", 1/2 -> "12".
+    A silently corrupted reason is worse than a leaked one (limitation 93).  It is a
+    DISCLOSED limitation in the docstring, PINNED BY A TEST so nobody closes it, and the
+    guard uses the same pattern ON PURPOSE — widen one side only and X7 fires while X6 is
+    writing the record.  On a Windows host the paths that arise are drive- or UNC-rooted
+    and both are now covered in BOTH shapes.
+```
+
+## WHAT I ACCEPTED FROM CODEX IN S68, AND THE ONE THING THAT LOOKS LIKE A FALSE POSITIVE
+
+```text
+ITS FINDING REPRODUCES.  The code declares PureWindowsPath as its semantics and the
+embedded regex accepted a narrower drive alphabet.  Measured through both blobs:
+  r"opaque-prefix1:\PRIVATE\row.npz"   MINE 04ec936e published | CODEX 9cd10305 clean
+  82 vs 34 leaking renderings of 286.  Its correction closed 48 real cases.
+I KEPT EVERY LINE: the widened backslash drive, the separate non-letter forward-slash
+form, the retained URI boundary on letter schemes, and all four new test contracts.
+
+*** LOOKS LIKE A FALSE POSITIVE, IS NOT.  The widened [^\\/\r\n]:\\ now rewrites
+r"pattern [A-Za-z]:[\\/] was rejected".  That is CORRECT:
+PureWindowsPath(r"]:\dir").is_absolute() is True, so the string really does record an
+absolute path under the semantics we chose.  If that cost is ever judged too high, change
+the DECLARED SEMANTICS, never the enumerator alone — they must agree or the artifact
+dies. ***
+```
+
+## WHAT I CHANGED IN S69
+
+```text
+scripts/run_payload_boundary_extension.py  +90/-31   9fd723b0
+tests/test_payload_boundary_extension.py   +175/-11  191d9b4d   83 -> 106 tests
+
+ - the Windows/UNC tail may cross a space, gated on a BACKSLASH lookahead.
+ - the "//host/share" alternative loses its outer token boundary; the single-slash form
+   KEEPS it, and the docstring now names what that leaves uncovered and why.
+ - _final_component(): a matched POSIX span reduces under BOTH separators.
+ - _substitution_pass(): one pass extracted so a test can DRIVE it.
+ - the fixpoint's stated reason re-measured and rewritten (see the S68 block below).
+
+VERIFICATION
+  focused 106 | -O 106 | FULL SUITE 1,242 in 117.26 s | compileall clean
+  REDCHECK vs CODEX's 9cd10305 in an isolated packet copy: 11 RED, 95 green, ALL 83 OF
+    CODEX'S PASS.  10 are behavioural; the 11th is red by AttributeError because
+    _substitution_pass does not exist in that blob — a HARNESS result, not a find, and I
+    said so.  The disclosed-gap test PASSES against 9cd10305: it is COVERAGE.
+  SWEEP 11 cases | 10 caught | 1 survivor | 0 bad anchors | BOTH PASSES AGREE
+    caught: space crossing removed; space gate widened to any separator; UNC boundary
+    restored; drive narrowed back to letters (Codex's own case, still live);
+    _final_component -> PurePosixPath.name; _final_component -> whole span; fixpoint
+    removed; LESSON-63 DOUBLE (fixpoint+discard); repo-root replacement removed; POSIX
+    lead character dropped.  Survivor: whole_message_discard_removed, unreachable BY
+    CONSTRUCTION and covered as a pair by the double.
+  *** TWO FAULTS IN MY OWN SWEEP HARNESS, BOTH REPORTED.  (1) The verdict carried
+  pytest's elapsed time, so the two-pass detector reported disagreement on EVERY clean
+  case — the exact mistake my own S65 notes warn about, made again.  (2) One anchor's
+  indentation was wrong -> BAD ANCHOR (0 matches).  Both fixed before any number was
+  taken.  A sweep result is worth exactly what its harness is worth. ***
+```
+
+## THE S68 FINDING (SUPERSEDED IN MECHANISM, KEPT FOR THE LESSON) — A REPAIR CAN DISCARD THE WHOLE REASON
 
 **Codex's S67 correction dropped the token boundary from the backslash drive form so that
 a path glued onto prose is caught. That was RIGHT and I kept it. It also made a state
@@ -71,14 +180,19 @@ nothing discloses the loss.
 
 THE FIX: run the substitutions to a FIXPOINT rather than once, extracted as
 substitute_known_path_spellings() so the caller's post-condition is checkable from
-OUTSIDE without a second copy of the substitution.  TERMINATION IS ARITHMETIC: every
-match begins with a root or drive separator that the replacement does not keep, and no
-replacement contains a separator, so each productive pass strictly decreases the number
-of "/" and "\" characters.  Three passes on the worst sentence.  Afterwards:
-   "ProtocolPError: pinned input absent at run1gate3.npz"      prose preserved
-   the discard branch fires on 0 of 37,448                     measured
+OUTSIDE without a second copy of the substitution.  TERMINATION IS ARITHMETIC.
 The discard branch is KEPT as a last resort and is a deliberate sweep survivor; the
 LESSON-63 DOUBLE removal (fixpoint + discard together) is what covers the pair.
+
+*** S69 UPDATE — THIS MECHANISM IS NOW CLOSED AT ITS SOURCE AND THE FIXPOINT'S REASON
+CHANGED.  _final_component() splits on both separators, so the POSIX replacement can no
+longer RE-EMIT one, and the three sentences above now survive a SINGLE pass.  RE-MEASURED
+with one pass over the 37,448 enumerated strings: 969 still absolute, TEN reaching the
+discard exit — the live mechanism is now a REPEATED ROOT ("///data/gate3.npz" -> one pass
+-> "/gate3.npz", still recorded, still relative as a whole).  I extracted
+_substitution_pass() so a test DRIVES one pass instead of a docstring claiming what it
+would do — the old docstring had just stopped being true, which IS the argument for the
+extraction.  Max productive passes over the enumeration: 2 (65 strings). ***
 ```
 
 ## WHAT I ACCEPTED FROM CODEX IN S67, AND THE SCOPE CORRECTION ON TWO OF THREE
@@ -274,6 +388,10 @@ APPROVED PLAN CONTENT IS STILL EMBEDDED VERBATIM AND STILL NOT SCRUBBED.  What c
 THE WRITER'S GUARD STILL ASKS WHETHER A STRING *IS* A PATH.  It cannot see a path inside
   prose, and it never will.  THE SCRUBBER, NOT THE GUARD, IS WHAT MAKES X7 TRUE — and as
   of S67 the scrubber's POST-CONDITION *is* the guard, so they cannot disagree.
+  *** S69: `_records_absolute_path` is REGEX **or** PurePath, so the guard DOES see an
+  embedded path — which is exactly why the two must be widened TOGETHER.  Tighten the
+  guard alone and X7 fires while X6 is writing.  That coupling is what forces the
+  single-slash POSIX gap (limitation 99) to be DISCLOSED rather than closed on one side. ***
 CODEX'S TWO NON-BLOCKING POINTS FROM S65 STAND AND I DID NOT TOUCH THEM: the decorative
   provenance inequality, and X1's recorded-but-unasserted reduced-run reconciliation.
 ```
@@ -624,7 +742,7 @@ Settled — do not reopen, do not edit v2.3.3.  Codex S55: no bump for the Stage
 ## Where the project is
 
 - **Phase 2 (Execution) is OPEN.** All Phase-1 gates in force. **Schema v1.0 + Amendment A1 in force.** Contract changes run through the **amendment protocol**.
-- I am **Claude**; last session was **Session 68**; next session I run is **Session 69**.
+- I am **Claude**; last session was **Session 69**; next session I run is **Session 70**.
 - **`config.json` is deliberately NOT frozen** and does not exist. All hashes are `dev-`; no `dev-` trace may enter confirmatory analysis.
 - Real data exists: `data/gate3-base-dev-pilot-val-c1-s` (3.86 GB, git-ignored, local only). 472 reservations / 944 manifest rows / C1+S / dev 152, pilot 152, val 168. **Test untouched: 0 identities, 0 payloads.** **Slated for full regeneration from zero after A2 — these 472 payloads become a superseded pre-amendment set in the packet exclusion trail. Read them; do not build on them.**
 - **STAGES A/B/C HAVE RUN — Codex's S57, 135 physical rollouts, CASE_B, JOINTLY APPROVED.** Stage 0 RAN in S48 at ZERO rollouts; `results/protocol_p/sensor_only_difference_null.json` is tracked and **JOINTLY APPROVED**. The §9 role-coverage read is now **JOINTLY APPROVED** (above). The payload read's **RESULT ARTIFACT is JOINTLY APPROVED** (S60 Codex / S61 me); its **script + tests are JOINTLY APPROVED (Codex S61)**.
@@ -659,11 +777,17 @@ the Stage-0 result, the progress report, Step 24, the public log, the extraction
 construction layers, the driver (blocked S54, corrected S55, approved S55), the S56/S57
 round, and **the role-coverage loop (blocked S58, corrected S59, approved S59, closed at
 the same state S60)**.
-**THE EXECUTABLE LOOP IS THE LONGEST YET — FIVE FULL ROUNDS
-(S64→S65→S65→S66→S66→S67→S67→S68) AND STILL OPEN.** It has NOT tripped the trigger, and the reason is worth stating so a future
+**THE EXECUTABLE LOOP IS THE LONGEST YET — SIX FULL ROUNDS
+(S64→S65→S65→S66→S66→S67→S67→S68→S68→S69) AND STILL OPEN.** It has NOT tripped the trigger, and the reason is worth stating so a future
 session does not escalate on count: every round accepted the previous round's findings in
 full and blocked on NEW measured evidence, each time one structural layer below the last
-(exception handling → container type and key position → the predicate itself). **The S67 authorization-gate
+(exception handling → container type and key position → the predicate itself → what the
+predicate is applied to → what the repair does to the message → what the rule does to a
+path that is not alone on the line). **THE S69 EXCEPTION TO WATCH: my fourth family is a
+JUDGMENT (disclose the single-slash POSIX gap rather than corrupt `dev/pilot/val`), not a
+measurement. I named it as such in the turn and offered the director. If Codex disagrees
+and one round does not settle it from source, ESCALATE — that is exactly the shape the
+rule is for.** **The S67 authorization-gate
 question is SETTLED**: Codex ruled in its S67 that the gate's refusal does not reopen
 the accepted "embed approved content verbatim" scope, and I took that ruling in my
 S68 rather than re-arguing it. **If a later round reopens THAT, or reopens the
@@ -782,9 +906,9 @@ and BEFORE any untouched `test` payload.**
 6. **Confirmatory controller protocol** — **DECIDED S27 (both agents):** freeze the fair four-arm comparison (no-action/detection-only · transparent attribution-driven · RMA · oracle) and **RUN the pre-registered paired C1-vs-S comparison**; do NOT narrow to information-only, do NOT retune blocked families post-hoc. *(Codex owns controller; diagnosis→control seam shared.)*
 7. **Evaluation driver + confirmatory manifest** — **MINE.** One CLI owning the `[t_c,t_c+5s]` slice, role joins, paired C1/S table, exclusions, CIs; rejects `dev-`/wrong-hash/cross-role/incomplete-pair/truncated. **Must implement the pre-registered statements (a)–(dd) carried below.**
 
-**The (a)–(ii) driver requirements, carried verbatim in shape:** (a) `ood_flag` exclusion from known-class metrics; (b) the **degradation-ladder rule** (S30/S31); (c) **pilot→val moves one variable while val→test additionally moves half-fraction → complete factorial** — *and, under A2 pin 4, no longer moves the contact window*; (d) S33's two findings; (e) the mild-stratum development diagnostic **at its true scope** and the per-channel attribution; (f) **[S35]** the excitation discontinuity; (g) **[S36]** the yardstick discontinuity (D) + the run-to-run range statement (E) + trajectory-partial margin coverage; (h) **[S37]** the operation mismatch (F), thermal near-invariance (G) as a *property*, the amplitude ceiling (H); (i) **[S38]** the **window origin (J)** — the driver MUST use the same origin the protocol pins — plus the matched/unmatched asymmetry and role-coverage counts; (j) **[S39]** the **construction path (K)** and the **unmatched-identity confound (L)**; (k) **[S40]** distinguish **`base_pair_id` from realized `pair_id`** in every identity join, and never stamp an overridden run with the base config hash; (l) **[S41]** any file whose **raw bytes** enter an identity must be hashed through the correct-domain helper; (m) **[S42]** that helper must be chosen **by file domain**; (n) **[S43]** every identity expression must **name the object it hashes**; (o) **[S44]** test the **wires between stages**, not only each stage; (p) **[S45]** every clean report must **disclose its denominator** and refuse to report when it cannot support the claim; (q) **[S46]** every guard must be **reachable from the construction that will run**, and every fixture large enough for the defect it exposes; (r) **[S47]** every pinned literal that also lives in a bound document is checked by EQUALITY, never adoption; (s) **[S48]** every test that claims to verify a gate must CALL it and assert the REASON for a refusal; (t) **[S50]** every documented dependency must be verified against the running system; (u) **[S51]** assert a phrase UNIQUE TO ONE RAISE SITE, and construct preconditions through `utils/protocol_p_conditions.py`; (v) **[S52]** obtain the source reservation from the I1-pinned assignment and never construct one, and test per BRANCH not per guard; (w) **[S53]** record a REUSED row's provenance by CITATION, and DERIVE the fault onset; (x) **[S54]** key the results table on the PHYSICAL BODY, and make every clean-census check reachable from a state that could fail it; (y) **[S55]** derive the reported set from what was MEASURED rather than from which candidates survived, CONSUME the hard-gate report in EVERY stage, and persist the gate evidence, step count and elapsed time on EVERY exit path including terminals; **(z) [S56]** every check the driver makes must be given a source INDEPENDENT of the thing it checks — a comparison whose two sides are produced by the same function from the same arguments is a report of a check rather than a check — and no result artifact may record an absolute filesystem path; **(aa) [S57]** every count must distinguish OCCURRENCES from IDENTITIES — 180 provenance references over 168 distinct stamps, never "180 stamps" — and every historical figure must be re-derived from primary records; **(bb) [S57]** no outcome case may be reported until the healthy-vs-faulted readback has distinguished a measured null from an override that never reached the plant; **(cc) [S59]** every digest a result artifact records must be taken in the domain of the file's KIND — canonical for tracked text, raw only for binary — and every check a review ADDS must have a committed test that constructs the state it refuses; **(dd) [NEW S60]** every verdict the driver reports must name the CONTEXT POPULATION it was established over, because a conjunction over context cells is a statement about exactly those cells and the confirmatory splits are not drawn from them — and no coverage count computed from those verdicts may be presented as a statement about a split's own contexts; **(ee) [NEW S61]** every refusal message must be unique to one raise site **as rendered**, not as written — a message assembled by an f-string can duplicate a literal one exactly, which no text search of the file will find, so the check is a runtime comparison of the sentences the sites actually emit. **(ff) [NEW S62]** every guard must be checked against what ELSE in the design produces its passing signal — a distinctness check over units that already differ for another reason certifies nothing — and after any change to what the design holds fixed, every downstream key, join and dedup must be re-asked what it was actually distinguishing, because a key is a claim about what makes two things different and the design just changed that claim. **(hh) [NEW S65]** every branch that reports a cost must read that cost from the object that incurred it — a handler reading a sibling handler's locals reports a number no run produced, or crashes — and every exit that a specification says must persist evidence needs a test that DRIVES that exit, because the exit paths of a CLI are the region no unit test enters. **(gg) [S64]** an additive field is only additive where something can **produce** it — after adding a field to a type, name every PRODUCER of that type and check each one passes the new input, because adding it to the type, its factory and its serializer covers every place the object is consumed or rendered and none of the places it is built. **(ii) [NEW S66]** a rule that FORBIDS content in an artifact must never be able to stop the write that rule's own specification REQUIRES — when one invariant refuses and another compels, name the exit where they meet and drive it, because the refusal fires while writing the evidence and destroys exactly the record it was protecting; and every value a failure artifact records must be validated for shape BEFORE it is recorded, not by the check that runs one exit later. **(jj) [NEW S67]** when one routine exists to make another routine's check pass, the first must END BY ASSERTING THAT CHECK rather than enumerating the cases it expects — a list of spellings and a predicate disagree on inputs nobody enumerated, and the disagreement surfaces as the destroyed artifact; and where a gate embeds content verbatim on the strength of a premise about where that content came from, the premise is a thing to CHECK at the gate, not to assume, because refusing is not the same act as rewriting. **(kk) [NEW S68]** a routine that REWRITES a persisted message must be run to a fixpoint, because one rewriting rule can BUILD the pattern another rule has already been offered and declined, and the state that leaves behind is one no reduction can repair — so the only exit left discards the record the rule existed to protect; and a fixture must be placed where the value it carries actually reaches the code under test, because an artifact writer copies named members rather than whole documents, and a bad value outside those members exercises nothing.
+**The (a)–(ii) driver requirements, carried verbatim in shape:** (a) `ood_flag` exclusion from known-class metrics; (b) the **degradation-ladder rule** (S30/S31); (c) **pilot→val moves one variable while val→test additionally moves half-fraction → complete factorial** — *and, under A2 pin 4, no longer moves the contact window*; (d) S33's two findings; (e) the mild-stratum development diagnostic **at its true scope** and the per-channel attribution; (f) **[S35]** the excitation discontinuity; (g) **[S36]** the yardstick discontinuity (D) + the run-to-run range statement (E) + trajectory-partial margin coverage; (h) **[S37]** the operation mismatch (F), thermal near-invariance (G) as a *property*, the amplitude ceiling (H); (i) **[S38]** the **window origin (J)** — the driver MUST use the same origin the protocol pins — plus the matched/unmatched asymmetry and role-coverage counts; (j) **[S39]** the **construction path (K)** and the **unmatched-identity confound (L)**; (k) **[S40]** distinguish **`base_pair_id` from realized `pair_id`** in every identity join, and never stamp an overridden run with the base config hash; (l) **[S41]** any file whose **raw bytes** enter an identity must be hashed through the correct-domain helper; (m) **[S42]** that helper must be chosen **by file domain**; (n) **[S43]** every identity expression must **name the object it hashes**; (o) **[S44]** test the **wires between stages**, not only each stage; (p) **[S45]** every clean report must **disclose its denominator** and refuse to report when it cannot support the claim; (q) **[S46]** every guard must be **reachable from the construction that will run**, and every fixture large enough for the defect it exposes; (r) **[S47]** every pinned literal that also lives in a bound document is checked by EQUALITY, never adoption; (s) **[S48]** every test that claims to verify a gate must CALL it and assert the REASON for a refusal; (t) **[S50]** every documented dependency must be verified against the running system; (u) **[S51]** assert a phrase UNIQUE TO ONE RAISE SITE, and construct preconditions through `utils/protocol_p_conditions.py`; (v) **[S52]** obtain the source reservation from the I1-pinned assignment and never construct one, and test per BRANCH not per guard; (w) **[S53]** record a REUSED row's provenance by CITATION, and DERIVE the fault onset; (x) **[S54]** key the results table on the PHYSICAL BODY, and make every clean-census check reachable from a state that could fail it; (y) **[S55]** derive the reported set from what was MEASURED rather than from which candidates survived, CONSUME the hard-gate report in EVERY stage, and persist the gate evidence, step count and elapsed time on EVERY exit path including terminals; **(z) [S56]** every check the driver makes must be given a source INDEPENDENT of the thing it checks — a comparison whose two sides are produced by the same function from the same arguments is a report of a check rather than a check — and no result artifact may record an absolute filesystem path; **(aa) [S57]** every count must distinguish OCCURRENCES from IDENTITIES — 180 provenance references over 168 distinct stamps, never "180 stamps" — and every historical figure must be re-derived from primary records; **(bb) [S57]** no outcome case may be reported until the healthy-vs-faulted readback has distinguished a measured null from an override that never reached the plant; **(cc) [S59]** every digest a result artifact records must be taken in the domain of the file's KIND — canonical for tracked text, raw only for binary — and every check a review ADDS must have a committed test that constructs the state it refuses; **(dd) [NEW S60]** every verdict the driver reports must name the CONTEXT POPULATION it was established over, because a conjunction over context cells is a statement about exactly those cells and the confirmatory splits are not drawn from them — and no coverage count computed from those verdicts may be presented as a statement about a split's own contexts; **(ee) [NEW S61]** every refusal message must be unique to one raise site **as rendered**, not as written — a message assembled by an f-string can duplicate a literal one exactly, which no text search of the file will find, so the check is a runtime comparison of the sentences the sites actually emit. **(ff) [NEW S62]** every guard must be checked against what ELSE in the design produces its passing signal — a distinctness check over units that already differ for another reason certifies nothing — and after any change to what the design holds fixed, every downstream key, join and dedup must be re-asked what it was actually distinguishing, because a key is a claim about what makes two things different and the design just changed that claim. **(hh) [NEW S65]** every branch that reports a cost must read that cost from the object that incurred it — a handler reading a sibling handler's locals reports a number no run produced, or crashes — and every exit that a specification says must persist evidence needs a test that DRIVES that exit, because the exit paths of a CLI are the region no unit test enters. **(gg) [S64]** an additive field is only additive where something can **produce** it — after adding a field to a type, name every PRODUCER of that type and check each one passes the new input, because adding it to the type, its factory and its serializer covers every place the object is consumed or rendered and none of the places it is built. **(ii) [NEW S66]** a rule that FORBIDS content in an artifact must never be able to stop the write that rule's own specification REQUIRES — when one invariant refuses and another compels, name the exit where they meet and drive it, because the refusal fires while writing the evidence and destroys exactly the record it was protecting; and every value a failure artifact records must be validated for shape BEFORE it is recorded, not by the check that runs one exit later. **(jj) [NEW S67]** when one routine exists to make another routine's check pass, the first must END BY ASSERTING THAT CHECK rather than enumerating the cases it expects — a list of spellings and a predicate disagree on inputs nobody enumerated, and the disagreement surfaces as the destroyed artifact; and where a gate embeds content verbatim on the strength of a premise about where that content came from, the premise is a thing to CHECK at the gate, not to assume, because refusing is not the same act as rewriting. **(kk) [NEW S68]** a routine that REWRITES a persisted message must be run to a fixpoint, because one rewriting rule can BUILD the pattern another rule has already been offered and declined, and the state that leaves behind is one no reduction can repair — so the only exit left discards the record the rule existed to protect; and a fixture must be placed where the value it carries actually reaches the code under test, because an artifact writer copies named members rather than whole documents, and a bad value outside those members exercises nothing. **(ll) [NEW S69]** a rule that recognises a value must be checked against every way that value can appear IN COMPANY, not only alone — a cross-product of renderings against the characters that can precede and follow them is a different instrument from a list of examples, and it is the one that finds the family rather than the instance; and where the rule cannot be widened without corrupting the project's own vocabulary, the answer is a DISCLOSED limitation with a test that pins it, not a silent gap — because a scrubber's accept side is where damage is invisible, and because the guard that shares the rule must not be tightened alone.
 
-**Order:** (1)✓ → (2 foundation)✓ → (2 role-write)✓ → (3 assignment)✓✓ → (2 generator + base roles)✓✓ → (2 hardening)✓✓ → (dev separability check)✓ **[NEGATIVE]** → Protocol P v2.3.3 spec ✓✓ → seam + 37 tests ✓✓ → replay gate ✓✓ → Stage-0 implementation ✓✓ → **Stage 0 RAN, S48 ✓** → Stage-0 result ✓✓ → Progress Report S48 ✓✓ → packet Step 24 ✓✓ → public README ✓✓ → extraction + construction layer ✓✓ (S51–S53) → driver + results layer (S54 built, S54 blocked, S55 corrected, S55 approved ✓✓) → S56 pre-registered helper + Step 25 ✓✓ → **Codex S57: replay gate (36.42 s) then STAGES A/B/C — 135 rollouts, CASE_B ✓** → **my S58: every number independently reproduced, result APPROVED; §9's role-coverage read found UNIMPLEMENTED and built at zero rollouts — dev 0 / pilot 0 / val 1 / test 1** → **Codex S58 BLOCKED it on three real findings and corrected it** → **my S59: all three CONFIRMED; a FOURTH found in the repair (raw-domain digest of a tracked text file); 23-case sweep, 13 survivors, 12 real, closed with 12 tests** → **Codex S59 APPROVED all four states and held the loop open for my explicit approval** → **my S60: approval posted, LOOP CLOSED AT THE SAME STATE; the mutation-sweep harness found to give false verdicts and fixed; the approved analyzer re-swept clean (28/28); the payload-conditioning read built at zero rollouts** → **Codex S60 blocked the payload read on two real defects, corrected them, ruled MEASURE FIRST via a separate development-only pre-registration, and blocked A2** → **my S61: both findings confirmed independently; the result artifact and both READMEs approved at Codex's states; the sweep over Codex's repair found a SILENT GAP in one of its own new guards and a three-way message collision one copy of which is built by an f-string; script+tests returned at new blobs; the payload-boundary extension v0.1 DRAFTED** → **Codex S61 APPROVED the analyzer/tests (loop CLOSED) and BLOCKED the extension on four findings** → **my S62: all four confirmed against primary sources, none contested; v0.1 `git mv`'d to v0.2 and rewritten — CRN across masses, a SECOND prerequisite (`PhysicalKey`), one ordered exhaustive classifier, pinned artifact/provenance contracts, the anchor staged first; plus three findings of my own (zero gravity, probe 97x below the lowest mode, a noise-fragile anchor)** → **Codex S62 made FIVE direct edits to v0.2 and approved its own state `e5192eaa` — circular provenance payload, plan/execute split, the anchor cannot prove payload liveness (its source reservation already carries 0.050 kg), result joins as data, reduced coverage licenses nothing** → **my S63: all five accepted, three verified at source; ONE NEW DEFECT found in Codex's own new text — R10 `X_CASE_EMPTY` kept the weaker Option-B rule Codex had just tightened at R11, and over all 19,448 states DELETING a result raised the licensed cap in 3,185 of them; fixed by unifying the rule (0 remain), state returned at `538ae06b`** → **Codex S63 APPROVED `538ae06b`, CLOSING THE DOCUMENT LOOP, then built two of the three Step-2 prerequisites and approved its own four-file state** → **my S64: both of Codex's changes verified with my own 10-case two-pass sweep (10/10 caught, 0 survivors); ONE defect found — `PhysicalKey` gained the payload field while `LogicalRow.physical`, the ONLY producer of a key in that module, could not set it, so the extension's 126 rollouts resolved to 18 keys; fixed additively; four-file state approved at `b7b2430a`/`c23e61d3`/`2f7c33b2`/`ad6b32fe`** → **my S65: Codex's executable could not have completed ONE execute run — wrong replay reservation, `UnboundLocalError` in the XR handler, an exception class outside the measurement handler; five corrections, state returned at `ff0cdbe6`/`ebdfdf83`** → **Codex S65 accepted all five including the `resolve_replay_source` extraction, found TWO more real X6/X7 exits, corrected them, approved `eb94afb2`/`5d8dd369`, and closed my progress-report loop at `b0ff7496`** → **my S66: both of Codex's findings accepted in full; FOUR MORE defects found by RUNNING — X7's writer guard destroying the X6 record on the wrong-plan exit, the same crash reachable through Codex's brand-new missing-argument exit, `//host/share` surviving both scrubbers, and my own S65 Windows regex eating every URL — plus two silent execute exits and an untested branch; state returned at `431d9c08`/`4d194a67`** → **Codex S66 accepted all four, found TWO more — a non-object `inputs` field crashing `execute_document_skeleton` while assembling the failure record, and an absolute path used as a JSON MEMBER NAME surviving both the scrubber and the writer — corrected both and approved `86fc3fdb`/`e081a26d`** → **my S67: both reproduced against my own blob and both implementations kept unchanged; a THIRD family found by ENUMERATION rather than reading — the scrubber is a list of spellings and the writer's guard is a `PurePath` predicate, and they disagreed on 1,358 of 37,448 strings (bare roots; drive letters `PurePath` accepts and `[A-Za-z]` does not), nine of which killed the write through `main()`; fixed by making the scrubber's post-condition BE the guard, run to a fixpoint; plus the authorized path closed at the gate by a refusal rather than a rewrite; state returned at `5a5b0562`/`f2f5031d`** → **Codex S67 accepted all three, ruled that the authorization-gate refusal does NOT reopen the verbatim-embedding scope, found THREE more execute-exit shapes — a real Windows path glued onto prose with no delimiter, values `json.loads` accepts that canonical JSON cannot represent (`1e9999` -> `inf`, a lone surrogate), and a foreign plan too deeply nested for the recursive visitors — and approved `25386e27`/`ab4ddfc0`** → **my S68: all three accepted and kept unchanged, with a SCOPE CORRECTION on two (the unserializable values only reach the writer under `inputs`/`protocol`/`plan`, and the recursion threshold is a property of the CALLER'S stack, not of this file — measured at two ambient depths); ONE NEW DEFECT found in the repair itself — dropping the drive-letter token boundary made a state reachable where the post-condition discards the WHOLE reason, measured on three realistic sentences and 6 of 37,448; fixed by running the substitutions to a FIXPOINT; state returned at `04ec936e`/`4979af07` ← WE ARE HERE** → Codex reviews it (both approve) → plan mode → SEPARATE execution authorization → the extension RUNS → both read it → written amendment A2 + replacement assignment (both approve) → **full regeneration from zero** → re-audit → (4/5 models+calibration) [me] → (2 remaining roles) [Codex] → (6 controller + sample-size) [shared] → **joint immutable freeze** → one-shot confirmatory generation + eval (7) → Phase 3.
+**Order:** (1)✓ → (2 foundation)✓ → (2 role-write)✓ → (3 assignment)✓✓ → (2 generator + base roles)✓✓ → (2 hardening)✓✓ → (dev separability check)✓ **[NEGATIVE]** → Protocol P v2.3.3 spec ✓✓ → seam + 37 tests ✓✓ → replay gate ✓✓ → Stage-0 implementation ✓✓ → **Stage 0 RAN, S48 ✓** → Stage-0 result ✓✓ → Progress Report S48 ✓✓ → packet Step 24 ✓✓ → public README ✓✓ → extraction + construction layer ✓✓ (S51–S53) → driver + results layer (S54 built, S54 blocked, S55 corrected, S55 approved ✓✓) → S56 pre-registered helper + Step 25 ✓✓ → **Codex S57: replay gate (36.42 s) then STAGES A/B/C — 135 rollouts, CASE_B ✓** → **my S58: every number independently reproduced, result APPROVED; §9's role-coverage read found UNIMPLEMENTED and built at zero rollouts — dev 0 / pilot 0 / val 1 / test 1** → **Codex S58 BLOCKED it on three real findings and corrected it** → **my S59: all three CONFIRMED; a FOURTH found in the repair (raw-domain digest of a tracked text file); 23-case sweep, 13 survivors, 12 real, closed with 12 tests** → **Codex S59 APPROVED all four states and held the loop open for my explicit approval** → **my S60: approval posted, LOOP CLOSED AT THE SAME STATE; the mutation-sweep harness found to give false verdicts and fixed; the approved analyzer re-swept clean (28/28); the payload-conditioning read built at zero rollouts** → **Codex S60 blocked the payload read on two real defects, corrected them, ruled MEASURE FIRST via a separate development-only pre-registration, and blocked A2** → **my S61: both findings confirmed independently; the result artifact and both READMEs approved at Codex's states; the sweep over Codex's repair found a SILENT GAP in one of its own new guards and a three-way message collision one copy of which is built by an f-string; script+tests returned at new blobs; the payload-boundary extension v0.1 DRAFTED** → **Codex S61 APPROVED the analyzer/tests (loop CLOSED) and BLOCKED the extension on four findings** → **my S62: all four confirmed against primary sources, none contested; v0.1 `git mv`'d to v0.2 and rewritten — CRN across masses, a SECOND prerequisite (`PhysicalKey`), one ordered exhaustive classifier, pinned artifact/provenance contracts, the anchor staged first; plus three findings of my own (zero gravity, probe 97x below the lowest mode, a noise-fragile anchor)** → **Codex S62 made FIVE direct edits to v0.2 and approved its own state `e5192eaa` — circular provenance payload, plan/execute split, the anchor cannot prove payload liveness (its source reservation already carries 0.050 kg), result joins as data, reduced coverage licenses nothing** → **my S63: all five accepted, three verified at source; ONE NEW DEFECT found in Codex's own new text — R10 `X_CASE_EMPTY` kept the weaker Option-B rule Codex had just tightened at R11, and over all 19,448 states DELETING a result raised the licensed cap in 3,185 of them; fixed by unifying the rule (0 remain), state returned at `538ae06b`** → **Codex S63 APPROVED `538ae06b`, CLOSING THE DOCUMENT LOOP, then built two of the three Step-2 prerequisites and approved its own four-file state** → **my S64: both of Codex's changes verified with my own 10-case two-pass sweep (10/10 caught, 0 survivors); ONE defect found — `PhysicalKey` gained the payload field while `LogicalRow.physical`, the ONLY producer of a key in that module, could not set it, so the extension's 126 rollouts resolved to 18 keys; fixed additively; four-file state approved at `b7b2430a`/`c23e61d3`/`2f7c33b2`/`ad6b32fe`** → **my S65: Codex's executable could not have completed ONE execute run — wrong replay reservation, `UnboundLocalError` in the XR handler, an exception class outside the measurement handler; five corrections, state returned at `ff0cdbe6`/`ebdfdf83`** → **Codex S65 accepted all five including the `resolve_replay_source` extraction, found TWO more real X6/X7 exits, corrected them, approved `eb94afb2`/`5d8dd369`, and closed my progress-report loop at `b0ff7496`** → **my S66: both of Codex's findings accepted in full; FOUR MORE defects found by RUNNING — X7's writer guard destroying the X6 record on the wrong-plan exit, the same crash reachable through Codex's brand-new missing-argument exit, `//host/share` surviving both scrubbers, and my own S65 Windows regex eating every URL — plus two silent execute exits and an untested branch; state returned at `431d9c08`/`4d194a67`** → **Codex S66 accepted all four, found TWO more — a non-object `inputs` field crashing `execute_document_skeleton` while assembling the failure record, and an absolute path used as a JSON MEMBER NAME surviving both the scrubber and the writer — corrected both and approved `86fc3fdb`/`e081a26d`** → **my S67: both reproduced against my own blob and both implementations kept unchanged; a THIRD family found by ENUMERATION rather than reading — the scrubber is a list of spellings and the writer's guard is a `PurePath` predicate, and they disagreed on 1,358 of 37,448 strings (bare roots; drive letters `PurePath` accepts and `[A-Za-z]` does not), nine of which killed the write through `main()`; fixed by making the scrubber's post-condition BE the guard, run to a fixpoint; plus the authorized path closed at the gate by a refusal rather than a rewrite; state returned at `5a5b0562`/`f2f5031d`** → **Codex S67 accepted all three, ruled that the authorization-gate refusal does NOT reopen the verbatim-embedding scope, found THREE more execute-exit shapes — a real Windows path glued onto prose with no delimiter, values `json.loads` accepts that canonical JSON cannot represent (`1e9999` -> `inf`, a lone surrogate), and a foreign plan too deeply nested for the recursive visitors — and approved `25386e27`/`ab4ddfc0`** → **my S68: all three accepted and kept unchanged, with a SCOPE CORRECTION on two (the unserializable values only reach the writer under `inputs`/`protocol`/`plan`, and the recursion threshold is a property of the CALLER'S stack, not of this file — measured at two ambient depths); ONE NEW DEFECT found in the repair itself — dropping the drive-letter token boundary made a state reachable where the post-condition discards the WHOLE reason, measured on three realistic sentences and 6 of 37,448; fixed by running the substitutions to a FIXPOINT; state returned at `04ec936e`/`4979af07`** → **Codex S68 accepted all of it and found ONE more — the embedded-path regex accepted a narrower drive alphabet than the file's own declared `PureWindowsPath` semantics, so an embedded `1:\…` was published — corrected it and approved `9cd10305`/`ce0cd642`** → **my S69: that finding reproduced (82 leaking renderings of 286 under my blob, 34 under Codex's, 0 under the state I returned) and every line of its repair kept; FOUR MORE found by a CROSS-PRODUCT rather than a reading — a UNC path glued to prose published whole, a path CONTAINING A SPACE reduced only to its first space-free run (this repo's own parent has a space), a mixed-separator span whose reduction kept the parent directory, and the single-slash POSIX form glued to a word, which I DID NOT FIX and disclosed instead because closing it turns `dev/pilot/val` into `val`; state returned at `9fd723b0`/`191d9b4d` ← WE ARE HERE** → Codex reviews it (both approve) → plan mode → SEPARATE execution authorization → the extension RUNS → both read it → written amendment A2 + replacement assignment (both approve) → **full regeneration from zero** → re-audit → (4/5 models+calibration) [me] → (2 remaining roles) [Codex] → (6 controller + sample-size) [shared] → **joint immutable freeze** → one-shot confirmatory generation + eval (7) → Phase 3.
 
 Not freeze blockers (still required before completion): Slot-8 verification artifact; Technical Report / Accessible Piece / Study Guide Pass 2 (Phase 3); fresh-environment packet validation.
 
@@ -1010,6 +1134,34 @@ generation_audit.json · independent_audit.json
     `Path.write_text` leaves a **zero-length file**, so "the artifact exists" is not the same
     check as "the artifact is readable."
 
+98. **[NEW S69] A PATH CONTAINING A SPACE WAS ONLY HALF-SCRUBBED, AND THIS MACHINE'S OWN
+    PROJECT DIRECTORY CONTAINS ONE.** The match's character class stopped at whitespace, so
+    the substitution saw only the first space-free run and re-emitted everything after the
+    space: r"D:\My Data\PRIVATE\row.npz" became r"My Data\PRIVATE\row.npz". Paths under
+    `REPO_ROOT` are covered by the `<repo>` replacement; a sibling directory or the `D:`
+    data drive was not. **It does NOT violate X7 as written** — the residue is relative, the
+    guard passes and the artifact is written — it violates the scrubber's stated
+    final-component contract and the reason X7 exists. Fixed by letting the tail cross a
+    space only when a backslash lies ahead of the next whitespace. **One input still
+    over-consumes and is named rather than hidden: r"C:\a\row.npz a\b" -> "b".**
+
+99. **[NEW S69] THE SINGLE-SLASH POSIX FORM GLUED TO A WORD IS PUBLISHED, AND THAT IS A
+    DECISION.** `"opaque-prefix/PRIVATE/row.npz"` and `"/mnt/My Data/PRIVATE/row.npz"` are
+    recorded as-is. Closing it means matching a lone `/` after an ordinary character, which
+    measured against this project's vocabulary turns `dev/pilot/val` into `val`, `C1/S` into
+    `C1S` and `1/2` into `12`. Disclosed in the docstring, pinned by a test, and symmetric
+    on purpose: the writer's guard shares the pattern, so it does not refuse those spellings
+    either — tighten one side alone and X7 fires while X6 is writing the record. **This is a
+    judgment and it is the one place the escalation trigger could plausibly fire.**
+
+100. **[NEW S69] THE MUTATION SWEEP'S VERDICT MUST CARRY NOTHING THAT VARIES BETWEEN
+    PASSES, AND I BROKE THAT AGAIN.** I embedded pytest's elapsed time in the verdict, so
+    the two-pass detector reported a disagreement on every clean case — a detector that
+    fires always is a detector that says nothing. My own S65 notes carry this exact warning.
+    A second case came back BAD ANCHOR purely from an indentation mismatch. **Both are
+    harness results and both were reported beside the corrected run; a sweep number is worth
+    exactly what its harness is worth.**
+
 ## Coherence / honesty bounds (keep loud)
 
 - **Sensor RNG keyed on `(sensor_seed, pair_id, channel, stream)` jointly** (`utils/rng.py:76-78`). **Measured S39: a `pair_id` change alone moves `gauge_obs` by up to 6.50 µε**, against `D` of order 0.1–0.5. **Nothing else is in the key.**
@@ -1020,7 +1172,7 @@ generation_audit.json · independent_audit.json
 
 - **Simulation-only, one desktop:** Windows 11, Ryzen 7 8700F (8C/16T), RTX 5060 Ti **16 GB VRAM** (sm_120), 32 GB RAM, Python **3.12.10** in `./venv`. Free/OSS, commercial-use-friendly only.
 - **venv has:** numpy 2.5.1, scipy 1.18.0, scikit-learn 1.9.0, matplotlib 3.11.0, mujoco 3.10.0, pandas 3.0.3, control 0.10.2, gymnasium 1.3.0, pytest 9.1.1, **torch 2.11.0+cu128**. **No new dependency was added in S46–S61.**
-- **Running packet tests:** from the REPO ROOT, `./venv/Scripts/python.exe -m pytest -q "Reproducibility Packet/tests"`. **Scope pytest to that path** — a root-wide invocation collides on duplicate test module names in the ignored `tmp/session6_packet_copy/`. **Full suite 1,217 tests green (S68, 119.02 s; Codex S67 1,212 in 127.96 s; my S67 1,207 in 117.49 s).** `test_payload_boundary_extension.py` now collects **81** — Codex handed off 36 in S64, I made it 45 in S65, Codex 47 in its S65, my S66 review made it 53, Codex's S66 made it 58, my S67 review made it 71, Codex's S67 made it 76, and my S68 review added 5. **The two closed Step-2 seam files together collect 124.** Prior: 1,207 (my S67), 1,189 (my S66), 1,136 (my S64), 1,133 (Codex S63), 1,126 (my S63 and Codex S61), 1,115 (Codex S60), 1,107 (my S60, 150.54 s), 1,021 (S59, 143.00 s), 999 (S58), 975 (S57), 938 (S55), 906 (S54), 750 (S53), 595 (pre-S51 baseline). **Set `PYTHONIOENCODING=utf-8` for anything that prints non-ASCII** — the console is cp1252. **Use ASCII in probe scripts and in anything a gate prints.**
+- **Running packet tests:** from the REPO ROOT, `./venv/Scripts/python.exe -m pytest -q "Reproducibility Packet/tests"`. **Scope pytest to that path** — a root-wide invocation collides on duplicate test module names in the ignored `tmp/session6_packet_copy/`. **Full suite 1,242 tests green (S69, 117.26 s; Codex S68 1,219 in 135.28 s; my S68 1,217 in 119.02 s).** `test_payload_boundary_extension.py` now collects **106** — Codex handed off 36 in S64, I made it 45 in S65, Codex 47 in its S65, my S66 review made it 53, Codex's S66 made it 58, my S67 review made it 71, Codex's S67 made it 76, my S68 review made it 81, Codex's S68 made it 83, and my S69 review added 23. **The two closed Step-2 seam files together collect 124.** Prior: 1,217 (my S68), 1,207 (my S67), 1,189 (my S66), 1,136 (my S64), 1,133 (Codex S63), 1,126 (my S63 and Codex S61), 1,115 (Codex S60), 1,107 (my S60, 150.54 s), 1,021 (S59, 143.00 s), 999 (S58), 975 (S57), 938 (S55), 906 (S54), 750 (S53), 595 (pre-S51 baseline). **Set `PYTHONIOENCODING=utf-8` for anything that prints non-ASCII** — the console is cp1252. **Use ASCII in probe scripts and in anything a gate prints.**
 - **MUTATION SWEEPS — MANDATORY HARNESS SHAPE AFTER S60:** clear `__pycache__` before every run **and** set `PYTHONDONTWRITEBYTECODE=1` in the subprocess env; drop `-x`; translate anchors to the target file's own newline; report bad anchors separately from survivors; restore exact bytes in a `finally` and verify the blob afterwards. **Run the whole sweep twice and require identical results** — that is the cheapest detector for a harness fault.
 - **Packet scripts are invoked FROM the packet directory** (`scripts\<name>.py`, `--output-dir results\<name>`), per its README. From the packet dir the project venv is `..\venv\Scripts\python.exe`. **In my PowerShell tool the working directory is not the repo root — use `Set-Location` or absolute paths. My Bash tool's cwd PERSISTS between calls — prefer absolute paths or re-`cd` every time.**
 - **Timings (measured S35–S60):** full packet suite ~150 s; one MuJoCo rollout (3000 steps) **25.6–27.5 s**; a PARTIAL rollout is proportionally cheap — 480 steps ≈ 3.0 s; at reduced fidelity (`point_count=9`, `simulation_timestep_s=2e-4`) 501 control steps ≈ 0.37 s; a 200-realization sensor-only null at W=768 ~40 s; an offline re-observation ≈ instantaneous; the driver's `--mode plan` 0.30–0.33 s; **one driver-file mutation case ≈ 100 s** (a 17-case sweep is ~28 min and belongs in the background); **a small-analyzer mutation case ≈ 0.5–0.7 s with the fixed harness, so a 44-case sweep is under a minute.** **NO figure exists for the pinned `pairs=100` Stage-0 run — see limitation 45; do not invent one.**
@@ -1152,11 +1304,30 @@ by a rule that throws everything away** — after asserting the post-condition, 
 last-resort branch was never REACHED, or the strongest evidence in the file is compatible with
 the worst behaviour.
 
+97. **(NEW S69) A RULE WIDENED ONE INPUT FAMILY AT A TIME WILL BE WIDENED AGAIN NEXT
+SESSION — THE FIX FOR A CLASS IS A CROSS-PRODUCT, NOT ANOTHER EXAMPLE.** Six consecutive
+rounds have now found the same class one family further out, and every single fix was
+correct. The reason the class stayed open is that each fix was an *instance* — add the
+digit drive, add the UNC form, drop this boundary — while the property was never asserted
+over the space of inputs. What worked this session was building the grid: eleven renderings
+crossed with thirteen prefixes and two suffixes, both agents' blobs in one process, two
+questions per cell (did the marker survive, was the message destroyed). Reading the patterns
+found nothing in three sessions; the grid found four families in one run. **The companion,
+and the harder half: the grid also told me which family NOT to close.** Two of the
+cells could only be covered by a rule that mangles this project's own vocabulary, and the
+right output there is a disclosed limitation with a test that pins it — a scrubber's accept
+side is where damage is invisible, so an un-measured "improvement" is the dangerous
+direction. Third note: **when a repair closes a mechanism, go back and re-measure whatever
+was justified BY that mechanism.** `_final_component` retired the exact behaviour my own
+Session-68 fixpoint test described in its docstring; the fixpoint is still needed, but for a
+different reason and a different input family, and the honest move was to extract one pass so
+a test could DRIVE the claim instead of narrating it.
+
 ## Pointers
 
 - **Protocol P (in force, JOINTLY APPROVED): `Reproducibility Packet/protocol/protocol-p-v2.3.3.md`, canonical sha256 `5689dad7…8bdf421f`. READ THE FILE.**
 - **The payload-boundary extension — JOINTLY APPROVED AND FROZEN, NOT YET EXECUTABLE: `Reproducibility Packet/protocol/payload-boundary-extension-v0.2.md`, canonical sha256 `538ae06b…df33b6a`, blob `d9f6e188`, 71,188 bytes, 1,285 lines, LF, raw == canonical.** Approved by me S63 and by Codex S63; **DO NOT EDIT IT — a change needs a version bump and a `git mv`.** It authorizes **Step 2 only**: build and review the three prerequisites. READ THE FILE — the blocks above are an index, not the document. Superseded states, never cite or build from them: v0.1 (`32a03930…`, blob `903962f8`, bytes in `Claude Session 61`), and inside v0.2 `c7facc13`/`e734c498…` (my S62 handoff) and `3d72e1f4`/`e5192eaa…` (Codex's S62 edits, which I did not approve).
-- **THE STEP-2 STATE — TWO SEAMS CLOSED, THE EXECUTABLE OPEN AT MY S67 STATE, CODEX OWNS THE NEXT TURN.**
+- **THE STEP-2 STATE — TWO SEAMS CLOSED, THE EXECUTABLE OPEN AT MY S69 STATE, CODEX OWNS THE NEXT TURN.**
 ```text
 JOINTLY APPROVED (me S64, Codex S64) — CLOSED, DO NOT REOPEN:
   scripts/utils/assignment_generator.py                b7b2430a28f2617c28b0924e16ce5b71aba0bf8a
@@ -1164,17 +1335,18 @@ JOINTLY APPROVED (me S64, Codex S64) — CLOSED, DO NOT REOPEN:
   scripts/utils/protocol_p_results.py                  2f7c33b274bfe7ee16ecdf0dc7227ca6bd159f9c
   tests/test_protocol_p_results.py                     ad6b32fef834cb55225b6cea1ac7831f090391de
   (Codex's own prior state of the last two, eaa33797 / 7361bfd8, is SUPERSEDED)
-THE THIRD PREREQUISITE — THE MEASUREMENT EXECUTABLE — OPEN AT MY S68 STATE:
-  scripts/run_payload_boundary_extension.py  04ec936e1fd0a8b3cbe4d17c0a942f9b5632187f
-  tests/test_payload_boundary_extension.py   4979af073747dc1fd9906877709caa8bca4fa3e1
+THE THIRD PREREQUISITE — THE MEASUREMENT EXECUTABLE — OPEN AT MY S69 STATE:
+  scripts/run_payload_boundary_extension.py  9fd723b0d63a395338378742ad7aed3bcd52173e
+  tests/test_payload_boundary_extension.py   191d9b4df84ba88dfb38c2e86ca67a9e9b85f369
   SUPERSEDED, never build from: 62e4c9e1/96906aab (Codex S64), ff0cdbe6/ebdfdf83 (my
   S65), eb94afb2/5d8dd369 (Codex S65), 431d9c08/4d194a67 (my S66), 86fc3fdb/e081a26d
-  (Codex S66), 5a5b0562/f2f5031d (my S67), 25386e27/ab4ddfc0 (Codex S67).
+  (Codex S66), 5a5b0562/f2f5031d (my S67), 25386e27/ab4ddfc0 (Codex S67),
+  04ec936e/4979af07 (my S68), 9cd10305/ce0cd642 (Codex S68).
   Run it from the packet dir; --mode plan is the DEFAULT and NOT YET AUTHORIZED:
     ..\venv\Scripts\python.exe scripts\run_payload_boundary_extension.py --mode plan
   A REVIEW PROBE MAY POINT --output-dir AT A SCRATCH DIR.  Never at
   results\payload_boundary_extension — that directory must not exist until Step 3.
-STEP 2 IS INCOMPLETE UNTIL CODEX APPROVES 04ec936e / 4979af07.  NOTHING RUNS.
+STEP 2 IS INCOMPLETE UNTIL CODEX APPROVES 9fd723b0 / 191d9b4d.  NOTHING RUNS.
 ```
 - **The replay gate: `scripts/protocol_p_replay_gate.py` + `tests/test_protocol_p_replay_gate.py` (36 tests).** Run from the packet dir: `..\venv\Scripts\python.exe scripts\protocol_p_replay_gate.py --data-root ..\data\gate3-base-dev-pilot-val-c1-s`. **EXECUTED EIGHT TIMES; not run S52–S60. IT CERTIFIES `overrides=None` ONLY (limitation 63).**
 - **Stage 0: `scripts/analyze_synchronous_difference_null.py` (blob `f104971d…`) + `tests/test_synchronous_difference_null.py` (99).** Pre-registered invocation from the packet dir: `..\venv\Scripts\python.exe scripts\analyze_synchronous_difference_null.py --window 768 --f-ctrl-hz 500.0 --diagnostic-hz 0.8 --thermal-ramp-c 3.0 --pairs 100 --seed 0 --pair-id 1`. **It has been spent; re-running it is NOT authorized.**
@@ -1214,11 +1386,42 @@ Run either read from the packet dir; zero rollouts, ~0.3 s each:
 - **CONCLUDED director chat:** `chats/Claude-Codex-Human/Better Suited Task/…- Concluded.md` — the withdrawn task-redesign directive. **A2 must stay clear of it.**
 - Director requests: `director_requests.md` (root) — entry 1 (Claim Sheet review) non-blocking, **still awaiting director reply**. Nothing else is blocked on the director.
 - My foundation `agents/Claude/Literature Foundation.md` · ledger `agents/Claude/references.md` (**no S20–S60 entries — reproduction/construction/measurement/review sessions, no external sources read**).
-- **Live-Run README (co-maintained): root `README.md` — Phase 2 / In Progress, banner 2026-08-03. MY S68 RAN THE HEARTBEAT CHECK AND ADDED NOTHING — fourth consecutive session, same reason: the executable loop is still open (round five), so no artifact was finished and no phase closed. My S67 made the same call, as did Codex for its own S66. THE ENTRY BELONGS ON THE LOG WHEN THE LOOP CLOSES, and whoever writes it owes the reader the four-round history, not just the outcome.** (Banner history: I moved it to 2026-08-03 in S64; my S62 and S63 left it because those were same-day.) **My S65 appended one entry (`+2/−0`), left the banner alone (same day), and edited no dated entry** — the bar was cleared by the first review of the executable finding it could never have completed a run. **Codex's S64 also appended a dated correction entry to its own preceding one (the loud-not-silent refusal, and the 4,432.16 s / 73.9 min screen time against the withdrawn project-wide "seventy minutes"); I read it and it is right.** My S64 appended one entry (`+3/−1` including the banner line), because the trigger my S63 note named actually fired: **the extension document loop CLOSED**. The entry covers the agreed plan, the 19,448-state licensing enumeration, the start of construction, and the payload column that existed with nothing able to fill it. **The log's date order is out of chronological order in the middle and Codex's dated correction says so; dated entries are never edited, so it stays that way.** **Beware when appending: `README.md` is all-CRLF; split on `b"\r\n"`, insert before the `''/'---'/''` block that precedes `## Follow along`, assert both anchors before writing, and read the neighbouring lines back afterwards rather than trusting an offset.**
-- **Phase-2 chat:** `chats/Claude-Codex/Phase 2 Integration and Config Freeze/…- Active.md` — **NOW 17,932 lines. My S68 turn is `+203/−0`, header unique, physically last, pre-write prefix retained byte-for-byte with its SHA-256 (`7863d702…`) asserted inside the writer. CODEX OWNS THE NEXT TURN: the executable (`04ec936e` / `4979af07`) and nothing else. WHAT IT HAS TO JUDGE: the substitution fixpoint and the two SCOPE corrections I made to its own new tests — the payloads moved under `inputs`, and the depth case re-aimed at the gate's boundary. The S67 authorization-gate question it ruled on is CLOSED; I took the ruling.** Codex answered my S64 open question in its S64: **the executable does NOT use `LogicalRow.key` across masses** — extension rows carry their own mass-bearing logical key and their joins use the mass-bearing `PhysicalKey`, so `.key` stays as it is. **Settled; do not reopen.** The things Codex has to judge now are the five S65 corrections and, explicitly, the one structural deviation: **I lifted the replay gate's pre-rollout half into `resolve_replay_source` so it is testable at zero cost.** Do NOT re-open: the extension document (both approved `538ae06b`), the five S62 edits, the unified Option-B rule, the four S62 questions, the measure-first ruling, the payload analyzer/tests, the role-coverage states, the readback ruling, `.gitattributes`, the Stage-C label, Step 25, the screen result, or the plan default. **The file is MIXED-EOL** — Codex appends LF, the older bulk is CRLF; append LF and verify `+N/−0` rather than assuming.
-- **Monitoring chat:** `chats/Claude-Codex-Human/Transcript Order Monitoring/…- Active.md` (88 lines; unchanged S43–S68 — no recurrence; **streak thirty-six**: Codex's S67 append was `+102/−0` at the physical tail, verified at the git level, and my S68 append passed all five gates — pre-write prefix retained byte-for-byte with an identical SHA-256 asserted *inside* the writer, header unique, physically last, `+203/−0`). The duty is to flag recurrences, so a clean session adds no note; verify at the git level regardless.
+- **Live-Run README (co-maintained): root `README.md` — Phase 2 / In Progress, banner 2026-08-03. MY S69 RAN THE HEARTBEAT CHECK AND ADDED NOTHING — FIFTH consecutive session, same reason: the executable loop is still open (round six), so no artifact was finished and no phase closed. My S68 and S67 made the same call, as did Codex for its own S66 and S68. THE ENTRY BELONGS ON THE LOG WHEN THE LOOP CLOSES, and whoever writes it owes the reader the four-round history, not just the outcome.** (Banner history: I moved it to 2026-08-03 in S64; my S62 and S63 left it because those were same-day.) **My S65 appended one entry (`+2/−0`), left the banner alone (same day), and edited no dated entry** — the bar was cleared by the first review of the executable finding it could never have completed a run. **Codex's S64 also appended a dated correction entry to its own preceding one (the loud-not-silent refusal, and the 4,432.16 s / 73.9 min screen time against the withdrawn project-wide "seventy minutes"); I read it and it is right.** My S64 appended one entry (`+3/−1` including the banner line), because the trigger my S63 note named actually fired: **the extension document loop CLOSED**. The entry covers the agreed plan, the 19,448-state licensing enumeration, the start of construction, and the payload column that existed with nothing able to fill it. **The log's date order is out of chronological order in the middle and Codex's dated correction says so; dated entries are never edited, so it stays that way.** **Beware when appending: `README.md` is all-CRLF; split on `b"\r\n"`, insert before the `''/'---'/''` block that precedes `## Follow along`, assert both anchors before writing, and read the neighbouring lines back afterwards rather than trusting an offset.**
+- **Phase-2 chat:** `chats/Claude-Codex/Phase 2 Integration and Config Freeze/…- Active.md` — **NOW 18,253 lines. My S69 turn is `+205/−0`, header unique, physically last, pre-write prefix retained byte-for-byte with its SHA-256 (`276c7630…`) asserted inside the writer. I corrected my own header stamp in place immediately after writing it (20:40 → 20:35 PDT, same byte length, every byte outside the 46-byte span compared before and after) because an estimated stamp defeats the only thing a stamp is for; that is the ONLY edit I have ever made to posted transcript content. CODEX OWNS THE NEXT TURN: the executable (`9fd723b0` / `191d9b4d`) and nothing else. WHAT IT HAS TO JUDGE: three fixes (the space-crossing tail gated on a backslash, the UNC boundary dropped, the both-separator reduction) and ONE JUDGMENT — the single-slash POSIX gap I disclosed rather than closed. If it disagrees on that and we cannot settle it from source in one round, ESCALATE to the director rather than trade turns.** Codex answered my S64 open question in its S64: **the executable does NOT use `LogicalRow.key` across masses** — extension rows carry their own mass-bearing logical key and their joins use the mass-bearing `PhysicalKey`, so `.key` stays as it is. **Settled; do not reopen.** The things Codex has to judge now are the five S65 corrections and, explicitly, the one structural deviation: **I lifted the replay gate's pre-rollout half into `resolve_replay_source` so it is testable at zero cost.** Do NOT re-open: the extension document (both approved `538ae06b`), the five S62 edits, the unified Option-B rule, the four S62 questions, the measure-first ruling, the payload analyzer/tests, the role-coverage states, the readback ruling, `.gitattributes`, the Stage-C label, Step 25, the screen result, or the plan default. **The file is MIXED-EOL** — Codex appends LF, the older bulk is CRLF; append LF and verify `+N/−0` rather than assuming.
+- **Monitoring chat:** `chats/Claude-Codex-Human/Transcript Order Monitoring/…- Active.md` (88 lines; unchanged S43–S69 — no recurrence; **streak thirty-eight**: Codex's S68 append was `+116/−0` at the physical tail with its header unique at line 17,936 and Codex physically last, verified at the git level in my S69, and my S69 append passed all five gates — pre-write prefix retained byte-for-byte with an identical SHA-256 asserted *inside* the writer, header unique, physically last, `+203/−0`). The duty is to flag recurrences, so a clean session adds no note; verify at the git level regardless.
 
-## Scratchpad (S68, NOT committed)
+## Scratchpad (S69, NOT committed)
+
+`probe_s69_embedded.py` — **the instrument of the session and the one to rebuild first.**
+Builds a CROSS-PRODUCT — eleven path renderings x thirteen prefixes x two suffixes — and
+drives all 286 through BOTH agents' git blobs in one process, printing per cell whether the
+private marker survived and whether the whole message was destroyed. *The general move:
+when a rule keeps being widened one example at a time, stop adding examples and build the
+grid.* It found four families in one run after three sessions of reading found none, and it
+is also what told me which family NOT to close.
+`probe_s69_spaces.py` / `probe_s69_spaces2.py` — the space finding. **The first version
+loaded the module from a TEMP COPY, which moves `REPO_ROOT` (it is derived from `__file__`)
+and made the repo-root replacement look dead.** That was a harness property, not a code
+property; the second version imports the committed file IN PLACE. *Whenever a probe loads a
+module from anywhere but its real path, ask what the module derives from `__file__`.*
+`probe_s69_candidate.py` — patches the committed source in memory into a CANDIDATE module
+and runs both side by side over the leak battery, a prose battery, and the 37,448-string
+enumeration. Measuring the repair beside the original, on the same batteries, is what let
+the prose cost be reported as a number rather than as a claim.
+`probe_s69_cost.py` — the adversarial side: a REAL path followed by a slash-carrying token.
+That is where the space gate would over-consume, and it is why the gate is a BACKSLASH.
+`probe_s69_passes.py` / `probe_s69_twopass.py` / `probe_s69_onepass.py` — re-measure the
+fixpoint's necessity after `_final_component` closed the S68 mechanism. *When a repair
+closes a mechanism, re-measure whatever was justified BY that mechanism.*
+`redcheck_s69.py` — takes the blob to restore as `sys.argv[1]`; isolated packet copy, the
+reviewed source restored over the edited script, my tests kept.
+`sweep_s69.py` — 11 cases, fresh copytree each, two passes. **Anchors are raw
+triple-quoted strings** because the patterns contain both quote characters; that fixed the
+S68 escaping problem, but I still shipped one anchor with the wrong INDENTATION and one
+verdict carrying pytest's elapsed time. Both are recorded in limitation 100.
+`turn_s69.md`, `append_s69.py`, `fix_stamp_s69.py`.
+
+## Scratchpad (S68, superseded)
 
 `probe_s68_payloads.py` — **the instrument of the session and the one to rebuild first.**
 Drives the SAME defect through two placements — the value under `"x"` and the value under
