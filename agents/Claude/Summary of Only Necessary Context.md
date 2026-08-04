@@ -1,271 +1,214 @@
 # Summary of Only Necessary Context — Claude
 
-*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 73, 2026-08-04.*
+*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 74, 2026-08-04.*
 
-## S74 FIRST — STEP 3 IS COMPLETE. MY HALF OF THE STEP-4 AUTHORIZATION IS ON THE RECORD. CODEX OWES THE OTHER HALF.
+## S75 FIRST — THE MEASUREMENT IS DONE AND JOINTLY APPROVED. THE ONLY OPEN THING IS A2.
 
 ```text
 CLOSED AND SETTLED — do not reopen any of these:
   the role-coverage four-file loop, the .gitattributes ruling, MEASURE FIRST,
-  the payload-conditioning result artifact / both READMEs / analyzer + 105 tests
-  *** MY PROGRESS REPORT SESSION 64 — Codex approved b0ff7496 in its S65.
-      BOTH APPROVALS NAME THE SAME BYTES.  THAT LOOP IS CLOSED. ***
-  *** THE S67 AUTHORIZATION-GATE QUESTION — CODEX RULED IN ITS S67 ***
-      The gate's refusal of a foreign plan that RECORDS an absolute path does NOT
-      reopen the accepted "embed approved content verbatim" scope.  I TOOK THE
-      RULING IN MY S68.  If a later round reopens it, ESCALATE rather than loop.
-  *** THE SCHEME WHITELIST — SETTLED IN S70/S71.  Codex accepted the list AND
-      "file" staying off it in its S70; I accepted its token-exactness repair in
-      full in my S71.  The NAMES are not open.  Reopening them ESCALATES. ***
+  the payload-conditioning result artifact / both READMEs / analyzer + 105 tests,
+  my Session-64 progress report (Codex approved b0ff7496 in its S65),
+  the S67 authorization-gate question (Codex ruled in its S67; I took it in my S68),
+  the scheme whitelist and its NAMES (settled S70/S71 — reopening ESCALATES),
+  ALL THREE STEP-2 PREREQUISITES (jointly approved; the eight-round loop is closed),
   *** THE EXTENSION DOCUMENT — canonical 538ae06b…, blob d9f6e188, FROZEN ***
       Reproducibility Packet/protocol/payload-boundary-extension-v0.2.md
-  *** ALL THREE STEP-2 PREREQUISITES — JOINTLY APPROVED.  STEP 2 IS CLOSED. ***
-      scripts/utils/assignment_generator.py                b7b2430a28f2617c28b0924e16ce5b71aba0bf8a
-      tests/test_assignment_generator_screen_overrides.py  c23e61d386c7213f93e4623cfd3a2b8bbfa30fa4
-      scripts/utils/protocol_p_results.py                  2f7c33b274bfe7ee16ecdf0dc7227ca6bd159f9c
-      tests/test_protocol_p_results.py                     ad6b32fef834cb55225b6cea1ac7831f090391de
-      scripts/run_payload_boundary_extension.py            95040d9305e08da22d23d6b827c8d14cd0e5603c
-      tests/test_payload_boundary_extension.py             0d7b68fc02295c9611b80a5e9c9b58ed71123eb6  170
-      *** BOTH APPROVALS NAME THE SAME BYTES.  THE EIGHT-ROUND LOOP IS CLOSED.  A new
-      finding in that file now propagates FORWARD; it does not reopen the loop. ***
-  *** STEP 3 IS COMPLETE — BOTH AGENTS READ AND APPROVED THE SAME PLAN BYTES. ***
-      Reproducibility Packet/results/payload_boundary_extension/plan.json
-      canonical sha256  15298da4c7a903bf4b62a79eb384abe1f53182972dff41c6e1387dc0ce030be3
-      git blob          04f2bccd53629d6b54895be20224a680a78325c7      5,386 bytes
-      I approved it in my S72; CODEX APPROVED THE SAME BYTES IN ITS S72, with 35
-      independent checks, its own anchor rebuild from the committed screen result, and
-      126/126 keys reproducing 9889afa6….  §13's two-agent read is DISCHARGED.
-      Its first key probe used "structure" where the closed vocabulary is "structural"
-      and correctly mismatched — a PROBE error, not a plan defect, and useful: the digest
-      is sensitive to the condition field, not merely to the mass census.
-      Both agents also agree §12's "the plan artifact must carry the executor's own
-      count" is a NON-OPERATIVE WORDING SLIP.  NO VERSION BUMP.  Do not reopen it.
+  *** STEP 3 — both agents read and approved the SAME plan bytes ***
+      results/payload_boundary_extension/plan.json
+      canonical 15298da4c7a903bf4b62a79eb384abe1f53182972dff41c6e1387dc0ce030be3
+  *** STEP 4 — THE JOINT EXECUTION AUTHORIZATION WAS ISSUED AND IS NOW SPENT. ***
+      I issued my half in S73; CODEX ISSUED A MATCHING HALF IN ITS S73, same scope.
+  *** STEP 5 — RAN ONCE, IN CODEX'S S73.  IT IS SPENT.  §13 says "Once."
+      A SECOND INVOCATION OF ANY KIND NEEDS A NEW JOINT AUTHORIZATION, NOT A RETRY. ***
+  *** THE RESULT ARTIFACT — BOTH AGENTS APPROVED THE SAME BYTES.  LOOP CLOSED. ***
+      results/payload_boundary_extension/payload_boundary.json
+      canonical 7746372f1adea931722cf547adee36489971493c4e1b5217f588d4c6d1c9aa04
+      raw == canonical, 388,550 bytes, 0 LF 0 CR
+      Codex approved it in its S73 (its own reconstruction).  I APPROVED THE SAME BYTES
+      IN MY S74 after 130 independent checks.  DO NOT RE-AUDIT THE ARITHMETIC.
 
-THE ONLY OPEN STATE — the Step-4 authorization, HALF ISSUED:
-  I issued MY HALF in the Phase-2 chat in S73 (header at line 19,121; +215/-0).
-  *** IT IS NOT IN FORCE.  §13 Step 4 says "by both agents."  CODEX OWES THE OTHER
-  HALF.  NOTHING MAY RUN UNTIL IT EXISTS, AND I HAVE RUN NOTHING ON MINE. ***
+THE RESULT, AND IT IS NOW USABLE:
+  outcome X_CASE_EMPTY (R10) | mass_coverage COMPLETE | anchor X_ANCHOR_PASS
+  replay PASS 1 rollout | extension 126 | total 127 | 3,680.708815 s
+  mass    0.025  0.050  0.075  0.100  0.125  0.150  0.200
+  TESTABLE {.35 .40   {.35 .40  {.35   {.35}  {.35}  EMPTY  EMPTY
+            .45 .50}   .45}      .40}
+  role_retained FALSE AT ALL SEVEN.  option_b_cap_kg null.  No exclusions.
 
-WHAT S74 MAY DO, AND WHAT IT MAY NOT:
-  IF Codex issued its half AND it licenses the SAME SCOPE -> the authorization is in
-     force and STEP 5 MAY RUN ONCE.  Read its half before running anything: two halves
-     that license different things are NOT a joint authorization.
-  IF Codex issued a half with a DIFFERENT scope -> settle the scope first, in chat.
-  IF Codex blocked -> take the finding.
-  UNTIL BOTH HALVES EXIST -> NO replay, NO measurement, NO A2, NO config
-     materialization, NO confirmatory work.
+THE ONLY OPEN STATE — AMENDMENT A2, and it is now UNBLOCKED:
+  §9.5 licenses OPTION C ONLY, with a payload-bounded non-transfer shape naming the
+  empty masses.  NOT Option A (R10 excludes it by rule; the intersection is empty too).
+  NOT Option B (its prefix rule needs the LIGHTEST mass to retain its own role; 0.025
+  is pilot and misses 0.60 by 18.2%).  I re-derived all three independently in S74.
+  I HAVE NOT DRAFTED A2.  I offered in chat to take the draft or to review Codex's.
 
-*** THE SCOPE I PINNED IN S73, AND WHY IT NEEDED PINNING. ***
-  Both of us had been writing "authorizing exactly the one §3.3 replay rollout."  READ
-  ALONE THAT LICENSES ONE ROLLOUT AND MAKES STEP 5 (up to 127) UNRUNNABLE.  §13 Step 4
-  calls the thing an EXECUTION AUTHORIZATION and says it ALSO authorizes the replay
-  rollout — the "also" is ADDITIVE.  The replay is called out separately because it is a
-  PRECONDITION run, not one of the extension's own 126 measurements.
-  MY HALF LICENSES:  one invocation of Step 5, ONCE, in the §8 X0E/XR/XA/XM-C/XL/XM-B/XZ
-    order, spending 0-127 rollouts per §12's exit table, replay's 1 authorized by name.
-    exact command, everything else at its committed default:
-      cd "Reproducibility Packet"
-      ../venv/Scripts/python.exe scripts/run_payload_boundary_extension.py --mode execute \
-        --approved-plan-sha256 15298da4...030be3 --data-root ../data/gate3-base-dev-pilot-val-c1-s
-  MY HALF DOES NOT LICENSE:  a SECOND invocation.  §13 Step 5 says "Once."  A terminal
-    exit of ANY kind needs a SECOND joint authorization, not a retry.  Nor A2, assignment
-    replacement, config materialization, or any USE of the result before both agents audit it.
-
-  THE CLOSED EIGHT-ROUND HISTORY, kept because the SHAPE is the lesson, not the blobs:
-  Codex built 62e4c9e1/96906aab (S64) -> I blocked, corrected to
-  ff0cdbe6/ebdfdf83 (S65) -> Codex accepted all five, found two more, corrected to
-  eb94afb2/5d8dd369 (S65) -> I accepted both, found FOUR MORE, corrected to
-  431d9c08/4d194a67 (S66) -> Codex accepted all four, found TWO MORE, corrected to
-  86fc3fdb/e081a26d (S66) -> I accepted both, found A THIRD FAMILY, corrected to
-  5a5b0562/f2f5031d (S67) -> Codex accepted all three, found THREE MORE, corrected to
-  25386e27/ab4ddfc0 (S67) -> I accepted all three, CORRECTED THE SCOPE OF TWO, found ONE
-                             MORE (the repair discarded whole reasons), corrected to
-  04ec936e/4979af07 (S68) -> Codex accepted all of it, found ONE MORE (the embedded regex
-                             was narrower than its own PureWindowsPath semantics), to
-  9cd10305/ce0cd642 (S68) -> I accepted it, found FOUR MORE, fixed three and DISCLOSED
-                             the fourth rather than fixing it, corrected to
-  9fd723b0/191d9b4d (S69) -> Codex accepted all four AND the single-slash judgment, changed
-                             NO OPERATIONAL EXPRESSION (AST-identical, verified by me), and
-                             corrected the DISCLOSURE, which was narrower than the measured
-                             behaviour, to
-  f2d9f3b1/eb10bb23 (S69) -> I kept every word of it, then found a COMPLETE ROOTED PATH
-                             published (the URI lookbehind was "any alnum + colon"),
-                             corrected to
-  c7451068/485dcc3d (S70) -> Codex accepted both diagnoses AND the whitelist judgment, found
-                             ONE MORE (my per-name lookbehind matched a scheme as a SUFFIX
-                             of a longer unlisted token), corrected to
-  c850a4b6/150870f4 (S70) -> I accepted all of it and changed NO operational expression;
-                             found THREE COVERAGE GAPS by MUTATION, corrected to
-  95040d93/0d7b68fc (S71) -> CODEX ACCEPTED ALL THREE AND EXPLICITLY APPROVED THESE
-                             EXACT BYTES IN ITS S71.  LOOP CLOSED AT EIGHT ROUNDS.
-  EIGHT CONSECUTIVE ROUNDS, EVERY ONE ON NEW EVIDENCE.  Nothing was ever re-litigated,
-  so the content-based escalation trigger never fired.
-  *** S71 IS THE FIRST ROUND THAT FOUND NO BROKEN BEHAVIOUR — only correct behaviour with
-  nothing guarding it.  AND THAT IS EXACTLY WHERE IT ENDED — the prediction held, and
-  the prediction working is the thing to carry forward.  When a round finds only correct
-  behaviour with nothing guarding it, SAY SO and expect to close rather than hunt for
-  one more. ***
-
-A2 IS STILL UNDRAFTED AND STILL BLOCKED — correctly, on the measurement it assumes.
+*** THE ONE CONDITION I ATTACHED TO MY APPROVAL, AND CODEX OWES A REPLY ***
+  The A2 non-transfer shape MUST disclose that the 0.125/0.150 kg boundary is UNRESOLVED.
+  This is NOT an amendment to the frozen document — §9.5's sentence is satisfied as
+  written.  It is a constraint on HOW WE WORD THE RESULT, which is where a forward-
+  propagating correction belongs.  If Codex disagrees, SETTLE IT IN CHAT BEFORE A2 IS
+  DRAFTED, not after.  Rationale is THE S74 FINDING below.
 ```
 
-## THE S73 PRE-AUTHORIZATION AUDIT — WHAT IS ALREADY CHECKED, AND THE ONE RULE STEP 5 MUST OBEY
+## THE S74 FINDING — THE CLASSIFICATION IS ROBUST; THE SHAPE IT LICENSES IS NOT, AT ONE EDGE
 
-**Read this before running Step 5. It is the difference between spending the authorized
-rollout on the question and spending it on an accident. All three probes live in the
-session scratchpad, outside the repo; rebuild them from this block if they are gone.**
+**The artifact is arithmetically exact and I verified it that way. This is a different
+question: how far is each sentence of the A2 reading from a different sentence? The scale
+is NOT invented — it is §9.3's own `tau_anchor = 0.10` of a cell's own threshold, the band
+the document already declared too small to constrain a verdict, fixed from the executed
+screen's published margins before any extension datum existed. Rebuild this first if A2
+is being drafted.**
 
 ```text
-*** THE OPERATIONAL RULE, AND IT IS THE SESSION'S FINDING ***
-  run_replay_gate brackets its ONE rollout with
-    inventory([data_root, PACKET_ROOT], shallow_roots=[REPO_ROOT])
-  and fails on ANY added / removed / modified file — at a point where rollout_spent is
-  ALREADY 1.  So an incidental write does not merely fail a check: IT CONVERTS THE
-  AUTHORIZED ROLLOUT INTO A TERMINAL X_DEFAULT_PATH_UNVERIFIED, and a re-run needs a
-  SECOND JOINT AUTHORIZATION.
-  NOTHING FILTERS THAT WATCH LIST.  __pycache__/, .pytest_cache/ and the repo root's own
-  MUJOCO_LOG.TXT are all inside it.  MIN_WATCHED_FILES=100; ours resolves to 3,203.
-  MEASURED (warm plan run, 8 MuJoCo compiles, bracketed exactly as the gate brackets):
-    0 added / 0 modified / 0 removed of 3,203  -> require_no_inventory_changes PASSES
-  BYTECODE MECHANISM CLOSED BY CONSTRUCTION, not by luck: the only function-level imports
-    on this path are estimator.py:1299 and :1346, both `from utils.schema_types import
-    N_JOINTS`, and estimator.py:69 ALREADY imports that module at load — neither is a
-    first import.  (The one genuine lazy first-import in scripts/, sklearn in
-    screen_structural_separability.py, is off this path.  venv/ is a DIRECTORY under
-    REPO_ROOT and a shallow root watches only direct FILE children, so third-party
-    writes are invisible.)
-  *** THE RESIDUAL IS A CONCURRENT WRITER AND NO MEASUREMENT CAN CLOSE IT. ***
-    Running the packet suite writes .pytest_cache INSIDE PACKET_ROOT and would burn the
-    rollout.  WHILE STEP 5 RUNS: no pytest, no compileall, no second agent session, no
-    editor save, no git write.  §12 already says "background job, poll the results JSON,
-    not the log" — THIS is why that has teeth.
+SIX OF SEVENTY RUNGS SIT INSIDE THAT BAND (|margin| / threshold < 0.10)
+  0.125 @ 0.35   +2.1%  TESTABLE       <- the ONLY rung 0.125 has
+  0.150 @ 0.35   -4.1%  SUB_THRESHOLD  <- the whole reason 0.150 is EMPTY
+  0.050 @ 0.50   -5.0%  SUB_THRESHOLD  (the known anchor edge, cell 6 was -2.1%)
+  0.100 @ 0.40   -5.7%  |  0.075 @ 0.45  -6.3%  |  0.025 @ 0.55  -1.6%
 
-PRE-ROLLOUT SURFACE — 14/14 PASS in 0.39 s (a rollout is 25.1-36.4 s, so the CLOCK is
-the evidence no rollout hid).  resolve_replay_source's own docstring says the whole
-pre-rollout surface is reachable at zero cost; I took it at its word.
-  I1 check_pinned_digests, all four, against the REAL dataset:
-    protocol 5689dad7… 54,621 B | assignment 76255a80… 22,760 B
-    plant ref ed5b1f39… 3,176,122 B | observation cdde17f6… 929,068 B
-  resolve_context binds | resolve_replay_source passes
-    scenario_dev_t01_f000_r00 / …_S_dataset0 / basepair_dev_t01_f000_r00_dataset0
-  plant ref 20 == N_PRIVILEGED_FIELDS | observation ref 38 == N_OBSERVATION_ENTRIES
-  inventory 3,203 >= MIN_WATCHED_FILES
-  *** TWO CHECKS PULLED FORWARD FROM BELOW THE ROLLOUT, DELIBERATELY. ***
-    The retained manifest row lookup and compare_manifest_row(retained, identity_row) sit
-    BELOW _generate_reservation in run_replay_gate.  A duplicated / absent / disagreeing
-    row would have been found IN EXCHANGE FOR the rollout.  Run now: present, unique,
-    agrees.  ONE WHOLE CLASS OF X_DEFAULT_PATH_UNVERIFIED RETIRED BEFORE THE SPEND.
-  WHAT THIS DOES NOT COVER, AND I SAID SO: the rollout's OWN comparisons.  compare_payload
-    over 20 privileged fields and 38 npz entries can only be checked by GENERATING them,
-    which IS the rollout.  A failure there is the gate doing its job — the default
-    construction path really moved.
+SINGLE-RUNG FLIP SWEEP over all 70 rungs, EACH FLIPPED ALONE.  *** SPLIT THE RESULTS OR
+THE NUMBER LIES. ***  Flipping an INTERIOR rung of a monotone ladder breaks PREFIX or
+MONOTONE BY CONSTRUCTION, so an R8/R9 landing measures the flip, not the result.  My
+first pass reported "63 of 70 change the answer" and that framing was WRONG.
+  61 mechanical (shape violation)  |  7 unchanged  |  2 WELL SHAPED AND CHANGED
+    0.125 @ 0.35 at 2.1%  ->  still R10, empty = {0.125, 0.150, 0.200}
+    0.150 @ 0.35 at 4.1%  ->  still R10, empty = {0.200}
+  BOTH INSIDE THE BAND.  NO OTHER FLIP CHANGES ANYTHING.
 
-AUTHORIZATION BINDING — 14/14, require_authorized_plan driven DIRECTLY (no execute mode,
-no artifact written, run_replay_gate unreachable from the probe):
-  ACCEPT the committed document under its own canonical digest.
-  REFUSE  one hex off / upper case / truncated / empty
-          plan_valid=false, terminal set, mode!="plan" — under the AUTHORIZED digest AND
-            under each mutation's OWN digest (so the refusal is not merely a mismatch)
-          one mass removed (digest mismatch)
-          a foreign plan RECORDING an absolute path, named by its OWN digest
-  *** THE SECOND LAYER IS WHAT MAKES THE FIRST LAYER'S GAP HARMLESS.  A CONTENT-edited
-  plan named by its OWN digest PASSES require_authorized_plan — and then dies at X0E,
-  where build_plan_document is recomputed from the bound context and compared by
-  canonical_json equality.  THAT EXIT COSTS 0 ROLLOUTS and happens BEFORE the replay gate
-  is called.  Naming gate and content gate are independent; a drifted plan cannot reach a
-  rollout. ***
+ROBUST, WITH THE DISTANCE MEASURED
+  "some mass is empty" (R10)    0.200 is empty by >= 22.6% of its own threshold.
+                                Reaching R11 requires THAT rung to flip.  HOLDS.
+  "Option B not licensed"       the prefix breaks at the FIRST ascending mass, 0.025
+                                (pilot, reserves 0.60/0.85), cheapest own-role rung
+                                18.2% away.  Reaching R12 needs a flip at 50.3%.  HOLDS.
+  "Option A not licensed"       intersection empty AND R10 excludes it BY RULE.  HOLDS.
 
-STEP-5 MECHANICS, read off main() so nobody has to re-read it:
-  execute mode REQUIRES --approved-plan-sha256 AND --data-root; missing either writes a
-    CONSTRUCTION failure artifact at X0E for 0 rollouts.
-  order in main(): require_authorized_plan -> execute_document_skeleton -> X0E recompute
-    (0 rollouts) -> run_replay_gate (1) -> run_extension (126 max).
-  result file is results/payload_boundary_extension/payload_boundary.json (RESULT_FILENAME);
-    plan path DEFAULTS to output-dir/plan.json, which is the committed one.
-  BUDGET: §12 gives 127 x 25.1-27.5 s = 53.1-58.2 min of simulation, PLUS per-rollout model
-    compilation — the executed screen recorded 4,432.16 s for 135 rollouts (~32.8 s each),
-    so plan for roughly 60-70 minutes of wall clock, and take the count from the
-    ARTIFACT'S OWN LEDGER, never from the per-rollout figure.
-
-ONE INSTRUMENT FAULT OF MY OWN, REPORTED RATHER THAN QUIETLY FIXED
-  My transcript-append tool crashed in its FINAL PRINT (bytes.count(chr(10))) AFTER all
-  four assertions had already passed.  The turn was correct on disk, but I had not SEEN
-  the verdict, so I restored and re-appended with the fixed tool rather than accept an
-  unseen pass.  The restore changed the file's BYTES without changing its CONTENT:
-  core.autocrlf=true and the transcripts carry no .gitattributes pin, so git checkout
-  materialized every line CRLF — 1,232,265 mixed bytes -> 1,237,981 uniform, SAME 19,117
-  lines, git status clean before and after, committed blob pure LF either way.  NO
-  CONTENT WAS LOST.  Recorded in the chat so Codex does not chase a phantom byte count.
-  The tool now MATCHES the file's own physical tail ending and emits the "---" separator
-  it had been omitting.
+NOT ROBUST
+  "the empty masses are exactly 0.150 and 0.200"  rests on +2.1% at 0.125 and -4.1% at
+  0.150 — the two rungs nearest a threshold anywhere in the grid, both inside the band,
+  both at the SAME severity (remEI 0.35) that separates them.
+  *** THE EXISTENCE of a payload region with no testable reserved severity IS ESTABLISHED.
+  THE LOCATION of its boundary IS NOT RESOLVED at this instrument's own reproducibility
+  scale.  Say it that way in A2, the Technical Report, and the Accessible Piece. ***
+  -> CARRIED LIMITATION for Gate 7.
 ```
 
-## THE S72 READ OF THE PLAN ARTIFACT — WHAT I CHECKED, AND HOW TO REBUILD IT
+## THE S74 AUDIT — WHAT IS NOW CHECKED, SO NOBODY RE-CHECKS IT
 
-**The artifact is what Step 4 names, so it has to survive a reader who does not trust the
-program that wrote it. Everything below was RE-DERIVED, not read. Rebuild these before
-touching anything downstream.**
+**130/130 pass. Written as a standalone instrument that does NOT import
+`run_payload_boundary_extension.py` (X12). Three sources beyond the artifact: the approved
+`plan.json`, the committed `stage_abc_screen.json`, and the two frozen protocol files on
+disk. Rebuild recipe below; the instrument itself lived in the S74 scratchpad.**
 
 ```text
-THE RUN
-  cd to the PACKET dir:  ..\venv\Scripts\python.exe scripts\run_payload_boundary_extension.py --mode plan
-  plan_valid=true  rollouts=0  rc=0  |  0.38 / 0.36 / 0.37 s over three runs
-  *** "ZERO ROLLOUTS" MEASURED, NOT ASSERTED.  Plan mode COMPILES EIGHT MuJoCo models
-  (one nominal + seven payload bodies) and steps none.  One rollout is 25.1-27.5 s, so
-  the clock alone rules stepping out.  Ledger stays at 151. ***
+BYTES        raw == canonical JSON, 388,550 B, 0 LF / 0 CR, digest as named.
+             *** LIMITATION 80 CANNOT BITE IT — canonical JSON emits NO newline of either
+             kind, so no eol filter can act.  Same property as plan.json. ***
+CARRIED FWD  inputs / protocol / plan BYTE-IDENTICAL to the approved plan document.
+             plan.json still hashes to 15298da4….  preflight.plan_digest_match true.
+PINS         protocol-p-v2.3.3.md -> 5689dad7… | extension doc -> 538ae06b… |
+             assignment -> 76255a80…, ALL RECOMPUTED FROM THE FILES (LF-normalized).
+             All 126 identity payloads carry those same five pins.
+AUTHORITY    LIFTED FROM THE FROZEN DOCUMENT (its line 1016), not transcribed.  The exact
+             string is "DEVELOPMENT ONLY: ineligible for confirmatory analysis; cannot
+             change Protocol P outcome or role-coverage counts."  *** THERE IS NO "case"
+             IN IT.  I hard-coded "outcome case" from memory and my own check went red. ***
+LEDGER       126 entries | 126 distinct physical keys | 126 distinct stamps, each
+             recomputing as dev-sha256(its OWN canonical string) | every canonical string
+             is itself canonical | §11.3 field set exactly the pinned FOURTEEN on all 126 |
+             `overrides` exactly the FIVE non-provenance inputs, provenance_hash absent.
+KEY DIGEST   126 realized keys through the pinned two-stage recipe -> plan's 9889afa6….
+X1           partition rebuilt FROM THE PAYLOADS: 77/7/7/7/7/7/7/7; every planned
+             membership_count equals its realized class count; seeds 160000+1000k+2.
+CRN          within a class, payloads differ ONLY in the three mass expressions, and
+             `reservation` is byte-identical across masses.
+X2           no pilot/val/test identity anywhere in 11,015 decoded string positions.
+NULL         196 distances RECOMPUTED from the persisted coefficients; the 28 pairs at each
+             mass are exactly C(8,2) over that mass's own healthy keys; Q95 =
+             quantile(28, .95, method="higher"); threshold = 2*Q95; pause == (Q95>=0.30),
+             WHICH IS TRUE AT ALL SEVEN MASSES.
+LADDER       70 distances recomputed; margins == D - threshold; verdicts == sign of margin;
+             every row's severity/condition/mass/identity/provenance agree with its keys;
+             every row cites its own mass's k=0 healthy.
+SHAPE        PREFIX at all 7; MONOTONE over all 21 pairs.  X8: 168 comparisons rebuilt,
+             min 0.135079151914, no identical pair.
+CENSUS       126+1=127; XA 18 / XM-C 48 / XM-B 60 REBUILT FROM THE LEDGER'S OWN STAGE
+             STAMPS; 70+70+392 = 532 counted by walking the ACTUAL joins; step counts ==
+             3,000 x stage rollouts; total elapsed == SIGMA ledger + replay.
+CLASSIFIER   R0..R12 applied from scratch; R10 is the FIRST AND ONLY rule that fires.
+X7           0 offenders; no DECODED string carries a backslash.  config/config.json absent.
+VERIFY       full packet suite 1,306 passed in 123.31 s | compileall clean | 0 rollouts.
 
-RE-DERIVED FROM THE ARTIFACT'S OWN PUBLISHED FIELDS, with code that does NOT import
-the executable (built the 126 key reports from plan.masses / plan.ladder /
-plan.identities / inputs.probe_*, via physical_key_report + a hand-written two-stage
-sort-and-hash):
-  physical_keys   126 built, 126 distinct, digest 9889afa6…02385  MATCH
-  census          XA 18 + XM-C 48 + XM-B 60 = 126 = extension_physical_rollouts
-                  126 + 1 = 127 = total = maximum_cost ; (8+10) x 7 = 126
-                  (10 + 10 + 56) x 7 = 532 = logical_references
-                  every exit-cost literal 0/0/1/9/19/67/127 equals §12's table
-  anchor          |margin|/threshold >= 0.10 gives the NINE constrained rungs and {0.50}
-                  stability interval re-derives (0.0211, 0.1962) vs §9.3's (0.021, 0.196)
-                  all ten verdicts equal the SIGN of their own published margin
-  identities      sensor_seed == 160000 + 1000k + 2 for all eight; sum of membership 126
-  X7              285 strings scanned with a matcher written for the probe alone:
-                  0 offenders, and ZERO BACKSLASHES anywhere in the file
+*** THE ANCHOR CAME OUT BETTER THAN §9.3 REQUIRED, AND IT IS WORTH KEEPING. ***
+  Rebuilt cell 6 from stage_abc_screen.json ITSELF: its own 28 nulls give Q95 0.37033237,
+  threshold 0.74066474, and its ten per-cell D values match the ten the artifact records.
+  The NINE constrained rungs, the single unconstrained {0.50}, and the (0.0211, 0.1962)
+  stability interval all re-derive.
+  ALL TEN RUNGS AGREE, INCLUDING THE UNCONSTRAINED ONE.  D ratios anchor/cell6 span
+  0.9605-1.1586.  Not a licensing claim; it is evidence the rebuilt probe/fault/identity
+  instrument reproduces the screen rather than merely passing a passable test.
 
-PROVENANCE — the property that makes the digest usable in an authorization
-  3 runs / 2 packet roots (one a full copy at a DIFFERENT absolute path) -> BYTE-IDENTICAL
-  *** LIMITATION 80 CANNOT BITE THIS ARTIFACT AND I CHECKED WHY.  Canonical JSON with
-  separators=(",",":") emits NO NEWLINE OF EITHER KIND, so no eol filter can act.  Staged
-  it and read the index blob back: 5,386 B, byte-identical to the worktree, LF 0 CR 0.
-  Its raw and canonical digests are the SAME NUMBER in every checkout, unlike
-  payload_conditioning.json.  STILL NAME THE CANONICAL DIGEST — require_authorized_plan
-  computes it from the PARSED document, which is the domain the comparison happens in. ***
+*** THE BOUNDARY OF BOTH AUDITS, AND IT MUST GO IN THE TECHNICAL REPORT. ***
+  Everything DOWNSTREAM of the coefficient vectors is independently recomputable from the
+  file and I recomputed all of it.  THE COEFFICIENT VECTORS THEMSELVES ARE NOT — the raw
+  gauge traces are not persisted, so harmonic_coefficients over [1000,1768) cannot be
+  re-derived from the artifact alone.  That step is covered by the replay gate, the
+  anchor's agreement with the screen, and X8 — and by NOTHING either audit did.  Two
+  independent reconstructions must not be allowed to imply coverage they do not have.
+```
 
-THE §11.1 WALK (Lesson 75).  All 19 `inputs` fields present and EXACTLY those 19; both
-protocol digests recomputed from the files themselves and matching the frozen pins;
-plan_valid / terminal / mode / authority / 6 preflight members / 8 plan.* members present.
-  TWO FIELDS BEYOND §11.1's LITERAL LIST, both flagged so nobody later reads drift:
-    preflight.per_mass_realized_delta  named by §11.2, and execute mode READS it
-    plan.shape_audit                   named NOWHERE, and it is the field that
-                                       DISCHARGES X9 in the plan artifact.  Keep it.
-  THE MECHANICS PREFLIGHT IS A REAL CHECK: it compiles a body per mass and measures
-  sum(body_mass) - nominal at atol=1e-12.  The published values are MEASUREMENTS
-  (0.05 realizes as 0.05000000000000002, |d| ~ 2.1e-17), so a reader can apply the
-  tolerance.  IT PROVES THE OVERRIDE REACHES THE COMPILED BODY AND NOTHING MORE — with
-  no gravity in the plant, reaching the MEASURED SIGNAL is a different claim and
-  X8 REMAINS THE SOLE LIVENESS CHECK.
+## S74 INSTRUMENT FAULTS — BOTH MINE, BOTH CAUGHT BY THE ARTIFACT DISAGREEING WITH ME
 
-ONE DOCUMENTATION OBSERVATION, DELIBERATELY NOT ESCALATED
-  §12's TIME block ends "the plan artifact must carry the executor's own count."  A plan
-  spends zero rollouts and has no executor; §11.1 names no timing field; §11.2 — which
-  says plan-mode exits are governed by §11.1 — carries it in timing{} and
-  physical_ledger[].elapsed_s under X6.  The word "plan" is a slip for "result".
-  I DID NOT PROPOSE A VERSION BUMP: the document is frozen, a bump costs a git mv plus
-  both approvals, and nothing operative depends on the sentence.  Recorded so the next
-  reader walking §12 against the artifact does not think a field went missing.
+```text
+1 I HARD-CODED THE AUTHORITY STRING FROM MEMORY and got one word wrong ("outcome case").
+  THE FIX WAS NOT TO CORRECT THE TRANSCRIPTION.  It was to stop transcribing and lift the
+  string out of the frozen document at run time.  *** X12 APPLIES TO MY OWN INSTRUMENT,
+  NOT ONLY TO THE THING IT CHECKS.  Any literal I copy from a document is a SECOND COPY,
+  not a second source.  Write it that way in the first draft. ***
+2 I ASSERTED "no backslash anywhere in the artifact", carried over from plan.json where it
+  IS true.  It CANNOT be true here: the result embeds 126 canonical JSON strings whose own
+  quotes are escaped (9,576 raw backslashes, all exactly \").  The operative property is
+  the DECODED domain, which is what X7 speaks about — 0 there.
+  *** A PROPERTY THAT HOLDS OF ONE ARTIFACT IS NOT A PROPERTY OF THE ARTIFACT CLASS. ***
+3 MY FIRST FLIP-SWEEP SUMMARY SAID "63 of 70 change the answer."  True and USELESS: 61 of
+  those are shape violations a monotone ladder makes by construction.  I split the table
+  before publishing it.  *** A SENSITIVITY NUMBER THAT COUNTS IMPOSSIBLE PERTURBATIONS
+  OVERSTATES FRAGILITY EXACTLY AS BADLY AS OMITTING THEM UNDERSTATES IT. ***
+```
 
-ONE RETIRED CHECK, STATED BECAUSE A SILENT RETIREMENT IS WORSE
-  Both agents reported "results/payload_boundary_extension absent" for eight rounds.
-  NOTHING COMMITTED WAS ENFORCING IT — it was review discipline.  The full suite is green
-  now that the directory exists.  That line retires here.
+## ONE §11.3 WORDING OBSERVATION, DELIBERATELY NOT ESCALATED
+
+```text
+§11.3's "Why this is unique per rollout" says two rollouts at different masses "differ in
+mass_index, distal_payload_mass_kg and overrides.distal_payload_mass_kg."  MEASURED: within
+a stage that is exact, but ACROSS THE XA/XM BOUNDARY they also differ in `stage` — the
+anchor mass runs as XA and the other six as XM, exactly as §8 schedules.  The sentence
+establishes SUFFICIENCY for distinctness and an extra differing field only strengthens it.
+NO VERSION BUMP.  Same class as the §12 "the plan artifact must carry the executor's own
+count" slip both agents agreed was non-operative in S72.  Recorded so the next reader
+walking §11.3 against the ledger does not think a field drifted.
+```
+
+## THE S73 PRE-AUTHORIZATION AUDIT — SPENT, BUT TWO RULES SURVIVE IT
+
+**The plan is consumed and the run is done, so most of that block retired with it. These
+two facts still bind if a SECOND joint authorization is ever issued.**
+
+```text
+THE INVENTORY RULE.  run_replay_gate brackets its ONE rollout with
+  inventory([data_root, PACKET_ROOT], shallow_roots=[REPO_ROOT]) and fails on ANY added /
+  removed / modified file at a point where rollout_spent is ALREADY 1.  An incidental write
+  does not merely fail a check: IT CONVERTS THE AUTHORIZED ROLLOUT INTO A TERMINAL
+  X_DEFAULT_PATH_UNVERIFIED.  Nothing filters that list — __pycache__/, .pytest_cache/ and
+  the repo root's MUJOCO_LOG.TXT are all inside it (3,203 files vs MIN_WATCHED_FILES=100).
+  WHILE ANY FUTURE RUN EXECUTES: no pytest, no compileall, no second agent session, no
+  editor save, no git write.  Run it as a background process and poll the RESULTS JSON.
+THE TWO-LAYER AUTHORIZATION GATE.  require_authorized_plan accepts a CONTENT-edited plan
+  named by its OWN digest — and that plan then dies at X0E, where build_plan_document is
+  recomputed from the bound context and compared by canonical_json equality, FOR 0 ROLLOUTS
+  and BEFORE the replay gate is called.  Naming gate and content gate are independent; a
+  drifted plan cannot reach a rollout.
 ```
 
 ## THE S71 FINDING — THE WHITELIST IS THE WHOLE DECISION AND NOTHING WAS CHECKING IT
@@ -1163,9 +1106,10 @@ Settled — do not reopen, do not edit v2.3.3.  Codex S55: no bump for the Stage
 ## Where the project is
 
 - **Phase 2 (Execution) is OPEN.** All Phase-1 gates in force. **Schema v1.0 + Amendment A1 in force.** Contract changes run through the **amendment protocol**.
-- I am **Claude**; last session was **Session 73**; next session I run is **Session 74**. **THE S72 PROGRESS REPORT** (`Progress Report Session 72.md`, covers S65–S72) **was read by Codex in its S72 general recent-work review, which found no correction to carry — so NO explicit review cycle opened on it** (the Working Method's rule: the review cycle does not apply to the general recent-work review until that review flags something). Next regular report: **Session 80**, or sooner if a phase transition or an approved written Claim-Sheet amendment fires. **An approved A2 fires it.** **A Step-5 run does NOT by itself fire one** — it is neither a phase transition nor an amendment, though the result it produces will feed A2, which does.
+- I am **Claude**; last session was **Session 74**; next session I run is **Session 75**. **THE S72 PROGRESS REPORT** (`Progress Report Session 72.md`, covers S65–S72) **was read by Codex in its S72 general recent-work review, which found no correction to carry — so NO explicit review cycle opened on it** (the Working Method's rule: the review cycle does not apply to the general recent-work review until that review flags something). Next regular report: **Session 80**, or sooner if a phase transition or an approved written Claim-Sheet amendment fires. **An approved A2 fires it.** **A Step-5 run does NOT by itself fire one** — it is neither a phase transition nor an amendment, though the result it produces will feed A2, which does.
 - **`config.json` is deliberately NOT frozen** and does not exist. All hashes are `dev-`; no `dev-` trace may enter confirmatory analysis.
 - Real data exists: `data/gate3-base-dev-pilot-val-c1-s` (3.86 GB, git-ignored, local only). 472 reservations / 944 manifest rows / C1+S / dev 152, pilot 152, val 168. **Test untouched: 0 identities, 0 payloads.** **Slated for full regeneration from zero after A2 — these 472 payloads become a superseded pre-amendment set in the packet exclusion trail. Read them; do not build on them.**
+- **THE PAYLOAD-BOUNDARY EXTENSION HAS RUN — Codex's S73, 127 physical rollouts, `X_CASE_EMPTY`, and the result artifact is JOINTLY APPROVED (Codex S73 / me S74).** The measurement is spent and no further payload-extension execution is authorized. **A2 is the only thing it is now waiting on.**
 - **STAGES A/B/C HAVE RUN — Codex's S57, 135 physical rollouts, CASE_B, JOINTLY APPROVED.** Stage 0 RAN in S48 at ZERO rollouts; `results/protocol_p/sensor_only_difference_null.json` is tracked and **JOINTLY APPROVED**. The §9 role-coverage read is now **JOINTLY APPROVED** (above). The payload read's **RESULT ARTIFACT is JOINTLY APPROVED** (S60 Codex / S61 me); its **script + tests are JOINTLY APPROVED (Codex S61)**.
 - **THE ROLLOUT COUNT HAS BEEN WRONG FIVE TIMES: one → four → thirteen → fourteen → FIFTEEN pre-run. Carry the table, never a remembered number.**
 ```text
@@ -1183,8 +1127,12 @@ FIFTEEN BEFORE CODEX'S S57.  Measured in S58 by sweeping BOTH agents' primary re
               --
               15
 + Codex S57: 1 replay (36.42 s) + 135 stage rollouts = 136   =>   TOTAL 151
-NOT RUN IN S58, S59 OR S60.  Nothing on the gate's watched path changed and the
-measurement it guards is already spent.
+NOT RUN IN S58-S72.  Nothing on the gate's watched path changed and the measurement it
+guards was already spent.
++ Codex S73: THE ONE AUTHORIZED STEP-5 INVOCATION.  1 replay + 126 extension = 127,
+  3,680.708815 s persisted.                                =>   TOTAL 278
+*** TAKE THE COUNT FROM THE ARTIFACT'S OWN LEDGER, NEVER FROM A PER-ROLLOUT FIGURE. ***
+MY S74 SPENT ZERO — the whole audit is a read of persisted fields.
 ```
 - **Progress report DONE at S64** (regular, covers S57–S64) at `agents/Claude/Progress Reports/Progress Report Session 64.md`. **ITS LOOP IS OPEN AT MY S65 STATE `b0ff7496`** — Codex made two edits in its S64 (the ledger refuses a duplicate LOUDLY, not silently; and "151 rollouts, about 70 minutes" contradicted my own line 14's audited 4,432.16 s), I verified both against primary records and accepted both diagnoses AND implementations, then moved one clause out of the present tense (+4/-3) because "still cannot run until payload mass is part of the key" stopped being true in S63/S64. **Codex owns the next turn on it; I offered to take its wording.** Prior status — the S56 one ran five review rounds, so expect Codex may open one. `Progress Report Session 56.md` (S49–S56) stays closed at blob `83c527ce…`; do not reopen it. **THE S72 REGULAR IS WRITTEN** — `agents/Claude/Progress Reports/Progress Report Session 72.md`, covering S65–S72. **Codex read it in its S72 general recent-work review and found no correction to carry, so no explicit review cycle opened on it.** Its spine: eight complete adversarial rounds on one program, every round finding something real and each structurally below the last; then the loop closing and the program producing the zero-rollout plan. It states both halves of the trade — what the rounds bought, and that eight of my sessions produced no science — and names where I think the cost stopped being obviously worth it. **MY NEXT REGULAR IS SESSION 80.**
 
@@ -1617,6 +1565,28 @@ generation_audit.json · independent_audit.json
     carrying no drive letter, so only the POSIX rule can match it. Fourth consecutive
     session in which the defect lived one layer below the layer being fixed.
 
+103. **[NEW S74] THE PAYLOAD BOUNDARY'S *EXISTENCE* IS ESTABLISHED; ITS *LOCATION* IS NOT.**
+    `X_CASE_EMPTY` is robust — 0.200 kg is empty by ≥22.6% of its own threshold, and no
+    single rung flip reaches R11. The **named** empty set `{0.150, 0.200}` is not: it rests
+    on `0.125 @ remEI 0.35` holding by **+2.1%** and `0.150 @ remEI 0.35` missing by
+    **−4.1%**, the two rungs nearest a threshold anywhere in the 70-rung grid, both inside
+    §9.3's own `tau_anchor = 0.10` band — the band the frozen document already declared too
+    small to constrain a verdict. **Every sentence that names 0.150 kg as the boundary must
+    carry the disclosure that the boundary is unresolved at ±1 ladder rung.** This is a
+    constraint on wording, not an amendment: §9.5's licensing sentence is satisfied as
+    written.
+
+104. **[NEW S74] NEITHER INDEPENDENT AUDIT REACHED THE COEFFICIENT VECTORS.** Both agents
+    reconstructed the result artifact without importing the executable, and everything
+    **downstream** of the 8-entry coefficient vectors — distances, thresholds, margins,
+    verdicts, sets, shape rules, classifier, censuses, provenance — is recomputable from the
+    file and was recomputed. The step from raw gauge trace to coefficients is **not**: the
+    traces are not persisted, so `harmonic_coefficients` over `[1000,1768)` cannot be
+    re-derived from the artifact alone. That step is covered by the replay gate, the
+    anchor's agreement with the screen, and X8, and by nothing either audit did. **Say so in
+    the Technical Report** — two independent reconstructions must not be allowed to imply
+    coverage they do not have.
+
 ## Coherence / honesty bounds (keep loud)
 
 - **Sensor RNG keyed on `(sensor_seed, pair_id, channel, stream)` jointly** (`utils/rng.py:76-78`). **Measured S39: a `pair_id` change alone moves `gauge_obs` by up to 6.50 µε**, against `D` of order 0.1–0.5. **Nothing else is in the key.**
@@ -1932,6 +1902,31 @@ Run either read from the packet dir; zero rollouts, ~0.3 s each:
 - **Live-Run README (co-maintained): root `README.md` — Phase 2 / In Progress, banner 2026-08-04. MY S72 APPENDED ONE ENTRY (`+2/−0`), edited no dated entry, and left the banner alone (Codex had already advanced it to 2026-08-04 earlier the same day). THE TRIGGER FIRED: a finished artifact — the extension's plan document, the first thing the extension has produced. The entry deliberately continues Codex's own entry from hours earlier, which had told the reader "the next permitted step is a zero-simulation plan document"; mine closes that loop for them. It states what the plan fixes in advance, the 0.36–0.38 s against ~26 s per simulation, that the 126-body fingerprint was rebuilt from the plan document rather than taken from the program, and the honest boundary (no simulation, 151, second agent has not read it, nothing runs until a separate authorization names this document).** *(Prior: MY S71 RAN THE HEARTBEAT CHECK AND ADDED NOTHING — SEVENTH consecutive session, same reason: the executable loop is still open (round eight), so no artifact was finished and no phase closed. My S70 made the same call (round seven). My S69 made the same call (round six). My S68 and S67 made the same call, as did Codex for its own S66 and S68. THE ENTRY BELONGS ON THE LOG WHEN THE LOOP CLOSES, and whoever writes it owes the reader the four-round history, not just the outcome. Codex wrote that entry in its S71.)** (Banner history: I moved it to 2026-08-03 in S64; my S62 and S63 left it because those were same-day.) **My S65 appended one entry (`+2/−0`), left the banner alone (same day), and edited no dated entry** — the bar was cleared by the first review of the executable finding it could never have completed a run. **Codex's S64 also appended a dated correction entry to its own preceding one (the loud-not-silent refusal, and the 4,432.16 s / 73.9 min screen time against the withdrawn project-wide "seventy minutes"); I read it and it is right.** My S64 appended one entry (`+3/−1` including the banner line), because the trigger my S63 note named actually fired: **the extension document loop CLOSED**. The entry covers the agreed plan, the 19,448-state licensing enumeration, the start of construction, and the payload column that existed with nothing able to fill it. **The log's date order is out of chronological order in the middle and Codex's dated correction says so; dated entries are never edited, so it stays that way.** **Beware when appending: `README.md` is all-CRLF; split on `b"\r\n"`, insert before the `''/'---'/''` block that precedes `## Follow along`, assert both anchors before writing, and read the neighbouring lines back afterwards rather than trusting an offset.**
 - **Phase-2 chat:** `chats/Claude-Codex/Phase 2 Integration and Config Freeze/…- Active.md` — **NOW 19,023 lines. My S72 turn is `+172/−0`, header unique at line 18,853, physically last, pre-write prefix (1,218,243 bytes) retained byte-for-byte with its SHA-256 (`c2c077b1…`) asserted inside the writer. CODEX OWNS THE NEXT TURN: the SECOND INDEPENDENT READ of `plan.json` (`15298da4…030be3`) and nothing else. WHAT IT HAS TO JUDGE: whether the Step-3 artifact is a faithful §11.1 plan. I gave it my re-derivations, the two additive fields, and the §12 "plan artifact must carry the executor's own count" observation, and told it that if it reads that sentence as requiring a version bump, its version wins rather than trading a round. IF IT APPROVES, THE TURN AFTER THAT IS THE STEP-4 JOINT AUTHORIZATION — and I explicitly declined to write anything readable as half of one, so do not let my approval be mistaken for it.** *(S71 record, kept: my S71 turn was `+168/−0`, header unique at line 18,622, prefix SHA-256 `83b52b2e…`; Codex approved those exact blobs and closed the loop in its S71 at `+63/−0`.)* *(S69 record, kept: my S69 turn was `+205/−0` with prefix SHA-256 `276c7630…`. I corrected my own header stamp in place immediately after writing it (20:40 → 20:35 PDT, same byte length, every byte outside the 46-byte span compared before and after) because an estimated stamp defeats the only thing a stamp is for; that is the ONLY edit I have ever made to posted transcript content. The S69 single-slash judgment it had to rule on is now SETTLED — Codex agreed in its S69.)* **If a judgment comes back contested and one exchange does not settle it from source, ESCALATE to the director rather than trade turns.** Codex answered my S64 open question in its S64: **the executable does NOT use `LogicalRow.key` across masses** — extension rows carry their own mass-bearing logical key and their joins use the mass-bearing `PhysicalKey`, so `.key` stays as it is. **Settled; do not reopen.** The things Codex has to judge now are the five S65 corrections and, explicitly, the one structural deviation: **I lifted the replay gate's pre-rollout half into `resolve_replay_source` so it is testable at zero cost.** Do NOT re-open: the extension document (both approved `538ae06b`), the five S62 edits, the unified Option-B rule, the four S62 questions, the measure-first ruling, the payload analyzer/tests, the role-coverage states, the readback ruling, `.gitattributes`, the Stage-C label, Step 25, the screen result, or the plan default. **The file is MIXED-EOL** — Codex appends LF, the older bulk is CRLF; append LF and verify `+N/−0` rather than assuming.
 - **Monitoring chat:** `chats/Claude-Codex-Human/Transcript Order Monitoring/…- Active.md` (88 lines; unchanged S43–S72 — no recurrence; **streak FORTY-TWO**: Codex's S71 append verified at the git level in my S72 — commit `5250aa4`, `+63/−0`, header unique and correctly ordered after mine — and my own S72 append passed all five gates. *(Prior: **streak FORTY-ONE**: Codex's S70 append verified at the git level in my S71 — `+110/−0`, prior content a byte-identical prefix, header unique, physically last — and my own S71 append passed all five gates.)* *(Prior: **streak thirty-nine**: Codex's S69 append was `+92/−0` with its header unique at line 18,257 and physically last, verified at the git level in my S70, and my S70 append passed all five gates — pre-write prefix retained byte-for-byte with an identical SHA-256 asserted *inside* the writer, header unique, physically last, `+165/−0`.)* The duty is to flag recurrences, so a clean session adds no note; verify at the git level regardless.
+
+## Scratchpad (S74, NOT committed)
+
+`audit_result_artifact.py --packet-root "Reproducibility Packet"` — **the 130-check result
+audit, and the one to rebuild first if the result artifact is ever re-opened.** Same
+independence discipline as the S72 plan probe: it does NOT import
+`run_payload_boundary_extension`, writes its own canonical-JSON and its own `D` statistic
+(`np.linalg.norm(fault − healthy)` over the 8-entry coefficient vector), and takes its
+literals from the frozen documents at run time rather than from my memory. It reaches
+outside the artifact three times — the approved `plan.json`, the committed
+`stage_abc_screen.json` (for the cell-6 rebuild), and the two protocol files on disk (for
+the digest pins, LF-normalized before hashing). **Two shapes to keep when rebuilding it:**
+the physical-key condition vocabulary is Protocol P's `"structural"` while the §11.3
+identity payload's is `"structure"` — two closed vocabularies over the same fact, and
+comparing them naively fails 70 of 126; and the raw file legitimately contains 9,576
+backslashes, all `\"` from the embedded canonical strings, so X7 must be checked in the
+**decoded** domain.
+`sensitivity_sweep.py --result <payload_boundary.json>` — the τ-band flip sweep behind THE
+S74 FINDING. Rebuilds `TESTABLE_SET` and `ROLE_RETAINED` under an arbitrary set of flipped
+rungs, re-runs §9.5's R8–R12 and the Option-B prefix rule on the perturbed state, and
+**separates shape-violating landings from informative ones** — without that split the
+headline number is 63/70 and means nothing.
+`append_s74.py` (inline) — the transcript appender, now matching the file's own physical
+tail ending and emitting the `---` separator, with the prefix SHA-256 asserted **after**
+the write. Both appends this session verified clean.
 
 ## Scratchpad (S72, NOT committed)
 
