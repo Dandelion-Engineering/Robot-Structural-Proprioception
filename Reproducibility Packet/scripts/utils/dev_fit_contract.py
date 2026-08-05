@@ -44,7 +44,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from pathlib import Path, PureWindowsPath
+from pathlib import Path, PurePath, PureWindowsPath
 from typing import Iterable, Mapping, Sequence
 
 from .protocol_p import ASSIGNMENT_CANONICAL_SHA256, canonical_json, canonical_text_sha256
@@ -400,6 +400,45 @@ def require_dev_only(
     )
 
 
+def require_code_identity(identity: Mapping[str, str]) -> Mapping[str, str]:
+    """Refuse a code-identity mapping that would not survive an audit; return it if valid.
+
+    Inputs: the `{label: digest}` mapping bound 4 requires a checkpoint to carry.
+    Outputs: the same mapping. Purpose: bound 4's "training-protocol/code identity",
+    stated ONCE so that the routine which builds it and the routine which audits it cannot
+    disagree about what it is.
+
+    Why this is a function and not two matching blocks
+    --------------------------------------------------
+    `code_identity()` produces this mapping and `DevFitProvenance.validate()` consumes it,
+    and until Session 80 each carried its own copy of the rule. They disagreed. Measured
+    over a 140-cell grid of hostile inputs across every entry point in this module,
+    `code_identity({})` was the **only** value anywhere in the module that was silently
+    ACCEPTED: the producer returned `{}` without a word, while the consumer refused exactly
+    that value one step later, with a message about the record rather than about the call
+    that built it.
+
+    That is the Session-79 shape one layer down — two guards in one module disagreeing
+    about one quantity, found the same way, by calling both of them on the same value.
+    Copying the consumer's block into the producer would have closed the instance; stating
+    the rule once closes the class, because there is no second copy left to drift
+    (requirement (r), equality never adoption, discharged here by deleting the second
+    source rather than by pinning it against the first).
+    """
+
+    require(
+        isinstance(identity, Mapping) and bool(identity),
+        "code_identity must name at least the module that defines the network",
+    )
+    for label, digest in identity.items():
+        require_bare_name(label, "code identity label")
+        require(
+            isinstance(digest, str) and _HEX64.fullmatch(digest) is not None,
+            f"code identity digest for {label!r} must be 64 lowercase hex characters",
+        )
+    return identity
+
+
 def code_identity(paths: Mapping[str, Path | str]) -> dict[str, str]:
     """Return `{label: canonical text digest}` for the files defining a training protocol.
 
@@ -409,15 +448,43 @@ def code_identity(paths: Mapping[str, Path | str]) -> dict[str, str]:
     not of the document — Session 59/61).
     Purpose: bound 4's "training-protocol/code identity", so a checkpoint names the code
     that produced it and not merely the data it read.
+
+    The post-condition is `require_code_identity`, which is the same predicate
+    `DevFitProvenance.validate()` applies — so this function cannot hand back a mapping the
+    record will refuse (Session 67: when one routine exists to satisfy another routine's
+    check, end by asserting that check).
+
+    The `PurePath`/`str` guard is not decoration: without it a `None` path — the most
+    likely bad path there is, an absent key read out of a config — dies inside `Path()`
+    with a `TypeError` one line *before* the `is_file` refusal that exists to catch a bad
+    path, so the guard written for the case never sees it (Session 61: ask what the first
+    of two adjacent guards alone rejects; here it is every non-path type).
+
+    The label rule is NOT repeated in the loop below, and its absence is deliberate. It
+    was there until the post-condition arrived, and the Session-80 sweep then reported it
+    as a survivor: `require_code_identity` refuses the same label with the same sentence,
+    so deleting the in-loop copy changed no observable behaviour and no test could go red
+    (Session 63 — two mutually redundant call sites of one guard are individually
+    untestable). Removing it rather than keeping it beside a double-removal sweep case is
+    the same choice this function is making everywhere else: one rule, one place.
     """
 
+    require(
+        isinstance(paths, Mapping),
+        "code_identity() needs a mapping from a bare label to a path",
+    )
     identity: dict[str, str] = {}
     for label, path in paths.items():
-        require_bare_name(label, "code identity label")
+        require(
+            isinstance(path, (str, PurePath)),
+            f"code identity {label!r} must name a path, not {type(path).__name__}",
+        )
         resolved = Path(path)
         require(resolved.is_file(), f"code identity {label!r} does not name a file")
         identity[label] = canonical_text_sha256(resolved)
-    return dict(sorted(identity.items()))
+    ordered = dict(sorted(identity.items()))
+    require_code_identity(ordered)
+    return ordered
 
 
 @dataclass(frozen=True)
@@ -470,16 +537,7 @@ class DevFitProvenance:
             and _HEX64.fullmatch(self.checkpoint_sha256) is not None,
             "checkpoint_sha256 must be 64 lowercase hex characters",
         )
-        require(
-            isinstance(self.code_identity, Mapping) and bool(self.code_identity),
-            "code_identity must name at least the module that defines the network",
-        )
-        for label, digest in self.code_identity.items():
-            require_bare_name(label, "code identity label")
-            require(
-                isinstance(digest, str) and _HEX64.fullmatch(digest) is not None,
-                f"code identity digest for {label!r} must be 64 lowercase hex characters",
-            )
+        require_code_identity(self.code_identity)
         require(
             isinstance(self.row_disclosure, str) and bool(self.row_disclosure.strip()),
             "row_disclosure must carry the selection's denominator sentence",

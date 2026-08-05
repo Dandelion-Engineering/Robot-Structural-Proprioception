@@ -43,6 +43,7 @@ from utils.dev_fit_contract import (  # noqa: E402
     code_identity,
     matched_fit_plan,
     require_bare_name,
+    require_code_identity,
     require_complete_matched_plan,
     require_dev_only,
     require_matched_fit_suite,
@@ -469,6 +470,53 @@ def test_code_identity_refuses_a_missing_file_and_a_path_shaped_label(tmp_path):
         code_identity({"absent.py": tmp_path / "absent.py"})
     with pytest.raises(DevFitContractError, match="bare name"):
         code_identity({"utils/attribution_net.py": SCRIPTS_DIR / "utils" / "attribution_net.py"})
+
+
+def test_the_producer_and_the_consumer_of_code_identity_apply_the_same_rule():
+    """Session 80: the producer silently returned the value the consumer refused.
+
+    `code_identity({})` returned `{}` with no refusal — the single silently ACCEPTED cell
+    in a 140-cell grid over every entry point in this module — while
+    `DevFitProvenance.validate()` refused exactly that mapping one step later. The rule
+    now lives in `require_code_identity` and both call it, so this drives BOTH of them on
+    the SAME values and requires them to agree (the Session-79 instrument: whenever one
+    quantity is validated in more than one place, call every one of them on one value).
+    """
+
+    for offender in ({}, {"utils/net.py": _A_DIGEST}, {"net.py": "nope"}):
+        with pytest.raises(DevFitContractError) as producer_side:
+            require_code_identity(offender)
+        with pytest.raises(DevFitContractError) as consumer_side:
+            _valid_provenance(code_identity=offender).validate()
+        assert str(producer_side.value) == str(consumer_side.value)
+
+    # and the accept side agrees too, so the shared rule is not "refuse everything"
+    accepted = {"attribution_net.py": _A_DIGEST}
+    assert require_code_identity(accepted) is accepted
+    assert _valid_provenance(code_identity=accepted).validate().code_identity == accepted
+
+
+def test_code_identity_cannot_hand_back_a_mapping_the_record_would_refuse(tmp_path):
+    """The post-condition, driven from the builder rather than asserted about it."""
+
+    with pytest.raises(DevFitContractError, match="code_identity must name at least"):
+        code_identity({})
+
+
+@pytest.mark.parametrize("hostile", [None, 7, ["net.py"], ("net.py",), {"net.py"}, "net.py"])
+def test_code_identity_refuses_a_non_mapping_in_its_own_domain(hostile):
+    """`paths.items()` used to escape as `AttributeError`, below the contract boundary."""
+
+    with pytest.raises(DevFitContractError, match="needs a mapping"):
+        code_identity(hostile)
+
+
+@pytest.mark.parametrize("hostile", [None, 7, 1.5, True, b"x", ["x"], {"x": 1}])
+def test_a_non_path_value_reaches_the_path_refusal_instead_of_dying_inside_Path(hostile):
+    """`Path(None)` raises `TypeError` one line BEFORE the guard written for a bad path."""
+
+    with pytest.raises(DevFitContractError, match="must name a path, not"):
+        code_identity({"net.py": hostile})
 
 
 # --------------------------------------------------------------------------- #
