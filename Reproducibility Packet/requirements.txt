@@ -3,3 +3,14 @@ mujoco==3.10.0
 numpy==2.5.1
 pytest==9.1.1
 scikit-learn==1.9.0
+# PyTorch backs the Gate-4 learned attribution rung (scripts/utils/attribution_net.py).
+# This pin is the CPU-installable source version, which is enough to run the whole test
+# suite: the rung is ~4x10^4 parameters and its tests are CPU-only. The recorded project
+# machine ran the identical source version as the CUDA 12.8 build (`torch==2.11.0+cu128`,
+# which carries the sm_120 kernels the RTX 5060 Ti needs), installed with
+#   pip install torch==2.11.0+cu128 --extra-index-url https://download.pytorch.org/whl/cu128
+# The two agree: measured Session 77 over four seeds on a 768-step window, CPU and CUDA
+# class probabilities differ by at most 5.960e-08 under the precision context the module
+# runs its forward passes in (`attribution_net.deterministic_conv_precision`), versus
+# 8.842e-05 under cuDNN's TF32 default.
+torch==2.11.0
