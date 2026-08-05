@@ -138,6 +138,10 @@ def require_bare_name(value: str, field_name: str) -> str:
         f"{field_name} must be a non-empty string",
     )
     require(
+        not any(ord(character) < 32 or ord(character) == 127 for character in value),
+        f"{field_name} must not contain control characters",
+    )
+    require(
         value not in RESERVED_COMPONENT_NAMES,
         f"{field_name} must not be a reserved path component "
         f"{list(RESERVED_COMPONENT_NAMES)}",
@@ -210,8 +214,13 @@ def require_complete_matched_plan(completed: Iterable[tuple[str, int]]) -> None:
     to avoid. Refusing here means the trainer cannot report a comparison it did not earn.
     """
 
-    done = set(completed)
+    materialized = list(completed)
+    done = set(materialized)
     expected = set(matched_fit_plan())
+    require(
+        len(materialized) == len(done),
+        "the completed fit plan contains a duplicate suite/seed pair",
+    )
     missing = sorted(expected - done)
     unexpected = sorted(done - expected)
     require(
@@ -244,10 +253,13 @@ class DevRowCensus:
 
         by_split = ", ".join(f"{name} {count}" for name, count in sorted(self.rows_by_split.items()))
         by_suite = ", ".join(f"{name} {count}" for name, count in sorted(self.rows_by_suite.items()))
+        non_dev_rows = self.total_rows - self.rows_by_split.get(AUTHORIZED_FIT_SPLIT, 0)
+        unmatched_dev_rows = self.rows_by_split.get(AUTHORIZED_FIT_SPLIT, 0) - self.selected_rows
         return (
             f"{self.selected_rows} of {self.total_rows} manifest rows selected "
             f"(split: {by_split}; suite of selected: {by_suite}); "
-            f"{self.withheld_rows} withheld as non-{AUTHORIZED_FIT_SPLIT}."
+            f"{self.withheld_rows} withheld ({non_dev_rows} non-{AUTHORIZED_FIT_SPLIT}, "
+            f"{unmatched_dev_rows} unmatched-suite {AUTHORIZED_FIT_SPLIT})."
         )
 
 
@@ -292,23 +304,42 @@ def select_dev_rows(
     return selected, census
 
 
-def require_dev_only(rows: Iterable[IdentityManifestRow]) -> None:
-    """Refuse a row set that contains any withheld role.
+def require_dev_only(
+    rows: Iterable[IdentityManifestRow], *, suite: str | None = None
+) -> None:
+    """Refuse an empty row set, withheld roles, or rows outside the fit suite.
 
-    Inputs: the rows a fit is about to consume. Outputs: none. Purpose: bound 1 checked
-    at the point of consumption rather than only at the point of selection, because the
-    selection is not the only way rows can arrive — a caller can pass a list it built
-    itself, and that is the path no filter guards.
+    Inputs: the rows a fit is about to consume and, when one fit is being prepared, its
+    expected matched suite. Outputs: none. Purpose: bounds 1 and 3 checked at the point
+    of consumption rather than only at selection, because the selection is not the only
+    way rows can arrive — a caller can pass a list it built itself, and that is the path
+    no filter guards. Passing ``suite`` also prevents a nominal C1 fit from consuming S
+    rows (or the reverse) while every row still truthfully says ``dev``.
     """
 
+    materialized = list(rows)
+    require(materialized != [], "a development-only fit may not consume an empty row set")
+    if suite is not None:
+        require_matched_fit_suite(suite)
     offenders: dict[str, int] = {}
-    for row in rows:
+    unmatched_suites: dict[str, int] = {}
+    for row in materialized:
         if row.split != AUTHORIZED_FIT_SPLIT:
             offenders[row.split] = offenders.get(row.split, 0) + 1
+        if row.suite not in MATCHED_FIT_SUITES or (suite is not None and row.suite != suite):
+            unmatched_suites[row.suite] = unmatched_suites.get(row.suite, 0) + 1
     require(
         not offenders,
         "a development-only fit may read no withheld role; found "
         + ", ".join(f"{name} x{count}" for name, count in sorted(offenders.items())),
+    )
+    expected = list(MATCHED_FIT_SUITES) if suite is None else [suite]
+    require(
+        not unmatched_suites,
+        f"a development-only fit may read only rows from suite(s) {expected}; found "
+        + ", ".join(
+            f"{name} x{count}" for name, count in sorted(unmatched_suites.items())
+        ),
     )
 
 

@@ -1,14 +1,14 @@
 # Summary of Only Necessary Context — Codex
 
-**Last rewritten:** 2026-08-05 — Codex Session 77
+**Last rewritten:** 2026-08-05 — Codex Session 78
 
 ## Resume here
 
 The project remains in **Phase 2 — Execution**. Final configuration is **UNFROZEN**;
 `Reproducibility Packet/config/config.json` is absent and confirmatory identities remain
-unmaterialized. Protocol P v2.3.3, its Stage-A/B/C screen, role-coverage read,
-payload-conditioning read, payload-boundary extension, and every Gate-4 fit are development
-evidence only, never confirmatory or final evidence.
+unmaterialized. Protocol P v2.3.3, its development screens/readbacks, the payload-boundary
+extension, and any future Gate-4 fit are development evidence only, never confirmatory or
+final evidence.
 
 The lifetime Protocol-P-related physical-rollout total is **278**: 151 before the
 payload-boundary extension plus its one authorized 127-rollout invocation. That invocation
@@ -19,25 +19,43 @@ is spent. No second invocation or further payload measurement is authorized.
 Claude owns the next review turn. Re-open and genuinely review these reviewer-edited files:
 
 ```text
-Reproducibility Packet/scripts/utils/attribution_net.py
-  80d7639f3df3a40b61c4229c4cf06649d1f613ae
-Reproducibility Packet/tests/test_attribution_net.py
-  861b8e83f6481da34668087cba238e356a13ed40
+Reproducibility Packet/scripts/utils/dev_fit_contract.py
+  6541cebcbd78d10918d5d6ab58b5f5501340ebf9
+Reproducibility Packet/tests/test_dev_fit_contract.py
+  9df7d7f79a7120e42ab84a81ba3bd76b1494ec32
 ```
 
-Codex explicitly approved these exact blobs in Session 77. The loop is **OPEN** until
-Claude explicitly approves the same state or edits and hands back a replacement. Do not
-infer approval from Claude's original implementation, Codex's edit, or downstream use.
-
-No fitting may begin until this loop closes and the trainer/checkpoint/result executable
-state is itself jointly reviewed.
+Codex explicitly approves these exact bytes. The loop is **OPEN** until Claude explicitly
+approves the same state or edits and hands back a replacement. No fit may run before this
+loop closes and the trainer/checkpoint/result executable state is itself jointly reviewed.
 
 The next regular Codex progress report is Session 80. The next Codex session/report is
-**78**.
+**79**.
 
-## Gate-4 rung 1 state
+## Gate-4 rung 1 — jointly approved implementation
 
-Claude Session 77 built the first learned attribution rung:
+Both agents explicitly approve:
+
+```text
+Reproducibility Packet/scripts/utils/attribution_net.py
+  c4fa3c63e7439236e09f4e5eeb08b7c76a6087ab
+Reproducibility Packet/tests/test_attribution_net.py
+  5a401ca14be170d0002c508111b7ce32a5291bb0
+```
+
+The two review rounds closed paired silent-state defects:
+
+1. Claude's original direct `load_state_dict` could partially mutate live tensors before
+   raising while leaving the previous `training_provenance` attached.
+2. Codex's first transactional repair validated on a candidate but rebound `self.net`,
+   orphaning optimizers or callers that captured the original module.
+
+The approved state validates the incoming dictionary and device transfer on a deep copy,
+then writes the validated tensors into the existing live network object. It preserves
+transactionality and object identity. The optimizer consequence test passes, as do
+success/refusal identity and provenance tests.
+
+Rung-1 facts:
 
 ```text
 TemporalAttributionNet              39,594 trainable parameters
@@ -52,70 +70,90 @@ installed torch                     2.11.0+cu128
 CUDA / GPU                          12.8 / NVIDIA GeForce RTX 5060 Ti
 ```
 
-Claude originally approved:
+The model is **untrained**. Joint implementation approval is not permission to fit.
+
+## Development-only fitting contract — reviewer state open
+
+Claude's original contract blobs were:
 
 ```text
-attribution_net.py                  5dc30c06a516b76db88776a8d9f7b26ebf3db937
-test_attribution_net.py             591d90318d3f30787a011bea2595ea6ddfaa8f6f
+dev_fit_contract.py                 73e5e743393ee5d0b0a2e548da6070bfceb1599e
+test_dev_fit_contract.py            3959ff28cad18efd8e55c3e8786951d1cea78e51
 ```
 
-Codex reproduced a blocking provenance defect in that state. PyTorch copied a changed
-`input_proj.weight` and only then raised on missing `severity_head.bias`; the estimator
-kept its prior `training_provenance`, leaving mixed weights falsely labeled as the old run.
+Codex reproduced four defects and blocked that state:
 
-The approved reviewer edit is transactional: load and transfer a deep-copied candidate,
-then replace the live network only after all steps succeed. The new regression proves a
-failed attachment preserves every tensor and the prior provenance. Because this changes
-executable bytes, Claude's original approval does not carry forward.
+- a duplicate suite/seed arm was collapsed by a set and accepted as a complete plan;
+- the point-of-consumption guard accepted both empty input and `dev/C0` rows;
+- a withheld `dev/C0` row was mislabeled as non-dev in the census disclosure; and
+- a newline-bearing bare name could split the promised one-line provenance string.
 
-Verification of the edited state:
+The approved reviewer edit refuses duplicate fits, refuses empty/unmatched/cross-suite
+consumption, distinguishes non-dev from unmatched-suite dev exclusions, and refuses ASCII
+control characters in path-free names/labels. Claude's re-review is still required.
+
+The contract's approved design direction, pending exact-state closure:
 
 ```text
-focused tests                        65 passed
-focused tests under python -O        65 passed
-full packet suite                    1,371 passed in 128.92 s
-compileall                           clean
-rollouts                             0
+authorized data                     persisted dev rows only
+matched fit suites                  C1 and S
+training seeds                      0, 1, 2, 3, 4
+plan                                exact 10-arm suite x seed cross-product
+authority                           DEVELOPMENT ONLY: ineligible for confirmatory
+                                    analysis; cannot change Protocol P outcome or
+                                    role-coverage counts.
+assignment identity                 exact ASSIGNMENT_CANONICAL_SHA256 equality
+configuration identity              dev- prefixed only
+data-root record                    bare name plus manifest digest, never local path
+source digest domain                canonical text
+checkpoint digest domain            raw binary
 ```
 
-The PyTorch requirement and packet README survived review unchanged:
-
-```text
-Reproducibility Packet/requirements.txt
-  3b103c526ae263dcc1c566fbac740b4452d18ffc
-Reproducibility Packet/README.md
-  9f4a1d592c2c9f1b5f10e575136b0199ab860d72
-```
-
-The base `torch==2.11.0` pin is intentional so CPU-only readers can install and run the
-packet. The project machine uses the corresponding `+cu128` build.
+The authority string remains local because importing an entry-point script into `utils`
+is the wrong direction and moving the source would edit a closed executable. Tests pin the
+literal by equality against the extension script and frozen protocol document.
 
 ## Development-only fitting authorization
 
-Session 77 opens the **conceptual** Gate-4 dev-fitting gate. Training rung 1 against the
-already-delivered development partition does **not** require new data generation.
-Amendment A2 did not independently grant this permission; the Session-77 ruling does.
+Session 77 opened the **conceptual** Gate-4 dev-fitting gate. Training rung 1 against the
+already-delivered development partition does not require new data generation. Amendment A2
+did not independently grant this permission.
 
 The authority is exact:
 
 1. Read only persisted rows whose role is exactly `dev` from the jointly approved delivered
    base dataset. Pilot, validation, and test outcomes remain unread.
-2. Generate no new plant, sensor, label, or role payload and spend zero physical rollouts.
-3. Hold architecture and training protocol identical across suites and use at least five
-   predeclared independent training seeds.
-4. Every checkpoint/result carries:
-   `DEVELOPMENT ONLY: ineligible for confirmatory analysis; cannot change Protocol P
-   outcome or role-coverage counts.`
-5. Persist machine-readable dev data root, manifest/config/assignment digests, suite,
-   training seed, training protocol/code identity, and checkpoint digest.
-6. Dev fitting may establish learnability or expose implementation failures. It may not set
+2. Generate no plant, sensor, label, or role payload and spend zero physical rollouts.
+3. Hold architecture and training protocol identical across C1/S and run only the five
+   predeclared independent training seeds in both arms.
+4. Every checkpoint/result carries the exact development-only authority and the dev data
+   root, manifest/config/assignment identities, suite, training seed, training-protocol
+   code identity, row disclosure, and checkpoint digest.
+5. A dev fit may establish learnability or expose implementation failures. It may not set
    validation-owned probability/detection/abstention/OOD/uncertainty thresholds, select a
    headline capacity from later roles, or become a research result.
 
-Before execution, close the two-file owner review, then build and jointly review the trainer,
-checkpoint/result schema, strict role refusal, and five-seed matched-suite plan. Once those
-executable bytes close under these bounds, no additional conceptual gate is required for the
-dev-only fits.
+Before execution, close the current contract review, then build and jointly review the
+trainer and its checkpoint/result writer. The trainer and evaluation driver must use the
+same `deterministic_conv_precision()` scope for forward/backward computation. Once those
+exact executable bytes close under these bounds, no additional conceptual permission is
+needed for the dev-only fits.
+
+## Delivered development partition
+
+A Session-78 read-only manifest check opened no `.npz` payload and found:
+
+```text
+data root                           gate3-base-dev-pilot-val-c1-s
+manifest rows                       944
+selected dev rows                   304
+C1 / S selected                     152 / 152
+withheld                            640 (pilot 304, val 336)
+config identity                     dev-712abf27c3f8f3c331ae9b76e3f22c4...
+manifest raw SHA-256                55ea5f0e74ddd24b05eafc51a2b9fc42...
+```
+
+The full identities remain in `HumanReport78.md`; the short forms above are navigation.
 
 ## Correct freeze sequence
 
@@ -130,9 +168,30 @@ draft config and role-separated storage
   -> untouched confirmatory generation/read
 ```
 
-`Reproducibility Packet/scripts/utils/estimator.py` still contains a stale sentence saying
-learned rungs train only after final freeze. Claude should correct it forward in the next
-session. This sequencing decision does not authorize pilot or validation work now.
+Claude corrected the stale post-freeze wording in both `utils/estimator.py` and
+`utils/__init__.py`; Codex approves those changes and the packet README as-is:
+
+```text
+estimator.py                        b2abf463d9a4b2678f182568f50417774a6191e7
+utils/__init__.py                   04647db4f61b18aac33e088543c6c49d54feb584
+Reproducibility Packet/README.md    ebef72fef5e423779901ba8a47529ae64d6a4433
+```
+
+This sequence does not authorize pilot or validation work now.
+
+## Verification of the current reviewer state
+
+```text
+direct adversarial probes           all corrected boundaries refuse
+focused tests                       126 passed
+focused tests under python -O       126 passed
+full packet suite                   1,432 passed in 130.27 s
+compileall                          clean
+payload files read                  0
+fits / checkpoints / generation    0 / 0 / 0
+rollouts                            0
+config/config.json                  absent
+```
 
 ## Amendment A2 remains in force
 
@@ -181,41 +240,22 @@ The development-context `TESTABLE_SET`s are:
 0.200 kg  EMPTY
 ```
 
-Payload-matched development-context role coverage is 0/0/0/0. This is a statement about
-reserved scalar payload/severity values in the fixed development context, not about later
-roles' own environments.
+Payload-matched development-context role coverage is 0/0/0/0. Binding limits: the
+0.125/0.150-kg transition is unresolved inside the 10% reproducibility band; `MONOTONE`
+means set inclusion rather than strict raw-distance monotonicity; seven CRN masses license
+no fitted curve or independence claim; no mechanism is identified; raw gauge traces were
+not persisted/re-derived; and this evidence cannot change Protocol P, role coverage, or
+establish/refute the hypothesis.
 
-Binding limits:
+## Public state and authorization boundary
 
-- An empty heavy-payload region exists, but its exact edge does not: the 0.125/0.150-kg
-  margins lie inside the pre-registered 10% reproducibility band.
-- `MONOTONE` means set inclusion, not strict monotonicity of every raw distance.
-- Seven common-random-number masses license no fitted payload curve or independence claim.
-- No attenuation mechanism is identified.
-- The exact-result audits reconstructed persisted coefficients downstream; raw gauge traces
-  were not persisted and were not re-derived.
-- This evidence cannot change Protocol P, role coverage, or establish/refute the hypothesis.
-
-## Public state
-
-The root README remains Phase 2 / `In Progress`. Claude's new entry says the learned rung
-exists but is untrained. Its final sentence incorrectly said training requires blocked data
-generation. Because the running log is append-only, Codex preserved it and appended a
-forward scope correction. Codex explicitly approves current blob:
-
-```text
-README.md  d06f844b9476c1c43f4b74cb5edce4d7e413b0e1
-```
-
-Keep the public README lean. A later same-state owner approval is not itself another public
-milestone; a completed fit may qualify only if it produces a genuinely noteworthy bounded
-development readout.
-
-## Authorization boundary
+The root README remains Phase 2 / `In Progress`, current blob
+`d06f844b9476c1c43f4b74cb5edce4d7e413b0e1`. Session 78 deliberately added no public
+entry: the model is untrained, the trainer does not exist, and the contract loop is open.
 
 Absent a new separately explicit authorization, all remain blocked:
 
-- fitting before the current implementation and trainer executable reviews close;
+- fitting before the contract and trainer executable reviews close;
 - any pilot, validation, or test outcome read;
 - any new dataset generation, replacement, supersession, or regeneration;
 - any second payload-extension invocation or further payload measurement;
@@ -225,17 +265,17 @@ Absent a new separately explicit authorization, all remain blocked:
 
 ## Transcript integrity state
 
-The Session-77 append used the unique complete EOF Claude block at the recorded boundary:
+Session 78 appended from a verified unique physical EOF block at:
 
 ```text
-pre-write bytes    1,316,541
-pre-write lines    20,550
-pre-write SHA-256  4adcc30b6ed1682f9b651a190edecbc444f3ca5c6b410ddce00591017cd0722f
+pre-write bytes    1,337,850
+pre-write lines    20,937
+pre-write SHA-256  70518b713090a9e595ec5b78089acd558f60a527fbe24f453cb6feb10898c43f
 ```
 
-Post-write, the full prefix remained byte-identical; the Session-77 header occurs once at
-line 20,554 after the boundary; Codex is physically last; and the transcript diff is
-`+125/-0`. Current physical state is 1,322,488 bytes / 20,675 lines. No repair was needed.
+The prefix remained byte-identical; the new header occurs once after the boundary; Codex
+is physically last; the diff is `+108/-0`; and the transcript now has 1,343,389 bytes /
+21,045 lines. No repair was needed.
 
 ## Workflow rules
 

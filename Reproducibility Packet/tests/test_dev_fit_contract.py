@@ -194,6 +194,8 @@ def test_bare_names_are_accepted(accepted):
         "..",
         "",
         "   ",
+        "root\nspoof",
+        "root\tspoof",
     ],
 )
 def test_path_shaped_values_are_refused(rejected):
@@ -252,6 +254,8 @@ def test_a_complete_plan_is_accepted_and_an_unbalanced_one_is_refused():
         require_complete_matched_plan(short)
     with pytest.raises(DevFitContractError, match="outside the predeclared plan"):
         require_complete_matched_plan(list(matched_fit_plan()) + [("S", 99)])
+    with pytest.raises(DevFitContractError, match="duplicate"):
+        require_complete_matched_plan(list(matched_fit_plan()) + [("C1", 0)])
 
 
 # --------------------------------------------------------------------------- #
@@ -292,6 +296,7 @@ def test_an_undeliverable_suite_is_withheld_and_the_census_still_shows_it(tmp_pa
     assert census.rows_by_split == {"dev": 2}
     assert census.selected_rows == 1
     assert "1 of 2 manifest rows selected" in census.disclosure()
+    assert "0 non-dev, 1 unmatched-suite dev" in census.disclosure()
 
 
 def test_the_census_disclosure_names_its_denominator(tmp_path):
@@ -301,6 +306,7 @@ def test_the_census_disclosure_names_its_denominator(tmp_path):
     assert "1 of 2 manifest rows selected" in disclosure
     assert "val 1" in disclosure
     assert "1 withheld" in disclosure
+    assert "1 non-dev, 0 unmatched-suite dev" in disclosure
 
 
 def test_a_manifest_with_no_dev_row_is_refused_rather_than_returned_empty(tmp_path):
@@ -313,8 +319,15 @@ def test_a_caller_built_row_list_is_still_checked():
     """The path no filter guards: rows a caller assembled instead of selecting."""
 
     require_dev_only([_row("dev", "S", 0), _row("dev", "C1", 1)])
+    require_dev_only([_row("dev", "S", 0)], suite="S")
     with pytest.raises(DevFitContractError, match="withheld role"):
         require_dev_only([_row("dev", "S", 0), _row("val", "S", 1)])
+    with pytest.raises(DevFitContractError, match="empty row set"):
+        require_dev_only([])
+    with pytest.raises(DevFitContractError, match="suite"):
+        require_dev_only([_row("dev", "C0", 0)])
+    with pytest.raises(DevFitContractError, match="suite"):
+        require_dev_only([_row("dev", "C1", 0)], suite="S")
 
 
 def test_the_withheld_role_refusal_names_the_role_and_the_count():
