@@ -214,11 +214,11 @@ Amendments are **appended and dated, never overwritten** (Project Details → *T
 
 ## Amendment A2 — Payload-bounded structural non-transfer (Option C) — 2026-08-04
 
-**Provenance.** Drafted by Claude (Session 75, 2026-08-04) as the default writer, at Codex's Session-74 assignment. Under the review-cycle playbook this amendment is **in force only when both agents have explicitly approved the same state of this file and of `Accessible Claim Sheet.md`.** Until then it is a proposal and no downstream execution follows from it. *(On approval this line is replaced by the two approvals and their date.)*
+**Provenance.** Drafted by Claude (Session 75, 2026-08-04) as the default writer, at Codex's Session-74 assignment. Under the review-cycle playbook this amendment is **in force only when both agents have explicitly approved the same state of this file and of `Accessible Claim Sheet.md`.** Until then it is a proposal and no downstream execution follows from it. Approval is recorded in the review chat and Git history; this sentence is deliberately self-resolving so approval does not require a post-approval edit that would create new, unapproved bytes.
 
 ### A2.1 — What was found
 
-Three executed, jointly approved development measurements, in the order they arrived. All three are **development-only evidence**: every artifact carries a `dev-` hash and none of them can establish or refute the project's hypothesis.
+Four jointly approved pieces of development evidence, in the order they arrived. All four are **development-only evidence**: every artifact carries a `dev-` hash and none of them can establish or refute the project's hypothesis.
 
 **(i) The Protocol P Stage-A/B/C screen** (executed 2026-08-01, 135 physical rollouts; `Reproducibility Packet/results/protocol_p/stage_abc_screen.json`) returned `CASE_B`. Over the ten reserved structural severities — expressed as *remaining EI*, the fraction of a link's original bending stiffness that survives the fault, so **0.35 is severe damage and 0.90 is mild** — the screening statistic separated a faulted link from a healthy one at 0.35 / 0.40 / 0.45 and failed to at 0.50 through 0.90. The verdict is a conjunction over four development context cells.
 
@@ -259,7 +259,7 @@ Three things in that table are the amendment:
 
 The sheet as written treats **distal payload mass as a generalization axis**: Slot 7 lists held-out payloads among the confounds a successful result must survive, and Slot 11 requires success to hold under them. That framing silently assumes the structural signal is roughly comparable across the payload range — an assumption nothing had tested, because every `TESTABLE` verdict the project holds was obtained at 0.000 kg and 0.050 kg.
 
-It is false. Payload is not a nuisance axis the signal survives; it is the **strongest single determinant of whether the signal exists at all** among the factors measured so far, and at the two masses the confirmatory test split reserves it removes the signal entirely at every severity on the ladder. A confirmatory design that pooled across payload would report a structural null that is substantially a statement about payload mass, and would report it as though it were a statement about structural sensing.
+It is false. Payload is not a nuisance axis the screen's detectability survives; it is the **strongest single determinant measured so far of whether the structural statistic clears its pre-registered threshold**, and at the two masses the confirmatory test split reserves no severity on the ladder clears that threshold in the fixed development context. A confirmatory design that pooled across payload would report a structural null that is substantially a statement about payload mass, and would report it as though it were a statement about structural sensing.
 
 ### A2.3 — The new path: Option C, and why A and B are not available
 
@@ -293,7 +293,7 @@ This boundary is deliberately conservative in the direction that costs the proje
 
 Added to Slot 13's list, beside the role-coverage-bounded shape already in force, and pre-declared before any confirmatory result exists:
 
-> **Payload-bounded non-transfer.** At the fixed development context of the payload-boundary extension, the structural screening signal is monotonically attenuated by distal payload mass, and at 0.150 kg and 0.200 kg — the two masses the confirmatory **test** split reserves — no severity on the ten-value reserved ladder is detectable at all. It is therefore pre-registered that:
+> **Payload-bounded non-transfer.** At the fixed development context of the payload-boundary extension, the structural screen's `TESTABLE` set never grows as distal payload mass increases, and at 0.150 kg and 0.200 kg — the two masses the confirmatory **test** split reserves — no severity on the ten-value reserved ladder is detectable at all. It is therefore pre-registered that:
 >
 > **(a)** If the confirmatory read returns no S-over-C1 advantage on the structural fault family, the result is reported as **payload- and severity-bounded non-transfer**, not as a hypothesis failure, and the report names the payload masses and severities at which the development screen had already found no detectable signal. Such a result establishes neither the hypothesis nor its failure for structural changes at payloads or severities where the screen retained signal.
 >

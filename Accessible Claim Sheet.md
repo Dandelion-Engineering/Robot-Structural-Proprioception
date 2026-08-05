@@ -241,13 +241,13 @@ The contract changes only by **dated amendment, appended and never overwritten.*
 
 ## Amendment A2 — the payload problem — 2026-08-04
 
-**Where this stands.** Written by Claude on 2026-08-04 (Session 75). Under the project's review rules an amendment is **in force only once both agents have explicitly approved the same version** of this document and of the technical Claim Sheet. Until that happens this is a proposal, and nothing downstream of it may proceed. *(When it is approved, this line will be replaced by the two approvals and their date.)*
+**Where this stands.** Written by Claude on 2026-08-04 (Session 75). Under the project's review rules an amendment is **in force only once both agents have explicitly approved the same version** of this document and of the technical Claim Sheet. Until that happens this is a proposal, and nothing downstream of it may proceed. The approvals are recorded in the project review conversation and version history; this sentence does not need a post-approval rewrite, because that rewrite would create a new version needing review.
 
 ### The short version
 
 We found something the contract had assumed away, and it is the kind of thing that would have quietly wrecked the headline result if we had not gone looking.
 
-The arm carries a small weight at its far end — a **payload**, standing in for whatever a real robot might be holding. The contract treats the payload as a nuisance the result has to survive: we vary it, and a real effect should show up regardless. What we have now measured is that **the payload is not a nuisance. It is the thing that decides whether the structural signal exists at all.** Adding weight steadily smothers the bending signal a softened link produces, and at the two payload weights reserved for the project's *final test* there is no detectable structural signal left at any damage level we planned to test.
+The arm carries a small weight at its far end — a **payload**, standing in for whatever a real robot might be holding. The contract treats the payload as a nuisance the result has to survive: we vary it, and a real effect should show up regardless. What we have now measured is that **the payload is not a nuisance. It strongly changes whether the structural signal clears the screen's detection rule.** Across the seven weights measured in the fixed development setup, increasing payload never expands the set of damage levels the screen can detect, and at the two payload weights reserved for the project's *final test* no planned damage level clears the rule.
 
 So a straightforward run of the experiment as originally designed would very likely have produced "structural sensing didn't help" — and we would have been reporting, without knowing it, a fact about how much the arm was carrying.
 
@@ -261,9 +261,9 @@ Four measurements, all in the development half of the project, none of them able
 
 **Second**, we counted, for each of the project's four data splits, how many of *that split's own* assigned damage levels were detectable. The four splits are the standard scientific separation: **development** (where we build), **pilot** (where we size things), **validation** (where we tune), and **test** (the final, untouched, one-shot data). Each split is assigned its own damage levels so results cannot leak between them. The count came out: development 0, pilot 0, validation 1, test 1.
 
-**Third**, we went back over the screening run's own already-paid-for data and noticed the four conditions it averaged over were not interchangeable: two carried no payload and two carried 50 g. Splitting them apart showed that **50 g roughly halves the damage signal at every damage level, while the background noise it is measured against does not move at all.** That was the alarm. But two weights tell you a ratio, not a curve — you cannot tell from them what happens at 100 g or 200 g — so the honest response was to go and measure, not to extrapolate.
+**Third**, we went back over the screening run's own already-paid-for data and noticed the four conditions it averaged over were not interchangeable: two carried no payload and two carried 50 g. Splitting them apart showed that **50 g roughly halves the damage signal at every damage level, while the background noise it is measured against does not scale with payload.** That was the alarm. But two weights tell you a ratio, not a curve — you cannot tell from them what happens at 100 g or 200 g — so the honest response was to go and measure, not to extrapolate.
 
-**Fourth — and this is the amendment** — we ran a purpose-built measurement across seven payload weights, 127 simulated runs, executed once, with both agents independently reconstructing the result from the raw file before either accepted it. It found this:
+**Fourth — and this is the amendment** — we ran a purpose-built measurement across seven payload weights, 127 simulated runs, executed once, with both agents independently reconstructing the result from the stored result file before either accepted it. It found this:
 
 ```text
 payload at the wrist   25 g   50 g   75 g   100 g   125 g   150 g   200 g
@@ -272,7 +272,7 @@ damage levels the
 instrument can see       4      3      2       1       1      0       0
 ```
 
-Read left to right, that is the whole finding: **the heavier the thing the arm is holding, the less of the structural damage signal survives, until at 150 g and 200 g none of it does.** No weight kept a damage level that a lighter weight had lost, so the pattern is a clean staircase down rather than a scatter — that consistency is itself one of the checks the measurement had to pass before it was allowed to mean anything.
+Read left to right, that is the whole finding: **as the payload rises, the number of planned damage levels that clear the detection rule never increases, until at 150 g and 200 g none of them do.** No weight kept a damage level that a lighter weight had lost, so the pattern is a clean staircase down rather than a scatter — that consistency is itself one of the checks the measurement had to pass before it was allowed to mean anything.
 
 And none of the seven weights kept a damage level that its *own* split had been assigned. That is true across the board — but see *"No weight kept its own damage levels" is true overall* further down before writing it as a flat universal, because three of the seven were near-misses.
 
@@ -282,7 +282,7 @@ And there is a sting in the tail. Remember that validation and test each looked 
 
 ### Why this changes the plan
 
-The contract listed "held-out payloads" among the realistic imperfections a genuine result must survive. That wording assumes the signal is roughly there across the payload range and merely gets noisier. It is not. Payload is the strongest single influence on whether the signal exists that we have measured, and at the final test split's own weights it removes the signal entirely.
+The contract listed "held-out payloads" among the realistic imperfections a genuine result must survive. That wording assumes detectability is roughly stable across the payload range and merely gets noisier. It is not. Payload is the strongest single influence we have measured on whether the structural statistic clears its detection rule, and at the final test split's own weights no planned damage level clears that rule in the fixed development setup.
 
 If we had pooled the final result across payload weights, we would have published a structural null that was substantially a statement about **how much the arm was carrying** — and presented it as a statement about **structural sensing**. That is exactly the kind of honest-looking, wrong conclusion this whole apparatus exists to prevent.
 
@@ -304,7 +304,7 @@ Before running the measurement, we wrote down three possible responses and — i
 
 **Partial results (Slot 13) — one new shape, pre-declared.** Added beside the ones already there:
 
-> **Payload-bounded non-transfer.** We commit now, before any final result exists, that: **(a)** if the final test shows no advantage for structural sensing on the *link-softening* fault, that is reported as a **payload- and severity-bounded** result — it establishes neither the hypothesis nor its failure at payloads or damage levels where our screening still found signal, and the report names the weights and levels where we already knew the signal was gone; **(b)** if it does show an advantage, the claim is bounded to the weights it was measured at; **(c)** either way, the report states that the signal was found to be payload-dependent, and does **not** claim to know *why* — we do not; **(d)** this applies to the link-softening fault only, and says nothing in advance about the motor-weakening or sensor-corruption faults, which this measurement did not cover.
+> **Payload-bounded non-transfer.** We commit now, before any final result exists, that: **(a)** if the final test shows no advantage for structural sensing on the *link-softening* fault, that is reported as a **payload- and severity-bounded** result — it establishes neither the hypothesis nor its failure at payloads or damage levels where our screening still found detectable signal, and the report names the weights and levels where the development screen found no planned damage level detectable; **(b)** if it does show an advantage, the claim is bounded to the weights it was measured at; **(c)** either way, the report states that the signal was found to be payload-dependent, and does **not** claim to know *why* — we do not; **(d)** this applies to the link-softening fault only, and says nothing in advance about the motor-weakening or sensor-corruption faults, which this measurement did not cover.
 
 **Reporting (Slot 7) — one addition.** The final structural comparison is reported **broken out by payload weight**, not only pooled, and that table goes in the Technical Report. This is a reporting rule only: it creates no new per-weight success bars and does not let anyone pick a favourable weight after the fact. Its whole purpose is that a reader can see whether a pooled number is being carried, or hidden, by payload.
 

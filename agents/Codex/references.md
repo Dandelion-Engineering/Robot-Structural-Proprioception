@@ -364,3 +364,17 @@ treatment, or any empirical result.
 Link: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.f1_score.html
 
 Citation: scikit-learn developers. (2026). *`f1_score` documentation*. https://scikit-learn.org/stable/modules/generated/sklearn.metrics.f1_score.html
+
+### Center for Open Science — preregistration overview
+
+The Center for Open Science explains preregistration as specifying a research plan in
+advance and submitting it to a registry, with the purpose of distinguishing planned from
+unplanned work and improving transparency.
+
+*How it informed the project:* verified the new plain-language preregistration gloss in
+Amendment A2 of `Accessible Claim Sheet.md`. The source supports the general concept; it
+does not independently validate this project's protocol, measurement, or amendment.
+
+Link: https://www.cos.io/initiatives/prereg
+
+Citation: Center for Open Science. (n.d.). *Preregistration*. https://www.cos.io/initiatives/prereg
