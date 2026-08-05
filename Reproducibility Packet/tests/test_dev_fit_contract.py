@@ -214,6 +214,57 @@ def test_the_refusal_does_not_quote_the_rejected_path():
     assert "data_root_name" in message
 
 
+def test_every_line_boundary_python_knows_about_is_refused():
+    """The universe is DERIVED from Python, not listed — a list would be examples again.
+
+    Codex's Session-78 review closed the newline case by refusing ASCII control
+    characters. Session 79 enumerated every codepoint and found three values that the
+    ASCII rule accepts and `str.splitlines` still treats as line boundaries: `U+0085`,
+    `U+2028` and `U+2029`. Deriving the set here rather than writing it out means a future
+    interpreter that recognises another boundary is covered without editing this test
+    (Session 71 — a probe is not a test).
+    """
+
+    boundaries = [
+        codepoint
+        for codepoint in range(0x110000)
+        if not 0xD800 <= codepoint <= 0xDFFF
+        and len(("a" + chr(codepoint) + "b").splitlines()) != 1
+    ]
+    assert {0x0A, 0x0D, 0x85, 0x2028, 0x2029} <= set(boundaries), "the derivation is broken"
+    for codepoint in boundaries:
+        with pytest.raises(DevFitContractError):
+            require_bare_name("root" + chr(codepoint) + "spoof", "data_root_name")
+
+
+def test_the_two_character_rules_each_refuse_what_the_other_accepts():
+    """Adjacent guards are only both worth having if each alone rejects something.
+
+    Session 61's question — what does the FIRST guard alone reject? — applied to the pair
+    this file now carries. Each direction is driven, so deleting either rule turns one of
+    these three states green when it should not be.
+    """
+
+    single_line_but_control = "root\tspoof"
+    assert single_line_but_control.splitlines() == [single_line_but_control]
+    with pytest.raises(DevFitContractError, match="control characters"):
+        require_bare_name(single_line_but_control, "data_root_name")
+
+    # Built with chr() rather than written as a literal: U+2028 is invisible in a
+    # source file, and a test whose input cannot be read is a test nobody reviews.
+    control_free_but_two_lines = "root" + chr(0x2028) + "spoof"
+    assert len(control_free_but_two_lines.splitlines()) == 2
+    assert not any(ord(character) < 32 or ord(character) == 127
+                   for character in control_free_but_two_lines)
+    with pytest.raises(DevFitContractError, match="single line"):
+        require_bare_name(control_free_but_two_lines, "data_root_name")
+
+    # DEL is the half of the control rule that had no test: dropping `== 127` survived the
+    # whole focused suite in the Session-79 sweep.
+    with pytest.raises(DevFitContractError, match="control characters"):
+        require_bare_name("root\x7fspoof", "data_root_name")
+
+
 # --------------------------------------------------------------------------- #
 # Seeds, suites, and the matched plan.
 # --------------------------------------------------------------------------- #
@@ -256,6 +307,38 @@ def test_a_complete_plan_is_accepted_and_an_unbalanced_one_is_refused():
         require_complete_matched_plan(list(matched_fit_plan()) + [("S", 99)])
     with pytest.raises(DevFitContractError, match="duplicate"):
         require_complete_matched_plan(list(matched_fit_plan()) + [("C1", 0)])
+
+
+def test_the_plan_check_and_the_seed_check_agree_about_what_a_seed_is():
+    """Two guards in one module disagreed about one quantity until Session 79.
+
+    Membership below is set equality over tuples, and Python's equality does not agree
+    with `require_predeclared_seed`: `("C1", True) == ("C1", 1)` with an equal hash, and
+    `("S", 4.0) == ("S", 4)`. Both plans were accepted as *complete matched plans* while
+    the seed check refuses a bool outright. The entry-shape check closes the disagreement.
+    """
+
+    assert ("C1", True) == ("C1", 1)
+    assert hash(("C1", True)) == hash(("C1", 1))
+    assert ("S", 4.0) == ("S", 4)
+
+    bool_plan = [("C1", True) if pair == ("C1", 1) else pair for pair in matched_fit_plan()]
+    with pytest.raises(DevFitContractError, match="bool is not an int"):
+        require_complete_matched_plan(bool_plan)
+    float_plan = [("S", 4.0) if pair == ("S", 4) else pair for pair in matched_fit_plan()]
+    with pytest.raises(DevFitContractError, match="seed must be an int"):
+        require_complete_matched_plan(float_plan)
+
+
+def test_a_malformed_plan_entry_gets_this_modules_refusal_and_not_a_foreign_exception():
+    """An unhashable entry used to die inside `set()` with a `TypeError` (Session 60)."""
+
+    with pytest.raises(DevFitContractError, match=r"\(suite, seed\) pair"):
+        require_complete_matched_plan([["C1", 0]])
+    with pytest.raises(DevFitContractError, match=r"\(suite, seed\) pair"):
+        require_complete_matched_plan([("C1", 0, "extra")])
+    with pytest.raises(DevFitContractError, match="suite must be a string"):
+        require_complete_matched_plan([(None, 0)])
 
 
 # --------------------------------------------------------------------------- #
@@ -330,6 +413,40 @@ def test_a_caller_built_row_list_is_still_checked():
         require_dev_only([_row("dev", "C1", 0)], suite="S")
 
 
+def test_the_expected_suite_argument_is_itself_validated():
+    """Found by the Session-79 sweep: deleting this validation left the suite green.
+
+    Every test that passed `suite=` passed a real one, so the guard that refuses an
+    unauthorized expected suite was never driven. Without it the refusal one layer down
+    still fires, but its message names a suite this project does not have as the one the
+    fit was entitled to read.
+    """
+
+    with pytest.raises(DevFitContractError, match="matched fit suites"):
+        require_dev_only([_row("dev", "S", 0)], suite="C0")
+
+
+def test_the_cross_suite_refusal_is_distinguishable_from_the_matched_suite_refusal():
+    """`match="suite"` matches two raise sites; the phrase has to be unique (Session 51)."""
+
+    with pytest.raises(DevFitContractError, match="may read only rows from suite"):
+        require_dev_only([_row("dev", "C1", 0)], suite="S")
+    with pytest.raises(DevFitContractError, match="may read only rows from suite"):
+        require_dev_only([_row("dev", "C0", 0)])
+
+
+def test_select_dev_rows_refuses_a_suite_the_contract_does_not_authorize(tmp_path):
+    """Also found by the Session-79 sweep: nothing drove the requested-suite validation.
+
+    Without it, asking for C0 rows returns silently through the empty-selection refusal,
+    whose message reads as "the manifest has no such rows" rather than "that suite is not
+    one a fit may name" — a true sentence about the wrong thing.
+    """
+
+    with pytest.raises(DevFitContractError, match="matched fit suites"):
+        select_dev_rows(_manifest(tmp_path, [_row("dev", "S", 0)]), suites=("C0",))
+
+
 def test_the_withheld_role_refusal_names_the_role_and_the_count():
     with pytest.raises(DevFitContractError) as excinfo:
         require_dev_only([_row("val", "S", 0), _row("val", "C1", 1), _row("test", "S", 2)])
@@ -383,6 +500,30 @@ def test_a_complete_record_validates_and_serializes_canonically():
 def test_each_bound_refuses_its_own_violation(override, expected):
     with pytest.raises(DevFitContractError, match=expected):
         _valid_provenance(**override).validate()
+
+
+def test_the_authority_must_equal_the_string_rather_than_merely_contain_it():
+    """Found by the Session-79 sweep: `==` replaced by `in` survived the whole suite.
+
+    Bound 4 says the checkpoint carries the EXACT authority. A containment test accepts a
+    record that has wrapped the authority in text of its own — including text that
+    contradicts it — while still passing every other check in this file.
+    """
+
+    with pytest.raises(DevFitContractError, match="exact development-only"):
+        _valid_provenance(authority=DEVELOPMENT_ONLY_AUTHORITY + " (superseded)").validate()
+    with pytest.raises(DevFitContractError, match="exact development-only"):
+        _valid_provenance(
+            authority="This bound no longer applies. " + DEVELOPMENT_ONLY_AUTHORITY
+        ).validate()
+
+
+def test_a_validated_record_always_renders_a_single_line():
+    """The promise `provenance_string` makes, asserted on the record rather than on names."""
+
+    for name in ("gate3-base-dev-pilot-val-c1-s", "a b c", "..data"):
+        line = _valid_provenance(data_root_name=name).provenance_string()
+        assert line.splitlines() == [line]
 
 
 def test_a_frozen_looking_config_hash_is_refused_because_the_config_is_not_frozen():

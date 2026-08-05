@@ -131,6 +131,27 @@ def require_bare_name(value: str, field_name: str) -> str:
     The refusal names the field and the rejected value's final component only, never the
     value, because a message that quotes the offending path is the leak the rule exists
     to prevent.
+
+    Two adjacent character rules, and neither subsumes the other
+    -----------------------------------------------------------
+    Codex's Session-78 review found that a name containing a newline turns
+    `DevFitProvenance.provenance_string()` into two lines, and closed it by refusing ASCII
+    control characters. That refusal is correct and is kept — but it is an enumerated
+    *family*, and the property it exists to protect is "the record stays one line", so the
+    property is now asserted directly as well (Session 67: when one routine exists to
+    satisfy another routine's promise, make that promise the post-condition rather than
+    listing the inputs that would break it).
+
+    Measured in Session 79 over every codepoint (1,112,064, surrogates excluded): with the
+    ASCII rule alone, **three** values were accepted as bare names and still split the
+    provenance line in two — `U+0085` NEL, `U+2028` LINE SEPARATOR and `U+2029` PARAGRAPH
+    SEPARATOR, all of which `str.splitlines` treats as line boundaries and none of which is
+    an ASCII control character. With both rules the count is zero.
+
+    Both rules are live, in both directions, which is why both are here (Session 61 — ask
+    what the first guard alone rejects, and delete it if the answer is "nothing"):
+    `\\t` and `\\x7f` are single-line values only the control rule refuses, and `U+2028` is
+    a control-free value only the single-line rule refuses. A test pins each direction.
     """
 
     require(
@@ -140,6 +161,10 @@ def require_bare_name(value: str, field_name: str) -> str:
     require(
         not any(ord(character) < 32 or ord(character) == 127 for character in value),
         f"{field_name} must not contain control characters",
+    )
+    require(
+        value.splitlines() == [value],
+        f"{field_name} must be a single line",
     )
     require(
         value not in RESERVED_COMPONENT_NAMES,
@@ -212,9 +237,41 @@ def require_complete_matched_plan(completed: Iterable[tuple[str, int]]) -> None:
     An unbalanced set still produces a difference — it is simply a difference between two
     different seed populations, which is the confound Slot 5 holds everything else fixed
     to avoid. Refusing here means the trainer cannot report a comparison it did not earn.
+
+    Why the entry shapes are checked before the set arithmetic
+    ---------------------------------------------------------
+    Membership below is decided by set equality over tuples, and Python's equality does not
+    agree with this module's own idea of a training seed. `("C1", True) == ("C1", 1)` and
+    `hash` agrees, so a bool seed is indistinguishable from the predeclared integer `1` to a
+    set — while `require_predeclared_seed` refuses bools explicitly ("bool is not an int
+    here"). Measured in Session 79: the ten-fit plan with `("C1", 1)` replaced by
+    `("C1", True)`, and with `("S", 4)` replaced by `("S", 4.0)`, were both accepted as
+    *complete matched plans* by the set arithmetic alone. Two guards in one module
+    disagreeing about one quantity is the shape that reaches a write-up unnoticed.
+
+    The shape check restores that agreement without moving the membership decision: the
+    "outside the predeclared plan" branch stays reachable from an unlisted-but-well-formed
+    entry such as `("S", 99)`, which is the state its own test drives. It also turns an
+    unhashable entry — a caller passing `["C1", 0]` rather than `("C1", 0)` — from a foreign
+    `TypeError` raised inside `set()` into this module's own refusal (Session 60: validate
+    before calling out, rather than catching afterwards).
     """
 
     materialized = list(completed)
+    for entry in materialized:
+        require(
+            isinstance(entry, tuple) and len(entry) == 2,
+            "each completed fit must be a (suite, seed) pair",
+        )
+        entry_suite, entry_seed = entry
+        require(
+            isinstance(entry_suite, str),
+            "a completed fit's suite must be a string",
+        )
+        require(
+            isinstance(entry_seed, int) and not isinstance(entry_seed, bool),
+            "a completed fit's seed must be an int (bool is not an int here)",
+        )
     done = set(materialized)
     expected = set(matched_fit_plan())
     require(
