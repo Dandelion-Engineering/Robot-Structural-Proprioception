@@ -6,6 +6,8 @@ This is the **contract** for the project. Every agent reads it at the start of e
 
 The body is organized as **fifteen numbered slots**, each a structurally important commitment (domain, problem, claim, constraints, methods, relevance, evaluation, the director's verification path, the build plan, the environment, and the pre-declared shapes of success / failure / inconclusive results, the minimum artifact, and monetization). They can be read straight through as a throughline; each slot arrives to answer a question the previous one opened.
 
+**Read the [Amendments](#amendments) section at the end before acting on any slot.** The sheet changes only by dated amendment, appended and never overwritten; where an amendment revises a slot, the amendment governs and the slot above it is preserved as the recorded prior turn.
+
 ### The question, in ordinary language
 
 Most robots run on a fixed factory model of their own body. But real bodies change: parts wear, loosen, heat up, go slightly soft, develop friction or backlash, or lose actuator strength — and the sensors watching all this drift and go noisy. A robot that keeps trusting its original model can become inaccurate or unsafe even while it is still physically capable of the task. Humans cope because we have a dense, distributed sense of our own bodies. This project asks whether giving a robot an analogous stream of **internal structural sensing** — strain and curvature measured along its own limbs, the kind of signal aerospace structures are already instrumented for — lets it do three things a conventional robot sensor suite cannot do as well: **notice** its body or its sensors have changed, **tell what** changed (the structure, an actuator, or the sensor itself), and **keep** as much useful capability as possible instead of treating every deviation as a terminal failure. The whole project runs in simulation; we are not building a sensor, we are testing whether the *information* such a sensor could provide is valuable enough to justify deeper research.
@@ -199,3 +201,147 @@ Forward-looking and honest.
 - **Succeeds-as-scoped:** no *direct* revenue — the immediate value is a research signal (a validated open reference implementation + benchmark for cheap structural self-sensing) that de-risks a larger program and can seed a reusable, MIT-licensed self-monitoring library other builders adopt. Honest entry: **none identified directly** for the small sim project itself.
 - **Succeeds-and-scaled:** a licensable or supported **"structural proprioception" self-monitoring layer** for low-cost robot arms — an estimation module that extends safe service life by detecting and attributing wear/damage/sensor-drift on affordable hardware, consistent with Dandelion's affordable-technology mission.
 - **Clean negative:** no monetization path from the result itself, but real value in the negative preventing wasted hardware spend downstream — reputational/credibility value for Dandelion as a team that publishes honest negatives, not a revenue line.
+
+---
+
+# Amendments
+
+Amendments are **appended and dated, never overwritten** (Project Details → *The amendment protocol*). The fifteen slots above are the sheet as originally agreed; each amendment below states what was found, why it changes the path, the new path, and the revised success / failure / non-transfer shapes. Where an amendment revises a slot, **the amendment text governs and the original slot text is preserved above as the recorded prior turn.**
+
+*Numbering note.* Amendment **A1** is not in this file. It amended the shared plant/signal **schema**, not the Claim Sheet, and is recorded in place at `Reproducibility Packet/schema/schema-v1.0.md` → *Amendment A1 — fixed contact/safety role widths (2026-07-19)*. The letter sequence is project-wide, so the first amendment to this document is **A2**.
+
+---
+
+## Amendment A2 — Payload-bounded structural non-transfer (Option C) — 2026-08-04
+
+**Provenance.** Drafted by Claude (Session 75, 2026-08-04) as the default writer, at Codex's Session-74 assignment. Under the review-cycle playbook this amendment is **in force only when both agents have explicitly approved the same state of this file and of `Accessible Claim Sheet.md`.** Until then it is a proposal and no downstream execution follows from it. *(On approval this line is replaced by the two approvals and their date.)*
+
+### A2.1 — What was found
+
+Three executed, jointly approved development measurements, in the order they arrived. All three are **development-only evidence**: every artifact carries a `dev-` hash and none of them can establish or refute the project's hypothesis.
+
+**(i) The Protocol P Stage-A/B/C screen** (executed 2026-08-01, 135 physical rollouts; `Reproducibility Packet/results/protocol_p/stage_abc_screen.json`) returned `CASE_B`. Over the ten reserved structural severities — expressed as *remaining EI*, the fraction of a link's original bending stiffness that survives the fault, so **0.35 is severe damage and 0.90 is mild** — the screening statistic separated a faulted link from a healthy one at 0.35 / 0.40 / 0.45 and failed to at 0.50 through 0.90. The verdict is a conjunction over four development context cells.
+
+**(ii) The Protocol P §9 role-coverage read** (zero rollouts; `results/protocol_p/role_coverage.json`, jointly approved) counted, per split, how many of that split's own reserved structural severities are `TESTABLE`:
+
+```text
+dev   {0.50, 0.75}   ->  0        pilot  {0.60, 0.85}   ->  0
+val   {0.40, 0.90}   ->  1        test   {0.35, 0.65}   ->  1
+```
+
+That result already licensed a **role-coverage-bounded non-transfer shape**, which is in force.
+
+**(iii) The Session-60 payload-conditioning read** (zero rollouts; `results/protocol_p/payload_conditioning.json`, jointly approved) then established that the screen's four cells are **not exchangeable**. Two carry 0.000 kg of distal payload and two carry 0.050 kg, and 50 g roughly halves the structural distance at every rung (ratio 0.4867–0.5366) while the noise floor it is measured against does not move. The screen is therefore a balanced **two-level payload contrast**, and two levels determine a ratio, not a curve.
+
+**(iv) The payload-boundary extension** (`Reproducibility Packet/protocol/payload-boundary-extension-v0.2.md`, canonical sha256 `538ae06b…f33b6a`, frozen and jointly approved before execution) was executed **once**, on 2026-08-04, for 127 physical rollouts. Its result — `Reproducibility Packet/results/payload_boundary_extension/payload_boundary.json`, canonical sha256 `7746372f1adea931722cf547adee36489971493c4e1b5217f588d4c6d1c9aa04` — was independently reconstructed and **explicitly approved by both agents at the same bytes** (Codex Session 73, Claude Session 74). Outcome `X_CASE_EMPTY` (rule R10), `mass_coverage = COMPLETE`, anchor `X_ANCHOR_PASS`, replay gate `PASS`, no exclusions:
+
+```text
+distal payload   reserved   own reserved   TESTABLE severities        role
+    mass (kg)    by split    severities    (remaining EI)           retained?
+      0.025       pilot     {0.60, 0.85}   0.35 0.40 0.45 0.50         no
+      0.050        dev      {0.50, 0.75}   0.35 0.40 0.45              no   <- anchor
+      0.075       pilot     {0.60, 0.85}   0.35 0.40                   no
+      0.100        val      {0.40, 0.90}   0.35                        no
+      0.125        val      {0.40, 0.90}   0.35                        no
+      0.150       test      {0.35, 0.65}   (empty)                     no
+      0.200       test      {0.35, 0.65}   (empty)                     no
+```
+
+Three things in that table are the amendment:
+
+1. **The testable set never grows with distal payload mass**, falling from four severities at 0.025 kg to none at all at 0.150 and 0.200 kg. (`MONOTONE` holds over all 21 mass pairs and `PREFIX` at all seven, so this is the artifact's own shape verdict, not a reading of the table.)
+2. **No measured mass retains a testable verdict at any severity its own split reserves.** `ROLE_RETAINED` is false at all seven. **Read this together with A2.8 item 2** — the finding holds as an aggregate, but three of the seven margins are inside the instrument's own reproducibility band, and A2 forbids writing it as a universal.
+3. **The 1/1 coverage val and test appeared to have was established at masses neither split reserves.** The screen ran only at 0.000 kg and 0.050 kg, and the assignment reserves both of those for **dev** (`payload_dev_nominal`, `payload_dev_0p050kg`). Val's single surviving severity (0.40) is sub-threshold at both masses val reserves; test's (0.35) is sub-threshold at both masses test reserves. Measured at the payloads each split actually carries, the role coverage of (ii) is **0 / 0 / 0 / 0**.
+
+**Scope, stated before any of this is used.** These are development verdicts at **one** environment profile (`env_dev_iso25c`), **one** contact profile (`contact_dev_none`), **one** trajectory (`trajectory_dev_diagnostic_b`), **one** probe (0.10 N peak, ramp fraction 0.25), and only the seven masses listed. A verdict about a severity that val or test reserves is a *development-context* verdict about a scalar severity, **not** a claim that the severity is testable or untestable in that split's own contexts (carried limitation 74). Point 3 above is a statement about payload mass, not about val's or test's environments.
+
+### A2.2 — Why this changes the path
+
+The sheet as written treats **distal payload mass as a generalization axis**: Slot 7 lists held-out payloads among the confounds a successful result must survive, and Slot 11 requires success to hold under them. That framing silently assumes the structural signal is roughly comparable across the payload range — an assumption nothing had tested, because every `TESTABLE` verdict the project holds was obtained at 0.000 kg and 0.050 kg.
+
+It is false. Payload is not a nuisance axis the signal survives; it is the **strongest single determinant of whether the signal exists at all** among the factors measured so far, and at the two masses the confirmatory test split reserves it removes the signal entirely at every severity on the ladder. A confirmatory design that pooled across payload would report a structural null that is substantially a statement about payload mass, and would report it as though it were a statement about structural sensing.
+
+### A2.3 — The new path: Option C, and why A and B are not available
+
+Three options were pre-registered before the measurement, and the frozen extension document pinned in advance which outcome licenses which. At `X_CASE_EMPTY` (§9.5, *What each complete-coverage outcome licenses*):
+
+- **Option A — move the severity grid down below the measured boundary.** **Not licensed by this result.** An empty testable set means no severity this extension measured clears those masses, so no lower grid is nameable from the evidence in hand; the across-mass intersection is empty as well. This is a statement about licensing, not a prohibition: a lower grid remains available in principle, but it would require a **new prospective measurement**, pre-registered and executed the same way, and it is not authorized here.
+- **Option B — compress the payload ladder to a verified band.** **Not licensed.** Option B's cap is the maximum mass of the longest ascending initial prefix in which *every* mass retains its own role. The prefix breaks at the very first mass: 0.025 kg (pilot) misses its cheapest own reserved severity, 0.60, by **18.2% of that mass's own threshold**. There is no non-empty qualifying prefix, so there is no cap to take.
+- **Option C — keep both ladders and pre-register a payload-bounded non-transfer shape.** **Licensed, and only with the empty masses named explicitly.** This is the path adopted.
+
+**What Option C changes.** The pre-declared shapes in Slots 11, 12 and 13, and the reporting requirement in Slot 7. Those revisions are A2.4–A2.7 below.
+
+**What Option C does not change, stated exactly because it determines whether existing work survives.** No reserved structural severity moves. No payload level moves. No split assignment, trajectory, environment, contact profile, or fault-grid entry moves. Because the assignment's fault expansion order (healthy → structure → actuator → sensor, per split) makes every later ordinal — and therefore every later seed — depend on the size of `grid["structure"]["severities"]`, and A2 changes no entry in it, **this amendment shifts no seed ordinal and by itself invalidates no already-generated development data.** No `archive/` move is required by A2, and none is performed by it. *(This corrects an expectation carried in both agents' continuity notes since Session 33, when A2 was still expected to add a severity band. It no longer does. If the delivered development set is superseded for some other reason, that is a separate decision, requires its own authorization, and carries its own archive and exclusion-trail obligations.)*
+
+### A2.4 — Revised Slot 11 (success)
+
+**The success bar itself is unchanged.** Every threshold, interval, margin, and seed requirement in Slot 11 stands exactly as pre-declared: ≥0.05 absolute macro-F1 improvement of S over C1 with the paired 95% hierarchical-bootstrap interval excluding zero; the lower 95% bound on every source-class recall difference above −0.02; a ≥10% reduction in the five-second post-change integral of absolute tracking error with its paired interval excluding zero and no safety regression; all under realistic confounds; all three conditions required. **A2 does not loosen, tighten, restate, or reinterpret any of them.**
+
+What A2 adds is a **scope bound on the sentence a success would license**:
+
+> A confirmatory success is stated **only over the distal payload masses at which it is measured**, and the headline sentence must name that range. It may not be extended to heavier payloads by interpolation, extrapolation, or silence. Where the confirmatory result is reported pooled across payload, the payload-stratified result (A2.7) is reported beside it, and the pooled number is never the only number given.
+
+### A2.5 — Revised Slot 12 (failure)
+
+Slot 12's two failure shapes are unchanged. A2 adds the **boundary between them and the new Slot-13 shape**, which the original sheet had no reason to draw:
+
+> **A structural null is a hypothesis failure only where the structural signal was screened as present.** Slot 12's "failure of the hypothesis" — C1 with temporal adaptation recovering the same attribution and the same control performance as S — may be claimed for a fault family, severity, and payload region **only where the development screen found the signal detectable at all**. A null obtained in a region where the screening instrument is itself blind is **not** evidence that structural sensing adds nothing there; it is the Slot-13 payload-bounded non-transfer shape of A2.6. Reporting the second as the first would be reporting the absence of an instrument as the absence of an effect.
+
+This boundary is deliberately conservative in the direction that costs the project its preferred headline: it makes a clean negative **harder** to claim, not easier.
+
+### A2.6 — Revised Slot 13: the new payload-bounded non-transfer shape
+
+Added to Slot 13's list, beside the role-coverage-bounded shape already in force, and pre-declared before any confirmatory result exists:
+
+> **Payload-bounded non-transfer.** At the fixed development context of the payload-boundary extension, the structural screening signal is monotonically attenuated by distal payload mass, and at 0.150 kg and 0.200 kg — the two masses the confirmatory **test** split reserves — no severity on the ten-value reserved ladder is detectable at all. It is therefore pre-registered that:
+>
+> **(a)** If the confirmatory read returns no S-over-C1 advantage on the structural fault family, the result is reported as **payload- and severity-bounded non-transfer**, not as a hypothesis failure, and the report names the payload masses and severities at which the development screen had already found no detectable signal. Such a result establishes neither the hypothesis nor its failure for structural changes at payloads or severities where the screen retained signal.
+>
+> **(b)** If the confirmatory read returns an S-over-C1 advantage on the structural family, the claim is bounded to the payload masses at which it was measured, per A2.4.
+>
+> **(c)** In either direction, the reported result must state that the development screen found the structural signal payload-conditional, and must not attribute the attenuation to a mechanism. None is identified (A2.8).
+>
+> **(d)** This shape is about the **structural** fault family only. It makes no pre-declaration about the actuator or sensor families, whose signatures the payload-boundary extension did not measure.
+
+### A2.7 — Revised Slot 7: payload-stratified reporting
+
+Slot 7's materials, metric layers, splitting rule, statistics, and pre-declared effect-size bars are unchanged. A2 adds one reporting requirement, which follows directly from keeping the payload ladder as a generalization axis rather than compressing it:
+
+> The confirmatory S-versus-C1 comparison on the **structural** fault family is reported **stratified by distal payload mass** as well as pooled. The stratified table is part of the minimum artifact (Slot 14) and appears in the Technical Report. Stratification is a **reporting** requirement: it does not create new per-stratum success bars, does not license selecting a stratum after seeing results, and does not change the pre-declared pooled bars of Slot 11. Its purpose is that a reader can see whether a pooled result is carried or masked by payload.
+
+### A2.8 — Claim-strength limits this amendment carries
+
+These are binding on A2's own wording, on the Technical Report, and on the Accessible Piece. They are recorded here so that no later write-up has to reconstruct them.
+
+**1. The existence of an empty payload region is established. Its boundary is not resolved.** The extension document fixed a reproducibility band **before** any extension datum existed: `tau_anchor = 0.10` of a cell's own threshold, the margin §9.3 declared too small to constrain a verdict, derived from the executed screen's own published margins. Six of the seventy measured rungs sit inside that band, and the two that separate 0.125 kg from 0.150 kg are the two closest to a threshold anywhere in the grid:
+
+```text
+0.125 kg  remEI 0.35   +2.123%  TESTABLE       <- the only surviving rung at 0.125
+0.150 kg  remEI 0.35   -4.141%  SUB_THRESHOLD  <- the whole reason 0.150 is empty
+```
+
+A single-rung flip sweep over all seventy rungs — counting only landings that do not break `PREFIX` or `MONOTONE` by construction, since an ill-shaped landing measures the flip rather than the result — finds **exactly four** well-shaped flips that change any reported quantity, and **all four are inside the band**. Under none of them does the outcome leave `X_CASE_EMPTY`, and under none of them does Option B acquire a cap.
+
+So the two statements have different strengths and A2 keeps them apart. **"Some measured payload region has no testable reserved severity" is robust:** leaving `X_CASE_EMPTY` would require *both* heaviest masses to become non-empty at once, and 0.200 kg — the mass furthest from non-empty — misses by **22.6% of its own threshold**, well outside the band. **"The empty masses are exactly 0.150 and 0.200 kg" is not robust.** No write-up may promote 0.150 kg into a physical cutoff.
+
+**2. "No mass retains its own role" holds as an aggregate; three of the seven are close calls.** Option B's unavailability is robust — the prefix breaks at 0.025 kg, 18.2% away, and no in-band flip repairs it. But the *universal* sentence is weaker than it looks: three of the seven role losses are inside the same 10% band, and a single well-shaped flip at any one of them would make that mass retain its role (without changing the outcome or the Option-B cap):
+
+```text
+0.050 kg  dev   cheapest own rung 0.50   -5.013%
+0.100 kg  val   cheapest own rung 0.40   -5.746%
+0.150 kg  test  cheapest own rung 0.35   -4.141%
+```
+
+Write the aggregate finding, not the universal one: **no measured mass retained its own reserved severity, and at three of the seven the margin was inside the instrument's own reproducibility band.**
+
+**3. No curve, and no mechanism.** Seven levels are seven levels. No functional form in payload mass may be fitted through them, and any interpolation shown for illustration must be labelled as illustration wherever it appears. The mechanism of the attenuation is **not identified**: a linearized modal estimate places the diagnostic probe roughly two orders of magnitude below the lowest elastic mode (0.8 Hz against 77.34 Hz), which rules a resonance explanation out and puts nothing in its place. The plant is compiled with zero gravity, so distal payload acts purely as **tip inertia** — it applies no static load, produces no sag, and consumes none of the A1 strain envelope at rest.
+
+**4. The seven per-mass nulls are not independent.** They are common-random-number-matched by construction (extension §5). This is deliberate and no analysis may forget it.
+
+**5. Neither audit re-derived the harmonic coefficient vectors from raw time series.** Both agents independently reconstructed everything downstream of the persisted coefficients. The raw gauge traces were not persisted, so the step from time series to coefficients is covered by the replay gate, the anchor's agreement with the executed screen, and the X8 liveness check — and by nothing either audit did. Two independent reconstructions must not be allowed to imply coverage they do not have.
+
+**6. All of this is development evidence.** The result artifact's own authority field reads: *"DEVELOPMENT ONLY: ineligible for confirmatory analysis; cannot change Protocol P outcome or role-coverage counts."* A2 changes the project's pre-declared shapes; it does not change any executed Protocol P verdict or role-coverage count, and it asserts no research result.
+
+### A2.9 — What this amendment does not do
+
+Named explicitly so that approving A2 cannot be read as approving anything downstream of it. A2 does **not** authorize, and nothing in it may be cited as authorizing: a second invocation of the payload-boundary extension or any further payload measurement; replacement of the assignment; coherent regeneration of any dataset; materialization of the final `config/config.json`; any pilot, validation, or test generation or outcome read; any confirmatory work; or any change to Protocol P v2.3.3, whose specification loop is closed. Each of those requires its own separately explicit authorization after this two-file review loop closes.

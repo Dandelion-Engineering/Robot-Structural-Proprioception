@@ -1,10 +1,41 @@
 # Summary of Only Necessary Context — Claude
 
-*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 74, 2026-08-04.*
+*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 75, 2026-08-04.*
 
-## S75 FIRST — THE MEASUREMENT IS DONE AND JOINTLY APPROVED. THE ONLY OPEN THING IS A2.
+## S76 FIRST — A2 IS WRITTEN AND WITH CODEX. THE ONE THING I OWE IS COMING BACK TO IT.
 
 ```text
+*** THE ONLY OPEN STATE IS THE A2 TWO-FILE REVIEW LOOP, AND CODEX OWNS THE NEXT TURN. ***
+  Claim Sheet.md              blob d4c2fea2b64de359be536908c52331edc3d673af   +146/-0
+  Accessible Claim Sheet.md   blob 5bd4a93dfcb2bba1e803d885a7cb813dfec2067b   +103/-0
+  SUPERSEDED, do not review: 7206bb77… / 75fedf70…  (two late A2.1 narrowing edits;
+  I appended a blob-correction turn rather than leave a handoff naming dead bytes)
+  Both are PURE INSERTIONS.  Nothing above Slot 15 in either file was rewritten.
+  Blobs are `git hash-object` (LF-normalized); NEITHER FILE IS eol-PINNED, so the
+  working tree is CRLF and the blob is LF — quote the blob, never a raw byte count.
+
+  I handed these off with MY EXPLICIT OWNER APPROVAL in my S75 chat turn.
+  *** A2 IS NOT IN FORCE.  Both agents must approve the SAME BYTES OF BOTH FILES. ***
+
+IF CODEX EDITED: RE-OPEN BOTH FILES AND GENUINELY RE-REVIEW BOTH THE FEEDBACK AND THE
+  EDITS, then approve or edit-and-hand-back with explicit approval.  The review-cycle
+  playbook names "the owner never comes back" as the failure mode, and this is the turn
+  where it would happen.  Accepting a diagnosis but not its implementation is a REAL
+  disagreement — say so, do not swallow it.
+IF CODEX APPROVED THE SAME BYTES: A2 IS IN FORCE, and TWO THINGS FIRE IN THAT SESSION:
+  (1) a Live-Run README entry — the first one that can say the contract changed; it owes
+      the reader BOTH halves, that it changed and that NOT ONE BAR MOVED.
+  (2) a PROGRESS REPORT.  An approved Claim-Sheet amendment is a trigger regardless of
+      the per-agent count, and it does not reset the counter.  (Next regular: S80.)
+
+TWO PLACES I ASKED CODEX TO PUSH ON — THEY ARE THE ONLY JUDGMENTS IN A2:
+  1 THE 0/0/0/0 RECOUNT (A2.1 point 3).  New inference, not a transcription.
+  2 THE NO-REGENERATION CORRECTION (A2.3).  It tells a future reader the OPPOSITE of
+    what both continuity files have said since S33.  If Codex knows an assignment- or
+    config-side reason Option C does oblige regeneration, this is where it says so.
+  Neither is a settled point being re-litigated, so the escalation trigger is NOT live.
+  It becomes live if either runs past about two round-trips.
+
 CLOSED AND SETTLED — do not reopen any of these:
   the role-coverage four-file loop, the .gitattributes ruling, MEASURE FIRST,
   the payload-conditioning result artifact / both READMEs / analyzer + 105 tests,
@@ -12,6 +43,9 @@ CLOSED AND SETTLED — do not reopen any of these:
   the S67 authorization-gate question (Codex ruled in its S67; I took it in my S68),
   the scheme whitelist and its NAMES (settled S70/S71 — reopening ESCALATES),
   ALL THREE STEP-2 PREREQUISITES (jointly approved; the eight-round loop is closed),
+  THE OPTION-C DIRECTION ITSELF (both agents named it in our S74 turns — A2 is the
+    WRITING of a settled decision; six earlier A2 versions were blocked and the
+    instinct to reopen the option choice is a trap),
   *** THE EXTENSION DOCUMENT — canonical 538ae06b…, blob d9f6e188, FROZEN ***
       Reproducibility Packet/protocol/payload-boundary-extension-v0.2.md
   *** STEP 3 — both agents read and approved the SAME plan bytes ***
@@ -27,29 +61,123 @@ CLOSED AND SETTLED — do not reopen any of these:
       raw == canonical, 388,550 bytes, 0 LF 0 CR
       Codex approved it in its S73 (its own reconstruction).  I APPROVED THE SAME BYTES
       IN MY S74 after 130 independent checks.  DO NOT RE-AUDIT THE ARITHMETIC.
+      I RE-HASHED IT AGAIN AT THE END OF S75: unchanged.
 
-THE RESULT, AND IT IS NOW USABLE:
+THE RESULT — TAKE IT FROM HERE, IT IS RE-DERIVED FROM THE ARTIFACT, NOT REMEMBERED:
   outcome X_CASE_EMPTY (R10) | mass_coverage COMPLETE | anchor X_ANCHOR_PASS
-  replay PASS 1 rollout | extension 126 | total 127 | 3,680.708815 s
-  mass    0.025  0.050  0.075  0.100  0.125  0.150  0.200
-  TESTABLE {.35 .40   {.35 .40  {.35   {.35}  {.35}  EMPTY  EMPTY
-            .45 .50}   .45}      .40}
-  role_retained FALSE AT ALL SEVEN.  option_b_cap_kg null.  No exclusions.
-
-THE ONLY OPEN STATE — AMENDMENT A2, and it is now UNBLOCKED:
-  §9.5 licenses OPTION C ONLY, with a payload-bounded non-transfer shape naming the
-  empty masses.  NOT Option A (R10 excludes it by rule; the intersection is empty too).
-  NOT Option B (its prefix rule needs the LIGHTEST mass to retain its own role; 0.025
-  is pilot and misses 0.60 by 18.2%).  I re-derived all three independently in S74.
-  I HAVE NOT DRAFTED A2.  I offered in chat to take the draft or to review Codex's.
-
-*** THE ONE CONDITION I ATTACHED TO MY APPROVAL, AND CODEX OWES A REPLY ***
-  The A2 non-transfer shape MUST disclose that the 0.125/0.150 kg boundary is UNRESOLVED.
-  This is NOT an amendment to the frozen document — §9.5's sentence is satisfied as
-  written.  It is a constraint on HOW WE WORD THE RESULT, which is where a forward-
-  propagating correction belongs.  If Codex disagrees, SETTLE IT IN CHAT BEFORE A2 IS
-  DRAFTED, not after.  Rationale is THE S74 FINDING below.
+  replay PASS 1 rollout | extension 126 | total 127 | 3,680.708815 s | 0 exclusions
+    mass    split  own severities  TESTABLE                 role_retained
+    0.025   pilot  {0.60, 0.85}    0.35 0.40 0.45 0.50      false
+    0.050   dev    {0.50, 0.75}    0.35 0.40 0.45           false   <- anchor
+    0.075   pilot  {0.60, 0.85}    0.35 0.40                false
+    0.100   val    {0.40, 0.90}    0.35                     false
+    0.125   val    {0.40, 0.90}    0.35                     false
+    0.150   test   {0.35, 0.65}    (empty)                  false
+    0.200   test   {0.35, 0.65}    (empty)                  false
+  option_b_cap_kg null.  MONOTONE over all 21 pairs; PREFIX at all 7.
 ```
+
+## WHAT A2 SAYS, SO THE NEXT SESSION DOES NOT RE-DERIVE IT
+
+**Read the amendment itself — `Claim Sheet.md` → `# Amendments` → `## Amendment A2`. This
+is an index, not a substitute.** Both files gained an `# Amendments` section after Slot 15
+with a numbering note (**A1 amended the SCHEMA, not this sheet, and is recorded in place at
+`Reproducibility Packet/schema/schema-v1.0.md`** — that is why the first Claim-Sheet
+amendment is A2), and both opening sections now point a reader at the amendments before the
+slots.
+
+```text
+A2.1  the four dev measurements in order (screen -> role coverage -> payload conditioning
+      -> extension), the seven-mass table, and THE THREE THINGS IN IT THAT ARE THE
+      AMENDMENT; then the scope statement (one env, one contact, one trajectory, one
+      probe, seven masses; limitation 74 carried).
+A2.2  why it changes the path: Slot 7 treated payload as a generalization axis; it is the
+      determinant.  A pooled confirmatory read would report a fact about payload as a
+      fact about structural sensing.
+A2.3  Option C adopted; A and B shown unavailable against §9.5's own clause; and the
+      NO-REGENERATION correction.
+A2.4  Slot 11 — EVERY BAR UNCHANGED and stated as unchanged; adds a scope bound on the
+      SENTENCE a success licenses (name the payload range; no extension by
+      interpolation, extrapolation, or silence).
+A2.5  Slot 12 — a structural null is a HYPOTHESIS failure only where the screen found
+      signal.  A null where the instrument is blind is the Slot-13 shape.
+      *** THIS MAKES OUR CLEAN NEGATIVE HARDER TO CLAIM, NOT EASIER, and A2 says so. ***
+A2.6  Slot 13 — the payload-bounded non-transfer shape, four parts (a) negative reported
+      as bounded (b) positive bounded to measured masses (c) state payload-conditionality,
+      claim no mechanism (d) STRUCTURAL FAMILY ONLY — the extension measured no actuator
+      or sensor signature.
+A2.7  Slot 7 — confirmatory structural S-vs-C1 reported STRATIFIED BY PAYLOAD as well as
+      pooled.  Explicitly a REPORTING rule: no per-stratum bars, no post-hoc stratum
+      selection, pooled bars unchanged.
+A2.8  six claim-strength limits, binding on A2 / Technical Report / Accessible Piece.
+A2.9  what approving A2 does NOT authorize — written INSIDE the contract so approval
+      cannot be read as reaching downstream.
+```
+
+**THE SENTENCE A2 EXISTS TO SAY (A2.1 point 3), and it is the one new inference:**
+
+```text
+The role-coverage read gave val and test ONE detectable severity each.  That read came
+from the SCREEN, and THE SCREEN RAN ONLY AT 0.000 kg AND 0.050 kg — and the assignment
+reserves BOTH of those for DEV (payload_dev_nominal, payload_dev_0p050kg).
+  val  reserves 0.100 / 0.125   its 0.40 is SUB_THRESHOLD at both
+  test reserves 0.150 / 0.200   its 0.35 is SUB_THRESHOLD at both
+MEASURED AT THE PAYLOADS EACH SPLIT ACTUALLY CARRIES, ROLE COVERAGE IS 0/0/0/0.
+I sourced the weight-to-split map from config/proposed-gate3-assignment-v0.1.json
+(context_profiles.payloads) — NOT from either result artifact — precisely so the claim
+does not depend on the artifact that motivated the question.  Rebuild it that way.
+```
+
+**THE NO-REGENERATION CORRECTION (A2.3), which retires a standing expectation:**
+
+```text
+Both continuity files have said since S33 that the delivered 472-reservation dev set is
+"slated for full regeneration from zero after A2."  THAT WAS TRUE WHEN A2 WAS EXPECTED
+TO ADD A SEVERITY BAND.  The generator expands healthy -> structure -> actuator ->
+sensor per split and derives each seed from its ordinal, so extending
+grid["structure"]["severities"] renumbers and reseeds everything after it.
+*** OPTION C INSERTS NOTHING.  No reserved severity, no payload level, no split
+assignment moves.  SO A2 SHIFTS NO SEED ORDINAL, INVALIDATES NO GENERATED DATA,
+REQUIRES NO archive/ MOVE, AND PERFORMS NONE. ***
+If the delivered set is superseded it is for some OTHER reason, under its own
+authorization, with its own exclusion trail.  I asked Codex to block this if it sees an
+assignment- or config-side reason I do not.
+```
+
+## THE S75 FINDING — MY OWN S74 DISCLOSURE DID NOT GO FAR ENOUGH
+
+**S74 measured what a single well-shaped flip does to THE OUTCOME. That is a different
+question from what it does to THE ROLE-RETENTION SENTENCE, because R10 fires before R11
+and hides it. This is the same shape as every good finding in this project: the defect was
+one layer below the layer I was checking.**
+
+```text
+CHEAPEST OWN-ROLE RUNG PER MASS, AS PCT OF THAT MASS'S OWN THRESHOLD
+  0.025 pilot  0.60   -18.233%          0.100 val   0.40    -5.746%   <- IN BAND
+  0.050 dev    0.50    -5.013% <- BAND  0.125 val   0.40   -17.605%
+  0.075 pilot  0.60   -50.305%          0.150 test  0.35    -4.141%   <- IN BAND
+  0.200 test   0.35   -22.583%
+THREE OF SEVEN ROLE LOSSES ARE INSIDE THE SAME tau_anchor = 0.10 BAND.
+
+WELL-SHAPED SINGLE-FLIP SWEEP, RE-RUN S75 against {outcome, empty set, all-roles-false,
+Option-B cap}.  EXACTLY FOUR flips move ANY of them, ALL FOUR IN BAND:
+  0.050@0.50 -5.0%  |  0.100@0.40 -5.7%  |  0.125@0.35 +2.1%  |  0.150@0.35 -4.1%
+  Outcome stays X_CASE_EMPTY in all four.  Option-B cap stays None in all four.
+  61 of the remaining 66 are MECHANICAL shape violations (an interior flip of a monotone
+  ladder breaks PREFIX or MONOTONE by construction — split them or the number lies).
+
+SO A2 WRITES THE AGGREGATE, NOT THE UNIVERSAL:
+  "no measured mass retained its own reserved severity, AND AT THREE OF THE SEVEN THE
+   MARGIN WAS INSIDE THE INSTRUMENT'S OWN REPRODUCIBILITY BAND."
+LICENSING DOES NOT MOVE.  Option B breaks at the FIRST mass, 0.025 at 18.2%, well
+outside the band, and no combination of in-band flips repairs the prefix (checked).
+```
+
+**THIRD CONSECUTIVE SESSION WHERE THE REPORTABLE THING WAS A LIMIT ON OUR OWN CLAIM RATHER
+THAN A DEFECT IN AN ARTIFACT.** I think that is correct for this stage, and I named it in
+the human report rather than letting it read as caution for its own sake. Watch it, though:
+if a session produces *only* a claim-strength narrowing and no forward motion twice more,
+that is a signal to check whether the project is polishing instead of moving.
 
 ## THE S74 FINDING — THE CLASSIFICATION IS ROBUST; THE SHAPE IT LICENSES IS NOT, AT ONE EDGE
 
@@ -1106,10 +1234,10 @@ Settled — do not reopen, do not edit v2.3.3.  Codex S55: no bump for the Stage
 ## Where the project is
 
 - **Phase 2 (Execution) is OPEN.** All Phase-1 gates in force. **Schema v1.0 + Amendment A1 in force.** Contract changes run through the **amendment protocol**.
-- I am **Claude**; last session was **Session 74**; next session I run is **Session 75**. **THE S72 PROGRESS REPORT** (`Progress Report Session 72.md`, covers S65–S72) **was read by Codex in its S72 general recent-work review, which found no correction to carry — so NO explicit review cycle opened on it** (the Working Method's rule: the review cycle does not apply to the general recent-work review until that review flags something). Next regular report: **Session 80**, or sooner if a phase transition or an approved written Claim-Sheet amendment fires. **An approved A2 fires it.** **A Step-5 run does NOT by itself fire one** — it is neither a phase transition nor an amendment, though the result it produces will feed A2, which does.
+- I am **Claude**; last session was **Session 75**; next session I run is **Session 76**. **THE S72 PROGRESS REPORT** (`Progress Report Session 72.md`, covers S65–S72) **was read by Codex in its S72 general recent-work review, which found no correction to carry — so NO explicit review cycle opened on it** (the Working Method's rule: the review cycle does not apply to the general recent-work review until that review flags something). Next regular report: **Session 80**, or sooner if a phase transition or an approved written Claim-Sheet amendment fires. **An approved A2 fires it.** **A Step-5 run does NOT by itself fire one** — it is neither a phase transition nor an amendment, though the result it produces will feed A2, which does.
 - **`config.json` is deliberately NOT frozen** and does not exist. All hashes are `dev-`; no `dev-` trace may enter confirmatory analysis.
-- Real data exists: `data/gate3-base-dev-pilot-val-c1-s` (3.86 GB, git-ignored, local only). 472 reservations / 944 manifest rows / C1+S / dev 152, pilot 152, val 168. **Test untouched: 0 identities, 0 payloads.** **Slated for full regeneration from zero after A2 — these 472 payloads become a superseded pre-amendment set in the packet exclusion trail. Read them; do not build on them.**
-- **THE PAYLOAD-BOUNDARY EXTENSION HAS RUN — Codex's S73, 127 physical rollouts, `X_CASE_EMPTY`, and the result artifact is JOINTLY APPROVED (Codex S73 / me S74).** The measurement is spent and no further payload-extension execution is authorized. **A2 is the only thing it is now waiting on.**
+- Real data exists: `data/gate3-base-dev-pilot-val-c1-s` (3.86 GB, git-ignored, local only). 472 reservations / 944 manifest rows / C1+S / dev 152, pilot 152, val 168. **Test untouched: 0 identities, 0 payloads.** **THE "SLATED FOR FULL REGENERATION FROM ZERO AFTER A2" EXPECTATION IS RETIRED AS OF MY S75 — see A2.3.** Option C inserts no severity, so no seed ordinal shifts and A2 by itself invalidates none of this. If the set is ever superseded it is for some other reason, under its own authorization. **Still: read them, do not build on them** — nothing downstream of them is authorized either way.
+- **THE PAYLOAD-BOUNDARY EXTENSION HAS RUN — Codex's S73, 127 physical rollouts, `X_CASE_EMPTY`, and the result artifact is JOINTLY APPROVED (Codex S73 / me S74).** The measurement is spent and no further payload-extension execution is authorized. **A2 IS DRAFTED (my S75) AND IN AN OPEN TWO-FILE REVIEW LOOP; CODEX OWNS THE NEXT TURN.**
 - **STAGES A/B/C HAVE RUN — Codex's S57, 135 physical rollouts, CASE_B, JOINTLY APPROVED.** Stage 0 RAN in S48 at ZERO rollouts; `results/protocol_p/sensor_only_difference_null.json` is tracked and **JOINTLY APPROVED**. The §9 role-coverage read is now **JOINTLY APPROVED** (above). The payload read's **RESULT ARTIFACT is JOINTLY APPROVED** (S60 Codex / S61 me); its **script + tests are JOINTLY APPROVED (Codex S61)**.
 - **THE ROLLOUT COUNT HAS BEEN WRONG FIVE TIMES: one → four → thirteen → fourteen → FIFTEEN pre-run. Carry the table, never a remembered number.**
 ```text
@@ -1133,6 +1261,7 @@ guards was already spent.
   3,680.708815 s persisted.                                =>   TOTAL 278
 *** TAKE THE COUNT FROM THE ARTIFACT'S OWN LEDGER, NEVER FROM A PER-ROLLOUT FIGURE. ***
 MY S74 SPENT ZERO — the whole audit is a read of persisted fields.
+MY S75 SPENT ZERO — drafting only; no plan mode, no replay, no execute mode.
 ```
 - **Progress report DONE at S64** (regular, covers S57–S64) at `agents/Claude/Progress Reports/Progress Report Session 64.md`. **ITS LOOP IS OPEN AT MY S65 STATE `b0ff7496`** — Codex made two edits in its S64 (the ledger refuses a duplicate LOUDLY, not silently; and "151 rollouts, about 70 minutes" contradicted my own line 14's audited 4,432.16 s), I verified both against primary records and accepted both diagnoses AND implementations, then moved one clause out of the present tense (+4/-3) because "still cannot run until payload mass is part of the key" stopped being true in S63/S64. **Codex owns the next turn on it; I offered to take its wording.** Prior status — the S56 one ran five review rounds, so expect Codex may open one. `Progress Report Session 56.md` (S49–S56) stays closed at blob `83c527ce…`; do not reopen it. **THE S72 REGULAR IS WRITTEN** — `agents/Claude/Progress Reports/Progress Report Session 72.md`, covering S65–S72. **Codex read it in its S72 general recent-work review and found no correction to carry, so no explicit review cycle opened on it.** Its spine: eight complete adversarial rounds on one program, every round finding something real and each structurally below the last; then the loop closing and the program producing the zero-rollout plan. It states both halves of the trade — what the rounds bought, and that eight of my sessions produced no science — and names where I think the cost stopped being obviously worth it. **MY NEXT REGULAR IS SESSION 80.**
 
@@ -1586,6 +1715,22 @@ generation_audit.json · independent_audit.json
     anchor's agreement with the screen, and X8, and by nothing either audit did. **Say so in
     the Technical Report** — two independent reconstructions must not be allowed to imply
     coverage they do not have.
+105. **[NEW S75] "NO MASS RETAINED ITS OWN ROLE" IS AN AGGREGATE, NOT A UNIVERSAL.** Three of
+    the seven role losses are inside the same `tau_anchor = 0.10` band — 0.050 kg dev at
+    −5.013%, 0.100 kg val at −5.746%, 0.150 kg test at −4.141% — and a single well-shaped
+    flip at any one of them makes that mass retain its role. **Licensing does not move**
+    (Option B breaks at 0.025 kg, 18.2% out, and no in-band combination repairs the prefix),
+    so this narrows the sentence and nothing else. **Write: "no measured mass retained its
+    own reserved severity, and at three of the seven the margin was inside the instrument's
+    own reproducibility band."** In A2.8 item 2, and it goes in the Technical Report.
+106. **[NEW S75] VAL'S AND TEST'S ROLE COVERAGE WAS ESTABLISHED AT MASSES THEY DO NOT
+    RESERVE.** The screen ran at 0.000 and 0.050 kg only; the assignment reserves both for
+    **dev**. Val's 0.40 and test's 0.35 are sub-threshold at every mass those splits actually
+    carry, so the 0/0/1/1 role-coverage read is **0/0/0/0** at the reserved payloads. **This
+    does not retract the role-coverage artifact** — it is a correct read of the screen at the
+    screen's own masses — and it is a *development-context* statement about payload mass,
+    **not** a claim about val's or test's own environments (limitation 74 still binds).
+    A2.1 point 3; both statements must appear together wherever either appears.
 
 ## Coherence / honesty bounds (keep loud)
 
@@ -1903,7 +2048,27 @@ Run either read from the packet dir; zero rollouts, ~0.3 s each:
 - **Phase-2 chat:** `chats/Claude-Codex/Phase 2 Integration and Config Freeze/…- Active.md` — **NOW 19,023 lines. My S72 turn is `+172/−0`, header unique at line 18,853, physically last, pre-write prefix (1,218,243 bytes) retained byte-for-byte with its SHA-256 (`c2c077b1…`) asserted inside the writer. CODEX OWNS THE NEXT TURN: the SECOND INDEPENDENT READ of `plan.json` (`15298da4…030be3`) and nothing else. WHAT IT HAS TO JUDGE: whether the Step-3 artifact is a faithful §11.1 plan. I gave it my re-derivations, the two additive fields, and the §12 "plan artifact must carry the executor's own count" observation, and told it that if it reads that sentence as requiring a version bump, its version wins rather than trading a round. IF IT APPROVES, THE TURN AFTER THAT IS THE STEP-4 JOINT AUTHORIZATION — and I explicitly declined to write anything readable as half of one, so do not let my approval be mistaken for it.** *(S71 record, kept: my S71 turn was `+168/−0`, header unique at line 18,622, prefix SHA-256 `83b52b2e…`; Codex approved those exact blobs and closed the loop in its S71 at `+63/−0`.)* *(S69 record, kept: my S69 turn was `+205/−0` with prefix SHA-256 `276c7630…`. I corrected my own header stamp in place immediately after writing it (20:40 → 20:35 PDT, same byte length, every byte outside the 46-byte span compared before and after) because an estimated stamp defeats the only thing a stamp is for; that is the ONLY edit I have ever made to posted transcript content. The S69 single-slash judgment it had to rule on is now SETTLED — Codex agreed in its S69.)* **If a judgment comes back contested and one exchange does not settle it from source, ESCALATE to the director rather than trade turns.** Codex answered my S64 open question in its S64: **the executable does NOT use `LogicalRow.key` across masses** — extension rows carry their own mass-bearing logical key and their joins use the mass-bearing `PhysicalKey`, so `.key` stays as it is. **Settled; do not reopen.** The things Codex has to judge now are the five S65 corrections and, explicitly, the one structural deviation: **I lifted the replay gate's pre-rollout half into `resolve_replay_source` so it is testable at zero cost.** Do NOT re-open: the extension document (both approved `538ae06b`), the five S62 edits, the unified Option-B rule, the four S62 questions, the measure-first ruling, the payload analyzer/tests, the role-coverage states, the readback ruling, `.gitattributes`, the Stage-C label, Step 25, the screen result, or the plan default. **The file is MIXED-EOL** — Codex appends LF, the older bulk is CRLF; append LF and verify `+N/−0` rather than assuming.
 - **Monitoring chat:** `chats/Claude-Codex-Human/Transcript Order Monitoring/…- Active.md` (88 lines; unchanged S43–S72 — no recurrence; **streak FORTY-TWO**: Codex's S71 append verified at the git level in my S72 — commit `5250aa4`, `+63/−0`, header unique and correctly ordered after mine — and my own S72 append passed all five gates. *(Prior: **streak FORTY-ONE**: Codex's S70 append verified at the git level in my S71 — `+110/−0`, prior content a byte-identical prefix, header unique, physically last — and my own S71 append passed all five gates.)* *(Prior: **streak thirty-nine**: Codex's S69 append was `+92/−0` with its header unique at line 18,257 and physically last, verified at the git level in my S70, and my S70 append passed all five gates — pre-write prefix retained byte-for-byte with an identical SHA-256 asserted *inside* the writer, header unique, physically last, `+165/−0`.)* The duty is to flag recurrences, so a clean session adds no note; verify at the git level regardless.
 
-## Scratchpad (S74, NOT committed)
+## Scratchpad (S75, NOT committed)
+
+**Nothing durable, deliberately.** S75 was drafting; the only file in the scratchpad was
+`s75_turn.md`, the chat turn, appended verbatim and then dead. Every figure A2 quotes was
+re-derived with short inline reads of the persisted artifact rather than with a saved
+instrument, **and that is the right call precisely because they are re-derivations of
+already-audited numbers** — the S74 auditor below is the instrument to rebuild if the
+result artifact is ever re-opened, and a second half-instrument beside it would just be a
+thing to keep in sync. **Two reads worth reproducing exactly if A2 is edited:** the
+weight-to-split map comes from `config/proposed-gate3-assignment-v0.1.json` →
+`context_profiles.payloads` (NOT from a result artifact), and the well-shaped-flip sweep
+must classify each flip's landing through the full R0..R12 order and discard `R8`/`R9`
+landings before counting, or 61 mechanical shape violations drown the four real ones.
+
+**Append discipline that worked and should be reused:** record `sha256` / byte length /
+CR and LF counts / the exact trailing bytes of the transcript BEFORE writing, assert the
+file ends at that anchor and that the anchor is unique, append in `'ab'` mode, then assert
+the prefix is byte-identical, the header occurs once and after the boundary, Claude is
+physically last, and the pre-existing CR count is unchanged. All eight held; `+201/-0`.
+
+## Scratchpad (S74, superseded)
 
 `audit_result_artifact.py --packet-root "Reproducibility Packet"` — **the 130-check result
 audit, and the one to rebuild first if the result artifact is ever re-opened.** Same

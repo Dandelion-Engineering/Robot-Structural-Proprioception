@@ -6,6 +6,8 @@ This is the **plain-language companion to the project's contract.** The contract
 
 It follows the technical sheet's structure: an orientation section, a one-line "contract at a glance," and then the same **fifteen numbered slots**, so you can read either document alone or move between them slot-for-slot. Where a term appears that you are not expected to already know, it is explained and given a link to a credible source you can check.
 
+**One thing to know before you read the slots: the contract changes only by dated amendment, and the amendments live at the [end of this document](#amendments).** They are appended, never written over the top of what they change, so the original wording stays visible as a record of what we thought before. Where an amendment revises a slot, **the amendment is what is in force** and the slot above it is history. There is currently one amendment to this contract, and it matters — read it.
+
 ---
 
 ## The question, in ordinary language
@@ -226,3 +228,104 @@ Plus the **Live-Run README** — the public front page — resolving from its li
 *A note on staying honest about the framing.* Throughout, the value proposition is **richer information from structural sensing**, not the romantic idea that "the body computes" — a distinction the field itself is careful about ([Müller & Hoffmann, 2017](https://doi.org/10.1162/ARTL_a_00219)). If you ever see the project drifting toward the grander claim, that is a signal to pull it back to the narrow, testable one this contract commits to.
 
 *This document is kept in exact sync with the technical [`Claim Sheet.md`](Claim%20Sheet.md). If the contract is ever amended, this companion is updated in the same session.*
+
+---
+
+# Amendments
+
+The contract changes only by **dated amendment, appended and never overwritten.** The fifteen slots above are the contract as first agreed; each amendment below says what we found, why it changes the plan, what the new plan is, and what the revised success / failure / partial-result lines are. Where an amendment revises a slot, **the amendment is what is in force.** The original slot stays above it on purpose, as an honest record of what we believed before the evidence arrived.
+
+*A note on the lettering.* Amendment **A1** is not in this document — it amended a different in-force document (the shared technical description of the simulated robot and its signals) and is recorded there. The letters run project-wide, so the first amendment to *this* contract is **A2**.
+
+---
+
+## Amendment A2 — the payload problem — 2026-08-04
+
+**Where this stands.** Written by Claude on 2026-08-04 (Session 75). Under the project's review rules an amendment is **in force only once both agents have explicitly approved the same version** of this document and of the technical Claim Sheet. Until that happens this is a proposal, and nothing downstream of it may proceed. *(When it is approved, this line will be replaced by the two approvals and their date.)*
+
+### The short version
+
+We found something the contract had assumed away, and it is the kind of thing that would have quietly wrecked the headline result if we had not gone looking.
+
+The arm carries a small weight at its far end — a **payload**, standing in for whatever a real robot might be holding. The contract treats the payload as a nuisance the result has to survive: we vary it, and a real effect should show up regardless. What we have now measured is that **the payload is not a nuisance. It is the thing that decides whether the structural signal exists at all.** Adding weight steadily smothers the bending signal a softened link produces, and at the two payload weights reserved for the project's *final test* there is no detectable structural signal left at any damage level we planned to test.
+
+So a straightforward run of the experiment as originally designed would very likely have produced "structural sensing didn't help" — and we would have been reporting, without knowing it, a fact about how much the arm was carrying.
+
+Nothing about the success bar changes. What changes is that we now say, **in advance and in writing**, how a result must be worded so it cannot be mistaken for something stronger than it is. That advance commitment is called [preregistration](https://www.cos.io/initiatives/prereg) — writing down what counts as what *before* you look — and it is the main protection this project has against fooling itself.
+
+### What we actually measured
+
+Four measurements, all in the development half of the project, none of them able to prove or disprove the project's actual hypothesis. That separation is deliberate: development work is where we check that our instruments work, and it is deliberately walled off from the final test so it cannot contaminate it. Everything below is labelled, inside the files themselves, as development-only evidence that cannot change any recorded result.
+
+**First**, a screening run in early August tested ten levels of link damage, from severe to mild, and asked a simple question at each: can a basic statistic tell a damaged link from a healthy one at all? It could at the three most severe levels and could not at the other seven. That is a check on whether the *instrument* can see anything — a floor, not the real experiment.
+
+**Second**, we counted, for each of the project's four data splits, how many of *that split's own* assigned damage levels were detectable. The four splits are the standard scientific separation: **development** (where we build), **pilot** (where we size things), **validation** (where we tune), and **test** (the final, untouched, one-shot data). Each split is assigned its own damage levels so results cannot leak between them. The count came out: development 0, pilot 0, validation 1, test 1.
+
+**Third**, we went back over the screening run's own already-paid-for data and noticed the four conditions it averaged over were not interchangeable: two carried no payload and two carried 50 g. Splitting them apart showed that **50 g roughly halves the damage signal at every damage level, while the background noise it is measured against does not move at all.** That was the alarm. But two weights tell you a ratio, not a curve — you cannot tell from them what happens at 100 g or 200 g — so the honest response was to go and measure, not to extrapolate.
+
+**Fourth — and this is the amendment** — we ran a purpose-built measurement across seven payload weights, 127 simulated runs, executed once, with both agents independently reconstructing the result from the raw file before either accepted it. It found this:
+
+```text
+payload at the wrist   25 g   50 g   75 g   100 g   125 g   150 g   200 g
+assigned to split      pilot  dev    pilot   val     val    test    test
+damage levels the
+instrument can see       4      3      2       1       1      0       0
+```
+
+Read left to right, that is the whole finding: **the heavier the thing the arm is holding, the less of the structural damage signal survives, until at 150 g and 200 g none of it does.** No weight kept a damage level that a lighter weight had lost, so the pattern is a clean staircase down rather than a scatter — that consistency is itself one of the checks the measurement had to pass before it was allowed to mean anything.
+
+And none of the seven weights kept a damage level that its *own* split had been assigned. That is true across the board — but see *"No weight kept its own damage levels" is true overall* further down before writing it as a flat universal, because three of the seven were near-misses.
+
+And there is a sting in the tail. Remember that validation and test each looked like they had one detectable damage level? That count came from the screening run, which only ever ran at 0 g and 50 g — the two payload weights assigned to **development**. Neither validation nor test uses those weights. Measured at the weights those splits actually carry, their one detectable level each becomes **zero**. The apparent coverage was real for the weights it was measured at, and did not survive being measured at the right ones.
+
+**One boundary on all of the above, and it is important.** The seven-weight measurement ran at a *single* set of conditions — one temperature setting, one contact setting, one arm motion, one probing nudge — and the earlier screening run covered four settings, all of them likewise development settings. So when we say a damage level assigned to validation or test is undetectable, we mean **undetectable at that development setup, at the payload weight that split carries.** We are not claiming to know how it behaves under validation's or test's own conditions; we have not looked, and looking would mean touching data we have deliberately walled off. The finding is about **payload weight**, not about those splits' environments.
+
+### Why this changes the plan
+
+The contract listed "held-out payloads" among the realistic imperfections a genuine result must survive. That wording assumes the signal is roughly there across the payload range and merely gets noisier. It is not. Payload is the strongest single influence on whether the signal exists that we have measured, and at the final test split's own weights it removes the signal entirely.
+
+If we had pooled the final result across payload weights, we would have published a structural null that was substantially a statement about **how much the arm was carrying** — and presented it as a statement about **structural sensing**. That is exactly the kind of honest-looking, wrong conclusion this whole apparatus exists to prevent.
+
+### The new plan, and the two options we did not take
+
+Before running the measurement, we wrote down three possible responses and — importantly — which measurement result would license which. That ordering matters: it means the choice was fixed by evidence, not by preference after the fact.
+
+- **Option A — make the damage more severe** so it sits back above the detection floor. **Not available on this evidence.** At the heaviest weights *nothing on the ladder we measured* was detectable, so there is no lower level we can name from what we have. This is not a ban — it stays available in principle — but it would need a fresh, pre-registered measurement first, and that is not authorized here.
+- **Option B — shrink the payload range** to the weights where the signal survives. **Not available.** The rule for this option requires an unbroken run of weights, starting from the lightest, where every weight keeps its own assigned damage levels detectable. It breaks at the very first weight: 25 g misses its own easiest assigned level by about 18% of the detection threshold, against a noise band of 10% — comfortably outside anything noise explains. There is no run to keep, so there is no reduced range to fall back on.
+- **Option C — keep the full design and commit, in advance, to how a payload-bounded result must be worded.** **This is the one the evidence licenses, and it is what we are adopting.**
+
+**What Option C leaves untouched, which is nearly everything.** No damage level changes. No payload weight changes. No split assignment, motion, temperature setting, or contact setting changes. This matters more than it sounds: the data generator numbers its runs in a fixed order and derives each run's random seed from its number, so inserting a new damage level would renumber and reseed everything after it and invalidate the simulation data already produced. A2 inserts nothing, so **nothing already generated is thrown away and nothing has to be archived.** *(This corrects an expectation both agents have carried since late July, back when A2 was still expected to add a new damage level. It no longer does.)*
+
+### What the revised commitments say
+
+**Success (Slot 11) — the bar itself does not move.** Every number stands exactly as written: 5 points better at naming the cause, 10% better at recovering the task, uncertainty ranges excluding "no difference," no cause made meaningfully worse, all under realistic sensor imperfections, all required together. **A2 loosens nothing.** What it adds is a limit on the *sentence* a success would earn: a positive result is stated only over the payload weights it was measured at, that range is named in the headline, and it is never quietly extended to heavier loads.
+
+**Failure (Slot 12) — a null now has to earn the name.** The contract's "interesting negative" — the ordinary sensor suite matching the structural one — may be claimed **only where the development screening found a signal there to begin with.** A null in a region where our own instrument is blind is not evidence that structural sensing adds nothing; it is the partial-result shape below. Reporting the second as the first would be reporting *the absence of an instrument* as *the absence of an effect*. Note which way this cuts: it makes our clean negative **harder** to claim, not easier.
+
+**Partial results (Slot 13) — one new shape, pre-declared.** Added beside the ones already there:
+
+> **Payload-bounded non-transfer.** We commit now, before any final result exists, that: **(a)** if the final test shows no advantage for structural sensing on the *link-softening* fault, that is reported as a **payload- and severity-bounded** result — it establishes neither the hypothesis nor its failure at payloads or damage levels where our screening still found signal, and the report names the weights and levels where we already knew the signal was gone; **(b)** if it does show an advantage, the claim is bounded to the weights it was measured at; **(c)** either way, the report states that the signal was found to be payload-dependent, and does **not** claim to know *why* — we do not; **(d)** this applies to the link-softening fault only, and says nothing in advance about the motor-weakening or sensor-corruption faults, which this measurement did not cover.
+
+**Reporting (Slot 7) — one addition.** The final structural comparison is reported **broken out by payload weight**, not only pooled, and that table goes in the Technical Report. This is a reporting rule only: it creates no new per-weight success bars and does not let anyone pick a favourable weight after the fact. Its whole purpose is that a reader can see whether a pooled number is being carried, or hidden, by payload.
+
+### What we are careful *not* to claim
+
+This is the part worth reading twice, because it is where an honest project and an overreaching one diverge.
+
+**We know an empty region exists. We do not know where its edge is.** The two measurements that place the edge between 125 g and 150 g are the two closest calls anywhere in the whole grid — one clears its threshold by about 2%, the other misses by about 4%. Before any of this data existed, the protocol had already declared that margins under 10% are inside the instrument's own noise and cannot be trusted to decide anything. Both of these are inside that band. We tested this directly rather than asserting it: we flipped each of the seventy measurements in the grid, one at a time, and asked what the answer would have been. **Exactly four flips change anything at all, and all four sit inside that same untrustworthy band** — and none of them changes the overall conclusion or reopens Option B. So **"there is a payload region with no detectable damage level" is solid; "the edge is at 150 g" is not.** Nobody may turn 150 g into a physical cutoff.
+
+**"No weight kept its own damage levels" is true overall, and close at three of the seven.** The finding holds as an aggregate, and the reason Option B is unavailable is well outside the noise band. But three of the seven weights missed keeping their own levels by less than that same 10% — so the honest sentence is *"no measured weight retained its own assigned damage level, and at three of seven the margin was inside the instrument's own noise band,"* not a flat universal.
+
+**Seven weights are seven weights.** We will not fit a curve through them. Any smooth line drawn between the points is illustration and will be labelled as illustration.
+
+**We do not know the mechanism.** We ruled one explanation out — the gentle probing motion runs about two orders of magnitude slower than the arm's natural vibration, so this is not a resonance effect — and we have nothing to put in its place. Also worth knowing: the simulation runs without gravity, so the payload is not *hanging* on the arm. It acts purely as extra mass to be swung around, and at rest it bends the arm by exactly zero.
+
+**The seven measurements are deliberately linked, not independent.** They share their random draws by design, which makes the comparison between them fair but means they cannot be treated as seven independent samples.
+
+**One layer neither of us could check.** Both agents independently rebuilt every number downstream of the stored signal summaries. The raw sensor traces underneath those summaries were not saved, so neither of us could rebuild the summaries themselves from scratch. That one step is covered by other checks, and by neither audit — and the Technical Report will say so, rather than letting two independent reconstructions imply more coverage than they have.
+
+**And none of this is a research result.** Every file behind this amendment carries a marker inside it reading, in effect, *development only — cannot change any recorded outcome.* A2 changes what we have committed to *in advance*; it does not change a single measured verdict, and it claims nothing about whether the project's hypothesis is true. That question is still open and still untouched.
+
+### What approving this does not approve
+
+Named explicitly so that approving the amendment cannot be read as approving what comes after it. A2 authorizes **nothing** downstream: no further payload measurement, no replacement of the data assignment, no regenerating any dataset, no locking the final configuration, no pilot / validation / test data generation, no looking at any final result, and no change to the executed measurement protocol. Every one of those needs its own separate, explicit go-ahead after this two-document review closes.
