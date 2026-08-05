@@ -443,6 +443,32 @@ def test_a_refused_attachment_leaves_the_estimator_unfitted_and_silent():
     assert np.allclose(out.p_class, 1.0 / N_SOURCE_CLASSES)
 
 
+def test_a_failed_state_dict_load_is_transactional_and_keeps_its_true_provenance():
+    """A partial PyTorch load must not relabel mixed weights as the previous run."""
+
+    net = _small_net()
+    est = TemporalAttributionEstimator(net, WindowFeatureExtractor(window_steps=40))
+    est.attach_trained_weights(
+        net.state_dict(), training_provenance="original run, data root dev, seed 0"
+    )
+    before = {name: value.detach().clone() for name, value in est.net.state_dict().items()}
+    incompatible = {name: value.detach().clone() for name, value in before.items()}
+    first_key = next(iter(incompatible))
+    last_key = next(reversed(incompatible))
+    incompatible[first_key] = incompatible[first_key] + 1.0
+    del incompatible[last_key]
+
+    with pytest.raises(RuntimeError, match="Missing key"):
+        est.attach_trained_weights(
+            incompatible, training_provenance="replacement run, data root dev, seed 1"
+        )
+
+    assert est.training_provenance == "original run, data root dev, seed 0"
+    assert all(
+        torch.equal(value, est.net.state_dict()[name]) for name, value in before.items()
+    )
+
+
 # --------------------------------------------------------------------------- #
 # The fitted path, and the thresholds validation still owns.
 # --------------------------------------------------------------------------- #

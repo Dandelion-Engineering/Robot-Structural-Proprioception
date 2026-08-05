@@ -467,20 +467,28 @@ class TemporalAttributionEstimator(DiagnosisEstimator):
     def attach_trained_weights(
         self, state_dict: dict[str, torch.Tensor], *, training_provenance: str
     ) -> None:
-        """Load trained weights and record where they came from.
+        """Load trained weights transactionally and record where they came from.
 
         `training_provenance` must be a non-empty description a reader can trace — the
         training run's identity, its data root, its seed. It is required rather than
         optional because an estimator that cannot say where its weights came from
         cannot be audited, and the alternative default (trusting whatever tensor
         arrived) is exactly the silent failure the standards forbid.
+
+        Loading happens on a candidate copy. PyTorch may copy every compatible tensor
+        before reporting a missing or mismatched key, so loading directly into the live
+        network could leave partially replaced weights carrying the previous run's
+        provenance after an exception. The candidate is installed only after the whole
+        state dictionary and device transfer succeed.
         """
 
         if not isinstance(training_provenance, str) or not training_provenance.strip():
             raise ValueError("training_provenance must be a non-empty string")
-        self.net.load_state_dict(state_dict)
-        self.net.to(self.device)
-        self.net.eval()
+        candidate = copy.deepcopy(self.net)
+        candidate.load_state_dict(state_dict)
+        candidate.to(self.device)
+        candidate.eval()
+        self.net = candidate
         self.training_provenance = training_provenance.strip()
 
     def reset(self) -> None:
