@@ -1,18 +1,71 @@
 # Summary of Only Necessary Context — Codex
 
-**Last rewritten:** 2026-08-04 — Codex Session 75
+**Last rewritten:** 2026-08-05 — Codex Session 76
 
 ## Resume here
 
-The project is in **Phase 2 — Execution**. Final configuration is **UNFROZEN**;
+The project remains in **Phase 2 — Execution**. Final configuration is **UNFROZEN**;
 `Reproducibility Packet/config/config.json` is absent and confirmatory identities remain
 unmaterialized. Protocol P v2.3.3, its Stage-A/B/C development screen, role-coverage read,
-payload-conditioning read, and the payload-boundary extension are development evidence,
-not confirmatory or final evidence.
+payload-conditioning read, and payload-boundary extension are development evidence, not
+confirmatory or final evidence.
 
-The lifetime Protocol-P-related physical-rollout total is **278**: 151 before the
-payload-boundary extension plus its one authorized 127-rollout invocation. That invocation
-is spent. No second invocation or further payload measurement is authorized.
+The lifetime Protocol-P-related physical-rollout total is **278**: 151 before the payload-
+boundary extension plus its one authorized 127-rollout invocation. That invocation is
+spent. No second invocation or further payload measurement is authorized.
+
+## Amendment A2 is now in force
+
+Claude Session 76 returned one technical wording correction and explicitly approved:
+
+```text
+Claim Sheet.md              baa8fd53146bb838b673946b34fe435c77d8ec06
+Accessible Claim Sheet.md   203aab77f1f244f0a11943955a6f8ec123944030
+```
+
+Codex Session 76 genuinely re-opened both files, independently checked the returned
+technical sentence against the persisted payload-conditioning artifact, and explicitly
+approved those exact blobs unchanged. Both agents therefore approve the same two-file
+state. **A2 IS IN FORCE.** Do not edit either self-resolving status line after approval;
+that would create a new unapproved state.
+
+A2 remains a pure insertion relative to the pre-A2 contract:
+
+```text
+Claim Sheet.md              +146 / -0
+Accessible Claim Sheet.md   +103 / -0
+```
+
+The amendment-triggered duties are complete:
+
+- `agents/Codex/Progress Reports/Progress Report Amendment Payload-Bounded Non-Transfer.md`
+  is the director-facing event report; this does not reset the regular cadence.
+- `README.md` now carries one lean 2026-08-05 milestone stating that the contract changed
+  while every numerical success bar stayed fixed.
+
+## What A2 changes
+
+Both agents chose **Option C**: retain the full payload and severity ladders and pre-register
+a payload-bounded structural non-transfer shape.
+
+1. A positive structural result is licensed only over the payload masses at which it was
+   measured, and that range must be named.
+2. A structural null is a hypothesis failure only where development screening found a
+   detectable structural signal. A null in a screened-blind region is payload- and
+   severity-bounded non-transfer instead.
+3. The confirmatory structural S-versus-C1 comparison must be reported by payload as well
+   as pooled. This creates no per-payload success bar and licenses no post-hoc selection.
+4. The shape applies only to the structural/link-softening family, not actuator weakening
+   or sensor corruption.
+
+Every original numerical success threshold, confidence requirement, recall margin,
+tracking-improvement bar, seed requirement, and safety condition remains unchanged.
+
+A2 changes no severity, payload, split, trajectory, environment, contact profile,
+assignment, or fault-grid entry. Because it adds no grid entry, it shifts no reservation
+ordinal or seed and by itself invalidates no existing development datum. It does not
+require an `archive/` move or regeneration. Any later supersession is a separate decision
+with its own authorization and exclusion trail.
 
 ## Closed payload-boundary evidence
 
@@ -45,99 +98,43 @@ mass kg   TESTABLE_SET                 own split role retained
 0.200     EMPTY                       false
 ```
 
-The sets are prefixes and never grow as mass increases. `X_CASE_EMPTY` is robust under
-the pre-registered reproducibility-band audit; 0.150 and 0.200 kg are the measured empty
-masses, but the adjacent 0.125/0.150-kg boundary is unresolved because the decisive
-margins are inside the instrument's own `tau_anchor = 0.10` band. No write-up may call
-0.150 kg a precise physical cutoff, fit a payload curve, identify a mechanism, treat the
-seven CRN-matched masses as independent, or imply either independent audit re-derived the
-stored harmonic coefficients from raw gauge traces (the raw traces were not persisted).
+Payload-matched development-context role coverage is **0 / 0 / 0 / 0**. The original
+Section-9 0/0/1/1 read was measured at 0.000 and 0.050 kg, both assigned to dev. Joining
+the reserved payload map to the extension sets gives pilot 0 at 0.025/0.075 kg, val 0 at
+0.100/0.125 kg, and test 0 at 0.150/0.200 kg. This is a statement about scalar payload and
+severity values in the fixed development context, not about held-out split environments.
 
-## Amendment A2 — current open exact-state review
+## Binding evidence limits
 
-Both agents chose **Option C**: keep both payload and severity ladders and pre-register a
-payload-bounded structural non-transfer shape. Option A is not licensed by the empty-set
-result. Option B has no qualifying initial role-retaining prefix.
+- The existence of a measured heavy-payload empty region is robust; its exact edge is not.
+  The 0.125/0.150-kg decisive margins are inside the pre-registered 10% reproducibility
+  band. Never call 0.150 kg a physical cutoff.
+- `MONOTONE` means set inclusion over `TESTABLE_SET`, not strict monotonicity of every raw
+  distance. Two mild-rung distances rise slightly from 0.125 to 0.150 kg.
+- `ROLE_RETAINED = false` at all seven masses is an aggregate finding. Three of the seven
+  cheapest-own-rung margins are inside the same band; report that qualifier.
+- Seven measured masses license no fitted payload curve. Common-random-number matching
+  means the seven nulls are deliberately not independent.
+- The mechanism is unknown. The zero-gravity plant makes payload tip inertia, not static
+  load, and the probe lies far below the lowest elastic mode, ruling out simple resonance
+  without identifying an alternative.
+- Both exact-result audits reconstructed everything downstream of persisted harmonic
+  coefficients. Raw gauge traces were not persisted, so neither audit re-derived the
+  coefficients from time series.
+- The result is development-only and cannot change a Protocol P verdict, a role-coverage
+  count, or establish/refute the project hypothesis.
 
-Claude Session 75 drafted and owner-approved:
-
-```text
-Claim Sheet.md              d4c2fea2b64de359be536908c52331edc3d673af
-Accessible Claim Sheet.md   5bd4a93dfcb2bba1e803d885a7cb813dfec2067b
-```
-
-Codex Session 75 verified the evidence, directly edited the two active artifacts, and
-explicitly approves the returned state:
-
-```text
-Claim Sheet.md              d67d22c4df2aa5db0dc62ed854bcc6b804084cac
-Accessible Claim Sheet.md   203aab77f1f244f0a11943955a6f8ec123944030
-review delta                +11 / -11 across the two files
-```
-
-**A2 IS NOT YET IN FORCE.** These are reviewer-edited blobs. Claude must genuinely
-re-open both files and either explicitly approve these exact blobs or edit and return a
-new exact state.
-
-## What Codex accepted and what it corrected
-
-The two judgments Claude specifically requested both passed:
-
-1. **Payload-matched role coverage is 0 / 0 / 0 / 0.** The original Section-9 read was
-   dev 0 / pilot 0 / val 1 / test 1, but it was established only at 0.000 and 0.050 kg,
-   both reserved to dev. Joining the independent assignment payload map to the extension
-   sets and frozen role-severity map gives pilot 0 at 0.025/0.075 kg, val 0 at
-   0.100/0.125 kg, and test 0 at 0.150/0.200 kg. This remains a development-context
-   statement about scalar payload/severity values, not a verdict about held-out
-   validation/test environments.
-2. **Option C does not itself require regeneration.** It changes no severity, payload,
-   split, trajectory, environment, contact, assignment, or fault-grid entry. The generator
-   derives seeds from reservation ordinals after healthy → structure → actuator → sensor
-   expansion; because A2 inserts no setting, it shifts no ordinal and by itself
-   invalidates no generated datum or requires any archive move. Any future supersession
-   needs its own authorization and exclusion trail.
-
-Codex corrected one load-bearing claim boundary plus two nearby wording defects:
-
-- **Sub-threshold is not signal absence.** At 0.150 and 0.200 kg the stored structural
-  distances are nonzero; no reserved severity clears the pre-registered threshold. The
-  active amendment now speaks about detectability and `TESTABLE` verdicts, not signal
-  existence or removal.
-- **`MONOTONE` is set inclusion.** It proves the `TESTABLE` set never grows with mass; it
-  does not prove every raw distance is strictly monotonic. Two mild-rung distances rise
-  slightly from 0.125 to 0.150 kg.
-- Technical A2.1 now says four pieces of evidence while enumerating four. The accessible
-  sheet also narrows “noise does not move at all” to “does not scale with payload” and
-  calls the audited JSON the stored result file rather than a raw file.
-- Both status lines are now self-resolving. Claude's draft said to replace them with the
-  approvals after approval, which would create new, unapproved blobs. The current text
-  says A2 enters force when both agents approve the same state and leaves the durable
-  approval record in the review chat and Git history; no post-approval edit is needed.
-
-No number, option, success bar, failure boundary, non-transfer shape, reporting rule,
-no-regeneration conclusion, or downstream authorization changed.
-
-## Next exact action
-
-Read the physical tail of the authoritative active transcript before doing anything else:
-
-`chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`
-
-Claude owns the next review turn. If Claude explicitly approves blobs `d67d22c4...` and
-`203aab77...`, the A2 loop closes and A2 becomes in force. No document status edit is
-needed. The closing session must then:
-
-1. write the amendment-triggered progress report (event trigger, independent of the
-   Session-80 regular cadence); and
-2. add one lean public README milestone stating that the contract changed while every
-   numerical success bar stayed fixed.
+The Session-76 returned correction is exact. `payload_conditioning.json` gives mean
+per-cell Q95 values 0.4165464356 at 0.000 kg and 0.3990021149 at 0.050 kg, a ratio
+0.9578814768, while structural-distance ratios span 0.4867076148–0.5365918313. The null
+moves slightly but does not scale with the roughly halved structural statistic.
 
 ## Authorization boundary
 
-Until the A2 two-file loop closes, and afterward absent a new separately explicit
-authorization, all of the following remain blocked:
+A2 closes an interpretation gate and opens **no execution gate**. Absent a new, separately
+explicit authorization, all of the following remain blocked:
 
-- any further payload measurement or second extension invocation;
+- any second payload-extension invocation or further payload measurement;
 - replacement of the assignment;
 - supersession or coherent regeneration of any dataset;
 - materialization of final `config/config.json`;
@@ -145,7 +142,31 @@ authorization, all of the following remain blocked:
 - confirmatory work; and
 - changes to closed Protocol P v2.3.3.
 
-Configuration stays unfrozen. Test identities/payloads remain untouched at zero.
+Configuration stays unfrozen. Test identities and payloads remain untouched at zero.
+
+## Next exact action
+
+There is no open A2 review turn. Before any downstream implementation or execution, read
+the physical tail of the authoritative active transcript and make a separate, explicitly
+reviewed decision about what work is actually required before configuration freeze. Do not
+infer authorization from A2's approval, the progress report, the public README entry, or
+the existence of prior development data.
+
+The next regular Codex progress report is Session 80. The next Codex session/report is
+**77**.
+
+## Transcript integrity state
+
+The Session-76 approval append used the complete unique 15-line EOF block at the recorded
+1,301,013-byte / 20,268-line boundary, but the first byte-prefix assertion failed because
+the patch normalized the anchor's 15 CRLF endings to LF. No text, line, message, or order
+changed. A forward correction records the failure and restates the operative approval.
+
+The correction used a fresh exact boundary of 1,303,210 bytes / 20,321 lines / SHA-256
+`3235faf5ef43ca0ac480b48ef7f02c7897a3df2d3b1908a8f698c57668635a96`. Its prefix remained
+exact; its header occurs once at line 20,325 after the boundary; Codex is physically last;
+and the cumulative transcript diff is `+83/-0`. Never silently “clean up” the line-ending
+event or the correction.
 
 ## Workflow rules
 
@@ -156,14 +177,6 @@ Configuration stays unfrozen. Test identities/payloads remain untouched at zero.
   authorization, and control outcome separate.
 - Transcript appends require a recorded byte/line boundary and SHA-256, a complete unique
   multi-line EOF anchor actually used by the patch, one post-boundary session header, a
-  byte-identical prefix, a physically last author, and an additions-only diff.
-- Session 75 first appended after 1,287,549 bytes / 20,000 lines. The pre-write prefix hash
-  `f7d95771...e116` remained exact and the header occurs once at line 20,004. The blob
-  correction then appended against the exact 1,292,235-byte / 20,093-line intermediate
-  state, preserving its `7867b381...bead` prefix hash. The correction header occurs once
-  at line 20,097; Codex is physically last at line 20,126; the cumulative append is
-  `+126/-0`; the pre-existing CR count stayed 19,329.
-- The public README is intentionally untouched while A2 remains an open proposal.
-
-Next Codex session/report: **76**. The next regular progress report is Session 80 unless
-the approved-amendment event trigger fires sooner.
+  byte-identical prefix, a physically last author, and an additions-only diff. If the byte
+  prefix fails, stop and append a forward correction before closeout.
+- Keep the public README lean and milestone-based. A2's milestone is already logged.

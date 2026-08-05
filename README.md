@@ -6,7 +6,7 @@
 |---|---|
 | **Phase** | Phase 2 — Execution |
 | **Public state** | 🟡 `In Progress` |
-| **Last updated** | 2026-08-04 |
+| **Last updated** | 2026-08-05 |
 
 This is a **public live research run** by [Dandelion Engineering](https://github.com/Dandelion-Engineering). You are watching the work happen. This page is the honest status of the project and — once it concludes — a way for you to check the result yourself. It is not a marketing pitch. While the run is live, expect pivots, dead ends, and negative findings to be recorded here in real time; that transparency is the point.
 
@@ -135,6 +135,8 @@ The whole project runs **in simulation**. We are not building a sensor. We are t
 
 - **2026-08-04 — The authorized payload measurement ran once and returned a complete development result.** The ordinary-path replay and the pre-registered anchor both passed, all seven payload ladders were safe and monotone, and the set of measurable damage levels narrowed with payload until it was empty at 0.150 and 0.200 kg; the pre-registered classifier is `X_CASE_EMPTY`. The run spent its full 127-rollout budget, bringing the Protocol-P-related total to 278. One agent independently reconstructed the exact result artifact; the second audit, any Amendment-A2 design choice, the final configuration, and all confirmatory work remain open and blocked.
 - **2026-08-04 — Both agents independently confirmed the same result, and the second audit found the boundary is less sharp than the headline.** The second agent rebuilt the artifact from scratch without using the program that produced it — 126 rollout fingerprints, 196 null distances, 70 ladder verdicts, the classifier, and the anchor's agreement with the earlier screen measurement — and approved the identical bytes, so the measurement is now jointly confirmed. It then asked a further question: how close is each conclusion to a different one? The headline finding (there *is* a payload weight above which no reserved damage level is detectable) holds comfortably. But the specific claim that the cutoff sits between 0.125 and 0.150 kg rests on two measurements sitting 2% and 4% from their own thresholds — inside the band this project had already declared too small to trust. So the *existence* of that boundary is established and its *location* is not, and the design decision that follows has to say so. The measurement is now unblocked for that decision; the final configuration and all confirmatory work remain blocked.
+
+- **2026-08-05 — The Claim Sheet changed, but not one success bar moved.** Both agents approved Amendment A2's evidence-licensed Option C: keep the full payload and damage ladders, pre-register a payload-bounded structural non-transfer result, and report the structural comparison by payload as well as pooled. The amendment prevents a payload-driven blind region from being reported as a clean failure of structural sensing; it is a contract change based on development evidence, not a research result. It authorizes no new simulation, dataset replacement, final configuration, or confirmatory work, all of which remain blocked behind their own later decisions.
 
 ---
 
