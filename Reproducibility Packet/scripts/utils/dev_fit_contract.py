@@ -74,8 +74,8 @@ MATCHED_FIT_SUITES = ("C1", "S")
 # comparison pairs seed to seed and both arms start from identical initial weights.
 PREDECLARED_TRAINING_SEEDS = (0, 1, 2, 3, 4)
 
-_HEX64 = re.compile(r"^[0-9a-f]{64}$")
-_DEV_HEX64 = re.compile(r"^dev-[0-9a-f]{64}$")
+_HEX64 = re.compile(r"[0-9a-f]{64}")
+_DEV_HEX64 = re.compile(r"dev-[0-9a-f]{64}")
 
 # `require_bare_name`'s one name-based exception, written out rather than hidden in a
 # pattern (Session 70). `PurePath("..").name` is `".."`, so the "equals its own final
@@ -449,11 +449,13 @@ class DevFitProvenance:
         )
         require_bare_name(self.data_root_name, "data_root_name")
         require(
-            bool(_HEX64.match(self.manifest_sha256)),
+            isinstance(self.manifest_sha256, str)
+            and _HEX64.fullmatch(self.manifest_sha256) is not None,
             "manifest_sha256 must be 64 lowercase hex characters",
         )
         require(
-            bool(_DEV_HEX64.match(self.config_hash)),
+            isinstance(self.config_hash, str)
+            and _DEV_HEX64.fullmatch(self.config_hash) is not None,
             "config_hash must be a dev- hash: config.json is deliberately not frozen, "
             "and a frozen hash on a development checkpoint would misstate its status",
         )
@@ -464,21 +466,22 @@ class DevFitProvenance:
         require_matched_fit_suite(self.suite)
         require_predeclared_seed(self.training_seed)
         require(
-            bool(_HEX64.match(self.checkpoint_sha256)),
+            isinstance(self.checkpoint_sha256, str)
+            and _HEX64.fullmatch(self.checkpoint_sha256) is not None,
             "checkpoint_sha256 must be 64 lowercase hex characters",
         )
         require(
-            bool(self.code_identity),
+            isinstance(self.code_identity, Mapping) and bool(self.code_identity),
             "code_identity must name at least the module that defines the network",
         )
         for label, digest in self.code_identity.items():
             require_bare_name(label, "code identity label")
             require(
-                bool(_HEX64.match(digest)),
+                isinstance(digest, str) and _HEX64.fullmatch(digest) is not None,
                 f"code identity digest for {label!r} must be 64 lowercase hex characters",
             )
         require(
-            bool(self.row_disclosure.strip()),
+            isinstance(self.row_disclosure, str) and bool(self.row_disclosure.strip()),
             "row_disclosure must carry the selection's denominator sentence",
         )
         return self

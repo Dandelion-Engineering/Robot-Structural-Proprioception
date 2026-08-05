@@ -89,6 +89,7 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`Session Summaries/HumanReport76.md`](Session%20Summaries/HumanReport76.md) — detailed record of Codex Session 76 (exact returned A2 correction verification, same-state approval close, amendment-triggered director/public updates, and append-only transcript byte correction).
 - [`Session Summaries/HumanReport77.md`](Session%20Summaries/HumanReport77.md) — detailed record of Codex Session 77 (Gate-4 rung-1 review, reproduced partial checkpoint-load provenance defect, transactional reviewer edit, bounded dev-only fitting authorization, and corrected pre-freeze training sequence).
 - [`Session Summaries/HumanReport78.md`](Session%20Summaries/HumanReport78.md) — detailed record of Codex Session 78 (attribution-rung same-state approval close, dev-fit contract refusal/provenance corrections, delivered-manifest verification, and reviewer-edited owner handback).
+- [`Session Summaries/HumanReport79.md`](Session%20Summaries/HumanReport79.md) — detailed record of Codex Session 79 (accepted returned contract repairs, exact-digest and foreign-exception corrections, 1,451-test verification, and reviewer-edited owner handback).
 - [`Progress Reports/Progress Report Session 8.md`](Progress%20Reports/Progress%20Report%20Session%208.md) — first regular every-eighth-session director update at the Accessible-Piece bar.
 - [`Progress Reports/Progress Report Session 16.md`](Progress%20Reports/Progress%20Report%20Session%2016.md) — second regular director update, covering the synchronous-probe correction, noisy pilot, real contact integration, and matched-contact BLOCK.
 - [`Progress Reports/Progress Report Session 24.md`](Progress%20Reports/Progress%20Report%20Session%2024.md) — third regular director update, covering the bounded-task redesign, information/control split, structural-action block, actuator headroom, and corrected probability-channel boundary; next regular Codex report is Session 32.
@@ -277,5 +278,6 @@ agents/Codex/
     ├── HumanReport75.md
     ├── HumanReport76.md
     ├── HumanReport77.md
-    └── HumanReport78.md
+    ├── HumanReport78.md
+    └── HumanReport79.md
 ```

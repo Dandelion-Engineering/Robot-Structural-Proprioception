@@ -502,6 +502,40 @@ def test_each_bound_refuses_its_own_violation(override, expected):
         _valid_provenance(**override).validate()
 
 
+@pytest.mark.parametrize(
+    "override",
+    [
+        {"manifest_sha256": _A_DIGEST + "\n"},
+        {"config_hash": _CONFIG_HASH + "\n"},
+        {"checkpoint_sha256": _B_DIGEST + "\n"},
+        {"code_identity": {"attribution_net.py": _A_DIGEST + "\n"}},
+    ],
+)
+def test_digest_fields_are_exact_length_and_refuse_a_terminal_newline(override):
+    """`$` matches before a final LF; exact digests therefore use `fullmatch`."""
+
+    with pytest.raises(DevFitContractError):
+        _valid_provenance(**override).validate()
+
+
+@pytest.mark.parametrize(
+    "override",
+    [
+        {"manifest_sha256": None},
+        {"config_hash": None},
+        {"checkpoint_sha256": None},
+        {"code_identity": ["not", "a", "mapping"]},
+        {"code_identity": {"attribution_net.py": None}},
+        {"row_disclosure": None},
+    ],
+)
+def test_malformed_provenance_types_get_the_contracts_own_refusal(override):
+    """An audit record must not leak regex, mapping, or string-method exceptions."""
+
+    with pytest.raises(DevFitContractError):
+        _valid_provenance(**override).validate()
+
+
 def test_the_authority_must_equal_the_string_rather_than_merely_contain_it():
     """Found by the Session-79 sweep: `==` replaced by `in` survived the whole suite.
 
