@@ -469,6 +469,65 @@ def test_a_failed_state_dict_load_is_transactional_and_keeps_its_true_provenance
     )
 
 
+def test_a_successful_attachment_updates_the_live_network_in_place():
+    """`attach_trained_weights` must not swap the estimator's network for a new object."""
+
+    est = TemporalAttributionEstimator(_small_net(), WindowFeatureExtractor(window_steps=40))
+    captured = est.net
+    donor = _small_net(seed=7)
+    est.attach_trained_weights(donor.state_dict(), training_provenance="checkpoint, dev, seed 7")
+
+    assert est.net is captured, "attaching weights replaced the live network object"
+    assert all(
+        torch.equal(value, captured.state_dict()[name])
+        for name, value in donor.state_dict().items()
+    ), "the captured reference does not see the attached weights"
+
+
+def test_an_optimizer_built_before_attachment_still_drives_the_live_network():
+    """The failure a rebinding install would cause: a silently orphaned optimizer.
+
+    Building the optimizer and then resuming from a checkpoint is an ordinary order.
+    If the attach rebinds `est.net`, the optimizer keeps stepping the abandoned module:
+    no exception, a falling loss, and an estimator that never moves.
+    """
+
+    est = TemporalAttributionEstimator(_small_net(), WindowFeatureExtractor(window_steps=40))
+    optimizer = torch.optim.SGD(est.net.parameters(), lr=1.0)
+    est.attach_trained_weights(
+        _small_net(seed=7).state_dict(), training_provenance="checkpoint, dev, seed 7"
+    )
+
+    before = {name: value.detach().clone() for name, value in est.net.state_dict().items()}
+    optimizer.zero_grad()
+    sum(parameter.sum() for parameter in optimizer.param_groups[0]["params"]).backward()
+    optimizer.step()
+
+    moved = [
+        name
+        for name, value in est.net.state_dict().items()
+        if not torch.equal(before[name], value)
+    ]
+    assert moved, "an optimizer step moved nothing the estimator reads: it was orphaned"
+
+
+def test_a_failed_attachment_does_not_replace_the_live_network_object():
+    """Identity survives the refusal path too, not only the success path."""
+
+    est = TemporalAttributionEstimator(_small_net(), WindowFeatureExtractor(window_steps=40))
+    est.attach_trained_weights(est.net.state_dict(), training_provenance="original, dev, seed 0")
+    captured = est.net
+    incompatible = {
+        name: value.detach().clone() for name, value in est.net.state_dict().items()
+    }
+    del incompatible[next(reversed(incompatible))]
+
+    with pytest.raises(RuntimeError, match="Missing key"):
+        est.attach_trained_weights(incompatible, training_provenance="replacement, dev, seed 1")
+
+    assert est.net is captured
+
+
 # --------------------------------------------------------------------------- #
 # The fitted path, and the thresholds validation still owns.
 # --------------------------------------------------------------------------- #

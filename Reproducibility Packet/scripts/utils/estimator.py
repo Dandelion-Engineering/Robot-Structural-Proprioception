@@ -41,22 +41,29 @@ The capacity ladder (Slot 9), in rungs that share this front-end and output cont
      or decision rates. Like rung 1 it detects without attributing the fault type, and it
      freezes its threshold on healthy calibration with a fail-loud guard against an
      under-resolved false-alarm tail.
-  2. **`TemporalAttributionNet`** (specified; trained post-freeze) — the matched
-     learned temporal-attribution head: a shared temporal encoder over the `[W, D]`
-     window (dilated temporal-conv / GRU) feeding class/unknown/location/severity
-     heads. Consumes `WindowFeatureExtractor.window_tensor`. This is the headline
-     method; it is *specified* now so `W`/`stride` are well-defined, and *trained*
-     only once `config.json` freezes and the confirmatory data exists (training on
-     absent data would be fabrication).
-  3. **`RMALatentEncoder`** (specified; trained post-freeze) — the RMA-style latent
-     baseline: an encoder mapping the same `[W, D]` history to an adaptation latent a
-     recovery policy consumes, giving "adapt without explicit attribution" as a
-     control-only comparison (Slot 5 / Phase-0 point 3).
+  2. **`TemporalAttributionNet`** (built in `utils.attribution_net`, Session 77) — the
+     matched learned temporal-attribution head: a shared causal dilated temporal-conv
+     encoder over the `[W, D]` window feeding class/unknown/location/severity heads.
+     Consumes `WindowFeatureExtractor.window_tensor`. This is the headline method. It
+     is built and **untrained**; `TemporalAttributionEstimator` abstains until weights
+     arrive through `attach_trained_weights`, which requires a training provenance.
+  3. **`RMALatentEncoder`** (specified, not built) — the RMA-style latent baseline: an
+     encoder mapping the same `[W, D]` history to an adaptation latent a recovery
+     policy consumes, giving "adapt without explicit attribution" as a control-only
+     comparison (Slot 5 / Phase-0 point 3).
 
-The learned rungs (2, 3) will live behind the same `DiagnosisEstimator` interface and
-`window_tensor` front-end; their training/build is the post-config-freeze step, and
-PyTorch (CUDA build, GPU verified) is installed then, not before, per the efficiency
-standard (no capacity we cannot yet use).
+**Where training sits relative to the config freeze (corrected Session 78).** An earlier
+version of this docstring said the learned rungs are trained only once `config.json`
+freezes. That was stale and backwards: the jointly approved Config Freeze Readiness
+Review sequences model implementation, then dev/pilot fitting and capacity work, then
+validation-only calibration and threshold selection, and only then the final immutable
+freeze — because the frozen configuration has to *contain* the selected model and
+threshold choices, which cannot exist before the model does. Codex ruled on this in its
+Session 77 after the contradiction was raised in Session 77's handoff. What the older
+sentence was right about survives unchanged: training on data that does not exist would
+be fabrication, so a fit is authorized only against an already-delivered partition,
+under its own explicit authorization, and every checkpoint is development-only until
+the confirmatory path opens.
 """
 
 from __future__ import annotations

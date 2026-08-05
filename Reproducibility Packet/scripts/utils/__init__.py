@@ -35,7 +35,12 @@ here and is imported rather than copy-pasted. Modules:
     contract, the past-only windowed front-end (the concrete W/stride realization), the
     detection/calibrated-abstention rung, the allowlisted oracle interface, and the
     online-seam command-policy adapter. The learned attribution/RMA rungs share this
-    front-end and are trained post-config-freeze.
+    front-end; the attribution rung is built in ``attribution_net`` and fitting it
+    precedes the config freeze rather than following it (see that module and
+    ``estimator``'s own note, corrected Session 78).
+  * ``attribution_net`` -- Gate-4 rung 1: the matched causal temporal-convolutional
+    attribution network and its ``DiagnosisEstimator``. Built and untrained; it abstains
+    until weights arrive with a recorded training provenance.
   * ``residual_baseline`` -- the deployable linear-ARX residual attribution floor:
     healthy nominal system identification, transparent residual-pattern prototypes,
     and separately calibrated off-prototype abstention.

@@ -480,6 +480,16 @@ class TemporalAttributionEstimator(DiagnosisEstimator):
         network could leave partially replaced weights carrying the previous run's
         provenance after an exception. The candidate is installed only after the whole
         state dictionary and device transfer succeed.
+
+        The install writes the validated tensors *into* `self.net` rather than rebinding
+        the attribute to the candidate, so `self.net` is the same object before and after
+        a call. A caller that captured `estimator.net` earlier — an optimizer built over
+        `estimator.net.parameters()` before a checkpoint was resumed is the case this
+        rung will meet — would otherwise be left driving an orphaned module while the
+        estimator answered from a different one, with no error and a falling loss. The
+        second load cannot itself fail partway: `candidate` is a deep copy of `self.net`
+        and a strict load neither adds keys nor changes shapes, so the two state
+        dictionaries agree by construction.
         """
 
         if not isinstance(training_provenance, str) or not training_provenance.strip():
@@ -488,7 +498,9 @@ class TemporalAttributionEstimator(DiagnosisEstimator):
         candidate.load_state_dict(state_dict)
         candidate.to(self.device)
         candidate.eval()
-        self.net = candidate
+        self.net.load_state_dict(candidate.state_dict())
+        self.net.to(self.device)
+        self.net.eval()
         self.training_provenance = training_provenance.strip()
 
     def reset(self) -> None:
