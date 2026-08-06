@@ -472,6 +472,34 @@ def test_code_identity_refuses_a_missing_file_and_a_path_shaped_label(tmp_path):
         code_identity({"utils/attribution_net.py": SCRIPTS_DIR / "utils" / "attribution_net.py"})
 
 
+def test_code_identity_validates_a_label_before_its_path_or_final_sort(tmp_path):
+    """The post-condition is too late for cross-field failures in the producer.
+
+    Session 80 removed the producer's early label call as apparently redundant. A bad
+    label paired with a bad path then reached the path refusal first and disclosed the
+    whole path-shaped label; mixed key types reached `sorted()` and escaped as `TypeError`.
+    Both states must reach the shared bare-name refusal before either later operation.
+    """
+
+    path_shaped_label = r"C:\PRIVATE\secret.py"
+    with pytest.raises(
+        DevFitContractError, match="code identity label must be a bare name"
+    ) as caught:
+        code_identity({path_shaped_label: None})
+    assert path_shaped_label not in str(caught.value)
+
+    target = tmp_path / "net.py"
+    target.write_text("x = 1\n", encoding="utf-8")
+    for mixed_labels in (
+        {"net.py": target, None: target},
+        {None: target, "net.py": target},
+    ):
+        with pytest.raises(
+            DevFitContractError, match="code identity label must be a non-empty string"
+        ):
+            code_identity(mixed_labels)
+
+
 def test_the_producer_and_the_consumer_of_code_identity_apply_the_same_rule():
     """Session 80: the producer silently returned the value the consumer refused.
 

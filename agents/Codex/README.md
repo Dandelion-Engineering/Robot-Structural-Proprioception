@@ -6,7 +6,7 @@ This folder contains Codex-owned research, source records, and continuity for th
 
 - [`Literature Foundation.md`](Literature%20Foundation.md) — Codex's independent Phase-0 field survey. It is a concluded research input; corrections discovered later propagate into current artifacts rather than rewriting the foundation.
 - [`references.md`](references.md) — living source ledger for Codex's project work, including Phase-1 review sources. Reconcile it with Claude's independent ledger when the project bibliography is assembled.
-- [`Config Freeze Readiness Review.md`](Config%20Freeze%20Readiness%20Review.md) — Session-26 gate audit that established the seven-gate path to final freeze. Its same-state review is closed; Gates 1 and 3 plus the current Gate-2 base roles are complete. Amendment A2 is in force. Gate-4 rung 1 is now jointly approved; the reviewer-edited dev-fit contract remains in Claude owner re-review, and fitting stays blocked until that loop and the trainer's own executable review close. Gates 4–7 still block final confirmatory config.
+- [`Config Freeze Readiness Review.md`](Config%20Freeze%20Readiness%20Review.md) — Session-26 gate audit that established the seven-gate path to final freeze. Its same-state review is closed; Gates 1 and 3 plus the current Gate-2 base roles are complete. Amendment A2 is in force. Gate-4 rung 1 is jointly approved but untrained; the Session-80 reviewer-edited dev-fit contract remains in Claude owner re-review, and fitting stays blocked until that loop and the trainer's own executable review close. Gates 4–7 still block final confirmatory config.
 
 ## Continuity and session record
 
@@ -90,6 +90,7 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`Session Summaries/HumanReport77.md`](Session%20Summaries/HumanReport77.md) — detailed record of Codex Session 77 (Gate-4 rung-1 review, reproduced partial checkpoint-load provenance defect, transactional reviewer edit, bounded dev-only fitting authorization, and corrected pre-freeze training sequence).
 - [`Session Summaries/HumanReport78.md`](Session%20Summaries/HumanReport78.md) — detailed record of Codex Session 78 (attribution-rung same-state approval close, dev-fit contract refusal/provenance corrections, delivered-manifest verification, and reviewer-edited owner handback).
 - [`Session Summaries/HumanReport79.md`](Session%20Summaries/HumanReport79.md) — detailed record of Codex Session 79 (accepted returned contract repairs, exact-digest and foreign-exception corrections, 1,451-test verification, and reviewer-edited owner handback).
+- [`Session Summaries/HumanReport80.md`](Session%20Summaries/HumanReport80.md) — detailed record of Codex Session 80 (accepted the shared code-identity predicate, reproduced cross-field disclosure/sorting regressions, restored load-bearing early label validation, 1,467-test verification, and exact-state owner handback).
 - [`Progress Reports/Progress Report Session 8.md`](Progress%20Reports/Progress%20Report%20Session%208.md) — first regular every-eighth-session director update at the Accessible-Piece bar.
 - [`Progress Reports/Progress Report Session 16.md`](Progress%20Reports/Progress%20Report%20Session%2016.md) — second regular director update, covering the synchronous-probe correction, noisy pilot, real contact integration, and matched-contact BLOCK.
 - [`Progress Reports/Progress Report Session 24.md`](Progress%20Reports/Progress%20Report%20Session%2024.md) — third regular director update, covering the bounded-task redesign, information/control split, structural-action block, actuator headroom, and corrected probability-channel boundary; next regular Codex report is Session 32.
@@ -99,6 +100,7 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`Progress Reports/Progress Report Session 56.md`](Progress%20Reports/Progress%20Report%20Session%2056.md) — seventh regular director update, covering Stage-0 closure, shared Protocol-P construction/provenance, the reviewed Stage-A/B/C driver, whole-program safety corrections, the live document-derived onset check, the physical replay-count correction, and the remaining execution gate; next regular Codex report is Session 64.
 - [`Progress Reports/Progress Report Session 64.md`](Progress%20Reports/Progress%20Report%20Session%2064.md) — eighth regular director update, covering the executed development screen, its role/payload evidence limits, mutation-harness repair, the approved extension design, and the reviewer-pending executable.
 - [`Progress Reports/Progress Report Session 72.md`](Progress%20Reports/Progress%20Report%20Session%2072.md) — ninth regular director update, covering the eight-round executable review, its evidence-preservation and privacy lessons, the jointly approved official plan, and the still-separate execution gate.
+- [`Progress Reports/Progress Report Session 80.md`](Progress%20Reports/Progress%20Report%20Session%2080.md) — tenth regular director update, covering the executed payload-boundary result, Amendment A2, the approved but untrained first learned rung, and the still-open bounded fitting-contract review.
 - [`Progress Reports/Progress Report Amendment Payload-Bounded Non-Transfer.md`](Progress%20Reports/Progress%20Report%20Amendment%20Payload-Bounded%20Non-Transfer.md) — event-triggered director update explaining why Option C became the in-force contract, why every numerical bar stayed fixed, and which downstream gates remain closed.
 
 ## Shared files outside this folder
@@ -174,7 +176,7 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`../../Reproducibility Packet/results/actuator_recovery_action_screen/actuator_recovery_action_report.md`](../../Reproducibility%20Packet/results/actuator_recovery_action_screen/actuator_recovery_action_report.md) — 100-arm tuning/assessment development BLOCK: cap-3 recovers 16.576% on fault but also benefits healthy false authorization by 8.322%, leaving 8.254 pp; cap-4/5 profiles fail A1 safety, and C1/S are action-identical at the selected cap.
 - [`../../chats/Claude-Codex/Claim Sheet Review and Division of Labor/Summary.md`](../../chats/Claude-Codex/Claim%20Sheet%20Review%20and%20Division%20of%20Labor/Summary.md) — concluded Phase-1 review/labor summary.
 - [`../Claude/Progress Reports/Progress Report Session 56.md`](../Claude/Progress%20Reports/Progress%20Report%20Session%2056.md) — Claude-owned director report; both agents explicitly approve blob `83c527ced4e12ce27cfbf83601c89fc0e670a3cd`, closing the five-round review loop at the corrected fifteen-pre-run / 151-current physical count.
-- [`../../chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`](../../chats/Claude-Codex/Phase%202%20Integration%20and%20Config%20Freeze/Phase%202%20Integration%20and%20Config%20Freeze%20-%20Active.md) — authoritative active interface/config thread. A2 is in force. Session 78 closes the attribution-rung loop at `c4fa3c63...` / `5a401ca1...`, blocks the submitted dev-fit contract on four reproduced guard defects, and returns reviewer-edited `6541cebc...` / `9df7d7f7...` for Claude's owner re-review. No fit, later-role read, generation, or confirmatory action is authorized yet.
+- [`../../chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`](../../chats/Claude-Codex/Phase%202%20Integration%20and%20Config%20Freeze/Phase%202%20Integration%20and%20Config%20Freeze%20-%20Active.md) — authoritative active interface/config thread. A2 is in force and the attribution rung is jointly approved but untrained. Session 80 accepts Claude's shared code-identity repair, corrects its cross-field validation order, and returns approved blobs `bd2c0d08...` / `fbd941b5...` for Claude's owner re-review. No fit, later-role read, generation, or confirmatory action is authorized yet.
 - [`../../chats/Claude-Codex-Human/Chat Appends/Summary.md`](../../chats/Claude-Codex-Human/Chat%20Appends/Summary.md) — concluded director coordination record for the transcript-tail failure mode and recovery rule.
 - [`../../chats/Claude-Codex-Human/Transcript Order Monitoring/Transcript Order Monitoring - Active.md`](../../chats/Claude-Codex-Human/Transcript%20Order%20Monitoring/Transcript%20Order%20Monitoring%20-%20Active.md) — active director-visible recurrence log; records verified append-only repairs and the requirement that the applied patch use the complete pre-verified EOF block.
 - [`../../chats/Claude-Codex/Phase 0 Coordination/Summary.md`](../../chats/Claude-Codex/Phase%200%20Coordination/Summary.md) — concluded Phase-0 convergence record that feeds the Claim Sheet.
@@ -196,7 +198,8 @@ agents/Codex/
 │   ├── Progress Report Session 48.md
 │   ├── Progress Report Session 56.md
 │   ├── Progress Report Session 64.md
-│   └── Progress Report Session 72.md
+│   ├── Progress Report Session 72.md
+│   └── Progress Report Session 80.md
 ├── references.md
 ├── README.md
 ├── Summary of Only Necessary Context.md
@@ -279,5 +282,6 @@ agents/Codex/
     ├── HumanReport76.md
     ├── HumanReport77.md
     ├── HumanReport78.md
-    └── HumanReport79.md
+    ├── HumanReport79.md
+    └── HumanReport80.md
 ```

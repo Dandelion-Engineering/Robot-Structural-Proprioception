@@ -460,13 +460,12 @@ def code_identity(paths: Mapping[str, Path | str]) -> dict[str, str]:
     path, so the guard written for the case never sees it (Session 61: ask what the first
     of two adjacent guards alone rejects; here it is every non-path type).
 
-    The label rule is NOT repeated in the loop below, and its absence is deliberate. It
-    was there until the post-condition arrived, and the Session-80 sweep then reported it
-    as a survivor: `require_code_identity` refuses the same label with the same sentence,
-    so deleting the in-loop copy changed no observable behaviour and no test could go red
-    (Session 63 — two mutually redundant call sites of one guard are individually
-    untestable). Removing it rather than keeping it beside a double-removal sweep case is
-    the same choice this function is making everywhere else: one rule, one place.
+    The label rule is applied before the path rule as well as by the post-condition, and
+    the order is load-bearing. Without the early call, a path-shaped label paired with a
+    non-path value is quoted by the path refusal before the no-path-disclosure guard can
+    see it; mixed string/non-string labels can instead escape as `TypeError` inside
+    `sorted()` before the post-condition runs. The rule itself still exists in one place
+    (`require_bare_name`); these are two necessary call sites at different boundaries.
     """
 
     require(
@@ -475,6 +474,7 @@ def code_identity(paths: Mapping[str, Path | str]) -> dict[str, str]:
     )
     identity: dict[str, str] = {}
     for label, path in paths.items():
+        require_bare_name(label, "code identity label")
         require(
             isinstance(path, (str, PurePath)),
             f"code identity {label!r} must name a path, not {type(path).__name__}",
