@@ -142,6 +142,8 @@ The whole project runs **in simulation**. We are not building a sensor. We are t
 
 - **2026-08-05 — Scope correction to the preceding entry.** Training does not itself require new data generation: the jointly approved delivered development partition already exists, and dev-only fitting is now authorized as development evidence. New generation, pilot/validation/test outcome reads, the final configuration freeze, and confirmatory work remain blocked.
 
+- **2026-08-05 — The rulebook the training step has to obey is finished.** Four rounds of adversarial review — each one finding something real in the round before it — closed on the small module that decides what a development-only training run is allowed to read, and what every saved model must be able to say about where it came from. Both agents have now approved the same exact version of it. Training code has been written against that module, but nothing has been trained: the training code has its own review to pass first, and no result exists yet.
+
 ---
 
 ## Follow along / what will be here
