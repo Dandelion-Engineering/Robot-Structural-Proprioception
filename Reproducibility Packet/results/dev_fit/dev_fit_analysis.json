@@ -1,0 +1,426 @@
+{
+ "arms": [
+  {
+   "checkpoint_name": "dev_fit_C1_seed0.pt",
+   "checkpoint_sha256": "6403e8948816568ffbeea6ed430b22b212e614baa645e767be7586cb286b6c59",
+   "classification": {
+    "accuracy": 0.796052631579,
+    "macro_f1": 0.6404753275,
+    "per_class_f1": {
+     "actuator": 0.688172043011,
+     "healthy": 0.666666666667,
+     "sensor": 0.921348314607,
+     "structure": 0.285714285714
+    }
+   },
+   "n_examples": 152,
+   "post_fit_full_batch_loss_terms": {
+    "class_cross_entropy": 0.559771955013,
+    "location_cross_entropy": 0.517807722092,
+    "ood_binary_cross_entropy": 0.022883221507,
+    "severity_gaussian_nll": -1.164814949036,
+    "severity_log_scale_mean": -1.52411711216,
+    "total": -0.064352050424
+   },
+   "seed": 0,
+   "suite": "C1",
+   "training_final_epoch_mean_loss": -0.178276470617
+  },
+  {
+   "checkpoint_name": "dev_fit_C1_seed1.pt",
+   "checkpoint_sha256": "c5cbb9dad0c3ebaa39f81683b8e185bde63dc73452dbd16ba03d25123ca5590b",
+   "classification": {
+    "accuracy": 0.875,
+    "macro_f1": 0.630634057971,
+    "per_class_f1": {
+     "actuator": 0.875,
+     "healthy": 0.0,
+     "sensor": 0.927536231884,
+     "structure": 0.72
+    }
+   },
+   "n_examples": 152,
+   "post_fit_full_batch_loss_terms": {
+    "class_cross_entropy": 0.346397429705,
+    "location_cross_entropy": 0.483208060265,
+    "ood_binary_cross_entropy": 0.024283858016,
+    "severity_gaussian_nll": -1.499190211296,
+    "severity_log_scale_mean": -1.813492655754,
+    "total": -0.645300863311
+   },
+   "seed": 1,
+   "suite": "C1",
+   "training_final_epoch_mean_loss": -0.505315761817
+  },
+  {
+   "checkpoint_name": "dev_fit_C1_seed2.pt",
+   "checkpoint_sha256": "154b9190c3ab301b006051b3c7eab582e53702fe3c9bd7fa546a0a735036f76a",
+   "classification": {
+    "accuracy": 0.927631578947,
+    "macro_f1": 0.829238733617,
+    "per_class_f1": {
+     "actuator": 0.909090909091,
+     "healthy": 0.545454545455,
+     "sensor": 0.959183673469,
+     "structure": 0.903225806452
+    }
+   },
+   "n_examples": 152,
+   "post_fit_full_batch_loss_terms": {
+    "class_cross_entropy": 0.337978035212,
+    "location_cross_entropy": 0.330497354269,
+    "ood_binary_cross_entropy": 0.023207901046,
+    "severity_gaussian_nll": -0.873790323734,
+    "severity_log_scale_mean": -1.414545536041,
+    "total": -0.182107033208
+   },
+   "seed": 2,
+   "suite": "C1",
+   "training_final_epoch_mean_loss": -0.204732920778
+  },
+  {
+   "checkpoint_name": "dev_fit_C1_seed3.pt",
+   "checkpoint_sha256": "7a4b0e7ed163747ae61da81cd50f75d0a32bd2dcd9cb6853eff5a1612d223d71",
+   "classification": {
+    "accuracy": 0.835526315789,
+    "macro_f1": 0.486679158321,
+    "per_class_f1": {
+     "actuator": 0.779220779221,
+     "healthy": 0.0,
+     "sensor": 0.945273631841,
+     "structure": 0.222222222222
+    }
+   },
+   "n_examples": 152,
+   "post_fit_full_batch_loss_terms": {
+    "class_cross_entropy": 0.539676845074,
+    "location_cross_entropy": 0.719547390938,
+    "ood_binary_cross_entropy": 0.024082168937,
+    "severity_gaussian_nll": -0.996937274933,
+    "severity_log_scale_mean": -1.455014705658,
+    "total": 0.286369130015
+   },
+   "seed": 3,
+   "suite": "C1",
+   "training_final_epoch_mean_loss": 0.189257665684
+  },
+  {
+   "checkpoint_name": "dev_fit_C1_seed4.pt",
+   "checkpoint_sha256": "deccc979cdf3e0e2de56b9cc7a3989c040c5dca6ca6f9f4e4935743bc543180a",
+   "classification": {
+    "accuracy": 0.914473684211,
+    "macro_f1": 0.824408602151,
+    "per_class_f1": {
+     "actuator": 0.870967741935,
+     "healthy": 0.666666666667,
+     "sensor": 0.96,
+     "structure": 0.8
+    }
+   },
+   "n_examples": 152,
+   "post_fit_full_batch_loss_terms": {
+    "class_cross_entropy": 0.384508222342,
+    "location_cross_entropy": 0.521472454071,
+    "ood_binary_cross_entropy": 0.022692430764,
+    "severity_gaussian_nll": -1.273158431053,
+    "severity_log_scale_mean": -1.581844687462,
+    "total": -0.344485323876
+   },
+   "seed": 4,
+   "suite": "C1",
+   "training_final_epoch_mean_loss": 0.071684313448
+  },
+  {
+   "checkpoint_name": "dev_fit_S_seed0.pt",
+   "checkpoint_sha256": "119b2f98f202ea3f87a25cb7b6aaf885b99af4a36d5859abbd02507012c39c87",
+   "classification": {
+    "accuracy": 0.822368421053,
+    "macro_f1": 0.715494654184,
+    "per_class_f1": {
+     "actuator": 0.705882352941,
+     "healthy": 0.666666666667,
+     "sensor": 0.880733944954,
+     "structure": 0.608695652174
+    }
+   },
+   "n_examples": 152,
+   "post_fit_full_batch_loss_terms": {
+    "class_cross_entropy": 0.589402854443,
+    "location_cross_entropy": 0.530138611794,
+    "ood_binary_cross_entropy": 0.020444987342,
+    "severity_gaussian_nll": -1.19203209877,
+    "severity_log_scale_mean": -1.675199151039,
+    "total": -0.052045645192
+   },
+   "seed": 0,
+   "suite": "S",
+   "training_final_epoch_mean_loss": -0.055032604619
+  },
+  {
+   "checkpoint_name": "dev_fit_S_seed1.pt",
+   "checkpoint_sha256": "49880844cb05d60007bc875d1af7ee63b5fbd685dac9c5032f1068ed5092e28d",
+   "classification": {
+    "accuracy": 0.815789473684,
+    "macro_f1": 0.669851355335,
+    "per_class_f1": {
+     "actuator": 0.703703703704,
+     "healthy": 0.545454545455,
+     "sensor": 0.884792626728,
+     "structure": 0.545454545455
+    }
+   },
+   "n_examples": 152,
+   "post_fit_full_batch_loss_terms": {
+    "class_cross_entropy": 0.587425649166,
+    "location_cross_entropy": 0.612938165665,
+    "ood_binary_cross_entropy": 0.009761466645,
+    "severity_gaussian_nll": -0.7806224823,
+    "severity_log_scale_mean": -1.268341183662,
+    "total": 0.429502799176
+   },
+   "seed": 1,
+   "suite": "S",
+   "training_final_epoch_mean_loss": 0.167772203684
+  },
+  {
+   "checkpoint_name": "dev_fit_S_seed2.pt",
+   "checkpoint_sha256": "3ed91a36a4ecbdba3f03cb016432346553dcd18459e698031e1deab5507f2bcc",
+   "classification": {
+    "accuracy": 0.789473684211,
+    "macro_f1": 0.590376660412,
+    "per_class_f1": {
+     "actuator": 0.63829787234,
+     "healthy": 0.222222222222,
+     "sensor": 0.860986547085,
+     "structure": 0.64
+    }
+   },
+   "n_examples": 152,
+   "post_fit_full_batch_loss_terms": {
+    "class_cross_entropy": 0.559770941734,
+    "location_cross_entropy": 0.477204531431,
+    "ood_binary_cross_entropy": 0.016026362777,
+    "severity_gaussian_nll": -1.341811776161,
+    "severity_log_scale_mean": -1.568332076073,
+    "total": -0.288809940219
+   },
+   "seed": 2,
+   "suite": "S",
+   "training_final_epoch_mean_loss": 0.096634827162
+  },
+  {
+   "checkpoint_name": "dev_fit_S_seed3.pt",
+   "checkpoint_sha256": "ec099cc70281f84a23800ead377520682fe9ab227d44eeca1801d57582de4982",
+   "classification": {
+    "accuracy": 0.809210526316,
+    "macro_f1": 0.590936677318,
+    "per_class_f1": {
+     "actuator": 0.740740740741,
+     "healthy": 0.4,
+     "sensor": 0.907216494845,
+     "structure": 0.315789473684
+    }
+   },
+   "n_examples": 152,
+   "post_fit_full_batch_loss_terms": {
+    "class_cross_entropy": 0.533067584038,
+    "location_cross_entropy": 0.593042254448,
+    "ood_binary_cross_entropy": 0.021690011024,
+    "severity_gaussian_nll": -1.137009501457,
+    "severity_log_scale_mean": -1.58986890316,
+    "total": 0.010790348053
+   },
+   "seed": 3,
+   "suite": "S",
+   "training_final_epoch_mean_loss": 0.010039991454
+  },
+  {
+   "checkpoint_name": "dev_fit_S_seed4.pt",
+   "checkpoint_sha256": "eb9dbb0cc04a66e73d4c0a29a4dc2b02b6002981a69344e24cb481e7ccfc55e1",
+   "classification": {
+    "accuracy": 0.848684210526,
+    "macro_f1": 0.684332824039,
+    "per_class_f1": {
+     "actuator": 0.794117647059,
+     "healthy": 0.545454545455,
+     "sensor": 0.921568627451,
+     "structure": 0.47619047619
+    }
+   },
+   "n_examples": 152,
+   "post_fit_full_batch_loss_terms": {
+    "class_cross_entropy": 0.514819264412,
+    "location_cross_entropy": 0.573216617107,
+    "ood_binary_cross_entropy": 0.018693707883,
+    "severity_gaussian_nll": -1.126506209373,
+    "severity_log_scale_mean": -1.750045418739,
+    "total": -0.019776619971
+   },
+   "seed": 4,
+   "suite": "S",
+   "training_final_epoch_mean_loss": -0.191296933513
+  }
+ ],
+ "authority": "DEVELOPMENT-ONLY IN-SAMPLE READBACK: establishes optimizer/data-path operation only; ineligible for capacity selection, threshold setting, generalization, validation, confirmatory analysis, or a C1-versus-S research conclusion.",
+ "baselines": {
+  "empirical_prior_cross_entropy": 1.010209947427,
+  "majority_class": "sensor",
+  "majority_class_accuracy": 0.631578947368
+ },
+ "boundary": {
+  "capacity_selected": false,
+  "development_only": true,
+  "generalization_established": false,
+  "in_sample": true,
+  "ood_behavior_established": false,
+  "pilot_validation_test_outcomes_read": 0,
+  "threshold_selected": false
+ },
+ "data_census": {
+  "class_counts_by_suite": {
+   "C1": {
+    "actuator": 32,
+    "healthy": 8,
+    "sensor": 96,
+    "structure": 16
+   },
+   "S": {
+    "actuator": 32,
+    "healthy": 8,
+    "sensor": 96,
+    "structure": 16
+   }
+  },
+  "n_examples_per_arm": 152,
+  "ood_counts_by_suite": {
+   "C1": 0,
+   "S": 0
+  },
+  "row_disclosure": "304 of 944 manifest rows selected (split: dev 304, pilot 304, val 336; suite of selected: C1 152, S 152); 640 withheld (640 non-dev, 0 unmatched-suite dev).",
+  "trajectory_census": {
+   "trajectory_dev_diagnostic_b": {
+    "C1": 76,
+    "S": 76
+   },
+   "trajectory_dev_ordinary_a": {
+    "C1": 76,
+    "S": 76
+   }
+  }
+ },
+ "fits_run": 0,
+ "generation_runs": 0,
+ "inputs": {
+  "analysis_code_identity": {
+   "analyze_dev_fit.py": "b99227be4ca3db1c40361c2b2cda8a5dfd45bd716432c8719360e1e7cf480bc1",
+   "attribution_net.py": "9d1171fd9a18ab954c91baedd27c0c41de3e06373eba45682401a3a88d6a290f",
+   "config_contract.py": "af1be596965e1e29241d302a808467531e64487539a88fb458218ea7c7f12020",
+   "dev_fit_contract.py": "0b2dcf0a4b9b70035980df1070d17e821fdcb38eced5bf9b764ede1497b6d013",
+   "dev_fit_trainer.py": "a95f80f0375357d03a563ca608d2a6cbcdd53d1070fb0b5a6bb5160c92a6f63d",
+   "estimator.py": "330cc707dcac778460e842feb61c9581828e4f28dde5e8000f6a52596238e972",
+   "role_contract.py": "c50bebe5dfab8685b16f421928c0774dddd24e4a6f87542954b65ddc48810a21",
+   "schema_types.py": "703245165d8ee3569073ea63a0cc4602dbf256dd9fe49391bb86a1591500d4c5",
+   "storage_contract.py": "40b0f88c75d4f283197011f2470f8b97af639b78573734130c07bcafbc1a20fa"
+  },
+  "assignment_sha256": "76255a8089f3e27d893b26d981cbf50e808bd75ba518c44b55c4635ec83514ae",
+  "data_root_name": "gate3-base-dev-pilot-val-c1-s",
+  "fit_code_identity": {
+   "attribution_net.py": "9d1171fd9a18ab954c91baedd27c0c41de3e06373eba45682401a3a88d6a290f",
+   "config_contract.py": "af1be596965e1e29241d302a808467531e64487539a88fb458218ea7c7f12020",
+   "dev_fit_contract.py": "0b2dcf0a4b9b70035980df1070d17e821fdcb38eced5bf9b764ede1497b6d013",
+   "dev_fit_trainer.py": "a95f80f0375357d03a563ca608d2a6cbcdd53d1070fb0b5a6bb5160c92a6f63d",
+   "estimator.py": "330cc707dcac778460e842feb61c9581828e4f28dde5e8000f6a52596238e972",
+   "role_contract.py": "c50bebe5dfab8685b16f421928c0774dddd24e4a6f87542954b65ddc48810a21",
+   "schema_types.py": "703245165d8ee3569073ea63a0cc4602dbf256dd9fe49391bb86a1591500d4c5",
+   "storage_contract.py": "40b0f88c75d4f283197011f2470f8b97af639b78573734130c07bcafbc1a20fa"
+  },
+  "fit_result_canonical_sha256": "f18c98b2baf47346ce7cf5868a615abe14047844b7de2c8541c2df137acd6b3e",
+  "manifest_sha256": "55ea5f0e74ddd24b05eafc51a2b9fc424eda99eac1901534946f42b6012ebe12",
+  "role_index_sha256": {
+   "labels/index.csv": "a7c700e53d917f2ddb256521af3c23bba6f7ec6d6f3af967d14ca9aad3a559f8",
+   "observations/C1/index.csv": "f0cc92bf33f7e06f8ac09e4ac0dffd86d567b445de07b049a9475b01f5dff716",
+   "observations/S/index.csv": "fa790f9d03b38d246c7e656164cbbee1ebe33f51c122d91edbf3dc72d526dd00"
+  }
+ },
+ "loss_interpretation": "training_final_epoch_mean_loss is the mean of minibatch totals during the last optimizer epoch. post_fit_full_batch_loss_terms are recomputed after the final update. The severity Gaussian NLL contains log-scale and may be negative, so the total is not a standalone learning or ranking metric.",
+ "paired_macro_f1": {
+  "by_seed": [
+   {
+    "C1_macro_f1": 0.6404753275,
+    "S_macro_f1": 0.715494654184,
+    "S_minus_C1_macro_f1": 0.075019326684,
+    "seed": 0
+   },
+   {
+    "C1_macro_f1": 0.630634057971,
+    "S_macro_f1": 0.669851355335,
+    "S_minus_C1_macro_f1": 0.039217297364,
+    "seed": 1
+   },
+   {
+    "C1_macro_f1": 0.829238733617,
+    "S_macro_f1": 0.590376660412,
+    "S_minus_C1_macro_f1": -0.238862073205,
+    "seed": 2
+   },
+   {
+    "C1_macro_f1": 0.486679158321,
+    "S_macro_f1": 0.590936677318,
+    "S_minus_C1_macro_f1": 0.104257518997,
+    "seed": 3
+   },
+   {
+    "C1_macro_f1": 0.824408602151,
+    "S_macro_f1": 0.684332824039,
+    "S_minus_C1_macro_f1": -0.140075778112,
+    "seed": 4
+   }
+  ],
+  "claim_sheet_success_bar": 0.05,
+  "interpretation": "development-only in-sample diagnostic; neither the sign nor the spread is a held-out C1-versus-S result",
+  "mean_S_minus_C1": -0.032088741654,
+  "sample_sd_S_minus_C1": 0.149635726834
+ },
+ "purpose": "In-sample readback of the first ten Gate-4 development-only fits.",
+ "rollouts_spent": 0,
+ "suite_summary": {
+  "C1": {
+   "mean_accuracy": 0.869736842105,
+   "mean_macro_f1": 0.682287175912,
+   "mean_per_class_f1": {
+    "actuator": 0.824490294652,
+    "healthy": 0.375757575758,
+    "sensor": 0.94266837036,
+    "structure": 0.586232462878
+   },
+   "mean_post_fit_full_batch_loss_terms": {
+    "class_cross_entropy": 0.433666497469,
+    "location_cross_entropy": 0.514506596327,
+    "ood_binary_cross_entropy": 0.023429916054,
+    "severity_gaussian_nll": -1.16157823801,
+    "severity_log_scale_mean": -1.557802939415,
+    "total": -0.189975228161
+   },
+   "n_arms": 5
+  },
+  "S": {
+   "mean_accuracy": 0.817105263158,
+   "mean_macro_f1": 0.650198434257,
+   "mean_per_class_f1": {
+    "actuator": 0.716548463357,
+    "healthy": 0.47595959596,
+    "sensor": 0.891059648213,
+    "structure": 0.517226029501
+   },
+   "mean_post_fit_full_batch_loss_terms": {
+    "class_cross_entropy": 0.556897258759,
+    "location_cross_entropy": 0.557308036089,
+    "ood_binary_cross_entropy": 0.017323307134,
+    "severity_gaussian_nll": -1.115596413612,
+    "severity_log_scale_mean": -1.570357346535,
+    "total": 0.015932188369
+   },
+   "n_arms": 5
+  }
+ }
+}

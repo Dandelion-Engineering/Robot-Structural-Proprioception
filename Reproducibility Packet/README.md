@@ -1,6 +1,6 @@
 # Reproducibility Packet
 
-This is the self-contained working packet for the Robot Structural Proprioception project. The current runnable surface reproduces the mechanics feasibility gate, emits a schema-v1.0 privileged trace from the selected MuJoCo cable plant, turns that trace into a deployable sensor suite's noisy observations, exercises the complete role-separated storage contract, validates the jointly approved Gate-3 scenario/split preregistration, and generates its draft-authorized dev/pilot/validation base roles without touching test. Later pipeline stages will be added here as they become final.
+This is the self-contained working packet for the Robot Structural Proprioception project. The current runnable surface reproduces the mechanics feasibility gate, emits a schema-v1.0 privileged trace from the selected MuJoCo cable plant, turns that trace into a deployable sensor suite's noisy observations, exercises the complete role-separated storage contract, validates the jointly approved Gate-3 scenario/split preregistration, generates its draft-authorized dev/pilot/validation base roles without touching test, and reproduces the first bounded development-only Gate-4 fit and in-sample readback. Later pipeline stages will be added here as they become final.
 
 ## Requirements
 
@@ -697,6 +697,88 @@ The consequence for reading the ladder is a scope statement, not a defect: the s
 
 This is a **development-screen result**, not a test of the project's headline hypothesis. `TESTABLE` means measurable under Protocol P's matched-signal / unmatched-null comparison, which the protocol explicitly notes favours S; it is necessary, not sufficient. Read together with the coverage counts, Case B says that at the selected probe the structural signature is measurable only at damage more severe than any known-class setting reserved for development or pilot. Every result identity remains `dev-`, `config.json` remains absent, and the confirmatory test split remains untouched.
 
+## Step 26 — Reproduce the first development-only learned-model fit
+
+The jointly reviewed trainer binds the exact delivered data root, manifest, role indexes,
+assignment-derived causal windows, two suites and five predeclared network seeds. Plan mode
+is the cheap audit: it resolves the training policy and enumerates all ten arms while
+opening no observation, label or checkpoint payload and running no fit.
+
+```powershell
+$env:PYTHONPATH = "scripts"
+.\.venv\Scripts\python.exe -m utils.dev_fit_trainer `
+  --mode plan `
+  --output-dir results\dev_fit_plan
+```
+
+Produces `results/dev_fit_plan/dev_fit_plan.json`: C1 and S at seeds 0–4, diagnostic
+window `[1000, 1768)`, ordinary window `[900, 1668)`, 768 steps and one window per run.
+
+The fit command must target a **new** output directory. It reads exactly 304 persisted
+development rows—152 C1 and 152 S—and trains one 39,594-parameter rung-1 network for each
+suite/seed arm. It generates no simulator data and spends no physical rollout.
+
+```powershell
+$env:PYTHONPATH = "scripts"
+.\.venv\Scripts\python.exe -m utils.dev_fit_trainer `
+  --mode fit `
+  --data-root ..\data\gate3-base-dev-pilot-val-c1-s `
+  --output-dir results\dev_fit_reproduced
+```
+
+Produces:
+
+- `results/dev_fit_reproduced/dev_fit_result.json`
+- `results/dev_fit_reproduced/dev_fit_{C1,S}_seed{0..4}.pt`
+
+The checkpoints are rebuildable and ignored; the result document is their provenance
+ledger. The tracked reference ledger is
+[`results/dev_fit/dev_fit_result.json`](results/dev_fit/dev_fit_result.json), canonical
+SHA-256 `f18c98b2baf47346ce7cf5868a615abe14047844b7de2c8541c2df137acd6b3e`.
+It records `X_FIT_OK`, ten distinct checkpoint digests, 152 examples per arm, zero
+rollouts and the exact code/data/assignment identity used by the run.
+
+This is development fitting only. It does not read pilot, validation or test outcomes;
+set a probability, abstention, OOD or uncertainty threshold; select a capacity; freeze
+`config.json`; or establish a C1-versus-S result.
+
+## Step 27 — Reproduce the bounded in-sample fit readback
+
+The fit ledger stores the training loss total. That total is not a standalone learning
+or ranking statistic: its Gaussian severity term includes a learned log-scale contribution
+and may be negative. This read-only step verifies every checkpoint and bound input, then
+persists the four post-fit loss terms separately together with in-sample accuracy,
+macro-F1 and the paired five-seed spread.
+
+```powershell
+.\.venv\Scripts\python.exe scripts\analyze_dev_fit.py `
+  --data-root ..\data\gate3-base-dev-pilot-val-c1-s `
+  --fit-result results\dev_fit_reproduced\dev_fit_result.json `
+  --checkpoint-dir results\dev_fit_reproduced `
+  --output-dir results\dev_fit_reproduced
+```
+
+Produces `results/dev_fit_reproduced/dev_fit_analysis.json`. The tracked reference is
+[`results/dev_fit/dev_fit_analysis.json`](results/dev_fit/dev_fit_analysis.json), raw
+SHA-256 `a5926ea1eb0b09314438aa7d7b74b4ecbcbd17b04a016d719743aa6e6cf4ee5f`.
+
+```text
+                         C1        S      empirical baseline
+class cross-entropy    0.434     0.557          1.010
+accuracy               0.870     0.817          0.632
+macro-F1               0.682     0.650              -
+
+paired S-C1 macro-F1 mean  -0.032
+paired five-seed sample SD  0.150
+```
+
+Those scores are computed on the same 152 examples used to fit each arm. They show that
+the executable model/data path optimizes above simple in-sample baselines and expose a
+large seed-sensitivity warning before any later role is read. They do **not** establish
+generalization, evidence against structural sensing, a capacity choice or a confirmatory
+effect. The development role contains no OOD row, so the OOD head's all-zero-target loss
+also says nothing about OOD behaviour.
+
 ## Data
 
 No external dataset is required. The simulator generates every value used by the spike. See [`DATA.md`](DATA.md) for the data and licensing boundary.
@@ -723,8 +805,8 @@ This packet reproduces the mechanics gate, detector-floor correction, safe-probe
 
 ## Current boundary
 
-This packet reproduces the selected MuJoCo cable/rod mechanics, schema-v1.0 plant and sensor interfaces, causal online loop, evaluation core, detector/reference lifecycle, interpretable residual baseline, bounded task/contact controller, and the development screens through Step 17A. Schema Amendment A1 is jointly in force. A machine-readable schema, self-hashed draft-config contract, whole-group identity-manifest audit, suite-scoped deployable observation loader, schema-driven writers/loaders for every non-observation role, and an explicit `dev|pilot|val` supervised label join now form the Gate 1–2 pre-confirmatory foundation. Step 2A exercises those boundaries end to end on a synthetic role-completeness fixture and hard-refuses `test` under the draft lifecycle. Step 2B validates the jointly approved 808-reservation Gate-3 assignment against its exact parent draft and the rehashed current approval wrapper. Step 2C implements the real assignment-driven base-role generator and an independent on-disk audit: exact distal payload inertia, split-owned temperature and contact windows, compound plant/sensor faults, direct approved-reservation/manifest comparison, hash-checked role loading, byte-identical paired plant truth, and bitwise shared-channel checks. The tracked draft remains explicitly non-confirmatory; no frozen `config.json` and no RMA head exists yet, and test materialization remains forbidden. The **learned attribution head now exists but is untrained**: `scripts/utils/attribution_net.py` builds Slot 9's rung-1 compact causal temporal-convolutional network (39,594 parameters, 1,023-sample receptive field) behind the same `DiagnosisEstimator` interface and `[W, D]` front-end the interpretable rungs use. It contains no training loop and no fitted weights, and it refuses to report an attribution until trained weights with a recorded provenance are attached — an untrained instance abstains, splits `p_class` uniformly, and reports `severity_uncertainty = +inf`. `scripts/utils/dev_fit_contract.py` is the executable form of the bounds a development-only fit runs under: it selects `dev` rows and refuses any withheld role, discloses the denominator of that selection, pins the predeclared five-seed / two-suite plan and refuses an unbalanced one, and builds the provenance record every development checkpoint must carry — the exact development-only authority string, the data root's bare name, the manifest / config / assignment digests, the suite, the seed, the training-protocol code identity, and the checkpoint digest. It imports neither MuJoCo nor PyTorch, which is checked in a fresh interpreter.
+This packet reproduces the selected MuJoCo cable/rod mechanics, schema-v1.0 plant and sensor interfaces, causal online loop, evaluation core, detector/reference lifecycle, interpretable residual baseline, bounded task/contact controller, and the development screens through Step 17A. Schema Amendment A1 is jointly in force. A machine-readable schema, self-hashed draft-config contract, whole-group identity-manifest audit, suite-scoped deployable observation loader, schema-driven writers/loaders for every non-observation role, and an explicit `dev|pilot|val` supervised label join now form the Gate 1–2 pre-confirmatory foundation. Step 2A exercises those boundaries end to end on a synthetic role-completeness fixture and hard-refuses `test` under the draft lifecycle. Step 2B validates the jointly approved 808-reservation Gate-3 assignment against its exact parent draft and the rehashed current approval wrapper. Step 2C implements the real assignment-driven base-role generator and an independent on-disk audit: exact distal payload inertia, split-owned temperature and contact windows, compound plant/sensor faults, direct approved-reservation/manifest comparison, hash-checked role loading, byte-identical paired plant truth, and bitwise shared-channel checks. The tracked draft remains explicitly non-confirmatory; no frozen `config.json` and no RMA head exists yet, and test materialization remains forbidden. The **learned attribution head now has one completed development-only rung-1 fit**: `scripts/utils/attribution_net.py` builds the 39,594-parameter, 1,023-sample-receptive-field network; `scripts/utils/dev_fit_contract.py` enforces the exact dev-only data/seed/provenance bounds; and `scripts/utils/dev_fit_trainer.py` ran the ten matched C1/S seed arms after both agents approved its exact executable state. The tracked ledger and Step-27 readback preserve ten checkpoint digests, 152 examples per arm, separate post-fit loss terms and the in-sample metrics without treating them as held-out evidence. Unfitted instances still abstain, split `p_class` uniformly and report `severity_uncertainty = +inf`; fitted weights remain development-only and carry no threshold or confirmatory authority.
 
 On the current bounded task, the structural suite has strong development information evidence, but structural recovery is blocked because the task has no structural tracking deficit and the tested action behaves like a generic controller retune. The actuator condition has headroom, yet the new source-specific action screen also blocks: safe cap-3 misses the 10-point specificity gate and higher caps violate A1 safety. The probability result remains a sampled empirical envelope; calibrated class-probability, abstention, and uncertainty authorization, sensor-fault recovery, and evaluation-sized paired control remain open.
 
-The proposed different-task amendment was withdrawn before approval. The existing Claim Sheet remains in force, `config.json` remains unfrozen, and no development screen here is a confirmatory research result. Gate 3 is closed at the jointly approved amended hash, and the exact assignment is embedded in the draft under a one-way parent/current hash binding. The real generated base roles are jointly approved; Gate 2 remains open until the Gate-4 fits supply the still-pending estimator/controller roles. Protocol P's specification is jointly approved, its one-row replay gate has passed (Step 23), Stage 0 has been executed once at zero rollout cost (Step 24), and Stages A/B/C now record a bounded **Case-B development result** (Step 25): 0.35–0.45 remaining EI are testable in all four cells, while 0.50–0.90 are sub-threshold under the all-cell rule. The accompanying Section-9 role-coverage read puts dev and pilot at zero testable known-class structural settings and val and test at one each, so the result carries a **role-coverage-bounded non-transfer outcome** — it establishes neither success nor hypothesis failure. Both fed the written **Amendment A2, which both agents approved at the same bytes on 2026-08-05 and which is now in force**: it adopts a payload-bounded structural non-transfer shape and payload-stratified reporting, leaves every numerical success bar unchanged, and — because it inserts no severity, payload level, or split assignment — shifts no seed ordinal and requires no dataset regeneration. A2 authorizes no assignment replacement, no data generation, no configuration freeze, and no confirmatory work. Separately from A2, fitting the attribution rung against the **already delivered** `dev` partition was authorized on 2026-08-05 as development evidence, because it reads persisted rows and generates nothing; **no fit has been run**, the trainer does not exist yet, and every future checkpoint is development-only and ineligible for confirmatory analysis. The order was also settled at the same time and corrected forward in `utils/estimator.py`: model implementation and dev fitting precede the final `config.json` freeze rather than following it, because the frozen configuration has to contain model and threshold choices that cannot exist before the model does. Validation calibration/authorization, the confirmatory controller protocol, the evaluation/test driver, and the interactive verification artifact remain later gates. Test identity and payload materialization are still zero and forbidden.
+The proposed different-task amendment was withdrawn before approval. The existing Claim Sheet remains in force, `config.json` remains unfrozen, and no development screen here is a confirmatory research result. Gate 3 is closed at the jointly approved amended hash, and the exact assignment is embedded in the draft under a one-way parent/current hash binding. The real generated base roles are jointly approved; the first Gate-4 fit now supplies development-only rung-1 checkpoint and result roles but does not close later estimator/controller, capacity, calibration or evaluation gates. Protocol P's specification is jointly approved, its one-row replay gate has passed (Step 23), Stage 0 has been executed once at zero rollout cost (Step 24), and Stages A/B/C now record a bounded **Case-B development result** (Step 25): 0.35–0.45 remaining EI are testable in all four cells, while 0.50–0.90 are sub-threshold under the all-cell rule. The accompanying Section-9 role-coverage read puts dev and pilot at zero testable known-class structural settings and val and test at one each, so the result carries a **role-coverage-bounded non-transfer outcome** — it establishes neither success nor hypothesis failure. Both fed the written **Amendment A2, which both agents approved at the same bytes on 2026-08-05 and which is now in force**: it adopts a payload-bounded structural non-transfer shape and payload-stratified reporting, leaves every numerical success bar unchanged, and — because it inserts no severity, payload level or split assignment — shifts no seed ordinal and requires no dataset regeneration. A2 authorizes no assignment replacement, no data generation, no configuration freeze, and no confirmatory work. The completed fit read only the already-delivered `dev` partition and generated nothing; its tracked in-sample analysis establishes optimizer/data-path operation, not generalization or a C1-versus-S result. The order remains model implementation and dev fitting, then later capacity work and validation-only calibration, then final immutable `config.json` freeze, then untouched confirmatory generation/read. Pilot, validation and test outcome reads, confirmatory controller/evaluation work, final freeze and test materialization remain unauthorized.
