@@ -1,6 +1,6 @@
 # Summary of Only Necessary Context — Codex
 
-**Last rewritten:** 2026-08-06 — Codex Session 82
+**Last rewritten:** 2026-08-06 — Codex Session 83
 
 ## Resume here
 
@@ -19,18 +19,57 @@ Claude owns the next turn. Genuinely owner-review the reviewer-edited trainer st
 
 ```text
 Reproducibility Packet/scripts/utils/dev_fit_trainer.py
-  788fc240c404797f883c08fc843296f277412643
+  caa00418b2f404575dca7cda167e6be76c99183a
 Reproducibility Packet/tests/test_dev_fit_trainer.py
-  c95bd8fbb5cf3dcb5d99bfb7f22799d738dcb0f7
+  cbc4064fddee8d2b548c95ddc32709dfbf0653e6
 ```
 
-Codex explicitly approves those exact bytes, including the assignment-derived training
-window policy. Claude must preserve or contest Findings O–R and the implementation, then
-explicitly approve or hand back a changed exact state. **No development fit may run until
-that executable loop closes.** The next regular Codex progress report is Session **88**;
-the next Codex session/report is **83**.
+Codex explicitly approves those exact bytes. Claude must preserve or contest Findings U/V
+and the implementation, then explicitly approve or hand back a changed exact state. **No
+development fit may run until that executable loop closes.** The next regular Codex progress
+report is Session **88**; the next Codex session/report is **84**.
 
-## Training-window policy — accepted
+## Trainer review — current reviewer state
+
+Claude Session 83 genuinely accepted Codex's Session-82 Findings O–R and the assignment-
+derived training-window policy, then found and repaired two defects:
+
+- **Finding S:** the stale-output guard's own refusal overwrote the prior
+  `dev_fit_result.json`, destroying the only record that binds surviving bare checkpoints
+  to provenance. The guard is now first, and a sixth `X_OUTPUT_DIRTY` exit writes
+  `dev_fit_output_refused.json` outside the checkpoint/result namespace.
+- **Finding T:** set equality discarded `pair_id` multiplicity and accepted equal-count but
+  unpaired populations. The comparison now uses sorted lists/multisets.
+
+Codex accepts both, accepts the sixth exit and accepts deleting the unreachable duplicate
+`control_dt_s` guard inside private `_exact_steps`. Codex then made two reviewer corrections:
+
+- **Finding U:** a directory containing only `dev_fit_output_refused.json` passed the
+  cleanliness guard and could accumulate a contradictory later terminal result. The guard
+  now recognizes its own refusal artifact, so every later fit remains refused and must move
+  to a fresh directory. Plan mode remains exempt.
+- **Finding V:** the function-level window-policy docstring still claimed excitation was the
+  only trajectory difference. It now matches the approved narrow statement: equal lead
+  removes an avoidable time-since-onset difference without erasing target-joint/task-timing
+  differences.
+
+Session-83 verification:
+
+```text
+focused trainer tests                49 passed
+focused under python -O              49 passed; expected warning only
+full packet suite                    1,516 passed in 130.18 s
+compileall                           clean
+git diff --check                     clean
+production plan probe                X_PLAN_OK; 10 arms; 0 fits; 0 rollouts
+dirty-refusal regression             X_OUTPUT_DIRTY; no contradictory result
+manifest / observations / labels     0 / 0 / 0 reads
+fits / checkpoints / results         0 / 0 / 0
+generation / rollouts                 0 / 0
+config/config.json                   absent
+```
+
+## Training-window policy — jointly settled
 
 The policy derives one window per trajectory from the approved assignment:
 
@@ -52,68 +91,6 @@ Equal lead removes an avoidable time-since-onset difference; it does **not** mak
 excitation the only trajectory difference. The assignment also changes target joints and
 task timing. The same arithmetic is total over the reserved pilot/validation/test design,
 but that fact authorizes no later-role outcome read.
-
-## Trainer review — reviewer corrections awaiting Claude
-
-Claude Session 82 preserved all six Session-81 corrections and fixed the handler defect
-where `DevFitContractError` / `DevFitDataError` were swallowed as generic `RuntimeError`.
-Codex accepts those changes and added four further corrections:
-
-### Finding O — exact pair identity and schedule coverage
-
-Equal per-trajectory C1/S counts were insufficient: a scheduled trajectory missing from
-both suites and disjoint equal-count `pair_id` sets both passed. The reviewer state now
-requires every scheduled trajectory and exact per-trajectory C1/S `pair_id` equality.
-
-### Finding P — persisted label-onset binding
-
-The assignment-derived schedule is now cross-checked against the independent persisted
-`onset_index` and `onset_time_s` before a row is windowed. The real delivered dev labels
-all agree: ordinary 400 / 0.8 s and diagnostic 500 / 1.0 s, with 76 C1 and 76 S rows per
-trajectory.
-
-### Finding Q — strict schedule-control refusal
-
-Claude's handed-off blob accepted `window_steps=True` as a one-step window and leaked raw
-`TypeError` / `ZeroDivisionError` for an empty probe and zero control period. The reviewer
-state validates assignment shape, ids, probe shape, positive non-bool window length, the
-fixed positive development control period and boolean probe flag under
-`DevFitContractError`.
-
-### Finding R — stale checkpoint population
-
-A partial rerun into the same directory could mix old and current deterministic checkpoint
-names. The reviewer state refuses a prior `dev_fit_result.json` or any
-`dev_fit_*_seed*.pt` before the first fit. A plan artifact alone remains allowed.
-
-The Session-81 protections remain intact:
-
-- online-equivalent `availability_time_s <= decision_time_s` masking;
-- exact data-root, manifest, config and three role-index pins before payload access;
-- hash-checking `DeployableObservationLoader` / `RolePayloadLoader` ingress;
-- eight-module code identity across plan and all arms;
-- in-memory checkpoint serialization, digest and validated provenance before write;
-- one full training protocol in plan, arm and terminal artifacts;
-- non-finite loss/weight, device, runtime and serialization refusal; and
-- complete arm records on partial failure plus all named `main()` exits driven.
-
-## Verification of the reviewer state
-
-```text
-focused trainer tests                37 passed
-focused under python -O              37 passed; expected warning only
-full packet suite                    1,504 passed in 128.96 s
-compileall                           clean
-git diff --check                     clean
-production plan probe                X_PLAN_OK; 10 arms; 0 fits; 0 rollouts
-selected real manifest rows          304 dev; 640 withheld
-exact real pairing                   76 C1 / 76 S pairs per trajectory
-real payload reads                   304 dev labels; 0 observations
-pilot / val / test outcomes          0 reads
-fits / checkpoints / results         0 / 0 / 0
-generation / rollouts                0 / 0
-config/config.json                   absent
-```
 
 ## Development-fit contract — jointly closed
 
@@ -209,7 +186,7 @@ coverage or establish/refute the headline hypothesis.
 
 ## Public state and authorization boundary
 
-The root README remains Phase 2 / `In Progress`. Session 82 deliberately added no public
+The root README remains Phase 2 / `In Progress`. Session 83 deliberately added no public
 entry: the trainer loop is open and no fit has run. The packet README likewise remains
 unchanged until the trainer closes; it owes an execution step then.
 
@@ -223,40 +200,26 @@ Absent separate explicit authorization, all remain blocked:
 - confirmatory identities, generation, reads or claims; and
 - changes to closed Protocol P v2.3.3.
 
-## Transcript integrity and recurrence
+## Transcript integrity
 
-The first Session-82 technical review append used a repeated single-line signature rather
-than the complete unique EOF block that had been verified. It landed at line 19,334 before
-the recorded 22,206-line tail. The verifier caught it before commit. The misplaced review
-was preserved and a complete decision-bearing correction was appended from a new unique
-EOF block.
-
-Final technical transcript:
+Session 83 used the complete verified physical EOF block and required a byte-identical
+prefix, one post-boundary header, additions-only diff and physically last authorship. It
+passed without repair:
 
 ```text
-bytes      1,414,699
-lines      22,349
-SHA-256    dca21bf5406e4dda735d986a66257111c3a3c50a6c78f715ba7cc81072c625ae
-diff       +143 / -0
-last       Codex; correction header unique at line 22,313
+pre-write bytes          1,424,812
+pre-write lines          22,529
+pre-write SHA-256        c1b146780d9b3790e504ef844e5c91130050a77026d27316f9b46547afb5bc65
+final bytes              1,428,567
+final lines              22,605
+final SHA-256            0411d1f200d21dbbd0c582f67cd6dbd7efa789d148ec7c8a4af65dd626e220ec
+header                   unique at line 22,533
+diff                     +76 / -0
+last                     Codex
 ```
 
-The recurrence is reported in the director-visible monitoring thread. Its first note
-landed in order but normalized CRLF inside its EOF context; that byte-prefix failure is
-also preserved and corrected forward. Final monitoring transcript:
-
-```text
-bytes      12,617
-lines      204
-SHA-256    a76596a0788013b0e54f02533069c96bd758b097e249e4c97d75a9e51210335f
-diff       +51 / -0
-last       Codex; byte-correction header unique at line 189
-```
-
-The operational rule remains absolute: record byte/line/hash boundary, verify a complete
-unique physical EOF block, use that **same full block** in the patch, then require one
-post-boundary header, exact prefix, additions-only diff and physically last author. A
-failed assertion requires a forward correction, not deletion.
+The older Session-82 recurrence remains preserved and corrected forward. Do not derive or
+extend an append streak number from memory.
 
 ## Workflow rules
 

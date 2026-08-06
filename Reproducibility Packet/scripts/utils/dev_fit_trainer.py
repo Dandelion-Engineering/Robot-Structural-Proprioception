@@ -153,10 +153,12 @@ EXIT_CODES: dict[str, int] = {
     X_OUTPUT_DIRTY: 6,
 }
 
-# The one artifact name `X_OUTPUT_DIRTY` may write. It is deliberately outside the set
-# `require_clean_fit_output` protects, because that exit fires *because* the protected
-# names are occupied: writing the refusal to `dev_fit_result.json` would overwrite the
-# only record binding the surviving checkpoints to their provenance. Session 83.
+# The one artifact name `X_OUTPUT_DIRTY` may write. It is deliberately outside the
+# checkpoint/result namespace whose bytes the refusal must preserve: writing the refusal
+# to `dev_fit_result.json` would overwrite the only record binding the surviving
+# checkpoints to their provenance. The cleanliness guard still recognizes this artifact
+# on a later invocation, so a refused directory cannot later accumulate a contradictory
+# fit terminal artifact. Sessions 83 (Claude) and 83 (Codex review).
 OUTPUT_DIRTY_ARTIFACT = "dev_fit_output_refused.json"
 
 # `location_out` is a joint index or -1; the head's index 0 is "not localized"
@@ -367,8 +369,9 @@ def development_window_schedule(
     trajectory of that split. Purpose: this is the single statement of the development
     training-window policy described in the module docstring — the origin is
     ``onset + lead``, the lead is the split's own diagnostic probe offset from onset, and
-    both trajectories of the split take the same lead so that excitation is the only
-    thing that differs between them.
+    both trajectories of the split take the same lead so that the rule removes an
+    avoidable time-since-onset difference without erasing the assignment's other
+    trajectory differences.
 
     Refuses a split whose trajectories do not supply exactly one diagnostic probe: with
     none there is no anchor to derive the lead from, and with two there is no single
@@ -1135,7 +1138,11 @@ def require_clean_fit_output(output_dir: Path) -> None:
     the current invocation never completed. The result document carries hashes for the
     current arms, but a later consumer that enumerates the directory would see a mixed
     population. Plan artifacts are allowed so an operator may plan and then fit in one
-    directory; prior fit results and deterministic checkpoint names are not.
+    directory; prior fit results, dirty-fit refusals and deterministic checkpoint names
+    are not. Recognizing this function's own refusal artifact matters: otherwise an
+    operator can retry in that same directory and leave `X_OUTPUT_DIRTY` beside a later,
+    contradictory fit terminal artifact even though the governing instruction requires a
+    fresh output directory.
 
     `main()` calls this *before its first write*, and its refusal takes `X_OUTPUT_DIRTY`
     rather than `X_CONTRACT_REFUSED`. Both properties are load-bearing and both were
@@ -1154,6 +1161,9 @@ def require_clean_fit_output(output_dir: Path) -> None:
     result_path = output_dir / "dev_fit_result.json"
     if result_path.exists():
         stale.append(result_path.name)
+    refusal_path = output_dir / OUTPUT_DIRTY_ARTIFACT
+    if refusal_path.exists():
+        stale.append(refusal_path.name)
     stale.extend(path.name for path in output_dir.glob("dev_fit_*_seed*.pt"))
     require(
         not stale,

@@ -1283,6 +1283,35 @@ def test_the_staleness_guard_runs_before_the_first_write_of_any_exit(tmp_path):
     assert document["exit"] == X_OUTPUT_DIRTY
 
 
+def test_a_prior_dirty_refusal_keeps_the_directory_closed_to_fitting(tmp_path):
+    """A refused fit directory may not later carry two contradictory terminal exits.
+
+    Codex Session 83 review. Claude's new refusal artifact sat outside the cleanliness
+    guard as well as outside the checkpoint/result namespace. With only that artifact
+    present, the current bytes accepted the directory, took the missing-data exit, and
+    left `X_OUTPUT_DIRTY` beside a new `X_DATA_MISSING` result. That is not a fresh output
+    directory and gives a reader two incompatible terminal records. A plan remains exempt,
+    but every later fit invocation must keep this directory closed.
+    """
+
+    output = tmp_path / "out"
+    output.mkdir()
+    refusal = output / trainer.OUTPUT_DIRTY_ARTIFACT
+    refusal.write_text(
+        json.dumps({"exit": X_OUTPUT_DIRTY, "fits_run": 0}),
+        encoding="utf-8",
+        newline="\n",
+    )
+
+    code = main(["--mode", "fit", "--output-dir", str(output)])
+
+    assert code == EXIT_CODES[X_OUTPUT_DIRTY], "the data-missing exit ran instead"
+    assert not (output / "dev_fit_result.json").exists()
+    document = json.loads(refusal.read_text(encoding="utf-8"))
+    assert document["exit"] == X_OUTPUT_DIRTY
+    assert document["fits_run"] == 0
+
+
 def test_plan_mode_may_still_write_beside_an_earlier_fit_result(tmp_path):
     """The accept side of the exemption: the guard is fit-path only, deliberately.
 
