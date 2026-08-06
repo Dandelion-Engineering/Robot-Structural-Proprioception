@@ -759,8 +759,15 @@ macro-F1 and the paired five-seed spread.
 ```
 
 Produces `results/dev_fit_reproduced/dev_fit_analysis.json`. The tracked reference is
-[`results/dev_fit/dev_fit_analysis.json`](results/dev_fit/dev_fit_analysis.json), raw
-SHA-256 `a5926ea1eb0b09314438aa7d7b74b4ecbcbd17b04a016d719743aa6e6cf4ee5f`.
+[`results/dev_fit/dev_fit_analysis.json`](results/dev_fit/dev_fit_analysis.json),
+**canonical** SHA-256 `7bec34a1289aa59b84dd3b5a05f0a753a72c588292a33957295ba20ff4ddac58`
+— that is, the digest of the file's bytes with any CRLF folded to LF. Take it that way
+rather than over the raw bytes: this repository is developed on Windows with
+`core.autocrlf=true` and the path carries no `.gitattributes` pin, so a fresh checkout
+renders this file with CRLF line endings and a *different* raw digest (measured on the
+development machine: 14,591 bytes, 426 CRLF pairs). The fit ledger named in Step 26 has
+no line endings at all — it is compact canonical JSON — so its raw and canonical digests
+are the same number in every checkout.
 
 ```text
                          C1        S      empirical baseline

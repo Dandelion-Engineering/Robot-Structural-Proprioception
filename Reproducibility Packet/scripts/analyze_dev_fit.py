@@ -30,6 +30,7 @@ from utils import dev_fit_trainer as trainer
 from utils.attribution_net import TemporalAttributionNet, deterministic_conv_precision
 from utils.dev_fit_contract import (
     DEVELOPMENT_ONLY_AUTHORITY,
+    PREDECLARED_TRAINING_SEEDS,
     DevFitContractError,
     code_identity,
     matched_fit_plan,
@@ -54,6 +55,14 @@ EXPECTED_TRAJECTORY_CENSUS = {
     for trajectory, count in EXPECTED_TRAJECTORY_COUNTS.items()
 }
 SHA256_RE = re.compile(r"[0-9a-f]{64}")
+# The decomposition below re-derives, term by term, the composite `trainer.arm_loss`
+# optimized. The two cannot be compared for exact equality: `arm_loss` adds four float32
+# tensors and converts once, while the decomposition converts each term and adds in
+# float64, so the results differ by float32 accumulation order. Measured over five random
+# forward passes at the production shape (Claude, Session 85): worst absolute difference
+# 3.576e-07. This tolerance sits two orders above that and far below any difference a
+# genuine change to either expression would produce.
+DECOMPOSITION_TOLERANCE = 1e-5
 
 
 class DevFitAnalysisError(RuntimeError):
@@ -116,7 +125,8 @@ def validate_fit_result(document: Any) -> list[dict[str, Any]]:
     require(isinstance(document, dict), "the fit result must be a JSON object")
     require(document.get("authority") == DEVELOPMENT_ONLY_AUTHORITY, "wrong authority")
     require(document.get("exit") == trainer.X_FIT_OK, "the fit did not take X_FIT_OK")
-    require(document.get("fits_run") == 10, "the fit result must report ten arms")
+    require(document.get("fits_run") == len(matched_fit_plan()),
+            "the fit result must report one completed fit per planned arm")
     require(document.get("rollouts_spent") == 0, "the fit result spent rollouts")
     require(
         document.get("trajectory_census") == EXPECTED_TRAJECTORY_CENSUS,
@@ -148,7 +158,8 @@ def validate_fit_result(document: Any) -> list[dict[str, Any]]:
                 f"code identity {label!r} is not a SHA-256 digest")
 
     arms = document.get("arms")
-    require(isinstance(arms, list) and len(arms) == 10, "the fit must carry ten arm records")
+    require(isinstance(arms, list) and len(arms) == len(matched_fit_plan()),
+            "the fit must carry exactly one arm record for every arm the plan declares")
     by_pair: dict[tuple[str, int], dict[str, Any]] = {}
     completed: list[tuple[str, int]] = []
     for arm in arms:
@@ -246,7 +257,16 @@ def classification_metrics(
 
 
 def post_fit_loss_terms(heads: Any, batch: dict[str, torch.Tensor]) -> dict[str, float]:
-    """Return the four full-batch loss terms and their sum after fitting."""
+    """Return the four full-batch loss terms, their sum, and the mean severity log-scale.
+
+    The four expressions below are a decomposition of `trainer.arm_loss`, which returns
+    only the scalar sum and is therefore the one thing a reader cannot take apart. Because
+    they are written out again here rather than imported, they are a copy, and a copy of an
+    expression disagrees silently with its original the moment either moves. So the
+    trainer's own composite is this function's post-condition: the four terms are required
+    to sum to `arm_loss` on the same heads and the same batch, to `DECOMPOSITION_TOLERANCE`.
+    That makes the other routine's value the check rather than this routine's reading of it.
+    """
 
     class_loss = nn.functional.cross_entropy(heads.class_logits, batch["class_index"])
     location_loss = nn.functional.cross_entropy(heads.location_logits, batch["location_index"])
@@ -265,7 +285,17 @@ def post_fit_loss_terms(heads: Any, batch: dict[str, torch.Tensor]) -> dict[str,
         "severity_gaussian_nll": float(severity_loss),
         "ood_binary_cross_entropy": float(ood_loss),
     }
-    terms["total"] = sum(terms.values())
+    terms["total"] = (
+        terms["class_cross_entropy"]
+        + terms["location_cross_entropy"]
+        + terms["severity_gaussian_nll"]
+        + terms["ood_binary_cross_entropy"]
+    )
+    composite = float(trainer.arm_loss(heads, batch))
+    require(
+        abs(terms["total"] - composite) <= DECOMPOSITION_TOLERANCE,
+        "the decomposed loss terms do not sum to the trainer's own composite loss",
+    )
     terms["severity_log_scale_mean"] = float(log_scale.mean())
     return terms
 
@@ -387,7 +417,16 @@ def sample_standard_deviation(values: Sequence[float]) -> float:
 
 
 def rounded(value: Any) -> Any:
-    """Round finite floats recursively so the text artifact is hardware-stable."""
+    """Round finite floats recursively so the text artifact carries a bounded decimal tail.
+
+    This trims the float64 print of each value; it is **not** a hardware-stability
+    mechanism and no claim of one is made here. The loss terms originate in float32
+    tensors, and every one of them was measured (Claude, Session 85) to round-trip through
+    `round(x, 12)` to the identical float32 — so two machines that disagreed in the float32
+    result would still write two different numbers here. What makes this artifact
+    reproducible is the fixed CPU device, the deterministic convolution context and the
+    verified checkpoint digests, not this function.
+    """
 
     if isinstance(value, float):
         require(math.isfinite(value), "the analysis produced a non-finite float")
@@ -474,7 +513,11 @@ def derive_analysis(
         }
 
     paired = []
-    for seed in range(5):
+    # The seeds come from the contract that defined the plan, not from a literal range.
+    # `validate_fit_result` has already established that `evaluated` is exactly the matched
+    # plan, so every lookup below resolves; a hand-typed range would agree with the plan
+    # only until the plan changed, and would then raise `StopIteration` rather than refuse.
+    for seed in PREDECLARED_TRAINING_SEEDS:
         c1 = next(entry for entry in evaluated if entry["suite"] == "C1" and entry["seed"] == seed)
         structural = next(entry for entry in evaluated if entry["suite"] == "S" and entry["seed"] == seed)
         paired.append(
