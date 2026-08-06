@@ -9,6 +9,12 @@ the check that passes while the document is empty, malformed, or missing.
 The second discipline is Session 81's Finding G: `DevFitProvenance` accepts any non-empty
 string in `row_disclosure`, so the trainer's promise that it passes the census sentence
 and nothing else is a promise only a test can keep.
+
+The third is Session 82's: the development training-window policy is a *scientific*
+commitment, so the tests that pin it are run against the **real approved assignment
+document**, not against a fixture. A fixture schedule can only show that the mechanics
+work; only the real document can show that the dev diagnostic window this policy derives
+is the one Protocol P already pre-registered.
 """
 
 from __future__ import annotations
@@ -41,10 +47,14 @@ from utils.dev_fit_trainer import (  # noqa: E402
     X_PLAN_OK,
     DevFitDataError,
     TrainingExample,
+    TrainingProtocol,
+    WindowSchedule,
+    authorized_window_schedule,
     build_provenance,
-    fit_one_arm,
+    development_window_schedule,
     load_arm_examples,
     main,
+    require_matched_trajectory_census,
     training_code_identity,
     window_record,
 )
@@ -64,8 +74,32 @@ from utils.storage_contract import (  # noqa: E402
 CONFIG_HASH = "dev-" + "a" * 64
 WINDOW = 16
 STEPS = 24
-ORIGIN = 4
-DECISION_TIME_S = (ORIGIN + WINDOW) * 0.002
+
+# The fixture schedule: two trajectories with DIFFERENT origins, which is the whole point
+# the real policy exists to serve. Both windows fit inside `STEPS` and both open after
+# their own onset.
+ORDINARY = "trajectory_dev_ordinary_a"
+DIAGNOSTIC = "trajectory_dev_diagnostic_b"
+FIXTURE_LEAD = 4
+FIXTURE_ONSET = {ORDINARY: 2, DIAGNOSTIC: 4}
+
+
+def _fixture_schedule() -> dict[str, WindowSchedule]:
+    """Return the small two-trajectory schedule the synthetic exits are driven with."""
+
+    return {
+        name: WindowSchedule(
+            trajectory_spec_id=name,
+            onset_step=onset,
+            lead_steps=FIXTURE_LEAD,
+            origin_step=onset + FIXTURE_LEAD,
+            window_steps=WINDOW,
+            decision_step=onset + FIXTURE_LEAD + WINDOW,
+            run_steps=STEPS,
+            has_diagnostic_probe=name == DIAGNOSTIC,
+        ).validate()
+        for name, onset in FIXTURE_ONSET.items()
+    }
 
 
 def _record(run_id: str, suite: str, t: int = STEPS, *, seed: int = 0) -> ObservedRecord:
@@ -100,18 +134,22 @@ def _record(run_id: str, suite: str, t: int = STEPS, *, seed: int = 0) -> Observ
     )
 
 
-def _manifest_row(split: str, suite: str, index: int) -> IdentityManifestRow:
+def _manifest_row(
+    split: str, suite: str, index: int, *, trajectory: str = "diagnostic_b"
+) -> IdentityManifestRow:
     """One schema-A identity row whose run_id carries its suite, as delivered rows do."""
 
+    tag = "t00" if trajectory.startswith("ordinary") else "t01"
+    scenario = f"scenario_{split}_{tag}_f000_r{index:02d}"
     return IdentityManifestRow(
         schema_version="1.0",
         config_hash=CONFIG_HASH,
-        scenario_spec_id=f"scenario_{split}_t01_f000_r{index:02d}",
-        pair_id=f"basepair_{split}_t01_f000_r{index:02d}_dataset0",
-        run_id=f"scenario_{split}_t01_f000_r{index:02d}_{suite}_dataset0",
-        trajectory_spec_id=f"trajectory_{split}_diagnostic_b",
+        scenario_spec_id=scenario,
+        pair_id=f"basepair_{split}_{tag}_f000_r{index:02d}_dataset0",
+        run_id=f"{scenario}_{suite}_dataset0",
+        trajectory_spec_id=f"trajectory_{split}_{trajectory}",
         fault_setting_id=f"fault_{split}_healthy",
-        split_group_id=f"group_{split}_{index}",
+        split_group_id=f"group_{split}_{tag}_{index}",
         split=split,
         suite=suite,
         estimator_id="estimator_none",
@@ -142,20 +180,31 @@ def _label_payload(source_class: str = "healthy", *, location: int = -1) -> dict
     }
 
 
-def _dataset(root: Path, *, rows_per_suite: int = 2, splits=("dev",)) -> list:
+def _dataset(
+    root: Path,
+    *,
+    rows_per_suite: int = 1,
+    splits=("dev",),
+    trajectories=("ordinary_a", "diagnostic_b"),
+    steps: dict[str, int] | None = None,
+) -> list:
     """Write a miniature but structurally real dataset root; return its manifest rows."""
 
     rows = []
     for split in splits:
-        for suite in ("C1", "S"):
-            for index in range(rows_per_suite):
-                rows.append(_manifest_row(split, suite, index))
+        for trajectory in trajectories:
+            for suite in ("C1", "S"):
+                for index in range(rows_per_suite):
+                    rows.append(
+                        _manifest_row(split, suite, index, trajectory=trajectory)
+                    )
     write_identity_manifest(root / "manifest.csv", rows)
     (root / "labels").mkdir(parents=True, exist_ok=True)
     for row in rows:
         observations = root / "observations" / row.suite
         observations.mkdir(parents=True, exist_ok=True)
-        record = _record(row.run_id, row.suite, seed=row.sim_seed)
+        n_steps = (steps or {}).get(row.run_id, STEPS)
+        record = _record(row.run_id, row.suite, t=n_steps, seed=row.sim_seed)
         np.savez(observations / f"{row.run_id}.npz", **record.to_npz_dict())
         np.savez(root / "labels" / f"{row.run_id}.npz", **_label_payload())
     return rows
@@ -194,15 +243,19 @@ def _fixture_role_loaders(root: Path):
     )
 
 
-def _authorize_fixture_window(monkeypatch) -> None:
-    """Stand in for the still-open owner/reviewer training-window decision."""
+def _authorize_fixture_window(monkeypatch, schedule=None) -> None:
+    """Substitute the small fixture schedule for the assignment-derived real one."""
 
-    monkeypatch.setattr(trainer, "DEVELOPMENT_WINDOW_ORIGIN_STEP", ORIGIN)
+    entries = _fixture_schedule() if schedule is None else schedule
     monkeypatch.setattr(trainer, "DEVELOPMENT_WINDOW_STEPS", WINDOW)
-    monkeypatch.setattr(trainer, "DEVELOPMENT_DECISION_STEP", ORIGIN + WINDOW)
+    monkeypatch.setattr(
+        trainer,
+        "authorized_window_schedule",
+        lambda **_: (entries, ASSIGNMENT_CANONICAL_SHA256),
+    )
 
 
-def _authorize_fixture_dataset(monkeypatch, root: Path) -> None:
+def _authorize_fixture_dataset(monkeypatch, root: Path, schedule=None) -> None:
     """Bind one synthetic root to the executable's otherwise exact data/window pins."""
 
     monkeypatch.setattr(trainer, "AUTHORIZED_DATA_ROOT_NAME", root.resolve().name)
@@ -219,10 +272,166 @@ def _authorize_fixture_dataset(monkeypatch, root: Path) -> None:
             "observations/S/index.csv": "f" * 64,
         },
     )
-    _authorize_fixture_window(monkeypatch)
+    _authorize_fixture_window(monkeypatch, schedule)
     monkeypatch.setattr(
         trainer, "build_role_loaders", lambda data_root: _fixture_role_loaders(data_root)
     )
+
+
+# --------------------------------------------------------------------------- #
+# The training-window policy, against the REAL approved assignment.
+# --------------------------------------------------------------------------- #
+def test_the_derived_dev_schedule_reproduces_protocol_ps_diagnostic_window():
+    """The policy's load-bearing claim: it does not invent a second window origin.
+
+    Protocol P v2.3.3 prospectively fixed the diagnostic window at ``[1000, 1768)``. If
+    the derivation ever stops landing there, the trainer and the pre-registration are
+    describing different slices of the same run and the policy's justification is void.
+    """
+
+    schedule, digest = authorized_window_schedule()
+    assert digest == ASSIGNMENT_CANONICAL_SHA256
+    assert set(schedule) == {ORDINARY, DIAGNOSTIC}
+
+    diagnostic = schedule[DIAGNOSTIC]
+    assert (diagnostic.origin_step, diagnostic.decision_step) == (1000, 1768)
+    assert diagnostic.onset_step == 500 and diagnostic.lead_steps == 500
+    assert diagnostic.has_diagnostic_probe is True
+
+    ordinary = schedule[ORDINARY]
+    assert (ordinary.origin_step, ordinary.decision_step) == (900, 1668)
+    assert ordinary.onset_step == 400 and ordinary.lead_steps == 500
+    assert ordinary.has_diagnostic_probe is False
+
+    # Both trajectories open at the same elapsed time after onset; that equality IS the
+    # policy's reason for giving the probe-free trajectory the diagnostic one's lead.
+    assert ordinary.lead_steps == diagnostic.lead_steps
+    for entry in schedule.values():
+        assert entry.window_steps == 768
+        assert entry.origin_step > entry.onset_step  # entirely post-onset
+        assert entry.decision_step <= entry.run_steps
+        assert entry.as_document()["windows_per_run"] == 1
+
+
+def test_the_schedule_refuses_an_assignment_file_that_is_not_the_approved_one(
+    monkeypatch,
+):
+    """The digest a checkpoint records must gate the read, not merely describe it.
+
+    Driven by moving the expected digest rather than the file: the refusal is what is
+    under test, and rewriting the packet's approved assignment to test it would be a
+    worse instrument than changing what the check compares against.
+    """
+
+    monkeypatch.setattr(trainer, "ASSIGNMENT_CANONICAL_SHA256", "0" * 64)
+    with pytest.raises(DevFitContractError, match="not the approved assignment"):
+        authorized_window_schedule()
+
+
+def test_every_split_of_the_approved_assignment_admits_the_same_policy():
+    """Gate 7 has to reuse this rule, so it must be total over the reserved design."""
+
+    document = json.loads(
+        (SCRIPTS_DIR.parent / "config" / trainer.ASSIGNMENT_DOCUMENT_NAME).read_text(
+            encoding="utf-8"
+        )
+    )
+    for split in ("dev", "pilot", "val", "test"):
+        schedule = development_window_schedule(document, split=split)
+        assert len(schedule) == 2, split
+        assert len({entry.lead_steps for entry in schedule.values()}) == 1, split
+        assert sum(e.has_diagnostic_probe for e in schedule.values()) == 1, split
+        for entry in schedule.values():
+            entry.validate()
+
+
+def test_a_split_without_exactly_one_diagnostic_trajectory_is_refused():
+    """With no probe there is no anchor; with two there is no single answer."""
+
+    def _document(n_probes: int) -> dict:
+        specs = []
+        for index in range(2):
+            specs.append(
+                {
+                    "id": f"trajectory_x_{index}",
+                    "split": "x",
+                    "onset_time_s": 0.8,
+                    "duration_s": 5.8,
+                    "diagnostic_probe": (
+                        {"start_offset_s": 1.0} if index < n_probes else None
+                    ),
+                }
+            )
+        return {"trajectory_specs": specs}
+
+    for n_probes in (0, 2):
+        with pytest.raises(DevFitContractError, match="exactly one diagnostic"):
+            development_window_schedule(_document(n_probes), split="x", window_steps=8)
+    # The one-probe case is the control: the same construction must succeed.
+    assert len(development_window_schedule(_document(1), split="x", window_steps=8)) == 2
+
+
+def test_an_off_grid_assignment_time_is_refused_rather_than_rounded():
+    """A design time that is not on the control grid is a disagreement, not a rounding."""
+
+    document = {
+        "trajectory_specs": [
+            {
+                "id": "trajectory_x_0",
+                "split": "x",
+                "onset_time_s": 0.8005,
+                "duration_s": 5.8,
+                "diagnostic_probe": {"start_offset_s": 1.0},
+            }
+        ]
+    }
+    with pytest.raises(DevFitContractError, match="not an exact multiple"):
+        development_window_schedule(document, split="x", window_steps=8)
+
+
+def test_a_window_that_leaves_its_run_or_precedes_its_onset_is_refused():
+    """The schedule validates itself, so a bad derivation cannot reach a training loop."""
+
+    with pytest.raises(DevFitContractError, match="does not fit"):
+        WindowSchedule(
+            trajectory_spec_id="t",
+            onset_step=2,
+            lead_steps=4,
+            origin_step=6,
+            window_steps=WINDOW,
+            decision_step=6 + WINDOW,
+            run_steps=WINDOW,
+            has_diagnostic_probe=False,
+        ).validate()
+    with pytest.raises(DevFitContractError, match="onset plus the split's lead"):
+        WindowSchedule(
+            trajectory_spec_id="t",
+            onset_step=2,
+            lead_steps=4,
+            origin_step=99,
+            window_steps=WINDOW,
+            decision_step=99 + WINDOW,
+            run_steps=STEPS,
+            has_diagnostic_probe=False,
+        ).validate()
+
+
+def test_the_protocol_refuses_a_schedule_that_is_not_the_approved_assignments():
+    """The recorded assignment digest must be the one the schedule was derived from."""
+
+    real_schedule, _ = authorized_window_schedule()
+    protocol = TrainingProtocol(
+        schedule=tuple(real_schedule.values()),
+        assignment_sha256="0" * 64,
+        window_steps=trainer.DEVELOPMENT_WINDOW_STEPS,
+        control_dt_s=0.002,
+        epochs=1,
+        batch_size=1,
+        learning_rate=1.0e-3,
+        device="cpu",
+    )
+    with pytest.raises(DevFitContractError, match="approved assignment"):
+        protocol.validate()
 
 
 # --------------------------------------------------------------------------- #
@@ -231,17 +440,19 @@ def _authorize_fixture_dataset(monkeypatch, root: Path) -> None:
 def test_window_record_slices_every_per_step_array_and_leaves_the_rest():
     """The slice must move every per-step array, or a channel silently misaligns."""
 
+    entry = _fixture_schedule()[DIAGNOSTIC]
     record = _record("r", "S", t=STEPS)
     windowed = window_record(
-        record, ORIGIN, WINDOW, decision_time_s=DECISION_TIME_S
+        record, entry.origin_step, WINDOW, decision_time_s=entry.decision_time_s
     )
     assert windowed.n_steps == WINDOW
+    start, stop = entry.origin_step, entry.origin_step + WINDOW
     for channel in CHANNEL_NAMES:
         assert windowed.values[channel].shape[0] == WINDOW
         assert windowed.valid_mask[channel].shape[0] == WINDOW
         assert windowed.measurement_time_s[channel].shape[0] == WINDOW
         np.testing.assert_allclose(
-            windowed.values[channel], record.values[channel][ORIGIN : ORIGIN + WINDOW]
+            windowed.values[channel], record.values[channel][start:stop]
         )
     assert windowed.run_id == record.run_id and windowed.suite == record.suite
 
@@ -249,32 +460,129 @@ def test_window_record_slices_every_per_step_array_and_leaves_the_rest():
 def test_window_record_refuses_a_window_that_does_not_fit():
     """A short tail zero-padded into a full window is an example that is not data."""
 
+    entry = _fixture_schedule()[DIAGNOSTIC]
     record = _record("r", "S", t=STEPS)
     with pytest.raises(DevFitDataError, match="does not fit"):
         window_record(
-            record, STEPS - 2, WINDOW, decision_time_s=DECISION_TIME_S
+            record, STEPS - 2, WINDOW, decision_time_s=entry.decision_time_s
         )
     with pytest.raises(DevFitDataError, match="non-negative"):
-        window_record(record, -1, WINDOW, decision_time_s=DECISION_TIME_S)
+        window_record(record, -1, WINDOW, decision_time_s=entry.decision_time_s)
 
 
 def test_window_record_masks_a_sample_delivered_after_the_held_decision():
     """Persisted future delivery must not become training-only look-ahead information."""
 
+    entry = _fixture_schedule()[DIAGNOSTIC]
     record = _record("r", "S", t=STEPS)
-    last = ORIGIN + WINDOW - 1
+    last = entry.decision_step - 1
     record.values["q_obs"][last] = 12345.0
-    record.availability_time_s["q_obs"][last] = DECISION_TIME_S + 1.0
+    record.availability_time_s["q_obs"][last] = entry.decision_time_s + 1.0
     windowed = window_record(
-        record, ORIGIN, WINDOW, decision_time_s=DECISION_TIME_S
+        record, entry.origin_step, WINDOW, decision_time_s=entry.decision_time_s
     )
     assert not np.any(windowed.valid_mask["q_obs"][-1])
     assert np.all(np.isnan(windowed.values["q_obs"][-1]))
+    # ...and nothing else was eaten: a mask that empties the channel would also "pass".
+    assert np.all(windowed.valid_mask["q_obs"][:-1])
 
 
 # --------------------------------------------------------------------------- #
 # The contract wiring.
 # --------------------------------------------------------------------------- #
+def test_each_row_is_windowed_by_its_own_trajectory_and_contributes_one_example(tmp_path):
+    """Two trajectories, two origins, one window each — the policy's arithmetic."""
+
+    rows = _dataset(tmp_path)
+    schedule = _fixture_schedule()
+    extractor = WindowFeatureExtractor(window_steps=WINDOW)
+    observations, labels = _fixture_role_loaders(tmp_path)
+    s_rows = [row for row in rows if row.suite == "S"]
+    examples = load_arm_examples(
+        s_rows,
+        suite="S",
+        schedule_by_trajectory=schedule,
+        extractor=extractor,
+        observation_loader=observations["S"],
+        label_loader=labels,
+    )
+    assert len(examples) == len(s_rows)
+    assert {e.trajectory_spec_id for e in examples} == {ORDINARY, DIAGNOSTIC}
+
+    # The two windows really are different slices of otherwise identical construction.
+    by_trajectory = {e.trajectory_spec_id: e for e in examples}
+    raw = {
+        row.trajectory_spec_id: observations["S"].load(row.run_id) for row in s_rows
+    }
+    for name, example in by_trajectory.items():
+        origin = schedule[name].origin_step
+        np.testing.assert_allclose(
+            example.values[:, 0], raw[name].values["q_obs"][origin : origin + WINDOW, 0]
+        )
+    assert schedule[ORDINARY].origin_step != schedule[DIAGNOSTIC].origin_step
+
+
+def test_a_row_naming_an_unscheduled_trajectory_is_refused(tmp_path):
+    """A row with no window must refuse, never be silently dropped from the census."""
+
+    _dataset(tmp_path)
+    stray = _manifest_row("dev", "S", 0, trajectory="unscheduled_z")
+    extractor = WindowFeatureExtractor(window_steps=WINDOW)
+    observations, labels = _fixture_role_loaders(tmp_path)
+    with pytest.raises(DevFitContractError, match="does not schedule"):
+        load_arm_examples(
+            [stray],
+            suite="S",
+            schedule_by_trajectory=_fixture_schedule(),
+            extractor=extractor,
+            observation_loader=observations["S"],
+            label_loader=labels,
+        )
+
+
+def test_unmatched_per_trajectory_counts_are_refused():
+    """C1/S matchedness is the paired comparison's premise, so it is measured."""
+
+    schedule = _fixture_schedule()
+    balanced = [
+        _manifest_row("dev", suite, 0, trajectory=trajectory)
+        for trajectory in ("ordinary_a", "diagnostic_b")
+        for suite in ("C1", "S")
+    ]
+    census = require_matched_trajectory_census(balanced, schedule)
+    assert census == {
+        ORDINARY: {"C1": 1, "S": 1},
+        DIAGNOSTIC: {"C1": 1, "S": 1},
+    }
+
+    extra = balanced + [_manifest_row("dev", "S", 1, trajectory="diagnostic_b")]
+    with pytest.raises(DevFitContractError, match="not matched across suites"):
+        require_matched_trajectory_census(extra, schedule)
+
+    one_suite = [row for row in balanced if row.suite == "C1"]
+    with pytest.raises(DevFitContractError, match="not present in both matched suites"):
+        require_matched_trajectory_census(one_suite, schedule)
+
+
+def test_a_payload_whose_length_disagrees_with_the_assignment_is_refused(tmp_path):
+    """The schedule and the payload are independent sources for the same fact."""
+
+    rows = _dataset(tmp_path)
+    target = next(row for row in rows if row.suite == "S")
+    _dataset(tmp_path, steps={target.run_id: STEPS + 1})
+    extractor = WindowFeatureExtractor(window_steps=WINDOW)
+    observations, labels = _fixture_role_loaders(tmp_path)
+    with pytest.raises(DevFitDataError, match="the assignment reserves"):
+        load_arm_examples(
+            [target],
+            suite="S",
+            schedule_by_trajectory=_fixture_schedule(),
+            extractor=extractor,
+            observation_loader=observations["S"],
+            label_loader=labels,
+        )
+
+
 def test_load_arm_examples_refuses_a_withheld_role_at_the_point_of_consumption(tmp_path):
     """Bound 1 is checked where rows are USED, because a caller can build the list."""
 
@@ -286,8 +594,7 @@ def test_load_arm_examples_refuses_a_withheld_role_at_the_point_of_consumption(t
         load_arm_examples(
             val_rows,
             suite="S",
-            origin=ORIGIN,
-            decision_time_s=DECISION_TIME_S,
+            schedule_by_trajectory=_fixture_schedule(),
             extractor=extractor,
             observation_loader=observations["S"],
             label_loader=labels,
@@ -305,8 +612,7 @@ def test_load_arm_examples_refuses_a_row_from_the_other_matched_suite(tmp_path):
         load_arm_examples(
             s_rows,
             suite="C1",
-            origin=ORIGIN,
-            decision_time_s=DECISION_TIME_S,
+            schedule_by_trajectory=_fixture_schedule(),
             extractor=extractor,
             observation_loader=observations["C1"],
             label_loader=labels,
@@ -337,6 +643,7 @@ def test_fit_one_arm_refuses_a_nonfinite_loss_before_any_checkpoint(monkeypatch)
     extractor = WindowFeatureExtractor(window_steps=WINDOW)
     example = TrainingExample(
         run_id="r",
+        trajectory_spec_id=DIAGNOSTIC,
         values=np.zeros((WINDOW, extractor.registry_width), dtype=float),
         valid=np.ones((WINDOW, extractor.registry_width), dtype=bool),
         class_index=0,
@@ -350,7 +657,7 @@ def test_fit_one_arm_refuses_a_nonfinite_loss_before_any_checkpoint(monkeypatch)
 
     monkeypatch.setattr(trainer, "arm_loss", _nonfinite_loss)
     with pytest.raises(DevFitDataError, match="non-finite"):
-        fit_one_arm(
+        trainer.fit_one_arm(
             [example],
             seed=0,
             epochs=1,
@@ -392,34 +699,14 @@ def test_build_provenance_passes_the_census_sentence_and_nothing_else(tmp_path):
 # --------------------------------------------------------------------------- #
 # Every terminal exit, driven, with its artifact read back.
 # --------------------------------------------------------------------------- #
-def test_unreviewed_training_window_policy_refuses_even_plan_mode(tmp_path):
-    """The committed executable cannot turn a caller's convenient origin into protocol."""
+def test_plan_mode_publishes_the_real_derived_schedule_and_runs_nothing(tmp_path):
+    """X_PLAN_OK: no monkeypatching — the artifact carries the production schedule.
 
-    code = main(
-        [
-            "--mode", "plan",
-            "--output-dir", str(tmp_path),
-            "--window-origin-step", str(ORIGIN),
-        ]
-    )
-    assert code == EXIT_CODES[X_CONTRACT_REFUSED]
-    document = json.loads((tmp_path / "dev_fit_plan.json").read_text(encoding="utf-8"))
-    assert document["exit"] == X_CONTRACT_REFUSED
-    assert document["fits_run"] == 0
+    The plan is the document a reviewer reads to see which slice the fit will consume, so
+    it is worth nothing if the test that reads it substituted a fixture first.
+    """
 
-
-def test_plan_exit_writes_the_ten_arms_and_runs_nothing(tmp_path, monkeypatch):
-    """X_PLAN_OK: the plan is a value the trainer iterates, not a loop it writes."""
-
-    _authorize_fixture_window(monkeypatch)
-    code = main(
-        [
-            "--mode", "plan",
-            "--output-dir", str(tmp_path),
-            "--window-origin-step", str(ORIGIN),
-            "--window-steps", str(WINDOW),
-        ]
-    )
+    code = main(["--mode", "plan", "--output-dir", str(tmp_path)])
     assert code == EXIT_CODES[X_PLAN_OK]
     document = json.loads((tmp_path / "dev_fit_plan.json").read_text(encoding="utf-8"))
     assert document["exit"] == X_PLAN_OK
@@ -427,33 +714,46 @@ def test_plan_exit_writes_the_ten_arms_and_runs_nothing(tmp_path, monkeypatch):
     assert document["fits_run"] == 0 and document["rollouts_spent"] == 0
     assert document["n_arms"] == len(matched_fit_plan()) == 10
     assert [(arm["suite"], arm["seed"]) for arm in document["arms"]] == list(matched_fit_plan())
-    assert document["training_protocol"]["window_origin_step"] == ORIGIN
-    assert document["training_protocol"]["decision_step"] == ORIGIN + WINDOW
     assert set(document["code_identity"]) == set(training_code_identity())
 
+    protocol = document["training_protocol"]
+    assert protocol["assignment_sha256"] == ASSIGNMENT_CANONICAL_SHA256
+    assert protocol["split"] == "dev" and protocol["windows_per_run"] == 1
+    published = {
+        entry["trajectory_spec_id"]: (entry["origin_step"], entry["decision_step"])
+        for entry in protocol["window_schedule"]
+    }
+    assert published == {ORDINARY: (900, 1668), DIAGNOSTIC: (1000, 1768)}
 
-def test_plan_refuses_a_window_that_does_not_end_at_the_held_decision(
+
+def test_plan_refuses_a_schedule_that_does_not_end_at_the_held_decision(
     tmp_path, monkeypatch
 ):
-    """A caller cannot train on post-decision task motion by moving the stored slice."""
+    """A derivation that drifts from the policy takes a named exit, not a silent fit."""
 
-    _authorize_fixture_window(monkeypatch)
-    code = main(
-        [
-            "--mode", "plan",
-            "--output-dir", str(tmp_path),
-            "--window-origin-step", str(ORIGIN + 1),
-            "--window-steps", str(WINDOW),
-        ]
+    drifted = _fixture_schedule()
+    entry = drifted[DIAGNOSTIC]
+    drifted[DIAGNOSTIC] = WindowSchedule(
+        trajectory_spec_id=entry.trajectory_spec_id,
+        onset_step=entry.onset_step,
+        lead_steps=entry.lead_steps,
+        origin_step=entry.origin_step,
+        window_steps=WINDOW,
+        decision_step=entry.decision_step + 1,
+        run_steps=entry.run_steps,
+        has_diagnostic_probe=True,
     )
+    _authorize_fixture_window(monkeypatch, drifted)
+    code = main(["--mode", "plan", "--output-dir", str(tmp_path)])
     assert code == EXIT_CODES[X_CONTRACT_REFUSED]
     document = json.loads((tmp_path / "dev_fit_plan.json").read_text(encoding="utf-8"))
     assert document["exit"] == X_CONTRACT_REFUSED
+    assert document["reason_class"] == "DevFitContractError"
     assert document["fits_run"] == 0
 
 
 def test_fit_without_the_required_inputs_takes_the_data_missing_exit(tmp_path):
-    """X_DATA_MISSING: the window origin has no default, so its absence is an exit."""
+    """X_DATA_MISSING: `--data-root` has no default, so its absence is an exit."""
 
     code = main(["--mode", "fit", "--output-dir", str(tmp_path)])
     assert code == EXIT_CODES[X_DATA_MISSING]
@@ -471,19 +771,14 @@ def test_a_manifest_with_no_dev_row_takes_the_contract_refused_exit(tmp_path, mo
     _authorize_fixture_dataset(monkeypatch, root)
     output = tmp_path / "out"
     code = main(
-        [
-            "--mode", "fit",
-            "--output-dir", str(output),
-            "--data-root", str(root),
-            "--window-origin-step", str(ORIGIN),
-            "--window-steps", str(WINDOW),
-        ]
+        ["--mode", "fit", "--output-dir", str(output), "--data-root", str(root)]
     )
     assert code == EXIT_CODES[X_CONTRACT_REFUSED]
     document = json.loads((output / "dev_fit_result.json").read_text(encoding="utf-8"))
     assert document["exit"] == X_CONTRACT_REFUSED
     assert document["reason_class"] == "DevFitContractError"
     assert document["fits_run"] == 0
+    assert document["trajectory_census"] is None
 
 
 def test_the_refusal_message_itself_is_never_persisted(tmp_path, monkeypatch):
@@ -499,19 +794,45 @@ def test_the_refusal_message_itself_is_never_persisted(tmp_path, monkeypatch):
     _dataset(root, splits=("val",))
     _authorize_fixture_dataset(monkeypatch, root)
     output = tmp_path / "out"
-    main(
-        [
-            "--mode", "fit",
-            "--output-dir", str(output),
-            "--data-root", str(root),
-            "--window-origin-step", str(ORIGIN),
-            "--window-steps", str(WINDOW),
-        ]
-    )
+    main(["--mode", "fit", "--output-dir", str(output), "--data-root", str(root)])
     text = (output / "dev_fit_result.json").read_text(encoding="utf-8")
     assert "reason_class" in text
     for leaked in ("manifest rows selected", "no dev row of suites", str(root)):
         assert leaked not in text, f"the artifact persisted {leaked!r}"
+
+
+def test_a_bound_violation_inside_the_fit_is_not_filed_as_missing_data(
+    tmp_path, monkeypatch
+):
+    """Session 82: `DevFitContractError` is a `RuntimeError`, so it can be swallowed.
+
+    `fit_one_arm` checks bound 3 (`require_predeclared_seed`) and the caller converts
+    `RuntimeError` into a data error to name torch's runtime failures. Both are
+    `RuntimeError` subclasses, so without an explicit re-raise a bound violation is filed
+    as `X_DATA_MISSING`/`DevFitDataError` — the wrong exit, the wrong code, and a bound
+    violation recorded as a missing file.
+    """
+
+    root = tmp_path / "data"
+    root.mkdir()
+    _dataset(root)
+    _authorize_fixture_dataset(monkeypatch, root)
+    monkeypatch.setattr(trainer, "matched_fit_plan", lambda: (("C1", 99),))
+    output = tmp_path / "out"
+    code = main(
+        [
+            "--mode", "fit",
+            "--output-dir", str(output),
+            "--data-root", str(root),
+            "--epochs", "1",
+        ]
+    )
+    assert code == EXIT_CODES[X_CONTRACT_REFUSED]
+    document = json.loads((output / "dev_fit_result.json").read_text(encoding="utf-8"))
+    assert document["exit"] == X_CONTRACT_REFUSED
+    assert document["reason_class"] == "DevFitContractError"
+    assert document["fits_run"] == 0
+    assert not list(output.glob("*.pt"))
 
 
 def test_a_missing_observation_payload_records_every_completed_arm(tmp_path, monkeypatch):
@@ -529,8 +850,6 @@ def test_a_missing_observation_payload_records_every_completed_arm(tmp_path, mon
             "--mode", "fit",
             "--output-dir", str(output),
             "--data-root", str(root),
-            "--window-origin-step", str(ORIGIN),
-            "--window-steps", str(WINDOW),
             "--epochs", "1",
         ]
     )
@@ -540,9 +859,13 @@ def test_a_missing_observation_payload_records_every_completed_arm(tmp_path, mon
     assert document["reason_class"] == "DevFitDataError"
     assert document["fits_run"] == 5
     assert len(document["arms"]) == 5
+    assert document["trajectory_census"] == {
+        ORDINARY: {"C1": 1, "S": 1},
+        DIAGNOSTIC: {"C1": 1, "S": 1},
+    }
     for arm in document["arms"]:
         assert arm["authority"] == DEVELOPMENT_ONLY_AUTHORITY
-        assert arm["training_protocol"]["window_origin_step"] == ORIGIN
+        assert arm["examples_by_trajectory"] == {ORDINARY: 1, DIAGNOSTIC: 1}
         assert (output / arm["checkpoint_name"]).is_file()
 
 
@@ -564,8 +887,6 @@ def test_a_complete_fit_writes_one_validated_provenance_record_per_arm(tmp_path,
             "--mode", "fit",
             "--output-dir", str(output),
             "--data-root", str(root),
-            "--window-origin-step", str(ORIGIN),
-            "--window-steps", str(WINDOW),
             "--epochs", "2",
             "--batch-size", "2",
         ]
@@ -575,8 +896,19 @@ def test_a_complete_fit_writes_one_validated_provenance_record_per_arm(tmp_path,
     assert document["exit"] == X_FIT_OK
     assert document["fits_run"] == 10
     assert document["rollouts_spent"] == 0
-    assert document["training_protocol"]["window_origin_step"] == ORIGIN
-    assert document["training_protocol"]["decision_time_s"] == DECISION_TIME_S
+    assert document["trajectory_census"] == {
+        ORDINARY: {"C1": 1, "S": 1},
+        DIAGNOSTIC: {"C1": 1, "S": 1},
+    }
+    published = {
+        entry["trajectory_spec_id"]: entry
+        for entry in document["training_protocol"]["window_schedule"]
+    }
+    assert set(published) == {ORDINARY, DIAGNOSTIC}
+    for name, entry in published.items():
+        assert entry["origin_step"] == FIXTURE_ONSET[name] + FIXTURE_LEAD
+        assert entry["decision_step"] == entry["origin_step"] + WINDOW
+        assert entry["windows_per_run"] == 1
 
     recorded = [(arm["suite"], arm["training_seed"]) for arm in document["arms"]]
     assert recorded == list(matched_fit_plan())
@@ -588,6 +920,8 @@ def test_a_complete_fit_writes_one_validated_provenance_record_per_arm(tmp_path,
         assert set(arm["code_identity"]) == set(training_code_identity())
         assert arm["code_identity"] == document["code_identity"]
         assert arm["data_root_name"] == "data"
+        assert arm["examples_by_trajectory"] == {ORDINARY: 1, DIAGNOSTIC: 1}
+        assert arm["n_examples"] == 2
         assert arm["role_index_sha256"] == document["role_index_sha256"]
         assert arm["training_protocol"] == document["training_protocol"]
         assert file_sha256(output / arm["checkpoint_name"]) == arm["checkpoint_sha256"]
@@ -604,13 +938,7 @@ def test_fit_refuses_a_well_formed_but_unapproved_dataset(tmp_path, monkeypatch)
     _authorize_fixture_window(monkeypatch)
     output = tmp_path / "out"
     code = main(
-        [
-            "--mode", "fit",
-            "--output-dir", str(output),
-            "--data-root", str(root),
-            "--window-origin-step", str(ORIGIN),
-            "--window-steps", str(WINDOW),
-        ]
+        ["--mode", "fit", "--output-dir", str(output), "--data-root", str(root)]
     )
     assert code == EXIT_CODES[X_CONTRACT_REFUSED]
     document = json.loads((output / "dev_fit_result.json").read_text(encoding="utf-8"))
@@ -641,8 +969,6 @@ def test_an_incomplete_plan_takes_its_named_main_exit(tmp_path, monkeypatch):
             "--mode", "fit",
             "--output-dir", str(output),
             "--data-root", str(root),
-            "--window-origin-step", str(ORIGIN),
-            "--window-steps", str(WINDOW),
             "--epochs", "1",
         ]
     )
@@ -670,3 +996,12 @@ def test_the_source_class_order_this_trainer_targets_is_the_projects_order():
     """The class head's index convention is a shared decision, not this file's."""
 
     assert SOURCE_CLASS_ORDER == ("healthy", "structure", "actuator", "sensor")
+
+
+def test_the_command_line_cannot_supply_a_window_origin():
+    """The pre-registration-adjacent choice must be underivable from the command line."""
+
+    with pytest.raises(SystemExit):
+        trainer.parse_args(
+            ["--mode", "plan", "--output-dir", ".", "--window-origin-step", "368"]
+        )

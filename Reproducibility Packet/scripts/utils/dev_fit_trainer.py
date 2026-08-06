@@ -37,19 +37,50 @@ So this trainer does not scrub: it **never persists a refusal message at all**. 
 artifact records which contract check refused and the exception class; the message itself
 goes to stdout, for the operator, and nowhere else.
 
-Why the development window remains fail-closed
-----------------------------------------------
-The delivered development split contains both an ordinary trajectory and a diagnostic
-trajectory, but no jointly reviewed policy yet maps both to the causal windows this model
-will consume. The 1,136 held-decision step belongs to the later bounded-contact screen;
-it is not authority to apply ``[368, 1136)`` to every delivered base-dataset row. The two
-authorization constants below therefore remain ``None``. Any plan or fit refuses until
-the owner supplies and both agents approve the missing training-window policy.
+The development training window, and why it is derived rather than supplied
+--------------------------------------------------------------------------
+The delivered development role spans two trajectories — one ordinary, one diagnostic —
+so a single global origin cannot be correct for both, and Session 81's reviewer was right
+to refuse one. The policy this module implements is stated once, in
+`development_window_schedule`, and it is **derived from the approved assignment document**
+rather than typed at the command line:
 
-`--data-root` remains required. The executable also pins the delivered root name,
-manifest digest and development config identity before it opens any observation or label
-payload. Merely recording an arbitrary manifest's digest would describe the wrong data
-accurately rather than enforce the dataset this fit is authorized to read.
+    origin_step(trajectory) = onset_step(trajectory) + lead_steps(split)
+    onset_step(trajectory)  = round(trajectory.onset_time_s / control_dt_s)
+    lead_steps(split)       = round(diagnostic_probe.start_offset_s / control_dt_s)
+                              of that split's one diagnostic trajectory
+    decision_step           = origin_step + W
+
+`start_offset_s` is measured **from onset** (Session 38, Finding J) and is already fixed
+per split by the approved assignment. For `dev` it is 1.000 s, so the diagnostic
+trajectory's window is ``[1000, 1768)`` — which is exactly Protocol P's prospectively
+fixed diagnostic window. The policy therefore does not introduce a second origin
+competing with the pre-registration; it *reproduces* the pre-registered one and extends
+it by a rule. That is the whole reason the lead is not a constant chosen here.
+
+The probe-free trajectory takes its split's same lead, so both trajectories of a split
+open their window at the same elapsed time after onset and the only thing that differs
+between them is the excitation. Giving the ordinary trajectory a different lead would
+confound excitation with time-since-onset, which is the one comparison this rung exists
+to make. For `dev` that is ``[900, 1668)``.
+
+**One window per persisted run.** A stride would be a second unregistered choice (how
+many, how far apart) and would inflate the example count with heavily correlated windows.
+One window per run keeps the example count equal to the row count a reader can check
+against the census — 76 per trajectory per suite, 152 per arm — and it is recorded as
+such rather than described as a large training set.
+
+Every window lies entirely after its trajectory's onset, so the label is true of every
+step the window contains; and the values are masked at the held decision by exactly the
+predicate `OnlineSensorSession.available_record` uses, so training cannot see a sample
+the online estimator would not yet have been delivered.
+
+`--data-root` remains required for a fit. The executable also pins the delivered root
+name, manifest digest and development config identity before it opens any observation or
+label payload, and checks the assignment document it derives the schedule from against
+the digest every checkpoint records. Merely recording an arbitrary manifest's digest
+would describe the wrong data accurately rather than enforce the dataset this fit is
+authorized to read.
 """
 
 from __future__ import annotations
@@ -62,7 +93,7 @@ import json
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Sequence
+from typing import Mapping, Sequence
 
 import numpy as np
 import torch
@@ -76,6 +107,7 @@ from .attribution_net import (
 from .config_contract import ConfigContractError, load_config
 from .dev_fit_contract import (
     DEVELOPMENT_ONLY_AUTHORITY,
+    MATCHED_FIT_SUITES,
     DevFitContractError,
     DevFitProvenance,
     DevRowCensus,
@@ -88,7 +120,11 @@ from .dev_fit_contract import (
     select_dev_rows,
 )
 from .estimator import SOURCE_CLASS_ORDER, WindowFeatureExtractor
-from .protocol_p import canonical_json
+from .protocol_p import (
+    ASSIGNMENT_CANONICAL_SHA256,
+    canonical_json,
+    canonical_text_sha256,
+)
 from .role_contract import RolePayloadLoader
 from .schema_types import ObservedRecord
 from .storage_contract import (
@@ -138,13 +174,18 @@ AUTHORIZED_ROLE_INDEX_SHA256 = {
     ),
 }
 
-# The control rate and window length come from the authorized draft config. A global
-# origin/decision does not: the delivered dev role spans ordinary and diagnostic
-# trajectories. Leaving these unset makes the unresolved scientific decision executable.
+# The control rate and window length come from the authorized draft config. The window
+# ORIGIN does not come from anywhere in this file: it is derived per trajectory from the
+# approved assignment document by `development_window_schedule`, which is the whole
+# subject of the module docstring's policy section.
 DEVELOPMENT_CONTROL_DT_S = 0.002
 DEVELOPMENT_WINDOW_STEPS = 768
-DEVELOPMENT_WINDOW_ORIGIN_STEP: int | None = None
-DEVELOPMENT_DECISION_STEP: int | None = None
+DEVELOPMENT_SPLIT = "dev"
+
+# The approved assignment is the schedule's source, so the trainer reads the file and
+# checks it against the digest every checkpoint records rather than recording a constant
+# no run ever compared against a file.
+ASSIGNMENT_DOCUMENT_NAME = "proposed-gate3-assignment-v0.1.json"
 
 
 class DevFitDataError(RuntimeError):
@@ -156,6 +197,7 @@ class TrainingExample:
     """One window and its four targets, already reduced to arrays the network reads."""
 
     run_id: str
+    trajectory_spec_id: str
     values: np.ndarray  # [W, D]
     valid: np.ndarray  # [W, D]
     class_index: int
@@ -175,48 +217,285 @@ class ArmResult:
     checkpoint_name: str
     checkpoint_sha256: str
     provenance: DevFitProvenance
+    examples_by_trajectory: dict[str, int] = field(default_factory=dict)
     loss_history: list[float] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class WindowSchedule:
+    """One trajectory's causal training window, and the numbers it was derived from.
+
+    Every field is carried rather than recomputed by a reader: the onset and the lead are
+    what the assignment said, the origin and decision are what the policy made of them,
+    and `run_steps` is the length the assignment implies — which the delivered payload is
+    then required to agree with, so the two sources check each other (requirement (z)).
+    """
+
+    trajectory_spec_id: str
+    onset_step: int
+    lead_steps: int
+    origin_step: int
+    window_steps: int
+    decision_step: int
+    run_steps: int
+    has_diagnostic_probe: bool
+
+    @property
+    def decision_time_s(self) -> float:
+        """Return the held-decision time used as this window's availability cutoff."""
+
+        return float(self.decision_step * DEVELOPMENT_CONTROL_DT_S)
+
+    def validate(self) -> "WindowSchedule":
+        """Refuse a schedule that is not causal, not the policy's, or does not fit."""
+
+        require(
+            isinstance(self.trajectory_spec_id, str)
+            and bool(self.trajectory_spec_id.strip()),
+            "a window schedule must name its trajectory",
+        )
+        for name in (
+            "onset_step",
+            "lead_steps",
+            "origin_step",
+            "window_steps",
+            "decision_step",
+            "run_steps",
+        ):
+            value = getattr(self, name)
+            require(
+                isinstance(value, int) and not isinstance(value, bool) and value >= 0,
+                f"{name} must be a non-negative integer, got {value!r}",
+            )
+        require(self.window_steps > 0, "window_steps must be positive")
+        require(
+            self.origin_step == self.onset_step + self.lead_steps,
+            "the window origin must be the onset plus the split's lead",
+        )
+        require(
+            self.decision_step == self.origin_step + self.window_steps,
+            "the window must end exactly at the held decision",
+        )
+        require(
+            self.origin_step >= self.onset_step,
+            "a training window may not open before its trajectory's onset",
+        )
+        require(
+            self.decision_step <= self.run_steps,
+            f"window [{self.origin_step}, {self.decision_step}) does not fit the "
+            f"{self.run_steps}-step trajectory {self.trajectory_spec_id}",
+        )
+        return self
+
+    def as_document(self) -> dict[str, object]:
+        """Return the canonical-JSON-serializable schedule every result records."""
+
+        self.validate()
+        return {
+            "decision_step": self.decision_step,
+            "decision_time_s": self.decision_time_s,
+            "has_diagnostic_probe": self.has_diagnostic_probe,
+            "lead_steps": self.lead_steps,
+            "onset_step": self.onset_step,
+            "origin_step": self.origin_step,
+            "run_steps": self.run_steps,
+            "trajectory_spec_id": self.trajectory_spec_id,
+            "window_steps": self.window_steps,
+            "windows_per_run": 1,
+        }
+
+
+def _exact_steps(seconds: float, control_dt_s: float, what: str) -> int:
+    """Return `seconds / control_dt_s` as an integer, refusing an off-grid value.
+
+    Inputs: a duration in seconds from the assignment, the control period, and a label
+    for the refusal. Outputs: the step count. Purpose: the assignment states the design
+    in seconds and the window is defined in steps, so the conversion is the seam between
+    them. A value that does not land on the control grid is a design/rate disagreement
+    and must fail loudly rather than round into a plausible-looking origin.
+    """
+
+    require(
+        np.isfinite(seconds) and seconds >= 0.0,
+        f"{what} must be a finite non-negative number of seconds, got {seconds!r}",
+    )
+    steps = round(float(seconds) / control_dt_s)
+    require(
+        abs(steps * control_dt_s - float(seconds)) <= 1.0e-9,
+        f"{what} of {seconds} s is not an exact multiple of the "
+        f"{control_dt_s} s control period",
+    )
+    return int(steps)
+
+
+def development_window_schedule(
+    assignment: Mapping[str, object],
+    *,
+    split: str = DEVELOPMENT_SPLIT,
+    window_steps: int = DEVELOPMENT_WINDOW_STEPS,
+    control_dt_s: float = DEVELOPMENT_CONTROL_DT_S,
+) -> dict[str, WindowSchedule]:
+    """Return `{trajectory_spec_id: WindowSchedule}` for one split, per the policy.
+
+    Inputs: the approved assignment document, the split whose trajectories are being
+    scheduled, the window length and the control period. Outputs: one schedule per
+    trajectory of that split. Purpose: this is the single statement of the development
+    training-window policy described in the module docstring — the origin is
+    ``onset + lead``, the lead is the split's own diagnostic probe offset from onset, and
+    both trajectories of the split take the same lead so that excitation is the only
+    thing that differs between them.
+
+    Refuses a split whose trajectories do not supply exactly one diagnostic probe: with
+    none there is no anchor to derive the lead from, and with two there is no single
+    answer to which one anchors the ordinary trajectory. Either is a design question, not
+    a value to pick at run time.
+    """
+
+    require(
+        isinstance(split, str) and bool(split.strip()),
+        "a window schedule must be requested for a named split",
+    )
+    specs = assignment.get("trajectory_specs")
+    require(
+        isinstance(specs, list) and specs != [],
+        "the assignment document carries no trajectory_specs list",
+    )
+    for entry in specs:
+        require(
+            isinstance(entry, dict) and isinstance(entry.get("id"), str),
+            "every trajectory spec must be an object carrying a string id",
+        )
+    mine = [entry for entry in specs if entry.get("split") == split]
+    require(mine != [], f"the assignment reserves no trajectory for split {split!r}")
+    probes = [
+        entry["diagnostic_probe"]
+        for entry in mine
+        if isinstance(entry.get("diagnostic_probe"), dict)
+    ]
+    require(
+        len(probes) == 1,
+        f"split {split!r} must reserve exactly one diagnostic trajectory to anchor the "
+        f"post-onset lead; found {len(probes)}",
+    )
+    lead_steps = _exact_steps(
+        probes[0].get("start_offset_s"),
+        control_dt_s,
+        f"the {split} diagnostic probe start_offset_s",
+    )
+    schedule: dict[str, WindowSchedule] = {}
+    for entry in mine:
+        trajectory_id = entry["id"]
+        require(
+            trajectory_id not in schedule,
+            f"the assignment reserves trajectory {trajectory_id!r} more than once",
+        )
+        onset_step = _exact_steps(
+            entry.get("onset_time_s"), control_dt_s, f"{trajectory_id} onset_time_s"
+        )
+        run_steps = _exact_steps(
+            entry.get("duration_s"), control_dt_s, f"{trajectory_id} duration_s"
+        )
+        schedule[trajectory_id] = WindowSchedule(
+            trajectory_spec_id=trajectory_id,
+            onset_step=onset_step,
+            lead_steps=lead_steps,
+            origin_step=onset_step + lead_steps,
+            window_steps=int(window_steps),
+            decision_step=onset_step + lead_steps + int(window_steps),
+            run_steps=run_steps,
+            has_diagnostic_probe=isinstance(entry.get("diagnostic_probe"), dict),
+        ).validate()
+    return schedule
+
+
+def authorized_window_schedule(
+    *,
+    window_steps: int = DEVELOPMENT_WINDOW_STEPS,
+    control_dt_s: float = DEVELOPMENT_CONTROL_DT_S,
+) -> tuple[dict[str, WindowSchedule], str]:
+    """Return the development schedule and the digest of the document it came from.
+
+    The assignment file is hashed in its canonical text domain and required to equal
+    `ASSIGNMENT_CANONICAL_SHA256` before it is parsed for the schedule, so the digest
+    every checkpoint records is the digest of the bytes the schedule was actually derived
+    from rather than a constant nothing compared against a file.
+    """
+
+    packet_root = Path(__file__).resolve().parents[2]
+    path = packet_root / "config" / ASSIGNMENT_DOCUMENT_NAME
+    require(path.is_file(), "the approved assignment document is not in the packet")
+    digest = canonical_text_sha256(path)
+    require(
+        digest == ASSIGNMENT_CANONICAL_SHA256,
+        "the packet's assignment document is not the approved assignment",
+    )
+    try:
+        document = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise DevFitContractError(
+            f"the approved assignment document could not be read "
+            f"({type(error).__name__})"
+        ) from error
+    return (
+        development_window_schedule(
+            document,
+            split=DEVELOPMENT_SPLIT,
+            window_steps=window_steps,
+            control_dt_s=control_dt_s,
+        ),
+        digest,
+    )
 
 
 @dataclass(frozen=True)
 class TrainingProtocol:
     """The runtime choices shared by all ten arms and recorded with their results."""
 
-    window_origin_step: int
+    schedule: tuple[WindowSchedule, ...]
+    assignment_sha256: str
     window_steps: int
-    decision_step: int
     control_dt_s: float
     epochs: int
     batch_size: int
     learning_rate: float
     device: str
 
-    @property
-    def decision_time_s(self) -> float:
-        """Return the held-decision time used as the availability cutoff."""
+    def by_trajectory(self) -> dict[str, WindowSchedule]:
+        """Return the schedule keyed by trajectory, as the row loop consumes it."""
 
-        return float(self.decision_step * self.control_dt_s)
+        return {entry.trajectory_spec_id: entry for entry in self.schedule}
 
     def validate(self) -> "TrainingProtocol":
-        """Refuse a protocol that changes the pinned causal window or is not runnable."""
+        """Refuse a protocol that changes the derived causal windows or is not runnable."""
 
         require(
-            DEVELOPMENT_WINDOW_ORIGIN_STEP is not None
-            and DEVELOPMENT_DECISION_STEP is not None,
-            "development training-window policy has not been authorized",
+            isinstance(self.schedule, tuple) and self.schedule != (),
+            "the development training-window schedule is empty",
         )
-        require(
-            self.window_origin_step == DEVELOPMENT_WINDOW_ORIGIN_STEP,
-            f"development window origin must be {DEVELOPMENT_WINDOW_ORIGIN_STEP}",
-        )
+        seen: set[str] = set()
+        for entry in self.schedule:
+            require(
+                isinstance(entry, WindowSchedule),
+                "every schedule entry must be a WindowSchedule",
+            )
+            entry.validate()
+            require(
+                entry.trajectory_spec_id not in seen,
+                f"trajectory {entry.trajectory_spec_id!r} is scheduled twice",
+            )
+            seen.add(entry.trajectory_spec_id)
+            require(
+                entry.window_steps == self.window_steps,
+                "every scheduled window must use the protocol's window length",
+            )
         require(
             self.window_steps == DEVELOPMENT_WINDOW_STEPS,
             f"development window length must be {DEVELOPMENT_WINDOW_STEPS}",
         )
         require(
-            self.decision_step == DEVELOPMENT_DECISION_STEP
-            and self.window_origin_step + self.window_steps == self.decision_step,
-            "development window must end exactly at the held decision",
+            isinstance(self.assignment_sha256, str)
+            and self.assignment_sha256 == ASSIGNMENT_CANONICAL_SHA256,
+            "the schedule must be derived from the approved assignment document",
         )
         require(
             np.isfinite(self.control_dt_s)
@@ -248,15 +527,19 @@ class TrainingProtocol:
 
         self.validate()
         return {
+            "assignment_sha256": self.assignment_sha256,
             "batch_size": self.batch_size,
             "control_dt_s": self.control_dt_s,
-            "decision_step": self.decision_step,
-            "decision_time_s": self.decision_time_s,
             "device": self.device,
             "epochs": self.epochs,
             "learning_rate": self.learning_rate,
-            "window_origin_step": self.window_origin_step,
+            "split": DEVELOPMENT_SPLIT,
+            "window_schedule": [
+                entry.as_document()
+                for entry in sorted(self.schedule, key=lambda e: e.trajectory_spec_id)
+            ],
             "window_steps": self.window_steps,
+            "windows_per_run": 1,
         }
 
 
@@ -332,22 +615,31 @@ def build_example(
     label: dict[str, object],
     *,
     extractor: WindowFeatureExtractor,
-    origin: int,
-    decision_time_s: float,
+    schedule: WindowSchedule,
 ) -> TrainingExample:
     """Reduce one observed record and its label to a `TrainingExample`.
 
     Inputs: a full observed trace, its label payload, the shared extractor, and the
-    window origin, and its online availability cutoff. Outputs: one example. Purpose:
-    this is the single place a stored row becomes a supervised target, so the causal
-    window and class/location conventions are stated once.
+    schedule of the trajectory the row belongs to. Outputs: one example. Purpose: this is
+    the single place a stored row becomes a supervised target, so the causal window and
+    class/location conventions are stated once.
+
+    The delivered payload's own length is required to equal the length the assignment
+    implies. The schedule and the payload are two independent sources for the same fact,
+    and a check whose two sides come from one source is a report of a check rather than a
+    check (requirement (z), Session 56).
     """
 
+    if record.n_steps != schedule.run_steps:
+        raise DevFitDataError(
+            f"run {record.run_id} carries {record.n_steps} steps; the assignment "
+            f"reserves {schedule.run_steps} for {schedule.trajectory_spec_id}"
+        )
     windowed = window_record(
         record,
-        origin,
+        schedule.origin_step,
         extractor.window_steps,
-        decision_time_s=decision_time_s,
+        decision_time_s=schedule.decision_time_s,
     )
     values, valid = extractor.window_tensor(windowed)
     source_class = str(label["source_class"])
@@ -363,6 +655,7 @@ def build_example(
         location_index = location + 1
     return TrainingExample(
         run_id=record.run_id,
+        trajectory_spec_id=schedule.trajectory_spec_id,
         values=values,
         valid=valid,
         class_index=SOURCE_CLASS_ORDER.index(source_class),
@@ -413,29 +706,80 @@ def build_role_loaders(
     return observations, labels
 
 
+def require_matched_trajectory_census(
+    rows: Sequence[IdentityManifestRow],
+    schedule_by_trajectory: Mapping[str, WindowSchedule],
+) -> dict[str, dict[str, int]]:
+    """Refuse a selection whose two suites do not carry the same rows per trajectory.
+
+    Inputs: the selected development rows and the derived schedule. Outputs:
+    `{trajectory: {suite: count}}`, which the result artifact records.
+    Purpose: "C1 and S are matched" is the property the whole paired comparison rests on,
+    and every window this policy assigns depends only on the trajectory — so the suites
+    are matched **iff** they carry equal per-trajectory counts. Checking it here makes
+    that a measurement rather than a sentence in a docstring, and refusing an unscheduled
+    trajectory keeps a row from being silently dropped for want of a window.
+    """
+
+    census: dict[str, dict[str, int]] = {}
+    for row in rows:
+        require(
+            row.trajectory_spec_id in schedule_by_trajectory,
+            f"row {row.run_id} names trajectory {row.trajectory_spec_id!r}, which the "
+            f"development window policy does not schedule",
+        )
+        per_suite = census.setdefault(row.trajectory_spec_id, {})
+        per_suite[row.suite] = per_suite.get(row.suite, 0) + 1
+    for trajectory, per_suite in sorted(census.items()):
+        counts = sorted(per_suite.items())
+        require(
+            [suite for suite, _ in counts] == sorted(MATCHED_FIT_SUITES),
+            f"trajectory {trajectory} is not present in both matched suites; found "
+            + ", ".join(f"{suite} x{count}" for suite, count in counts),
+        )
+        require(
+            len({count for _, count in counts}) == 1,
+            f"trajectory {trajectory} is not matched across suites; found "
+            + ", ".join(f"{suite} x{count}" for suite, count in counts),
+        )
+    return {
+        trajectory: dict(sorted(per_suite.items()))
+        for trajectory, per_suite in sorted(census.items())
+    }
+
+
 def load_arm_examples(
     rows: Sequence[IdentityManifestRow],
     *,
     suite: str,
-    origin: int,
-    decision_time_s: float,
+    schedule_by_trajectory: Mapping[str, WindowSchedule],
     extractor: WindowFeatureExtractor,
     observation_loader: DeployableObservationLoader,
     label_loader: RolePayloadLoader,
 ) -> list[TrainingExample]:
     """Load every example for one arm, checking the role bound at the point of use.
 
-    Inputs: the rows this arm will consume, its suite, the window origin, held-decision
-    time, shared extractor, and hash-checking role loaders. Outputs: the arm's examples.
+    Inputs: the rows this arm will consume, its suite, the derived per-trajectory
+    schedule, the shared extractor, and hash-checking role loaders. Outputs: the arm's
+    examples — exactly one per row, which is the policy's `windows_per_run = 1`.
     Purpose: bound 1 checked where the rows are *consumed*, not only where they were
     selected — a caller can build a row list itself, and that is the path no filter
     guards. `require_dev_only` is therefore called here, with the arm's own suite, so a
     nominal C1 fit cannot consume S rows while every row still truthfully says `dev`.
+
+    The window is looked up by the row's own trajectory rather than passed in, so a row
+    can never be given another trajectory's origin.
     """
 
     require_dev_only(rows, suite=suite)
     examples: list[TrainingExample] = []
     for row in rows:
+        require(
+            row.trajectory_spec_id in schedule_by_trajectory,
+            f"row {row.run_id} names trajectory {row.trajectory_spec_id!r}, which the "
+            f"development window policy does not schedule",
+        )
+        schedule = schedule_by_trajectory[row.trajectory_spec_id]
         try:
             record = observation_loader.load(row.run_id)
             label = label_loader.load(row.run_id)
@@ -445,13 +789,7 @@ def load_arm_examples(
                 f"({type(error).__name__})"
             ) from error
         examples.append(
-            build_example(
-                record,
-                label,
-                extractor=extractor,
-                origin=origin,
-                decision_time_s=decision_time_s,
-            )
+            build_example(record, label, extractor=extractor, schedule=schedule)
         )
     return examples
 
@@ -661,6 +999,7 @@ def arm_document(result: ArmResult, protocol: TrainingProtocol) -> dict[str, obj
     document.update(
         {
             "checkpoint_name": result.checkpoint_name,
+            "examples_by_trajectory": dict(sorted(result.examples_by_trajectory.items())),
             "final_loss": result.final_loss,
             "loss_history": list(result.loss_history),
             "n_examples": result.n_examples,
@@ -700,10 +1039,12 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--mode", choices=("plan", "fit"), required=True)
     parser.add_argument("--output-dir", required=True, type=Path)
     parser.add_argument("--data-root", type=Path, default=None)
-    parser.add_argument(
-        "--window-origin-step", type=int, default=None
-    )
-    parser.add_argument("--window-steps", type=int, default=DEVELOPMENT_WINDOW_STEPS)
+    # There is deliberately no window-origin argument. The origin is a
+    # pre-registration-adjacent scientific choice (limitation 17), and Session 81's
+    # reviewer was right that a caller-supplied one lets the operator make it at
+    # invocation. It is now derived per trajectory from the approved assignment instead,
+    # which is stricter than requiring the operator to type it: there is no value the
+    # command line can supply.
     parser.add_argument("--epochs", type=int, default=20)
     parser.add_argument("--batch-size", type=int, default=8)
     parser.add_argument("--learning-rate", type=float, default=1e-3)
@@ -720,36 +1061,31 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     args = parse_args(argv)
     output_dir = Path(args.output_dir)
-    if args.window_origin_step is None or (
-        args.mode == "fit" and args.data_root is None
-    ):
+    if args.mode == "fit" and args.data_root is None:
         document = {
             "authority": DEVELOPMENT_ONLY_AUTHORITY,
             "exit": X_DATA_MISSING,
             "reason_class": "MissingRequiredArgument",
             "fits_run": 0,
         }
-        target = "dev_fit_plan.json" if args.mode == "plan" else "dev_fit_result.json"
-        write_document(output_dir / target, document)
-        print(
-            f"{X_DATA_MISSING}: --window-origin-step is required"
-            + (" and --mode fit requires --data-root" if args.mode == "fit" else "")
-        )
+        write_document(output_dir / "dev_fit_result.json", document)
+        print(f"{X_DATA_MISSING}: --mode fit requires --data-root")
         return EXIT_CODES[X_DATA_MISSING]
 
-    protocol = TrainingProtocol(
-        window_origin_step=args.window_origin_step,
-        window_steps=args.window_steps,
-        decision_step=args.window_origin_step + args.window_steps,
-        control_dt_s=DEVELOPMENT_CONTROL_DT_S,
-        epochs=args.epochs,
-        batch_size=args.batch_size,
-        learning_rate=args.learning_rate,
-        device=args.device,
-    )
-
     try:
-        protocol.validate()
+        schedule_by_trajectory, assignment_digest = authorized_window_schedule()
+        protocol = TrainingProtocol(
+            schedule=tuple(
+                schedule_by_trajectory[key] for key in sorted(schedule_by_trajectory)
+            ),
+            assignment_sha256=assignment_digest,
+            window_steps=DEVELOPMENT_WINDOW_STEPS,
+            control_dt_s=DEVELOPMENT_CONTROL_DT_S,
+            epochs=args.epochs,
+            batch_size=args.batch_size,
+            learning_rate=args.learning_rate,
+            device=args.device,
+        ).validate()
         protocol_code_identity = training_code_identity()
     except DevFitContractError as error:
         document = {
@@ -776,6 +1112,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     manifest_path = data_root / "manifest.csv"
     completed: list[tuple[str, int]] = []
     results: list[ArmResult] = []
+    # Bound before the try, and `None` rather than `{}`, so a failure handler cannot read
+    # a name the failing branch never assigned (Session 65) and a reader can tell "the
+    # matched census was never established" from "it was established and was empty".
+    trajectory_census: dict[str, dict[str, int]] | None = None
 
     try:
         if not manifest_path.is_file():
@@ -789,6 +1129,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             selected_rows=rows,
         )
         observation_loaders, label_loader = build_role_loaders(data_root)
+        trajectory_census = require_matched_trajectory_census(
+            rows, schedule_by_trajectory
+        )
         extractor = WindowFeatureExtractor(window_steps=protocol.window_steps)
         try:
             device = torch.device(protocol.device)
@@ -813,11 +1156,19 @@ def main(argv: Sequence[str] | None = None) -> int:
             examples = load_arm_examples(
                 arm_rows,
                 suite=suite,
-                origin=protocol.window_origin_step,
-                decision_time_s=protocol.decision_time_s,
+                schedule_by_trajectory=schedule_by_trajectory,
                 extractor=extractor,
                 observation_loader=observation_loaders[suite],
                 label_loader=label_loader,
+            )
+            examples_by_trajectory: dict[str, int] = {}
+            for example in examples:
+                examples_by_trajectory[example.trajectory_spec_id] = (
+                    examples_by_trajectory.get(example.trajectory_spec_id, 0) + 1
+                )
+            require(
+                sum(examples_by_trajectory.values()) == len(arm_rows),
+                "the policy contributes exactly one window per persisted run",
             )
             try:
                 net, history = fit_one_arm(
@@ -828,6 +1179,16 @@ def main(argv: Sequence[str] | None = None) -> int:
                     learning_rate=protocol.learning_rate,
                     device=device,
                 )
+            except (DevFitContractError, DevFitDataError):
+                # Both are `RuntimeError` subclasses, so the conversion below would
+                # otherwise swallow them. A `DevFitContractError` here is a *bound*
+                # violation and belongs at `X_CONTRACT_REFUSED`; converting it would file
+                # a bound violation under `X_DATA_MISSING` with the wrong `reason_class`
+                # and exit code. A `DevFitDataError` is this module's own diagnosis, and
+                # since a refusal message is deliberately never persisted, stdout is the
+                # only place it exists — replacing it with a generic sentence destroys the
+                # one record of why the fit stopped. Session 82.
+                raise
             except RuntimeError as error:
                 raise DevFitDataError(
                     f"training runtime failed for {suite} seed {seed} "
@@ -849,7 +1210,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 data_root=data_root,
                 manifest_sha256=manifest_digest,
                 config_hash=AUTHORIZED_CONFIG_HASH,
-                assignment_sha256=_assignment_digest(),
+                assignment_sha256=protocol.assignment_sha256,
                 suite=suite,
                 seed=seed,
                 checkpoint_sha256=checkpoint_digest,
@@ -867,6 +1228,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                     checkpoint_name=checkpoint_name,
                     checkpoint_sha256=provenance.checkpoint_sha256,
                     provenance=provenance,
+                    examples_by_trajectory=examples_by_trajectory,
                     loss_history=history,
                 )
             )
@@ -882,6 +1244,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "arms": [arm_document(result, protocol) for result in results],
             "code_identity": protocol_code_identity,
             "fits_run": len(completed),
+            "trajectory_census": trajectory_census,
             "training_protocol": protocol.as_document(),
         }
         write_document(output_dir / "dev_fit_result.json", document)
@@ -896,6 +1259,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "arms": [arm_document(result, protocol) for result in results],
             "code_identity": protocol_code_identity,
             "fits_run": len(completed),
+            "trajectory_census": trajectory_census,
             "training_protocol": protocol.as_document(),
         }
         write_document(output_dir / "dev_fit_result.json", document)
@@ -913,6 +1277,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "arms": [arm_document(result, protocol) for result in results],
             "code_identity": protocol_code_identity,
             "fits_run": len(completed),
+            "trajectory_census": trajectory_census,
             "training_protocol": protocol.as_document(),
         }
         write_document(output_dir / "dev_fit_result.json", document)
@@ -930,19 +1295,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         ],
         "role_index_sha256": dict(sorted(AUTHORIZED_ROLE_INDEX_SHA256.items())),
         "rollouts_spent": 0,
+        "trajectory_census": trajectory_census,
         "training_protocol": protocol.as_document(),
     }
     write_document(output_dir / "dev_fit_result.json", document)
     print(f"{X_FIT_OK}: {len(results)} arms fitted, 0 rollouts spent")
     return EXIT_CODES[X_FIT_OK]
-
-
-def _assignment_digest() -> str:
-    """Return the pinned approved assignment digest the provenance record demands."""
-
-    from .dev_fit_contract import ASSIGNMENT_CANONICAL_SHA256
-
-    return ASSIGNMENT_CANONICAL_SHA256
 
 
 if __name__ == "__main__":  # pragma: no cover - exercised through main(argv)
