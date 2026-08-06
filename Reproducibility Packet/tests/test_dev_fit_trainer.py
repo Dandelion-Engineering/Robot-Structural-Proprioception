@@ -19,6 +19,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+import torch
 
 SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
@@ -30,6 +31,7 @@ from utils.dev_fit_contract import (  # noqa: E402
     DevRowCensus,
     matched_fit_plan,
 )
+import utils.dev_fit_trainer as trainer  # noqa: E402
 from utils.dev_fit_trainer import (  # noqa: E402
     EXIT_CODES,
     X_CONTRACT_REFUSED,
@@ -38,7 +40,9 @@ from utils.dev_fit_trainer import (  # noqa: E402
     X_PLAN_INCOMPLETE,
     X_PLAN_OK,
     DevFitDataError,
+    TrainingExample,
     build_provenance,
+    fit_one_arm,
     load_arm_examples,
     main,
     training_code_identity,
@@ -51,12 +55,17 @@ from utils.schema_types import (  # noqa: E402
     SUITE_CHANNELS,
     ObservedRecord,
 )
-from utils.storage_contract import IdentityManifestRow, write_identity_manifest  # noqa: E402
+from utils.storage_contract import (  # noqa: E402
+    IdentityManifestRow,
+    file_sha256,
+    write_identity_manifest,
+)
 
 CONFIG_HASH = "dev-" + "a" * 64
 WINDOW = 16
 STEPS = 24
 ORIGIN = 4
+DECISION_TIME_S = (ORIGIN + WINDOW) * 0.002
 
 
 def _record(run_id: str, suite: str, t: int = STEPS, *, seed: int = 0) -> ObservedRecord:
@@ -152,6 +161,70 @@ def _dataset(root: Path, *, rows_per_suite: int = 2, splits=("dev",)) -> list:
     return rows
 
 
+class _FixtureObservationLoader:
+    """Minimal synthetic loader; production wiring is tested by the packet loaders."""
+
+    def __init__(self, root: Path, suite: str) -> None:
+        self.root = root
+        self.suite = suite
+
+    def load(self, run_id: str) -> ObservedRecord:
+        return ObservedRecord.load_npz(
+            self.root / "observations" / self.suite / f"{run_id}.npz"
+        )
+
+
+class _FixtureLabelLoader:
+    """Minimal synthetic label loader matching RolePayloadLoader's return shape."""
+
+    def __init__(self, root: Path) -> None:
+        self.root = root
+
+    def load(self, run_id: str) -> dict[str, np.ndarray]:
+        with np.load(self.root / "labels" / f"{run_id}.npz", allow_pickle=False) as payload:
+            return {name: np.asarray(payload[name]) for name in payload.files}
+
+
+def _fixture_role_loaders(root: Path):
+    """Return suite-scoped synthetic loaders for a temporary fixture root."""
+
+    return (
+        {suite: _FixtureObservationLoader(root, suite) for suite in ("C1", "S")},
+        _FixtureLabelLoader(root),
+    )
+
+
+def _authorize_fixture_window(monkeypatch) -> None:
+    """Stand in for the still-open owner/reviewer training-window decision."""
+
+    monkeypatch.setattr(trainer, "DEVELOPMENT_WINDOW_ORIGIN_STEP", ORIGIN)
+    monkeypatch.setattr(trainer, "DEVELOPMENT_WINDOW_STEPS", WINDOW)
+    monkeypatch.setattr(trainer, "DEVELOPMENT_DECISION_STEP", ORIGIN + WINDOW)
+
+
+def _authorize_fixture_dataset(monkeypatch, root: Path) -> None:
+    """Bind one synthetic root to the executable's otherwise exact data/window pins."""
+
+    monkeypatch.setattr(trainer, "AUTHORIZED_DATA_ROOT_NAME", root.resolve().name)
+    monkeypatch.setattr(
+        trainer, "AUTHORIZED_MANIFEST_SHA256", file_sha256(root / "manifest.csv")
+    )
+    monkeypatch.setattr(trainer, "AUTHORIZED_CONFIG_HASH", CONFIG_HASH)
+    monkeypatch.setattr(
+        trainer,
+        "AUTHORIZED_ROLE_INDEX_SHA256",
+        {
+            "labels/index.csv": "d" * 64,
+            "observations/C1/index.csv": "e" * 64,
+            "observations/S/index.csv": "f" * 64,
+        },
+    )
+    _authorize_fixture_window(monkeypatch)
+    monkeypatch.setattr(
+        trainer, "build_role_loaders", lambda data_root: _fixture_role_loaders(data_root)
+    )
+
+
 # --------------------------------------------------------------------------- #
 # The window seam.
 # --------------------------------------------------------------------------- #
@@ -159,7 +232,9 @@ def test_window_record_slices_every_per_step_array_and_leaves_the_rest():
     """The slice must move every per-step array, or a channel silently misaligns."""
 
     record = _record("r", "S", t=STEPS)
-    windowed = window_record(record, ORIGIN, WINDOW)
+    windowed = window_record(
+        record, ORIGIN, WINDOW, decision_time_s=DECISION_TIME_S
+    )
     assert windowed.n_steps == WINDOW
     for channel in CHANNEL_NAMES:
         assert windowed.values[channel].shape[0] == WINDOW
@@ -176,9 +251,25 @@ def test_window_record_refuses_a_window_that_does_not_fit():
 
     record = _record("r", "S", t=STEPS)
     with pytest.raises(DevFitDataError, match="does not fit"):
-        window_record(record, STEPS - 2, WINDOW)
+        window_record(
+            record, STEPS - 2, WINDOW, decision_time_s=DECISION_TIME_S
+        )
     with pytest.raises(DevFitDataError, match="non-negative"):
-        window_record(record, -1, WINDOW)
+        window_record(record, -1, WINDOW, decision_time_s=DECISION_TIME_S)
+
+
+def test_window_record_masks_a_sample_delivered_after_the_held_decision():
+    """Persisted future delivery must not become training-only look-ahead information."""
+
+    record = _record("r", "S", t=STEPS)
+    last = ORIGIN + WINDOW - 1
+    record.values["q_obs"][last] = 12345.0
+    record.availability_time_s["q_obs"][last] = DECISION_TIME_S + 1.0
+    windowed = window_record(
+        record, ORIGIN, WINDOW, decision_time_s=DECISION_TIME_S
+    )
+    assert not np.any(windowed.valid_mask["q_obs"][-1])
+    assert np.all(np.isnan(windowed.values["q_obs"][-1]))
 
 
 # --------------------------------------------------------------------------- #
@@ -190,8 +281,17 @@ def test_load_arm_examples_refuses_a_withheld_role_at_the_point_of_consumption(t
     _dataset(tmp_path, splits=("dev", "val"))
     val_rows = [_manifest_row("val", "S", 0)]
     extractor = WindowFeatureExtractor(window_steps=WINDOW)
+    observations, labels = _fixture_role_loaders(tmp_path)
     with pytest.raises(DevFitContractError, match="may read no withheld role"):
-        load_arm_examples(tmp_path, val_rows, suite="S", origin=ORIGIN, extractor=extractor)
+        load_arm_examples(
+            val_rows,
+            suite="S",
+            origin=ORIGIN,
+            decision_time_s=DECISION_TIME_S,
+            extractor=extractor,
+            observation_loader=observations["S"],
+            label_loader=labels,
+        )
 
 
 def test_load_arm_examples_refuses_a_row_from_the_other_matched_suite(tmp_path):
@@ -200,11 +300,20 @@ def test_load_arm_examples_refuses_a_row_from_the_other_matched_suite(tmp_path):
     _dataset(tmp_path)
     s_rows = [_manifest_row("dev", "S", 0)]
     extractor = WindowFeatureExtractor(window_steps=WINDOW)
+    observations, labels = _fixture_role_loaders(tmp_path)
     with pytest.raises(DevFitContractError, match="only rows from suite"):
-        load_arm_examples(tmp_path, s_rows, suite="C1", origin=ORIGIN, extractor=extractor)
+        load_arm_examples(
+            s_rows,
+            suite="C1",
+            origin=ORIGIN,
+            decision_time_s=DECISION_TIME_S,
+            extractor=extractor,
+            observation_loader=observations["C1"],
+            label_loader=labels,
+        )
 
 
-def test_training_code_identity_names_the_three_files_that_define_the_protocol():
+def test_training_code_identity_names_every_runtime_module_that_defines_the_protocol():
     """Bound 4: a checkpoint names the code that produced it, built by `code_identity`."""
 
     identity = training_code_identity()
@@ -212,9 +321,43 @@ def test_training_code_identity_names_the_three_files_that_define_the_protocol()
         "dev_fit_trainer.py",
         "dev_fit_contract.py",
         "attribution_net.py",
+        "config_contract.py",
+        "estimator.py",
+        "role_contract.py",
+        "schema_types.py",
+        "storage_contract.py",
     }
     for label, digest in identity.items():
         assert len(digest) == 64 and digest == digest.lower(), label
+
+
+def test_fit_one_arm_refuses_a_nonfinite_loss_before_any_checkpoint(monkeypatch):
+    """A diverged optimizer path becomes a named data failure, not invalid JSON later."""
+
+    extractor = WindowFeatureExtractor(window_steps=WINDOW)
+    example = TrainingExample(
+        run_id="r",
+        values=np.zeros((WINDOW, extractor.registry_width), dtype=float),
+        valid=np.ones((WINDOW, extractor.registry_width), dtype=bool),
+        class_index=0,
+        location_index=0,
+        severity=0.0,
+        ood_flag=False,
+    )
+
+    def _nonfinite_loss(_heads, batch):
+        return torch.tensor(float("nan"), device=batch["inputs"].device, requires_grad=True)
+
+    monkeypatch.setattr(trainer, "arm_loss", _nonfinite_loss)
+    with pytest.raises(DevFitDataError, match="non-finite"):
+        fit_one_arm(
+            [example],
+            seed=0,
+            epochs=1,
+            batch_size=1,
+            learning_rate=1.0e-3,
+            device=torch.device("cpu"),
+        )
 
 
 def test_build_provenance_passes_the_census_sentence_and_nothing_else(tmp_path):
@@ -236,6 +379,7 @@ def test_build_provenance_passes_the_census_sentence_and_nothing_else(tmp_path):
         seed=0,
         checkpoint_sha256="c" * 64,
         census=census,
+        protocol_code_identity=training_code_identity(),
     )
     assert provenance.row_disclosure == census.disclosure()
     assert provenance.data_root_name == tmp_path.resolve().name
@@ -248,11 +392,33 @@ def test_build_provenance_passes_the_census_sentence_and_nothing_else(tmp_path):
 # --------------------------------------------------------------------------- #
 # Every terminal exit, driven, with its artifact read back.
 # --------------------------------------------------------------------------- #
-def test_plan_exit_writes_the_ten_arms_and_runs_nothing(tmp_path):
-    """X_PLAN_OK: the plan is a value the trainer iterates, not a loop it writes."""
+def test_unreviewed_training_window_policy_refuses_even_plan_mode(tmp_path):
+    """The committed executable cannot turn a caller's convenient origin into protocol."""
 
     code = main(
-        ["--mode", "plan", "--output-dir", str(tmp_path), "--window-origin-step", str(ORIGIN)]
+        [
+            "--mode", "plan",
+            "--output-dir", str(tmp_path),
+            "--window-origin-step", str(ORIGIN),
+        ]
+    )
+    assert code == EXIT_CODES[X_CONTRACT_REFUSED]
+    document = json.loads((tmp_path / "dev_fit_plan.json").read_text(encoding="utf-8"))
+    assert document["exit"] == X_CONTRACT_REFUSED
+    assert document["fits_run"] == 0
+
+
+def test_plan_exit_writes_the_ten_arms_and_runs_nothing(tmp_path, monkeypatch):
+    """X_PLAN_OK: the plan is a value the trainer iterates, not a loop it writes."""
+
+    _authorize_fixture_window(monkeypatch)
+    code = main(
+        [
+            "--mode", "plan",
+            "--output-dir", str(tmp_path),
+            "--window-origin-step", str(ORIGIN),
+            "--window-steps", str(WINDOW),
+        ]
     )
     assert code == EXIT_CODES[X_PLAN_OK]
     document = json.loads((tmp_path / "dev_fit_plan.json").read_text(encoding="utf-8"))
@@ -261,6 +427,29 @@ def test_plan_exit_writes_the_ten_arms_and_runs_nothing(tmp_path):
     assert document["fits_run"] == 0 and document["rollouts_spent"] == 0
     assert document["n_arms"] == len(matched_fit_plan()) == 10
     assert [(arm["suite"], arm["seed"]) for arm in document["arms"]] == list(matched_fit_plan())
+    assert document["training_protocol"]["window_origin_step"] == ORIGIN
+    assert document["training_protocol"]["decision_step"] == ORIGIN + WINDOW
+    assert set(document["code_identity"]) == set(training_code_identity())
+
+
+def test_plan_refuses_a_window_that_does_not_end_at_the_held_decision(
+    tmp_path, monkeypatch
+):
+    """A caller cannot train on post-decision task motion by moving the stored slice."""
+
+    _authorize_fixture_window(monkeypatch)
+    code = main(
+        [
+            "--mode", "plan",
+            "--output-dir", str(tmp_path),
+            "--window-origin-step", str(ORIGIN + 1),
+            "--window-steps", str(WINDOW),
+        ]
+    )
+    assert code == EXIT_CODES[X_CONTRACT_REFUSED]
+    document = json.loads((tmp_path / "dev_fit_plan.json").read_text(encoding="utf-8"))
+    assert document["exit"] == X_CONTRACT_REFUSED
+    assert document["fits_run"] == 0
 
 
 def test_fit_without_the_required_inputs_takes_the_data_missing_exit(tmp_path):
@@ -273,12 +462,13 @@ def test_fit_without_the_required_inputs_takes_the_data_missing_exit(tmp_path):
     assert document["fits_run"] == 0
 
 
-def test_a_manifest_with_no_dev_row_takes_the_contract_refused_exit(tmp_path):
+def test_a_manifest_with_no_dev_row_takes_the_contract_refused_exit(tmp_path, monkeypatch):
     """X_CONTRACT_REFUSED: a fit over zero rows is a defect, not an empty result."""
 
     root = tmp_path / "data"
     root.mkdir()
     _dataset(root, splits=("val",))
+    _authorize_fixture_dataset(monkeypatch, root)
     output = tmp_path / "out"
     code = main(
         [
@@ -296,7 +486,7 @@ def test_a_manifest_with_no_dev_row_takes_the_contract_refused_exit(tmp_path):
     assert document["fits_run"] == 0
 
 
-def test_the_refusal_message_itself_is_never_persisted(tmp_path):
+def test_the_refusal_message_itself_is_never_persisted(tmp_path, monkeypatch):
     """The artifact records the exception CLASS; the message goes to stdout only.
 
     A refusal can quote a caller-supplied string, and requirement (z) forbids a result
@@ -307,6 +497,7 @@ def test_the_refusal_message_itself_is_never_persisted(tmp_path):
     root = tmp_path / "data"
     root.mkdir()
     _dataset(root, splits=("val",))
+    _authorize_fixture_dataset(monkeypatch, root)
     output = tmp_path / "out"
     main(
         [
@@ -323,13 +514,15 @@ def test_the_refusal_message_itself_is_never_persisted(tmp_path):
         assert leaked not in text, f"the artifact persisted {leaked!r}"
 
 
-def test_a_missing_observation_payload_takes_the_data_missing_exit(tmp_path):
-    """X_DATA_MISSING from inside the arm loop, with the arms completed so far recorded."""
+def test_a_missing_observation_payload_records_every_completed_arm(tmp_path, monkeypatch):
+    """A partial failure leaves no checkpoint without its full provenance record."""
 
     root = tmp_path / "data"
     root.mkdir()
     rows = _dataset(root)
-    (root / "observations" / "C1" / f"{rows[0].run_id}.npz").unlink()
+    _authorize_fixture_dataset(monkeypatch, root)
+    first_s = next(row for row in rows if row.suite == "S")
+    (root / "observations" / "S" / f"{first_s.run_id}.npz").unlink()
     output = tmp_path / "out"
     code = main(
         [
@@ -345,10 +538,15 @@ def test_a_missing_observation_payload_takes_the_data_missing_exit(tmp_path):
     document = json.loads((output / "dev_fit_result.json").read_text(encoding="utf-8"))
     assert document["exit"] == X_DATA_MISSING
     assert document["reason_class"] == "DevFitDataError"
-    assert document["fits_run"] == 0
+    assert document["fits_run"] == 5
+    assert len(document["arms"]) == 5
+    for arm in document["arms"]:
+        assert arm["authority"] == DEVELOPMENT_ONLY_AUTHORITY
+        assert arm["training_protocol"]["window_origin_step"] == ORIGIN
+        assert (output / arm["checkpoint_name"]).is_file()
 
 
-def test_a_complete_fit_writes_one_validated_provenance_record_per_arm(tmp_path):
+def test_a_complete_fit_writes_one_validated_provenance_record_per_arm(tmp_path, monkeypatch):
     """X_FIT_OK: ten arms, ten provenance records on disk, zero rollouts.
 
     This asserts what the exit WROTE, not that the model learned anything. Whether the
@@ -359,6 +557,7 @@ def test_a_complete_fit_writes_one_validated_provenance_record_per_arm(tmp_path)
     root = tmp_path / "data"
     root.mkdir()
     _dataset(root)
+    _authorize_fixture_dataset(monkeypatch, root)
     output = tmp_path / "out"
     code = main(
         [
@@ -376,7 +575,8 @@ def test_a_complete_fit_writes_one_validated_provenance_record_per_arm(tmp_path)
     assert document["exit"] == X_FIT_OK
     assert document["fits_run"] == 10
     assert document["rollouts_spent"] == 0
-    assert document["window_origin_step"] == ORIGIN
+    assert document["training_protocol"]["window_origin_step"] == ORIGIN
+    assert document["training_protocol"]["decision_time_s"] == DECISION_TIME_S
 
     recorded = [(arm["suite"], arm["training_seed"]) for arm in document["arms"]]
     assert recorded == list(matched_fit_plan())
@@ -386,25 +586,70 @@ def test_a_complete_fit_writes_one_validated_provenance_record_per_arm(tmp_path)
         assert arm["config_hash"].startswith("dev-")
         assert len(arm["checkpoint_sha256"]) == 64
         assert set(arm["code_identity"]) == set(training_code_identity())
+        assert arm["code_identity"] == document["code_identity"]
         assert arm["data_root_name"] == "data"
+        assert arm["role_index_sha256"] == document["role_index_sha256"]
+        assert arm["training_protocol"] == document["training_protocol"]
+        assert file_sha256(output / arm["checkpoint_name"]) == arm["checkpoint_sha256"]
     for suite, seed in matched_fit_plan():
         assert (output / f"dev_fit_{suite}_seed{seed}.pt").is_file()
 
 
-def test_an_incomplete_plan_cannot_be_reported_as_a_comparison(tmp_path):
+def test_fit_refuses_a_well_formed_but_unapproved_dataset(tmp_path, monkeypatch):
+    """Recording an arbitrary manifest digest is not authority to train on that root."""
+
+    root = tmp_path / "lookalike"
+    root.mkdir()
+    _dataset(root)
+    _authorize_fixture_window(monkeypatch)
+    output = tmp_path / "out"
+    code = main(
+        [
+            "--mode", "fit",
+            "--output-dir", str(output),
+            "--data-root", str(root),
+            "--window-origin-step", str(ORIGIN),
+            "--window-steps", str(WINDOW),
+        ]
+    )
+    assert code == EXIT_CODES[X_CONTRACT_REFUSED]
+    document = json.loads((output / "dev_fit_result.json").read_text(encoding="utf-8"))
+    assert document["exit"] == X_CONTRACT_REFUSED
+    assert document["fits_run"] == 0
+    assert not list(output.glob("*.pt"))
+
+
+def test_an_incomplete_plan_takes_its_named_main_exit(tmp_path, monkeypatch):
     """X_PLAN_INCOMPLETE: an unbalanced set is a difference between two seed populations.
 
-    Driven by handing `require_complete_matched_plan` the state `main()` would hold if an
-    arm had been skipped, because that is the branch the exit exists for.
+    Monkeypatching the iterator to skip S models the code mutation this post-condition is
+    meant to catch; the contract's independent expected plan remains unchanged.
     """
 
-    from utils.dev_fit_trainer import require_complete_matched_plan
-
-    partial = [arm for arm in matched_fit_plan() if arm[0] == "C1"]
-    with pytest.raises(DevFitContractError, match="incomplete"):
-        require_complete_matched_plan(partial)
-    assert EXIT_CODES[X_PLAN_INCOMPLETE] == 5
-    assert X_PLAN_INCOMPLETE in EXIT_CODES
+    root = tmp_path / "data"
+    root.mkdir()
+    _dataset(root)
+    _authorize_fixture_dataset(monkeypatch, root)
+    monkeypatch.setattr(
+        trainer,
+        "matched_fit_plan",
+        lambda: tuple(arm for arm in matched_fit_plan() if arm[0] == "C1"),
+    )
+    output = tmp_path / "out"
+    code = main(
+        [
+            "--mode", "fit",
+            "--output-dir", str(output),
+            "--data-root", str(root),
+            "--window-origin-step", str(ORIGIN),
+            "--window-steps", str(WINDOW),
+            "--epochs", "1",
+        ]
+    )
+    assert code == EXIT_CODES[X_PLAN_INCOMPLETE]
+    document = json.loads((output / "dev_fit_result.json").read_text(encoding="utf-8"))
+    assert document["exit"] == X_PLAN_INCOMPLETE
+    assert document["fits_run"] == 5 and len(document["arms"]) == 5
 
 
 def test_every_named_exit_has_a_distinct_code_and_appears_in_the_table():

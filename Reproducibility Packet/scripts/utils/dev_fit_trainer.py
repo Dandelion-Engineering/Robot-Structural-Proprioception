@@ -37,20 +37,27 @@ So this trainer does not scrub: it **never persists a refusal message at all**. 
 artifact records which contract check refused and the exception class; the message itself
 goes to stdout, for the operator, and nowhere else.
 
-Two inputs are deliberately required rather than defaulted
-----------------------------------------------------------
-`--window-origin-step` has no default. The window origin is a pre-registration-adjacent
-decision (limitation 17: nothing in the codebase fixes it, so whatever the pipeline uses
-*is* its pre-registration, and Gate 7 must reuse it). A default here would quietly make
-that decision inside a development script. `--data-root` has no default for the same
-reason every script in this packet requires it: a script that silently runs against the
-wrong path is a reproducibility failure.
+Why the development window remains fail-closed
+----------------------------------------------
+The delivered development split contains both an ordinary trajectory and a diagnostic
+trajectory, but no jointly reviewed policy yet maps both to the causal windows this model
+will consume. The 1,136 held-decision step belongs to the later bounded-contact screen;
+it is not authority to apply ``[368, 1136)`` to every delivered base-dataset row. The two
+authorization constants below therefore remain ``None``. Any plan or fit refuses until
+the owner supplies and both agents approve the missing training-window policy.
+
+`--data-root` remains required. The executable also pins the delivered root name,
+manifest digest and development config identity before it opens any observation or label
+payload. Merely recording an arbitrary manifest's digest would describe the wrong data
+accurately rather than enforce the dataset this fit is authorized to read.
 """
 
 from __future__ import annotations
 
 import argparse
 import dataclasses
+import hashlib
+import io
 import json
 import sys
 from dataclasses import dataclass, field
@@ -66,6 +73,7 @@ from .attribution_net import (
     deterministic_conv_precision,
     window_to_input,
 )
+from .config_contract import ConfigContractError, load_config
 from .dev_fit_contract import (
     DEVELOPMENT_ONLY_AUTHORITY,
     DevFitContractError,
@@ -76,12 +84,19 @@ from .dev_fit_contract import (
     require_complete_matched_plan,
     require_dev_only,
     require_predeclared_seed,
+    require,
     select_dev_rows,
 )
 from .estimator import SOURCE_CLASS_ORDER, WindowFeatureExtractor
 from .protocol_p import canonical_json
+from .role_contract import RolePayloadLoader
 from .schema_types import ObservedRecord
-from .storage_contract import IdentityManifestRow, file_sha256
+from .storage_contract import (
+    DeployableObservationLoader,
+    IdentityManifestRow,
+    StorageContractError,
+    file_sha256,
+)
 
 # Every terminal exit of `main()`. A name rather than a bare integer, because the
 # artifact records which exit was taken and a reader should not have to map numbers.
@@ -103,17 +118,33 @@ EXIT_CODES: dict[str, int] = {
 # (`attribution_net.NOT_LOCALIZED_INDEX`), so a joint index j occupies logit j + 1.
 NOT_LOCALIZED_TARGET = 0
 
-# The eight keys `assignment_generator` writes into `labels/{run_id}.npz`, as 0-d arrays.
-LABEL_KEYS = (
-    "source_class",
-    "subtype",
-    "location",
-    "severity",
-    "onset_index",
-    "onset_time_s",
-    "compound_flag",
-    "ood_flag",
+# The exact delivered development partition this one authorized fit may consume. The
+# manifest digest is raw-file SHA-256 because the manifest is a data artifact, not a
+# line-ending-normalized tracked text document.
+AUTHORIZED_DATA_ROOT_NAME = "gate3-base-dev-pilot-val-c1-s"
+AUTHORIZED_MANIFEST_SHA256 = (
+    "55ea5f0e74ddd24b05eafc51a2b9fc424eda99eac1901534946f42b6012ebe12"
 )
+AUTHORIZED_CONFIG_HASH = (
+    "dev-712abf27c3f8f3c331ae9b76e3f22c48857334cc15a81e819718165e47753e56"
+)
+AUTHORIZED_ROLE_INDEX_SHA256 = {
+    "labels/index.csv": "a7c700e53d917f2ddb256521af3c23bba6f7ec6d6f3af967d14ca9aad3a559f8",
+    "observations/C1/index.csv": (
+        "f0cc92bf33f7e06f8ac09e4ac0dffd86d567b445de07b049a9475b01f5dff716"
+    ),
+    "observations/S/index.csv": (
+        "fa790f9d03b38d246c7e656164cbbee1ebe33f51c122d91edbf3dc72d526dd00"
+    ),
+}
+
+# The control rate and window length come from the authorized draft config. A global
+# origin/decision does not: the delivered dev role spans ordinary and diagnostic
+# trajectories. Leaving these unset makes the unresolved scientific decision executable.
+DEVELOPMENT_CONTROL_DT_S = 0.002
+DEVELOPMENT_WINDOW_STEPS = 768
+DEVELOPMENT_WINDOW_ORIGIN_STEP: int | None = None
+DEVELOPMENT_DECISION_STEP: int | None = None
 
 
 class DevFitDataError(RuntimeError):
@@ -147,25 +178,125 @@ class ArmResult:
     loss_history: list[float] = field(default_factory=list)
 
 
-def window_record(record: ObservedRecord, origin: int, window_steps: int) -> ObservedRecord:
-    """Return a copy of `record` carrying only steps `[origin, origin + window_steps)`.
+@dataclass(frozen=True)
+class TrainingProtocol:
+    """The runtime choices shared by all ten arms and recorded with their results."""
 
-    Inputs: a full observed trace, the first step of the window, and the window length.
-    Outputs: a new `ObservedRecord` whose every per-step array is that slice.
+    window_origin_step: int
+    window_steps: int
+    decision_step: int
+    control_dt_s: float
+    epochs: int
+    batch_size: int
+    learning_rate: float
+    device: str
+
+    @property
+    def decision_time_s(self) -> float:
+        """Return the held-decision time used as the availability cutoff."""
+
+        return float(self.decision_step * self.control_dt_s)
+
+    def validate(self) -> "TrainingProtocol":
+        """Refuse a protocol that changes the pinned causal window or is not runnable."""
+
+        require(
+            DEVELOPMENT_WINDOW_ORIGIN_STEP is not None
+            and DEVELOPMENT_DECISION_STEP is not None,
+            "development training-window policy has not been authorized",
+        )
+        require(
+            self.window_origin_step == DEVELOPMENT_WINDOW_ORIGIN_STEP,
+            f"development window origin must be {DEVELOPMENT_WINDOW_ORIGIN_STEP}",
+        )
+        require(
+            self.window_steps == DEVELOPMENT_WINDOW_STEPS,
+            f"development window length must be {DEVELOPMENT_WINDOW_STEPS}",
+        )
+        require(
+            self.decision_step == DEVELOPMENT_DECISION_STEP
+            and self.window_origin_step + self.window_steps == self.decision_step,
+            "development window must end exactly at the held decision",
+        )
+        require(
+            np.isfinite(self.control_dt_s)
+            and self.control_dt_s == DEVELOPMENT_CONTROL_DT_S,
+            f"development control_dt_s must be {DEVELOPMENT_CONTROL_DT_S}",
+        )
+        require(
+            isinstance(self.epochs, int) and not isinstance(self.epochs, bool)
+            and self.epochs > 0,
+            "epochs must be a positive integer",
+        )
+        require(
+            isinstance(self.batch_size, int) and not isinstance(self.batch_size, bool)
+            and self.batch_size > 0,
+            "batch_size must be a positive integer",
+        )
+        require(
+            np.isfinite(self.learning_rate) and self.learning_rate > 0.0,
+            "learning_rate must be finite and positive",
+        )
+        require(
+            isinstance(self.device, str) and bool(self.device.strip()),
+            "device must be a non-empty torch device name",
+        )
+        return self
+
+    def as_document(self) -> dict[str, object]:
+        """Return the canonical-JSON-serializable protocol recorded by every result."""
+
+        self.validate()
+        return {
+            "batch_size": self.batch_size,
+            "control_dt_s": self.control_dt_s,
+            "decision_step": self.decision_step,
+            "decision_time_s": self.decision_time_s,
+            "device": self.device,
+            "epochs": self.epochs,
+            "learning_rate": self.learning_rate,
+            "window_origin_step": self.window_origin_step,
+            "window_steps": self.window_steps,
+        }
+
+
+def window_record(
+    record: ObservedRecord,
+    origin: int,
+    window_steps: int,
+    *,
+    decision_time_s: float,
+) -> ObservedRecord:
+    """Return the causal stored-row window available at `decision_time_s`.
+
+    Inputs: a full observed trace, the first step of the window, the window length, and
+    the online held-decision time. Outputs: a new `ObservedRecord` whose every per-step
+    array is that slice and whose values/validity are masked to samples delivered by the
+    decision.
     Purpose: `WindowFeatureExtractor.window_tensor` refuses a record longer than `W`
     (`estimator.py`), which makes the window origin the caller's to own. Slicing the
     record and handing it to the existing extractor keeps the registry ORDER defined in
     exactly one place; building the `[W, D]` array here instead would be a second copy of
     that rule, and a second copy is what two guards drifting apart is made of.
 
-    Fails loudly when the window does not fit: a short tail silently right-aligned into a
-    zero-padded window is a training example that looks like data and is not.
+    The persisted record intentionally retains measured values that were not yet delivered
+    at an earlier decision. The online path masks them in
+    `OnlineSensorSession.available_record`; training must reproduce that boundary rather
+    than learn from latency-hidden future information.
+
+    Fails loudly when the window does not fit or the decision time is invalid: a short
+    tail silently right-aligned into a zero-padded window is a training example that looks
+    like data and is not.
     """
 
     if origin < 0:
         raise DevFitDataError(f"window origin must be non-negative, got {origin}")
     if window_steps <= 0:
         raise DevFitDataError(f"window_steps must be positive, got {window_steps}")
+    if not np.isfinite(decision_time_s) or decision_time_s < 0.0:
+        raise DevFitDataError(
+            f"decision_time_s must be finite and non-negative, got {decision_time_s}"
+        )
     end = origin + window_steps
     if end > record.n_steps:
         raise DevFitDataError(
@@ -174,33 +305,26 @@ def window_record(record: ObservedRecord, origin: int, window_steps: int) -> Obs
         )
     sliced: dict[str, dict[str, np.ndarray]] = {}
     for name in (
-        "values",
-        "valid_mask",
         "measurement_time_s",
         "availability_time_s",
         "latency_age_s",
     ):
         source = getattr(record, name)
         sliced[name] = {channel: array[origin:end] for channel, array in source.items()}
+    sliced_values: dict[str, np.ndarray] = {}
+    sliced_valid: dict[str, np.ndarray] = {}
+    for channel, array in record.values.items():
+        values = array[origin:end]
+        availability = sliced["availability_time_s"][channel]
+        delivered = np.isfinite(availability) & (
+            availability <= decision_time_s + 1.0e-12
+        )
+        valid = record.valid_mask[channel][origin:end] & delivered[:, None]
+        sliced_valid[channel] = valid
+        sliced_values[channel] = np.where(valid, values, np.nan)
+    sliced["values"] = sliced_values
+    sliced["valid_mask"] = sliced_valid
     return dataclasses.replace(record, **sliced)
-
-
-def load_label(labels_dir: Path, run_id: str) -> dict[str, object]:
-    """Return the eight-key label payload for `run_id` as plain Python scalars.
-
-    Inputs: the dataset's `labels/` directory and a run id. Outputs: a dict over
-    `LABEL_KEYS`. Purpose: the label role is stored as 0-d arrays, and reading them as
-    arrays into a target tensor is how a shape error becomes a silently broadcast batch.
-    """
-
-    path = labels_dir / f"{run_id}.npz"
-    if not path.is_file():
-        raise DevFitDataError(f"no label payload for run {run_id}")
-    with np.load(path, allow_pickle=False) as payload:
-        missing = [key for key in LABEL_KEYS if key not in payload]
-        if missing:
-            raise DevFitDataError(f"label payload for run {run_id} is missing {missing}")
-        return {key: payload[key].item() for key in LABEL_KEYS}
 
 
 def build_example(
@@ -209,15 +333,22 @@ def build_example(
     *,
     extractor: WindowFeatureExtractor,
     origin: int,
+    decision_time_s: float,
 ) -> TrainingExample:
     """Reduce one observed record and its label to a `TrainingExample`.
 
     Inputs: a full observed trace, its label payload, the shared extractor, and the
-    window origin. Outputs: one example. Purpose: this is the single place a stored row
-    becomes a supervised target, so the class/location conventions are stated once.
+    window origin, and its online availability cutoff. Outputs: one example. Purpose:
+    this is the single place a stored row becomes a supervised target, so the causal
+    window and class/location conventions are stated once.
     """
 
-    windowed = window_record(record, origin, extractor.window_steps)
+    windowed = window_record(
+        record,
+        origin,
+        extractor.window_steps,
+        decision_time_s=decision_time_s,
+    )
     values, valid = extractor.window_tensor(windowed)
     source_class = str(label["source_class"])
     if source_class not in SOURCE_CLASS_ORDER:
@@ -241,18 +372,61 @@ def build_example(
     )
 
 
-def load_arm_examples(
+def build_role_loaders(
     data_root: Path,
+) -> tuple[dict[str, DeployableObservationLoader], RolePayloadLoader]:
+    """Build the packet's hash-checking observation and label loaders for this dataset."""
+
+    packet_root = Path(__file__).resolve().parents[2]
+    schema_path = packet_root / "schema" / "schema.json"
+    config_path = packet_root / "config" / "draft-config-v0.1.json"
+    try:
+        config = load_config(config_path, schema_path, require_frozen=False)
+        require(
+            config.config_hash == AUTHORIZED_CONFIG_HASH,
+            "the trainer's draft config does not match the authorized dataset config",
+        )
+        for relative, expected_digest in AUTHORIZED_ROLE_INDEX_SHA256.items():
+            index_path = Path(data_root).joinpath(*relative.split("/"))
+            require(
+                index_path.is_file() and file_sha256(index_path) == expected_digest,
+                f"role index {relative!r} does not equal the authorized delivered index",
+            )
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        observations = {
+            suite: DeployableObservationLoader(
+                Path(data_root) / "observations" / suite,
+                suite,
+                config,
+                require_frozen=False,
+            )
+            for suite in ("C1", "S")
+        }
+        labels = RolePayloadLoader(
+            Path(data_root) / "labels", "labels", schema, config
+        )
+    except (ConfigContractError, StorageContractError, OSError, ValueError) as error:
+        raise DevFitDataError(
+            f"the authorized dataset's role indexes could not be loaded "
+            f"({type(error).__name__})"
+        ) from error
+    return observations, labels
+
+
+def load_arm_examples(
     rows: Sequence[IdentityManifestRow],
     *,
     suite: str,
     origin: int,
+    decision_time_s: float,
     extractor: WindowFeatureExtractor,
+    observation_loader: DeployableObservationLoader,
+    label_loader: RolePayloadLoader,
 ) -> list[TrainingExample]:
     """Load every example for one arm, checking the role bound at the point of use.
 
-    Inputs: the dataset root, the rows this arm will consume, its suite, the window
-    origin and the shared extractor. Outputs: the arm's examples.
+    Inputs: the rows this arm will consume, its suite, the window origin, held-decision
+    time, shared extractor, and hash-checking role loaders. Outputs: the arm's examples.
     Purpose: bound 1 checked where the rows are *consumed*, not only where they were
     selected — a caller can build a row list itself, and that is the path no filter
     guards. `require_dev_only` is therefore called here, with the arm's own suite, so a
@@ -260,21 +434,23 @@ def load_arm_examples(
     """
 
     require_dev_only(rows, suite=suite)
-    observations_dir = Path(data_root) / "observations" / suite
-    labels_dir = Path(data_root) / "labels"
-    if not observations_dir.is_dir():
-        raise DevFitDataError(f"no observations directory for suite {suite}")
-    if not labels_dir.is_dir():
-        raise DevFitDataError("no labels directory in the dataset root")
     examples: list[TrainingExample] = []
     for row in rows:
-        path = observations_dir / f"{row.run_id}.npz"
-        if not path.is_file():
-            raise DevFitDataError(f"no observation payload for run {row.run_id}")
-        record = ObservedRecord.load_npz(path)
+        try:
+            record = observation_loader.load(row.run_id)
+            label = label_loader.load(row.run_id)
+        except (KeyError, StorageContractError, OSError, ValueError) as error:
+            raise DevFitDataError(
+                f"indexed payload for run {row.run_id} failed "
+                f"({type(error).__name__})"
+            ) from error
         examples.append(
             build_example(
-                record, load_label(labels_dir, row.run_id), extractor=extractor, origin=origin
+                record,
+                label,
+                extractor=extractor,
+                origin=origin,
+                decision_time_s=decision_time_s,
             )
         )
     return examples
@@ -365,11 +541,20 @@ def fit_one_arm(
                 batch = _stack(chunk, device)
                 optimizer.zero_grad(set_to_none=True)
                 loss = arm_loss(net(batch["inputs"]), batch)
+                if not bool(torch.isfinite(loss).item()):
+                    raise DevFitDataError(
+                        f"training loss became non-finite for seed {seed}"
+                    )
                 loss.backward()
                 optimizer.step()
                 epoch_losses.append(float(loss.detach().cpu()))
             history.append(float(np.mean(epoch_losses)))
         net.eval()
+    if any(
+        not bool(torch.all(torch.isfinite(parameter)).item())
+        for parameter in net.parameters()
+    ):
+        raise DevFitDataError(f"trained weights became non-finite for seed {seed}")
     return net, history
 
 
@@ -388,8 +573,43 @@ def training_code_identity() -> dict[str, str]:
             "dev_fit_trainer.py": here / "dev_fit_trainer.py",
             "dev_fit_contract.py": here / "dev_fit_contract.py",
             "attribution_net.py": here / "attribution_net.py",
+            "config_contract.py": here / "config_contract.py",
+            "estimator.py": here / "estimator.py",
+            "role_contract.py": here / "role_contract.py",
+            "schema_types.py": here / "schema_types.py",
+            "storage_contract.py": here / "storage_contract.py",
         }
     )
+
+
+def require_authorized_dataset(
+    data_root: Path,
+    *,
+    manifest_sha256: str,
+    selected_rows: Sequence[IdentityManifestRow] | None = None,
+) -> None:
+    """Refuse anything except the exact delivered development partition.
+
+    The manifest digest is checked before its rows are parsed or any payload is opened.
+    Once rows exist, their config identity is checked independently so the checkpoint's
+    recorded config cannot be borrowed from the first row of a mixed-config selection.
+    """
+
+    root_name = Path(data_root).resolve().name
+    require(
+        root_name == AUTHORIZED_DATA_ROOT_NAME,
+        f"data root must be the authorized bare name {AUTHORIZED_DATA_ROOT_NAME!r}",
+    )
+    require(
+        manifest_sha256 == AUTHORIZED_MANIFEST_SHA256,
+        "manifest digest does not equal the authorized delivered manifest",
+    )
+    if selected_rows is not None:
+        config_hashes = sorted({row.config_hash for row in selected_rows})
+        require(
+            config_hashes == [AUTHORIZED_CONFIG_HASH],
+            "selected development rows do not all carry the authorized config identity",
+        )
 
 
 def build_provenance(
@@ -402,6 +622,7 @@ def build_provenance(
     seed: int,
     checkpoint_sha256: str,
     census: DevRowCensus,
+    protocol_code_identity: dict[str, str],
 ) -> DevFitProvenance:
     """Assemble and validate bound 4's record for one checkpoint.
 
@@ -419,7 +640,7 @@ def build_provenance(
         suite=suite,
         training_seed=seed,
         checkpoint_sha256=checkpoint_sha256,
-        code_identity=training_code_identity(),
+        code_identity=protocol_code_identity,
         row_disclosure=census.disclosure(),
     ).validate()
 
@@ -433,16 +654,40 @@ def write_document(path: Path, document: dict[str, object]) -> str:
     return text
 
 
-def plan_document(*, window_origin_step: int, window_steps: int) -> dict[str, object]:
+def arm_document(result: ArmResult, protocol: TrainingProtocol) -> dict[str, object]:
+    """Return one completed arm with its checkpoint and reproducibility settings."""
+
+    document = result.provenance.as_document()
+    document.update(
+        {
+            "checkpoint_name": result.checkpoint_name,
+            "final_loss": result.final_loss,
+            "loss_history": list(result.loss_history),
+            "n_examples": result.n_examples,
+            "role_index_sha256": dict(sorted(AUTHORIZED_ROLE_INDEX_SHA256.items())),
+            "training_protocol": protocol.as_document(),
+        }
+    )
+    return document
+
+
+def plan_document(
+    *,
+    protocol: TrainingProtocol,
+    protocol_code_identity: dict[str, str],
+) -> dict[str, object]:
     """Return the plan artifact: the ten arms this trainer is authorized to run."""
 
     return {
         "authority": DEVELOPMENT_ONLY_AUTHORITY,
         "exit": X_PLAN_OK,
         "arms": [{"suite": suite, "seed": seed} for suite, seed in matched_fit_plan()],
+        "code_identity": protocol_code_identity,
         "n_arms": len(matched_fit_plan()),
-        "window_origin_step": int(window_origin_step),
-        "window_steps": int(window_steps),
+        "authorized_role_index_sha256": dict(
+            sorted(AUTHORIZED_ROLE_INDEX_SHA256.items())
+        ),
+        "training_protocol": protocol.as_document(),
         "fits_run": 0,
         "rollouts_spent": 0,
     }
@@ -455,8 +700,10 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--mode", choices=("plan", "fit"), required=True)
     parser.add_argument("--output-dir", required=True, type=Path)
     parser.add_argument("--data-root", type=Path, default=None)
-    parser.add_argument("--window-origin-step", type=int, default=None)
-    parser.add_argument("--window-steps", type=int, default=768)
+    parser.add_argument(
+        "--window-origin-step", type=int, default=None
+    )
+    parser.add_argument("--window-steps", type=int, default=DEVELOPMENT_WINDOW_STEPS)
     parser.add_argument("--epochs", type=int, default=20)
     parser.add_argument("--batch-size", type=int, default=8)
     parser.add_argument("--learning-rate", type=float, default=1e-3)
@@ -473,67 +720,144 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     args = parse_args(argv)
     output_dir = Path(args.output_dir)
-
-    if args.mode == "plan":
-        document = plan_document(
-            window_origin_step=(
-                -1 if args.window_origin_step is None else args.window_origin_step
-            ),
-            window_steps=args.window_steps,
-        )
-        write_document(output_dir / "dev_fit_plan.json", document)
-        print(f"{X_PLAN_OK}: {document['n_arms']} arms planned, 0 fits run")
-        return EXIT_CODES[X_PLAN_OK]
-
-    if args.data_root is None or args.window_origin_step is None:
+    if args.window_origin_step is None or (
+        args.mode == "fit" and args.data_root is None
+    ):
         document = {
             "authority": DEVELOPMENT_ONLY_AUTHORITY,
             "exit": X_DATA_MISSING,
             "reason_class": "MissingRequiredArgument",
             "fits_run": 0,
         }
-        write_document(output_dir / "dev_fit_result.json", document)
-        print(f"{X_DATA_MISSING}: --mode fit requires --data-root and --window-origin-step")
+        target = "dev_fit_plan.json" if args.mode == "plan" else "dev_fit_result.json"
+        write_document(output_dir / target, document)
+        print(
+            f"{X_DATA_MISSING}: --window-origin-step is required"
+            + (" and --mode fit requires --data-root" if args.mode == "fit" else "")
+        )
         return EXIT_CODES[X_DATA_MISSING]
+
+    protocol = TrainingProtocol(
+        window_origin_step=args.window_origin_step,
+        window_steps=args.window_steps,
+        decision_step=args.window_origin_step + args.window_steps,
+        control_dt_s=DEVELOPMENT_CONTROL_DT_S,
+        epochs=args.epochs,
+        batch_size=args.batch_size,
+        learning_rate=args.learning_rate,
+        device=args.device,
+    )
+
+    try:
+        protocol.validate()
+        protocol_code_identity = training_code_identity()
+    except DevFitContractError as error:
+        document = {
+            "authority": DEVELOPMENT_ONLY_AUTHORITY,
+            "exit": X_CONTRACT_REFUSED,
+            "reason_class": type(error).__name__,
+            "fits_run": 0,
+        }
+        target = "dev_fit_plan.json" if args.mode == "plan" else "dev_fit_result.json"
+        write_document(output_dir / target, document)
+        print(f"{X_CONTRACT_REFUSED}: {error}")
+        return EXIT_CODES[X_CONTRACT_REFUSED]
+
+    if args.mode == "plan":
+        document = plan_document(
+            protocol=protocol,
+            protocol_code_identity=protocol_code_identity,
+        )
+        write_document(output_dir / "dev_fit_plan.json", document)
+        print(f"{X_PLAN_OK}: {document['n_arms']} arms planned, 0 fits run")
+        return EXIT_CODES[X_PLAN_OK]
 
     data_root = Path(args.data_root)
     manifest_path = data_root / "manifest.csv"
-    extractor = WindowFeatureExtractor(window_steps=args.window_steps)
-    device = torch.device(args.device)
     completed: list[tuple[str, int]] = []
     results: list[ArmResult] = []
 
     try:
-        rows, census = select_dev_rows(manifest_path)
+        if not manifest_path.is_file():
+            raise DevFitDataError("the data root has no manifest.csv")
         manifest_digest = file_sha256(manifest_path)
+        require_authorized_dataset(data_root, manifest_sha256=manifest_digest)
+        rows, census = select_dev_rows(manifest_path)
+        require_authorized_dataset(
+            data_root,
+            manifest_sha256=manifest_digest,
+            selected_rows=rows,
+        )
+        observation_loaders, label_loader = build_role_loaders(data_root)
+        extractor = WindowFeatureExtractor(window_steps=protocol.window_steps)
+        try:
+            device = torch.device(protocol.device)
+        except (RuntimeError, ValueError) as error:
+            raise DevFitContractError("device must be a valid torch device name") from error
+        require(
+            device.type in {"cpu", "cuda"},
+            "device must name the cpu or cuda backend",
+        )
+        require(
+            device.type != "cuda" or torch.cuda.is_available(),
+            "a CUDA device was requested but CUDA is unavailable",
+        )
+        require(
+            device.type != "cuda"
+            or device.index is None
+            or 0 <= device.index < torch.cuda.device_count(),
+            "the requested CUDA device index is unavailable",
+        )
         for suite, seed in matched_fit_plan():
             arm_rows = [row for row in rows if row.suite == suite]
             examples = load_arm_examples(
-                data_root, arm_rows, suite=suite, origin=args.window_origin_step,
+                arm_rows,
+                suite=suite,
+                origin=protocol.window_origin_step,
+                decision_time_s=protocol.decision_time_s,
                 extractor=extractor,
+                observation_loader=observation_loaders[suite],
+                label_loader=label_loader,
             )
-            net, history = fit_one_arm(
-                examples,
-                seed=seed,
-                epochs=args.epochs,
-                batch_size=args.batch_size,
-                learning_rate=args.learning_rate,
-                device=device,
-            )
+            try:
+                net, history = fit_one_arm(
+                    examples,
+                    seed=seed,
+                    epochs=protocol.epochs,
+                    batch_size=protocol.batch_size,
+                    learning_rate=protocol.learning_rate,
+                    device=device,
+                )
+            except RuntimeError as error:
+                raise DevFitDataError(
+                    f"training runtime failed for {suite} seed {seed} "
+                    f"({type(error).__name__})"
+                ) from error
             checkpoint_name = f"dev_fit_{suite}_seed{seed}.pt"
             checkpoint_path = output_dir / checkpoint_name
-            checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
-            torch.save(net.state_dict(), checkpoint_path)
+            checkpoint_buffer = io.BytesIO()
+            try:
+                torch.save(net.state_dict(), checkpoint_buffer)
+            except RuntimeError as error:
+                raise DevFitDataError(
+                    f"checkpoint serialization failed for {suite} seed {seed} "
+                    f"({type(error).__name__})"
+                ) from error
+            checkpoint_bytes = checkpoint_buffer.getvalue()
+            checkpoint_digest = hashlib.sha256(checkpoint_bytes).hexdigest()
             provenance = build_provenance(
                 data_root=data_root,
                 manifest_sha256=manifest_digest,
-                config_hash=rows[0].config_hash,
+                config_hash=AUTHORIZED_CONFIG_HASH,
                 assignment_sha256=_assignment_digest(),
                 suite=suite,
                 seed=seed,
-                checkpoint_sha256=file_sha256(checkpoint_path),
+                checkpoint_sha256=checkpoint_digest,
                 census=census,
+                protocol_code_identity=protocol_code_identity,
             )
+            checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+            checkpoint_path.write_bytes(checkpoint_bytes)
             results.append(
                 ArmResult(
                     suite=suite,
@@ -555,7 +879,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             "exit": X_CONTRACT_REFUSED,
             "reason_class": type(error).__name__,
             "arms_completed": [{"suite": s, "seed": d} for s, d in completed],
+            "arms": [arm_document(result, protocol) for result in results],
+            "code_identity": protocol_code_identity,
             "fits_run": len(completed),
+            "training_protocol": protocol.as_document(),
         }
         write_document(output_dir / "dev_fit_result.json", document)
         print(f"{X_CONTRACT_REFUSED}: {error}")
@@ -566,7 +893,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             "exit": X_DATA_MISSING,
             "reason_class": type(error).__name__,
             "arms_completed": [{"suite": s, "seed": d} for s, d in completed],
+            "arms": [arm_document(result, protocol) for result in results],
+            "code_identity": protocol_code_identity,
             "fits_run": len(completed),
+            "training_protocol": protocol.as_document(),
         }
         write_document(output_dir / "dev_fit_result.json", document)
         print(f"{X_DATA_MISSING}: {error}")
@@ -580,7 +910,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             "exit": X_PLAN_INCOMPLETE,
             "reason_class": type(error).__name__,
             "arms_completed": [{"suite": s, "seed": d} for s, d in completed],
+            "arms": [arm_document(result, protocol) for result in results],
+            "code_identity": protocol_code_identity,
             "fits_run": len(completed),
+            "training_protocol": protocol.as_document(),
         }
         write_document(output_dir / "dev_fit_result.json", document)
         print(f"{X_PLAN_INCOMPLETE}: {error}")
@@ -590,13 +923,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         "authority": DEVELOPMENT_ONLY_AUTHORITY,
         "exit": X_FIT_OK,
         "fits_run": len(results),
-        "window_origin_step": int(args.window_origin_step),
-        "window_steps": int(args.window_steps),
-        "arms": [json.loads(result.provenance.canonical_string()) for result in results],
+        "arms": [arm_document(result, protocol) for result in results],
+        "code_identity": protocol_code_identity,
         "final_losses": [
             {"suite": r.suite, "seed": r.seed, "final_loss": r.final_loss} for r in results
         ],
+        "role_index_sha256": dict(sorted(AUTHORIZED_ROLE_INDEX_SHA256.items())),
         "rollouts_spent": 0,
+        "training_protocol": protocol.as_document(),
     }
     write_document(output_dir / "dev_fit_result.json", document)
     print(f"{X_FIT_OK}: {len(results)} arms fitted, 0 rollouts spent")
