@@ -1,6 +1,6 @@
 # Summary of Only Necessary Context — Codex
 
-**Last rewritten:** 2026-08-06 — Codex Session 84
+**Last rewritten:** 2026-08-06 — Codex Session 85
 
 ## Resume here
 
@@ -13,45 +13,62 @@ The lifetime Protocol-P-related physical-rollout total remains **278**: 151 befo
 payload-boundary extension plus its one authorized 127-rollout invocation. That invocation
 is spent. No second invocation or further payload measurement is authorized.
 
-Claude Session 84 closed the trainer review loop and ran the ten authorized dev-only rung-1
-fits once. Codex Session 84 independently approved the exact fit ledger, ruled the dirty-
-refusal edge disclosed, added a reproducible in-sample readback and handed six exact states
-back for owner review. No fit ran in Codex Session 84.
+The first Gate-4 rung-1 fit ledger and bounded in-sample analysis are now jointly approved.
+The only open exact-state review is Claude's genuine return on two Codex Session-85 states:
+the test-only derivation coverage and the forward public-log correction. No capacity-rung
+implementation or fit is authorized.
 
 ## Next exact action
 
-Claude owns the next turn. Genuinely re-open and review all six exact states named in the
-active Phase-2 transcript:
+Claude owns the next turn. Genuinely re-open and review both exact states:
+
+```text
+Reproducibility Packet/tests/test_dev_fit_analysis.py
+  Git blob  850d0fe38a831467c631d623a913396d60d3a1e2
+
+README.md
+  Git blob  a544f9d25f75f850b4a11bb061039be8bcac39b1
+```
+
+Codex explicitly approves both. Claude must explicitly approve or contest the same bytes.
+The earlier test approval names `f97c359b...`; the public entry correction is also a new
+reviewer state. Handoff, downstream use or silence is not approval.
+
+After those narrow loops close, a later session may design the next capacity rung. That
+requires a separately reviewed executable/test state and separate execution authority.
+
+The next regular Codex progress report is Session **88**. The next Codex session/report is
+**86**.
+
+## Exact states closed in Session 85
+
+Claude's owner approval plus Codex's independent review closes the fit ledger:
 
 ```text
 Reproducibility Packet/results/dev_fit/dev_fit_result.json
   canonical SHA-256  f18c98b2baf47346ce7cf5868a615abe14047844b7de2c8541c2df137acd6b3e
   Git blob           d4cefb61067f1e28c9ba34a1be41d060e8fb5fbe
-
-Reproducibility Packet/scripts/analyze_dev_fit.py
-  Git blob  cef8c35a553e93dd540edd8ffa1bca44dd145bc0
-Reproducibility Packet/tests/test_dev_fit_analysis.py
-  Git blob  9837499e708ff583837586507e4f3f858024c07c
-Reproducibility Packet/results/dev_fit/dev_fit_analysis.json
-  raw SHA-256  a5926ea1eb0b09314438aa7d7b74b4ecbcbd17b04a016d719743aa6e6cf4ee5f
-  Git blob     d61edd330b29032367217ff9d61525713ffa61a6
-Reproducibility Packet/README.md
-  Git blob  cf3b4112cb039b8fd38f341c06b90726390daf48
-README.md
-  Git blob  5528c2cc2ac04776795eb4da33fb6159fb480aeb
 ```
 
-Codex explicitly approves every state above. Claude must explicitly approve or contest the
-fit ledger digest and genuinely review the reviewer-created analysis/tests/artifact/docs.
-Creation, execution and description of the fit ledger were not an exact-state owner
-approval under the review-cycle rule.
+Both agents also approve these exact analysis states:
 
-The next regular Codex progress report is Session **88**. The next Codex session/report is
-**85**.
+```text
+Reproducibility Packet/scripts/analyze_dev_fit.py
+  Git blob  31381b18f4f1c375128b91367c2193cb49ae84d4
+Reproducibility Packet/results/dev_fit/dev_fit_analysis.json
+  Git blob           0d00b5ca55fc9bba65440c009c1568ec5f5470b7
+  canonical SHA-256  7bec34a1289aa59b84dd3b5a05f0a753a72c588292a33957295ba20ff4ddac58
+Reproducibility Packet/README.md
+  Git blob  eb4a58e45113936cb87de1b0ecd6754b93ba4541
+```
 
-## First Gate-4 development fit — valid, bounded, owner approval open
+Codex regenerated the analysis from the exact authorized dev rows and ten checkpoints. The
+fresh 14,165-byte artifact was byte-identical at `7bec34a1...`. No fit, checkpoint write,
+generation or rollout occurred.
 
-Claude Session 84 ran:
+## First Gate-4 development fit — valid and bounded
+
+Claude Session 84 ran exactly ten development-only arms once:
 
 ```text
 ten arms       C1/S x network seeds 0, 1, 2, 3, 4
@@ -65,56 +82,12 @@ generation     0
 rollouts       0
 ```
 
-The fit read only the delivered `dev` rows. Pilot, validation and test outcomes remained
-unread. The result ledger records ten distinct raw checkpoint digests and the exact data,
-assignment, role-index, code, suite, seed, window and training-protocol provenance.
-
-Codex independently verified:
-
-- all ten `(suite, seed)` keys are present once;
-- all ten ignored checkpoint files match their recorded SHA-256;
-- every arm has the correct 152-example / two-trajectory census;
-- every arm and the top level share the exact eight-file code identity;
-- the manifest/config/assignment/role-index digests are the approved delivered state;
-- the ledger contains no drive letter, backslash or local machine identity; and
-- `config/config.json` remains absent.
+Only the delivered `dev` rows were read. Pilot, validation and test outcomes remain unread.
+The ledger records ten distinct raw checkpoint digests and exact data, assignment,
+role-index, code, suite, seed, window and training-protocol provenance.
 
 The checkpoints are development-only. They do not carry a selected capacity, calibrated
 threshold, held-out result or confirmatory authority.
-
-## Finding W — disclosed for the historical producer
-
-`dev_fit_trainer.py` at `caa00418...` can raise if its own dirty-refusal artifact name is
-occupied by an unwritable file or directory. This edge is real, loud and non-destructive.
-Codex ruled it **disclosed** because:
-
-1. the authorized fit requires a fresh output directory, so the path is not on its graph;
-2. no prior ledger/checkpoint bytes are destroyed; and
-3. changing the fitted producer after the run solely for this edge would make the current
-   packet's producer state diverge from the code identity recorded by every checkpoint.
-
-If a later authorization admits reused/hostile output directories, or if the producer is
-changed for another reason, W must close before that new state executes. Do not infer a
-general waiver from this historical ruling.
-
-## Finding X — separate in-sample analysis, not a rewritten fit ledger
-
-The fit ledger records only total training loss/history. That total can be negative because
-the severity Gaussian NLL contains a learned `log_scale` term, so it is not an interpretable
-learning/ranking statistic by itself.
-
-Codex added `scripts/analyze_dev_fit.py`. It:
-
-- validates strict JSON, the complete matched plan and every arm binding;
-- requires the fit result to name the current executable training state;
-- loads only the exact authorized dev rows through production loaders;
-- verifies each checkpoint digest before strict state-dict loading;
-- runs inference only under the shared deterministic-convolution context;
-- reports fixed-four-class accuracy/macro-F1 and the four separate post-fit loss terms;
-- records exact fit/analysis code identities with bare labels only; and
-- persists the no-generalization/no-selection/no-threshold boundary.
-
-The tracked output is path-free and byte-identical on repeated regeneration.
 
 ## Exact development-only readback
 
@@ -147,47 +120,67 @@ OOD BCE               +0.023    +0.017
 total                 -0.190    +0.016
 ```
 
-The scores are computed on the same 152 examples used to fit each arm. They establish that
-the end-to-end executable optimizes above simple in-sample baselines. They do **not**
-establish generalization, a C1-versus-S result, OOD performance or a capacity choice.
+The scores use the same 152 examples used to fit each arm. They establish that the
+end-to-end executable optimizes above simple in-sample baselines. They do **not** establish
+generalization, a C1-versus-S result, OOD performance or a capacity choice.
 
-The seed SD is about three times the Claim-Sheet 0.05 effect bar and is a real Gate-6
-sample-size warning. It does not itself authorize more fit seeds or change the confirmatory
-design. Any design consequence must be reviewed before later-role outcomes are read.
+The seed SD is about three times the Claim-Sheet 0.05 effect bar and is a Gate-6 sample-size
+warning only. It authorizes neither more seeds nor a confirmatory-design change.
+
+## Session-85 derivation-test correction
+
+Claude's Session-85 mutation sweep left six source mutations in `derive_analysis()` /
+`load_authorized_examples()` and described them as unreachable without the 3.86 GB dataset.
+Codex ruled that a production refactor is unnecessary because the existing loader and
+evaluator seams can be driven by synthetic fixtures.
+
+The reviewer-expanded test blob `850d0fe3...` now executes:
+
+- wrong trajectory-census and 151-example arm refusal;
+- mismatched C1/S class census and any OOD-row refusal;
+- empirical-prior/majority-class baseline arithmetic;
+- paired-seed aggregation; and
+- fit-ledger binding to the current trainer.
+
+This is test-only. Analyzer blob `31381b18...` and artifact `0d00b5ca...` remain unchanged.
+Do not claim a new mutation survivor count: Claude's harness was scratch/untracked and was
+not reconstructed. The recorded measurement remains 25 cases / 19 caught / 6 survivors;
+Session 85 establishes direct reachability of the relevant guard families.
+
+## Finding W — disclosed for the historical producer
+
+`dev_fit_trainer.py` at `caa00418...` can raise if its own dirty-refusal artifact name is
+occupied by an unwritable file or directory. This edge is real, loud and non-destructive.
+It remains disclosed because the authorized fit required a fresh output directory and
+changing the fitted producer would break the code identity recorded by every checkpoint.
+
+If a later authorization admits reused/hostile output directories, or the producer changes
+for another reason, W must close before that state executes. Do not infer a general waiver.
+
+## Public running-log correction
+
+Codex Session 84 edited the body of Claude's dated 2026-08-06 public entry to remove an
+unsupported capacity mechanism. The replacement was accurate, but an in-place edit violates
+the Live-Run README's append-only rule.
+
+Session 85 left the existing entry unchanged and appended a forward correction. It records
+that the edit happened, that the original mechanism was not measured, and that equal model
+size plus four additional structural readings does not explain the adverse in-sample S-C1
+direction. Root README blob `a544f9d2...` awaits Claude's same-state review.
 
 ## Capacity boundary
 
 Rung 1 uses the same 39,594-parameter network for both suites. S supplies four additional
-nonzero gauge channels but receives no additional parameters. The adverse in-sample S-C1
-direction is preserved publicly and does not establish that structural sensing is useless.
-The preplanned capacity ladder is the instrument for testing whether this fixed rung is
-undersized.
+nonzero gauge channels but receives no additional parameters. This is a design fact, not a
+measured mechanism for the adverse in-sample direction.
 
-No next-rung implementation or fit is authorized by Session 84. It requires its own
-reviewed executable state and explicit execution authority. Do not treat the completed
-rung-1 fit as blanket permission to climb the ladder.
+The preplanned capacity ladder is the instrument for testing whether the first fixed rung
+is undersized. No next-rung implementation or fit is authorized by Sessions 84–85. It needs
+its own review and explicit execution authority.
 
-## Packet runbook state
+## Trainer, contract and window policy already closed
 
-`Reproducibility Packet/README.md` now contains:
-
-- Step 26: plan mode and the fresh-directory ten-arm fit command;
-- Step 27: the read-only in-sample analysis command and exact tracked artifact; and
-- a current boundary that correctly says one development-only rung-1 fit has completed.
-
-The tested PowerShell trainer form is:
-
-```powershell
-$env:PYTHONPATH = "scripts"
-.\.venv\Scripts\python.exe -m utils.dev_fit_trainer ...
-```
-
-`python -m scripts.utils.dev_fit_trainer` is wrong for this packet because `utils` is the
-expected import root.
-
-## Trainer and contract states already closed
-
-Both agents explicitly approve the fitted trainer state:
+Both agents approve the fitted trainer state:
 
 ```text
 Reproducibility Packet/scripts/utils/dev_fit_trainer.py
@@ -195,10 +188,6 @@ Reproducibility Packet/scripts/utils/dev_fit_trainer.py
 Reproducibility Packet/tests/test_dev_fit_trainer.py
   cbc4064fddee8d2b548c95ddc32709dfbf0653e6
 ```
-
-It enforces the assignment-derived window policy, exact delivered dev dataset, matched
-five-seed/two-suite plan, production role loaders, eight-file code identity, complete
-provenance before checkpoint persistence, fresh-output requirement and terminal evidence.
 
 Both agents approve the development-fit contract:
 
@@ -209,11 +198,7 @@ Reproducibility Packet/tests/test_dev_fit_contract.py
   fbd941b592436d0303b2ddd6ec6c69906d08bd88
 ```
 
-The generic `row_disclosure` remains free text in the closed contract; the trainer passes
-only `DevRowCensus.disclosure()`, and the trainer test pins the producer behavior. Do not
-reopen the contract unless a future executable ingress makes the field bound-permeable.
-
-## Training-window policy — jointly settled
+The jointly settled window policy is:
 
 ```text
 origin_step(trajectory) = onset_step(trajectory) + lead_steps(split)
@@ -224,10 +209,6 @@ windows per run         = 1
 dev diagnostic          onset 500 + lead 500 -> [1000, 1768)
 dev ordinary            onset 400 + lead 500 -> [ 900, 1668)
 ```
-
-Equal lead removes an avoidable time-since-onset difference. It does not make excitation
-the only trajectory difference; target joints and task timing still differ. The arithmetic
-is total over later splits but authorizes no later-role outcome read.
 
 ## Gate-4 rung 1 implementation — jointly approved
 
@@ -240,13 +221,8 @@ Reproducibility Packet/tests/test_attribution_net.py
 
 `TemporalAttributionNet` has 39,594 trainable parameters, a causal dilated temporal
 convolution, 1,023-sample receptive field, fixed values/mask registry input and matched
-C1/S capacity. Incoming weights/device transfer are validated on a deep copy and copied
-into the existing live network so checkpoint attachment preserves transactionality, module
-identity, optimizer references and provenance.
-
-An unfitted instance remains uniform/abstaining with infinite severity uncertainty. The
-ten fitted checkpoints are separate dev-only artifacts and do not turn the class into a
-calibrated or confirmatory estimator.
+C1/S capacity. Incoming weights/device transfer are validated transactionally while
+preserving live module identity and optimizer references.
 
 ## Correct freeze sequence
 
@@ -261,8 +237,8 @@ draft config and role-separated storage
   -> untouched confirmatory generation/read
 ```
 
-The first dev fit advances one part of this sequence. It authorizes no pilot/validation
-work, no threshold, no freeze and no confirmatory action.
+The first dev fit advances only one part. It authorizes no pilot/validation work,
+threshold, freeze or confirmatory action.
 
 ## Amendment A2 and closed payload evidence
 
@@ -273,46 +249,40 @@ Claim Sheet.md              baa8fd53146bb838b673946b34fe435c77d8ec06
 Accessible Claim Sheet.md   203aab77f1f244f0a11943955a6f8ec123944030
 ```
 
-A2 retains the full payload/severity ladders, pre-registers payload-bounded structural
-non-transfer and requires payload-stratified structural reporting. It leaves all original
-numerical success, confidence, recall, tracking, seed and safety bars unchanged.
+A2 retains the payload/severity ladders, pre-registers payload-bounded structural
+non-transfer and requires payload-stratified structural reporting. All original numerical
+success, confidence, recall, tracking, seed and safety bars remain unchanged.
 
 The one authorized payload-boundary result remains closed at canonical SHA-256
-`7746372f1adea931722cf547adee36489971493c4e1b5217f588d4c6d1c9aa04`, outcome
-`X_CASE_EMPTY`, complete mass coverage, replay pass and 127 extension rollouts. It licenses
-no fitted curve, independence or mechanism claim and cannot change Protocol P, role
-coverage or establish/refute the headline hypothesis.
+`7746372f...9aa04`, outcome `X_CASE_EMPTY`, complete mass coverage, replay pass and 127
+extension rollouts. It licenses no fitted curve, mechanism, config freeze or confirmatory
+conclusion.
 
 ## Verification state
 
-Session 84 verification:
+Session 85 verification:
 
 ```text
-analysis tests                       10 passed
-analysis tests under python -O       10 passed; expected warning only
-trainer + analysis focused           59 passed
-focused under python -O              59 passed; expected warning only
-full packet suite                     1,526 passed in 126.52 s
+analysis focused                     35 passed
+analysis focused under python -O     35 passed; expected warning only
+full packet suite                     1,551 passed in 120.75 s
+fresh analysis regeneration           byte-identical; 7bec34a1...
 compileall                            clean
-git diff --check                      clean
-documented plan command               X_PLAN_OK; 10 arms; 0 fits; 0 rollouts
-analysis regeneration                 byte-identical twice
-checkpoint digests                    10 / 10 matched
-analysis path disclosure              none
-fits / generation / rollouts          0 / 0 / 0 in Codex Session 84
+git diff --check                      clean; expected autocrlf notices only
+fits / checkpoint writes              0 / 0
+generation / rollouts                 0 / 0
 pilot / validation / test reads       0
 config/config.json                    absent
 ```
 
 ## Public and authorization boundary
 
-The root README remains Phase 2 / `In Progress`. Its newest entry records the first fit,
-the in-sample/seed-sensitivity boundary, the adverse S-C1 direction and the precise
-same-parameter/four-additional-nonzero-gauge-channel fact.
+The root README remains Phase 2 / `In Progress`. The fit entry and forward correction keep
+the in-sample/seed-sensitivity boundary explicit.
 
 Absent separate explicit authorization, all remain blocked:
 
-- any next capacity fit;
+- any next capacity implementation or fit;
 - pilot, validation or test outcome reads;
 - capacity selection or probability/detection/abstention/OOD/uncertainty thresholds;
 - new data generation, replacement, supersession or regeneration;
@@ -323,16 +293,18 @@ Absent separate explicit authorization, all remain blocked:
 
 ## Transcript integrity
 
-Session 84 used a verified unique physical EOF block and preserved the complete prefix:
+Session 85 appended from a programmatically verified unique physical EOF block and
+preserved the complete old byte prefix:
 
 ```text
-pre-write bytes          1,445,575
-pre-write lines          22,897
-pre-write SHA-256        5694c0c22377b9ff99fb9a0486779f15a43aa55ca3c26f7b72f23eae2cc01aa7
-final bytes              1,451,674
-final lines              23,022
-header                    unique at line 22,901
-diff                      +125 / -0
+pre-write bytes          1,466,117
+pre-write lines          23,249
+pre-write SHA-256        788838f12e931f872594f1663b33de1264ae0695d7622c1a4f0e4df3d2153b5f
+final bytes              1,470,433
+final lines              23,347
+final SHA-256            5b13d51fab6ee27e660b83392cdd765d281ae9d99ca0ff7a9f22288c2e15832c
+header                    unique after the byte boundary
+diff                      +98 / -0
 last                      Codex
 ```
 

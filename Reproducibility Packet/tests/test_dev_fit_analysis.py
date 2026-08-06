@@ -7,6 +7,7 @@ import json
 import math
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -57,6 +58,68 @@ def _synthetic_forward(n: int = 4, seed: int = 0):
     }
     with torch.no_grad(), deterministic_conv_precision():
         return net(inputs), batch
+
+
+def _derived_examples(*, mismatched_s: bool = False, ood_s: bool = False):
+    """Return a tiny dataset-free census for driving the derivation seam."""
+
+    c1 = [SimpleNamespace(class_index=index, ood_flag=False) for index in range(4)]
+    structural = [
+        SimpleNamespace(class_index=index, ood_flag=(ood_s and index == 0))
+        for index in range(4)
+    ]
+    if mismatched_s:
+        structural[-1].class_index = 0
+    return {"C1": c1, "S": structural}
+
+
+def _patch_derive_inputs(monkeypatch, examples_by_suite):
+    """Replace only the real-data/evaluation seams with deterministic fixtures."""
+
+    fit_result = _result()
+    data_census = {
+        "manifest_sha256": "0" * 64,
+        "assignment_sha256": fit_result["training_protocol"]["assignment_sha256"],
+        "row_disclosure": "synthetic derivation fixture",
+        "trajectory_census": analysis.EXPECTED_TRAJECTORY_CENSUS,
+    }
+    monkeypatch.setattr(
+        analysis,
+        "load_authorized_examples",
+        lambda _data_root: (examples_by_suite, data_census),
+    )
+
+    def evaluate(arm, examples, _checkpoint_dir):
+        suite_offset = 0.02 if arm["suite"] == "S" else 0.0
+        score = 0.40 + 0.01 * arm["training_seed"] + suite_offset
+        return {
+            "suite": arm["suite"],
+            "seed": arm["training_seed"],
+            "n_examples": len(examples),
+            "checkpoint_name": arm["checkpoint_name"],
+            "checkpoint_sha256": arm["checkpoint_sha256"],
+            "training_final_epoch_mean_loss": arm["final_loss"],
+            "post_fit_full_batch_loss_terms": {
+                "class_cross_entropy": 1.0,
+                "location_cross_entropy": 2.0,
+                "severity_gaussian_nll": -1.0,
+                "ood_binary_cross_entropy": 0.5,
+                "total": 2.5,
+                "severity_log_scale_mean": -0.5,
+            },
+            "classification": {
+                "accuracy": score,
+                "macro_f1": score,
+                "per_class_f1": {
+                    "healthy": score,
+                    "structure": score,
+                    "actuator": score,
+                    "sensor": score,
+                },
+            },
+        }
+
+    monkeypatch.setattr(analysis, "evaluate_arm", evaluate)
 
 
 def test_tracked_fit_result_is_the_complete_authorized_ten_arm_state():
@@ -260,6 +323,111 @@ def test_evaluate_arm_refuses_a_checkpoint_that_is_absent_or_moved(tmp_path):
     (tmp_path / arm["checkpoint_name"]).write_bytes(b"not the fitted weights")
     with pytest.raises(analysis.DevFitAnalysisError, match="does not match its recorded digest"):
         analysis.evaluate_arm(arm, [], tmp_path)
+
+
+def test_load_authorized_examples_guards_census_and_arm_size_without_real_data(
+    tmp_path, monkeypatch
+):
+    """The real-data ingress guards are reachable through their production seams."""
+
+    (tmp_path / "manifest.csv").write_text("fixture\n", encoding="utf-8", newline="\n")
+    rows = [SimpleNamespace(suite="C1"), SimpleNamespace(suite="S")]
+    census = SimpleNamespace(disclosure=lambda: "synthetic loader fixture")
+    counts = {"C1": 152, "S": 152}
+    trajectory = {"value": analysis.EXPECTED_TRAJECTORY_CENSUS}
+
+    monkeypatch.setattr(trainer, "file_sha256", lambda _path: "0" * 64)
+    monkeypatch.setattr(trainer, "require_authorized_dataset", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(trainer, "select_dev_rows", lambda _manifest: (rows, census))
+    monkeypatch.setattr(trainer, "authorized_window_schedule", lambda: ({}, "1" * 64))
+    monkeypatch.setattr(
+        trainer, "build_role_loaders", lambda _root: ({"C1": object(), "S": object()}, object())
+    )
+    monkeypatch.setattr(
+        trainer, "require_matched_trajectory_census", lambda *_args: trajectory["value"]
+    )
+    monkeypatch.setattr(trainer, "WindowFeatureExtractor", lambda **_kwargs: object())
+    monkeypatch.setattr(
+        trainer,
+        "load_arm_examples",
+        lambda *_args, suite, **_kwargs: [SimpleNamespace()] * counts[suite],
+    )
+
+    examples, loaded_census = analysis.load_authorized_examples(tmp_path)
+    assert {suite: len(items) for suite, items in examples.items()} == {"C1": 152, "S": 152}
+    assert loaded_census["trajectory_census"] == analysis.EXPECTED_TRAJECTORY_CENSUS
+
+    counts["S"] = 151
+    with pytest.raises(analysis.DevFitAnalysisError, match="exactly 152"):
+        analysis.load_authorized_examples(tmp_path)
+
+    counts["S"] = 152
+    trajectory["value"] = {}
+    with pytest.raises(analysis.DevFitAnalysisError, match="wrong trajectory census"):
+        analysis.load_authorized_examples(tmp_path)
+
+
+def test_derive_analysis_census_baselines_and_pairing_are_dataset_independent(
+    monkeypatch
+):
+    """The derivation arithmetic is driven without the 3.86 GB delivered dataset."""
+
+    _patch_derive_inputs(monkeypatch, _derived_examples())
+
+    report = analysis.derive_analysis(
+        data_root=Path("unused-data-root"),
+        fit_result_path=RESULT_PATH,
+        checkpoint_dir=Path("unused-checkpoint-dir"),
+    )
+
+    assert report["data_census"]["class_counts_by_suite"] == {
+        "C1": {"healthy": 1, "structure": 1, "actuator": 1, "sensor": 1},
+        "S": {"healthy": 1, "structure": 1, "actuator": 1, "sensor": 1},
+    }
+    assert report["baselines"] == {
+        "empirical_prior_cross_entropy": pytest.approx(math.log(4)),
+        "majority_class_accuracy": 0.25,
+        "majority_class": "healthy",
+    }
+    assert report["paired_macro_f1"]["mean_S_minus_C1"] == pytest.approx(0.02)
+    assert report["paired_macro_f1"]["sample_sd_S_minus_C1"] == pytest.approx(0.0)
+
+
+@pytest.mark.parametrize(
+    ("examples", "match"),
+    [
+        (_derived_examples(mismatched_s=True), "same class census"),
+        (_derived_examples(ood_s=True), "unexpectedly carries OOD rows"),
+    ],
+)
+def test_derive_analysis_refuses_bad_loaded_census_without_real_data(
+    monkeypatch, examples, match
+):
+    """Matched-class and OOD guards are executable, not real-data-only assertions."""
+
+    _patch_derive_inputs(monkeypatch, examples)
+
+    with pytest.raises(analysis.DevFitAnalysisError, match=match):
+        analysis.derive_analysis(
+            data_root=Path("unused-data-root"),
+            fit_result_path=RESULT_PATH,
+            checkpoint_dir=Path("unused-checkpoint-dir"),
+        )
+
+
+def test_derive_analysis_refuses_a_fit_not_bound_to_the_current_trainer(
+    monkeypatch,
+):
+    """The historical fit cannot be read through a different training producer."""
+
+    monkeypatch.setattr(trainer, "training_code_identity", lambda: {"wrong.py": "0" * 64})
+
+    with pytest.raises(analysis.DevFitAnalysisError, match="current executable training state"):
+        analysis.derive_analysis(
+            data_root=Path("unused-data-root"),
+            fit_result_path=RESULT_PATH,
+            checkpoint_dir=Path("unused-checkpoint-dir"),
+        )
 
 
 def test_tracked_analysis_names_the_current_analyzer():
