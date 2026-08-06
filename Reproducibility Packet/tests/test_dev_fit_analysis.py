@@ -60,14 +60,35 @@ def _synthetic_forward(n: int = 4, seed: int = 0):
         return net(inputs), batch
 
 
-def _derived_examples(*, mismatched_s: bool = False, ood_s: bool = False):
-    """Return a tiny dataset-free census for driving the derivation seam."""
+#: healthy, structure, actuator, sensor.  Deliberately UNEQUAL -- see `_derived_examples`.
+_DERIVED_CLASS_COUNTS = (1, 2, 3, 4)
 
-    c1 = [SimpleNamespace(class_index=index, ood_flag=False) for index in range(4)]
-    structural = [
-        SimpleNamespace(class_index=index, ood_flag=(ood_s and index == 0))
-        for index in range(4)
-    ]
+
+def _derived_examples(*, mismatched_s: bool = False, ood_s: bool = False):
+    """Return a tiny dataset-free census for driving the derivation seam.
+
+    The per-class counts are deliberately unequal. A uniform census executes the
+    baseline arithmetic without testing it: every proportion is the same number, so
+    `max(proportions)` and `min(proportions)` agree, and `max`/`min` over the count
+    mapping both return the first key. Measured (Claude, Session 86): with a uniform
+    four-example fixture, mutating either selector survived the whole focused suite;
+    with these counts both are caught. The delivered census is 8/16/32/96, whose
+    majority class is `sensor` and not the first key, so a fixture that cannot tell
+    the two selectors apart is not exercising the baseline the artifact reports.
+    """
+
+    def build(carries_ood: bool):
+        rows = [
+            SimpleNamespace(class_index=class_index, ood_flag=False)
+            for class_index, count in enumerate(_DERIVED_CLASS_COUNTS)
+            for _ in range(count)
+        ]
+        if carries_ood:
+            rows[0].ood_flag = True
+        return rows
+
+    c1 = build(False)
+    structural = build(ood_s)
     if mismatched_s:
         structural[-1].class_index = 0
     return {"C1": c1, "S": structural}
@@ -90,8 +111,13 @@ def _patch_derive_inputs(monkeypatch, examples_by_suite):
     )
 
     def evaluate(arm, examples, _checkpoint_dir):
-        suite_offset = 0.02 if arm["suite"] == "S" else 0.0
-        score = 0.40 + 0.01 * arm["training_seed"] + suite_offset
+        # The paired S-minus-C1 difference must VARY across seeds. A constant offset
+        # yields the same mean and a sample SD of exactly zero for ANY number of
+        # seeds, so a truncated paired loop is invisible to both statistics
+        # (measured, Claude Session 86: truncating to two seeds survived).
+        seed = arm["training_seed"]
+        suite_offset = (0.02 + 0.01 * seed) if arm["suite"] == "S" else 0.0
+        score = 0.40 + 0.01 * seed + suite_offset
         return {
             "suite": arm["suite"],
             "seed": arm["training_seed"],
@@ -331,9 +357,14 @@ def test_load_authorized_examples_guards_census_and_arm_size_without_real_data(
     """The real-data ingress guards are reachable through their production seams."""
 
     (tmp_path / "manifest.csv").write_text("fixture\n", encoding="utf-8", newline="\n")
-    rows = [SimpleNamespace(suite="C1"), SimpleNamespace(suite="S")]
+    # 152 rows per suite in ONE list, so the production per-suite filter is the thing
+    # that decides how many rows each arm sees. A two-row fixture plus a stub that
+    # returns a count of its own leaves that filter deletable with the suite green
+    # (measured, Claude Session 86) -- the fixture would already have the property
+    # the filter establishes.
+    rows = [SimpleNamespace(suite="C1") for _ in range(152)]
+    rows += [SimpleNamespace(suite="S") for _ in range(152)]
     census = SimpleNamespace(disclosure=lambda: "synthetic loader fixture")
-    counts = {"C1": 152, "S": 152}
     trajectory = {"value": analysis.EXPECTED_TRAJECTORY_CENSUS}
 
     monkeypatch.setattr(trainer, "file_sha256", lambda _path: "0" * 64)
@@ -350,18 +381,20 @@ def test_load_authorized_examples_guards_census_and_arm_size_without_real_data(
     monkeypatch.setattr(
         trainer,
         "load_arm_examples",
-        lambda *_args, suite, **_kwargs: [SimpleNamespace()] * counts[suite],
+        # One example per row HANDED IN. The stub must not re-derive the suite, or the
+        # production filter is covered for it and can be deleted unnoticed.
+        lambda suite_rows, *, suite, **_kwargs: [SimpleNamespace() for _ in suite_rows],
     )
 
     examples, loaded_census = analysis.load_authorized_examples(tmp_path)
     assert {suite: len(items) for suite, items in examples.items()} == {"C1": 152, "S": 152}
     assert loaded_census["trajectory_census"] == analysis.EXPECTED_TRAJECTORY_CENSUS
 
-    counts["S"] = 151
+    dropped = rows.pop()  # one S row, so S loads 151 and C1 still loads 152
     with pytest.raises(analysis.DevFitAnalysisError, match="exactly 152"):
         analysis.load_authorized_examples(tmp_path)
 
-    counts["S"] = 152
+    rows.append(dropped)
     trajectory["value"] = {}
     with pytest.raises(analysis.DevFitAnalysisError, match="wrong trajectory census"):
         analysis.load_authorized_examples(tmp_path)
@@ -381,16 +414,29 @@ def test_derive_analysis_census_baselines_and_pairing_are_dataset_independent(
     )
 
     assert report["data_census"]["class_counts_by_suite"] == {
-        "C1": {"healthy": 1, "structure": 1, "actuator": 1, "sensor": 1},
-        "S": {"healthy": 1, "structure": 1, "actuator": 1, "sensor": 1},
+        "C1": {"healthy": 1, "structure": 2, "actuator": 3, "sensor": 4},
+        "S": {"healthy": 1, "structure": 2, "actuator": 3, "sensor": 4},
     }
+    # `sensor` is neither the first nor the last key of the count mapping, so this
+    # pins the selector rather than an iteration-order accident.
     assert report["baselines"] == {
-        "empirical_prior_cross_entropy": pytest.approx(math.log(4)),
-        "majority_class_accuracy": 0.25,
-        "majority_class": "healthy",
+        # -sum(p*ln p) over (0.1, 0.2, 0.3, 0.4).
+        "empirical_prior_cross_entropy": pytest.approx(1.2798542258336676),
+        "majority_class_accuracy": pytest.approx(0.4),
+        "majority_class": "sensor",
     }
-    assert report["paired_macro_f1"]["mean_S_minus_C1"] == pytest.approx(0.02)
-    assert report["paired_macro_f1"]["sample_sd_S_minus_C1"] == pytest.approx(0.0)
+    # One row per predeclared seed. Nothing else in this file pins the paired table's
+    # cardinality against the contract that defines it, so a truncated loop was
+    # invisible; the tracked-artifact test at the foot of this file reads a static
+    # document and cannot see a change to the code that wrote it.
+    assert [row["seed"] for row in report["paired_macro_f1"]["by_seed"]] == list(
+        PREDECLARED_TRAINING_SEEDS
+    )
+    # Differences 0.02 .. 0.06, one per seed.
+    assert report["paired_macro_f1"]["mean_S_minus_C1"] == pytest.approx(0.04)
+    assert report["paired_macro_f1"]["sample_sd_S_minus_C1"] == pytest.approx(
+        0.015811388300841896
+    )
 
 
 @pytest.mark.parametrize(
