@@ -19,6 +19,7 @@ is the one Protocol P already pre-registered.
 
 from __future__ import annotations
 
+import dataclasses
 import json
 import sys
 from pathlib import Path
@@ -43,6 +44,7 @@ from utils.dev_fit_trainer import (  # noqa: E402
     X_CONTRACT_REFUSED,
     X_DATA_MISSING,
     X_FIT_OK,
+    X_OUTPUT_DIRTY,
     X_PLAN_INCOMPLETE,
     X_PLAN_OK,
     DevFitDataError,
@@ -419,6 +421,45 @@ def test_a_split_without_exactly_one_diagnostic_trajectory_is_refused():
             {"window_steps": 8, "control_dt_s": 0.0},
             "development control_dt_s",
         ),
+        # Session 83. A zero period alone does not pin the rule: the sweep showed
+        # `== DEVELOPMENT_CONTROL_DT_S` could be weakened to `!= 0.0` with the suite
+        # green, because 0.0 was the only wrong period any case supplied. A period that
+        # is positive, finite and simply NOT the development one is the state that
+        # separates the two rules, and it silently halves every derived step count.
+        (
+            {
+                "trajectory_specs": [
+                    {
+                        "id": "t",
+                        "split": "x",
+                        "onset_time_s": 0.8,
+                        "duration_s": 5.8,
+                        "diagnostic_probe": {"start_offset_s": 1.0},
+                    }
+                ]
+            },
+            {"window_steps": 8, "control_dt_s": 0.004},
+            "development control_dt_s",
+        ),
+        # Session 83. `diagnostic_probe` is read as "an object or null"; a list reaches
+        # `probes[0].get(...)` and raises `AttributeError` without the shape guard.
+        (
+            {
+                "trajectory_specs": [
+                    {
+                        "id": "t",
+                        "split": "x",
+                        "onset_time_s": 0.8,
+                        "duration_s": 5.8,
+                        "diagnostic_probe": [{"start_offset_s": 1.0}],
+                    }
+                ]
+            },
+            {"window_steps": 8},
+            "diagnostic_probe must be an object or null",
+        ),
+        # Session 83. The assignment itself must be a mapping before anything is read.
+        ([], {"window_steps": 8}, "assignment document must be a mapping"),
     ],
 )
 def test_malformed_schedule_controls_take_the_named_contract_refusal(
@@ -428,6 +469,32 @@ def test_malformed_schedule_controls_take_the_named_contract_refusal(
 
     with pytest.raises(DevFitContractError, match=message):
         development_window_schedule(document, split="x", **kwargs)
+
+
+def test_the_schedules_probe_flag_must_be_a_bool_not_merely_truthy():
+    """`has_diagnostic_probe` is recorded in the plan, so its type is part of the record.
+
+    Session 83: the reviewer added this guard and no test constructed a schedule that
+    could fail it, so it could be deleted with the focused suite green. A truthy payload
+    (the probe object itself) is the realistic wrong value — it serializes into the plan
+    artifact as an object where a reader expects a boolean.
+    """
+
+    fields = dict(
+        trajectory_spec_id=DIAGNOSTIC,
+        onset_step=4,
+        lead_steps=FIXTURE_LEAD,
+        origin_step=4 + FIXTURE_LEAD,
+        window_steps=WINDOW,
+        decision_step=4 + FIXTURE_LEAD + WINDOW,
+        run_steps=STEPS,
+    )
+    for wrong in ({"start_offset_s": 1.0}, 1, None):
+        with pytest.raises(DevFitContractError, match="has_diagnostic_probe must be a bool"):
+            WindowSchedule(**fields, has_diagnostic_probe=wrong).validate()
+    # The accept side: both booleans must still validate.
+    for good in (True, False):
+        assert WindowSchedule(**fields, has_diagnostic_probe=good).validate()
 
 
 def test_an_off_grid_assignment_time_is_refused_rather_than_rounded():
@@ -672,6 +739,79 @@ def test_a_label_onset_that_disagrees_with_the_assignment_is_refused(tmp_path):
             suite="S",
             schedule_by_trajectory=_fixture_schedule(),
             extractor=extractor,
+            observation_loader=observations["S"],
+            label_loader=labels,
+        )
+
+
+@pytest.mark.parametrize(
+    ("moved", "why"),
+    [
+        ("onset_index", "the index disagrees while the time still agrees"),
+        ("onset_time_s", "the time disagrees while the index still agrees"),
+    ],
+)
+def test_each_half_of_the_onset_binding_is_load_bearing_on_its_own(tmp_path, moved, why):
+    """The index and the time must be checked SEPARATELY, and only this can show it.
+
+    Session 83, and it is Session 52's lesson 63 in a new place. `_label_payload` derives
+    `onset_time_s` from `onset_index`, so the existing disagreement test moves both at
+    once and either check alone catches it — which is exactly why the sweep could delete
+    either one individually with the focused suite green. Two conditions in one `or`
+    chain are two mutually redundant guards unless something drives them apart.
+
+    The state each case constructs is also the realistic one: a payload whose two onset
+    fields disagree *with each other* is what a regeneration bug produces, and it is the
+    reason the reviewer bound both rather than one.
+    """
+
+    rows = _dataset(tmp_path)
+    target = next(row for row in rows if row.suite == "S")
+    correct = FIXTURE_ONSET[target.trajectory_spec_id]
+    payload = _label_payload(onset_index=correct)
+    if moved == "onset_index":
+        payload["onset_index"] = np.asarray(correct + 1, dtype=np.int64)
+    else:
+        payload["onset_time_s"] = np.asarray(
+            correct * 0.002 + 0.5, dtype=np.float64
+        )
+    np.savez(tmp_path / "labels" / f"{target.run_id}.npz", **payload)
+
+    observations, labels = _fixture_role_loaders(tmp_path)
+    with pytest.raises(DevFitDataError, match="disagrees with assignment trajectory"):
+        load_arm_examples(
+            [target],
+            suite="S",
+            schedule_by_trajectory=_fixture_schedule(),
+            extractor=WindowFeatureExtractor(window_steps=WINDOW),
+            observation_loader=observations["S"],
+            label_loader=labels,
+        )
+
+
+def test_the_onset_time_binding_is_an_equality_not_a_tolerance(tmp_path):
+    """The 1e-12 comparison must not be readable as a loose agreement window.
+
+    Session 83: the sweep widened the tolerance to a full second and the focused suite
+    stayed green, because no case ever supplied a small disagreement. One control period
+    (0.002 s) is the smallest disagreement that can mean anything here, and it must be
+    refused.
+    """
+
+    rows = _dataset(tmp_path)
+    target = next(row for row in rows if row.suite == "S")
+    correct = FIXTURE_ONSET[target.trajectory_spec_id]
+    payload = _label_payload(onset_index=correct)
+    payload["onset_time_s"] = np.asarray(correct * 0.002 + 0.002, dtype=np.float64)
+    np.savez(tmp_path / "labels" / f"{target.run_id}.npz", **payload)
+
+    observations, labels = _fixture_role_loaders(tmp_path)
+    with pytest.raises(DevFitDataError, match="disagrees with assignment trajectory"):
+        load_arm_examples(
+            [target],
+            suite="S",
+            schedule_by_trajectory=_fixture_schedule(),
+            extractor=WindowFeatureExtractor(window_steps=WINDOW),
             observation_loader=observations["S"],
             label_loader=labels,
         )
@@ -1059,10 +1199,157 @@ def test_fit_refuses_an_output_directory_with_a_stale_checkpoint(tmp_path, monke
     code = main(
         ["--mode", "fit", "--output-dir", str(output), "--data-root", str(root)]
     )
-    assert code == EXIT_CODES[X_CONTRACT_REFUSED]
-    document = json.loads((output / "dev_fit_result.json").read_text(encoding="utf-8"))
-    assert document["exit"] == X_CONTRACT_REFUSED
+    assert code == EXIT_CODES[X_OUTPUT_DIRTY]
+    document = json.loads(
+        (output / trainer.OUTPUT_DIRTY_ARTIFACT).read_text(encoding="utf-8")
+    )
+    assert document["exit"] == X_OUTPUT_DIRTY
     assert document["fits_run"] == 0
+    assert document["authority"] == DEVELOPMENT_ONLY_AUTHORITY
+
+
+def test_the_refusal_does_not_destroy_the_record_it_is_protecting(tmp_path, monkeypatch):
+    """The guard's own refusal may not overwrite `dev_fit_result.json`.
+
+    Session 83. The reviewer state staged only a stale checkpoint, so the directory it
+    refused had no prior result document to lose — the fixture already had the property
+    that made the defect invisible (limitation 111's shape, and Session 58's). Staging the
+    document too shows what the refusal did: `torch.save` embeds no provenance, so
+    `dev_fit_result.json` is the ONLY record binding each surviving `.pt` to its data
+    root, digests, suite, seed and code identity. Routing the refusal through an exit that
+    writes that name deleted it and left the checkpoints orphaned beside a document
+    reporting `fits_run: 0` — a worse mixed population than the one being refused.
+    """
+
+    root = tmp_path / "data"
+    root.mkdir()
+    _dataset(root)
+    _authorize_fixture_dataset(monkeypatch, root)
+    output = tmp_path / "out"
+    output.mkdir()
+    prior = output / "dev_fit_result.json"
+    prior.write_text(
+        json.dumps({"exit": X_FIT_OK, "fits_run": 2, "arms": ["provenance lives here"]}),
+        encoding="utf-8",
+        newline="\n",
+    )
+    prior_bytes = prior.read_bytes()
+    checkpoint = output / "dev_fit_C1_seed0.pt"
+    checkpoint.write_bytes(b"stale")
+    checkpoint_bytes = checkpoint.read_bytes()
+    monkeypatch.setattr(
+        trainer,
+        "fit_one_arm",
+        lambda *args, **kwargs: pytest.fail("fit began before stale output was refused"),
+    )
+
+    code = main(
+        ["--mode", "fit", "--output-dir", str(output), "--data-root", str(root)]
+    )
+
+    assert code == EXIT_CODES[X_OUTPUT_DIRTY]
+    assert prior.read_bytes() == prior_bytes, "the prior result document was overwritten"
+    assert checkpoint.read_bytes() == checkpoint_bytes
+    document = json.loads(
+        (output / trainer.OUTPUT_DIRTY_ARTIFACT).read_text(encoding="utf-8")
+    )
+    assert document["exit"] == X_OUTPUT_DIRTY
+    assert trainer.OUTPUT_DIRTY_ARTIFACT != "dev_fit_result.json"
+
+
+def test_the_staleness_guard_runs_before_the_first_write_of_any_exit(tmp_path):
+    """The missing-`--data-root` exit sits ABOVE the guard and also writes the record.
+
+    Session 83: with the guard placed inside the second `try`, this exit destroyed the
+    prior result document without the guard running at all. Placement is the fix, so
+    placement is what this test pins. It reaches no data root and no assignment file.
+    """
+
+    output = tmp_path / "out"
+    output.mkdir()
+    prior = output / "dev_fit_result.json"
+    prior.write_text(
+        json.dumps({"exit": X_FIT_OK, "fits_run": 2}), encoding="utf-8", newline="\n"
+    )
+    prior_bytes = prior.read_bytes()
+
+    code = main(["--mode", "fit", "--output-dir", str(output)])
+
+    assert code == EXIT_CODES[X_OUTPUT_DIRTY], "the data-missing exit ran first"
+    assert prior.read_bytes() == prior_bytes
+    document = json.loads(
+        (output / trainer.OUTPUT_DIRTY_ARTIFACT).read_text(encoding="utf-8")
+    )
+    assert document["exit"] == X_OUTPUT_DIRTY
+
+
+def test_plan_mode_may_still_write_beside_an_earlier_fit_result(tmp_path):
+    """The accept side of the exemption: the guard is fit-path only, deliberately.
+
+    An operator may plan into a directory that already holds a completed fit, because a
+    plan artifact overwrites nothing that binds a checkpoint to its provenance.
+    """
+
+    output = tmp_path / "out"
+    output.mkdir()
+    prior = output / "dev_fit_result.json"
+    prior.write_text(
+        json.dumps({"exit": X_FIT_OK, "fits_run": 10}), encoding="utf-8", newline="\n"
+    )
+    prior_bytes = prior.read_bytes()
+
+    code = main(["--mode", "plan", "--output-dir", str(output)])
+
+    assert code == EXIT_CODES[X_PLAN_OK]
+    assert prior.read_bytes() == prior_bytes
+    assert not (output / trainer.OUTPUT_DIRTY_ARTIFACT).exists()
+    plan = json.loads((output / "dev_fit_plan.json").read_text(encoding="utf-8"))
+    assert plan["exit"] == X_PLAN_OK
+
+
+def test_equal_pair_id_sets_with_unequal_multiplicity_are_not_identity_matched():
+    """Identity matching is a MULTISET property; a set comparison cannot establish it.
+
+    Session 83, one layer below Finding O. The reviewer state upgraded matchedness from
+    count equality to `pair_id` SET equality, which is the right property named with the
+    wrong container: `C1 = [a, a, b]` against `S = [a, b, b]` has equal counts and equal
+    sets, and two of its three rows have no partner. Measured accepted at `788fc240`.
+    """
+
+    schedule = _fixture_schedule()
+    c1 = [_manifest_row("dev", "C1", i) for i in range(3)]
+    s_rows = [_manifest_row("dev", "S", i) for i in range(3)]
+    a, b = c1[0].pair_id, c1[1].pair_id
+    skewed = [
+        c1[0],
+        dataclasses.replace(c1[1], pair_id=a),
+        dataclasses.replace(c1[2], pair_id=b),
+        dataclasses.replace(s_rows[0], pair_id=a),
+        dataclasses.replace(s_rows[1], pair_id=b),
+        dataclasses.replace(s_rows[2], pair_id=b),
+    ]
+    ordinary = [
+        _manifest_row("dev", suite, 7, trajectory="ordinary_a") for suite in ("C1", "S")
+    ]
+
+    c1_ids = [row.pair_id for row in skewed if row.suite == "C1"]
+    s_ids = [row.pair_id for row in skewed if row.suite == "S"]
+    # The constructed state is exactly the one the weaker containers cannot see.
+    assert len(c1_ids) == len(s_ids), "counts must be equal or a weaker check would fire"
+    assert set(c1_ids) == set(s_ids), "sets must be equal or the set check would fire"
+    assert sorted(c1_ids) != sorted(s_ids), "the multisets are what actually differ"
+
+    with pytest.raises(DevFitContractError, match="not identity-matched"):
+        require_matched_trajectory_census(skewed + ordinary, schedule)
+
+    # The accept side, at the same shape: a genuinely matched population must pass.
+    matched = [
+        _manifest_row("dev", suite, index)
+        for index in range(3)
+        for suite in ("C1", "S")
+    ] + ordinary
+    census = require_matched_trajectory_census(matched, schedule)
+    assert census[DIAGNOSTIC] == {"C1": 3, "S": 3}
 
 
 def test_an_incomplete_plan_takes_its_named_main_exit(tmp_path, monkeypatch):
@@ -1105,6 +1392,7 @@ def test_every_named_exit_has_a_distinct_code_and_appears_in_the_table():
         X_CONTRACT_REFUSED,
         X_DATA_MISSING,
         X_PLAN_INCOMPLETE,
+        X_OUTPUT_DIRTY,
     }
     failures = {name: code for name, code in EXIT_CODES.items() if code != 0}
     assert len(set(failures.values())) == len(failures), "two failures share an exit code"

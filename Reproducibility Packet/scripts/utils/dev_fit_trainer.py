@@ -142,6 +142,7 @@ X_FIT_OK = "X_FIT_OK"
 X_CONTRACT_REFUSED = "X_CONTRACT_REFUSED"
 X_DATA_MISSING = "X_DATA_MISSING"
 X_PLAN_INCOMPLETE = "X_PLAN_INCOMPLETE"
+X_OUTPUT_DIRTY = "X_OUTPUT_DIRTY"
 
 EXIT_CODES: dict[str, int] = {
     X_PLAN_OK: 0,
@@ -149,7 +150,14 @@ EXIT_CODES: dict[str, int] = {
     X_CONTRACT_REFUSED: 3,
     X_DATA_MISSING: 4,
     X_PLAN_INCOMPLETE: 5,
+    X_OUTPUT_DIRTY: 6,
 }
+
+# The one artifact name `X_OUTPUT_DIRTY` may write. It is deliberately outside the set
+# `require_clean_fit_output` protects, because that exit fires *because* the protected
+# names are occupied: writing the refusal to `dev_fit_result.json` would overwrite the
+# only record binding the surviving checkpoints to their provenance. Session 83.
+OUTPUT_DIRTY_ARTIFACT = "dev_fit_output_refused.json"
 
 # `location_out` is a joint index or -1; the head's index 0 is "not localized"
 # (`attribution_net.NOT_LOCALIZED_INDEX`), so a joint index j occupies logit j + 1.
@@ -318,6 +326,15 @@ def _exact_steps(seconds: float, control_dt_s: float, what: str) -> int:
     in seconds and the window is defined in steps, so the conversion is the seam between
     them. A value that does not land on the control grid is a design/rate disagreement
     and must fail loudly rather than round into a plausible-looking origin.
+
+    `seconds` comes from the assignment document and is validated here, because this is
+    where an untrusted value first enters arithmetic. `control_dt_s` is NOT validated
+    here: `development_window_schedule` is this function's only caller — all three call
+    sites are inside it — and it pins the period by equality against
+    `DEVELOPMENT_CONTROL_DT_S` before the first of them. A second copy of that rule here
+    would be a branch nothing can drive (requirement (q)); the reviewer state carried one
+    and the Session-83 sweep confirmed it could be deleted with the focused suite green.
+    Reordering beats catching (lesson 84): the caller checks before it calls out.
     """
 
     require(
@@ -326,13 +343,6 @@ def _exact_steps(seconds: float, control_dt_s: float, what: str) -> int:
         and np.isfinite(seconds)
         and seconds >= 0.0,
         f"{what} must be a finite non-negative number of seconds, got {seconds!r}",
-    )
-    require(
-        isinstance(control_dt_s, (int, float, np.integer, np.floating))
-        and not isinstance(control_dt_s, (bool, np.bool_))
-        and np.isfinite(control_dt_s)
-        and control_dt_s > 0.0,
-        f"control_dt_s must be a finite positive number, got {control_dt_s!r}",
     )
     steps = round(float(seconds) / control_dt_s)
     require(
@@ -776,8 +786,10 @@ def require_matched_trajectory_census(
     `{trajectory: {suite: count}}`, which the result artifact records.
     Purpose: "C1 and S are matched" is the property the whole paired comparison rests on,
     and every window this policy assigns depends only on the trajectory. Equal counts are
-    necessary but not sufficient: the C1 and S rows must carry the same `pair_id` set for
-    each trajectory. Checking both coverage and identity here makes matchedness a
+    necessary but not sufficient: the C1 and S rows must carry the same `pair_id`
+    *multiset* for each trajectory — equal sets are not enough, because a set discards
+    the multiplicity that decides whether every row has a partner. Checking coverage,
+    counts and identity here makes matchedness a
     measurement rather than a sentence in a docstring, refuses a scheduled trajectory
     missing from both suites, and refuses an unscheduled row rather than silently dropping
     it for want of a window.
@@ -809,12 +821,17 @@ def require_matched_trajectory_census(
             f"trajectory {trajectory} is not matched across suites; found "
             + ", ".join(f"{suite} x{count}" for suite, count in counts),
         )
+        # Sorted LISTS, not sets. A set discards multiplicity, and the reviewer state
+        # this replaces accepted C1 = [a, a, b] against S = [a, b, b]: equal counts,
+        # equal pair_id *sets*, and a pairing in which two of the three rows have no
+        # partner (measured, Session 83). Identity matching is a multiset property, so
+        # the comparison has to be one.
         pair_ids = {
-            suite: {
+            suite: sorted(
                 row.pair_id
                 for row in rows
                 if row.trajectory_spec_id == trajectory and row.suite == suite
-            }
+            )
             for suite in MATCHED_FIT_SUITES
         }
         require(
@@ -1119,6 +1136,17 @@ def require_clean_fit_output(output_dir: Path) -> None:
     current arms, but a later consumer that enumerates the directory would see a mixed
     population. Plan artifacts are allowed so an operator may plan and then fit in one
     directory; prior fit results and deterministic checkpoint names are not.
+
+    `main()` calls this *before its first write*, and its refusal takes `X_OUTPUT_DIRTY`
+    rather than `X_CONTRACT_REFUSED`. Both properties are load-bearing and both were
+    bought by a measured defect (Session 83): every other fit-mode exit writes
+    `dev_fit_result.json`, which is the sole record binding each `dev_fit_*_seed*.pt` to
+    its provenance — `torch.save` stores a bare state dictionary and embeds nothing. A
+    refusal routed through those exits therefore deleted the provenance of the very
+    checkpoints it was refusing to mix, leaving them orphaned beside a document reporting
+    `fits_run: 0`. That is a worse mixed population than the one this guard exists to
+    prevent, and it is the shape of limitation 91: one invariant destroying the evidence
+    another invariant compels.
     """
 
     output_dir = Path(output_dir)
@@ -1163,6 +1191,24 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     args = parse_args(argv)
     output_dir = Path(args.output_dir)
+    if args.mode == "fit":
+        # FIRST, before any write. Every fit-mode exit below writes `dev_fit_result.json`,
+        # so a staleness refusal taken anywhere later destroys the provenance record of
+        # the checkpoints it is refusing to mix with (Session 83). Plan mode is exempt: it
+        # writes only `dev_fit_plan.json`, which this guard deliberately permits.
+        try:
+            require_clean_fit_output(output_dir)
+        except DevFitContractError as error:
+            document = {
+                "authority": DEVELOPMENT_ONLY_AUTHORITY,
+                "exit": X_OUTPUT_DIRTY,
+                "reason_class": type(error).__name__,
+                "fits_run": 0,
+            }
+            write_document(output_dir / OUTPUT_DIRTY_ARTIFACT, document)
+            print(f"{X_OUTPUT_DIRTY}: {error}")
+            return EXIT_CODES[X_OUTPUT_DIRTY]
+
     if args.mode == "fit" and args.data_root is None:
         document = {
             "authority": DEVELOPMENT_ONLY_AUTHORITY,
@@ -1220,7 +1266,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     trajectory_census: dict[str, dict[str, int]] | None = None
 
     try:
-        require_clean_fit_output(output_dir)
         if not manifest_path.is_file():
             raise DevFitDataError("the data root has no manifest.csv")
         manifest_digest = file_sha256(manifest_path)
@@ -1269,6 +1314,14 @@ def main(argv: Sequence[str] | None = None) -> int:
                 examples_by_trajectory[example.trajectory_spec_id] = (
                     examples_by_trajectory.get(example.trajectory_spec_id, 0) + 1
                 )
+            # A REGRESSION GUARD, NOT A LIVE CHECK, and Session 83's sweep is what
+            # established the difference: `load_arm_examples` appends exactly once per
+            # row and has no skip path, so this equality is forced by construction and
+            # cannot fail against the current caller. My Session-82 summary called it a
+            # run-time cross-check, which overstated it. It stays because
+            # `windows_per_run = 1` is a pre-registration-adjacent property and a future
+            # edit that drops or duplicates a row should not reach the optimizer — but
+            # no write-up may present it as evidence that the property was measured.
             require(
                 sum(examples_by_trajectory.values()) == len(arm_rows),
                 "the policy contributes exactly one window per persisted run",
