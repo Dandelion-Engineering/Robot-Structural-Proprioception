@@ -1,13 +1,13 @@
 # Summary of Only Necessary Context — Codex
 
-**Last rewritten:** 2026-08-05 — Codex Session 81
+**Last rewritten:** 2026-08-06 — Codex Session 82
 
 ## Resume here
 
 The project remains in **Phase 2 — Execution**. Final configuration is **UNFROZEN**;
 `Reproducibility Packet/config/config.json` is absent and confirmatory identities remain
 unmaterialized. All development screens/readbacks, Protocol P v2.3.3, the payload-boundary
-extension, Amendment A2 and any later Gate-4 fit are development evidence only.
+extension, Amendment A2 and any Gate-4 fit are development evidence only.
 
 The lifetime Protocol-P-related physical-rollout total remains **278**: 151 before the
 payload-boundary extension plus its one authorized 127-rollout invocation. That invocation
@@ -15,30 +15,109 @@ is spent. No second invocation or further payload measurement is authorized.
 
 ## Next exact action
 
-Claude owns the next turn. Genuinely owner-review the fail-closed trainer state:
+Claude owns the next turn. Genuinely owner-review the reviewer-edited trainer state:
 
 ```text
 Reproducibility Packet/scripts/utils/dev_fit_trainer.py
-  fd2c8c9b5ce87f701e78b2bd08d21285799d3afd
+  788fc240c404797f883c08fc843296f277412643
 Reproducibility Packet/tests/test_dev_fit_trainer.py
-  9d9455b712367a8fbfcf92225889a355f43b892b
+  c95bd8fbb5cf3dcb5d99bfb7f22799d738dcb0f7
 ```
 
-Codex blocks Claude's original `275a7a5...` / `80d9722...` state. The reviewer bytes
-correct the executable safety/provenance defects but intentionally leave
-`DEVELOPMENT_WINDOW_ORIGIN_STEP` and `DEVELOPMENT_DECISION_STEP` unset. Production plan
-and fit modes refuse until a jointly reviewed policy maps the ordinary and diagnostic
-development trajectories to causal training examples.
+Codex explicitly approves those exact bytes, including the assignment-derived training
+window policy. Claude must preserve or contest Findings O–R and the implementation, then
+explicitly approve or hand back a changed exact state. **No development fit may run until
+that executable loop closes.** The next regular Codex progress report is Session **88**;
+the next Codex session/report is **83**.
 
-Claude must preserve or contest the reviewer corrections explicitly, propose and
-implement that missing window policy, and hand the resulting exact blobs back. **No fit
-may run until the trainer executable loop closes.** The next regular Codex progress report
-is Session **88**; the next Codex session/report is **82**.
+## Training-window policy — accepted
+
+The policy derives one window per trajectory from the approved assignment:
+
+```text
+origin_step(trajectory) = onset_step(trajectory) + lead_steps(split)
+lead_steps(split)       = that split's diagnostic probe start offset
+decision_step           = origin_step + 768
+windows per run         = 1
+
+dev diagnostic          onset 500 + lead 500 -> [1000, 1768)
+dev ordinary            onset 400 + lead 500 -> [ 900, 1668)
+```
+
+The diagnostic line exactly reproduces Protocol P v2.3.3 §8. The ordinary line uses the
+same prospectively fixed post-onset lead rather than introducing a second chosen number.
+One window per row avoids an unregistered stride and correlated-window multiplication.
+
+Equal lead removes an avoidable time-since-onset difference; it does **not** make
+excitation the only trajectory difference. The assignment also changes target joints and
+task timing. The same arithmetic is total over the reserved pilot/validation/test design,
+but that fact authorizes no later-role outcome read.
+
+## Trainer review — reviewer corrections awaiting Claude
+
+Claude Session 82 preserved all six Session-81 corrections and fixed the handler defect
+where `DevFitContractError` / `DevFitDataError` were swallowed as generic `RuntimeError`.
+Codex accepts those changes and added four further corrections:
+
+### Finding O — exact pair identity and schedule coverage
+
+Equal per-trajectory C1/S counts were insufficient: a scheduled trajectory missing from
+both suites and disjoint equal-count `pair_id` sets both passed. The reviewer state now
+requires every scheduled trajectory and exact per-trajectory C1/S `pair_id` equality.
+
+### Finding P — persisted label-onset binding
+
+The assignment-derived schedule is now cross-checked against the independent persisted
+`onset_index` and `onset_time_s` before a row is windowed. The real delivered dev labels
+all agree: ordinary 400 / 0.8 s and diagnostic 500 / 1.0 s, with 76 C1 and 76 S rows per
+trajectory.
+
+### Finding Q — strict schedule-control refusal
+
+Claude's handed-off blob accepted `window_steps=True` as a one-step window and leaked raw
+`TypeError` / `ZeroDivisionError` for an empty probe and zero control period. The reviewer
+state validates assignment shape, ids, probe shape, positive non-bool window length, the
+fixed positive development control period and boolean probe flag under
+`DevFitContractError`.
+
+### Finding R — stale checkpoint population
+
+A partial rerun into the same directory could mix old and current deterministic checkpoint
+names. The reviewer state refuses a prior `dev_fit_result.json` or any
+`dev_fit_*_seed*.pt` before the first fit. A plan artifact alone remains allowed.
+
+The Session-81 protections remain intact:
+
+- online-equivalent `availability_time_s <= decision_time_s` masking;
+- exact data-root, manifest, config and three role-index pins before payload access;
+- hash-checking `DeployableObservationLoader` / `RolePayloadLoader` ingress;
+- eight-module code identity across plan and all arms;
+- in-memory checkpoint serialization, digest and validated provenance before write;
+- one full training protocol in plan, arm and terminal artifacts;
+- non-finite loss/weight, device, runtime and serialization refusal; and
+- complete arm records on partial failure plus all named `main()` exits driven.
+
+## Verification of the reviewer state
+
+```text
+focused trainer tests                37 passed
+focused under python -O              37 passed; expected warning only
+full packet suite                    1,504 passed in 128.96 s
+compileall                           clean
+git diff --check                     clean
+production plan probe                X_PLAN_OK; 10 arms; 0 fits; 0 rollouts
+selected real manifest rows          304 dev; 640 withheld
+exact real pairing                   76 C1 / 76 S pairs per trajectory
+real payload reads                   304 dev labels; 0 observations
+pilot / val / test outcomes          0 reads
+fits / checkpoints / results         0 / 0 / 0
+generation / rollouts                0 / 0
+config/config.json                   absent
+```
 
 ## Development-fit contract — jointly closed
 
-Claude Session 81 explicitly approved the Session-80 reviewer bytes, and Codex accepts
-that same-state approval:
+Both agents approve:
 
 ```text
 Reproducibility Packet/scripts/utils/dev_fit_contract.py
@@ -47,88 +126,9 @@ Reproducibility Packet/tests/test_dev_fit_contract.py
   fbd941b592436d0303b2ddd6ec6c69906d08bd88
 ```
 
-The four-round contract loop is **closed**. Claude's Finding G is ruled option **(b)**:
-leave generic `row_disclosure` free-text in the closed contract, while the trainer passes
-only `DevRowCensus.disclosure()`. The trainer test pins that producer behavior and checks
-that the emitted sentence contains neither `/` nor `\`. Do not reopen the contract for
-this unless a future executable ingress makes the generic field bound-permeable.
-
-## Trainer review — corrected defects and current block
-
-Codex Session 81 reproduced or established six blocking defects in Claude's trainer:
-
-1. Persisted values delivered after the decision survived `window_record()` and could
-   become training-only future information.
-2. A well-formed lookalike root was accepted; direct `.npz` loading bypassed role-index
-   and payload hashes.
-3. Checkpoint code identity omitted config, estimator, role, schema and storage modules
-   that define the runtime fit.
-4. Checkpoints were written before provenance; partial-failure documents omitted full
-   records for completed arms.
-5. Epochs, batch size, learning rate, device, decision time and availability cutoff were
-   not carried through every checkpoint/result, and several runtime failures escaped the
-   named artifact exits.
-6. The `X_PLAN_INCOMPLETE` test never drove the `main()` exit it claimed to cover.
-
-The reviewer state now:
-
-- reapplies `availability_time_s <= decision_time_s` exactly like the online path;
-- pins the authorized data root, manifest, config and three role-index hashes before
-  payload access;
-- loads real data only through `DeployableObservationLoader` and `RolePayloadLoader`;
-- records an eight-module code identity once across plan and all arms;
-- serializes in memory, hashes and validates provenance before checkpoint write;
-- records one validated training protocol in plan, every arm and every terminal artifact;
-- refuses non-finite loss/weights, unavailable devices, runtime and serialization errors;
-- carries every completed arm's full record into partial-failure artifacts; and
-- drives all five named exits through `main()`.
-
-## Missing training-window policy
-
-The delivered development role contains:
-
-```text
-trajectory_dev_ordinary_a      C1 76 / S 76
-trajectory_dev_diagnostic_b    C1 76 / S 76
-total                          C1 152 / S 152
-```
-
-The ordinary trajectory has no diagnostic probe. The later bounded-contact decision at
-step 1,136 / 2.272 s is not a reviewed global decision for these 304 base-dataset rows.
-Protocol P's diagnostic `[1000, 1768)` window is a different object; the prior learned-rung
-wire check ending at 1,600 was illustrative. None authorizes `[368, 1136)` globally.
-
-The next policy must either map both trajectories or explicitly justify a narrower census;
-keep C1/S windows and counts matched; reproduce online availability; state how many
-windows each persisted run contributes; and record the exact schedule in every result.
-Codex has not selected among plausible policies from implementation convenience.
-
-## Verification of the reviewer state
-
-```text
-future-availability probe            reproduced before correction; masked after
-focused trainer tests                20 passed in 3.13 s
-focused under python -O              20 passed in 3.12 s; expected warning only
-full packet suite                    1,487 passed in 124.66 s
-compileall                           clean
-git diff --check                     clean
-real metadata reads                  manifest/config/schema/three role-index CSVs
-real .npz payload reads              0
-fits / checkpoints / generation     0 / 0 / 0
-rollouts                             0
-config/config.json                   absent
-```
-
-Pinned delivered identities:
-
-```text
-data root             gate3-base-dev-pilot-val-c1-s
-manifest SHA256       55ea5f0e74ddd24b05eafc51a2b9fc424eda99eac1901534946f42b6012ebe12
-config                dev-712abf27c3f8f3c331ae9b76e3f22c48857334cc15a81e819718165e47753e56
-labels index SHA256   a7c700e53d917f2ddb256521af3c23bba6f7ec6d6f3af967d14ca9aad3a559f8
-C1 index SHA256       f0cc92bf33f7e06f8ac09e4ac0dffd86d567b445de07b049a9475b01f5dff716
-S index SHA256        fa790f9d03b38d246c7e656164cbbee1ebe33f51c122d91edbf3dc72d526dd00
-```
+The generic `row_disclosure` remains free-text in the closed contract; the trainer passes
+only `DevRowCensus.disclosure()`, and the trainer test pins that producer behavior. Do not
+reopen the contract unless a future executable ingress makes the field bound-permeable.
 
 ## Gate-4 rung 1 — jointly approved but untrained
 
@@ -141,41 +141,31 @@ Reproducibility Packet/tests/test_attribution_net.py
   5a401ca14be170d0002c508111b7ce32a5291bb0
 ```
 
-The state validates incoming weights/device transfer on a deep copy and copies validated
-tensors into the existing live network, preserving transactionality, object identity,
-optimizer references and provenance.
-
-```text
-TemporalAttributionNet        39,594 trainable parameters
-architecture                  causal dilated temporal convolution
-receptive field               1,023 samples
-proposed window               768 samples
-input                         fixed [values, validity mask] registry
-matched suites                identical shape/count for C0, C1, S
-unfitted behavior             uniform p_class, abstain, no location/detection,
-                              infinite severity uncertainty
-```
+`TemporalAttributionNet` has 39,594 trainable parameters, a causal dilated temporal
+convolution, 1,023-sample receptive field, fixed values/mask registry input and matched
+C1/S capacity. Incoming weights/device transfer are validated on a deep copy, then copied
+into the existing live network to preserve transactionality, module identity, optimizer
+references and provenance. Unfitted behavior remains uniform class probability, abstain,
+no localization/detection and infinite severity uncertainty.
 
 The model is **untrained**. Approved implementation is not permission to fit.
 
 ## Exact development-only fitting authority
 
-Session 77 opened conceptual development-only fitting against the already-delivered `dev`
-partition; no new data generation is needed. Execution still requires the current trainer
-review to close.
+Conceptual dev-only fitting is authorized against the already-delivered `dev` partition,
+but execution still requires Claude's exact-state trainer approval.
 
 1. Read only persisted rows whose role is exactly `dev` from the approved delivered base
    dataset. Pilot, validation and test outcomes remain unread.
 2. Generate no plant, sensor, label or role payload and spend zero physical rollouts.
 3. Hold architecture and training protocol identical across C1/S and run only network
    seeds 0, 1, 2, 3 and 4 in both arms.
-4. Each checkpoint/result carries exact development-only authority; data root,
-   manifest/config/assignment identities; suite and training seed; full training protocol;
-   canonical-text code identity; row disclosure; role-index hashes; and raw checkpoint
-   digest.
+4. Use a fresh output directory. Each checkpoint/result carries exact development-only
+   authority; data, assignment and code identities; suite/seed; training protocol;
+   schedule; row disclosure; role-index hashes; and raw checkpoint digest.
 5. A dev fit may establish learnability or expose implementation failure. It may not set
    validation-owned probability/detection/abstention/OOD/uncertainty thresholds, choose a
-   headline capacity from later roles or become a research result.
+   headline capacity from later roles or become a confirmatory research result.
 
 The trainer and evaluation driver must share `deterministic_conv_precision()` across
 forward and backward computation. Execution is exactly the ten arms from
@@ -219,12 +209,13 @@ coverage or establish/refute the headline hypothesis.
 
 ## Public state and authorization boundary
 
-The root README remains Phase 2 / `In Progress`. Session 81 deliberately added no public
-entry: a blocked trainer review is not a finished artifact, phase close or research result.
+The root README remains Phase 2 / `In Progress`. Session 82 deliberately added no public
+entry: the trainer loop is open and no fit has run. The packet README likewise remains
+unchanged until the trainer closes; it owes an execution step then.
 
 Absent separate explicit authorization, all remain blocked:
 
-- any fit before the trainer exact-state review closes;
+- any fit before Claude approves the exact reviewer-edited trainer bytes;
 - pilot, validation or test outcome reads;
 - new data generation, replacement, supersession or regeneration;
 - a second payload-extension invocation or further payload measurement;
@@ -232,26 +223,40 @@ Absent separate explicit authorization, all remain blocked:
 - confirmatory identities, generation, reads or claims; and
 - changes to closed Protocol P v2.3.3.
 
-## Transcript integrity state
+## Transcript integrity and recurrence
 
-Session 81 appended from the unique complete physical EOF anchor at:
+The first Session-82 technical review append used a repeated single-line signature rather
+than the complete unique EOF block that had been verified. It landed at line 19,334 before
+the recorded 22,206-line tail. The verifier caught it before commit. The misplaced review
+was preserved and a complete decision-bearing correction was appended from a new unique
+EOF block.
 
-```text
-pre-write bytes    1,385,061
-pre-write lines    21,820
-pre-write SHA-256  74cadceead8998f1078868165941aaecc4cd9b1693f029b261735bb9109df893
-```
-
-The prefix remained byte-identical. The Session-81 header occurs once after the boundary;
-Codex is physically last; and the transcript diff is `+143/-0`. Final state:
+Final technical transcript:
 
 ```text
-bytes      1,393,189
-lines      21,963
-SHA-256    fb7129644f56d27f2c30ff546ab61d9b863b583a62b0ee213f5cdd6680c41051
+bytes      1,414,699
+lines      22,349
+SHA-256    dca21bf5406e4dda735d986a66257111c3a3c50a6c78f715ba7cc81072c625ae
+diff       +143 / -0
+last       Codex; correction header unique at line 22,313
 ```
 
-No append-order repair or monitoring-thread entry was needed.
+The recurrence is reported in the director-visible monitoring thread. Its first note
+landed in order but normalized CRLF inside its EOF context; that byte-prefix failure is
+also preserved and corrected forward. Final monitoring transcript:
+
+```text
+bytes      12,617
+lines      204
+SHA-256    a76596a0788013b0e54f02533069c96bd758b097e249e4c97d75a9e51210335f
+diff       +51 / -0
+last       Codex; byte-correction header unique at line 189
+```
+
+The operational rule remains absolute: record byte/line/hash boundary, verify a complete
+unique physical EOF block, use that **same full block** in the patch, then require one
+post-boundary header, exact prefix, additions-only diff and physically last author. A
+failed assertion requires a forward correction, not deletion.
 
 ## Workflow rules
 
@@ -260,7 +265,5 @@ No append-order repair or monitoring-thread entry was needed.
 - Use `./venv` and packet-scoped commands; never bare Python or root-wide pytest.
 - Keep development screens, confirmatory evidence, detection, attribution, information,
   action authorization and control outcome separate.
-- Transcript appends require a recorded byte/line/hash boundary, the complete unique EOF
-  anchor actually patched, one post-boundary header, a byte-identical prefix, a physically
-  last author and additions-only diff. If any check fails, append a forward correction.
 - Preserve append-only public and technical history; corrections propagate forward.
+- Keep README updates lean and milestone-based.

@@ -165,7 +165,12 @@ def _manifest_row(
     )
 
 
-def _label_payload(source_class: str = "healthy", *, location: int = -1) -> dict:
+def _label_payload(
+    source_class: str = "healthy",
+    *,
+    location: int = -1,
+    onset_index: int = 5,
+) -> dict:
     """The eight-key label payload `assignment_generator` writes, as 0-d arrays."""
 
     return {
@@ -173,8 +178,8 @@ def _label_payload(source_class: str = "healthy", *, location: int = -1) -> dict
         "subtype": np.asarray("none"),
         "location": np.asarray(location, dtype=np.int64),
         "severity": np.asarray(0.5, dtype=np.float64),
-        "onset_index": np.asarray(5, dtype=np.int64),
-        "onset_time_s": np.asarray(0.01, dtype=np.float64),
+        "onset_index": np.asarray(onset_index, dtype=np.int64),
+        "onset_time_s": np.asarray(onset_index * 0.002, dtype=np.float64),
         "compound_flag": np.asarray(False, dtype=np.bool_),
         "ood_flag": np.asarray(False, dtype=np.bool_),
     }
@@ -206,7 +211,16 @@ def _dataset(
         n_steps = (steps or {}).get(row.run_id, STEPS)
         record = _record(row.run_id, row.suite, t=n_steps, seed=row.sim_seed)
         np.savez(observations / f"{row.run_id}.npz", **record.to_npz_dict())
-        np.savez(root / "labels" / f"{row.run_id}.npz", **_label_payload())
+        np.savez(
+            root / "labels" / f"{row.run_id}.npz",
+            **_label_payload(
+                onset_index=(
+                    FIXTURE_ONSET[ORDINARY]
+                    if row.trajectory_spec_id.endswith("ordinary_a")
+                    else FIXTURE_ONSET[DIAGNOSTIC]
+                )
+            ),
+        )
     return rows
 
 
@@ -369,6 +383,51 @@ def test_a_split_without_exactly_one_diagnostic_trajectory_is_refused():
             development_window_schedule(_document(n_probes), split="x", window_steps=8)
     # The one-probe case is the control: the same construction must succeed.
     assert len(development_window_schedule(_document(1), split="x", window_steps=8)) == 2
+
+
+@pytest.mark.parametrize(
+    ("document", "kwargs", "message"),
+    [
+        ({"trajectory_specs": []}, {"window_steps": True}, "positive integer"),
+        (
+            {
+                "trajectory_specs": [
+                    {
+                        "id": "t",
+                        "split": "x",
+                        "onset_time_s": 0.8,
+                        "duration_s": 5.8,
+                        "diagnostic_probe": {},
+                    }
+                ]
+            },
+            {"window_steps": 8},
+            "finite non-negative",
+        ),
+        (
+            {
+                "trajectory_specs": [
+                    {
+                        "id": "t",
+                        "split": "x",
+                        "onset_time_s": 0.8,
+                        "duration_s": 5.8,
+                        "diagnostic_probe": {"start_offset_s": 1.0},
+                    }
+                ]
+            },
+            {"window_steps": 8, "control_dt_s": 0.0},
+            "development control_dt_s",
+        ),
+    ],
+)
+def test_malformed_schedule_controls_take_the_named_contract_refusal(
+    document, kwargs, message
+):
+    """Scientific controls reject bools/missing values without foreign exceptions."""
+
+    with pytest.raises(DevFitContractError, match=message):
+        development_window_schedule(document, split="x", **kwargs)
 
 
 def test_an_off_grid_assignment_time_is_refused_rather_than_rounded():
@@ -563,6 +622,19 @@ def test_unmatched_per_trajectory_counts_are_refused():
     with pytest.raises(DevFitContractError, match="not present in both matched suites"):
         require_matched_trajectory_census(one_suite, schedule)
 
+    missing_both = [row for row in balanced if row.trajectory_spec_id == DIAGNOSTIC]
+    with pytest.raises(DevFitContractError, match="cover every scheduled trajectory"):
+        require_matched_trajectory_census(missing_both, schedule)
+
+    disjoint_pairs = [
+        _manifest_row("dev", "C1", 0, trajectory="ordinary_a"),
+        _manifest_row("dev", "S", 1, trajectory="ordinary_a"),
+        _manifest_row("dev", "C1", 0, trajectory="diagnostic_b"),
+        _manifest_row("dev", "S", 1, trajectory="diagnostic_b"),
+    ]
+    with pytest.raises(DevFitContractError, match="not identity-matched"):
+        require_matched_trajectory_census(disjoint_pairs, schedule)
+
 
 def test_a_payload_whose_length_disagrees_with_the_assignment_is_refused(tmp_path):
     """The schedule and the payload are independent sources for the same fact."""
@@ -573,6 +645,28 @@ def test_a_payload_whose_length_disagrees_with_the_assignment_is_refused(tmp_pat
     extractor = WindowFeatureExtractor(window_steps=WINDOW)
     observations, labels = _fixture_role_loaders(tmp_path)
     with pytest.raises(DevFitDataError, match="the assignment reserves"):
+        load_arm_examples(
+            [target],
+            suite="S",
+            schedule_by_trajectory=_fixture_schedule(),
+            extractor=extractor,
+            observation_loader=observations["S"],
+            label_loader=labels,
+        )
+
+
+def test_a_label_onset_that_disagrees_with_the_assignment_is_refused(tmp_path):
+    """The schedule origin is assignment-derived, but the persisted label must agree."""
+
+    rows = _dataset(tmp_path)
+    target = next(row for row in rows if row.suite == "S")
+    np.savez(
+        tmp_path / "labels" / f"{target.run_id}.npz",
+        **_label_payload(onset_index=FIXTURE_ONSET[target.trajectory_spec_id] + 1),
+    )
+    extractor = WindowFeatureExtractor(window_steps=WINDOW)
+    observations, labels = _fixture_role_loaders(tmp_path)
+    with pytest.raises(DevFitDataError, match="disagrees with assignment trajectory"):
         load_arm_examples(
             [target],
             suite="S",
@@ -945,6 +1039,30 @@ def test_fit_refuses_a_well_formed_but_unapproved_dataset(tmp_path, monkeypatch)
     assert document["exit"] == X_CONTRACT_REFUSED
     assert document["fits_run"] == 0
     assert not list(output.glob("*.pt"))
+
+
+def test_fit_refuses_an_output_directory_with_a_stale_checkpoint(tmp_path, monkeypatch):
+    """A rerun may not mix current arms with checkpoints left by an earlier attempt."""
+
+    root = tmp_path / "data"
+    root.mkdir()
+    _dataset(root)
+    _authorize_fixture_dataset(monkeypatch, root)
+    output = tmp_path / "out"
+    output.mkdir()
+    (output / "dev_fit_C1_seed0.pt").write_bytes(b"stale")
+    monkeypatch.setattr(
+        trainer,
+        "fit_one_arm",
+        lambda *args, **kwargs: pytest.fail("fit began before stale output was refused"),
+    )
+    code = main(
+        ["--mode", "fit", "--output-dir", str(output), "--data-root", str(root)]
+    )
+    assert code == EXIT_CODES[X_CONTRACT_REFUSED]
+    document = json.loads((output / "dev_fit_result.json").read_text(encoding="utf-8"))
+    assert document["exit"] == X_CONTRACT_REFUSED
+    assert document["fits_run"] == 0
 
 
 def test_an_incomplete_plan_takes_its_named_main_exit(tmp_path, monkeypatch):

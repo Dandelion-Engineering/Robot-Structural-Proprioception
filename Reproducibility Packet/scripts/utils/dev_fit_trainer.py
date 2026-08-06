@@ -59,10 +59,11 @@ competing with the pre-registration; it *reproduces* the pre-registered one and 
 it by a rule. That is the whole reason the lead is not a constant chosen here.
 
 The probe-free trajectory takes its split's same lead, so both trajectories of a split
-open their window at the same elapsed time after onset and the only thing that differs
-between them is the excitation. Giving the ordinary trajectory a different lead would
-confound excitation with time-since-onset, which is the one comparison this rung exists
-to make. For `dev` that is ``[900, 1668)``.
+open their window at the same elapsed time after onset. This removes an avoidable
+time-since-onset difference; it does **not** erase the assignment's other predeclared
+trajectory differences (including target joints and task timing). Giving the ordinary
+trajectory a different lead would add a timing confound to those retained differences.
+For `dev` the resulting ordinary window is ``[900, 1668)``.
 
 **One window per persisted run.** A stride would be a second unregistered choice (how
 many, how far apart) and would inflate the example count with heavily correlated windows.
@@ -285,6 +286,10 @@ class WindowSchedule:
             f"window [{self.origin_step}, {self.decision_step}) does not fit the "
             f"{self.run_steps}-step trajectory {self.trajectory_spec_id}",
         )
+        require(
+            isinstance(self.has_diagnostic_probe, bool),
+            "has_diagnostic_probe must be a bool",
+        )
         return self
 
     def as_document(self) -> dict[str, object]:
@@ -316,8 +321,18 @@ def _exact_steps(seconds: float, control_dt_s: float, what: str) -> int:
     """
 
     require(
-        np.isfinite(seconds) and seconds >= 0.0,
+        isinstance(seconds, (int, float, np.integer, np.floating))
+        and not isinstance(seconds, (bool, np.bool_))
+        and np.isfinite(seconds)
+        and seconds >= 0.0,
         f"{what} must be a finite non-negative number of seconds, got {seconds!r}",
+    )
+    require(
+        isinstance(control_dt_s, (int, float, np.integer, np.floating))
+        and not isinstance(control_dt_s, (bool, np.bool_))
+        and np.isfinite(control_dt_s)
+        and control_dt_s > 0.0,
+        f"control_dt_s must be a finite positive number, got {control_dt_s!r}",
     )
     steps = round(float(seconds) / control_dt_s)
     require(
@@ -352,8 +367,25 @@ def development_window_schedule(
     """
 
     require(
+        isinstance(assignment, Mapping),
+        "the assignment document must be a mapping",
+    )
+    require(
         isinstance(split, str) and bool(split.strip()),
         "a window schedule must be requested for a named split",
+    )
+    require(
+        isinstance(window_steps, int)
+        and not isinstance(window_steps, bool)
+        and window_steps > 0,
+        "window_steps must be a positive integer",
+    )
+    require(
+        isinstance(control_dt_s, (int, float, np.integer, np.floating))
+        and not isinstance(control_dt_s, (bool, np.bool_))
+        and np.isfinite(control_dt_s)
+        and float(control_dt_s) == DEVELOPMENT_CONTROL_DT_S,
+        f"development control_dt_s must be {DEVELOPMENT_CONTROL_DT_S}",
     )
     specs = assignment.get("trajectory_specs")
     require(
@@ -362,15 +394,23 @@ def development_window_schedule(
     )
     for entry in specs:
         require(
-            isinstance(entry, dict) and isinstance(entry.get("id"), str),
-            "every trajectory spec must be an object carrying a string id",
+            isinstance(entry, Mapping)
+            and isinstance(entry.get("id"), str)
+            and bool(entry["id"].strip()),
+            "every trajectory spec must be an object carrying a non-empty string id",
         )
     mine = [entry for entry in specs if entry.get("split") == split]
     require(mine != [], f"the assignment reserves no trajectory for split {split!r}")
+    for entry in mine:
+        probe = entry.get("diagnostic_probe")
+        require(
+            probe is None or isinstance(probe, Mapping),
+            f"trajectory {entry['id']!r} diagnostic_probe must be an object or null",
+        )
     probes = [
         entry["diagnostic_probe"]
         for entry in mine
-        if isinstance(entry.get("diagnostic_probe"), dict)
+        if entry.get("diagnostic_probe") is not None
     ]
     require(
         len(probes) == 1,
@@ -400,10 +440,10 @@ def development_window_schedule(
             onset_step=onset_step,
             lead_steps=lead_steps,
             origin_step=onset_step + lead_steps,
-            window_steps=int(window_steps),
-            decision_step=onset_step + lead_steps + int(window_steps),
+            window_steps=window_steps,
+            decision_step=onset_step + lead_steps + window_steps,
             run_steps=run_steps,
-            has_diagnostic_probe=isinstance(entry.get("diagnostic_probe"), dict),
+            has_diagnostic_probe=entry.get("diagnostic_probe") is not None,
         ).validate()
     return schedule
 
@@ -635,6 +675,26 @@ def build_example(
             f"run {record.run_id} carries {record.n_steps} steps; the assignment "
             f"reserves {schedule.run_steps} for {schedule.trajectory_spec_id}"
         )
+    try:
+        label_onset_index = int(label["onset_index"])
+        label_onset_time_s = float(label["onset_time_s"])
+    except (KeyError, TypeError, ValueError, OverflowError) as error:
+        raise DevFitDataError(
+            f"run {record.run_id} carries no valid persisted onset binding "
+            f"({type(error).__name__})"
+        ) from error
+    expected_onset_time_s = schedule.onset_step * DEVELOPMENT_CONTROL_DT_S
+    if (
+        label_onset_index != schedule.onset_step
+        or not np.isfinite(label_onset_time_s)
+        or abs(label_onset_time_s - expected_onset_time_s) > 1.0e-12
+    ):
+        raise DevFitDataError(
+            f"run {record.run_id} label onset ({label_onset_index}, "
+            f"{label_onset_time_s!r} s) disagrees with assignment trajectory "
+            f"{schedule.trajectory_spec_id} ({schedule.onset_step}, "
+            f"{expected_onset_time_s!r} s)"
+        )
     windowed = window_record(
         record,
         schedule.origin_step,
@@ -715,10 +775,12 @@ def require_matched_trajectory_census(
     Inputs: the selected development rows and the derived schedule. Outputs:
     `{trajectory: {suite: count}}`, which the result artifact records.
     Purpose: "C1 and S are matched" is the property the whole paired comparison rests on,
-    and every window this policy assigns depends only on the trajectory — so the suites
-    are matched **iff** they carry equal per-trajectory counts. Checking it here makes
-    that a measurement rather than a sentence in a docstring, and refusing an unscheduled
-    trajectory keeps a row from being silently dropped for want of a window.
+    and every window this policy assigns depends only on the trajectory. Equal counts are
+    necessary but not sufficient: the C1 and S rows must carry the same `pair_id` set for
+    each trajectory. Checking both coverage and identity here makes matchedness a
+    measurement rather than a sentence in a docstring, refuses a scheduled trajectory
+    missing from both suites, and refuses an unscheduled row rather than silently dropping
+    it for want of a window.
     """
 
     census: dict[str, dict[str, int]] = {}
@@ -730,6 +792,11 @@ def require_matched_trajectory_census(
         )
         per_suite = census.setdefault(row.trajectory_spec_id, {})
         per_suite[row.suite] = per_suite.get(row.suite, 0) + 1
+    require(
+        set(census) == set(schedule_by_trajectory),
+        "the selected development rows do not cover every scheduled trajectory; found "
+        f"{sorted(census)}, expected {sorted(schedule_by_trajectory)}",
+    )
     for trajectory, per_suite in sorted(census.items()):
         counts = sorted(per_suite.items())
         require(
@@ -741,6 +808,18 @@ def require_matched_trajectory_census(
             len({count for _, count in counts}) == 1,
             f"trajectory {trajectory} is not matched across suites; found "
             + ", ".join(f"{suite} x{count}" for suite, count in counts),
+        )
+        pair_ids = {
+            suite: {
+                row.pair_id
+                for row in rows
+                if row.trajectory_spec_id == trajectory and row.suite == suite
+            }
+            for suite in MATCHED_FIT_SUITES
+        }
+        require(
+            pair_ids[MATCHED_FIT_SUITES[0]] == pair_ids[MATCHED_FIT_SUITES[1]],
+            f"trajectory {trajectory} is not identity-matched across suites",
         )
     return {
         trajectory: dict(sorted(per_suite.items()))
@@ -1032,6 +1111,29 @@ def plan_document(
     }
 
 
+def require_clean_fit_output(output_dir: Path) -> None:
+    """Refuse an output directory containing artifacts from an earlier fit attempt.
+
+    A partial rerun into the same directory can otherwise leave old checkpoints for arms
+    the current invocation never completed. The result document carries hashes for the
+    current arms, but a later consumer that enumerates the directory would see a mixed
+    population. Plan artifacts are allowed so an operator may plan and then fit in one
+    directory; prior fit results and deterministic checkpoint names are not.
+    """
+
+    output_dir = Path(output_dir)
+    stale = []
+    result_path = output_dir / "dev_fit_result.json"
+    if result_path.exists():
+        stale.append(result_path.name)
+    stale.extend(path.name for path in output_dir.glob("dev_fit_*_seed*.pt"))
+    require(
+        not stale,
+        "fit output directory contains artifacts from an earlier attempt; use a new "
+        "directory (found " + ", ".join(sorted(stale)) + ")",
+    )
+
+
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     """Parse the trainer's command line. Every machine-specific input is required."""
 
@@ -1118,6 +1220,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     trajectory_census: dict[str, dict[str, int]] | None = None
 
     try:
+        require_clean_fit_output(output_dir)
         if not manifest_path.is_file():
             raise DevFitDataError("the data root has no manifest.csv")
         manifest_digest = file_sha256(manifest_path)
