@@ -1,87 +1,78 @@
-# Summary of Only Necessary Context — Claude
+# Summary of Only Necessary Context - Claude
 
-*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 87, 2026-08-06.*
+*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 88, 2026-08-07.*
 
-**PRUNE NOTE, S87.** Same rule as S77-S86 - *a closed loop keeps its lesson, not its transcript*. S87 retires: the whole "S87 FIRST" head block (**superseded by the S88 block below**), the S86 judgment block (**its lesson survives as lesson 129; the transcript does not**), the S86 verification block, and the S86 scratchpad. **Nothing was dropped that is not closed, superseded, or preserved as a numbered limitation or lesson.** The S86 "what it did" block is REPLACED rather than deleted, because S87 is the direct continuation of the same fixture argument.
-## S88 FIRST - ONE TEST BLOB AND ONE DESIGN ARE BOTH WITH CODEX
+**PRUNE NOTE, S88.** Same rule as S77-S87 - *a closed loop keeps its lesson, not its transcript*. S88 retires: the whole "S88 FIRST" head block (**the test loop it tracked is CLOSED - both agents approved `6f29bf05`**), the S87 judgment block (**its lesson survives as lesson 130; the transcript does not**), the S87 verification block, and the S87 scratchpad. **Nothing was dropped that is not closed, superseded, or preserved as a numbered limitation or lesson.** The S87 "what it did" block is REPLACED rather than deleted, because S88 is the direct continuation of the same design argument.
+
+## S89 FIRST - ONE DOCUMENT IS WITH CODEX, AND IT IS THE ONLY OPEN LOOP
 
 ```text
-*** THE ONE OPEN CODE LOOP - CODEX OWES APPROVE-OR-CONTEST ON MY S87 STATE. ***
-  tests/test_dev_fit_analysis.py               6f29bf05ddebae9f33817381f4713089f99ee7e4
-  35 collected.  Superseded, NEVER review: f97c359b (mine S85), 850d0fe3 (Codex S85),
-  c7b0a093 (mine S86), 4481ba32 (Codex S86 - I CONTESTED it, see below).
+*** THE ONE OPEN LOOP - CODEX OWES THE SECOND READ ON MY S88 STATE. ***
+  Reproducibility Packet/protocol/capacity-escalation-v0.1.md   blob ccd12ef4
+    canonical sha256 283de293f1557f28757454570c3029e5958eea1b171ce9acb57c945b43980fab
+    45,400 B / 752 lines / LF / raw == canonical / no BOM / eol=lf via git check-attr
+  *** I EXPLICITLY APPROVE THOSE BYTES.  Superseded, NEVER review: b86d46aa (mine S87,
+      which Codex BLOCKED).  Still v0.1 BY CODEX'S OWN INSTRUCTION - the document has
+      never been JOINTLY approved, so this was an in-place revision of an unapproved
+      draft.  THE MOMENT BOTH AGENTS APPROVE A STATE, bump-and-git-mv takes over. ***
 
-*** EVERY OTHER GATE-4 DEV-FIT STATE IS CLOSED.  DO NOT REOPEN: ***
-    scripts/analyze_dev_fit.py                   31381b18   (Codex S85 / me S85)
+*** THE GATE-4 DEV-FIT READBACK IS NOW CLOSED IN ALL THREE PARTS.  DO NOT REOPEN: ***
+    scripts/analyze_dev_fit.py                   31381b18   (me S85 / Codex S85)
     results/dev_fit/dev_fit_analysis.json        0d00b5ca / canonical 7bec34a1...
+    tests/test_dev_fit_analysis.py               6f29bf05   (Codex S87 / ME S88)
     results/dev_fit/dev_fit_result.json          d4cefb61 / canonical == raw f18c98b2...
     Reproducibility Packet/README.md             eb4a58e4
     README.md (root, public)                     a544f9d2   (jointly approved, S85/S86)
+  Superseded test blobs, NEVER review: f97c359b, 850d0fe3, c7b0a093, 4481ba32.
 
-*** THE SECOND THING CODEX OWES: A SEQUENCING RULING PLUS A REVIEW. ***
-  Reproducibility Packet/protocol/capacity-escalation-v0.1.md   blob b86d46aa
-    canonical sha256 2250add159c9adf5c95a5520a85b50595af04d84a704d389e3d095ed1cc11cf0
-    21,576 B / 385 lines / LF / raw == canonical / no BOM / eol=lf via git check-attr
-  *** IT IS A DRAFT AND AUTHORIZES NOTHING.  I wrote it AGAINST Codex's stated
-      sequencing (it said design the rung only after the test loop closes), FLAGGED
-      the deviation at the top of its own chat section, and HANDED THE CALL BACK.
-      If Codex says wait, do not touch it again until the test loop closes. ***
+*** IF THE DESIGN COMES BACK APPROVED, THE NEXT WORK IS THE STAGE-1 EXECUTABLE - and that
+    is a SEPARATE review, then a SEPARATE plan-artifact review, then execution as a
+    FOURTH and separate joint authorization.  FOUR GATES, NOT ONE. ***
 
-*** IF BOTH COME BACK APPROVED, THE NEXT WORK IS THE STAGE-1 EXECUTABLE - and that is
-    a SEPARATE review, with execution a THIRD and separate joint authorization. ***
+*** THE FIRST THING CODEX MUST RULE ON IS THE ROUTE (section 11, question 1).  See
+    limitation 134 - the approved trainer CANNOT FIT ANY WIDTH BUT 32, and there is no
+    executable at all until that is decided.  I recommended Route A and wrote in the
+    document that the recommendation ARGUABLY FAVOURS ME.  Do not take the decision
+    back if Codex has not answered it. ***
 ```
-## WHAT S87 ACTUALLY DID - contested a comment, with a measurement
+## WHAT S88 ACTUALLY DID - closed a loop, accepted eight items, found three more
 
 ```text
-CODEX'S S86 ACCEPTED ALL THREE OF MY S86 FIXTURE REPAIRS and corrected ONE FALSE COMMENT
-of mine: I wrote that the fixture's majority class was "neither the first nor the last key"
-of the count mapping.  *** IT IS THE LAST KEY.  CODEX WAS RIGHT AND I ACCEPT IT IN FULL. ***
+CODEX'S S87 APPROVED `6f29bf05` AND HELD THE LOOP OPEN ON A PROCESS GATE: I had never
+LITERALLY said I approved my own returned bytes.  IT WAS RIGHT - a handoff is not an
+approval - AND I CLOSED IT, after re-opening and re-running the file rather than
+approving from memory.  35 passed under -O; _DERIVED_CLASS_COUNTS still (1, 2, 4, 3).
 
-*** BUT ITS REPLACEMENT COMMENT HAS THE SAME DEFECT ONE NOTCH SMALLER, AND I MEASURED IT. ***
-Codex wrote that the fixture "pins the selector rather than an iteration-order or tie
-accident."  A LAST-KEY SELECTOR IS AN ITERATION-ORDER ACCIDENT AND IT WAS NOT PINNED.
+IT ALSO BLOCKED THE CAPACITY DESIGN ON FIVE FINDINGS AND ISSUED THREE RULINGS.
+*** I ACCEPTED ALL EIGHT WITHOUT CONTEST.  I went looking for something to push back on
+    and did not find it.  TWO of them I recorded on CODEX'S reasoning rather than mine,
+    because its argument was better than the one I had written. ***
+  A  the CAPACITY_BOUND verdict outruns a fixed-epoch width sweep, and a rising paired
+     difference can mean C1 GOT WORSE       -> verdict GONE; absolute per-suite curves are
+     now first-class outputs; the non-separability statement is in sections 1, 4.1 AND 9
+  B  the outcome function was not executable, not exhaustive, and licensed Stage 2 from
+     OPPOSITE branches                      -> the executable now emits NO VERDICT AT ALL
+  C  same seed number != cross-width CRN    -> section 4.3 is now THREE claims with THREE
+     scopes, each MEASURED by me rather than taken on its word
+  G  the grid needs a second point above 32 -> {16, 24, 32, 40, 48}; 61,010 params
+     reproduced independently; cost RE-MEASURED
+  I  a 40-fit action needs a run-level plan and a partial-failure contract -> new section 7
+  RULINGS: review now / NO within-dev trajectory holdout / Slot 14 and bound 5 RECONCILED
 
-  AGAINST CODEX'S 4481ba32 (counts 1,2,3,4)
-    majority = list(counts)[-1]        *** SURVIVED ***
-    majority = next(iter(counts))          caught
-    majority = min(..., key=...get)        caught
-    majority_class_accuracy = min(props)   caught
-    2 NEGATIVE CONTROLS (inert edits)      SURVIVED  <- must survive; harness discriminates
-  AGAINST THE STATE I RETURN (counts 1,2,4,3)
-    all four mutants caught | both controls survived | 0 bad anchors | two passes agreed
-
-*** THE CAUSE IS STRUCTURAL, NOT ACCIDENTAL.  `class_counts_by_suite` is built in
-    SOURCE_CLASS_ORDER, so ASCENDING counts put the majority at the LAST key and
-    `max(mapping, key=mapping.get)` is then indistinguishable from "take the last key."
-    AND THE DELIVERED DATA CANNOT RESCUE IT: the real census 8/16/32/96 is ALSO peaked on
-    `sensor`, ALSO last.  No fixture and no state of the real dataset separates the
-    selector from the ordering unless the majority is DELIBERATELY INTERIOR. ***
-
-  FIX: _DERIVED_CLASS_COUNTS (1,2,3,4) -> (1,2,4,3).  Majority becomes `actuator`, which is
-  neither first nor last.  THE PROPORTIONS ARE THE SAME MULTISET {0.1,0.2,0.3,0.4}, so
-  empirical_prior_cross_entropy stays 1.2798542258336676 and majority_class_accuracy stays
-  0.4.  ONLY `majority_class` moves.  TEST COUNT UNCHANGED AT 35 - I added no test, I made
-  one able to fail.  NOTHING IN PRODUCTION CHANGED and NO REGENERATION WAS REQUIRED;
-  `analysis_code_identity()` names NINE PRODUCTION MODULES AND NO TEST FILE - I CHECKED IT
-  rather than trusting either agent's report.
-
-  I CHOSE TO STRENGTHEN THE FIXTURE RATHER THAN WEAKEN THE COMMENT.  Weakening would have
-  been accurate, cheaper, and would have left a real gap behind a sentence that had stopped
-  claiming to cover it.  SAID SO IN THE HANDOFF and offered the two-line revert.
-
-THEN I DESIGNED THE CAPACITY SWEEP (see the head block).  Three things it settles before any
-number exists - and these are the parts to carry, not the document's prose:
-  (i)   NO CLAIM SHEET AMENDMENT IS NEEDED.  Slot 9's escalation condition (b) IS
-        limitation 127 restated, and Slot 14 ALREADY requires "the within-suite capacity
-        sweep" as a Technical Report component.  It is an implementation pre-registration.
-  (ii)  BOUND 5 IS THE REAL TENSION AND IT IS RESOLVED BY SPLITTING THE QUESTION:
-          "is the rung-1 deficit capacity-bound?"  -> dev owns it, this sweep answers it
-          "which capacity does the project SHIP?" -> VALIDATION owns it, Gate 5/6, NOT here
-  (iii) THE SATURATION TRAP.  152 examples, no held-out set: as capacity grows BOTH arms
-        approach a perfect in-sample fit and the paired difference goes to zero FOR REASONS
-        THAT HAVE NOTHING TO DO WITH INFORMATION.  A sweep run far enough ALWAYS shows the
-        deficit closing.  So the read is conditioned on a PRE-DECLARED saturation criterion
-        and a deficit closing at or above the first saturated point is NOT evidence.
+*** THEN THREE FINDINGS OF MY OWN, TWO BELOW ANYTHING EITHER REVIEW REACHED. ***
+  Y (limitation 134)  THE APPROVED TRAINER IS WIDTH-LOCKED AT 32 and my own invariant C3
+     would have REFUSED THE ONLY FIX.  The sweep was UNIMPLEMENTABLE and neither of us
+     saw it, because both reviews checked the design against ITSELF.  Answered by a new
+     MANDATORY invariant C9: refit one 32-channel arm through the new path and require
+     BIT-IDENTICAL weights.  Route decision HANDED TO CODEX.
+  Z (limitation 135)  THE SATURATION CRITERION WAS ON THE WRONG QUANTITY.  The read is
+     over macro-F1; the criterion was over accuracy; under 8/16/32/96 they are far apart.
+     It DISCARDS good evidence, which is the wrong direction for a guard to fail in.
+     Replaced by the IDENTITY |d| <= 1 - min(F1_C1, F1_S) and a BAR read at run time from
+     the approved artifact's own field - the last invented constant in the read is gone.
+  Cost table DID NOT REPRODUCE.  S87 0.015/0.021/0.023/0.026 vs S88 0.016/0.018/0.019/
+     0.031 at 16/24/32/48 - up to 19% apart, BOTH directions.  SAID SO in section 8
+     rather than silently replacing four numbers with four different numbers.
 ```
 ## WHAT THE FIRST FIT SHOWED — unchanged by S85, and now in a TRACKED artifact
 
@@ -116,36 +107,41 @@ BOTH SUITES GET THE SAME 39,594-PARAMETER NET.  That is a fairness property AND 
 at once (lesson 122's companion), and it is exactly why rung 1 cannot settle C1-vs-S.
 ```
 
-## THE S87 JUDGMENT I WANT THE NEXT SESSION TO INHERIT
+## THE S88 JUDGMENT I WANT THE NEXT SESSION TO INHERIT
 
-**Codex was right about my comment and I was right about its replacement, and both of those
-are the same finding.** A fixture can be non-degenerate along the axis you just fixed and
-degenerate along one nobody named. Unequal counts closed `max`-vs-`min`; ascending unequal
-counts left `max`-vs-last-key wide open, because the answer sat on the boundary. **Name every
-wrong implementation the fixture is supposed to exclude, then check the expected answer is not
-producible by any of them** - and prefer an expected answer that is neither the first nor the
-last element, which buys most of that for free.
+**A design document can be complete, internally consistent, reviewed in detail by both agents,
+and unimplementable.** Both reviews checked the capacity design against its own logic. Nothing
+checked it against the function it would have to call. It took one paragraph - "which routine
+does the executable invoke?" - to find that `fit_one_arm` has no width input and the CLI has no
+flag for it. **Before a design is frozen, write down the exact call site. That single paragraph
+is the cheapest instrument this project has for the whole class.**
 
-**"The real data has this shape too" is not a defence - it can be the same blind spot.** The
-delivered census is peaked on `sensor`, exactly like the fixture was. When a fixture and the
-production data share an accidental property, nothing in the project can see past it, and the
-fixture is the only place the distinction can be made at all.
+**An invariant that guarantees comparability can forbid the change that makes the measurement
+possible.** C3 exists so the reused anchor and the new points are produced by matching code;
+threading `channels` through the trainer moves that code's digest, so C3 would refuse it. When
+a rule and its purpose come apart like that, **the rule was standing in for a check nobody had
+run** - convert it from an assertion into a measurement. That is C9.
 
-**Eighth consecutive round with the defect one layer below the repair, and the second in a row
-inside a repair the other agent made to my work.** It does not weaken because the repair came
-from the reviewer; it strengthens, because a repair made on a reviewer's authority arrives
-carrying that authority.
+**A guard can fail in two directions and only one of them is loud.** The accuracy-based
+saturation rule would have thrown away points where a bar-sized difference was still available.
+That produces a smaller reported result and no error message anywhere. **Ask of every guard not
+only what it lets through but what it discards.**
 
-**A round that finds only coverage is normally the signal to close (lesson 99's family) - and
-this one was not, for one reason only: the bytes asserted a property I had measured to be
-false.** The deciding factor was never the size of the gap. If the last-key mutant had died I
-would have approved and said so. **Keep those two questions separate: "is the gap worth a
-round?" and "does this state claim something untrue?" Only the second one compels.**
+**A constant inherited from an approved artifact is a different kind of object from one chosen
+in the document that uses it.** Reading `BAR` at run time from
+`paired_macro_f1.claim_sheet_success_bar` did not answer my S87 open question 3 - it made the
+question disappear. **Prefer the constant you can source over the constant you can defend.**
 
-**And the design work is the part of this session I would defend hardest.** Nothing forced me
-to ask whether Slot 14 already contracted the capacity sweep; assuming it needed an amendment
-would have been the natural, defensible, wrong answer and would have cost several sessions.
-**Before proposing an amendment, read the slots that are not obviously about your question.**
+**A withdrawn claim needs a rule, not an edit.** My first draft of the S88 progress report
+reintroduced "spread the same capacity over more incoming information" - the exact unmeasured
+mechanism Codex struck from the public log in its S85 and whose removal I approved in S86. One
+keystroke, in a session whose entire subject was reviewing carefully. **When a claim is
+withdrawn from one document, carry the withdrawal as a standing rule; the edit only protects
+the document it was made in.**
+
+**Ninth consecutive round with the defect one layer below the repair** (lessons 88, 89, 91, 94,
+102, 104, 119, 129, 130). This time the layer below was not code at all - it was *whether the
+code that would run exists at all*.
 ## THE TRAINING-WINDOW POLICY — JOINTLY APPROVED (me S82, Codex S82). SETTLED. IT RAN.
 
 ```text
@@ -247,29 +243,32 @@ scripts/analyze_dev_fit.py  31381b18  +  tests/test_dev_fit_analysis.py  f97c359
       and will go red.  That is limitation 127 and it is deliberate. ***
 ```
 
-## THE S87 VERIFICATION BLOCK
+## THE S88 VERIFICATION BLOCK
 
 ```text
-mutation sweep      Codex's 4481ba32   4 cases | 3 caught | 1 SURVIVOR (last-key) | 0 bad anchors
-                    state returned     4 cases | 4 caught | 0 survivors | 0 bad anchors
-                    two passes agreed in BOTH; restore digest re-verified in a finally;
-                    tripwire DESELECTED and the deselection ASSERTED (SystemExit otherwise)
-NEGATIVE CONTROL    2 semantically inert edits, both SURVIVED, in BOTH sweeps.  STANDING
-                    PRACTICE since S86 - it is what separates a real score from S85's two
-                    false perfect ones, and it now lives INSIDE the harness, not beside it.
-focused suite       test_dev_fit_analysis.py 35 passed (count UNCHANGED from Codex's 35)
-under -O            trainer+contract+analysis 177 passed, expected pytest warning only
-FULL PACKET SUITE   1,551 passed in 119.94 s   (Codex S86 1,551; NO change, NO regression)
-compileall clean    git diff --check clean (only the expected autocrlf notices)
-production blobs    analyze_dev_fit.py 31381b18 | dev_fit_analysis.json 0d00b5ca
-                    dev_fit_result.json d4cefb61 | packet README eb4a58e4   ALL UNCHANGED
-code identity       analysis_code_identity() = 9 production modules, NO test file. CHECKED.
-design document     b86d46aa | canonical 2250add1... | eol=lf via git check-attr, not inferred
-transcript          Codex S86 append: single tail hunk @@ -23525,3 +23525,92 @@, additions
-                    only, touches the monitoring file not at all.  NO RECURRENCE.
+test blob approved   6f29bf05ddebae9f33817381f4713089f99ee7e4  UNCHANGED, re-verified
+focused under -O     tests/test_dev_fit_analysis.py 35 passed, 1 expected warning
+FULL PACKET SUITE    1,551 passed in 119.03 s   (Codex S87 1,551; NO change, NO regression)
+design document      blob ccd12ef4 | canonical 283de293... | 45,400 B / 752 lines
+                     LF | raw == canonical | no BOM | eol=lf via git check-attr, not inferred
+40-channel probe     61,010 parameters | receptive field 1,023 | enforce_rung1_band ACCEPTS
+init-weight probe    (32,3)==(32,3), (40,3)==(40,3), (32,3)!=(40,3)   [state-dict digests]
+row-order probe      default_rng(k).permutation(152) width-independent, k in {0,3}
+census counterexample  3 healthy errors  -> acc 0.9803 / macro-F1 0.9385 / headroom 0.0615
+                       3 structure errs  -> acc 0.9803 / macro-F1 0.9347 / headroom 0.0653
+cost probe           synthetic tensors ONLY; no data read, no checkpoint, no fit
+production blobs     analyze_dev_fit.py 31381b18 | dev_fit_analysis.json 0d00b5ca
+                     dev_fit_result.json d4cefb61 | root README a544f9d2   ALL UNCHANGED
+                     dev_fit_trainer.py and attribution_net.py READ ONLY, NOT EDITED
+transcript           pre-write 1,506,399 B / 23,975 lines / sha 1f4602a8...; post-write
+                     1,518,959 B / 24,178 lines; prefix byte-identical ASSERTED INSIDE the
+                     writer; +203/-0; header unique at line 23,977; Claude physically last
+Codex S87 append     single tail hunk @@ -23790,3 +23790,186 @@, +183/-0, additions only,
+                     monitoring file untouched.  NO RECURRENCE.
 FITS 0 | CHECKPOINTS 0 | GENERATION 0 | ROLLOUTS 0
-REAL-DATA TOUCHES   *** ZERO OF EVERY KIND.  No manifest, no .npz, no checkpoint, no
-                    regeneration.  PILOT / VAL / TEST: 0. ***
+REAL-DATA TOUCHES    *** ZERO OF EVERY KIND.  No manifest, no .npz, no checkpoint, no
+                     regeneration.  The only reads were the TRACKED dev_fit_analysis.json
+                     and source files.  PILOT / VAL / TEST: 0. ***
 ```
 ## READ THIS FIRST — Protocol P lives in a file, not in this summary
 
@@ -295,7 +294,7 @@ Settled — do not reopen, do not edit v2.3.3.  Codex S55: no bump for the Stage
 ## Where the project is
 
 - **Phase 2 (Execution) is OPEN.** All Phase-1 gates in force. **Schema v1.0 + Amendment A1 in force.** Contract changes run through the **amendment protocol**.
-- I am **Claude**; last session was **Session 87**; next session I run is **Session 88**. **THE S80 REGULAR PROGRESS REPORT IS WRITTEN** — `agents/Claude/Progress Reports/Progress Report Session 80.md`, covering S73-S80, not yet reviewed by Codex. **MY NEXT REGULAR IS SESSION 88 - I.E. MY NEXT SESSION, COVERING S81-S88.** **THE S72 PROGRESS REPORT** (`Progress Report Session 72.md`, covers S65–S72) **was read by Codex in its S72 general recent-work review, which found no correction to carry — so NO explicit review cycle opened on it** (the Working Method's rule: the review cycle does not apply to the general recent-work review until that review flags something). Next regular report: **Session 88**, or sooner if a phase transition or an approved written Claim-Sheet amendment fires. **A2 ALREADY FIRED ONE AND IT WAS CODEX'S TO WRITE** (its S76 wrote the approving turn); that does not reset either counter.
+- I am **Claude**; last session was **Session 88**; next session I run is **Session 89**. **THE S88 REGULAR PROGRESS REPORT IS WRITTEN** — `agents/Claude/Progress Reports/Progress Report Session 88.md`, covering S81-S88, not yet reviewed by Codex. **MY NEXT REGULAR IS SESSION 96.** *(The S80 report, covering S73-S80, is also still unreviewed by Codex.)* **THE S72 PROGRESS REPORT** (`Progress Report Session 72.md`, covers S65–S72) **was read by Codex in its S72 general recent-work review, which found no correction to carry — so NO explicit review cycle opened on it** (the Working Method's rule: the review cycle does not apply to the general recent-work review until that review flags something). Next regular report: **Session 96**, or sooner if a phase transition or an approved written Claim-Sheet amendment fires. **A2 ALREADY FIRED ONE AND IT WAS CODEX'S TO WRITE** (its S76 wrote the approving turn); that does not reset either counter.
 - **`config.json` is deliberately NOT frozen** and does not exist. All hashes are `dev-`; no `dev-` trace may enter confirmatory analysis.
 - Real data exists: `data/gate3-base-dev-pilot-val-c1-s` (3.86 GB, git-ignored, local only). 472 reservations / 944 manifest rows / C1+S / dev 152, pilot 152, val 168. **Test untouched: 0 identities, 0 payloads.** **THE "SLATED FOR FULL REGENERATION FROM ZERO AFTER A2" EXPECTATION IS RETIRED AS OF MY S75 — see A2.3.** Option C inserts no severity, so no seed ordinal shifts and A2 by itself invalidates none of this. If the set is ever superseded it is for some other reason, under its own authorization. **Still: read them, do not build on them** — nothing downstream of them is authorized either way.
 - **THE PAYLOAD-BOUNDARY EXTENSION HAS RUN — Codex's S73, 127 physical rollouts, `X_CASE_EMPTY`, and the result artifact is JOINTLY APPROVED (Codex S73 / me S74).** The measurement is spent and no further payload-extension execution is authorized. **A2 IS IN FORCE at `baa8fd53…` / `203aab77…` — both agents approved those exact bytes (me S76, Codex S76). The two-file loop is CLOSED and the amendment is not to be reopened or status-edited.**
@@ -328,6 +327,11 @@ MY S77 SPENT ZERO — built the Gate-4 rung; no plan mode, no execute mode, no r
   no generation.  Every real-data touch was a READ of one persisted observation row.
 MY S79 SPENT ZERO — owner re-review of Codex's contract repair.  NO REAL DATA READ AT ALL:
   no manifest, no .npz, no checkpoint, no fit, no generation.
+MY S88 SPENT ZERO OF EVERYTHING AND TOUCHED NO REAL DATA AT ALL - no manifest, no
+  .npz, no checkpoint, no regeneration, no fit, no generation, no rollout.  An explicit
+  owner approval, a design revision, and four constructor/synthetic probes.  Its only
+  reads of a tracked results file were of dev_fit_analysis.json.  PILOT/VAL/TEST: 0.
+  *** THE ROLLOUT COUNT IS UNCHANGED AT 278. ***
 MY S87 SPENT ZERO OF EVERYTHING AND TOUCHED NO REAL DATA AT ALL - no manifest, no
   .npz, no checkpoint, no regeneration, no fit, no generation, no rollout.  An owner
   re-review, a four-case mutation sweep over test fixtures, and a design document.
@@ -362,7 +366,7 @@ MY S80 SPENT ZERO — owner re-review round 3, plus the S73-S80 progress report.
 MY S78 SPENT ZERO — owner re-review plus the dev-fit contract.  No fit, no checkpoint, no
   generation.  Every real-data touch was ONE read of manifest.csv; no .npz was opened.
 ```
-- **Progress report DONE at S64** (regular, covers S57–S64) at `agents/Claude/Progress Reports/Progress Report Session 64.md`. **ITS LOOP IS CLOSED AT `b0ff7496` — Codex explicitly approved that exact blob in its S65 (`HumanReport65.md:81-82`), and I had already approved it, so both approvals name the same bytes. DO NOT REOPEN.** *(This line said OPEN through five of my own sessions after the loop had closed, and the Pointers section said CLOSED the whole time — my own summary contradicted itself and I only caught it in S80 by grepping the file rather than reading it. Lesson 65 exactly: a status clause that has been true for several consecutive rewrites is the most likely thing to be carried into one where it is false.)* Round history, kept because the figure it argues about was wrong five times: Codex made two edits in its S64 (the ledger refuses a duplicate LOUDLY, not silently; and "151 rollouts, about 70 minutes" contradicted my own line 14's audited 4,432.16 s), I verified both against primary records and accepted both diagnoses AND implementations, then moved one clause out of the present tense (+4/-3) because "still cannot run until payload mass is part of the key" stopped being true in S63/S64. Prior status — the S56 one ran five review rounds, so expect Codex may open one. `Progress Report Session 56.md` (S49–S56) stays closed at blob `83c527ce…`; do not reopen it. **THE S72 REGULAR IS WRITTEN** — `agents/Claude/Progress Reports/Progress Report Session 72.md`, covering S65–S72. **Codex read it in its S72 general recent-work review and found no correction to carry, so no explicit review cycle opened on it.** Its spine: eight complete adversarial rounds on one program, every round finding something real and each structurally below the last; then the loop closing and the program producing the zero-rollout plan. It states both halves of the trade — what the rounds bought, and that eight of my sessions produced no science — and names where I think the cost stopped being obviously worth it. **MY NEXT REGULAR IS SESSION 88.**
+- **Progress report DONE at S64** (regular, covers S57–S64) at `agents/Claude/Progress Reports/Progress Report Session 64.md`. **ITS LOOP IS CLOSED AT `b0ff7496` — Codex explicitly approved that exact blob in its S65 (`HumanReport65.md:81-82`), and I had already approved it, so both approvals name the same bytes. DO NOT REOPEN.** *(This line said OPEN through five of my own sessions after the loop had closed, and the Pointers section said CLOSED the whole time — my own summary contradicted itself and I only caught it in S80 by grepping the file rather than reading it. Lesson 65 exactly: a status clause that has been true for several consecutive rewrites is the most likely thing to be carried into one where it is false.)* Round history, kept because the figure it argues about was wrong five times: Codex made two edits in its S64 (the ledger refuses a duplicate LOUDLY, not silently; and "151 rollouts, about 70 minutes" contradicted my own line 14's audited 4,432.16 s), I verified both against primary records and accepted both diagnoses AND implementations, then moved one clause out of the present tense (+4/-3) because "still cannot run until payload mass is part of the key" stopped being true in S63/S64. Prior status — the S56 one ran five review rounds, so expect Codex may open one. `Progress Report Session 56.md` (S49–S56) stays closed at blob `83c527ce…`; do not reopen it. **THE S72 REGULAR IS WRITTEN** — `agents/Claude/Progress Reports/Progress Report Session 72.md`, covering S65–S72. **Codex read it in its S72 general recent-work review and found no correction to carry, so no explicit review cycle opened on it.** Its spine: eight complete adversarial rounds on one program, every round finding something real and each structurally below the last; then the loop closing and the program producing the zero-rollout plan. It states both halves of the trade — what the rounds bought, and that eight of my sessions produced no science — and names where I think the cost stopped being obviously worth it. **THE S88 REGULAR IS WRITTEN** — `agents/Claude/Progress Reports/Progress Report Session 88.md`, covering S81-S88, unreviewed. Its spine: the ten development fits ran and produced the project's first learned-model numbers; the two findings that matter are that S fit slightly worse at a fixed width (a capacity statement, with the MECHANISM explicitly unmeasured) and that the seed spread is 3x the success bar; and the stretch's recurring lesson, that a fixture repaired along the measured axis stayed degenerate along one nobody named while the real data shares the same accident. **MY NEXT REGULAR IS SESSION 96.**
 
 ## Escalation trigger — content-based, and it has now held ten times
 
@@ -584,7 +588,7 @@ generation_audit.json · independent_audit.json
 - **GATE-4 RUNG 1 — LOOP CLOSED, BOTH AGENTS APPROVED THE SAME BYTES (me S78, Codex S78). DO NOT REOPEN.** `scripts/utils/attribution_net.py` (`c4fa3c63`) + `tests/test_attribution_net.py` (`5a401ca1`, 68 tests). `TemporalAttributionNet` (39,594 params, 9 causal dilated blocks, receptive field 1,023) + `TemporalAttributionEstimator` (a `DiagnosisEstimator`) + `window_to_input` + `deterministic_conv_precision` + `CAPACITY_LADDER`. **No training loop, no fitted weights.** The estimator DEEP-COPIES the net it is handed (`nn.Module.to` moves in place — adopting it aliases two estimators onto one set of weights). `severity_uncertainty` is `+inf` even when fitted; the raw head scale is exposed only as `raw_severity_scale`. **`torch==2.11.0` is pinned in the packet's `requirements.txt` (blob `3b103c52`, ACCEPTED BY CODEX S77) — the FIRST new packet dependency since S45.** **`attach_trained_weights` is TRANSACTIONAL *and* IDENTITY-PRESERVING: it validates on a deep copy, then copies the validated tensors INTO the live network rather than rebinding `self.net`. Both properties are load-bearing and both were bought by a real defect (Codex found the first, I found the second inside its repair — limitation 108, lesson 102). The docstring carries the argument for why the second load cannot fail partway; do not delete it.**
 - **THE DEV-FIT CONTRACT — LOOP CLOSED AT ROUND FOUR; BOTH AGENTS APPROVED THE SAME BYTES (Codex S80, me S81). DO NOT REOPEN.** `scripts/utils/dev_fit_contract.py` (`bd2c0d08`) + `tests/test_dev_fit_contract.py` (`fbd941b5`, 93 tests). The executable form of Codex's S77 bounds 1/3/4 — see the block at the top of this file. Imports neither `mujoco` nor `torch` (checked in a FRESH interpreter). **All four flagged design choices were RULED ON by Codex S78 and upheld.** **`require_code_identity` (S80) is the ONE statement of bound 4's code-identity rule; `code_identity()` and `DevFitProvenance.validate()` both call it and neither carries a copy — do not re-introduce a second copy.** `_HEX64`/`_DEV_HEX64` are UNANCHORED and safe only under `fullmatch`. Superseded, never review: `73e5e743`/`3959ff28` (mine S78), `6541cebc`/`9df7d7f7` (Codex S78), `2448ad4d`/`2aa5f762` (mine S79), `872c6b12`/`3125a618` (Codex S79), `9d6ecfea`/`d4202c8e` (mine S80). **`code_identity()` has TWO non-substitutable `require_bare_name` call sites — one early in the loop, one via the `require_code_identity` post-condition. Deleting either goes red (measured, S81). The rule itself still exists ONCE.**
 - **THE DEV-FIT TRAINER — LOOP CLOSED, BOTH AGENTS APPROVED THE SAME BYTES (Codex S83, me S84). IT HAS RUN ONCE.** `scripts/utils/dev_fit_trainer.py` (`caa00418`) + `tests/test_dev_fit_trainer.py` (`cbc4064f`, 49 tests). **Do not reopen the loop; do NOT re-run `--mode fit` into `results/dev_fit` — the guard refuses it and rightly so. A second fit needs a NEW output directory and a reason.** See the blocks at the top of this file for the approved window policy, Codex's four preserved S82 corrections, and my Findings S and T; **do not redesign it.** Superseded, never review: `275a7a50`/`80d9722f` (mine S81), `fd2c8c9b`/`9d9455b7` (Codex S81), `10054696`/`9e76923c` (mine S82), `788fc240`/`c95bd8fb` (Codex S82), `b9d7bb6f`/`3a81eecc` (mine S83). **10 fits, 10 checkpoints, 0 rollouts.** **THE FIRST DEVELOPMENT FIT RESULT is `results/dev_fit/dev_fit_result.json` (tracked) + ten git-ignored `.pt` files — see the head of this file.** **THE WINDOW POLICY ITSELF IS SETTLED — Codex approved it in its S82 and that is not part of this loop.**
-- **THE DEV-FIT IN-SAMPLE READBACK — CODEX OWNS IT, I AM THE REVIEWER. THE CODE AND ARTIFACT ARE JOINTLY APPROVED AND CLOSED; ONE TEST FILE IS OPEN AT MY S86 STATE.** `scripts/analyze_dev_fit.py` (`31381b18`) and `results/dev_fit/dev_fit_analysis.json` (`0d00b5ca`, canonical `7bec34a1`) are **JOINTLY APPROVED (me S85, Codex S85) — DO NOT REOPEN.** `tests/test_dev_fit_analysis.py` is at **`6f29bf05`, 35 collected, and Codex owes approve-or-contest.** Codex built the readback in its S84 to carry Finding X forward without rewriting the ledger; my S85 review kept every published number and made four repairs (loss decomposition bound to `trainer.arm_loss`, plan cardinality and seed set derived from the contract, two unsupported docstring claims corrected, a producer binding added); Codex's S85 approved all of that unchanged, rejected my no-refactor-possible premise, and added five tests through the loader/evaluator seams; **my S86 measured what those tests actually catch (10 of 14) and repaired three degenerate fixtures to reach 14 of 14, changing no production code and no number.** **Superseded, never review: `cef8c35a`/`9837499e`/`d61edd33` (Codex S84), `f97c359b` (mine S85), `850d0fe3` (Codex S85), `c7b0a093` (mine S86), `4481ba32` (Codex S86 - I CONTESTED it in S87; see limitation 133).** **Limitation 130 is now a CORRECTION, not a limitation — the derivation path IS coverable through those seams and my S85 claim to the contrary was false.**
+- **THE DEV-FIT IN-SAMPLE READBACK — CODEX OWNS IT, I AM THE REVIEWER. ALL THREE PARTS ARE NOW JOINTLY APPROVED AND CLOSED.** `scripts/analyze_dev_fit.py` (`31381b18`) and `results/dev_fit/dev_fit_analysis.json` (`0d00b5ca`, canonical `7bec34a1`) are **JOINTLY APPROVED (me S85, Codex S85) — DO NOT REOPEN.** `tests/test_dev_fit_analysis.py` is **CLOSED at `6f29bf05`, 35 collected — Codex approved it in its S87 and I gave the explicit owner approval in my S88, so both approvals name the same bytes. DO NOT REOPEN.** Codex built the readback in its S84 to carry Finding X forward without rewriting the ledger; my S85 review kept every published number and made four repairs (loss decomposition bound to `trainer.arm_loss`, plan cardinality and seed set derived from the contract, two unsupported docstring claims corrected, a producer binding added); Codex's S85 approved all of that unchanged, rejected my no-refactor-possible premise, and added five tests through the loader/evaluator seams; **my S86 measured what those tests actually catch (10 of 14) and repaired three degenerate fixtures to reach 14 of 14, changing no production code and no number.** **Superseded, never review: `cef8c35a`/`9837499e`/`d61edd33` (Codex S84), `f97c359b` (mine S85), `850d0fe3` (Codex S85), `c7b0a093` (mine S86), `4481ba32` (Codex S86 - I CONTESTED it in S87; see limitation 133).** **Limitation 130 is now a CORRECTION, not a limitation — the derivation path IS coverable through those seams and my S85 claim to the contrary was false.**
 - **THE PAYLOAD-CONDITIONING READ — RESULT JOINTLY APPROVED, CODE UNDER REVIEW.** `results/protocol_p/payload_conditioning.json` (`c11f7067`, canonical sha256 `47ec3571…`) is **jointly approved** (Codex S60, me S61) and my S61 edits regenerate it byte-identically. `scripts/analyze_protocol_p_payload_conditioning.py` (`39048d26`) + `tests/test_protocol_p_payload_conditioning.py` (`b9e81f63`, 105) are **under review at my S61 blobs**. **Not pre-registered; the artifact's second key is an `authority` field saying so and a test asserts that string.** Same post-A2 revision obligation as the role-coverage read.
 
 ## Codex's OTHER lanes — reference
@@ -1085,6 +1089,44 @@ generation_audit.json · independent_audit.json
     --deselect` silently ignores a node id that matches nothing.** The warning is written
     into the test's own docstring, which is the only place the next person will see it.
 
+134. **[NEW S88] THE APPROVED DEV-FIT TRAINER CANNOT FIT ANY WIDTH BUT 32, AND MY OWN
+    COMPARABILITY INVARIANT WOULD HAVE REFUSED THE ONLY FIX.** Measured:
+    `dev_fit_trainer.py:968` is the file's ONLY network construction site and reads
+    `TemporalAttributionNet(seed=seed)`; `fit_one_arm` takes examples, seed, epochs,
+    batch size, learning rate and device and **no width**; the CLI has no capacity flag;
+    and `grep -c 'channels'` returns **0** in both `dev_fit_trainer.py` and
+    `dev_fit_contract.py`. **The Gate-4 fit path is width-locked at the 32-channel
+    default**, so the capacity sweep as designed at S87 - and as Codex reviewed in detail
+    - was unimplementable, and neither review saw it because both checked the design
+    against its own logic. The collision on top: invariant C3 requires the reused anchor
+    row's recorded `code_identity` to match the code fitting the new points, so threading
+    `channels` through the trainer moves `training_code_identity()["dev_fit_trainer.py"]`
+    and **the anchor fails its own check by construction**. Answered by invariant **C9**,
+    which refits ONE 32-channel arm through the new path into a scratch root and requires
+    **bit-identical** parameter tensors against the approved checkpoint, refusing loudly
+    on difference, on a missing checkpoint (a fresh clone has the ledger without the
+    weights) and on an unmakeable comparison. **The route - a new module vs an additive
+    keyword on `fit_one_arm` - is CODEX'S CALL and was handed over, not taken.**
+
+135. **[NEW S88] THE S87 SATURATION CRITERION WAS ON THE WRONG QUANTITY, AND IT FAILED IN
+    THE DIRECTION THAT DISCARDS EVIDENCE.** The read is over macro-F1; the criterion was
+    "mean in-sample four-way ACCURACY of both suites >= 0.98". Codex's aggregation
+    objection was right and this one sits under it. Measured on the exact 8/16/32/96
+    census: 3 healthy examples misclassified as sensor gives accuracy **0.9803** (the S87
+    rule says SATURATED) with macro-F1 **0.9385**, so `|d|` could still be **0.0615**;
+    3 structure errors give accuracy 0.9803, macro-F1 0.9347, `|d|` up to **0.0653**.
+    Both exceed the project's own **0.05** bar, so the rule would have thrown away points
+    where a bar-sized difference was still arithmetically available - **and a guard that
+    discards good evidence produces a smaller reported result with no error message
+    anywhere.** Replaced by an identity rather than a threshold: for macro-F1 in [0, 1],
+    `|d| = max - min <= 1 - min`, so `headroom(c,k) = 1 - min(F1_C1, F1_S)` is an EXACT
+    upper bound, and a pair is BAR_CONSTRAINED iff `headroom < BAR` where **`BAR` is read
+    at run time from the approved artifact's `paired_macro_f1.claim_sheet_success_bar`
+    field**, not written as a literal. Rung-1 per-seed headroom is **0.3157 to 0.5133** -
+    nowhere near constrained. **The general form: check that a guard's quantity is the
+    quantity the read is over, not merely a correlate of it.**
+
+
 ## Coherence / honesty bounds (keep loud)
 
 - **Sensor RNG keyed on `(sensor_seed, pair_id, channel, stream)` jointly** (`utils/rng.py:76-78`). **Measured S39: a `pair_id` change alone moves `gauge_obs` by up to 6.50 µε**, against `D` of order 0.1–0.5. **Nothing else is in the key.**
@@ -1095,7 +1137,7 @@ generation_audit.json · independent_audit.json
 
 - **Simulation-only, one desktop:** Windows 11, Ryzen 7 8700F (8C/16T), RTX 5060 Ti **16 GB VRAM** (sm_120), 32 GB RAM, Python **3.12.10** in `./venv`. Free/OSS, commercial-use-friendly only.
 - **venv has:** numpy 2.5.1, scipy 1.18.0, scikit-learn 1.9.0, matplotlib 3.11.0, mujoco 3.10.0, pandas 3.0.3, control 0.10.2, gymnasium 1.3.0, pytest 9.1.1, **torch 2.11.0+cu128**. **S77 added the FIRST new PACKET dependency since the packet was created: `torch==2.11.0` in `Reproducibility Packet/requirements.txt`, pinned as the BASE version (not `+cu128`) so a reader without a CUDA machine can still run the whole suite.** The venv itself gained nothing — torch was already installed.
-- **Running packet tests:** from the REPO ROOT, `./venv/Scripts/python.exe -m pytest -q "Reproducibility Packet/tests"`. **Scope pytest to that path** — a root-wide invocation collides on duplicate test module names in the ignored `tmp/session6_packet_copy/`. **Full suite 1,551 tests green (S87, 119.94 s - UNCHANGED again, because S87 like S86 added no test and only made an existing one able to fail; S86 115.64 s — UNCHANGED from Codex S85's 1,551, because my S86 added no test and only made three existing ones able to fail; `test_dev_fit_analysis.py` collects 35 after Codex's S85 added 5 to my 30; prior 1,546 at S85, 114.73 s; Codex S84 1,526 after it added `test_dev_fit_analysis.py` at 10, which my S85 review took to 30; prior 1,515 at S83, 121.01 s; `test_dev_fit_trainer.py` collects 48 after my S83 review added 11 to Codex's 37; Codex S82 1,504; S82 1,499, 119.64 s; Codex S81 1,487; S81 1,482; prior 1,466 at S80, 128.41 s; `test_dev_fit_contract.py` collects 92 after my S80 review added 15 to Codex's 77; Codex S79 1,451; S79 1,441; Codex S78 1,432; S78 1,430; S77 1,370, 132.81 s, +64 from `test_attribution_net.py`; prior 1,306 at S72, 122.77 s WITH the new `results/payload_boundary_extension/plan.json` present — nothing asserts that directory's absence; S71 126.03 s; Codex S70 1,288 in 123.18 s).** `test_payload_boundary_extension.py` now collects **170** — Codex handed off 36 in S64, I made it 45 in S65, Codex 47 in its S65, my S66 review made it 53, Codex's S66 made it 58, my S67 review made it 71, Codex's S67 made it 76, my S68 review made it 81, Codex's S68 made it 83, my S69 review made it 106, Codex's S69 kept it at 106 (a rename plus three added spellings), my S70 review added 35 (21 of which are one parametrization over `_URI_SCHEMES` x three letter cases), Codex's S70 added 11, and my S71 review added 18 — one equality pin, 11 boundary cases and 6 scheme-character cases. **The two closed Step-2 seam files together collect 124.** Prior: 1,217 (my S68), 1,207 (my S67), 1,189 (my S66), 1,136 (my S64), 1,133 (Codex S63), 1,126 (my S63 and Codex S61), 1,115 (Codex S60), 1,107 (my S60, 150.54 s), 1,021 (S59, 143.00 s), 999 (S58), 975 (S57), 938 (S55), 906 (S54), 750 (S53), 595 (pre-S51 baseline). **Set `PYTHONIOENCODING=utf-8` for anything that prints non-ASCII** — the console is cp1252. **Use ASCII in probe scripts and in anything a gate prints.**
+- **Running packet tests:** from the REPO ROOT, `./venv/Scripts/python.exe -m pytest -q "Reproducibility Packet/tests"`. **Scope pytest to that path** — a root-wide invocation collides on duplicate test module names in the ignored `tmp/session6_packet_copy/`. **Full suite 1,551 tests green (S88, 119.03 s - UNCHANGED, because S88 added no test and changed no executable at all; S87 119.94 s - UNCHANGED again, because S87 like S86 added no test and only made an existing one able to fail; S86 115.64 s — UNCHANGED from Codex S85's 1,551, because my S86 added no test and only made three existing ones able to fail; `test_dev_fit_analysis.py` collects 35 after Codex's S85 added 5 to my 30; prior 1,546 at S85, 114.73 s; Codex S84 1,526 after it added `test_dev_fit_analysis.py` at 10, which my S85 review took to 30; prior 1,515 at S83, 121.01 s; `test_dev_fit_trainer.py` collects 48 after my S83 review added 11 to Codex's 37; Codex S82 1,504; S82 1,499, 119.64 s; Codex S81 1,487; S81 1,482; prior 1,466 at S80, 128.41 s; `test_dev_fit_contract.py` collects 92 after my S80 review added 15 to Codex's 77; Codex S79 1,451; S79 1,441; Codex S78 1,432; S78 1,430; S77 1,370, 132.81 s, +64 from `test_attribution_net.py`; prior 1,306 at S72, 122.77 s WITH the new `results/payload_boundary_extension/plan.json` present — nothing asserts that directory's absence; S71 126.03 s; Codex S70 1,288 in 123.18 s).** `test_payload_boundary_extension.py` now collects **170** — Codex handed off 36 in S64, I made it 45 in S65, Codex 47 in its S65, my S66 review made it 53, Codex's S66 made it 58, my S67 review made it 71, Codex's S67 made it 76, my S68 review made it 81, Codex's S68 made it 83, my S69 review made it 106, Codex's S69 kept it at 106 (a rename plus three added spellings), my S70 review added 35 (21 of which are one parametrization over `_URI_SCHEMES` x three letter cases), Codex's S70 added 11, and my S71 review added 18 — one equality pin, 11 boundary cases and 6 scheme-character cases. **The two closed Step-2 seam files together collect 124.** Prior: 1,217 (my S68), 1,207 (my S67), 1,189 (my S66), 1,136 (my S64), 1,133 (Codex S63), 1,126 (my S63 and Codex S61), 1,115 (Codex S60), 1,107 (my S60, 150.54 s), 1,021 (S59, 143.00 s), 999 (S58), 975 (S57), 938 (S55), 906 (S54), 750 (S53), 595 (pre-S51 baseline). **Set `PYTHONIOENCODING=utf-8` for anything that prints non-ASCII** — the console is cp1252. **Use ASCII in probe scripts and in anything a gate prints.**
 - **MUTATION SWEEPS — MANDATORY HARNESS SHAPE AFTER S60:** clear `__pycache__` before every run **and** set `PYTHONDONTWRITEBYTECODE=1` in the subprocess env; drop `-x`; translate anchors to the target file's own newline; report bad anchors separately from survivors; restore exact bytes in a `finally` and verify the blob afterwards. **Run the whole sweep twice and require identical results** — that is the cheapest detector for a harness fault.
 - **Packet scripts are invoked FROM the packet directory** (`scripts\<name>.py`, `--output-dir results\<name>`), per its README. From the packet dir the project venv is `..\venv\Scripts\python.exe`. **In my PowerShell tool the working directory is not the repo root — use `Set-Location` or absolute paths. My Bash tool's cwd PERSISTS between calls — prefer absolute paths or re-`cd` every time.**
 - **Timings (measured S35–S60):** full packet suite ~150 s; one MuJoCo rollout (3000 steps) **25.6–27.5 s**; a PARTIAL rollout is proportionally cheap — 480 steps ≈ 3.0 s; at reduced fidelity (`point_count=9`, `simulation_timestep_s=2e-4`) 501 control steps ≈ 0.37 s; a 200-realization sensor-only null at W=768 ~40 s; an offline re-observation ≈ instantaneous; the driver's `--mode plan` 0.30–0.33 s; **the payload-extension executable's `--mode plan` 0.36–0.38 s (eight MuJoCo model compilations, zero steps)**; **one driver-file mutation case ≈ 100 s** (a 17-case sweep is ~28 min and belongs in the background); **a small-analyzer mutation case ≈ 0.5–0.7 s with the fixed harness, so a 44-case sweep is under a minute.** **NO figure exists for the pinned `pairs=100` Stage-0 run — see limitation 45; do not invent one.**
@@ -1612,9 +1654,37 @@ sweep" as a Technical Report component, which turns a proposed amendment into an
 implementation pre-registration. The natural, defensible, wrong answer would have cost
 several sessions.
 
+131. **[S88] BEFORE FREEZING A DESIGN, WRITE DOWN THE EXACT CALL SITE ITS EXECUTABLE WOULD
+INVOKE.** The capacity design was complete, internally consistent, reviewed in detail by both
+agents - and unimplementable, because `fit_one_arm` has no width input and nobody had asked
+which function the executable would call. Both reviews checked the design against its own
+logic; nothing checked it against the code it would have to use. **One paragraph naming the
+call site is the cheapest instrument this project has for that whole class**, and it is now the
+thing I do before handing any design over. (Limitation 134.)
+
+Three companions from the same session, each smaller and each with teeth:
+
+**When a rule and its purpose come apart, the rule was standing in for a check nobody ran.**
+C3 guarantees comparability by requiring matching code identities - and would therefore have
+refused the edit that makes the measurement possible. The repair is not to weaken the rule but
+to **convert it from an assertion into a measurement**: refit one arm and require bit-identical
+weights. Assertions that cannot be checked accumulate; measurements fail loudly.
+
+**Ask of every guard not only what it lets through but what it DISCARDS.** The saturation rule's
+failure mode was throwing away good points, which shows up as a smaller reported result and no
+error anywhere. The whole review culture here is tuned to false accepts; false rejects are the
+quieter half and they were what limitation 135 turned out to be.
+
+**A claim withdrawn from one document walks back in through another unless the withdrawal is
+carried as a RULE.** My first draft of the S88 progress report reintroduced verbatim the
+unmeasured mechanism Codex struck from the public log in S85 and whose removal I approved in
+S86 - one keystroke, in a session whose entire subject was reviewing carefully. The edit
+protects only the document it was made in.
+
+
 ## Pointers
 
-- **THE CAPACITY-ESCALATION DESIGN - MINE, A DRAFT, WITH CODEX: `Reproducibility Packet/protocol/capacity-escalation-v0.1.md`, blob `b86d46aa`, canonical sha256 `2250add159c9adf5c95a5520a85b50595af04d84a704d389e3d095ed1cc11cf0`, 21,576 B / 385 lines / LF / raw == canonical / no BOM.** **IT AUTHORIZES NOTHING** and it is approved by nobody. It pre-registers the Slot-9 within-suite capacity sweep that limitation 127 requires before any C1-vs-S reading is drawn from rung 1. **READ THE FILE - the head block is an index, not the document.** Three parts are load-bearing: **no Claim Sheet amendment is needed** (Slot 9 (b) IS limitation 127 restated, and Slot 14 already contracts "the within-suite capacity sweep" as a Technical Report component); **bound 5 is resolved by splitting the question** (dev may ask whether the deficit is capacity-bound; only VALIDATION, at Gate 5/6, may select the shipped capacity); and **the saturation trap** (152 examples, no held-out set, so a long enough sweep ALWAYS shows the deficit closing - the read is conditioned on a PRE-DECLARED saturation criterion, and a deficit closing at or above the first saturated point is NOT evidence). Stage 1 is `channels` in {16, 24, 32, 48} = 10,586 / 22,786 / 39,594 / 87,034 parameters, **all four INSIDE Slot 9's rung-1 band [10^4, 10^5], so `enforce_rung1_band` stays ON and Stage 1 does not climb the ladder at all.** Width and not depth, because `n_blocks` moves the receptive field as well as the parameter count. **If it needs correcting after approval, bump the version and `git mv`; never edit an approved version in place.**
+- **THE CAPACITY-ESCALATION DESIGN - MINE, REVISED AND OWNER-APPROVED, WITH CODEX: `Reproducibility Packet/protocol/capacity-escalation-v0.1.md`, blob `ccd12ef4`, canonical sha256 `283de293f1557f28757454570c3029e5958eea1b171ce9acb57c945b43980fab`, 45,400 B / 752 lines / LF / raw == canonical / no BOM.** **IT AUTHORIZES NOTHING.** I approve these exact bytes; Codex owes the second read. **Superseded, NEVER review or build from: `b86d46aa` (my S87 state, which Codex BLOCKED).** **STILL v0.1 BY CODEX'S OWN INSTRUCTION** - the document has never been jointly approved, so S88 was an in-place revision of an unapproved draft; **the moment both agents approve a state, bump-and-`git mv` takes over and the document says so.** **READ THE FILE - the head block is an index, not the document.** What survives from S87 and must not be re-derived: **no Claim Sheet amendment is needed** (Slot 9 (b) IS limitation 127 restated, and Slot 14 already contracts "the within-suite capacity sweep"); **width and not depth**, because `n_blocks` moves the receptive field too; **the ten approved 32-channel arms are reused and never re-run**; **every point stays inside Slot 9's rung-1 band**, so `enforce_rung1_band` stays ON and Stage 1 does not climb the ladder. What S88 changed: **the executable emits NO VERDICT AT ALL** - exactly-defined descriptive fields, an interpretation pre-registered as prose in Section 5.4 and applied jointly, and **no observation licensing any action**, Stage 2 included; **the absolute per-suite curves are first-class outputs** so a rising paired difference caused by C1 deteriorating cannot be misread; **`{16, 24, 32, 40, 48}`, 50 arms, 40 new** plus the C9 equivalence fit = **41 fits**; **Section 4.3 states the seed claim as three claims with three scopes** (suite pairing IS real CRN at fixed `(c,k)`; row order IS common across widths; initialization is NOT); **Section 7 is a new run-level plan and partial-failure contract**; and **Section 2.1 reconciles Slot 14 with bound 5** - the Technical Report must disclose the sweep as development-only instrument diagnosis and capacity-search history, and may not use it as held-out evidence, a headline result, or a capacity selection. **The two load-bearing new invariants are C9 (the equivalence gate, limitation 134) and C10 (no partial run may present itself as a curve).** **Section 11's question 1 - Route A vs Route B - is CODEX'S CALL and there is no executable until it answers.**
 - **Protocol P (in force, JOINTLY APPROVED): `Reproducibility Packet/protocol/protocol-p-v2.3.3.md`, canonical sha256 `5689dad7…8bdf421f`. READ THE FILE.**
 - **The payload-boundary extension — JOINTLY APPROVED AND FROZEN, NOT YET EXECUTABLE: `Reproducibility Packet/protocol/payload-boundary-extension-v0.2.md`, canonical sha256 `538ae06b…df33b6a`, blob `d9f6e188`, 71,188 bytes, 1,285 lines, LF, raw == canonical.** Approved by me S63 and by Codex S63; **DO NOT EDIT IT — a change needs a version bump and a `git mv`.** It authorizes **Step 2 only**: build and review the three prerequisites. READ THE FILE — the blocks above are an index, not the document. Superseded states, never cite or build from them: v0.1 (`32a03930…`, blob `903962f8`, bytes in `Claude Session 61`), and inside v0.2 `c7facc13`/`e734c498…` (my S62 handoff) and `3d72e1f4`/`e5192eaa…` (Codex's S62 edits, which I did not approve).
 - **STEP 2 IS CLOSED — ALL THREE PREREQUISITES JOINTLY APPROVED. STEP 3 HAS RUN. THE PLAN ARTIFACT IS THE OPEN STATE AND CODEX OWES THE SECOND READ.**
@@ -1700,39 +1770,35 @@ Run either read from the packet dir; zero rollouts, ~0.3 s each:
 - **CONCLUDED director chat:** `chats/Claude-Codex-Human/Better Suited Task/…- Concluded.md` — the withdrawn task-redesign directive. **A2 must stay clear of it.**
 - Director requests: `director_requests.md` (root) — entry 1 (Claim Sheet review) non-blocking, **still awaiting director reply**. Nothing else is blocked on the director.
 - My foundation `agents/Claude/Literature Foundation.md` · ledger `agents/Claude/references.md` (**no S20–S60 entries — reproduction/construction/measurement/review sessions, no external sources read**).
-- **Live-Run README (co-maintained): root `README.md` — Phase 2 / In Progress, banner 2026-08-06, blob `a544f9d2`.** **MY S87 ADDED NOTHING AND CHANGED NOTHING — heartbeat checked; no artifact finished (the test loop is CONTESTED and the capacity design is a DRAFT approved by nobody) and no phase closed. An open review round is work in progress, which the lean log is explicitly not for.** *(Prior: **MY S86 ADDED NOTHING AND CHANGED NOTHING** — same reason, and Codex had just appended to the log.)* *** THE IN-PLACE-EDIT ITEM IS RULED AND CLOSED. Codex's S85 corrected it FORWARD: it left my edited 2026-08-06 entry alone and appended a dated note recording that an entry was edited in place and that the removed mechanism was never measured. I APPROVED `a544f9d2` UNCHANGED in my S86 after (i) measuring it removed ZERO bytes — 662 inserted, prefix 120,300 / suffix 2,274 — and (ii) checking its claim about what the log used to say against `388f55c:README.md` vs `ba95c0e:README.md`, where my original did assert the unmeasured "spread the same capacity over more incoming information." DO NOT REOPEN. One thing I flagged and did not act on: a note ABOUT the log is not one of the playbook's three entry triggers, so this must not be read as a licence for process entries generally. ***  **MY S84 APPENDED ONE ENTRY AND ADVANCED THE BANNER (`+3/-1`, the `-1` being the banner line, which the playbook says is overwritten).** First entry I have added in four of my sessions, and the bar was cleared twice: the trainer loop closed with both agents on the same bytes, and the ten fits ran. The entry leads with the seed-spread caution rather than with "it trained", and deliberately records the result that points the WRONG way (S scored slightly worse on its own training data) with the reason that is about network size rather than sensors. **BEWARE WHEN APPENDING — MEASURED AGAIN IN S84 AND THE ALL-CRLF NOTE IS STILL WRONG FOR THE LOG REGION: the file is 161 CRLF / 168 LF overall, but the log tail (the last few entries, the blank line and the `---` before `## Follow along`) is BARE LF.** I anchored on `b'...no result exists yet.
+- **Live-Run README (co-maintained): root `README.md` — Phase 2 / In Progress, banner 2026-08-06, blob `a544f9d2`.** **MY S88 ADDED NOTHING AND CHANGED NOTHING — heartbeat checked, THIRD CONSECUTIVE SESSION. The only loop that closed is a TEST FIXTURE'S, which is not a stranger-facing artifact; the capacity design is a revised draft in an OPEN review round, which is work in progress; and limitation 134, interesting as it is, is a mid-review engineering discovery rather than a project-level event. Banner already current at 2026-08-06.** *(Prior: **MY S87 ADDED NOTHING AND CHANGED NOTHING** — heartbeat checked; no artifact finished (the test loop is CONTESTED and the capacity design is a DRAFT approved by nobody) and no phase closed. An open review round is work in progress, which the lean log is explicitly not for.)* *(Prior: **MY S86 ADDED NOTHING AND CHANGED NOTHING** — same reason, and Codex had just appended to the log.)* *** THE IN-PLACE-EDIT ITEM IS RULED AND CLOSED. Codex's S85 corrected it FORWARD: it left my edited 2026-08-06 entry alone and appended a dated note recording that an entry was edited in place and that the removed mechanism was never measured. I APPROVED `a544f9d2` UNCHANGED in my S86 after (i) measuring it removed ZERO bytes — 662 inserted, prefix 120,300 / suffix 2,274 — and (ii) checking its claim about what the log used to say against `388f55c:README.md` vs `ba95c0e:README.md`, where my original did assert the unmeasured "spread the same capacity over more incoming information." DO NOT REOPEN. One thing I flagged and did not act on: a note ABOUT the log is not one of the playbook's three entry triggers, so this must not be read as a licence for process entries generally. ***  **MY S84 APPENDED ONE ENTRY AND ADVANCED THE BANNER (`+3/-1`, the `-1` being the banner line, which the playbook says is overwritten).** First entry I have added in four of my sessions, and the bar was cleared twice: the trainer loop closed with both agents on the same bytes, and the ten fits ran. The entry leads with the seed-spread caution rather than with "it trained", and deliberately records the result that points the WRONG way (S scored slightly worse on its own training data) with the reason that is about network size rather than sensors. **BEWARE WHEN APPENDING — MEASURED AGAIN IN S84 AND THE ALL-CRLF NOTE IS STILL WRONG FOR THE LOG REGION: the file is 161 CRLF / 168 LF overall, but the log tail (the last few entries, the blank line and the `---` before `## Follow along`) is BARE LF.** I anchored on `b'...no result exists yet.
 
 ---
 '`, asserted both anchors before writing, and read the neighbouring lines back afterwards rather than trusting an offset. **The log's date order is out of chronological order in the middle and Codex's dated correction says so; dated entries are never edited, so it stays that way.**
-- **Phase-2 chat:** `chats/Claude-Codex/Phase 2 Integration and Config Freeze/...- Active.md` — **S87 STATE: 23,792 lines / 1,496,410 bytes after my ONE append, sha256 `32bc9961821a95f6f79207a258f2e09747ce3f003d314eac101c5c0d52ab3fe6`. My S87 is `+176/-0`, a single tail hunk (`@@ -23614,3 +23614,179 @@`), header unique at line 23,618, Claude physically last, the pre-write state (1,485,862 bytes / 23,616 lines, sha `009dd85f...`) asserted byte-identical INSIDE the writer, the turn asserted PURE ASCII before writing, and the prefix re-verified byte-identical afterwards. **CODEX OWNS THE NEXT TURN: approve or contest `6f29bf05` (`tests/test_dev_fit_analysis.py`), AND rule on whether the capacity-escalation design is reviewable now or waits for that loop.** *(Prior S86 STATE: 23,527 lines / 1,481,589 bytes, sha256 `a2fb881b8a08e8984d183924076844bb8634a7e549dbe65d5e587d70eebb1f45`. My S86 is `+180/-0`, a single hunk at the physical tail (`@@ -23347,0 +23348,180 @@`), header unique at line 23,349, Claude physically last, pre-write state (1,470,433 bytes / 23,347 lines, sha `5b13d51f...`) asserted byte-identical INSIDE the writer, and the tail anchor (`— Codex\n\n---\n`) asserted before writing.** *(that turn HAPPENED: Codex S86 contested `c7b0a093` on one comment and approved `4481ba32`, which I then contested in S87 — see the head of this file.)* *(Prior S85 STATE: 23,249 lines / 1,466,117 bytes, sha256 `788838f1...`; my S85 was `+227/-0`.)* *(Prior S84 STATE: 22,897 lines / 1,445,575 bytes after my three appends, sha256 `5694c0c2...`. My S84 is `+292/-0` across THREE appends** (the approval turn, header unique at line 22,609; the fit-results turn at 22,753; and a timestamp correction). Each asserted its pre-write prefix byte-identical INSIDE the writer; all three additions-only, verified with `git diff --numstat`. **I TYPED A FABRICATED TIMESTAMP INTO THE SECOND TURN'S HEADER (08:52 PDT; the shell said 08:29) and corrected it FORWARD rather than editing the header, per the project's standing rule.** **CODEX OWNS THE NEXT TURN: rulings on Finding W and Finding X.** *** THE S82 APPEND-ORDER RECURRENCE STILL BINDS: Codex's S82 review landed at physical line 19,334 and was restated at the true tail, so **the chronological order is permanently broken in the middle and the PHYSICAL TAIL is the authoritative order.** *** **If a judgment comes back contested and one exchange does not settle it from source, ESCALATE to the director rather than trade turns.** Do NOT re-open: the extension document (both approved `538ae06b`), the five S62 edits, the unified Option-B rule, the four S62 questions, the measure-first ruling, the payload analyzer/tests, the role-coverage states, the readback ruling, `.gitattributes`, the Stage-C label, Step 25, the screen result, the plan default, A2, Codex's two S77 rulings, its four S78 rulings, its S80 ruling on the forty escapes, its S81 Finding-G ruling, its S83 rulings on the sixth exit and the `_exact_steps` deletion, the closed attribution rung, the closed dev-fit contract, or the closed trainer. **The file is MIXED-EOL** — Codex appends LF, the older bulk is CRLF; append LF and verify additions-only rather than assuming.
-- **Monitoring chat:** `chats/Claude-Codex-Human/Transcript Order Monitoring/…- Active.md` — **S87 ADDED NOTHING: NO RECURRENCE.** Verified at the Git level rather than assumed: Codex's S86 commit `56c790c` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -23525,3 +23525,92 @@`, additions only (`+89/-0`), and touches this monitoring file not at all. My own append is likewise a single tail hunk `@@ -23614,3 +23614,179 @@`. **The duty is to flag recurrences, so a clean session adds no note - but verify at the git level regardless, and DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S86 ADDED NOTHING: NO RECURRENCE.** Verified at the Git level rather than assumed: Codex's S85 commit `f5ee81a` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -23249,0 +23250,98 @@`, additions only, landing after my S85 header, and it touches this monitoring file not at all. My own append is likewise a single tail hunk `@@ -23347,0 +23348,180 @@`. **The duty is to flag recurrences, so a clean session adds no note — but verify at the git level regardless, and DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S85 ADDED NOTHING: NO RECURRENCE.** Verified at the Git level rather than assumed: Codex's S84 commit is a SINGLE hunk `@@ -22897,0 +22898,125 @@` on the Phase-2 transcript — additions only, at the then-physical tail, after all three of my S84 headers — and it touches this monitoring file not at all. My own append is likewise a single tail hunk `@@ -23022,0 +23023,227 @@`. **The duty is to flag recurrences, so a clean session adds no note — but verify at the git level regardless, and DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S84 ADDED NOTHING: NO RECURRENCE.** Verified two ways rather than assumed: at the git level Codex's S83 commit is `+76/-0` on the Phase-2 transcript and touches this file not at all; and my own pre-write read of the transcript (1,428,567 bytes, sha256 `0411d1f2…`) equalled Codex's reported POST-write figures exactly, so its append was clean and nothing moved between sessions. **The duty is to flag recurrences, so a clean session adds no note — but verify at the git level regardless.** *(Prior state, unchanged on disk: 251 lines / 15,255 bytes; my S83 note is `+47/-0`, header unique at line 208, physically last.)* It records my independent git-level verification of the S82 recurrence (additions-only, both files), the point that the transcript's chronological order is now permanently broken in the middle, and the general rule Codex's own byte-assertion failure produced: **on a mixed-EOL file a PATCH and a BYTE APPEND are different operations, and only the second can promise a byte-identical prefix.** *(Historical: **118 lines; last post was mine at S74. NO RECURRENCE IN S75 OR S76, so no note was added — the duty is to flag recurrences.** S76 check, at the git level: Codex's two S75 appends landed as a single `+126/−0` hunk at line 20,001, after the recorded 20,000-line tail, nothing inserted before the boundary and nothing moved. **DO NOT EXTEND THE STREAK NUMBER FROM MEMORY — it has been wrong five times running in this project. Sweep the transcript's commit history if a number is actually wanted.** *(Stale historical figures below, kept only so a reader knows they are stale:* **streak FORTY-TWO**: Codex's S71 append verified at the git level in my S72 — commit `5250aa4`, `+63/−0`, header unique and correctly ordered after mine — and my own S72 append passed all five gates. *(Prior: **streak FORTY-ONE**: Codex's S70 append verified at the git level in my S71 — `+110/−0`, prior content a byte-identical prefix, header unique, physically last — and my own S71 append passed all five gates.)* *(Prior: **streak thirty-nine**: Codex's S69 append was `+92/−0` with its header unique at line 18,257 and physically last, verified at the git level in my S70, and my S70 append passed all five gates — pre-write prefix retained byte-for-byte with an identical SHA-256 asserted *inside* the writer, header unique, physically last, `+165/−0`.)* The duty is to flag recurrences, so a clean session adds no note; verify at the git level regardless.
+- **Phase-2 chat:** `chats/Claude-Codex/Phase 2 Integration and Config Freeze/...- Active.md` — **S88 STATE: 24,178 lines / 1,518,959 bytes after my ONE append, sha256 `9a54829987bc70637a680f79a4b3e10bb8d4e99c9dd48bb5a95f0f3eeeada5ff`. My S88 is `+203/-0`, a single tail hunk, header unique at line 23,977, Claude physically last, the pre-write state (1,506,399 bytes / 23,975 lines, sha `1f4602a8...`) asserted byte-identical INSIDE the writer, the turn asserted PURE ASCII before writing, and the prefix re-verified byte-identical afterwards. **CODEX OWNS THE NEXT TURN: the second read on `ccd12ef4` (`protocol/capacity-escalation-v0.1.md`), and in particular the ROUTE RULING of section 11 question 1 — there is no executable until it answers.** *(Codex's S87 reported final 1,506,399 B / 23,975 lines; my own pre-write read matched that exactly, so its append was clean and nothing moved between sessions. Prior S87 state: 23,792 lines / 1,496,410 bytes, my S87 `+176/-0`.)* *** THE S82 APPEND-ORDER RECURRENCE STILL BINDS: Codex's S82 review landed at physical line 19,334 and was restated at the true tail, so **the chronological order is permanently broken in the middle and the PHYSICAL TAIL is the authoritative order.** *** **If a judgment comes back contested and one exchange does not settle it from source, ESCALATE to the director rather than trade turns.** Do NOT re-open: the extension document (both approved `538ae06b`), the five S62 edits, the unified Option-B rule, the four S62 questions, the measure-first ruling, the payload analyzer/tests, the role-coverage states, the readback ruling, `.gitattributes`, the Stage-C label, Step 25, the screen result, the plan default, A2, Codex's two S77 rulings, its four S78 rulings, its S80 ruling on the forty escapes, its S81 Finding-G ruling, its S83 rulings on the sixth exit and the `_exact_steps` deletion, the closed attribution rung, the closed dev-fit contract, or the closed trainer. **The file is MIXED-EOL** — Codex appends LF, the older bulk is CRLF; append LF and verify additions-only rather than assuming.
+- **Monitoring chat:** `chats/Claude-Codex-Human/Transcript Order Monitoring/…- Active.md` — **S88 ADDED NOTHING: NO RECURRENCE.** Verified at the Git level rather than assumed: Codex's S87 commit `08434d2` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -23790,3 +23790,186 @@`, additions only (`+183/-0`), and touches this monitoring file not at all; it also touched NO production file. My own append is likewise a single tail hunk. **The duty is to flag recurrences, so a clean session adds no note - but verify at the git level regardless, and DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S87 ADDED NOTHING: NO RECURRENCE.** Verified at the Git level rather than assumed: Codex's S86 commit `56c790c` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -23525,3 +23525,92 @@`, additions only (`+89/-0`), and touches this monitoring file not at all. My own append is likewise a single tail hunk `@@ -23614,3 +23614,179 @@`. **The duty is to flag recurrences, so a clean session adds no note - but verify at the git level regardless, and DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S86 ADDED NOTHING: NO RECURRENCE.** Verified at the Git level rather than assumed: Codex's S85 commit `f5ee81a` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -23249,0 +23250,98 @@`, additions only, landing after my S85 header, and it touches this monitoring file not at all. My own append is likewise a single tail hunk `@@ -23347,0 +23348,180 @@`. **The duty is to flag recurrences, so a clean session adds no note — but verify at the git level regardless, and DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S85 ADDED NOTHING: NO RECURRENCE.** Verified at the Git level rather than assumed: Codex's S84 commit is a SINGLE hunk `@@ -22897,0 +22898,125 @@` on the Phase-2 transcript — additions only, at the then-physical tail, after all three of my S84 headers — and it touches this monitoring file not at all. My own append is likewise a single tail hunk `@@ -23022,0 +23023,227 @@`. **The duty is to flag recurrences, so a clean session adds no note — but verify at the git level regardless, and DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S84 ADDED NOTHING: NO RECURRENCE.** Verified two ways rather than assumed: at the git level Codex's S83 commit is `+76/-0` on the Phase-2 transcript and touches this file not at all; and my own pre-write read of the transcript (1,428,567 bytes, sha256 `0411d1f2…`) equalled Codex's reported POST-write figures exactly, so its append was clean and nothing moved between sessions. **The duty is to flag recurrences, so a clean session adds no note — but verify at the git level regardless.** *(Prior state, unchanged on disk: 251 lines / 15,255 bytes; my S83 note is `+47/-0`, header unique at line 208, physically last.)* It records my independent git-level verification of the S82 recurrence (additions-only, both files), the point that the transcript's chronological order is now permanently broken in the middle, and the general rule Codex's own byte-assertion failure produced: **on a mixed-EOL file a PATCH and a BYTE APPEND are different operations, and only the second can promise a byte-identical prefix.** *(Historical: **118 lines; last post was mine at S74. NO RECURRENCE IN S75 OR S76, so no note was added — the duty is to flag recurrences.** S76 check, at the git level: Codex's two S75 appends landed as a single `+126/−0` hunk at line 20,001, after the recorded 20,000-line tail, nothing inserted before the boundary and nothing moved. **DO NOT EXTEND THE STREAK NUMBER FROM MEMORY — it has been wrong five times running in this project. Sweep the transcript's commit history if a number is actually wanted.** *(Stale historical figures below, kept only so a reader knows they are stale:* **streak FORTY-TWO**: Codex's S71 append verified at the git level in my S72 — commit `5250aa4`, `+63/−0`, header unique and correctly ordered after mine — and my own S72 append passed all five gates. *(Prior: **streak FORTY-ONE**: Codex's S70 append verified at the git level in my S71 — `+110/−0`, prior content a byte-identical prefix, header unique, physically last — and my own S71 append passed all five gates.)* *(Prior: **streak thirty-nine**: Codex's S69 append was `+92/−0` with its header unique at line 18,257 and physically last, verified at the git level in my S70, and my S70 append passed all five gates — pre-write prefix retained byte-for-byte with an identical SHA-256 asserted *inside* the writer, header unique, physically last, `+165/−0`.)* The duty is to flag recurrences, so a clean session adds no note; verify at the git level regardless.
 
-## Scratchpad (S87, NOT committed)
+## Scratchpad (S88, NOT committed)
 
 ```text
 <session scratchpad>/
-  sweep_s87.py            *** THE HARNESS TO COPY FORWARD.  Rebuilt AGAIN from the recorded
-    rules, third session running - which is itself the finding: the harness is NOT tracked
-    (deliberately, it mutates production files) and so it dies with every scratchpad.
-    4 mutation cases over the majority-class selector in analyze_dev_fit.py, PLUS the two
-    negative controls BAKED INTO THE CASE LIST rather than run beside it, with an explicit
-    expected-survivor set so a control that DIES is reported as a harness fault.
-    Every rule baked in: PYTHONDONTWRITEBYTECODE + __pycache__ cleared per case, no -x,
+  probe_s88.py       parameter counts / band guard / state-dict digests / permutations.
+                     Constructor-only.  NO data, NO fit, NO checkpoint.
+  cost_s88.py        the synthetic-tensor cost table.  Batch 8, W 768, 36 input channels,
+                     CPU, inside deterministic_conv_precision(), through the APPROVED
+                     arm_loss; 10 timed steps after 2 warm-ups.  *** ITS BATCH DICT KEYS
+                     ARE class_index / location_index / severity / ood - I got them wrong
+                     twice before reading arm_loss at :913. ***
+  s88_turn.md        the chat turn, appended with pre-write byte assertions.
+  rewrite*_s88.py    the surgical rewrite of this file.
+
+*** NO MUTATION SWEEP THIS SESSION - nothing executable changed.  If a future session needs
+    one, the HARNESS RULES are the tracked part and they are in the ops block above and in
+    lesson 100/limitation 77: PYTHONDONTWRITEBYTECODE + __pycache__ cleared per case, no -x,
     bad anchor is a FAILURE not a skip, restore in a finally with the digest re-verified,
-    TWO passes required to agree, tripwire deselected with the word "deselected" ASSERTED
-    in pytest's output, and a green-baseline check before any mutation. ***
-  rewrite_summary.py      the surgical rewrite of this file.
-  s87_turn.md             the chat turn, appended with pre-write byte assertions.
-
-*** THE RULES ABOVE ARE THE TRACKED PART AND THEY ARE WHAT TOOK NINE SESSIONS OF FAULTS TO
-    LEARN.  Recover the harness's SHAPE from this block; do not redesign it. ***
+    TWO passes required to agree, negative controls BAKED INTO the case list with an
+    expected-survivor set, tripwire deselected AND the deselection asserted, and a green
+    baseline before any mutation.  RECOVER THE SHAPE FROM THOSE RULES; DO NOT REDESIGN IT. ***
 ```
-
-*** IF A FUTURE SESSION NEEDS A MUTATION SWEEP, THE FASTEST PATH IS TO RECOVER
-`sweep_s86.py`'S SHAPE FROM THIS BLOCK RATHER THAN REDESIGN IT. Two sessions running, the
-harness has been the thing that had to be rebuilt before any measurement could happen. It is
-NOT tracked, deliberately (it mutates production files), but the RULES above are, and they
-are the part that took nine sessions of faults to learn. ***
 
 **REBUILD RECIPE for the Gate-4 numbers, none of which should be taken from this summary:**
 
