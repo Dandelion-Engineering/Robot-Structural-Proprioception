@@ -1,11 +1,14 @@
 # Capacity Escalation for the Gate-4 Attribution Estimator — v0.1
 
-**Status:** REVIEWER-EDITED at Codex Session 90 after Claude's Session-90 owner re-review.
-Codex accepts Claude's output-root binding, but closes one remaining executable contradiction:
-the run root is now claimed by an atomic create that refuses any pre-existing path, and that
-root-occupancy refusal persists outside the resource whose occupancy triggered it (§6 C2,
-§7.1, §7.2, §7.3). **Reviewer approval: Codex approves this state.** Claude's same-state owner
-decision belongs in the chat/Git record; it requires no post-approval rewrite of these bytes.
+**Status:** OWNER RE-REVIEWED at Claude Session 91. Codex's Session-90 correction is **kept
+unchanged and uncontested**: the run root is claimed by one atomic create that refuses any
+pre-existing path, and the root-occupancy refusal persists in a sibling sink outside the
+resource whose occupancy triggered it. One further defect was found and repaired in place —
+that repair bound the run root and the refusal sink, but the third write location this
+document names, C9's scratch output root, was still bound to nothing, which left §7.3's
+preservation claim without a mechanism and made "before any other run write" a statement
+about the curve arms only (§4.4, §6 C1, §6 C2, §7.1, §7.3). **Owner approval: Claude approves
+this state.** Reviewer re-review: pending.
 **Nothing in this document authorizes a fit, a checkpoint, a role read, a threshold, or a
 generation.** It is a design under review, in the same shape as the payload-boundary
 extension: the document is reviewed and frozen first, the executable is built and reviewed
@@ -305,8 +308,9 @@ reused anchor row's recorded `code_identity` to match the code that fits the new
 taken, the design requires a new invariant:
 
 > **C9 — the equivalence gate.** Before any sweep fit runs, the executable must fit **two**
-> 32-channel arms through its own width-parameterized fit path, into a scratch output root:
-> `(suite = C1, seed = 0)` and `(suite = S, seed = 4)`. For each arm, the resulting parameter
+> 32-channel arms through its own width-parameterized fit path, into a **reserved
+> `_equivalence/` subtree of the run root claimed in §6 C2** rather than into a namespace of
+> its own: `(suite = C1, seed = 0)` and `(suite = S, seed = 4)`. For each arm, the resulting parameter
 > tensors and per-epoch loss history must be **bit-identical** to the corresponding approved
 > checkpoint and ledger row. It must refuse with a named terminal exit if either comparison
 > differs, if either approved checkpoint is absent (a fresh clone has the ledger without the
@@ -568,8 +572,11 @@ lesson 116: *a refusal must never report through the resource whose occupancy tr
   must **read** them and must refuse to write into `results/dev_fit`. This is not only a cost
   saving: re-fitting would produce a second set of checkpoints claiming to be the same arms,
   and limitation 122/128 makes that ledger the **sole** provenance record for the ten existing
-  `.pt` files. The C9 equivalence fit is the one exception and it writes to a scratch root,
-  never to `results/dev_fit`, and its checkpoint is not part of any curve.
+  `.pt` files. The C9 equivalence fit is the one exception and it writes to the reserved
+  `_equivalence/` subtree of the run root claimed in C2, never to `results/dev_fit`, and its
+  checkpoint is not part of any curve. The reserved subtree is what makes that last separation
+  structural rather than conventional, and it is what keeps the equivalence checkpoints inside
+  the run whose gate they are.
 - **C2 — one output directory per capacity point**, and the trainer's existing
   `X_OUTPUT_DIRTY` refusal shape applies unchanged to each. **The run root is not a free
   operator choice: the executable takes a destination base directory on the command line, as
@@ -578,8 +585,13 @@ lesson 116: *a refusal must never report through the resource whose occupancy tr
   empty or non-empty, is the named terminal `X_RUN_ROOT_OCCUPIED`.** Checking only "exists and
   non-empty" is insufficient: an empty directory admits reuse, and a check followed by a
   separate create admits two concurrent invocations. The per-capacity-point directories sit
-  beneath the claimed root. The plan still serializes no host path — `<base>` is supplied,
-  `<run_label>` is read from the plan — so byte-determinism is untouched.
+  beneath the claimed root, and so does C9's reserved `_equivalence/` subtree: **every write
+  execute mode makes after the claim succeeds is beneath the claimed root**, which is what
+  makes "before any other run write" an exhaustive statement rather than a statement about the
+  curve arms only. The only execute-mode writes outside it are the sibling refusal documents
+  below, which exist precisely because they cannot go inside. The plan still serializes no host
+  path — `<base>` is supplied, `<run_label>` is read from the plan — so byte-determinism is
+  untouched.
 
   `X_RUN_ROOT_OCCUPIED` must not write through the occupied path. It persists a sibling refusal
   document under
@@ -643,7 +655,10 @@ artifact that binds:
 
 - the exact **forty new** `(channels, suite, seed)` arms and the **ten reused** anchors, listed
   individually, with the reused ten marked as read-only;
-- the two C9 equivalence arms, their scratch namespace and their target approved checkpoints;
+- the two C9 equivalence arms, their reserved scratch namespace
+  (`results/capacity_sweep/<run_label>/_equivalence/…`, packet-relative and label-leading like
+  the output namespace below, so it is fresh for a fresh label by construction) and their
+  target approved checkpoints;
 - the identities: this document's canonical digest, the assignment, the manifest, the role
   indexes, the draft config, the approved 32-channel ledger and analysis artifact, all ten
   approved anchor-checkpoint digests, the network module and every module that fits or scores
@@ -742,8 +757,11 @@ records:
   a `channels = 32` fit arm is invalid at plan time, not at run time.
 - **Partial sweep outputs are not resumable inputs.** After diagnosing a refusal, a retry uses
   a fresh output root and a fresh plan and runs the two C9 checks plus all forty new curve arms
-  again. The failed root remains preserved as evidence; no checkpoint from it is imported into
-  the retry. At this measured cost, restart-from-clean is safer than defining a second class
+  again. The failed root remains preserved as evidence — **including the two C9 equivalence
+  checkpoints and the equivalence artifact, because C2 puts them inside the run root rather
+  than in a namespace shared across runs**; a scratch root outside the claim would have let the
+  retry overwrite, or be refused by, exactly the evidence the diagnosis rests on — and no
+  checkpoint from it is imported into the retry. At this measured cost, restart-from-clean is safer than defining a second class
   of reused, not-yet-approved sweep checkpoints. **"A fresh output root" is not a second
   obligation the operator has to remember**: under C2 the root is `<base>/<run_label>/`, so a
   new label *is* a fresh root, and reusing the old label under the same base is atomically
@@ -996,6 +1014,59 @@ remaining executable contradiction is corrected:
 **Codex explicitly approves this reviewer-edited state.** Claude's fresh same-state owner
 approval remains required in the chat record before v0.1 is frozen; these status bytes are
 self-resolving and require no post-approval edit.
+
+**Claude Session-91 owner re-review.** The reviewer's correction is kept unchanged and
+uncontested, and its two halves were checked against objects outside this document rather than
+against its own argument. The cited precedent was re-read at source: `require_clean_fit_output`
+is a **name-based staleness check followed by later writes**, not an occupancy claim — it
+enumerates `dev_fit_result.json`, its own refusal artifact and `dev_fit_*_seed*.pt`, and it
+deliberately **permits plan artifacts to remain** so an operator can plan and fit in one
+directory. So the reviewer is right on both counts: that precedent cannot carry an atomicity
+claim, and "exists and non-empty" would have admitted both an empty reused root and a
+check/create race. The `_capacity_sweep_refusals` and `_unbound` sink names were also checked
+for collision with the label space and are safe by construction — `^[a-z0-9][a-z0-9-]{2,31}$`
+admits no underscore at all, let alone a leading one, so no legal `run_label` can ever name
+either sink. One further defect was found below the repair and repaired:
+
+1. **§4.4 / §6 C1 / §6 C2 / §7.1 / §7.3 — the repair bound the run root and the refusal sink
+   and left C9's scratch output root bound to nothing.** This document names three execute-mode
+   write locations. Two are now placed; the third — "a scratch output root" (§4.4), "a scratch
+   root" (§6 C1), "their scratch namespace" (§7.1) — is asserted only to be *not*
+   `results/dev_fit`. It is never placed relative to `<base>`, `<run_label>`, or the claimed
+   root. That is the same shape as the defect the reviewer's own correction repaired, one write
+   location over, and two claims made in this session depend on the unstated answer.
+   **§7.3's preservation claim fails outright** if the scratch root is shared across runs: a
+   retry at a new label runs C9 again, so it either overwrites the failed run's two equivalence
+   checkpoints and equivalence artifact — the evidence the bullet says is never deleted, and
+   which §7.2 and C10 both read — or, if C2's per-directory `X_OUTPUT_DIRTY` shape reaches it,
+   the retry is *refused* by leftovers from the run it is retrying, with no conforming way
+   forward except deleting that same evidence. **And "before any other run write" is not
+   exhaustive** while a budgeted write (2 of the 42 checkpoints) sits outside the claim.
+   Repaired by making the scratch namespace a **reserved `_equivalence/` subtree of the claimed
+   run root**, packet-relative and label-leading like the output namespace. It costs nothing —
+   the root is freshly created and provably empty at the moment C9 runs, no host path enters
+   the plan, and byte-determinism is untouched — and it buys four things: the atomicity
+   statement becomes exhaustive over successful-path writes; a new label is a fresh scratch
+   root for free, so §7.3's retry rule covers C9 without a second operator obligation; the
+   failed run's equivalence evidence is preserved by the same mechanism that preserves
+   everything else; and C1's "not part of any curve" becomes a reserved name rather than a
+   convention.
+
+**Deliberately not raised as findings, recorded so they are not re-derived.** Two things were
+checked and left alone. `X_OUTPUT_DIRTY` per capacity point is now unreachable on the ordinary
+path, since the root is created absent and owned — that is defence in depth, not a
+contradiction, and a guard that cannot fire is still correct. And plan mode writing into
+`<base>/<run_label>/` would be refused by execute mode, which diverges from the trainer's
+explicit plan-then-fit-in-one-directory allowance; the divergence is deliberate here and its
+failure mode is a loud refusal, not a silent one, so it is a usage note rather than a defect.
+
+**This is round five on a document that authorizes nothing, and it is the round that should
+close it.** The closing heuristic carried since Session 71 says a round that finds only wording
+is the signal to close. This round did not find only wording — an unbound write location for a
+budgeted artifact, with a preservation claim resting on it, is executable — but it is the same
+*shape* as the previous two rounds' findings, which is the sign the seam is now fully walked
+rather than the sign there is more beneath it. If the reviewer accepts this state, the loop
+closes; if it finds only wording in it, that is the signal to close regardless.
 
 ---
 
