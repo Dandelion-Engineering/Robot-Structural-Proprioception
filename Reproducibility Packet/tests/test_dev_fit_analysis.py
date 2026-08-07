@@ -60,21 +60,37 @@ def _synthetic_forward(n: int = 4, seed: int = 0):
         return net(inputs), batch
 
 
-#: healthy, structure, actuator, sensor.  Deliberately UNEQUAL -- see `_derived_examples`.
-_DERIVED_CLASS_COUNTS = (1, 2, 3, 4)
+#: healthy, structure, actuator, sensor.  Deliberately UNEQUAL, and deliberately
+#: peaked on an INTERIOR class -- see `_derived_examples`.
+_DERIVED_CLASS_COUNTS = (1, 2, 4, 3)
 
 
 def _derived_examples(*, mismatched_s: bool = False, ood_s: bool = False):
     """Return a tiny dataset-free census for driving the derivation seam.
 
-    The per-class counts are deliberately unequal. A uniform census executes the
-    baseline arithmetic without testing it: every proportion is the same number, so
-    `max(proportions)` and `min(proportions)` agree, and `max`/`min` over the count
-    mapping both return the first key. Measured (Claude, Session 86): with a uniform
-    four-example fixture, mutating either selector survived the whole focused suite;
-    with these counts both are caught. The delivered census is 8/16/32/96, whose
-    majority class is `sensor` and not the first key, so a fixture that cannot tell
-    the two selectors apart is not exercising the baseline the artifact reports.
+    The per-class counts are deliberately unequal AND deliberately peaked on an
+    interior class. Both properties were bought by a measured survivor.
+
+    Unequal, because a uniform census executes the baseline arithmetic without
+    testing it: every proportion is the same number, so `max(proportions)` and
+    `min(proportions)` agree, and `max`/`min` over the count mapping both return the
+    first key. Measured (Claude, Session 86): with a uniform four-example fixture,
+    mutating either selector survived the whole focused suite.
+
+    Interior, because unequal alone is not enough. The count mapping is built in
+    `SOURCE_CLASS_ORDER`, so a fixture peaked on `sensor` makes the majority class the
+    LAST key, and `max(...)` is then indistinguishable from an iteration-order accident
+    that takes the last key. Measured (Claude, Session 87): with counts (1, 2, 3, 4),
+    replacing the selector with `list(counts)[-1]` SURVIVED the focused suite in two
+    agreeing passes, while first-key, `min` and `min(proportions)` were all caught.
+    With (1, 2, 4, 3) the majority is `actuator` -- neither the first nor the last key
+    -- and the last-key mutant dies too.
+
+    The delivered census, 8/16/32/96, is peaked on `sensor` and therefore CANNOT make
+    that distinction either: real data is not the fallback here, and this fixture is
+    the only thing in the packet that separates the selector from the ordering.
+    Total, proportions and cross-entropy are unchanged by the reordering, so the
+    reported baseline arithmetic is pinned at exactly the same numbers.
     """
 
     def build(carries_ood: bool):
@@ -414,16 +430,18 @@ def test_derive_analysis_census_baselines_and_pairing_are_dataset_independent(
     )
 
     assert report["data_census"]["class_counts_by_suite"] == {
-        "C1": {"healthy": 1, "structure": 2, "actuator": 3, "sensor": 4},
-        "S": {"healthy": 1, "structure": 2, "actuator": 3, "sensor": 4},
+        "C1": {"healthy": 1, "structure": 2, "actuator": 4, "sensor": 3},
+        "S": {"healthy": 1, "structure": 2, "actuator": 4, "sensor": 3},
     }
-    # `sensor` is not the first key of the count mapping and every count differs, so
-    # this pins the selector rather than an iteration-order or tie accident.
+    # `actuator` is neither the first nor the last key of the count mapping and every
+    # count differs, so this pins the selector against a first-key accident, a
+    # last-key accident and a tie. The last-key case is the one measured in Session 87
+    # and it is why the counts are not simply ascending; see `_derived_examples`.
     assert report["baselines"] == {
-        # -sum(p*ln p) over (0.1, 0.2, 0.3, 0.4).
+        # -sum(p*ln p) over (0.1, 0.2, 0.4, 0.3) -- order-independent, so unchanged.
         "empirical_prior_cross_entropy": pytest.approx(1.2798542258336676),
         "majority_class_accuracy": pytest.approx(0.4),
-        "majority_class": "sensor",
+        "majority_class": "actuator",
     }
     # One row per predeclared seed. Nothing else in this file pins the paired table's
     # cardinality against the contract that defines it, so a truncated loop was
