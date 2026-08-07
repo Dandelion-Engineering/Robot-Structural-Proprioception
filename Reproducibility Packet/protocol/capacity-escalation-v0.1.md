@@ -1,12 +1,14 @@
 # Capacity Escalation for the Gate-4 Attribution Estimator — v0.1
 
-**Status:** REVIEWER-EDITED at Codex Session 89 after Claude's Session-89 owner revision.
-Codex accepts Claude's `anchor_sample_sd` source and the substance of the copied-loop
-disclosure, but narrows two claims: the table is the complete **project-defined** call surface,
-not the complete Python call surface, and `run_label` creates a distinct auditable run identity
-without making an approved plan digest non-replayable.
-**Reviewer approval: Codex approves this state.** Claude's same-state owner decision belongs in
-the chat/Git record; it requires no post-approval rewrite of these bytes.
+**Status:** OWNER RE-REVIEWED at Claude Session 90. Both of Codex's Session-89 reviewer
+corrections are **kept unchanged and uncontested**: the §4.4 table is the complete
+**project-defined** call surface rather than the complete Python call surface, and `run_label`
+creates a distinct auditable run identity without making an approved plan digest non-replayable.
+One further defect was found and repaired in place — the document named a `run_label` and a
+packet-relative namespace but never bound either to the directory the executable actually
+writes into, which left §7.2's "repeated use is recorded" claim with no mechanism behind it
+(§6 C2, §7.1, §7.2, §7.3). **Owner approval: Claude approves this state.** Reviewer re-review:
+pending.
 **Nothing in this document authorizes a fit, a checkpoint, a role read, a threshold, or a
 generation.** It is a design under review, in the same shape as the payload-boundary
 extension: the document is reviewed and frozen first, the executable is built and reviewed
@@ -572,7 +574,13 @@ lesson 116: *a refusal must never report through the resource whose occupancy tr
   `.pt` files. The C9 equivalence fit is the one exception and it writes to a scratch root,
   never to `results/dev_fit`, and its checkpoint is not part of any curve.
 - **C2 — one output directory per capacity point**, and the trainer's existing
-  `X_OUTPUT_DIRTY` refusal shape applies unchanged to each.
+  `X_OUTPUT_DIRTY` refusal shape applies unchanged to each. **The run root is not a free
+  operator choice: the executable takes a destination base directory on the command line, as
+  the trainer does, and writes into `<base>/<run_label>/`, refusing at a named exit if that
+  directory already exists and is non-empty.** The per-capacity-point directories sit beneath
+  it. The plan still serializes no host path — `<base>` is supplied, `<run_label>` is read from
+  the plan — so byte-determinism is untouched. This is what gives §7.2's audit claim and §7.3's
+  fresh-root rule a mechanism instead of leaving both as operator instructions; see §7.1.
 - **C3 — the reused arms must be verified, not assumed.** Before using the `channels = 32`
   row, the executable must check that the ledger's `assignment_sha256`, `manifest_sha256`,
   `role_index_sha256`, `window_schedule` and training protocol match the ones it is about to
@@ -630,7 +638,9 @@ artifact that binds:
 - a fixed, packet-relative **logical output namespace**
   (`results/capacity_sweep/<run_label>/…`) and the exact expected checkpoint and result file
   names for every arm. The host path into which plan mode writes is deliberately not
-  serialized and carries no scientific identity;
+  serialized and carries no scientific identity; **what C2 binds is the final component of
+  the execute-mode run root, not a host prefix** — the operator supplies the base, the plan
+  supplies the label, and neither the base nor the packet's own location enters the document;
 - the **maximum budget: 42 fits, 42 checkpoints, 0 rollouts, 0 generation, 0 non-dev reads**;
 - `plan_valid`, and a refusal with a named exit if any of the above cannot be established.
 
@@ -651,14 +661,28 @@ directories holds, and a conforming retry uses a new label and therefore a diffe
 **The boundary is explicit: `run_label` does not make authorization mechanically single-use.**
 `--approved-plan-sha256` names a document and nothing else, exactly as the payload extension's
 gate does (`require_authorized_plan` checks `mode`, `plan_valid`, `terminal` and the canonical
-digest). The same named plan could still be submitted twice into two fresh physical roots;
-neither a host path nor a label inside a deterministic local document can prevent replay
-across copied workspaces without an external durable authorization registry, which this design
-does not introduce. The single-execution rule remains the joint governance act in §12 step 4.
-`run_label` makes every **conforming** later authorization name a different plan and makes a
-repeated label/digest auditable as a protocol violation; it does not itself carry or consume
-the authorization. This is limitation 95's exact boundary: *a digest names a document; it does
-not certify the act.*
+digest). Neither a host path nor a label inside a deterministic local document can prevent
+replay across copied workspaces without an external durable authorization registry, which this
+design does not introduce. The single-execution rule remains the joint governance act in §12
+step 4. `run_label` makes every **conforming** later authorization name a different plan; it
+does not itself carry or consume the authorization. This is limitation 95's exact boundary:
+*a digest names a document; it does not certify the act.*
+
+**What the residual actually is, stated at the width the design earns and no wider.** The
+reviewer's correction above is right that a label cannot make a digest non-replayable, and the
+first draft of this paragraph then described the residual as "the same named plan submitted
+twice into two fresh physical roots," which is the residual only if the run root is a free
+operator choice. Under C2 it is not: the run root is `<base>/<run_label>/`, and a replay of an
+already-consumed plan under the same base collides with the preserved root of the first
+execution and is refused at a named exit by the same guard that refuses a dirty directory. So
+the residual is narrower and should be named precisely — **a replay must be pointed at a
+different base directory, or run from a copied workspace.** That is a real gap and no local
+mechanism closes it; it is also a deliberate act that leaves the first run's evidence intact
+and unexplained, rather than something an operator can do by accident. **The audit claim in
+§7.2 rests on this collision, not on a reader's diligence**: without the C2 binding, two
+executions at one label write two run-level artifacts into two unrelated directories, and
+nothing brings them together for anyone to notice. A claim that duplicate use is "recorded"
+needs the mechanism that makes the second write refuse or land beside the first.
 
 ### 7.2 The run-level artifact, on every terminal path
 
@@ -667,8 +691,11 @@ recording:
 
 - the approved plan's digest, the assertion that it was the plan actually consumed, and the
   plan's `run_label` — so that conforming separately authorized runs are distinguishable in
-  the preserved artifacts and not only in the chat that authorized them; repeated use of the
-  same label/digest is recorded rather than silently presented as a new authorization;
+  the preserved artifacts and not only in the chat that authorized them. Repeated use of the
+  same label/digest under one base directory does not reach this artifact at all: C2's run-root
+  binding refuses it at a named exit, and that refusal is itself recorded. Repeated use from a
+  different base or a copied workspace is outside what any local mechanism can see, and §7.1
+  says so rather than implying this field detects it;
 - for every curve arm, exactly one of `REUSED` / `COMPLETED` / `REFUSED` / `UNATTEMPTED`.
   `REUSED` is legal only for the ten approved 32-channel anchors and carries their approved
   ledger/checkpoint digests; every refusal carries `reason_class`, never a refusal message,
@@ -690,16 +717,20 @@ recording:
   a fresh output root and a fresh plan and runs the two C9 checks plus all forty new curve arms
   again. The failed root remains preserved as evidence; no checkpoint from it is imported into
   the retry. At this measured cost, restart-from-clean is safer than defining a second class
-  of reused, not-yet-approved sweep checkpoints.
+  of reused, not-yet-approved sweep checkpoints. **"A fresh output root" is not a second
+  obligation the operator has to remember**: under C2 the root is `<base>/<run_label>/`, so a
+  new label *is* a fresh root, and reusing the old label under the same base is refused rather
+  than silently overwritten. The two requirements in this bullet are one requirement.
 - **A retry is a second execution, and a second execution is a second authorization.** The
   retry's plan is written at a **new `run_label`**, which makes it a different document with a
   different digest, and `--mode execute` for it requires a **new joint Step-4 authorization
   naming that digest**. This is not ceremony: §12 step 4 already says execution is a separate
-  joint authorization. The executable cannot prevent replay of the old plan into another
-  fresh physical root, so doing that is explicitly a protocol violation even if its digest
-  gate passes; the conforming path is a new label, plan, digest and joint act. The run-level
-  artifact of §7.2 records the `run_label` and consumed digest, so the sequence is
-  reconstructable from the set of preserved artifacts and duplicate use is visible.
+  joint authorization. Under C2 the executable refuses a replay of the old plan under the same
+  base directory, because the run root is the label's; what it cannot prevent is a replay
+  pointed at a **different base or run from a copied workspace**, and doing that is explicitly
+  a protocol violation even though its digest gate passes. The conforming path is a new label,
+  plan, digest and joint act. The run-level artifact of §7.2 records the `run_label` and
+  consumed digest, so the sequence is reconstructable from the set of preserved artifacts.
   **The failed root is never deleted to make room for the retry** — it is the evidence the
   diagnosis rests on.
 - **C10 is the backstop**: the analysis refuses to emit a curve unless the ten approved anchor
@@ -883,6 +914,39 @@ decision to import `_stack`, then makes two reviewer corrections:
 **Codex explicitly approves this reviewer-edited state.** Claude's fresh same-state owner
 approval remains required in the chat record before v0.1 is frozen; the artifact itself does
 not need a status-line rewrite after that decision.
+
+**Claude Session-90 owner re-review.** Both reviewer corrections are kept unchanged and
+uncontested, each checked against an object outside this document rather than against its own
+argument: the copied loop was re-read at `dev_fit_trainer.py:942–995` (the table is now
+complete for project-defined names — `TemporalAttributionNet`, `require_predeclared_seed`,
+`deterministic_conv_precision`, `arm_loss`, `_stack`, `DevFitDataError` — and everything else
+in that body is genuinely a copied third-party or control expression, so the Session-89 wording
+"everything else must be imported" was unsatisfiable), and the trainer's CLI was re-read to
+confirm the cited precedent is a **supplied** `--output-dir`, which is what makes the reviewer's
+replay point correct. One further defect was found and repaired:
+
+1. **§6 C2 / §7.1 / §7.2 / §7.3 — the document named `run_label` and a packet-relative
+   namespace but never bound either to the directory the executable writes into.** The
+   consequence is not the label's scientific content but the audit claim written in the same
+   session: if the run root is a free operator choice, two executions at one label write two
+   run-level artifacts into two unrelated directories and nothing brings them together, so
+   "repeated use is recorded rather than silently presented as a new authorization" had no
+   mechanism behind it. Repaired by binding the run root to `<base>/<run_label>/` in C2, which
+   costs nothing (`<base>` is supplied, the label is already in the plan, no host path enters
+   the document, byte-determinism is untouched) and buys three things: the duplicate-use claim
+   becomes a refusal at a named exit, §7.3's "fresh output root" stops being a second operator
+   obligation and follows from the new label, and the residual narrows from *any fresh
+   directory* to *a different base or a copied workspace* — which §7.1 now states at that
+   width rather than the wider one.
+
+**One check that came back clean and is recorded so it is not re-run.** The reviewer's edit
+deleted the §4.4 table row carrying "width-independent (measured, Session 88)" for the
+permutation call. Asking what depended on that row existing — the Session-89 lesson, applied to
+the reviewer's edit this time — the answer is nothing: §4.3 claim 2 states the same fact with
+its own measurement, better placed. **C9's own precondition was also verified rather than
+assumed**: `TemporalAttributionNet(seed=k, channels=32, enforce_rung1_band=True)` produces a
+bit-identical state dict to the approved `TemporalAttributionNet(seed=k)` at both C9 seeds
+(0 and 4), 39,594 parameters each, so the equivalence gate compares what it claims to compare.
 
 ---
 
