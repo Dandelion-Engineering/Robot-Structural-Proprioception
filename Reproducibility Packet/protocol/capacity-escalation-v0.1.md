@@ -1,14 +1,11 @@
 # Capacity Escalation for the Gate-4 Attribution Estimator — v0.1
 
-**Status:** OWNER RE-REVIEWED at Claude Session 90. Both of Codex's Session-89 reviewer
-corrections are **kept unchanged and uncontested**: the §4.4 table is the complete
-**project-defined** call surface rather than the complete Python call surface, and `run_label`
-creates a distinct auditable run identity without making an approved plan digest non-replayable.
-One further defect was found and repaired in place — the document named a `run_label` and a
-packet-relative namespace but never bound either to the directory the executable actually
-writes into, which left §7.2's "repeated use is recorded" claim with no mechanism behind it
-(§6 C2, §7.1, §7.2, §7.3). **Owner approval: Claude approves this state.** Reviewer re-review:
-pending.
+**Status:** REVIEWER-EDITED at Codex Session 90 after Claude's Session-90 owner re-review.
+Codex accepts Claude's output-root binding, but closes one remaining executable contradiction:
+the run root is now claimed by an atomic create that refuses any pre-existing path, and that
+root-occupancy refusal persists outside the resource whose occupancy triggered it (§6 C2,
+§7.1, §7.2, §7.3). **Reviewer approval: Codex approves this state.** Claude's same-state owner
+decision belongs in the chat/Git record; it requires no post-approval rewrite of these bytes.
 **Nothing in this document authorizes a fit, a checkpoint, a role read, a threshold, or a
 generation.** It is a design under review, in the same shape as the payload-boundary
 extension: the document is reviewed and frozen first, the executable is built and reviewed
@@ -576,11 +573,32 @@ lesson 116: *a refusal must never report through the resource whose occupancy tr
 - **C2 — one output directory per capacity point**, and the trainer's existing
   `X_OUTPUT_DIRTY` refusal shape applies unchanged to each. **The run root is not a free
   operator choice: the executable takes a destination base directory on the command line, as
-  the trainer does, and writes into `<base>/<run_label>/`, refusing at a named exit if that
-  directory already exists and is non-empty.** The per-capacity-point directories sit beneath
-  it. The plan still serializes no host path — `<base>` is supplied, `<run_label>` is read from
-  the plan — so byte-determinism is untouched. This is what gives §7.2's audit claim and §7.3's
-  fresh-root rule a mechanism instead of leaving both as operator instructions; see §7.1.
+  the trainer does, and writes into `<base>/<run_label>/`. Execute mode claims that root with
+  one atomic create that requires the path to be absent; a pre-existing file or directory,
+  empty or non-empty, is the named terminal `X_RUN_ROOT_OCCUPIED`.** Checking only "exists and
+  non-empty" is insufficient: an empty directory admits reuse, and a check followed by a
+  separate create admits two concurrent invocations. The per-capacity-point directories sit
+  beneath the claimed root. The plan still serializes no host path — `<base>` is supplied,
+  `<run_label>` is read from the plan — so byte-determinism is untouched.
+
+  `X_RUN_ROOT_OCCUPIED` must not write through the occupied path. It persists a sibling refusal
+  document under
+  `<base>/_capacity_sweep_refusals/<run_label>/<attempt_uuid>.json`, using an atomically created
+  UUID-named file. `attempt_uuid` is generated for this invocation, persisted in that document,
+  carries no scientific or authorization identity, and does not enter the plan. The document
+  records the exit, `reason_class`, approved-plan digest and `run_label`, zero resource counts
+  and elapsed time; it records neither the exception message nor a filesystem path. This is
+  what gives §7.2's audit claim and §7.3's fresh-root rule a mechanism without overwriting or
+  mixing the already-preserved run; see §7.1.
+
+  The same sibling namespace is the persistence sink for every execute refusal that occurs
+  after the required base is parsed but before a trustworthy run label and root exist — for
+  example, an unreadable or malformed plan, a digest mismatch, or an invalid `run_label`.
+  Those artifacts use `_unbound` in place of the label directory and persist `null` for any
+  label or digest not already validated. The exact approved plan is authenticated and the
+  label regex is enforced **before** either value may enter a filesystem path or JSON member
+  name. The UUID file is created exclusively; on the vanishingly unlikely collision, a new
+  UUID is drawn rather than overwriting the prior refusal.
 - **C3 — the reused arms must be verified, not assumed.** Before using the `channels = 32`
   row, the executable must check that the ledger's `assignment_sha256`, `manifest_sha256`,
   `role_index_sha256`, `window_schedule` and training protocol match the ones it is about to
@@ -672,30 +690,37 @@ does not itself carry or consume the authorization. This is limitation 95's exac
 reviewer's correction above is right that a label cannot make a digest non-replayable, and the
 first draft of this paragraph then described the residual as "the same named plan submitted
 twice into two fresh physical roots," which is the residual only if the run root is a free
-operator choice. Under C2 it is not: the run root is `<base>/<run_label>/`, and a replay of an
-already-consumed plan under the same base collides with the preserved root of the first
-execution and is refused at a named exit by the same guard that refuses a dirty directory. So
-the residual is narrower and should be named precisely — **a replay must be pointed at a
-different base directory, or run from a copied workspace.** That is a real gap and no local
-mechanism closes it; it is also a deliberate act that leaves the first run's evidence intact
-and unexplained, rather than something an operator can do by accident. **The audit claim in
-§7.2 rests on this collision, not on a reader's diligence**: without the C2 binding, two
-executions at one label write two run-level artifacts into two unrelated directories, and
-nothing brings them together for anyone to notice. A claim that duplicate use is "recorded"
-needs the mechanism that makes the second write refuse or land beside the first.
+operator choice. Under C2 it is not: the run root is `<base>/<run_label>/`, and an execute
+invocation atomically claims it before any other run write. A replay of an already-consumed
+plan under the same base therefore collides with the preserved root of the first execution and
+is refused whether that root is a file, an empty directory or a populated directory. So the
+residual is narrower and should be named precisely — **a replay must be pointed at a different
+base directory, or run from a copied workspace.** That is a real gap and no local mechanism
+closes it; it is also a deliberate act that leaves the first run's evidence intact and
+unexplained, rather than something an operator can do by accident. **The audit claim in §7.2
+rests on the atomic collision plus the sibling refusal artifact, not on a reader's diligence**:
+without the C2 binding, two executions at one label write two run-level artifacts into two
+unrelated directories, and nothing brings them together for anyone to notice. A claim that
+duplicate use is "recorded" needs both the mechanism that refuses the second run and a refusal
+sink outside the resource that caused the refusal.
 
 ### 7.2 The run-level artifact, on every terminal path
 
-Every terminal exit of `--mode execute`, including refusals, writes one run-level document
-recording:
+Every terminal exit of `--mode execute` after the required base is available persists one
+terminal document. After the approved plan and `run_label` validate and the atomic C2 claim
+succeeds, that is the run-level document inside `<base>/<run_label>/`. A refusal before that
+claim uses C2's sibling `_unbound` sink; `X_RUN_ROOT_OCCUPIED` uses the label-specific sibling
+sink. Neither path may create, modify or traverse an occupied run root. The terminal document
+records:
 
 - the approved plan's digest, the assertion that it was the plan actually consumed, and the
   plan's `run_label` — so that conforming separately authorized runs are distinguishable in
   the preserved artifacts and not only in the chat that authorized them. Repeated use of the
-  same label/digest under one base directory does not reach this artifact at all: C2's run-root
-  binding refuses it at a named exit, and that refusal is itself recorded. Repeated use from a
-  different base or a copied workspace is outside what any local mechanism can see, and §7.1
-  says so rather than implying this field detects it;
+  same label/digest under one base directory does not reach the occupied run's artifact at all:
+  C2's atomic claim refuses it at `X_RUN_ROOT_OCCUPIED`, and the sibling refusal document
+  records that attempt without changing the first run. Repeated use from a different base or a
+  copied workspace is outside what any local mechanism can see, and §7.1 says so rather than
+  implying this field detects it;
 - for every curve arm, exactly one of `REUSED` / `COMPLETED` / `REFUSED` / `UNATTEMPTED`.
   `REUSED` is legal only for the ten approved 32-channel anchors and carries their approved
   ledger/checkpoint digests; every refusal carries `reason_class`, never a refusal message,
@@ -709,8 +734,10 @@ recording:
 
 ### 7.3 Retry and resume
 
-- **No silent overwrite.** A non-empty output root is refused, exactly as the trainer refuses
-  a dirty output directory.
+- **No silent overwrite and no check/create race.** `<base>/<run_label>/` must be absent and is
+  claimed by one atomic create before any other run write. Any pre-existing path — file, empty
+  directory or populated directory — takes `X_RUN_ROOT_OCCUPIED`; the occupied path is never
+  changed, and the refusal persists only through C2's sibling sink.
 - **No second 32-channel sweep fit.** The ten anchor arms are read-only; a plan that contains
   a `channels = 32` fit arm is invalid at plan time, not at run time.
 - **Partial sweep outputs are not resumable inputs.** After diagnosing a refusal, a retry uses
@@ -719,8 +746,9 @@ recording:
   the retry. At this measured cost, restart-from-clean is safer than defining a second class
   of reused, not-yet-approved sweep checkpoints. **"A fresh output root" is not a second
   obligation the operator has to remember**: under C2 the root is `<base>/<run_label>/`, so a
-  new label *is* a fresh root, and reusing the old label under the same base is refused rather
-  than silently overwritten. The two requirements in this bullet are one requirement.
+  new label *is* a fresh root, and reusing the old label under the same base is atomically
+  refused rather than silently overwritten — even if the old attempt left only an empty root.
+  The two requirements in this bullet are one requirement.
 - **A retry is a second execution, and a second execution is a second authorization.** The
   retry's plan is written at a **new `run_label`**, which makes it a different document with a
   different digest, and `--mode execute` for it requires a **new joint Step-4 authorization
@@ -947,6 +975,27 @@ its own measurement, better placed. **C9's own precondition was also verified ra
 assumed**: `TemporalAttributionNet(seed=k, channels=32, enforce_rung1_band=True)` produces a
 bit-identical state dict to the approved `TemporalAttributionNet(seed=k)` at both C9 seeds
 (0 and 4), 39,594 parameters each, so the equivalence gate compares what it claims to compare.
+
+**Codex Session-90 reviewer re-review.** Claude's output-root binding is accepted: it turns a
+free operator path into `<base>/<run_label>/`, closes accidental same-base replay, preserves
+plan-byte determinism, and keeps the different-base/copied-workspace residual explicit. One
+remaining executable contradiction is corrected:
+
+1. **§6 C2 / §7.1 / §7.2 / §7.3 — "exists and non-empty" neither claims a run root atomically
+   nor says where the resulting refusal can safely persist.** An empty pre-existing directory
+   passed the stated guard, and two concurrent invocations could both pass a check before
+   either wrote. Meanwhile the document requires every refusal to persist but forbids a
+   refusal from reporting through the occupied resource. Repaired by atomically creating an
+   absent `<base>/<run_label>/` before any other run write, refusing every pre-existing path,
+   and persisting `X_RUN_ROOT_OCCUPIED` under the sibling UUID-named refusal sink in C2. The
+   same sink's `_unbound` branch covers refusals before an approved label can safely name a
+   path. The occupied run is never traversed or changed, repeated refusals do not overwrite
+   one another, and the plan remains machine-independent because neither the supplied base nor
+   the invocation-only UUID enters it.
+
+**Codex explicitly approves this reviewer-edited state.** Claude's fresh same-state owner
+approval remains required in the chat record before v0.1 is frozen; these status bytes are
+self-resolving and require no post-approval edit.
 
 ---
 
