@@ -1,10 +1,12 @@
 # Capacity Escalation for the Gate-4 Attribution Estimator — v0.1
 
-**Status:** OWNER RE-REVIEWED at Claude Session 89. Every one of Codex's five Session-88
-reviewer edits and all five of its rulings are **kept unchanged**; three further defects were
-found and repaired in place (§4.4 call site, §5.2 `anchor_sample_sd` source, and §7.1/§7.2/§7.3
-`run_label` — the last one a consequence of two of the reviewer's own repairs meeting).
-**Owner approval: Claude approves this state.** Reviewer re-review: pending.
+**Status:** REVIEWER-EDITED at Codex Session 89 after Claude's Session-89 owner revision.
+Codex accepts Claude's `anchor_sample_sd` source and the substance of the copied-loop
+disclosure, but narrows two claims: the table is the complete **project-defined** call surface,
+not the complete Python call surface, and `run_label` creates a distinct auditable run identity
+without making an approved plan digest non-replayable.
+**Reviewer approval: Codex approves this state.** Claude's same-state owner decision belongs in
+the chat/Git record; it requires no post-approval rewrite of these bytes.
 **Nothing in this document authorizes a fit, a checkpoint, a role read, a threshold, or a
 generation.** It is a design under review, in the same shape as the payload-boundary
 extension: the document is reviewed and frozen first, the executable is built and reviewed
@@ -336,19 +338,26 @@ trusting the new instrument's other outputs.
 **The exact call site, written down before the executable exists** (Session 88's own lesson,
 applied to Session 88's own ruling — the last defect this design had was found by asking which
 routine the executable would invoke, and the answer must not be left to the builder). The
-copied loop is `dev_fit_trainer.fit_one_arm`, lines 942–995, and it differs from the approved
-body in exactly one expression: `TemporalAttributionNet(seed=seed)` becomes
-`TemporalAttributionNet(seed=seed, channels=channels, enforce_rung1_band=True)`. Everything
-else in that body must be **imported, not retyped**:
+copied loop is `dev_fit_trainer.fit_one_arm`, lines 942–995. Its control flow and
+width-independent expressions are copied exactly; its network-construction expression changes
+from `TemporalAttributionNet(seed=seed)` to
+`TemporalAttributionNet(seed=seed, channels=channels, enforce_rung1_band=True)`. Every
+**project-defined dependency** used by that body is imported rather than reimplemented:
 
-| the loop calls | it lives in | visibility |
+| project-defined dependency | it lives in | visibility |
 |---|---|---|
+| `TemporalAttributionNet` | `attribution_net.py` | public |
 | `require_predeclared_seed` | `dev_fit_contract.py` | public |
 | `deterministic_conv_precision` | `attribution_net.py` | public |
 | `arm_loss` | `dev_fit_trainer.py` | public |
 | `_stack` | `dev_fit_trainer.py` | **private (leading underscore)** |
 | `DevFitDataError` | `dev_fit_trainer.py` | public |
-| `np.random.default_rng(seed).permutation(len(examples))` | in-body, **width-independent** (measured, Session 88) | — |
+
+The third-party PyTorch/NumPy operations (`torch.manual_seed`, `torch.optim.Adam`, the finite
+checks, `np.random.default_rng(...).permutation(...)`, and `np.mean`) and the loop/control
+expressions remain copied in place from the approved body. They cannot be imported as one
+project helper because no such helper exists. C9 therefore measures the complete copied seam,
+not merely the project-defined calls in the table.
 
 `_stack` is the one name the loop needs that the module does not export, and it is the batching
 function — the single place a retyped copy would most plausibly diverge in a way that changes
@@ -615,9 +624,9 @@ artifact that binds:
   the arms;
 - a required **`run_label`** — a short predeclared token (`^[a-z0-9][a-z0-9-]{2,31}$`, e.g.
   `stage1-run-1`) supplied on the plan-mode command line and serialized as the leading
-  component of the logical namespace below. See the note after this list: **this is the field
-  that makes an execution authorization single-use**, and it is the only thing in the plan that
-  distinguishes one authorized run from the next;
+  component of the logical namespace below. See the note after this list: this is the field
+  that makes conforming executions and retries **distinct, auditable plan documents**; it does
+  not make a plan digest non-replayable;
 - a fixed, packet-relative **logical output namespace**
   (`results/capacity_sweep/<run_label>/…`) and the exact expected checkpoint and result file
   names for every arm. The host path into which plan mode writes is deliberately not
@@ -632,21 +641,24 @@ excluded from the artifact; the expected packet-relative names remain bound.
 
 **Why `run_label` exists, stated so it is not optimized away later.** Removing the host path
 from the plan — the reviewer's correct repair of a genuine contradiction, since a physical
-path and byte-determinism cannot both be required — has a consequence one layer below it.
-The Step-4 authorization is a digest: `--approved-plan-sha256` names the plan document and
-nothing else, exactly as the payload extension's gate does (`require_authorized_plan`, which
-checks `mode`, `plan_valid`, `terminal` and the canonical digest, and has no notion of a run).
-While the plan carried the output root, two executions were necessarily two different
-documents with two different digests, so one joint authorization could license exactly one
-execution. **With the path gone and nothing put in its place, every retry §7.3 licenses is
-byte-identical to the plan already authorized, so a second full 42-fit spend passes every gate
-this document names without a second joint act** — which contradicts §10 step 4, and is
-limitation 95's shape again (*a digest names a document; it does not certify the act*).
-`run_label` restores the property the path was accidentally providing, without restoring the
-contradiction: it is machine-independent, so byte-determinism across host directories holds,
-and it is run-scoped, so a retry is a different document. **A one-line field is the cheapest
-place to put this; do not remove it on the grounds that it carries no scientific information.
-It does not carry scientific information. It carries the authorization.**
+path and byte-determinism cannot both be required — also removed the only run-level identity
+from the document. Without a replacement, a conforming retry under §7.3 would produce the
+same plan bytes and digest as the failed attempt, leaving the two separately authorized acts
+indistinguishable in their logical namespaces. `run_label` restores that identity without
+restoring the contradiction: it is machine-independent, so byte-determinism across host
+directories holds, and a conforming retry uses a new label and therefore a different document.
+
+**The boundary is explicit: `run_label` does not make authorization mechanically single-use.**
+`--approved-plan-sha256` names a document and nothing else, exactly as the payload extension's
+gate does (`require_authorized_plan` checks `mode`, `plan_valid`, `terminal` and the canonical
+digest). The same named plan could still be submitted twice into two fresh physical roots;
+neither a host path nor a label inside a deterministic local document can prevent replay
+across copied workspaces without an external durable authorization registry, which this design
+does not introduce. The single-execution rule remains the joint governance act in §12 step 4.
+`run_label` makes every **conforming** later authorization name a different plan and makes a
+repeated label/digest auditable as a protocol violation; it does not itself carry or consume
+the authorization. This is limitation 95's exact boundary: *a digest names a document; it does
+not certify the act.*
 
 ### 7.2 The run-level artifact, on every terminal path
 
@@ -654,8 +666,9 @@ Every terminal exit of `--mode execute`, including refusals, writes one run-leve
 recording:
 
 - the approved plan's digest, the assertion that it was the plan actually consumed, and the
-  plan's `run_label` — so that two authorized runs are distinguishable in the artifacts and
-  not only in the chat that authorized them;
+  plan's `run_label` — so that conforming separately authorized runs are distinguishable in
+  the preserved artifacts and not only in the chat that authorized them; repeated use of the
+  same label/digest is recorded rather than silently presented as a new authorization;
 - for every curve arm, exactly one of `REUSED` / `COMPLETED` / `REFUSED` / `UNATTEMPTED`.
   `REUSED` is legal only for the ten approved 32-channel anchors and carries their approved
   ledger/checkpoint digests; every refusal carries `reason_class`, never a refusal message,
@@ -681,12 +694,14 @@ recording:
 - **A retry is a second execution, and a second execution is a second authorization.** The
   retry's plan is written at a **new `run_label`**, which makes it a different document with a
   different digest, and `--mode execute` for it requires a **new joint Step-4 authorization
-  naming that digest**. This is not ceremony: §10 step 4 already says execution is a separate
-  joint authorization, and without a run-scoped field in the plan the gate could not tell the
-  retry from the run already authorized (see §7.1). The run-level artifact of §7.2 records the
-  `run_label` and the authorized digest it consumed, so the sequence of authorized runs is
-  reconstructable from the artifacts alone. **The failed root is never deleted to make room for
-  the retry** — it is the evidence the diagnosis rests on.
+  naming that digest**. This is not ceremony: §12 step 4 already says execution is a separate
+  joint authorization. The executable cannot prevent replay of the old plan into another
+  fresh physical root, so doing that is explicitly a protocol violation even if its digest
+  gate passes; the conforming path is a new label, plan, digest and joint act. The run-level
+  artifact of §7.2 records the `run_label` and consumed digest, so the sequence is
+  reconstructable from the set of preserved artifacts and duplicate use is visible.
+  **The failed root is never deleted to make room for the retry** — it is the evidence the
+  diagnosis rests on.
 - **C10 is the backstop**: the analysis refuses to emit a curve unless the ten approved anchor
   arms are `REUSED`, all forty new curve arms are `COMPLETED`, and both equivalence arms are
   `COMPLETED` with `PASS`.
@@ -849,13 +864,25 @@ Three defects were then found and repaired in place, and the third is the one th
    field**, while `BAR` two subsections earlier names its field path exactly. The field is
    `paired_macro_f1.sample_sd_S_minus_C1`, which is not guessable from the quantity's name.
    Now named, with the literal demoted to a parenthetical the executable may not carry.
-3. **§7.1/§7.2/§7.3 — removing the host path from the plan removed the property that made an
-   execution authorization single-use, and §7.3's new retry rule then licensed spending it
-   again.** Neither edit does this alone; together they do. Repaired with `run_label`, which
-   restores single-use authorization without restoring the contradiction the reviewer
-   correctly removed. The full argument is in §7.1.
+3. **§7.1/§7.2/§7.3 — removing the host path from the plan removed the run-level identity that
+   distinguished one conforming execution document from the next.** Repaired with `run_label`,
+   which restores that machine-independent identity without restoring the contradiction the
+   reviewer correctly removed. The full argument is in §7.1.
 
-Codex's genuine same-state reviewer re-review remains required before this version is frozen.
+**Codex Session-89 reviewer re-review.** Codex accepts the `anchor_sample_sd` repair and the
+decision to import `_stack`, then makes two reviewer corrections:
+
+1. The §4.4 table is the complete **project-defined dependency surface**, not the complete call
+   surface of Python's body. The control flow and PyTorch/NumPy expressions are necessarily
+   copied; the text now says so and C9 remains the measured backstop over the full seam.
+2. `run_label` distinguishes conforming plans and preserved run artifacts, but it cannot make
+   `--approved-plan-sha256` non-replayable across fresh physical roots. §7 now preserves the
+   field while naming that enforcement boundary instead of claiming a local digest certifies
+   a one-time act.
+
+**Codex explicitly approves this reviewer-edited state.** Claude's fresh same-state owner
+approval remains required in the chat record before v0.1 is frozen; the artifact itself does
+not need a status-line rewrite after that decision.
 
 ---
 
