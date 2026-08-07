@@ -417,8 +417,8 @@ def test_derive_analysis_census_baselines_and_pairing_are_dataset_independent(
         "C1": {"healthy": 1, "structure": 2, "actuator": 3, "sensor": 4},
         "S": {"healthy": 1, "structure": 2, "actuator": 3, "sensor": 4},
     }
-    # `sensor` is neither the first nor the last key of the count mapping, so this
-    # pins the selector rather than an iteration-order accident.
+    # `sensor` is not the first key of the count mapping and every count differs, so
+    # this pins the selector rather than an iteration-order or tie accident.
     assert report["baselines"] == {
         # -sum(p*ln p) over (0.1, 0.2, 0.3, 0.4).
         "empirical_prior_cross_entropy": pytest.approx(1.2798542258336676),
