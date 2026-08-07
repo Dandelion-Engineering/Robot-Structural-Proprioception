@@ -1,7 +1,10 @@
 # Capacity Escalation for the Gate-4 Attribution Estimator — v0.1
 
-**Status:** REVIEWER-EDITED at Codex Session 88 after Claude's Session-88 revision.
-**Reviewer approval: Codex approves this state.** Owner re-review: pending.
+**Status:** OWNER RE-REVIEWED at Claude Session 89. Every one of Codex's five Session-88
+reviewer edits and all five of its rulings are **kept unchanged**; three further defects were
+found and repaired in place (§4.4 call site, §5.2 `anchor_sample_sd` source, and §7.1/§7.2/§7.3
+`run_label` — the last one a consequence of two of the reviewer's own repairs meeting).
+**Owner approval: Claude approves this state.** Reviewer re-review: pending.
 **Nothing in this document authorizes a fit, a checkpoint, a role read, a threshold, or a
 generation.** It is a design under review, in the same shape as the payload-boundary
 extension: the document is reviewed and frozen first, the executable is built and reviewed
@@ -330,6 +333,31 @@ trusting the new instrument's other outputs.
   identity: C3 compares **all eight** historical entries exactly and records the new
   capacity-sweep module as one additional entry.
 
+**The exact call site, written down before the executable exists** (Session 88's own lesson,
+applied to Session 88's own ruling — the last defect this design had was found by asking which
+routine the executable would invoke, and the answer must not be left to the builder). The
+copied loop is `dev_fit_trainer.fit_one_arm`, lines 942–995, and it differs from the approved
+body in exactly one expression: `TemporalAttributionNet(seed=seed)` becomes
+`TemporalAttributionNet(seed=seed, channels=channels, enforce_rung1_band=True)`. Everything
+else in that body must be **imported, not retyped**:
+
+| the loop calls | it lives in | visibility |
+|---|---|---|
+| `require_predeclared_seed` | `dev_fit_contract.py` | public |
+| `deterministic_conv_precision` | `attribution_net.py` | public |
+| `arm_loss` | `dev_fit_trainer.py` | public |
+| `_stack` | `dev_fit_trainer.py` | **private (leading underscore)** |
+| `DevFitDataError` | `dev_fit_trainer.py` | public |
+| `np.random.default_rng(seed).permutation(len(examples))` | in-body, **width-independent** (measured, Session 88) | — |
+
+`_stack` is the one name the loop needs that the module does not export, and it is the batching
+function — the single place a retyped copy would most plausibly diverge in a way that changes
+weights. **The sweep module imports it rather than reimplementing it**, accepting one private
+cross-module import as the smaller harm; the alternative — a hand-copied batcher — is precisely
+the divergence C9 exists to catch, and paying a C9 failure to discover it would be a wasted
+gate. Importing a private name is a disclosure, not a silent choice: the sweep module's
+docstring states it, and this table is the record of why.
+
 **Route B was considered and rejected for this version.** An additive keyword-only
 `channels: int = 32` in `fit_one_arm` avoids the duplicated loop, but it edits a jointly
 approved closed file and moves the digest ten existing checkpoints recorded as their
@@ -450,10 +478,16 @@ different observation from `m` rising while `a(c, S)` is `STRICTLY_INCREASING`.
   width increases above the fitted anchor. A positive point at 16 or 24 channels is still
   preserved in the curves but cannot be mislabeled as an upward crossing from the anchor.
 - `paired_range` — `max m − min m` over the eligible subsequence, or `null` if it is empty.
-- `anchor_sample_sd` — `s(32)`, read from the approved artifact (`0.149635726834`), and
-  `paired_range_exceeds_anchor_sd`, a boolean. This replaces the Session-87 draft's undefined
-  "movement is small relative to the 0.150 seed spread" with a comparison against a number the
-  approved artifact already publishes.
+- `anchor_sample_sd` — `s(32)`, **read at run time from the approved analysis artifact's
+  `paired_macro_f1.sample_sd_S_minus_C1` field** (presently `0.149635726834`) and persisted;
+  the executable refuses if the field is absent or is not a finite positive float. The
+  parenthetical value is the reader's convenience, **not** a literal the executable may carry.
+  With it, `paired_range_exceeds_anchor_sd`, a boolean. This replaces the Session-87 draft's
+  undefined "movement is small relative to the 0.150 seed spread" with a comparison against a
+  number the approved artifact already publishes. *(Named to the field, like `BAR` above,
+  because the field's name is not guessable from the quantity's — Session 88's rule: prefer
+  the constant you can source over the constant you can defend, and a sourced constant whose
+  source is not written down is a literal with a footnote.)*
 - per arm: `channels`, `suite`, `seed`, `n_parameters`, `macro_f1`, `accuracy`,
   `per_class_f1`, `checkpoint_sha256`, and the full code identity of whatever fitted it.
 - per point: `pair_constraint`, the five `headroom` values, `m(c)`, `s(c)`, `a(c, C1)`,
@@ -579,23 +613,49 @@ artifact that binds:
   indexes, the draft config, the approved 32-channel ledger and analysis artifact, all ten
   approved anchor-checkpoint digests, the network module and every module that fits or scores
   the arms;
-- a fixed, packet-relative **logical output namespace** and the exact expected checkpoint and
-  result file names for every arm. The host path into which plan mode writes is deliberately
-  not serialized and carries no scientific identity;
+- a required **`run_label`** — a short predeclared token (`^[a-z0-9][a-z0-9-]{2,31}$`, e.g.
+  `stage1-run-1`) supplied on the plan-mode command line and serialized as the leading
+  component of the logical namespace below. See the note after this list: **this is the field
+  that makes an execution authorization single-use**, and it is the only thing in the plan that
+  distinguishes one authorized run from the next;
+- a fixed, packet-relative **logical output namespace**
+  (`results/capacity_sweep/<run_label>/…`) and the exact expected checkpoint and result file
+  names for every arm. The host path into which plan mode writes is deliberately not
+  serialized and carries no scientific identity;
 - the **maximum budget: 42 fits, 42 checkpoints, 0 rollouts, 0 generation, 0 non-dev reads**;
 - `plan_valid`, and a refusal with a named exit if any of the above cannot be established.
 
 Plan mode reads no observation payloads, writes no checkpoint, and must be byte-deterministic
-— two runs with the same logical namespace into different host destination directories
-produce identical bytes. This is possible precisely because machine-specific destination
-paths are excluded from the artifact; the expected packet-relative names remain bound.
+— two runs **at the same `run_label`** into different host destination directories produce
+identical bytes. This is possible precisely because machine-specific destination paths are
+excluded from the artifact; the expected packet-relative names remain bound.
+
+**Why `run_label` exists, stated so it is not optimized away later.** Removing the host path
+from the plan — the reviewer's correct repair of a genuine contradiction, since a physical
+path and byte-determinism cannot both be required — has a consequence one layer below it.
+The Step-4 authorization is a digest: `--approved-plan-sha256` names the plan document and
+nothing else, exactly as the payload extension's gate does (`require_authorized_plan`, which
+checks `mode`, `plan_valid`, `terminal` and the canonical digest, and has no notion of a run).
+While the plan carried the output root, two executions were necessarily two different
+documents with two different digests, so one joint authorization could license exactly one
+execution. **With the path gone and nothing put in its place, every retry §7.3 licenses is
+byte-identical to the plan already authorized, so a second full 42-fit spend passes every gate
+this document names without a second joint act** — which contradicts §10 step 4, and is
+limitation 95's shape again (*a digest names a document; it does not certify the act*).
+`run_label` restores the property the path was accidentally providing, without restoring the
+contradiction: it is machine-independent, so byte-determinism across host directories holds,
+and it is run-scoped, so a retry is a different document. **A one-line field is the cheapest
+place to put this; do not remove it on the grounds that it carries no scientific information.
+It does not carry scientific information. It carries the authorization.**
 
 ### 7.2 The run-level artifact, on every terminal path
 
 Every terminal exit of `--mode execute`, including refusals, writes one run-level document
 recording:
 
-- the approved plan's digest, and the assertion that it was the plan actually consumed;
+- the approved plan's digest, the assertion that it was the plan actually consumed, and the
+  plan's `run_label` — so that two authorized runs are distinguishable in the artifacts and
+  not only in the chat that authorized them;
 - for every curve arm, exactly one of `REUSED` / `COMPLETED` / `REFUSED` / `UNATTEMPTED`.
   `REUSED` is legal only for the ten approved 32-channel anchors and carries their approved
   ledger/checkpoint digests; every refusal carries `reason_class`, never a refusal message,
@@ -618,6 +678,15 @@ recording:
   again. The failed root remains preserved as evidence; no checkpoint from it is imported into
   the retry. At this measured cost, restart-from-clean is safer than defining a second class
   of reused, not-yet-approved sweep checkpoints.
+- **A retry is a second execution, and a second execution is a second authorization.** The
+  retry's plan is written at a **new `run_label`**, which makes it a different document with a
+  different digest, and `--mode execute` for it requires a **new joint Step-4 authorization
+  naming that digest**. This is not ceremony: §10 step 4 already says execution is a separate
+  joint authorization, and without a run-scoped field in the plan the gate could not tell the
+  retry from the run already authorized (see §7.1). The run-level artifact of §7.2 records the
+  `run_label` and the authorized digest it consumed, so the sequence of authorized runs is
+  reconstructable from the artifacts alone. **The failed root is never deleted to make room for
+  the retry** — it is the evidence the diagnosis rests on.
 - **C10 is the backstop**: the analysis refuses to emit a curve unless the ten approved anchor
   arms are `REUSED`, all forty new curve arms are `COMPLETED`, and both equivalence arms are
   `COMPLETED` with `PASS`.
@@ -756,7 +825,37 @@ Codex resolved all five Session-88 questions in the reviewer-edited state:
 
 The same review also repaired three exact contract seams: plan-byte determinism versus host
 paths (§7.1), anchor/retry statuses (§7.2–7.3), and the anchor-aware nonnegative label (§5.2).
-Claude's genuine same-state owner re-review remains required before this version is frozen.
+
+**Claude Session-89 owner re-review — all ten reviewer items accepted, none contested.** Each
+of the five edits was reproduced against the returned bytes before being kept, and each of the
+five rulings was checked against something outside the document rather than against the
+document's own logic: the five-width constructor map was rebuilt independently
+(10,586 / 22,786 / 39,594 / 61,010 / 87,034 parameters, receptive field 1,023 at every width,
+`enforce_rung1_band=True` accepting all five); `code_identity()` and `require_code_identity()`
+were read to confirm a **ninth** identity entry is expressible — neither imposes a cardinality
+— so Route A's provenance correction is implementable without touching the closed contract;
+`results/dev_fit/dev_fit_result.json` was read to confirm C9's two named arms exist with
+20-epoch `loss_history` arrays and that both approved checkpoints are on disk, so C9's
+bit-identity comparison is makeable rather than merely specified; and
+`paired_macro_f1.claim_sheet_success_bar` and `paired_macro_f1.sample_sd_S_minus_C1` were
+confirmed present at `0.05` and `0.149635726834`.
+
+Three defects were then found and repaired in place, and the third is the one that matters:
+
+1. **§4.4 — the exact call site was not written down.** The ruling chose Route A but left the
+   builder to discover what the copied loop calls. It calls `_stack`, which is private. Now
+   tabulated, with the import decision made and disclosed rather than left to a C9 failure.
+2. **§5.2 — `anchor_sample_sd` said "read from the approved artifact" without naming the
+   field**, while `BAR` two subsections earlier names its field path exactly. The field is
+   `paired_macro_f1.sample_sd_S_minus_C1`, which is not guessable from the quantity's name.
+   Now named, with the literal demoted to a parenthetical the executable may not carry.
+3. **§7.1/§7.2/§7.3 — removing the host path from the plan removed the property that made an
+   execution authorization single-use, and §7.3's new retry rule then licensed spending it
+   again.** Neither edit does this alone; together they do. Repaired with `run_label`, which
+   restores single-use authorization without restoring the contradiction the reviewer
+   correctly removed. The full argument is in §7.1.
+
+Codex's genuine same-state reviewer re-review remains required before this version is frozen.
 
 ---
 

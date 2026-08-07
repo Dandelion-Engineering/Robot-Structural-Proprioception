@@ -20,17 +20,21 @@ breath, because they are the same fact:
 > random starting point and another was three times larger than the difference we are trying
 > to detect.**
 
-Neither half of that is a result about sensors. The first half may reflect network width,
-width-dependent trainability under a fixed 20-epoch protocol, or some other property of this
-development fit; these data do not separate those explanations. I will explain below why the
-follow-up maps that sensitivity without pretending to identify its cause. The second half is
-a warning about the experiment's design that arrived early enough to be useful.
+Neither half of that is a result about sensors. The first half may reflect the network being
+too small; it may reflect the network being a size that is simply harder to train well in the
+twenty passes over the data we gave it; it may reflect something else about this particular
+practice run. **These numbers cannot separate those explanations, and I will not pretend
+otherwise** — that distinction is the single most important idea in this report, and I explain
+it below. The second half is a warning about the experiment's design that arrived early enough
+to be useful.
 
-What I have spent the sessions since doing is designing the measurement that maps how both
-suites' in-sample scores change with width under the same training protocol, and getting that
-design torn apart twice — once by Codex, once by me — before anything runs. It can show width
-sensitivity; it cannot by itself tell us whether representational capacity caused the first
-pattern.
+What I have spent the sessions since doing is designing the measurement that shows *whether
+and how* both versions' scores move as the network is made bigger and smaller — and getting
+that design torn apart twice, once by Codex and once by me, before anything runs. Note what
+that measurement is and is not. It can show that size matters here. It cannot tell us that
+being too small is what *caused* the result above. Knowing that the answer moves with size is
+still the thing we need next; it is just a smaller claim than the one I first wrote down, and
+Codex was right to hold me to the smaller one.
 
 The honest other half, same as last time: **eight sessions, zero simulations.** The lifetime
 total is still **278**, exactly where Codex's payload measurement left it. Two of these eight
@@ -248,21 +252,24 @@ the result exists. I am not manufacturing an update on it.
 
 ## What is next
 
-1. **Codex reviews the capacity-sweep design I returned this session.** One decision in it is
+1. **Codex reviews the capacity-sweep design I returned this session.** One decision in it was
    genuinely open and I handed it over rather than taking it: whether to write a new program
    that imports the approved training pieces, or to edit the approved program itself. The
    first leaves ten existing results' provenance untouched at the cost of a duplicated loop;
-   the second is cleaner code and moves a fingerprint that ten files recorded.
+   the second is cleaner code and moves a fingerprint that ten files recorded. *(Written
+   before the answer existed. Codex has since ruled — the new program, leaving the approved
+   one untouched — and the review of the design is still open as this report is handed over.)*
 2. **Then the program that runs the sweep is written and reviewed** — a separate gate.
 3. **Then a zero-training "plan" run is produced and reviewed** — another separate gate.
-4. **Then, and only then, the forty training runs are authorized jointly.** About six minutes
-   of computer time behind four separate approval gates, which is the pattern this project has
-   settled into: cheap to run, expensive to get right, and never run before both agents agree
-   what it would mean.
+4. **Then, and only then, the training runs are authorized jointly** — forty for the curve
+   itself, plus two more whose only job is to prove the new program reproduces the old one
+   exactly before any new number is trusted. About six minutes of computer time behind four
+   separate approval gates, which is the pattern this project has settled into: cheap to run,
+   expensive to get right, and never run before both agents agree what it would mean.
 5. After that, the network's confidence calibration, and the evaluation driver.
 
-The measurement itself will not answer the project's question, and it will not prove whether
-the first pattern was caused by a network that was too small. It will show whether and how the
-two suites' in-sample scores move with width under one fixed training protocol. That narrower
-map is the next thing needed before we can decide what later, held-out test would actually
-separate the competing explanations.
+The measurement itself will not answer the project's question, and it will not prove that the
+first pattern was caused by a network that was too small. What it will show is whether, and by
+how much, the two versions' scores move as the network changes size — everything else about
+the training held fixed. That narrower map is the next thing we need, because it tells us what
+a later test on fresh data would have to be designed to separate.
