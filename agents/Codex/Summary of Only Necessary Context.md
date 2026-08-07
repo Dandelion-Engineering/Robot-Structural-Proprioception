@@ -1,110 +1,138 @@
 # Summary of Only Necessary Context -- Codex
 
-**Last rewritten:** 2026-08-06 -- Codex Session 87
+**Last rewritten:** 2026-08-07 -- Codex Session 88
 
 ## Resume here
 
 The project remains in **Phase 2 -- Execution**. Final configuration is **UNFROZEN**;
 `Reproducibility Packet/config/config.json` is absent and confirmatory identities remain
-unmaterialized. Every development screen/readback, Protocol P v2.3.3, the payload-boundary
+unmaterialized. Every development screen/read-back, Protocol P v2.3.3, the payload-boundary
 extension, Amendment A2 and the first Gate-4 fit remain development evidence only.
 
 The lifetime Protocol-P-related physical-rollout total remains **278**: 151 before the
 payload-boundary extension plus its one authorized 127-rollout invocation. That invocation
 is spent. No second invocation or further payload measurement is authorized.
 
-The first Gate-4 rung-1 fit ledger, bounded in-sample analysis, analyzer, packet runbook and
-root public-log forward correction are jointly approved. Codex now explicitly approves the
-strengthened analysis-test blob `6f29bf05...`; Claude's literal approval of that same blob is
-still missing. Capacity-escalation v0.1 is reviewable but blocked in draft. No capacity
-executable, plan execution or fit is authorized.
+The first Gate-4 rung-1 fit ledger, bounded in-sample analysis, analyzer, strengthened
+analysis tests, packet runbook and root public-log forward correction are jointly approved.
+The analysis-test loop closed in Claude Session 88 when Claude explicitly approved exact blob
+`6f29bf05...`, already approved by Codex.
+
+Capacity-escalation v0.1 is now a reviewer-edited, Codex-approved design at blob
+`e1c8f77c...` / canonical SHA-256 `835e2fc6...`. Claude's genuine same-state owner re-review
+is open. Claude's Session-88 progress report is likewise reviewer-edited and Codex-approved at
+blob `b538547e...`; Claude owner re-review is open. No capacity executable, plan run, fit or
+checkpoint is authorized.
 
 ## Next exact actions
 
 Claude owns the next turn.
 
-The next Codex session/report is **88**, which is also the next regular every-eighth-session
-director progress-report trigger.
+The next Codex session/report is **89**.
 
-### 1. Close the narrow test loop literally
+### 1. Re-review the capacity design
 
 Genuinely re-open and explicitly approve or contest:
 
 ```text
-Reproducibility Packet/tests/test_dev_fit_analysis.py
-  Git blob  6f29bf05ddebae9f33817381f4713089f99ee7e4
+Reproducibility Packet/protocol/capacity-escalation-v0.1.md
+  Git blob          e1c8f77ce30898090563b2793ed2bf75fdf0d9df
+  canonical SHA-256 835e2fc64cd5674bd0f61748351d713804f7f57c9b5415667c6a6c2ea139ccf2
+  status            REVIEWER-EDITED; Codex approved; Claude re-review open
 ```
 
-Codex Session 87 independently reviewed and explicitly approved these exact bytes. Claude's
-Session-87 handoff called them the returned state and asked Codex to approve or contest, but
-never explicitly said that Claude approved the blob. An unchanged literal owner approval in
-chat closes the loop; do not edit the test merely to record approval.
+Codex accepts Claude's Session-88 repairs to the earlier causal verdict, outcome function,
+cross-width seed claim, grid, report boundary, run-level state and saturation quantity. Codex
+then made these decision-bearing edits:
 
-The approved substance is:
+1. **Route A is selected.** Add a narrow width-parameterized module and leave the approved
+   trainer unchanged. The new module imports `arm_loss`, so all eight historical canonical
+   code identities, including `dev_fit_trainer.py`, must match; the capacity module is a ninth
+   entry.
+2. **Two C9 equivalence arms are required:** `(C1, 0)` and `(S, 4)`. Their parameter tensors
+   and per-epoch loss histories must match the approved states bit-for-bit before any curve fit.
+3. **The exact constructor map is binding:** channels 16/24/32/40/48 map to parameters
+   10,586/22,786/39,594/61,010/87,034, all with receptive field 1,023.
+4. **The descriptive label is anchor-aware.** It records the first post-32 nonnegative point
+   and the first eligible post-32 nonnegative point separately, so a constrained point cannot
+   hide a later readable one and a positive sub-anchor point cannot masquerade as an upward
+   crossing.
+5. **Six-decimal `ROUND_HALF_EVEN` quantization** is the numerical tie rule; raw and
+   quantized values are both persisted and the resolution has no inferential meaning.
+6. **`PARTIAL` points stay out of the eligible subsequence.** Dropping individual seeds would
+   make different capacity points average different seed sets.
+7. **Plan paths are logical and packet-relative.** Host destinations are not serialized, so
+   two equivalent plan runs can be byte-identical across physical directories.
+8. **Run states distinguish provenance:** ten anchors are `REUSED`, forty new curve arms must
+   be `COMPLETED`, and the two C9 arms have separate completion/comparison fields.
+9. **Partial outputs are never resumed into a curve.** A retry uses a fresh plan/root and
+   reruns both C9 arms plus all forty new curve arms. The failed root remains evidence.
+10. **The maximum is 42 fits / 42 checkpoints / zero rollouts:** two scratch equivalence fits
+    plus forty new curve fits. The ten approved 32-channel curve arms remain read-only.
 
-- `_DERIVED_CLASS_COUNTS = (1, 2, 4, 3)` preserves the same class-proportion multiset;
-- `actuator` is the unique interior majority, so first-key, last-key, minimum and tie
-  accidents no longer share the expected answer;
-- empirical-prior cross-entropy remains `1.2798542258336676`;
-- majority accuracy remains `0.4`; and
-- the test-only change is outside `analysis_code_identity()`, so no analysis artifact
-  regeneration is owed.
+Even unchanged owner approval authorizes only writing the Route-A executable and tests. It
+does not authorize plan mode, C9, curve fitting, any checkpoint, later-role read, threshold,
+Stage 2, config freeze, generation or rollout.
 
-Session-87 verification: 35 focused tests under `python -O`, 1,551 full packet tests and clean
-compileall.
+### 2. Re-review Claude's Session-88 progress report
 
-### 2. Revise and explicitly approve the capacity design
-
-Current draft:
+Genuinely re-open and explicitly approve or contest:
 
 ```text
-Reproducibility Packet/protocol/capacity-escalation-v0.1.md
-  Git blob          b86d46aa64da883a8438b3880d90bc37c11360eb
-  canonical SHA-256 2250add159c9adf5c95a5520a85b50595af04d84a704d389e3d095ed1cc11cf0
-  status            BLOCKED DRAFT; approved by nobody
+agents/Claude/Progress Reports/Progress Report Session 88.md
+  Git blob  b538547e29fe8d828c52b9f373c1b0cd70fd96a0
+  status    REVIEWER-EDITED; Codex approved; Claude re-review open
 ```
 
-Codex accepts reviewing this document now; the sequencing deviation is closed. The draft
-must return as an explicitly owner-approved state before an exact review loop can close.
+Codex narrowed two causal statements. The report no longer says the adverse rung-1 direction
+is “almost certainly” network size or that the width sweep will tell whether the network was
+too small. It now matches the design: the sweep maps width sensitivity under one fixed
+training protocol and cannot separate representational capacity from width-dependent
+trainability or other explanations.
 
-Required corrections:
+### 3. After both review loops close
 
-1. **Remove the causal `CAPACITY_BOUND` claim.** A fixed-20-epoch width sweep measures width
-   sensitivity under one optimization protocol. It cannot isolate representational capacity
-   from width-dependent optimization/trainability, and a relative crossing may come from C1
-   worsening rather than S improving. Persist both absolute suite curves and use descriptive
-   observation labels or no executable verdict.
-2. **Make any outcome function complete and exact.** "Increasing," "no upward trend" and
-   "small relative to the seed spread" are undefined. Suite-mean saturation can hide
-   seed-level saturation. Prefer publishing exact curves plus saturation diagnostics and
-   reserving interpretation for joint review. If a classifier remains, enumerate exact,
-   exhaustive, mutually exclusive inequalities and one non-contradictory license per branch.
-3. **Correct the cross-width seed claim.** At fixed width/seed, C1 and S share identical
-   same-shaped initialization and row order. Across widths, tensors have different shapes;
-   repeated integer seed labels are not common initial weights or cross-width CRN. The fixed
-   seed set prevents different seed samples from confounding width; claim only that.
-4. **Use grid `{16, 24, 32, 40, 48}`.** Codex independently measured the 40-channel model at
-   61,010 parameters and receptive field 1,023, inside rung 1. This gives a second point above
-   the fitted anchor if 48 is saturated. The revised plan has 50 total arms, ten reused and
-   **40 new fits**. Measure 40-channel cost; do not interpolate.
-5. **Do not add the proposed two-trajectory holdout.** The dev trajectories are different
-   regimes: diagnostic/probe/onset-500/origin-1000/run-3000 versus ordinary/no-probe/
-   onset-400/origin-900/run-2900. A one-to-other split measures cross-regime transfer, halves
-   training data and breaks comparability with the approved 32-channel ledger. Any future
-   transfer diagnostic needs its own symmetric pre-registration.
-6. **Reconcile bound 5 and Slot 14.** The Technical Report must disclose the within-suite
-   sweep as development-only instrument diagnosis and capacity-search history; it may not
-   treat it as held-out C1-vs-S evidence, a headline result or a capacity selection.
-7. **Add aggregate plan/partial-state rules.** Before fits, require a canonical zero-fit plan
-   binding all new/reused arms, source/data/protocol identities, a fresh output root, exact
-   output names and maximum budget. A run-level terminal artifact must record completed,
-   refused and unattempted arms plus checkpoint digests. No silent overwrite/resume, no
-   second 32-channel fit and no partial directory presented as a complete curve.
+If both artifacts are approved unchanged, the Route-A executable and tests may be written.
+That executable has its own exact-state review. After executable approval, a deterministic
+zero-fit plan may be produced and reviewed. Only a later, separate joint authorization may
+run the two C9 equivalence fits and forty curve fits.
 
-Choices Codex approves in principle: no Claim Sheet amendment; Stage 1 wholly inside rung 1;
-width not depth; 1,023-sample receptive field fixed; reuse never rerun of 32-channel arms;
-dev-only/zero-rollout/later-role refusal; separate document, executable, zero-fit plan and
-execution gates; protocol-folder placement; approved-version immutability.
+## Capacity-escalation design -- current reviewer state
+
+The design measures width sensitivity under the fixed 20-epoch development protocol. It does
+not emit a causal verdict and no observation licenses Stage 2 or any other action.
+
+Stage-1 grid:
+
+```text
+channels             16      24      32      40      48
+parameters        10,586  22,786  39,594  61,010  87,034
+receptive field    1,023   1,023   1,023   1,023   1,023
+curve arms            10      10      10      10      10
+execution state       new     new   reused     new     new
+```
+
+The executable must preserve, per arm, macro-F1, accuracy, per-class F1, parameter count,
+checkpoint digest and full fitting-code identity. It derives paired S-minus-C1 curves and
+the absolute C1/S curves through the approved analyzer's exact metric functions.
+
+The bar-constraint check uses:
+
+```text
+headroom(c,k) = 1 - min(macro_f1_C1(c,k), macro_f1_S(c,k))
+BAR           = approved analysis artifact's claim_sheet_success_bar field
+```
+
+A pair is `BAR_CONSTRAINED` only if `headroom < BAR`. Point state is NONE/PARTIAL/ALL from
+the five seed pairs. Shape classification uses exact six-decimal Decimal quantization and
+persists raw values. The interpretation is prose, applied jointly after exact-state result
+review, and licenses nothing automatically.
+
+The plan artifact binds the design, assignment, manifest, role indexes, draft config,
+approved ledger/analysis, all anchor checkpoints, exact arms/output names and every fitting or
+scoring module. Plan mode reads no observation payload and writes no checkpoint. Every execute
+exit persists all curve/equivalence states and resource counts; no partial run can present a
+curve.
 
 ## First Gate-4 development fit -- closed but bounded
 
@@ -144,6 +172,9 @@ Reproducibility Packet/results/dev_fit/dev_fit_analysis.json
   Git blob           0d00b5ca55fc9bba65440c009c1568ec5f5470b7
   canonical SHA-256  7bec34a1289aa59b84dd3b5a05f0a753a72c588292a33957295ba20ff4ddac58
 
+Reproducibility Packet/tests/test_dev_fit_analysis.py
+  Git blob  6f29bf05ddebae9f33817381f4713089f99ee7e4
+
 Reproducibility Packet/README.md
   Git blob  eb4a58e45113936cb87de1b0ecd6754b93ba4541
 ```
@@ -179,8 +210,9 @@ total                 -0.190    +0.016
 
 These are scores on the same 152 examples used to fit each arm. They establish that the
 end-to-end executable optimizes above simple in-sample baselines. They do **not** establish
-generalization, a C1-versus-S result, OOD performance or a capacity choice. The seed SD is
-about three times the Claim-Sheet 0.05 effect bar and is a Gate-6 sample-size warning only.
+generalization, a C1-versus-S result, OOD performance or a capacity choice. The 0.1496 sample
+SD is measured at the 32-channel anchor only and is a later seed-count warning, not a power
+calculation.
 
 ## Finding W -- historical producer disclosure
 
@@ -259,31 +291,30 @@ The one authorized payload-boundary result is closed at canonical SHA-256
 extension rollouts. It licenses no fitted curve, mechanism, config freeze or confirmatory
 conclusion.
 
-## Session-87 verification and transcript integrity
+## Session-88 verification and transcript integrity
 
 ```text
-analysis focused under python -O       35 passed; expected warning only
-full packet suite                   1,551 passed in 129.39 s
-compileall                            clean
-git diff --check                      clean; expected autocrlf notices only
-40-channel constructor probe          61,010 parameters / receptive field 1,023
+construction-only width map          exact at 16/24/32/40/48
+historical code identities           8/8 canonical matches
+git diff --check                      clean
+packet tests                          not run; document-only production changes
 fits / checkpoint writes              0 / 0
 generation / rollouts                 0 / 0
 pilot / validation / test reads       0
 config/config.json                    absent
 ```
 
-Session 87 appended from a programmatically verified unique physical EOF block and preserved
+Session 88 appended from a programmatically verified unique physical EOF block and preserved
 the complete old byte prefix:
 
 ```text
-pre-write bytes          1,496,410
-pre-write lines          23,792
-pre-write SHA-256        32bc9961821a95f6f79207a258f2e09747ce3f003d314eac101c5c0d52ab3fe6
-final bytes              1,506,399
-final lines              23,975
-header line              23,794; unique after the line boundary
-diff                     +183 / -0
+pre-write bytes          1,518,959
+pre-write lines          24,178
+pre-write SHA-256        9a54829987bc70637a680f79a4b3e10bb8d4e99c9dd48bb5a95f0f3eeeada5ff
+final bytes              1,525,692
+final lines              24,297
+header line              24,180; unique after the line boundary
+diff                     +119 / -0
 last agent               Codex
 ```
 
@@ -292,10 +323,11 @@ or extend an append streak number from memory.
 
 ## Public and authorization boundary
 
-The root README remains Phase 2 / `In Progress` and was deliberately unchanged in Session 87.
+The root README remains Phase 2 / `In Progress` and was deliberately unchanged in Session 88.
 Absent separate explicit authorization, all remain blocked:
 
 - any capacity executable, zero-fit plan execution or fit;
+- any checkpoint write;
 - pilot, validation or test outcome reads;
 - capacity selection or probability/detection/abstention/OOD/uncertainty thresholds;
 - new data generation, replacement, supersession or regeneration;

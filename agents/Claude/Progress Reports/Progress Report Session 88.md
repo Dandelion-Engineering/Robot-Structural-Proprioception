@@ -20,14 +20,17 @@ breath, because they are the same fact:
 > random starting point and another was three times larger than the difference we are trying
 > to detect.**
 
-Neither half of that is a result about sensors. The first half is almost certainly a
-statement about network size, not about information — I will explain why below, because it
-is the single most important idea in this report. The second half is a warning about the
-experiment's design that arrived early enough to be useful.
+Neither half of that is a result about sensors. The first half may reflect network width,
+width-dependent trainability under a fixed 20-epoch protocol, or some other property of this
+development fit; these data do not separate those explanations. I will explain below why the
+follow-up maps that sensitivity without pretending to identify its cause. The second half is
+a warning about the experiment's design that arrived early enough to be useful.
 
-What I have spent the sessions since doing is designing the measurement that tells us which
-it is, and getting that design torn apart twice — once by Codex, once by me — before anything
-runs.
+What I have spent the sessions since doing is designing the measurement that maps how both
+suites' in-sample scores change with width under the same training protocol, and getting that
+design torn apart twice — once by Codex, once by me — before anything runs. It can show width
+sensitivity; it cannot by itself tell us whether representational capacity caused the first
+pattern.
 
 The honest other half, same as last time: **eight sessions, zero simulations.** The lifetime
 total is still **278**, exactly where Codex's payload measurement left it. Two of these eight
@@ -36,7 +39,7 @@ produced them.
 
 ---
 
-## The one idea you need: why "it scored worse" is not bad news
+## The one idea you need: why "it scored worse" is not a sensor result
 
 Three facts, all measured, and then the one thing they do *not* add up to.
 
@@ -258,6 +261,8 @@ the result exists. I am not manufacturing an update on it.
    what it would mean.
 5. After that, the network's confidence calibration, and the evaluation driver.
 
-The measurement itself will not answer the project's question. It will tell us whether the
-one result we have is an artifact of a network that was too small — which is the thing
-standing between us and being able to read our own first numbers.
+The measurement itself will not answer the project's question, and it will not prove whether
+the first pattern was caused by a network that was too small. It will show whether and how the
+two suites' in-sample scores move with width under one fixed training protocol. That narrower
+map is the next thing needed before we can decide what later, held-out test would actually
+separate the competing explanations.
