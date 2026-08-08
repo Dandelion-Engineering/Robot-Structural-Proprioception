@@ -1527,10 +1527,20 @@ def require_clean_capacity_point(directory: Path) -> None:
     """Refuse a per-point directory holding artifacts from an earlier attempt.
 
     Invariant C2 applies the trainer's `X_OUTPUT_DIRTY` shape unchanged to each capacity
-    point. Design section 11 records honestly that this guard is now unreachable on the
-    ordinary path, since the run root is created absent and owned by this invocation --
-    that is defence in depth rather than a contradiction, and a guard that cannot fire on
-    the ordinary path is still correct.
+    point. The trainer makes that check ONCE, before it fits anything, and "unchanged to
+    each" means once per point -- not once per arm.
+
+    **Call it exactly once per capacity point, before any fit.** Ten arms share a point
+    directory, so calling it per arm makes the guard fire against the checkpoint the
+    previous arm of the same width just wrote (Finding AU, measured in Session 98: the
+    executable terminated at the second curve arm of the first width, having spent three
+    fits). The caller in `_execute_mode` is the one call site and it iterates the distinct
+    capacity points above the C9 gate.
+
+    Design section 11 records that on the ordinary path this guard does not fire, since
+    the run root is created absent and owned by this invocation. That statement is true of
+    the once-per-point placement and was false of the per-arm one; keep the placement and
+    the statement together.
     """
 
     directory = Path(directory)
@@ -2103,6 +2113,23 @@ def _execute_mode(args: argparse.Namespace) -> int:
         print(f"{X_DATA_MISSING}: {error}")
         return _terminal(X_DATA_MISSING, type(error).__name__)
 
+    # Invariant C2's per-point cleanliness, checked ONCE PER CAPACITY POINT and above
+    # every spend. Finding AU: this ran at the top of the curve loop until Session 98,
+    # which is once per ARM against a directory TEN arms share -- so the first arm at a
+    # width wrote its checkpoint and the second arm at the same width found it and took
+    # `X_OUTPUT_DIRTY` against this run's own output. The executable could never fit more
+    # than one arm per capacity point, and the run that measured it spent three fits to
+    # find out. Two properties are load-bearing here and neither may be quietly undone:
+    # the check is made once per point, and it is made BEFORE the C9 gate rather than
+    # after it, because an output-cleanliness refusal must not cost two equivalence fits.
+    try:
+        for point in sorted({channels for channels, _, _ in curve_arms()}):
+            point_dir = run_root / capacity_point_directory(point)
+            require_clean_capacity_point(point_dir)
+    except DevFitContractError as error:
+        print(f"{X_OUTPUT_DIRTY}: {error}")
+        return _terminal(X_OUTPUT_DIRTY, type(error).__name__)
+
     try:
         gate = equivalence_gate(
             examples_by_suite=examples,
@@ -2133,12 +2160,6 @@ def _execute_mode(args: argparse.Namespace) -> int:
 
     device = torch.device(protocol.device)
     for channels, suite, seed in curve_arms():
-        point_dir = run_root / capacity_point_directory(channels)
-        try:
-            require_clean_capacity_point(point_dir)
-        except DevFitContractError as error:
-            print(f"{X_OUTPUT_DIRTY}: {error}")
-            return _terminal(X_OUTPUT_DIRTY, type(error).__name__)
         curve_fits_attempted += 1
         try:
             net, history = fit_arm_at_width(

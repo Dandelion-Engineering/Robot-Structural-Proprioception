@@ -2119,3 +2119,200 @@ def test_the_checkpoint_names_are_unique_across_the_whole_sweep():
     equivalence = {cs.equivalence_relative_name(suite, seed) for suite, seed in cs.EQUIVALENCE_ARMS}
     assert len(equivalence) == len(cs.EQUIVALENCE_ARMS)
     assert not names & equivalence
+
+
+# ---------------------------------------------------------------------------
+# Finding AU (Session 98): the per-point cleanliness guard, and the run it killed
+# ---------------------------------------------------------------------------
+def _stubbed_execute_world(tmp_path, protocol, examples, monkeypatch):
+    """Stub every input above the curve loop so `main()` can run all forty arms.
+
+    Everything below the loop stays real: the loop itself, the per-point guard, the
+    checkpoint writer, `curve_arm_document`, `require_complete_sweep` and the terminal.
+    The fit is stubbed because this file fits nothing on the delivered rows -- but the
+    stub still returns a real network at the requested width, so the writer, the digest
+    and the shape map are exercised on genuine bytes.
+    """
+
+    identity = cs.sweep_code_identity()
+    monkeypatch.setattr(cs, "resolve_protocol", lambda: protocol)
+    monkeypatch.setattr(
+        cs,
+        "require_authorized_plan",
+        lambda *_args, **_kwargs: {"code_identity": identity, "run_label": "stage1-run-1"},
+    )
+    monkeypatch.setattr(cs, "read_json_document", lambda *_args, **_kwargs: {})
+    monkeypatch.setattr(cs, "require_anchor_comparability", lambda *_args: None)
+    monkeypatch.setattr(
+        cs,
+        "approved_anchor_arms",
+        lambda *_args: [
+            {
+                "channels": channels,
+                "fit_code_identity": identity,
+                "seed": seed,
+                "status": cs.ARM_REUSED,
+                "suite": suite,
+            }
+            for channels, suite, seed in cs.anchor_arms()
+        ],
+    )
+    monkeypatch.setattr(
+        cs,
+        "load_dev_examples",
+        lambda *_args: ({suite: examples for suite in MATCHED_FIT_SUITES}, {"role": "dev"}),
+    )
+
+    passing = cs.initial_equivalence_arm_records()
+    for record in passing:
+        record.update(
+            {
+                "comparison": cs.COMPARISON_PASS,
+                "fit_code_identity": identity,
+                "status": cs.ARM_COMPLETED,
+            }
+        )
+    monkeypatch.setattr(
+        cs,
+        "equivalence_gate",
+        lambda **_kwargs: {"arms": passing, "checkpoints_written": 2, "fits_attempted": 2},
+    )
+    monkeypatch.setattr(
+        cs,
+        "fit_arm_at_width",
+        lambda _examples, *, seed, channels, **_kwargs: (
+            cs.build_network(channels=channels, seed=seed),
+            [1.0, 0.5],
+        ),
+    )
+    return [
+        "--mode",
+        "execute",
+        "--base-dir",
+        str(tmp_path),
+        "--approved-plan",
+        str(tmp_path / "synthetic-plan.json"),
+        "--approved-plan-sha256",
+        "a" * 64,
+        "--data-root",
+        str(tmp_path / "synthetic-data"),
+    ]
+
+
+def test_execute_fits_every_arm_at_a_capacity_point_not_only_the_first(
+    tmp_path, protocol, examples, monkeypatch
+):
+    """Finding AU. Ten arms share a capacity-point directory; all ten must be fitted.
+
+    Until Session 98 `require_clean_capacity_point` was called at the top of the curve
+    loop -- once per ARM against a directory ten arms share. The first arm at a width
+    wrote its checkpoint; the second arm at the same width found it and took
+    `X_OUTPUT_DIRTY` against this run's own output, so the executable could not complete
+    a sweep at all. Every test in this file passed against that state, because none of
+    them ran two arms at one width through the loop. This is that test.
+
+    It asserts the whole shape rather than the exit code alone: forty `COMPLETED` arms,
+    ten checkpoints in each of the four point directories, and the counters the run
+    artifact reports.
+    """
+
+    argv = _stubbed_execute_world(tmp_path, protocol, examples, monkeypatch)
+    assert cs.main(argv) == cs.EXIT_CODES[cs.X_SWEEP_OK]
+
+    run_root = tmp_path / "stage1-run-1"
+    document = json.loads((run_root / cs.RUN_ARTIFACT).read_text(encoding="utf-8"))
+    assert document["exit"] == cs.X_SWEEP_OK
+    assert document["curve_fits_attempted"] == 40
+    assert document["curve_checkpoints_written"] == 40
+    assert document["rollouts_spent"] == 0
+
+    statuses = [arm["status"] for arm in document["curve_arms"]]
+    assert statuses.count(cs.ARM_COMPLETED) == 40
+    assert statuses.count(cs.ARM_REUSED) == 10
+    assert cs.ARM_UNATTEMPTED not in statuses
+
+    for channels in sorted({channels for channels, _, _ in cs.curve_arms()}):
+        point = run_root / cs.capacity_point_directory(channels)
+        assert len(sorted(point.glob("*.pt"))) == 10
+
+
+def test_the_cleanliness_guard_is_checked_once_per_point_and_above_every_spend(
+    tmp_path, protocol, examples, monkeypatch
+):
+    """The two properties of the Finding-AU repair, each able to fail on its own.
+
+    A behavioural test that only counted checkpoints would pass with the guard restored
+    to the loop but skipped after the first arm, and would pass with the guard left below
+    the C9 gate. Both are checked here directly: a stale checkpoint in ONE point directory
+    refuses, and it refuses **without the equivalence gate having been called**, because
+    an output-cleanliness refusal must not cost two equivalence fits.
+
+    The stale file has to be planted *after* the root is claimed, which is the only state
+    from which this guard can fire at all -- C2 claims `<base>/<run_label>/` with one
+    atomic create requiring absence, so nothing can pre-exist inside it. Wrapping
+    `claim_run_root` is therefore not a convenience: it is the construction that produces
+    the state the guard exists for, which is a foreign writer reaching a claimed root.
+    """
+
+    argv = _stubbed_execute_world(tmp_path, protocol, examples, monkeypatch)
+
+    real_claim = cs.claim_run_root
+
+    def _claim_then_dirty(base_dir, run_label):
+        root = real_claim(base_dir, run_label)
+        stale = root / cs.capacity_point_directory(48)
+        stale.mkdir(parents=True)
+        (stale / "capacity_sweep_ch048_S_seed2.pt").write_bytes(b"stale")
+        return root
+
+    monkeypatch.setattr(cs, "claim_run_root", _claim_then_dirty)
+
+    called: list[str] = []
+    monkeypatch.setattr(
+        cs,
+        "equivalence_gate",
+        lambda **_kwargs: called.append("c9") or pytest.fail("C9 ran below a dirty point"),
+    )
+
+    run_root = tmp_path / "stage1-run-1"
+    assert cs.main(argv) == cs.EXIT_CODES[cs.X_OUTPUT_DIRTY]
+    assert called == []
+    document = json.loads((run_root / cs.RUN_ARTIFACT).read_text(encoding="utf-8"))
+    assert document["exit"] == cs.X_OUTPUT_DIRTY
+    assert document["fits_attempted"] == 0
+    assert document["checkpoints_written"] == 0
+    assert [arm["status"] for arm in document["curve_arms"]].count(cs.ARM_UNATTEMPTED) == 40
+
+
+def test_the_cleanliness_guard_is_not_called_inside_the_curve_loop():
+    """The structural half, so the repair cannot be quietly undone by a refactor.
+
+    The behavioural tests above catch the defect; this one names it. The guard's single
+    call site must not be a descendant of the `for` statement that iterates `curve_arms()`,
+    because that placement is what made it fire against this run's own output.
+    """
+
+    tree = _module_ast()
+    execute = next(
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef) and node.name == "_execute_mode"
+    )
+    call_sites = [
+        node
+        for node in ast.walk(execute)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "require_clean_capacity_point"
+    ]
+    assert len(call_sites) == 1
+
+    arm_loops = [
+        node
+        for node in ast.walk(execute)
+        if isinstance(node, ast.For)
+        and isinstance(node.target, ast.Tuple)
+        and [element.id for element in node.target.elts] == ["channels", "suite", "seed"]
+    ]
+    assert len(arm_loops) == 1
+    assert not any(child is call_sites[0] for child in ast.walk(arm_loops[0]))
