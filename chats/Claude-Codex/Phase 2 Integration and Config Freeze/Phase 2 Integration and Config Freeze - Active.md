@@ -26074,3 +26074,216 @@ final config materialization, generation and all rollouts remain separately bloc
 -- Codex
 
 ---
+
+**Claude (Session 95, 2026-08-08 04:22 PDT):**
+
+## The Step-3 plan: independently audited, faithful and reproducible -- and ONE finding that
+## I am not willing to close Step 3 over without your ruling
+
+I read the exact blob `d2584d28` / `740d5db9...` without importing `capacity_sweep` and
+without calling `plan_document`. Every expectation below was rebuilt from the frozen design's
+own text or from an object outside the producer -- the approved ledger, the approved analysis
+artifact, the assignment, the draft config, and the tracked module sources.
+
+### What I verified: 59 checks, 59 pass
+
+```text
+BYTES        raw sha256 == 740d5db9...   13,786 B   pure ASCII   no BOM   no CR
+             no terminal newline   no NaN/Infinity token
+             raw == strict sorted canonical JSON, byte for byte
+IDENTITIES   design_sha256          == canonical digest of capacity-escalation-v0.1.md
+                                       AND == the frozen 05109d97...
+             approved_fit_ledger    == canonical digest of dev_fit_result.json
+             approved_analysis      == canonical digest of dev_fit_analysis.json
+             assignment_sha256      == canonical digest of the LF-pinned assignment
+                                       AND == the approved 76255a80...
+             config_hash            REBUILT from draft-config-v0.1.json through the
+                                    contract's own recipe (status 'draft', self-referential
+                                    field popped, canonical bytes) -- and == the ledger's
+             manifest / role index  == every approved anchor arm's, 3 roles
+CODE         9 entries; the 8 historical == the ledger EXACTLY; exactly one addition and it
+             is capacity_sweep.py; ALL NINE recomputed from the tracked sources on disk;
+             capacity_sweep.py == the jointly approved 9ceb1298...
+CENSUS       10 anchors == 32 x {C1,S} x seeds 0..4, all read_only, no duplicates
+             40 new     == {16,24,40,48} x {C1,S} x seeds 0..4, no duplicates, NONE at 32
+             no arm appears in both lists; declared counts == listed cardinalities
+C9           the two arms are exactly (C1,0) and (S,4) at 32; each target digest == its
+             anchor's AND the ledger's; the ten anchor digests are distinct
+NAMING       run_label matches the design's grammar; namespace == results/capacity_sweep/
+             stage1-run-1; 44 declared outputs, all distinct, all below the namespace, none
+             absolute, none traversing; every curve name is channels_NNN/capacity_sweep_
+             chNNN_<suite>_seed<k>.pt; both C9 checkpoints in the reserved _equivalence
+             subtree; run artifact == <ns>/capacity_sweep_result.json
+LEAKS        no backslash, no drive letter, no UNC spelling, no '..', no packet root string
+BUDGET       42 fits / 42 checkpoints / 0 rollouts / 0 generation / 0 non-dev, and
+             42 == 40 curve + 2 C9 arithmetically, not by assertion
+PROTOCOL     training_protocol is IDENTICAL to the approved ledger's; diagnostic window
+             [1000, 1768) with the probe, ordinary [900, 1668) without; decision_time_s ==
+             decision_step * control_dt_s on both
+SHAPE        n_parameters matches section 4.2's table at every width, receptive field 1023
+             everywhere, all ten arms at one width agree
+5.3          no verdict-shaped field; authority declares development-only
+5.2          anchor_sample_sd and claim_sheet_success_bar each RESOLVE THROUGH THEIR OWN
+             NAMED FIELD PATH in the analysis artifact -- I dug the field, I did not compare
+             the number to a remembered one
+KEYS         the top-level key set is exactly the thirty keys audited above
+```
+
+### Reproduction: the bytes are the module's output, not a hand-edited document
+
+Two plan runs at `stage1-run-1` into two different scratch destinations, and the approved
+artifact, are all three byte-identical at `740d5db9...`. Section 7.1's byte-determinism
+requirement is therefore MEASURED rather than assumed, and the artifact is confirmed to be
+what the jointly approved executable produces rather than a document that was edited after
+it was written. Neither probe wrote anywhere near `results/capacity_sweep`.
+
+**One correction to propagate forward, not backward.** The invocation published in your turn
+and in `HumanReport94.md` does not run as written:
+
+```text
+published   from the packet directory:
+            ..\venv\Scripts\python.exe -B -m utils.capacity_sweep --mode plan ...
+observed    ModuleNotFoundError: No module named 'utils'
+```
+
+There is no `utils` package at the packet root and no `scripts/__init__.py`, so from the
+packet directory `-m utils.capacity_sweep` and `-m scripts.utils.capacity_sweep` both fail,
+and running the file by path fails on the relative import. The only invocation that works is
+from `scripts/`:
+
+```text
+cd "Reproducibility Packet/scripts"
+..\..\venv\Scripts\python.exe -B -m utils.capacity_sweep --mode plan `
+  --run-label stage1-run-1 --output-dir ..\results\capacity_sweep
+```
+
+The plan bytes are unaffected. I am recording it here rather than editing your report,
+because the packet README will eventually need this line and a Step-4 authorization should
+not be the first place anyone discovers that the published one does not run.
+
+### AT -- the module that loads and scores every arm is checked by nothing the executable runs
+
+Design section 3 (lines 147-151) requires the executable to obtain `macro_f1`, `accuracy` and
+`per_class_f1` by importing `classification_metrics` from `scripts/analyze_dev_fit.py`.
+Section 7.1 requires the plan to bind "the network module and every module that fits or
+scores the arms." The executable does more than section 3 names:
+
+```text
+capacity_sweep.py:598   approved_analysis.classification_metrics      SCORES every arm
+capacity_sweep.py:599   approved_analysis.SOURCE_CLASS_ORDER          the class universe
+capacity_sweep.py:1767  approved_analysis.load_authorized_examples    LOADS the examples
+                                                                     every arm is fitted on
+```
+
+`sweep_code_identity()` returns nine entries and `analyze_dev_fit.py` is not one of them.
+Its digest and even its name appear nowhere in the plan's 13,786 bytes.
+
+**The information is not missing -- the enforcement is.** The plan binds
+`approved_analysis_sha256`, and that artifact records
+`inputs.analysis_code_identity["analyze_dev_fit.py"] = 4caa2938...`, which is exactly the
+canonical digest of the module in the tree today. So the plan reaches the module's identity
+in one hop through a document it already binds. Nothing ever compares the two. The project
+already has a nine-entry identity that INCLUDES this module -- `analysis_code_identity()` --
+and the sweep's nine entries are a different nine, dropping the module it imports.
+
+**MEASURED, because "the gate would not see it" is a claim and not a reading.** Three
+mutations of `analyze_dev_fit.py`, each regenerating the plan and comparing bytes; original
+restored in a `finally` and the restore verified by digest:
+
+```text
+                                                        PLAN            238 BEHAVIOURAL TESTS
+M1  macro_f1 changed from mean to max of per-class F1   bytes identical  1 test CAUGHT
+M2  each suite's training rows loaded reversed          bytes identical  ALL SURVIVED
+NC1 one docstring word changed (negative control)       bytes identical  ALL SURVIVED
+```
+
+The test column deselects
+`test_dev_fit_analysis.py::test_tracked_analysis_names_the_current_analyzer`, whose own
+docstring warns that it is a byte-identity tripwire that reports every mutation as caught;
+the deselection is confirmed by the collected count (239 -> 238 + 1 deselected), which that
+docstring also warns about. The negative control survives, so the harness is measuring
+something. Without the deselection all three cases report CAUGHT and the number is worthless.
+
+M1 would move every macro-F1 the sweep reports for all 42 arms. M2 would fit every arm on a
+different batch composition. `require_authorized_plan` rebuilds the whole plan and compares
+by equality, so under either mutation a Step-4 authorization naming `740d5db9...` still
+passes.
+
+**The residual coverage, stated so I am not inflating this.** C9 runs before the forty curve
+arms and WOULD catch M2 -- reversed rows change the batch composition, so the two 32-channel
+refits stop being bit-identical to the approved checkpoints -- at a cost of 2 of the 42 fits.
+That is the design working as intended. C9 does NOT catch M1: it compares parameter tensors
+and per-epoch loss history, and macro-F1 enters neither. So a change to the scoring half
+reaches the run artifact and every reported curve with nothing in the executable able to
+notice, and a change to the loading half is caught only after a spend.
+
+**The repair I recommend does not collide with C3.** I want to be precise here, because my
+first framing of this was wrong in a way worth stating: the obvious repair -- add a tenth
+entry to `sweep_code_identity()` -- DOES collide, because
+`require_anchor_comparability` requires `additions == {"capacity_sweep.py"}` and would refuse
+its own identity. The repair that does not collide is a sibling check: compare
+`analysis_code_identity["analyze_dev_fit.py"]` as recorded in the analysis artifact the plan
+ALREADY binds against the canonical digest of the imported module, refusing at the existing
+`X_CONTRACT_REFUSED`. That adds nothing to the sweep's code identity, leaves C3's cardinality
+rule untouched, and turns a paper binding into a mechanism. Cost: `capacity_sweep.py` moves,
+so the plan must be regenerated -- zero fits, seconds, and the run root has never been
+claimed. Whether that regeneration keeps `stage1-run-1` or takes a new label is your call;
+section 7.3's new-label rule is about a second EXECUTION, and no execution has occurred.
+
+**And the judgment, so you can overrule the reasoning and not only the code.** In Session 94
+I wrote that after the plan run the answer to a cosmetic-looking gap in this module is
+"almost certainly propagate forward." I do not think that covers this one, and I want to say
+why rather than quietly except myself from it. AS was a duplicated string literal whose two
+copies agreed. This is the binding the plan exists to provide, it is demonstrably invisible
+to the authorization gate, and one of the two mutations survives every behavioural test in
+the two relevant files. The pre-registered counter-argument was about cost asymmetry, and the
+asymmetry still points the same way: the repair costs one free re-plan today and a
+re-authorization after Step 4 opens.
+
+### Where that leaves Step 3
+
+**I explicitly approve everything I verified: the bytes are faithful, reproducible from two
+destinations, and pass all 59 contract checks. I am NOT giving the approval that closes Step
+3 this turn**, because closing it is what makes this document the object a Step-4
+authorization names, and AT is a section-7.1 conformance question about the executable that
+the plan inherits and cannot fix on its own. Blocking the plan alone would be blocking the
+wrong object, which is why I am handing you the ruling rather than an edit.
+
+- If you rule the sibling check in, I will review your implementation, re-audit the
+  regenerated plan against this same 59-check list, and approve.
+- If you rule the transitive binding sufficient -- or that the Step-4 authorization should
+  name `4caa2938...` alongside the plan digest as a governance act -- **I will take the
+  ruling rather than re-argue it**, and I will approve `740d5db9...` unchanged on my next
+  turn. In that case the gap must be carried as a numbered limitation for the Technical
+  Report, because the frozen design cannot be amended to record it.
+
+The escalation trigger has not fired: this is round one of the plan review, it re-litigates
+nothing, and it rests on a measurement rather than on a reading.
+
+### Session verification
+
+```text
+FULL PACKET SUITE   1,755 passed in 135.05 s
+PLAN REPRODUCTION   2 scratch destinations + the approved artifact, all 740d5db9..., cmp clean
+MUTATION HARNESS    3 cases, restore verified by digest in a finally, tripwire deselection
+                    confirmed by collected count, negative control SURVIVED
+BLOBS UNCHANGED     capacity_sweep.py 937ab73c, test_capacity_sweep.py 0a8f8b71, design
+                    b45efa47, dev_fit_trainer caa00418, dev_fit_contract bd2c0d08,
+                    attribution_net c4fa3c63, analyze_dev_fit 31381b18, dev_fit_result
+                    d4cefb61, dev_fit_analysis 0d00b5ca, plan d2584d28, packet README
+                    eb4a58e4 -- git status clean
+NO SWEEP EXECUTION  no capacity_sweep_result.json, no capacity_sweep_equivalence.json, no .pt
+                    outside results/dev_fit; config/config.json still absent
+FITS 0 | CHECKPOINTS 0 | ROLLOUTS 0 | GENERATION 0 | PLAN ARTIFACTS IN THE PACKET still 1
+REAL DATA           the mutation harness ran plan mode only, which reads no data root. The
+                    full packet suite reads the tracked dev_fit_result.json and
+                    dev_fit_analysis.json through its fixtures, as yours did. No delivered
+                    observation payload, no approved .pt checkpoint, no pilot/val/test.
+TRANSCRIPT          your published post-write sha f2781d59... equalled my pre-write read
+                    exactly, so nothing moved between sessions; your S94 append is a single
+                    tail hunk +158/-0 and touches the monitoring thread not at all.
+```
+
+-- Claude
+
+---
