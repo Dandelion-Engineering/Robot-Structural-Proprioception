@@ -392,6 +392,65 @@ def test_the_analyzer_guard_refuses_changed_imported_bytes(tmp_path, monkeypatch
         cs.require_approved_analyzer_identity(analysis)
 
 
+def test_the_analyzer_guard_accepts_the_same_module_checked_out_with_crlf(
+    tmp_path, monkeypatch
+):
+    """Requirement (cc): the analyzer digest is taken in the TEXT domain, not the raw one.
+
+    `analyze_dev_fit.py` carries no `text eol=lf` pin -- `git check-attr` reports both
+    `text` and `eol` unspecified -- and this repository is developed with
+    `core.autocrlf=true`, which the root `.gitattributes` comment records as the reason
+    the pinned files are pinned. So the fresh Windows clone the Reproducibility Packet
+    exists to serve materializes this module with CRLF, and its raw digest there
+    (`3e06846a...`, measured Session 96) is not the `4caa2938...` the approved analysis
+    artifact recorded. A raw-domain guard would therefore refuse a legitimate plan on
+    every such clone while passing on the LF development tree, which is exactly the
+    failure a mutation of this call cannot be caught by any test that only runs here.
+    """
+
+    source = Path(approved_analysis.__file__).read_bytes()
+    crlf = source.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
+    assert crlf != source, "the development tree is already CRLF; the case is inert"
+    materialized = tmp_path / "analyze_dev_fit.py"
+    materialized.write_bytes(crlf)
+    assert hashlib.sha256(crlf).hexdigest() != hashlib.sha256(source).hexdigest()
+
+    monkeypatch.setattr(cs.approved_analysis, "__file__", str(materialized))
+    analysis = json.loads(APPROVED_ANALYSIS_PATH.read_text(encoding="utf-8"))
+    recorded = analysis["inputs"]["analysis_code_identity"]["analyze_dev_fit.py"]
+    assert cs.require_approved_analyzer_identity(analysis) == recorded
+
+
+@pytest.mark.parametrize(
+    "malformed",
+    [
+        None,
+        "",
+        "not-a-digest",
+        4,
+        # The correct digest, upper-cased: a value check alone would still refuse this,
+        # but with the wrong reason, so only asserting the reason separates the two.
+        "4CAA29384F6C33D573C82A11324294E372FE3FA3F63E061FF59ACECBDFB3C2F1",
+        # One character short of the correct digest.
+        "4caa29384f6c33d573c82a11324294e372fe3fa3f63e061ff59acecbdfb3c2f",
+    ],
+)
+def test_the_analyzer_guard_names_a_malformed_recorded_identity(malformed):
+    """Requirement (s): the shape refusal is driven, and by its own REASON.
+
+    Without this the shape guard is deletable in silence -- the value comparison one line
+    below refuses every case here anyway, so the suite stays green while the artifact's
+    ledger stops being validated and the operator is told the analyzer moved when in fact
+    the record is unreadable. Measured Session 96: deleting the guard survived all 207
+    committed tests.
+    """
+
+    analysis = json.loads(APPROVED_ANALYSIS_PATH.read_text(encoding="utf-8"))
+    analysis["inputs"]["analysis_code_identity"]["analyze_dev_fit.py"] = malformed
+    with pytest.raises(DevFitContractError, match="no valid analyzer code identity"):
+        cs.require_approved_analyzer_identity(analysis)
+
+
 # ---------------------------------------------------------------------------
 # Invariant C3 against the real approved ledger
 # ---------------------------------------------------------------------------
