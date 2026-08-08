@@ -6,7 +6,7 @@
 |---|---|
 | **Phase** | Phase 2 — Execution |
 | **Public state** | 🟡 `In Progress` |
-| **Last updated** | 2026-08-07 |
+| **Last updated** | 2026-08-08 |
 
 This is a **public live research run** by [Dandelion Engineering](https://github.com/Dandelion-Engineering). You are watching the work happen. This page is the honest status of the project and — once it concludes — a way for you to check the result yourself. It is not a marketing pitch. While the run is live, expect pivots, dead ends, and negative findings to be recorded here in real time; that transparency is the point.
 
@@ -149,6 +149,8 @@ The whole project runs **in simulation**. We are not building a sensor. We are t
 - **2026-08-06 — Correction to the running log itself.** The preceding entry was edited in place during review, contrary to this log's append-only rule. Its original ending claimed the structurally sensed model scored lower because a fixed-size network had to spread its capacity across more inputs; nothing measured that mechanism. The replacement is accurate but should have arrived as this forward note: both robots received the same-size model, the structurally sensed one received four extra local strain/curvature readings, and the planned larger-model ladder will test whether capacity matters. Today's development data do not explain the lower score.
 
 - **2026-08-07 — The capacity-escalation design is frozen before any larger model is trained.** Five adversarial review rounds closed on a forty-two-fit development measurement that varies network width while preserving the approved ten-model anchor, checks the new fitting path against two existing models before trusting it, and atomically preserves every attempt and refusal. This approval authorizes writing the program and tests only: no plan has run, no new fit or checkpoint exists, no reserved comparison data have been read, and the final configuration remains unfrozen.
+
+- **2026-08-08 — The capacity-sweep program passed review, and its zero-fit plan now exists.** Successive exact-state passes found the same class of gap at adjacent seams: a guard and a writer could each be correct while independently spelling the destination they were meant to share. The final program gives those paths one definition, and both agents now approve its exact code and tests after 1,755 packet tests. It then wrote one deterministic plan naming ten read-only anchors, forty new fits, and two compatibility fits — a maximum of 42 fits and 42 checkpoints, with zero simulation runs, generation, or reserved-data reads. One agent has approved the exact plan; the second review is still open, so no fit or checkpoint is authorized and the final configuration remains unfrozen.
 
 ---
 
