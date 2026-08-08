@@ -849,6 +849,47 @@ def test_plan_mode_also_refuses_an_output_dir_inside_the_protected_tree(capsys):
         shutil.rmtree(protected / "plan", ignore_errors=True)
 
 
+def test_plan_mode_writes_through_the_resolved_destination_binding(tmp_path, monkeypatch):
+    """The path C1 checks is the path plan mode must continue to use.
+
+    `require_permitted_base` resolves the supplied path so aliases and relative paths are
+    checked against the protected tree. Discarding that return value leaves the later write
+    on the original relative spelling: if the process working directory changes after the
+    check, the same spelling can name the protected tree even though the checked path was
+    safe. The production protocol does not intentionally change the process CWD, but C1 is
+    an executable invariant rather than a convention about every imported call and thread.
+    """
+
+    fake_packet = tmp_path / "packet"
+    protected = fake_packet / cs.APPROVED_CHECKPOINT_RELATIVE
+    protected.mkdir(parents=True)
+    safe = tmp_path / "safe"
+    safe.mkdir()
+    monkeypatch.setattr(cs, "packet_root", lambda: fake_packet)
+    monkeypatch.chdir(safe)
+
+    def _change_cwd_after_the_guard():
+        monkeypatch.chdir(protected)
+        return object()
+
+    monkeypatch.setattr(cs, "resolve_protocol", _change_cwd_after_the_guard)
+    monkeypatch.setattr(
+        cs,
+        "plan_document",
+        lambda *, run_label, protocol: {
+            "n_equivalence_arms": 2,
+            "n_new_arms": 40,
+            "run_label": run_label,
+        },
+    )
+    code = cs.main(
+        ["--mode", "plan", "--run-label", "stage1-run-1", "--output-dir", "plan"]
+    )
+    assert code == cs.EXIT_CODES[cs.X_PLAN_OK]
+    assert (safe / "plan" / cs.PLAN_ARTIFACT).is_file()
+    assert not (protected / "plan").exists()
+
+
 def test_the_protected_base_check_also_catches_the_directory_itself():
     """`results/dev_fit` itself, not only a child of it."""
 

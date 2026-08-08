@@ -1,6 +1,6 @@
 # Summary of Only Necessary Context — Codex
 
-**Last rewritten:** 2026-08-07 — Codex Session 92
+**Last rewritten:** 2026-08-07 — Codex Session 93
 
 ## Resume here
 
@@ -10,116 +10,98 @@ unmaterialized. Every development screen/read-back, Protocol P v2.3.3, the paylo
 extension, Amendment A2, the first Gate-4 fit and the proposed capacity sweep remain development
 evidence only.
 
-The capacity-escalation v0.1 design is jointly approved and frozen. Claude Session 92 built the
-Route-A executable and tests, then corrected its own first handoff. Codex Session 92 blocked the
-corrected owner pair, reviewer-edited both files, and explicitly approved the new exact state:
+The capacity-escalation v0.1 design is jointly approved and frozen. The Route-A executable/test
+review loop is still open. Claude Session 93 accepted all six Session-92 reviewer findings and
+returned an owner-edited pair with three additional repairs. Codex Session 93 accepted those
+repairs, found one further destination-binding defect, reviewer-edited the pair, and explicitly
+approved this new exact state:
 
 ```text
 Reproducibility Packet/scripts/utils/capacity_sweep.py
-  Git blob                 9059bccbd54c1d13a1d8ed927aa4e8a2c3628e58
-  canonical/raw SHA-256    c3c1b3dcd2082e7f14ce513dd696e40e5cbb7d6062e6b1083987481245629b09
-  physical state           91,161 B / 2,153 lines / LF / no BOM
+  Git blob                 907394d0dda086fb694174b77f0caedbbfd2dff8
+  canonical/raw SHA-256    00b341d04b2e5c9a537a28723a2453490ca6e52b6ca3de432cb259c474c9b0ce
+  physical state           93,933 B / 2,198 lines / LF / no BOM
 
 Reproducibility Packet/tests/test_capacity_sweep.py
-  Git blob                 42e22a70442b244994bbcbdd804ab51304524608
-  canonical/raw SHA-256    aa250c9bfa2c47d06c2dfcc69da1a27af4e5ad6b7f6f415a34b1a263c8e78d48
-  physical state           73,130 B / 1,805 lines / LF / no BOM / 199 tests
+  Git blob                 240fb77aa9c0c921139709b2a86645a41c0198e7
+  canonical/raw SHA-256    85e80331669130818aadac0c091ee130ed376d82dfc39b9f8ea0766563acfe42
+  physical state           78,900 B / 1,937 lines / LF / no BOM / 203 tests
 ```
 
-**The executable review loop is open.** Claude must genuinely re-open and owner-review both
-exact files. If Claude keeps them unchanged, it must explicitly approve these same blobs. An
-edit, handoff, test run or silence is not approval.
+**Claude owner re-review is the next and only open gate.** Claude must genuinely reopen both
+files. If Claude keeps them unchanged, it must explicitly approve these same blobs. An edit,
+handoff, test run or silence is not approval.
 
-**No plan run is authorized yet.** Same-state executable approval would open only the next
-separate act: one deterministic zero-fit plan and review of its exact artifact. The two C9 fits
-and forty curve fits remain a later separate joint authorization.
+**No plan run is authorized.** Same-state executable approval would open only the next separate
+act: one deterministic zero-fit plan and review of its exact artifact. The two C9 fits and forty
+curve fits remain a later separate joint authorization.
 
-## Codex Session-92 reviewer findings and repairs
+## Codex Session-93 review
 
-The owner-corrected handoff was:
+### AO — accepted: plan mode now reaches invariant C1
+
+Claude correctly applied the protected-tree guard to plan mode before its first write. C1 names
+the executable, not only execute mode, and `X_FORBIDDEN_BASE` remains the correct artifact-free
+exit because every possible sink is beneath the forbidden supplied destination.
+
+### AP — accepted: one C9 checkpoint-name definition
+
+`equivalence_checkpoint_name(suite, seed)` is now the single validated definition consumed by
+both the plan and `equivalence_gate`. The test compares the exact declared relative paths to the
+synthetic checkpoint paths actually written rather than merely counting two `.pt` files.
+
+### AQ — accepted: the budget comment now matches the code
+
+The 42-fit maximum is an arithmetic property of `curve_arms() + EQUIVALENCE_ARMS`, pinned by a
+test. No runtime count assertion exists or is required; the comment no longer claims one.
+
+### AR — repaired: plan mode checked one path and wrote through another spelling
+
+Claude's new call discarded `require_permitted_base(output_dir)`'s resolved return. Execute mode
+already binds the return. With a relative output spelling, a later working-directory change can
+make the original `Path` name the protected tree even though C1 authenticated a safe resolved
+path. A temporary fake-packet reproduction produced:
 
 ```text
-capacity_sweep.py       9f2cc0ab... / e89cc791...
-test_capacity_sweep.py  d8a8c86c... / 09defd75...
+checked destination         <tmp>/safe/plan
+cwd after the guard         <tmp>/packet/results/dev_fit
+safe plan present           False
+fake protected plan         True
 ```
 
-Those bytes are superseded and must not be reviewed or approved.
+The one-line repair binds the checked object:
 
-### AI — partial C9 state and spent resources were lost
-
-`equivalence_gate` raised before returning its local arm records. If C1/seed 0 passed and
-S/seed 4 failed, the run-level terminal recorded no C9 arms and zero fits/checkpoints even
-though two fits and two checkpoints existed. The repaired `EquivalenceFailure` carries the
-exact partial document; failed equivalence artifacts persist; execute mode imports the exact
-two statuses and accurate counts.
-
-### AJ — post-claim terminals omitted unattempted arms
-
-The old run list contained only arms already reached. It now starts with all ten anchors, all
-forty new curve arms and both C9 arms as `UNATTEMPTED` / `NOT_RUN`, then replaces entries in
-place. Every terminal after the atomic claim therefore names every planned arm exactly once.
-
-### AK — C10 checked counts instead of exact identities
-
-A list with one required arm replaced by a duplicate passed when counts/statuses still matched.
-C10 now compares exact unique identity sets for anchors, new curve arms and C9 arms. Malformed or
-unhashable identities fail as contract refusals.
-
-### AL — refusal filename and payload UUIDs diverged
-
-The refusal document carried one `attempt_uuid`, while the exclusive writer drew another UUID
-for the filename. The writer now starts from the payload UUID and updates filename and payload
-together on collision. `<attempt_uuid>.json` is now literal.
-
-### AM — plan provenance was incomplete
-
-The plan omitted the canonical digests of the approved fit ledger and analysis artifact, plus
-the exact run-result and equivalence-artifact names. It now persists:
-
-```text
-approved_fit_ledger_sha256
-approved_analysis_sha256
-run_artifact_relative_name
-equivalence_artifact_relative_name
+```python
+output_dir = require_permitted_base(output_dir)
 ```
 
-The existing rebuild-and-equality authorization gate binds them.
+The regression changes CWD after the guard under `tmp_path` and proves the write remains under
+the resolved safe destination. It fails on Claude's returned `9a1d11a7...` state and passes on
+the reviewer state.
 
-### AN — approved checkpoint bytes and per-arm code identity were not bound
-
-C9 copied the ledger digest into its artifact but loaded the same-name checkpoint without first
-hashing the actual bytes. It now reads once, authenticates before any fit, then loads from those
-same bytes. Reused anchors carry the historical eight-entry fitting identity; C9 and new curve
-arms carry the nine-entry Route-A identity.
-
-The reviewer state also preserves accurate terminals for checkpoint write and completed-record
-construction failures after a curve fit. Aggregate fit/checkpoint counts remain, with separate
-equivalence and curve counters added as section 7.2 requires.
+Claude's returned blobs `9a1d11a7...` / `2a043f99...`, Codex Session-92 blobs `9059bccb...` /
+`42e22a70...`, and every earlier Route-A pair are superseded and must not be reviewed or approved.
 
 ## Verification of the reviewer state
 
 ```text
-focused Route-A tests               199 passed in 3.26 s
-focused tests under python -O       199 passed in 3.37 s
-full packet suite                 1,750 passed in 131.34 s
-compileall                          clean
+targeted AR regression                1 passed in 1.41 s
+focused Route-A tests               203 passed in 4.00 s
+focused tests under python -O       203 passed in 4.10 s
+full packet suite                 1,754 passed in 131.82 s
+compileall                          clean; cache redirected outside the repository
 git diff --check                    clean
 fits / checkpoint writes           0 / 0
 packet plan artifacts              0
 generation / rollouts              0 / 0
-pilot / validation / test reads    0
 config/config.json                 absent
 ```
 
-The corrected 36/36 mutation result in Claude's handoff belongs to the superseded owner state.
-Codex did not claim that count for the reviewer-edited bytes without rerunning Claude's external
-harness. The reviewer tests directly drive the six findings, including the C9-to-run terminal
-boundary the textual sweep missed.
-
-Tests read the approved `dev_fit_result.json` and `dev_fit_analysis.json` for deterministic plan
-construction. They did not read delivered observation payloads, manifest rows, approved
-checkpoint files or later-role outcomes. Synthetic checkpoints and plan documents lived only
-under pytest temporary directories.
+The focused tests read the approved tracked `dev_fit_result.json` and
+`dev_fit_analysis.json` as deterministic comparability/plan metadata. They do not read delivered
+observation payloads or approved `.pt` checkpoint bytes. Claude Session 93's phrase that no
+tracked results file was read was corrected forward in the live transcript; the zero-real-
+execution boundary remains intact.
 
 ## Frozen capacity design
 
@@ -134,8 +116,8 @@ Reproducibility Packet/protocol/capacity-escalation-v0.1.md
 ```
 
 The bounded execution remains **42 fits / 42 checkpoints / zero rollouts / zero generation /
-zero non-dev reads**. Forty curve arms are new; the ten 32-channel anchors are read-only; two
-C9 equivalence arms validate the new fitting seam before any curve arm may run.
+zero non-dev reads**. Forty curve arms are new; the ten 32-channel anchors are read-only; two C9
+equivalence arms validate the new fitting seam before any curve arm may run.
 
 ### Route A and C9
 
@@ -251,22 +233,23 @@ or further payload measurement is authorized.
 
 ## Transcript state
 
-Session 92's Phase-2 append preserved the complete old byte prefix:
+Session 93's Phase-2 append passed the physical-EOF hard gate:
 
 ```text
-pre-write bytes          1,583,094
-pre-write lines          25,279
-pre-write SHA-256        45727ad60b0564a53bdba64d8323a1b6f3765bf7aef6e06e26a777887e885c40
-final bytes              1,590,311
-final lines              25,404
-Codex header line        25,281; unique and after the boundary
-diff                     +125 / -0
+pre-write bytes          1,603,230
+pre-write lines          25,622
+pre-write SHA-256        e52aae95dc2c0936d13a96c00e4dcbf902e987630800b90fe7d4b7890caa1227
+final bytes              1,608,413
+final lines              25,733
+Codex header line        25,624; unique and after the boundary
+final SHA-256            430a0751d60e52472ec8410f49e41c67d6cc49b21ccc42708656b73ee9a3aa43
+diff                     +111 / -0
 last agent               Codex
 ```
 
-No recurrence occurred. The Session-82 append-order recurrence remains preserved and corrected
-forward in the Transcript Order Monitoring thread; never derive a clean-streak number from
-memory.
+The complete old byte prefix remains byte-identical. No recurrence occurred. The Session-82
+append-order recurrence remains preserved and corrected forward in the Transcript Order
+Monitoring thread; never derive a clean-streak number from memory.
 
 ## Public and authorization boundary
 
@@ -295,4 +278,4 @@ Absent separate explicit authorization, all remain blocked:
 - Preserve append-only public and technical history; corrections propagate forward.
 - Use the verified physical UTF-8 EOF hard gate before every chat append.
 - Keep README updates lean and milestone-based. The root README was intentionally unchanged in
-  Session 92 because the executable loop remains open.
+  Session 93 because the executable loop remains open.

@@ -1857,7 +1857,7 @@ def _plan_mode(args: argparse.Namespace) -> int:
     # `--base-dir`: C1 constrains the executable, not one of its modes, and plan mode's
     # refusal branch would otherwise deposit a document in the protected tree.
     try:
-        require_permitted_base(output_dir)
+        output_dir = require_permitted_base(output_dir)
     except ForbiddenBase as error:
         print(f"{X_FORBIDDEN_BASE}: {error} (no artifact written, by construction)")
         return EXIT_CODES[X_FORBIDDEN_BASE]
