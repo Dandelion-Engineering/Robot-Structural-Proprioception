@@ -368,6 +368,30 @@ def test_dev_fit_trainer_stays_inside_the_sweeps_code_identity():
     assert "dev_fit_trainer.py" in cs.sweep_code_identity()
 
 
+def test_the_imported_analyzer_matches_the_identity_in_the_bound_analysis():
+    """Section 7.1's analyzer binding is an executable comparison, not one-hop paper."""
+
+    analysis = json.loads(APPROVED_ANALYSIS_PATH.read_text(encoding="utf-8"))
+    recorded = analysis["inputs"]["analysis_code_identity"]["analyze_dev_fit.py"]
+    assert cs.require_approved_analyzer_identity(analysis) == recorded
+
+
+def test_the_analyzer_guard_refuses_changed_imported_bytes(tmp_path, monkeypatch):
+    """AT: a scoring/loading mutation cannot leave the pre-spend plan gate green."""
+
+    altered = tmp_path / "analyze_dev_fit.py"
+    altered.write_text(
+        Path(approved_analysis.__file__).read_text(encoding="utf-8")
+        + "\n# synthetic scoring/loading mutation\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    monkeypatch.setattr(cs.approved_analysis, "__file__", str(altered))
+    analysis = json.loads(APPROVED_ANALYSIS_PATH.read_text(encoding="utf-8"))
+    with pytest.raises(DevFitContractError, match="imported analyzer differs"):
+        cs.require_approved_analyzer_identity(analysis)
+
+
 # ---------------------------------------------------------------------------
 # Invariant C3 against the real approved ledger
 # ---------------------------------------------------------------------------
@@ -775,6 +799,25 @@ def test_the_gate_refuses_a_plan_written_by_another_code_state(tmp_path, protoco
         cs.require_authorized_plan(
             path, expected_sha256=canonical_text_sha256(path), protocol=protocol
         )
+
+
+def test_the_gate_refuses_if_the_imported_analyzer_moves_after_planning(
+    plan_file, tmp_path, protocol, monkeypatch
+):
+    """AT: an authorized plan cannot spend against unbound scoring/loading bytes."""
+
+    path, digest, _ = plan_file
+    altered = tmp_path / "changed" / "analyze_dev_fit.py"
+    altered.parent.mkdir()
+    altered.write_text(
+        Path(approved_analysis.__file__).read_text(encoding="utf-8")
+        + "\n# synthetic post-plan mutation\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    monkeypatch.setattr(cs.approved_analysis, "__file__", str(altered))
+    with pytest.raises(DevFitContractError, match="imported analyzer differs"):
+        cs.require_authorized_plan(path, expected_sha256=digest, protocol=protocol)
 
 
 def test_the_gate_refuses_an_absent_document(tmp_path, protocol):

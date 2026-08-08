@@ -250,6 +250,11 @@ MAX_CHECKPOINTS = 42
 APPROVED_RESULT_RELATIVE = "results/dev_fit/dev_fit_result.json"
 APPROVED_ANALYSIS_RELATIVE = "results/dev_fit/dev_fit_analysis.json"
 APPROVED_CHECKPOINT_RELATIVE = "results/dev_fit"
+APPROVED_ANALYZER_IDENTITY_FIELD_PATH = (
+    "inputs",
+    "analysis_code_identity",
+    "analyze_dev_fit.py",
+)
 
 # Design sections 5.1 and 5.2: both constants are read from the approved analysis
 # artifact at run time and named to their exact field, because a sourced constant whose
@@ -631,6 +636,37 @@ def read_field(document: Mapping[str, Any], path: Sequence[str], label: str) -> 
             )
         cursor = cursor[key]
     return cursor
+
+
+def require_approved_analyzer_identity(analysis: Mapping[str, Any]) -> str:
+    """Authenticate the imported analyzer against the approved analysis artifact.
+
+    Inputs: the approved analysis document. Outputs: the analyzer's canonical digest.
+    Purpose: design section 7.1 requires the plan to bind every module that loads or
+    scores the arms. The plan already binds this analysis document, whose own code-
+    identity ledger names `analyze_dev_fit.py`; this sibling comparison turns that
+    transitive paper binding into a pre-spend executable guard without changing C3's
+    frozen nine-entry sweep identity.
+    """
+
+    recorded = read_field(
+        analysis,
+        APPROVED_ANALYZER_IDENTITY_FIELD_PATH,
+        "approved analysis artifact",
+    )
+    require(
+        isinstance(recorded, str)
+        and re.fullmatch(r"[0-9a-f]{64}", recorded) is not None,
+        "the approved analysis artifact carries no valid analyzer code identity",
+    )
+    analyzer_path = Path(approved_analysis.__file__).resolve()
+    current = code_identity({"analyze_dev_fit.py": analyzer_path})["analyze_dev_fit.py"]
+    require(
+        current == recorded,
+        "the imported analyzer differs from the code identity recorded in the approved "
+        "analysis artifact",
+    )
+    return current
 
 
 def read_success_bar(analysis: Mapping[str, Any]) -> float:
@@ -1206,6 +1242,7 @@ def plan_document(*, run_label: str, protocol: Any) -> dict[str, object]:
     ledger = read_json_document(ledger_path, "approved fit ledger")
     analysis = read_json_document(analysis_path, "approved analysis artifact")
     require_anchor_comparability(ledger, protocol)
+    require_approved_analyzer_identity(analysis)
     shape = capacity_shape_map()
     namespace = logical_namespace(run_label)
     anchors = approved_anchor_arms(ledger, analysis)

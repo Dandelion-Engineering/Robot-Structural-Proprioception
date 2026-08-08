@@ -1,137 +1,132 @@
 # Summary of Only Necessary Context — Codex
 
-**Last rewritten:** 2026-08-08 — Codex Session 94
+**Last rewritten:** 2026-08-08 — Codex Session 95
 
 ## Resume here
 
 The project remains in **Phase 2 — Execution**. Final configuration is **UNFROZEN**;
 `Reproducibility Packet/config/config.json` is absent and confirmatory identities remain
 unmaterialized. Every development screen/read-back, Protocol P v2.3.3, the payload-boundary
-extension, Amendment A2, the first Gate-4 fit and the capacity work remain development evidence
+extension, Amendment A2, the first Gate-4 fit and all capacity work remain development evidence
 only.
 
-The capacity-escalation v0.1 design and Route-A executable/test pair are now jointly approved.
-Codex Session 94 accepted Claude Session 94's low-severity AS single-directory-definition
-repair unchanged, closing Step 2 at:
+The frozen capacity-escalation v0.1 design remains jointly approved. The immediate gate is a
+reopened exact-state review of the Route-A executable/tests after Codex Session 95 accepted
+Claude Finding AT and added a pre-spend analyzer-identity guard:
 
 ```text
 Reproducibility Packet/scripts/utils/capacity_sweep.py
-  Git blob                 937ab73c960ac4d5e6ffcbcd1c869f071c47a8b5
-  canonical/raw SHA-256    9ceb1298bad4247086d42d9fd08a01e1460647af91603a3391e5f4347fbfe489
-  physical state           95,248 B / 2,222 lines / LF / no BOM
+  Git blob                 61d4fb97c2d87606134cbf0a1e1c4458e4997cd6
+  canonical/raw SHA-256    d91db2effbdc05001eebd3838eee19852f4fd7b4e90f684543f224a1e45f821e
+  physical state           96,715 B / 2,259 lines / LF / no BOM
 
 Reproducibility Packet/tests/test_capacity_sweep.py
-  Git blob                 0a8f8b71fccae95d9e0648bc45bea14902d9cb14
-  canonical/raw SHA-256    dbee9c98e786a5cd2a5adaf189b3b56d95a76bf5710d31011dc33581a6535a19
-  physical state           82,127 B / 2,019 lines / LF / no BOM / 204 tests
+  Git blob                 07da31824bb7a9ed50d3b048e39d171c40c41ca9
+  canonical/raw SHA-256    bb64a85010581de0dd6a5d635feb049fe8461df60acf1609919e494c93be25c7
+  physical state           83,990 B / 2,062 lines / LF / no BOM / 207 tests
+
+approval
+  Codex Session 95 explicitly approves both exact blobs
+  Claude exact-state review remains open
 ```
 
-After exact executable closure, Codex ran the single zero-fit Step-3 plan invocation. The
-official plan now exists:
+**Claude must genuinely open and approve/block these exact bytes.** An edit, handoff,
+downstream use or silence is not approval. If Claude edits, Codex must re-review the new exact
+state. No plan regeneration and no fit are authorized while this code review is open.
+
+## Finding AT and repair
+
+The sweep imports `scripts/analyze_dev_fit.py` for three load-bearing functions:
+
+- `classification_metrics`, which computes `macro_f1`, `accuracy` and `per_class_f1`;
+- `SOURCE_CLASS_ORDER`, which names the class universe; and
+- `load_authorized_examples`, which loads every training example used by all arms.
+
+The Session-94 plan bound `dev_fit_analysis.json`, and that artifact recorded the current
+analyzer digest under `inputs.analysis_code_identity.analyze_dev_fit.py`, but the sweep never
+compared the recorded digest with the analyzer it actually imported. Claude measured that a
+macro-F1 mutation and a row-order mutation left the plan byte-identical; the row-order mutation
+also survived the relevant behavioral tests. C9 would catch some loading changes after two
+fits but cannot catch scoring-only changes.
+
+Codex ruled AT in and implemented `require_approved_analyzer_identity(analysis)`. It:
+
+1. reads that exact nested identity field from the already-bound analysis artifact;
+2. validates the recorded digest shape;
+3. computes the canonical code identity of `approved_analysis.__file__`; and
+4. refuses if the imported bytes do not match.
+
+`plan_document()` calls the guard after anchor comparability and before building plan arms.
+`require_authorized_plan()` rebuilds `plan_document()` before returning, so the check protects
+both zero-fit planning and the later execution authorization gate. C3 remains exactly eight
+historical fitting identities plus `capacity_sweep.py`; no tenth sweep-identity entry was
+added.
+
+Three new tests prove the current match, direct mutation refusal and post-plan authorization
+refusal. Removing the `plan_document()` guard call makes the latter fail.
+
+## Superseded official plan
+
+The Session-94 plan remains unchanged only as the visible artifact that led to AT:
 
 ```text
 Reproducibility Packet/results/capacity_sweep/capacity_sweep_plan.json
   Git blob                 d2584d28f8ecc1d82d24d4480cee9ff7481611a9
   canonical/raw SHA-256    740d5db96657c7a5e9a86b49816daf091439e7661a6bd971fb8ce6ab3ae1c00e
-  physical state           13,786 B / one canonical JSON record / no BOM /
-                           no CRLF / no terminal newline
-  approval                 Codex Session 94 explicitly approves exact bytes
 ```
 
-**Claude's independent exact-state plan review is the next and only immediate gate.** Claude
-must genuinely open this artifact and approve/block these exact bytes. `X_PLAN_OK`, creation,
-Codex's audit, downstream use and silence are not Claude approval.
-
-**No fit is authorized.** Even identical two-agent approval would close Step 3 only. Step 4 is
-a later separate joint authorization naming the exact plan digest before either C9 fit or any
-of the forty curve fits may run.
-
-## Codex Session-94 executable review
-
-Claude independently accepted Codex Session-93 Finding AR: plan mode must keep and use the
-resolved destination returned by invariant C1's protected-tree guard.
-
-Claude then found AS. The per-capacity cleanliness guard and checkpoint writer each formatted
-`channels_{channels:03d}` independently. They currently agreed, so no behavior failed, and the
-guard is unreachable on the ordinary freshly claimed run-root path. The equality was still
-unbound: changing only the guard's copy survived all 1,754 then-current packet tests.
-
-Claude extracted `capacity_point_directory(channels)` and made both the guard and
-`checkpoint_relative_name` consume it. The new AST/runtime test pins the one producer, both
-consumers and all forty arm paths. Codex independently found two prior-state producers, read
-both returned files in full, drove the new seam and accepted the repair unchanged.
-
-The repair-before-plan judgment is settled. AS is low-severity coverage, but the next plan
-binds the module digest and exact checkpoint names. Deferring the repair would make a small
-cleanup invalidate an approved plan. The exact spelling pin is appropriate because design
-section 7.1 makes checkpoint names contract-visible.
-
-Claude's `HumanReport94.md` calls its pass round three while its transcript calls it round four.
-This was corrected forward. The pass count did not decide closure; exact bytes and measured
-behavior did.
-
-## Verification of the jointly approved executable
+Against the Session-95 executable it is mechanically rejected:
 
 ```text
-prior-state AST probe                 2 independent channels_ f-string producers
-targeted AS regression                1 passed in 1.36 s
-focused Route-A tests               204 passed in 3.70 s
-focused tests under python -O       204 passed in 3.54 s
-full packet suite                 1,755 passed in 125.98 s
-fits / checkpoint writes             0 / 0
-packet plan artifacts before Step 3  0
-generation / rollouts                0 / 0
-config/config.json                 absent
+DevFitContractError: the authorized plan was written by a different code state
 ```
 
-The tests read approved tracked `dev_fit_result.json` and `dev_fit_analysis.json` as
-comparability/plan metadata. They read no delivered observation payload and no approved `.pt`
-checkpoint. No plan ran during executable review.
-
-## Official Step-3 plan
-
-The one official invocation, from the packet directory, was:
+Codex's Session-94 approval remains historical on those bytes but cannot close current Step 3.
+No plan was regenerated in Session 95. The correct order is:
 
 ```text
-..\venv\Scripts\python.exe -B -m utils.capacity_sweep --mode plan \
-  --run-label stage1-run-1 --output-dir results\capacity_sweep
+Claude exact-state approval of repaired executable/tests
+  -> one zero-fit plan regeneration
+  -> fresh independent exact-state plan review by both agents
+  -> later separate Step-4 joint authorization naming the new plan digest
+  -> only then may C9 or curve fitting begin
 ```
 
-It returned `X_PLAN_OK` and wrote only the exact plan artifact above.
+Because no capacity execution has occurred, the corrected plan may retain
+`run_label=stage1-run-1`; frozen-design section 7.3's new-label rule governs a second execution,
+not correction of a pre-execution plan.
 
-Independent audit of the persisted JSON, without calling the plan producer, established:
+Claude also proved the Session-94 published plan command starts in the wrong directory. Future
+packet instructions must launch from `Reproducibility Packet/scripts/`:
 
 ```text
-read-only anchors                  10 = 32 channels x C1/S x seeds 0..4
-new curve arms                     40 = 16/24/40/48 x C1/S x seeds 0..4
-C9 equivalence arms                 2 = (C1, 0), (S, 4)
-distinct declared output paths     44 = 40 curve + 2 C9 + C9 artifact + run artifact
-code identities                     9 = eight approved historical + capacity_sweep.py
-maximum budget                42 fits / 42 checkpoints / 0 rollouts /
-                              0 generations / 0 non-dev reads
+..\..\venv\Scripts\python.exe -B -m utils.capacity_sweep --mode plan \
+  --run-label stage1-run-1 --output-dir ..\results\capacity_sweep
 ```
 
-The forty new identities equal the full cross-product, exclude 32-channel fits and have no
-duplicates. Every path is below `results/capacity_sweep/stage1-run-1/`; no host path, parent
-traversal or UNC spelling is serialized. C9 target digests match their read-only anchors.
+The historical report is not edited backward; the corrected invocation propagates forward.
 
-A separate audit recomputed all nine current code-identity digests and the frozen design,
-approved ledger and approved analysis digests from tracked files. All match. The raw plan bytes
-are strict sorted canonical JSON.
-
-Resource state after Step 3:
+## Session-95 verification
 
 ```text
-fits / checkpoint writes        0 / 0
-official plan artifacts         1
-result / equivalence artifacts  0 / 0
-observation payload reads       0
-approved checkpoint reads       0
-pilot / validation / test reads 0 / 0 / 0
-generation / rollouts           0 / 0
-lifetime Protocol-P rollouts    278 unchanged
-config/config.json              absent
+targeted analyzer tests                  5 passed
+focused Route-A tests                  207 passed in 3.50 s
+focused tests under python -O          207 passed in 3.72 s
+full packet suite                    1,758 passed in 116.41 s
+compileall / git diff --check           clean / clean
+old plan authorization probe            REFUSED: different code state
+fits / checkpoint writes                0 / 0
+new or regenerated plan artifacts       0
+result / equivalence artifacts          0 / 0
+foreign capacity checkpoints            0
+generation / rollouts                    0 / 0
+lifetime Protocol-P rollouts             278 unchanged
+config/config.json                       absent
 ```
+
+Tests read the approved development ledger and analysis artifact as fixtures/plan metadata.
+They read no delivered observation payload, approved checkpoint, pilot, validation or test
+outcome.
 
 ## Frozen capacity design
 
@@ -150,16 +145,15 @@ equivalence arms validate the copied fitting seam before any curve arm may run.
 
 Route A preserves approved `dev_fit_trainer.py` bytes. `capacity_sweep.py` copies only the
 width-parameterized construction and fit-loop control seam while importing all project-defined
-dependencies, including private `_stack`. The module is the ninth code identity.
+dependencies, including private `_stack`. C9 runs `(C1, seed 0)` and `(S, seed 4)` at 32
+channels inside the claimed run's `_equivalence/` subtree. Produced weights and all twenty
+per-epoch losses must be bit-identical to approved checkpoints/ledger rows. Reading or fitting
+them is not yet authorized.
 
-C9 runs `(C1, seed 0)` and `(S, seed 4)` at 32 channels inside the claimed run's reserved
-`_equivalence/` subtree. Produced weights and all twenty per-epoch losses must be bit-identical
-to approved checkpoints/ledger rows. Reading or fitting them is not yet authorized.
-
-Execute mode takes a base and derives `<base>/<run_label>/`, atomically claims an absent root
-and refuses every pre-existing file/directory at `X_RUN_ROOT_OCCUPIED`. Pre-root and occupied-
-root refusals persist in sibling UUID sinks. Same-label replay under the same base collides;
-another base/copied workspace remains a governance residual, not local replay prevention.
+Execute mode derives `<base>/<run_label>/`, atomically claims an absent root and refuses every
+pre-existing file/directory at `X_RUN_ROOT_OCCUPIED`. Pre-root and occupied-root refusals persist
+in sibling UUID sinks. Same-label replay under the same base collides; another base/copied
+workspace remains a governance residual, not local replay prevention.
 
 ## First Gate-4 fit and bounded analysis
 
@@ -217,37 +211,37 @@ The one authorized payload-boundary result remains closed at canonical SHA-256
 `7746372f...9aa04`, outcome `X_CASE_EMPTY`, complete mass coverage, replay pass and 127 extension
 rollouts. It licenses no fitted curve, mechanism, config freeze or confirmatory conclusion.
 
-Lifetime Protocol-P-related physical rollouts remain **278**: 151 before the extension plus
-its one authorized 127-rollout invocation. That invocation is spent.
+Lifetime Protocol-P-related physical rollouts remain **278**: 151 before the extension plus its
+one authorized 127-rollout invocation. That invocation is spent.
 
 ## Transcript and public state
 
-Session 94 appended two verified additions-only turns to the Phase-2 transcript:
+Session 95 appended one verified additions-only turn to the Phase-2 transcript:
 
 ```text
-session-start bytes       1,619,145
-session-start lines       25,918
-session-start SHA-256     25a8926b0ced660810703e31d8ffc86b7e15e4d9ea167db0400aa86024865d14
-executable header line    25,920; unique and after boundary
-plan header line          26,000; unique and after its boundary
-final bytes               1,626,311
-final lines               26,076
-final SHA-256             f2781d5999cb24a255c6663d0fc03816669517c778820de05fc0aa21743581c7
-diff                      +158 / -0
-last agent                Codex
+pre-write bytes        1,639,880
+pre-write lines        26,289
+pre-write SHA-256      f4cc6efc14ff259b74a53c4af15ff0993bedbf4da8001ee3852120e81e5fcaf2
+header line            26,291; unique and after boundary
+final bytes            1,645,051
+final lines            26,391
+final SHA-256          fa7705076769614eb697d2ff25fd140d38deb69e7b511d918bb4841010b6ca67
+diff                   +102 / -0
+last agent             Codex
 ```
 
-Each pre-write byte prefix remains exact. No Transcript Order Monitoring note was required.
+The pre-write byte prefix remains exact. No Transcript Order Monitoring note was required.
 The Session-82 recurrence remains preserved/corrected forward; physical tail is authoritative.
 
-The root README banner is 2026-08-08 and carries one lean entry covering exact executable
-closure and the official plan's still-open second review. The packet README remains unchanged
-until the plan loop closes and the public runnable surface can advance honestly.
+The root README remains unchanged. Session 95 reopened a technical review and created no public
+milestone; its current log already states the only decision-relevant public boundary: the plan
+review is open and no fit/checkpoint is authorized.
 
 ## Public and authorization boundary
 
 Absent separate explicit authorization, all remain blocked:
 
+- plan regeneration until exact executable/test approval closes;
 - both C9 fits and all forty capacity curve fits;
 - every real capacity checkpoint write;
 - C7 capacity analysis construction or execution;
@@ -262,11 +256,14 @@ Absent separate explicit authorization, all remain blocked:
 
 ## Next session
 
-- Next Codex session number: **95**.
-- First inspect Claude's exact review of plan blob `d2584d28...` if present.
-- If Claude approves unchanged, Step 3 is jointly closed; do not infer Step-4 authorization.
-- If Claude edits or blocks, genuinely review the exact new state and preserve the open gate.
-- Codex Session 96, not 95, owes the next regular progress report.
+- Next Codex session number: **96**.
+- Codex Session 96 owes the next regular progress report in addition to normal work.
+- First inspect Claude's exact review of blobs `61d4fb97...` / `07da3182...` if present.
+- If Claude approves unchanged, the executable loop re-closes; only then regenerate the
+  zero-fit plan with the corrected invocation.
+- If Claude edits or blocks, genuinely re-review the exact new state and preserve the open
+  gate.
+- Do not infer Step-4 fit authorization from code or plan approval.
 
 ## Workflow rules
 
