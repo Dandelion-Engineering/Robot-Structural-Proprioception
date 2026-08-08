@@ -71,15 +71,24 @@ so no conforming label can ever name `_capacity_sweep_refusals` or `_unbound`.
 
 One supplied-destination refusal persists nothing, and it is disclosed rather than hidden
 ------------------------------------------------------------------------------------------
-`X_FORBIDDEN_BASE` -- a `--base-dir` at or inside the approved `results/dev_fit`
+`X_FORBIDDEN_BASE` -- a supplied destination at or inside the approved `results/dev_fit`
 checkpoint directory -- is the single terminal exit *after a destination is supplied*
-that writes no artifact. Every sink this module could use is under that base, so persisting
-the refusal would itself be the write into `results/dev_fit` that invariant C1 forbids. The
-refusal is printed and the exit code is returned; the design's persistence rule is knowingly
-not met here, for the same reason lesson 116 exists. An invocation that omits plan mode's
-`--output-dir` or execute mode's `--base-dir` likewise has no authorized destination in which
-to persist; those are pre-destination CLI refusals, outside section 7.2's explicit boundary
-of "after the required base is available." Recorded here rather than discovered later.
+that writes no artifact. Every sink this module could use is under that destination, so
+persisting the refusal would itself be the write into `results/dev_fit` that invariant C1
+forbids. The refusal is printed and the exit code is returned; the design's persistence rule
+is knowingly not met here, for the same reason lesson 116 exists. An invocation that omits
+plan mode's `--output-dir` or execute mode's `--base-dir` likewise has no authorized
+destination in which to persist; those are pre-destination CLI refusals, outside section
+7.2's explicit boundary of "after the required base is available." Recorded here rather than
+discovered later.
+
+**Both modes are guarded, because C1 constrains the executable and not one of its modes.**
+Execute mode checks `--base-dir` and plan mode checks `--output-dir`, each before its own
+first write. Plan mode's write is small and its refusal document is smaller, but a
+`capacity_sweep_plan.json` deposited in `results/dev_fit` is still a write into the tree
+whose ledger is the sole provenance record for ten checkpoints, and the ordinary path there
+is the *refusal* branch -- a plan that could not be built writing itself into the one
+directory the module may not touch.
 
 Why the descriptive read of design section 5 lives here but is not run here
 ---------------------------------------------------------------------------
@@ -226,7 +235,14 @@ PLAN_ARTIFACT = "capacity_sweep_plan.json"
 RUN_ARTIFACT = "capacity_sweep_result.json"
 EQUIVALENCE_ARTIFACT = "capacity_sweep_equivalence.json"
 
-# Design section 7.1: the maximum budget, stated in the plan and asserted on every exit.
+# Design section 7.1: the maximum budget. It is *stated* in the plan and *recorded* on
+# every exit, which is what sections 7.1 and 7.2 require -- there is deliberately no
+# run-time comparison of the counts against it, because the budget is not a limit the
+# executable enforces but an arithmetic property of the arm lists it iterates. What keeps
+# the constant honest is `test_the_maximum_budget_is_forty_two_fits`, which pins it to
+# `len(curve_arms()) + len(EQUIVALENCE_ARMS)` by equality, so the grid cannot drift away
+# from the number without a red test. Said exactly, because a comment claiming an
+# assertion the code does not make is the defect Finding AN was about.
 MAX_FITS = 42
 MAX_CHECKPOINTS = 42
 
@@ -1032,9 +1048,7 @@ def equivalence_gate(
             entry["produced_checkpoint_sha256"] = hashlib.sha256(
                 produced_bytes
             ).hexdigest()
-            checkpoint_path = (
-                scratch_dir / f"capacity_sweep_equivalence_{suite}_seed{seed}.pt"
-            )
+            checkpoint_path = scratch_dir / equivalence_checkpoint_name(suite, seed)
             checkpoint_path.write_bytes(produced_bytes)
         except (OSError, RuntimeError, TypeError, ValueError) as error:
             _raise_failure(
@@ -1111,12 +1125,27 @@ def checkpoint_relative_name(channels: int, suite: str, seed: int) -> str:
     )
 
 
-def equivalence_relative_name(suite: str, seed: int) -> str:
-    """Return one equivalence checkpoint's name inside the reserved scratch subtree."""
+def equivalence_checkpoint_name(suite: str, seed: int) -> str:
+    """Return the bare filename of one C9 compatibility checkpoint.
+
+    Inputs: a matched suite and a predeclared seed. Outputs: the filename, with no
+    directory component. Purpose: the **one** definition of that name. The plan declares
+    where each C9 checkpoint will be written and `equivalence_gate` is what actually
+    writes it; while each built the string from its own copy of the literal, a change to
+    either would have left the plan promising a path the run never produces, and nothing
+    in the module or its tests compared the two. That is the shape of Codex's Session-92
+    Finding AM one level down: a plan may not assert more than the executable binds.
+    """
 
     require_matched_fit_suite(suite)
     require_predeclared_seed(seed)
-    return f"{EQUIVALENCE_SUBTREE}/capacity_sweep_equivalence_{suite}_seed{seed}.pt"
+    return f"capacity_sweep_equivalence_{suite}_seed{seed}.pt"
+
+
+def equivalence_relative_name(suite: str, seed: int) -> str:
+    """Return one equivalence checkpoint's name inside the reserved scratch subtree."""
+
+    return f"{EQUIVALENCE_SUBTREE}/{equivalence_checkpoint_name(suite, seed)}"
 
 
 def design_digest() -> str:
@@ -1308,9 +1337,15 @@ def require_permitted_base(base_dir: Path) -> Path:
 
     Invariant C1: the executable must refuse to write into `results/dev_fit`. This check
     runs **before any write of any kind**, including the refusal sink's, because every
-    sink this module has is under the base -- so persisting this refusal would itself be
-    the forbidden write. That is why `X_FORBIDDEN_BASE` is the one terminal exit with no
-    artifact, and why the docstring at the top of this module says so out loud.
+    sink this module has is under the supplied destination -- so persisting this refusal
+    would itself be the forbidden write. That is why `X_FORBIDDEN_BASE` is the one
+    terminal exit with no artifact, and why the docstring at the top of this module says
+    so out loud.
+
+    Both modes pass their destination through here -- execute mode's `--base-dir` and
+    plan mode's `--output-dir` -- because C1 names the executable rather than one of its
+    modes. The parameter is called `base_dir` for the caller that came first; what it
+    means is "the directory this invocation may write beneath."
     """
 
     base = Path(base_dir).resolve()
@@ -1817,6 +1852,16 @@ def _plan_mode(args: argparse.Namespace) -> int:
         print(f"{X_CONTRACT_REFUSED}: --mode plan requires --output-dir")
         return EXIT_CODES[X_CONTRACT_REFUSED]
     output_dir = Path(output_dir)
+
+    # Invariant C1, before plan mode's first write. The same guard execute mode applies to
+    # `--base-dir`: C1 constrains the executable, not one of its modes, and plan mode's
+    # refusal branch would otherwise deposit a document in the protected tree.
+    try:
+        require_permitted_base(output_dir)
+    except ForbiddenBase as error:
+        print(f"{X_FORBIDDEN_BASE}: {error} (no artifact written, by construction)")
+        return EXIT_CODES[X_FORBIDDEN_BASE]
+
     try:
         require(
             args.run_label is not None,

@@ -814,6 +814,41 @@ def test_a_base_inside_the_approved_checkpoint_tree_writes_absolutely_nothing(ca
         shutil.rmtree(protected / "sweep", ignore_errors=True)
 
 
+def test_plan_mode_also_refuses_an_output_dir_inside_the_protected_tree(capsys):
+    """Invariant C1 names the executable, not one of its modes.
+
+    Execute mode's `--base-dir` was guarded from the first draft; plan mode's
+    `--output-dir` was not, so `--mode plan --output-dir <packet>/results/dev_fit/...`
+    deposited a `capacity_sweep_plan.json` inside the tree whose ledger is the sole
+    provenance record for ten checkpoints. Worse on the ordinary route: the branch that
+    reaches it most easily is the *refusal* branch, so a plan that could not be built
+    wrote itself into the one directory the module may not touch. Proved the same way as
+    the execute-mode exit -- by the protected directory gaining nothing.
+    """
+
+    protected = PACKET_ROOT / cs.APPROVED_CHECKPOINT_RELATIVE
+    before = sorted(path.name for path in protected.iterdir())
+    try:
+        code = cs.main(
+            [
+                "--mode",
+                "plan",
+                "--run-label",
+                "stage1-run-1",
+                "--output-dir",
+                str(protected / "plan"),
+            ]
+        )
+        assert code == cs.EXIT_CODES[cs.X_FORBIDDEN_BASE] == 10
+        assert sorted(path.name for path in protected.iterdir()) == before
+        assert not (protected / "plan").exists()
+        assert cs.X_FORBIDDEN_BASE in capsys.readouterr().out
+    finally:
+        # Same discipline as the execute-mode exit's test: this one's subject is a
+        # tracked results directory, so it removes whatever a broken guard let through.
+        shutil.rmtree(protected / "plan", ignore_errors=True)
+
+
 def test_the_protected_base_check_also_catches_the_directory_itself():
     """`results/dev_fit` itself, not only a child of it."""
 
@@ -1315,6 +1350,62 @@ def test_c9_passes_and_writes_into_the_reserved_subtree(tmp_path, examples, prot
     for arm in document["arms"]:
         assert re.fullmatch(r"[0-9a-f]{64}", arm["produced_checkpoint_sha256"])
         assert arm["fit_code_identity"] == document["code_identity"]
+
+
+def test_c9_writes_its_checkpoints_at_the_exact_names_the_plan_declares(
+    tmp_path, examples, protocol, monkeypatch
+):
+    """The plan promises two paths; this proves the gate produces those two paths.
+
+    `test_c9_passes_and_writes_into_the_reserved_subtree` counts the `.pt` files and
+    checks the subtree they land in, which is a different claim: two files in the right
+    directory under any names would satisfy it. `plan_document` declares each C9
+    checkpoint by `equivalence_relative_name`, so what has to hold is that the gate
+    writes at *that* name -- otherwise the plan is a promise nothing keeps.
+    """
+
+    ledger, checkpoint_dir, _ = _synthetic_equivalence_world(tmp_path)
+
+    def _matching(_examples, *, seed, channels, **_kwargs):
+        return cs.build_network(channels=channels, seed=seed), [1.0, 0.5]
+
+    monkeypatch.setattr(cs, "fit_arm_at_width", _matching)
+    run_root = tmp_path / "run"
+    cs.equivalence_gate(
+        examples_by_suite={suite: examples for suite in MATCHED_FIT_SUITES},
+        ledger=ledger,
+        checkpoint_dir=checkpoint_dir,
+        scratch_dir=run_root / cs.EQUIVALENCE_SUBTREE,
+        protocol=protocol,
+    )
+    declared = {cs.equivalence_relative_name(suite, seed) for suite, seed in cs.EQUIVALENCE_ARMS}
+    for relative in declared:
+        assert (run_root / relative).is_file()
+    written = {
+        str(path.relative_to(run_root)).replace("\\", "/")
+        for path in (run_root / cs.EQUIVALENCE_SUBTREE).glob("*.pt")
+    }
+    assert written == declared
+
+
+def test_the_c9_checkpoint_name_has_exactly_one_definition():
+    """One definition of the name, so the plan and the gate cannot drift apart.
+
+    Both sides built this filename from their own copy of the literal until Session 93.
+    Nothing compared them, so an edit to either would have gone unnoticed until a run
+    produced a file the plan had not named -- Finding AM's shape one level down.
+    """
+
+    source = Path(cs.__file__).read_text(encoding="utf-8")
+    assert source.count('capacity_sweep_equivalence_{suite}_seed{seed}.pt') == 1
+    assert cs.equivalence_checkpoint_name("C1", 0) == "capacity_sweep_equivalence_C1_seed0.pt"
+    assert cs.equivalence_relative_name("C1", 0) == (
+        f"{cs.EQUIVALENCE_SUBTREE}/capacity_sweep_equivalence_C1_seed0.pt"
+    )
+    with pytest.raises(DevFitContractError):
+        cs.equivalence_checkpoint_name("C0", 0)
+    with pytest.raises(DevFitContractError):
+        cs.equivalence_checkpoint_name("C1", 99)
 
 
 def test_the_equivalence_arms_are_the_two_the_design_rules(tmp_path):
