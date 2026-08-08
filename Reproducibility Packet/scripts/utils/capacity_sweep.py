@@ -1114,6 +1114,29 @@ def logical_namespace(run_label: str) -> str:
     return f"{LOGICAL_NAMESPACE_ROOT}/{require_run_label(run_label)}"
 
 
+def capacity_point_directory(channels: int) -> str:
+    """Return one capacity point's directory component -- the **one** definition of it.
+
+    Inputs: a predeclared capacity point. Outputs: the bare directory name, with no
+    separator and no file component. Purpose: invariant C2 applies the trainer's
+    `X_OUTPUT_DIRTY` shape to each capacity point, and that invariant is only carried if
+    the directory `require_clean_capacity_point` inspects is the directory the checkpoint
+    writer actually fills. While `checkpoint_relative_name` and `_execute_mode` each built
+    that name from their own copy of the format, the equality held by coincidence: a
+    mutation that changed only the guard's copy left it inspecting a directory no arm
+    writes into, and survived all 1,754 packet tests. That the guard is unreachable on the
+    ordinary path (design section 11) is why this is defence in depth rather than a live
+    defect -- and defence in depth pointed at the wrong path is not defence.
+
+    This is Finding AP's shape one level down: AP bound the name a plan *declares* to the
+    name the gate *writes*; this binds the name a guard *checks* to the name the writer
+    *fills*.
+    """
+
+    require_capacity_point(channels)
+    return f"channels_{channels:03d}"
+
+
 def checkpoint_relative_name(channels: int, suite: str, seed: int) -> str:
     """Return one curve arm's expected checkpoint name inside the logical namespace."""
 
@@ -1121,7 +1144,8 @@ def checkpoint_relative_name(channels: int, suite: str, seed: int) -> str:
     require_matched_fit_suite(suite)
     require_predeclared_seed(seed)
     return (
-        f"channels_{channels:03d}/capacity_sweep_ch{channels:03d}_{suite}_seed{seed}.pt"
+        f"{capacity_point_directory(channels)}/"
+        f"capacity_sweep_ch{channels:03d}_{suite}_seed{seed}.pt"
     )
 
 
@@ -2072,7 +2096,7 @@ def _execute_mode(args: argparse.Namespace) -> int:
 
     device = torch.device(protocol.device)
     for channels, suite, seed in curve_arms():
-        point_dir = run_root / f"channels_{channels:03d}"
+        point_dir = run_root / capacity_point_directory(channels)
         try:
             require_clean_capacity_point(point_dir)
         except DevFitContractError as error:

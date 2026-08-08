@@ -1924,6 +1924,88 @@ def test_the_per_point_cleanliness_guard_still_refuses_a_stale_checkpoint(tmp_pa
         cs.require_clean_capacity_point(point)
 
 
+def test_the_capacity_point_directory_has_exactly_one_definition():
+    """The directory C2's guard inspects must be the directory the writer fills.
+
+    Driven by mutation rather than by reading: changing only `_execute_mode`'s copy of
+    the `channels_...` format -- so the guard inspected a directory no arm writes into --
+    left every one of the 1,754 packet tests passing. The equality was real and unbound.
+
+    Four assertions, because each covers a different way it could come apart: the format
+    exists in exactly one f-string in the module, and both consumers -- the guard's call
+    site and the writer's -- reach it through that function rather than through a literal,
+    and the writer's path agrees with it for every arm. The AST is the instrument for the
+    first three because a text search counts the prose that *describes* the name alongside
+    the expressions that *build* it.
+
+    The first assertion deliberately pins the current spelling and not merely the count.
+    Design section 7.1 makes the expected checkpoint names part of what the plan binds, so
+    renaming the directory is a contract-visible change that *should* require touching a
+    test, not a refactor this file waves through.
+    """
+
+    tree = _module_ast()
+    producers = [
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.JoinedStr)
+        and any(
+            isinstance(part, ast.Constant)
+            and isinstance(part.value, str)
+            and "channels_" in part.value
+            for part in node.values
+        )
+    ]
+    assert len(producers) == 1
+
+    owners = [
+        node.name
+        for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef)
+        and any(child is producers[0] for child in ast.walk(node))
+    ]
+    assert owners == ["capacity_point_directory"]
+
+    execute = next(
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef) and node.name == "_execute_mode"
+    )
+    bindings = [
+        node.value
+        for node in ast.walk(execute)
+        if isinstance(node, ast.Assign)
+        and len(node.targets) == 1
+        and isinstance(node.targets[0], ast.Name)
+        and node.targets[0].id == "point_dir"
+    ]
+    assert len(bindings) == 1
+    assert isinstance(bindings[0], ast.BinOp) and isinstance(bindings[0].op, ast.Div)
+    called = bindings[0].right
+    assert isinstance(called, ast.Call) and isinstance(called.func, ast.Name)
+    assert called.func.id == "capacity_point_directory"
+
+    writer = next(
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef)
+        and node.name == "checkpoint_relative_name"
+    )
+    assert [
+        node.func.id
+        for node in ast.walk(writer)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+    ].count("capacity_point_directory") == 1
+
+    for channels, suite, seed in cs.curve_arms():
+        relative = cs.checkpoint_relative_name(channels, suite, seed)
+        assert relative.count("/") == 1
+        assert relative.split("/")[0] == cs.capacity_point_directory(channels)
+
+    with pytest.raises(DevFitContractError):
+        cs.capacity_point_directory(cs.ANCHOR_CHANNELS + 1)
+
+
 def test_the_checkpoint_names_are_unique_across_the_whole_sweep():
     """Fifty arms, and no two of them naming one file."""
 
