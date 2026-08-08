@@ -26,6 +26,7 @@ fresh clone that carries the ledger without the weights.
 from __future__ import annotations
 
 import ast
+import hashlib
 import json
 import re
 import shutil
@@ -126,12 +127,13 @@ def _synthetic_equivalence_world(tmp_path):
         states[(suite, seed)] = state
         name = f"dev_fit_{suite}_seed{seed}.pt"
         torch.save(state, checkpoint_dir / name)
+        checkpoint_sha256 = hashlib.sha256((checkpoint_dir / name).read_bytes()).hexdigest()
         arms.append(
             {
                 "suite": suite,
                 "training_seed": seed,
                 "checkpoint_name": name,
-                "checkpoint_sha256": "0" * 64,
+                "checkpoint_sha256": checkpoint_sha256,
                 "loss_history": [1.0, 0.5],
             }
         )
@@ -454,6 +456,7 @@ def test_the_ten_anchors_are_read_from_the_two_approved_documents():
         assert recorded["macro_f1"] == arm["classification"]["macro_f1"]
         assert recorded["accuracy"] == arm["classification"]["accuracy"]
         assert recorded["checkpoint_sha256"] == arm["checkpoint_sha256"]
+        assert recorded["fit_code_identity"] == dict(sorted(ledger["code_identity"].items()))
 
 
 def test_the_anchor_read_refuses_two_documents_that_disagree_on_a_digest():
@@ -472,7 +475,17 @@ def test_the_anchor_read_refuses_a_missing_arm():
     ledger = _ledger()
     analysis = json.loads(APPROVED_ANALYSIS_PATH.read_text(encoding="utf-8"))
     analysis["arms"] = analysis["arms"][:9]
-    with pytest.raises(cs.CapacitySweepError, match="do not both carry"):
+    with pytest.raises(cs.CapacitySweepError, match="exactly the ten approved"):
+        cs.approved_anchor_arms(ledger, analysis)
+
+
+def test_the_anchor_read_refuses_a_duplicate_in_place_of_one_identity():
+    """A ten-row census still fails when one anchor silently replaces another."""
+
+    ledger = _ledger()
+    analysis = json.loads(APPROVED_ANALYSIS_PATH.read_text(encoding="utf-8"))
+    analysis["arms"][-1] = dict(analysis["arms"][-2])
+    with pytest.raises(cs.CapacitySweepError, match="duplicate"):
         cs.approved_anchor_arms(ledger, analysis)
 
 
@@ -656,6 +669,23 @@ def test_the_equivalence_namespace_is_a_reserved_subtree_of_the_run_root(protoco
         assert entry["channels"] == cs.ANCHOR_CHANNELS
 
 
+def test_the_plan_binds_both_approved_documents_and_terminal_names(protocol):
+    """Section 7.1 names the ledger, analysis, and exact result-file identities."""
+
+    document = cs.plan_document(run_label="stage1-run-1", protocol=protocol)
+    namespace = document["logical_output_namespace"]
+    assert document["approved_fit_ledger_sha256"] == canonical_text_sha256(
+        PACKET_ROOT / cs.APPROVED_RESULT_RELATIVE
+    )
+    assert document["approved_analysis_sha256"] == canonical_text_sha256(
+        PACKET_ROOT / cs.APPROVED_ANALYSIS_RELATIVE
+    )
+    assert document["run_artifact_relative_name"] == f"{namespace}/{cs.RUN_ARTIFACT}"
+    assert document["equivalence_artifact_relative_name"] == (
+        f"{namespace}/{cs.EQUIVALENCE_SUBTREE}/{cs.EQUIVALENCE_ARTIFACT}"
+    )
+
+
 def test_plan_mode_refuses_a_bad_label_and_still_writes_a_terminal_artifact(tmp_path):
     """Every terminal exit persists a document; a refusal records its class, not its text."""
 
@@ -813,6 +843,7 @@ def test_a_pre_claim_refusal_persists_in_the_unbound_sink(tmp_path):
     assert document["fits_attempted"] == document["checkpoints_written"] == 0
     assert document["rollouts_spent"] == document["generation_runs"] == 0
     assert document["non_dev_reads"] == 0
+    assert written[0].stem == document["attempt_uuid"]
     assert str(tmp_path) not in json.dumps(document)
     assert not list(tmp_path.glob("*/*.pt"))
 
@@ -889,6 +920,7 @@ def test_an_occupied_run_root_is_refused_and_never_touched(tmp_path, plan_file, 
     written = list(sink.glob("*.json"))
     assert len(written) == 1
     refusal = json.loads(written[0].read_text(encoding="utf-8"))
+    assert written[0].stem == refusal["attempt_uuid"]
     assert refusal["exit"] == cs.X_RUN_ROOT_OCCUPIED
     assert refusal["run_label"] == document["run_label"]
     assert refusal["approved_plan_sha256"] == digest
@@ -970,6 +1002,94 @@ def test_the_sink_refuses_to_name_a_directory_from_an_unvalidated_label(tmp_path
         cs.write_refusal_document(tmp_path, "../escape", {"exit": "X"})
 
 
+def test_execute_terminal_preserves_partial_c9_and_all_unattempted_curve_arms(
+    tmp_path, protocol, monkeypatch
+):
+    """The C9 exception-to-terminal seam keeps identities and split resource counts."""
+
+    identity = cs.sweep_code_identity()
+    monkeypatch.setattr(cs, "resolve_protocol", lambda: protocol)
+    monkeypatch.setattr(
+        cs,
+        "require_authorized_plan",
+        lambda *_args, **_kwargs: {
+            "code_identity": identity,
+            "run_label": "stage1-run-1",
+        },
+    )
+    monkeypatch.setattr(cs, "capacity_shape_map", lambda: {})
+    monkeypatch.setattr(cs, "read_json_document", lambda *_args, **_kwargs: {})
+    monkeypatch.setattr(cs, "require_anchor_comparability", lambda *_args: None)
+
+    anchors = [
+        {
+            "channels": channels,
+            "fit_code_identity": {"anchor": "a" * 64},
+            "seed": seed,
+            "status": cs.ARM_REUSED,
+            "suite": suite,
+        }
+        for channels, suite, seed in cs.anchor_arms()
+    ]
+    monkeypatch.setattr(cs, "approved_anchor_arms", lambda *_args: anchors)
+    monkeypatch.setattr(cs, "load_dev_examples", lambda *_args: ({}, {"role": "dev"}))
+
+    c9 = cs.initial_equivalence_arm_records()
+    c9[0].update(
+        {
+            "comparison": cs.COMPARISON_PASS,
+            "fit_code_identity": identity,
+            "status": cs.ARM_COMPLETED,
+        }
+    )
+    c9[1].update(
+        {
+            "comparison": cs.COMPARISON_FAIL,
+            "fit_code_identity": identity,
+            "reason_class": "LossHistoryDiffers",
+            "status": cs.ARM_COMPLETED,
+        }
+    )
+
+    def _fail_c9(**_kwargs):
+        raise cs.EquivalenceFailure(
+            "second comparison failed",
+            document={
+                "arms": c9,
+                "checkpoints_written": 2,
+                "fits_attempted": 2,
+            },
+        )
+
+    monkeypatch.setattr(cs, "equivalence_gate", _fail_c9)
+    code = cs.main(
+        [
+            "--mode",
+            "execute",
+            "--base-dir",
+            str(tmp_path),
+            "--approved-plan",
+            str(tmp_path / "synthetic-plan.json"),
+            "--approved-plan-sha256",
+            "a" * 64,
+            "--data-root",
+            str(tmp_path / "synthetic-data"),
+        ]
+    )
+    assert code == cs.EXIT_CODES[cs.X_EQUIVALENCE_FAILED]
+    document = json.loads(
+        (tmp_path / "stage1-run-1" / cs.RUN_ARTIFACT).read_text(encoding="utf-8")
+    )
+    assert len(document["curve_arms"]) == 50
+    assert sum(arm["status"] == cs.ARM_REUSED for arm in document["curve_arms"]) == 10
+    assert sum(arm["status"] == cs.ARM_UNATTEMPTED for arm in document["curve_arms"]) == 40
+    assert document["equivalence_arms"] == c9
+    assert document["equivalence_fits_attempted"] == 2
+    assert document["equivalence_checkpoints_written"] == 2
+    assert document["curve_fits_attempted"] == 0
+    assert document["curve_checkpoints_written"] == 0
+
+
 # ---------------------------------------------------------------------------
 # Invariant C9 -- the equivalence gate, driven without any real checkpoint
 # ---------------------------------------------------------------------------
@@ -1026,7 +1146,7 @@ def test_c9_refuses_when_an_approved_checkpoint_is_absent(tmp_path, examples, pr
     ledger, checkpoint_dir, _ = _synthetic_equivalence_world(tmp_path)
     for path in checkpoint_dir.glob("*.pt"):
         path.unlink()
-    with pytest.raises(cs.EquivalenceFailure, match="not on disk"):
+    with pytest.raises(cs.EquivalenceFailure, match="not on disk") as caught:
         cs.equivalence_gate(
             examples_by_suite={suite: examples for suite in MATCHED_FIT_SUITES},
             ledger=ledger,
@@ -1034,6 +1154,13 @@ def test_c9_refuses_when_an_approved_checkpoint_is_absent(tmp_path, examples, pr
             scratch_dir=tmp_path / "run" / cs.EQUIVALENCE_SUBTREE,
             protocol=protocol,
         )
+    document = caught.value.document
+    assert document["fits_attempted"] == document["checkpoints_written"] == 0
+    assert [arm["status"] for arm in document["arms"]] == [
+        cs.ARM_REFUSED,
+        cs.ARM_UNATTEMPTED,
+    ]
+    assert (tmp_path / "run" / cs.EQUIVALENCE_SUBTREE / cs.EQUIVALENCE_ARTIFACT).is_file()
 
 
 def test_c9_refuses_when_the_ledger_has_no_row_for_an_arm(tmp_path, examples, protocol):
@@ -1050,6 +1177,33 @@ def test_c9_refuses_when_the_ledger_has_no_row_for_an_arm(tmp_path, examples, pr
             scratch_dir=tmp_path / "run" / cs.EQUIVALENCE_SUBTREE,
             protocol=protocol,
         )
+
+
+def test_c9_authenticates_the_approved_checkpoint_bytes_before_fitting(
+    tmp_path, examples, protocol, monkeypatch
+):
+    """The ledger digest names the bytes loaded; a same-name replacement cannot pass."""
+
+    ledger, checkpoint_dir, _ = _synthetic_equivalence_world(tmp_path)
+    ledger["arms"][0]["checkpoint_sha256"] = "0" * 64
+
+    def _fit_must_not_run(*_args, **_kwargs):
+        raise AssertionError("C9 fitted before authenticating the approved checkpoint")
+
+    monkeypatch.setattr(cs, "fit_arm_at_width", _fit_must_not_run)
+    with pytest.raises(cs.EquivalenceFailure, match="digest in the approved ledger") as caught:
+        cs.equivalence_gate(
+            examples_by_suite={suite: examples for suite in MATCHED_FIT_SUITES},
+            ledger=ledger,
+            checkpoint_dir=checkpoint_dir,
+            scratch_dir=tmp_path / "run" / cs.EQUIVALENCE_SUBTREE,
+            protocol=protocol,
+        )
+    assert caught.value.document["fits_attempted"] == 0
+    assert caught.value.document["checkpoints_written"] == 0
+    assert caught.value.document["arms"][0]["reason_class"] == (
+        "ApprovedCheckpointDigestMismatch"
+    )
 
 
 def test_c9_refuses_when_the_produced_weights_differ(tmp_path, examples, protocol, monkeypatch):
@@ -1099,6 +1253,41 @@ def test_c9_refuses_when_only_the_loss_history_differs(tmp_path, examples, proto
         )
 
 
+def test_c9_failure_preserves_the_first_pass_and_the_second_failure(
+    tmp_path, examples, protocol, monkeypatch
+):
+    """A later C9 refusal cannot erase a fit/checkpoint already spent by the first arm."""
+
+    ledger, checkpoint_dir, _ = _synthetic_equivalence_world(tmp_path)
+
+    def _second_history_differs(_examples, *, seed, channels, **_kwargs):
+        history = [1.0, 0.5] if seed == 0 else [1.0, 0.5 + 1.0e-9]
+        return cs.build_network(channels=channels, seed=seed), history
+
+    monkeypatch.setattr(cs, "fit_arm_at_width", _second_history_differs)
+    scratch = tmp_path / "run" / cs.EQUIVALENCE_SUBTREE
+    with pytest.raises(cs.EquivalenceFailure, match="per-epoch loss history") as caught:
+        cs.equivalence_gate(
+            examples_by_suite={suite: examples for suite in MATCHED_FIT_SUITES},
+            ledger=ledger,
+            checkpoint_dir=checkpoint_dir,
+            scratch_dir=scratch,
+            protocol=protocol,
+        )
+    document = caught.value.document
+    assert document["fits_attempted"] == 2
+    assert document["checkpoints_written"] == 2
+    assert [arm["status"] for arm in document["arms"]] == [
+        cs.ARM_COMPLETED,
+        cs.ARM_COMPLETED,
+    ]
+    assert [arm["comparison"] for arm in document["arms"]] == [
+        cs.COMPARISON_PASS,
+        cs.COMPARISON_FAIL,
+    ]
+    assert json.loads((scratch / cs.EQUIVALENCE_ARTIFACT).read_text(encoding="utf-8")) == document
+
+
 def test_c9_passes_and_writes_into_the_reserved_subtree(tmp_path, examples, protocol, monkeypatch):
     """The accept side, and the placement of what it writes."""
 
@@ -1118,12 +1307,14 @@ def test_c9_passes_and_writes_into_the_reserved_subtree(tmp_path, examples, prot
     )
     assert [arm["comparison"] for arm in document["arms"]] == [cs.COMPARISON_PASS] * 2
     assert [arm["status"] for arm in document["arms"]] == [cs.ARM_COMPLETED] * 2
+    assert document["fits_attempted"] == document["checkpoints_written"] == 2
     assert document["rollouts_spent"] == 0
     scratch = run_root / cs.EQUIVALENCE_SUBTREE
     assert (scratch / cs.EQUIVALENCE_ARTIFACT).is_file()
     assert len(list(scratch.glob("*.pt"))) == 2
     for arm in document["arms"]:
         assert re.fullmatch(r"[0-9a-f]{64}", arm["produced_checkpoint_sha256"])
+        assert arm["fit_code_identity"] == document["code_identity"]
 
 
 def test_the_equivalence_arms_are_the_two_the_design_rules(tmp_path):
@@ -1309,6 +1500,51 @@ def test_c10_refuses_a_single_equivalence_arm():
     document["equivalence_arms"] = document["equivalence_arms"][:1]
     with pytest.raises(DevFitContractError, match="exactly 2 equivalence"):
         cs.require_complete_sweep(document)
+
+
+@pytest.mark.parametrize("family", ["anchor", "curve", "equivalence"])
+def test_c10_refuses_a_duplicate_that_replaces_one_required_identity(family):
+    """Correct counts are insufficient when one required arm is missing and another repeats."""
+
+    document = _complete_run_document()
+    if family == "anchor":
+        records = [
+            arm for arm in document["curve_arms"] if arm["status"] == cs.ARM_REUSED
+        ]
+    elif family == "curve":
+        records = [
+            arm for arm in document["curve_arms"] if arm["status"] == cs.ARM_COMPLETED
+        ]
+    else:
+        records = document["equivalence_arms"]
+    records[-1].update(records[-2])
+    with pytest.raises(DevFitContractError, match="identit"):
+        cs.require_complete_sweep(document)
+
+
+def test_c10_refuses_an_unhashable_malformed_identity_as_a_contract_error():
+    """Malformed JSON values fail closed instead of escaping as a Python TypeError."""
+
+    document = _complete_run_document()
+    document["curve_arms"][0]["suite"] = ["C1"]
+    with pytest.raises(DevFitContractError, match="malformed identity"):
+        cs.require_complete_sweep(document)
+
+
+def test_partial_run_templates_name_every_arm_before_work_begins():
+    """A post-claim refusal records downstream arms as UNATTEMPTED, never by omission."""
+
+    curve = cs.initial_curve_arm_records()
+    equivalence = cs.initial_equivalence_arm_records()
+    assert len(curve) == 50
+    assert len({(arm["channels"], arm["suite"], arm["seed"]) for arm in curve}) == 50
+    assert {arm["status"] for arm in curve} == {cs.ARM_UNATTEMPTED}
+    assert len(equivalence) == 2
+    assert {(arm["suite"], arm["seed"]) for arm in equivalence} == set(
+        cs.EQUIVALENCE_ARMS
+    )
+    assert {arm["status"] for arm in equivalence} == {cs.ARM_UNATTEMPTED}
+    assert {arm["comparison"] for arm in equivalence} == {cs.COMPARISON_NOT_RUN}
 
 
 # ---------------------------------------------------------------------------
@@ -1502,11 +1738,14 @@ def test_every_document_asserts_the_zero_resource_counts(tmp_path, protocol):
         reason_class=None,
         run_label="stage1-run-1",
         approved_plan_sha256="a" * 64,
+        code_identity=cs.sweep_code_identity(),
         protocol=protocol,
         curve=[],
         equivalence=[],
-        fits_attempted=0,
-        checkpoints_written=0,
+        equivalence_fits_attempted=1,
+        equivalence_checkpoints_written=1,
+        curve_fits_attempted=2,
+        curve_checkpoints_written=2,
         census=None,
         elapsed_s=0.0,
     )
@@ -1515,6 +1754,11 @@ def test_every_document_asserts_the_zero_resource_counts(tmp_path, protocol):
     assert run["non_dev_reads"] == 0
     assert run["mode"] == "execute"
     assert run["design_sha256"] == cs.DESIGN_CANONICAL_SHA256
+    assert run["fits_attempted"] == run["checkpoints_written"] == 3
+    assert run["equivalence_fits_attempted"] == 1
+    assert run["equivalence_checkpoints_written"] == 1
+    assert run["curve_fits_attempted"] == 2
+    assert run["curve_checkpoints_written"] == 2
 
 
 def test_every_named_exit_has_a_distinct_code_and_is_referenced():

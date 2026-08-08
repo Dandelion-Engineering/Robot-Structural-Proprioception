@@ -69,15 +69,17 @@ The two sink names are safe by construction rather than by convention: `run_labe
 match `^[a-z0-9][a-z0-9-]{2,31}$`, whose character class contains no underscore anywhere,
 so no conforming label can ever name `_capacity_sweep_refusals` or `_unbound`.
 
-One refusal deliberately persists nothing, and it is disclosed rather than hidden
----------------------------------------------------------------------------------
+One supplied-destination refusal persists nothing, and it is disclosed rather than hidden
+------------------------------------------------------------------------------------------
 `X_FORBIDDEN_BASE` -- a `--base-dir` at or inside the approved `results/dev_fit`
-checkpoint directory -- is the single terminal exit that writes no artifact. Every sink
-this module could use is *under the base*, so persisting that refusal would itself be the
-write into `results/dev_fit` that invariant C1 forbids. The refusal is printed and the
-exit code is returned; the design's "every terminal exit persists an artifact" rule is
-knowingly not met here, for the same reason lesson 116 exists. Recorded here rather than
-discovered later.
+checkpoint directory -- is the single terminal exit *after a destination is supplied*
+that writes no artifact. Every sink this module could use is under that base, so persisting
+the refusal would itself be the write into `results/dev_fit` that invariant C1 forbids. The
+refusal is printed and the exit code is returned; the design's persistence rule is knowingly
+not met here, for the same reason lesson 116 exists. An invocation that omits plan mode's
+`--output-dir` or execute mode's `--base-dir` likewise has no authorized destination in which
+to persist; those are pre-destination CLI refusals, outside section 7.2's explicit boundary
+of "after the required base is available." Recorded here rather than discovered later.
 
 Why the descriptive read of design section 5 lives here but is not run here
 ---------------------------------------------------------------------------
@@ -275,7 +277,18 @@ class CapacitySweepError(RuntimeError):
 
 
 class EquivalenceFailure(RuntimeError):
-    """Invariant C9 refused: the width-parameterized path is not the approved path."""
+    """Invariant C9 refused, carrying the exact partial equivalence state.
+
+    Inputs: the refusal message and the C9 artifact assembled before the refusal.
+    Outputs: an exception whose ``document`` attribute lets execute mode preserve the
+    two arm statuses and the real fit/checkpoint counts in the run-level terminal.
+    Purpose: a failed equivalence gate is still measured work; losing its state while
+    unwinding would make the terminal artifact under-report spent fits and written files.
+    """
+
+    def __init__(self, message: str, *, document: Mapping[str, Any]) -> None:
+        super().__init__(message)
+        self.document = dict(document)
 
 
 class RunRootOccupied(RuntimeError):
@@ -348,6 +361,52 @@ def anchor_arms() -> tuple[tuple[int, str, int], ...]:
         for suite in MATCHED_FIT_SUITES
         for seed in PREDECLARED_TRAINING_SEEDS
     )
+
+
+def initial_curve_arm_records() -> list[dict[str, Any]]:
+    """Return all fifty curve-arm identities in their pre-read/pre-fit state.
+
+    Inputs: none. Outputs: ten anchor identities followed by forty new arm identities,
+    each marked ``UNATTEMPTED``. Purpose: design section 7.2 requires *every* arm to
+    carry exactly one status on every post-claim terminal path. Execute mode replaces
+    these records in place as anchors are reused and new arms complete or refuse; arms
+    downstream of a failure therefore remain explicitly ``UNATTEMPTED`` rather than
+    disappearing from the terminal artifact.
+    """
+
+    return [
+        {
+            "channels": channels,
+            "seed": seed,
+            "status": ARM_UNATTEMPTED,
+            "suite": suite,
+        }
+        for channels, suite, seed in anchor_arms() + curve_arms()
+    ]
+
+
+def initial_equivalence_arm_records() -> list[dict[str, Any]]:
+    """Return both C9 arm identities in their pre-comparison state.
+
+    Inputs: none. Outputs: the two ruled C9 identities with ``UNATTEMPTED`` /
+    ``NOT_RUN`` state and null digests. Purpose: the run-level artifact retains the
+    complete gate shape even when setup fails before C9 or the first C9 arm refuses.
+    """
+
+    return [
+        {
+            "approved_checkpoint_sha256": None,
+            "channels": ANCHOR_CHANNELS,
+            "comparison": COMPARISON_NOT_RUN,
+            "fit_code_identity": None,
+            "produced_checkpoint_sha256": None,
+            "reason_class": None,
+            "seed": seed,
+            "status": ARM_UNATTEMPTED,
+            "suite": suite,
+        }
+        for suite, seed in EQUIVALENCE_ARMS
+    ]
 
 
 def build_network(*, channels: int, seed: int) -> TemporalAttributionNet:
@@ -614,16 +673,48 @@ def approved_anchor_arms(ledger: Mapping[str, Any], analysis: Mapping[str, Any])
     analysis_arms = analysis.get("arms")
     if not isinstance(ledger_arms, list) or not isinstance(analysis_arms, list):
         raise CapacitySweepError("the approved anchor documents carry no arms list")
-    by_key_ledger = {
-        (str(arm.get("suite")), int(arm.get("training_seed"))): arm
-        for arm in ledger_arms
-        if isinstance(arm, Mapping)
-    }
-    by_key_analysis = {
-        (str(arm.get("suite")), int(arm.get("seed"))): arm
-        for arm in analysis_arms
-        if isinstance(arm, Mapping)
-    }
+
+    expected = {(suite, seed) for _, suite, seed in anchor_arms()}
+
+    def _index(
+        rows: Sequence[Any], *, seed_field: str, label: str
+    ) -> dict[tuple[str, int], Mapping[str, Any]]:
+        indexed: dict[tuple[str, int], Mapping[str, Any]] = {}
+        for arm in rows:
+            if not isinstance(arm, Mapping):
+                raise CapacitySweepError(f"the {label} carries a non-object arm")
+            suite = arm.get("suite")
+            seed = arm.get(seed_field)
+            if (
+                not isinstance(suite, str)
+                or not isinstance(seed, int)
+                or isinstance(seed, bool)
+            ):
+                raise CapacitySweepError(
+                    f"the {label} carries an arm without a valid suite/seed identity"
+                )
+            key = (suite, seed)
+            if key in indexed:
+                raise CapacitySweepError(
+                    f"the {label} carries duplicate {suite} seed {seed} arms"
+                )
+            indexed[key] = arm
+        if set(indexed) != expected:
+            raise CapacitySweepError(
+                f"the {label} does not carry exactly the ten approved anchor identities"
+            )
+        return indexed
+
+    by_key_ledger = _index(
+        ledger_arms, seed_field="training_seed", label="approved ledger"
+    )
+    by_key_analysis = _index(
+        analysis_arms, seed_field="seed", label="approved analysis"
+    )
+    recorded_identity = ledger.get("code_identity")
+    if not isinstance(recorded_identity, Mapping) or not recorded_identity:
+        raise CapacitySweepError("the approved ledger carries no code identity")
+    anchor_identity = dict(sorted(dict(recorded_identity).items()))
     entries: list[dict[str, Any]] = []
     for channels, suite, seed in anchor_arms():
         key = (suite, seed)
@@ -649,6 +740,7 @@ def approved_anchor_arms(ledger: Mapping[str, Any], analysis: Mapping[str, Any])
                 "accuracy": classification["accuracy"],
                 "channels": channels,
                 "checkpoint_sha256": digest,
+                "fit_code_identity": anchor_identity,
                 "macro_f1": classification["macro_f1"],
                 "n_parameters": EXPECTED_PARAMETERS[channels],
                 "per_class_f1": dict(sorted(dict(classification["per_class_f1"]).items())),
@@ -773,6 +865,7 @@ def equivalence_gate(
     checkpoint_dir: Path,
     scratch_dir: Path,
     protocol: Any,
+    fit_code_identity: Mapping[str, str] | None = None,
 ) -> dict[str, Any]:
     """Measure the copied fit path against the approved one, and refuse if it differs.
 
@@ -791,108 +884,210 @@ def equivalence_gate(
     """
 
     scratch_dir = Path(scratch_dir)
-    scratch_dir.mkdir(parents=True, exist_ok=True)
-    ledger_arms = {
-        (str(arm.get("suite")), int(arm.get("training_seed"))): arm
-        for arm in ledger.get("arms", [])
-        if isinstance(arm, Mapping)
-    }
-    identity = sweep_code_identity()
-    results: list[dict[str, Any]] = []
-    for suite, seed in EQUIVALENCE_ARMS:
+    identity = dict(
+        sorted(
+            dict(
+                fit_code_identity
+                if fit_code_identity is not None
+                else sweep_code_identity()
+            ).items()
+        )
+    )
+    results = initial_equivalence_arm_records()
+    for entry in results:
+        entry["fit_code_identity"] = identity
+    fits_attempted = 0
+    checkpoints_written = 0
+
+    def _document(*, gate_passed: bool) -> dict[str, Any]:
+        return {
+            "arms": [dict(entry) for entry in results],
+            "authority": SWEEP_AUTHORITY,
+            "checkpoints_written": checkpoints_written,
+            "code_identity": identity,
+            "equivalence_channels": ANCHOR_CHANNELS,
+            "fits_attempted": fits_attempted,
+            "gate_passed": gate_passed,
+            "generation_runs": 0,
+            "non_dev_reads": 0,
+            "rollouts_spent": 0,
+        }
+
+    def _raise_failure(
+        message: str,
+        *,
+        entry: dict[str, Any] | None,
+        reason_class: str,
+        completed_fit: bool = False,
+        cause: BaseException | None = None,
+    ) -> None:
+        if entry is not None:
+            entry["comparison"] = COMPARISON_FAIL
+            entry["reason_class"] = reason_class
+            entry["status"] = ARM_COMPLETED if completed_fit else ARM_REFUSED
+        document = _document(gate_passed=False)
+        try:
+            write_document(scratch_dir / EQUIVALENCE_ARTIFACT, document)
+        except Exception as artifact_error:
+            # The claimed run-level terminal remains the authoritative fallback. Keep
+            # only the error class; neither a path nor an exception message enters it.
+            document["artifact_write_reason_class"] = type(artifact_error).__name__
+        raise EquivalenceFailure(message, document=document) from cause
+
+    try:
+        scratch_dir.mkdir(parents=True, exist_ok=True)
+    except OSError as error:
+        _raise_failure(
+            "the reserved equivalence subtree could not be created",
+            entry=None,
+            reason_class=type(error).__name__,
+            cause=error,
+        )
+
+    ledger_arms: dict[tuple[str, int], Mapping[str, Any]] = {}
+    for arm in ledger.get("arms", []):
+        if not isinstance(arm, Mapping):
+            continue
+        suite = arm.get("suite")
+        seed = arm.get("training_seed")
+        if isinstance(suite, str) and isinstance(seed, int) and not isinstance(seed, bool):
+            ledger_arms[(suite, seed)] = arm
+
+    for entry, (suite, seed) in zip(results, EQUIVALENCE_ARMS):
         require_matched_fit_suite(suite)
         require_predeclared_seed(seed)
-        entry: dict[str, Any] = {
-            "approved_checkpoint_sha256": None,
-            "channels": ANCHOR_CHANNELS,
-            "comparison": COMPARISON_NOT_RUN,
-            "produced_checkpoint_sha256": None,
-            "reason_class": None,
-            "seed": seed,
-            "status": ARM_UNATTEMPTED,
-            "suite": suite,
-        }
-        results.append(entry)
         arm = ledger_arms.get((suite, seed))
         if arm is None:
-            entry["comparison"] = COMPARISON_FAIL
-            entry["reason_class"] = "MissingApprovedLedgerRow"
-            raise EquivalenceFailure(
-                f"the approved ledger carries no {suite} seed {seed} arm to compare against"
+            _raise_failure(
+                f"the approved ledger carries no {suite} seed {seed} arm to compare against",
+                entry=entry,
+                reason_class="MissingApprovedLedgerRow",
             )
         approved_path = Path(checkpoint_dir) / str(arm.get("checkpoint_name"))
         entry["approved_checkpoint_sha256"] = str(arm.get("checkpoint_sha256"))
         if not approved_path.is_file():
-            entry["comparison"] = COMPARISON_FAIL
-            entry["reason_class"] = "MissingApprovedCheckpoint"
-            raise EquivalenceFailure(
+            _raise_failure(
                 f"the approved {suite} seed {seed} checkpoint is not on disk; a fresh "
                 "clone carries the ledger without the weights, and the equivalence gate "
-                "cannot be made without them"
+                "cannot be made without them",
+                entry=entry,
+                reason_class="MissingApprovedCheckpoint",
             )
         try:
-            approved_state = torch.load(approved_path, map_location="cpu", weights_only=True)
+            approved_bytes = approved_path.read_bytes()
+        except OSError as error:
+            _raise_failure(
+                f"the approved {suite} seed {seed} checkpoint could not be read "
+                f"({type(error).__name__})",
+                entry=entry,
+                reason_class=type(error).__name__,
+                cause=error,
+            )
+        observed_approved_digest = hashlib.sha256(approved_bytes).hexdigest()
+        if observed_approved_digest != entry["approved_checkpoint_sha256"]:
+            _raise_failure(
+                f"the approved {suite} seed {seed} checkpoint bytes do not match "
+                "the digest in the approved ledger",
+                entry=entry,
+                reason_class="ApprovedCheckpointDigestMismatch",
+            )
+        try:
+            approved_state = torch.load(
+                io.BytesIO(approved_bytes), map_location="cpu", weights_only=True
+            )
         except (OSError, RuntimeError, TypeError, ValueError) as error:
-            entry["comparison"] = COMPARISON_FAIL
-            entry["reason_class"] = type(error).__name__
-            raise EquivalenceFailure(
+            _raise_failure(
                 f"the approved {suite} seed {seed} checkpoint could not be loaded "
-                f"({type(error).__name__})"
-            ) from error
+                f"({type(error).__name__})",
+                entry=entry,
+                reason_class=type(error).__name__,
+                cause=error,
+            )
 
-        net, history = fit_arm_at_width(
-            examples_by_suite[suite],
-            seed=seed,
-            channels=ANCHOR_CHANNELS,
-            epochs=protocol.epochs,
-            batch_size=protocol.batch_size,
-            learning_rate=protocol.learning_rate,
-            device=torch.device(protocol.device),
-        )
+        fits_attempted += 1
+        try:
+            net, history = fit_arm_at_width(
+                examples_by_suite[suite],
+                seed=seed,
+                channels=ANCHOR_CHANNELS,
+                epochs=protocol.epochs,
+                batch_size=protocol.batch_size,
+                learning_rate=protocol.learning_rate,
+                device=torch.device(protocol.device),
+            )
+        except Exception as error:
+            _raise_failure(
+                f"the width-parameterized {suite} seed {seed} equivalence fit refused "
+                f"({type(error).__name__})",
+                entry=entry,
+                reason_class=type(error).__name__,
+                cause=error,
+            )
+
         produced_state = net.state_dict()
-        buffer = io.BytesIO()
-        torch.save(produced_state, buffer)
-        produced_bytes = buffer.getvalue()
-        entry["produced_checkpoint_sha256"] = hashlib.sha256(produced_bytes).hexdigest()
-        checkpoint_path = scratch_dir / f"capacity_sweep_equivalence_{suite}_seed{seed}.pt"
-        checkpoint_path.write_bytes(produced_bytes)
+        try:
+            buffer = io.BytesIO()
+            torch.save(produced_state, buffer)
+            produced_bytes = buffer.getvalue()
+            entry["produced_checkpoint_sha256"] = hashlib.sha256(
+                produced_bytes
+            ).hexdigest()
+            checkpoint_path = (
+                scratch_dir / f"capacity_sweep_equivalence_{suite}_seed{seed}.pt"
+            )
+            checkpoint_path.write_bytes(produced_bytes)
+        except (OSError, RuntimeError, TypeError, ValueError) as error:
+            _raise_failure(
+                f"the width-parameterized {suite} seed {seed} checkpoint could not be "
+                f"persisted ({type(error).__name__})",
+                entry=entry,
+                reason_class=type(error).__name__,
+                cause=error,
+            )
+        checkpoints_written += 1
         entry["status"] = ARM_COMPLETED
 
         identical, reason = state_dicts_are_bit_identical(produced_state, approved_state)
         if not identical:
-            entry["comparison"] = COMPARISON_FAIL
-            entry["reason_class"] = "WeightsDiffer"
-            raise EquivalenceFailure(
+            _raise_failure(
                 f"the width-parameterized path did not reproduce the approved "
-                f"{suite} seed {seed} weights: {reason}"
+                f"{suite} seed {seed} weights: {reason}",
+                entry=entry,
+                reason_class="WeightsDiffer",
+                completed_fit=True,
             )
         approved_history = arm.get("loss_history")
-        if (
-            not isinstance(approved_history, list)
-            or len(approved_history) != len(history)
-            or any(
-                float(left) != float(right)
-                for left, right in zip(approved_history, history)
+        try:
+            history_matches = (
+                isinstance(approved_history, list)
+                and len(approved_history) == len(history)
+                and all(
+                    float(left) == float(right)
+                    for left, right in zip(approved_history, history)
+                )
             )
-        ):
-            entry["comparison"] = COMPARISON_FAIL
-            entry["reason_class"] = "LossHistoryDiffers"
-            raise EquivalenceFailure(
+        except (TypeError, ValueError):
+            history_matches = False
+        if not history_matches:
+            _raise_failure(
                 f"the width-parameterized path did not reproduce the approved "
-                f"{suite} seed {seed} per-epoch loss history"
+                f"{suite} seed {seed} per-epoch loss history",
+                entry=entry,
+                reason_class="LossHistoryDiffers",
+                completed_fit=True,
             )
         entry["comparison"] = COMPARISON_PASS
 
-    document = {
-        "arms": results,
-        "authority": SWEEP_AUTHORITY,
-        "code_identity": identity,
-        "equivalence_channels": ANCHOR_CHANNELS,
-        "generation_runs": 0,
-        "non_dev_reads": 0,
-        "rollouts_spent": 0,
-    }
-    write_document(scratch_dir / EQUIVALENCE_ARTIFACT, document)
+    document = _document(gate_passed=True)
+    try:
+        write_document(scratch_dir / EQUIVALENCE_ARTIFACT, document)
+    except Exception as error:
+        document["gate_passed"] = False
+        document["artifact_write_reason_class"] = type(error).__name__
+        raise EquivalenceFailure(
+            "the equivalence comparisons passed but their artifact could not be persisted",
+            document=document,
+        ) from error
     return document
 
 
@@ -953,10 +1148,10 @@ def plan_document(*, run_label: str, protocol: Any) -> dict[str, object]:
     """
 
     require_run_label(run_label)
-    ledger = read_json_document(packet_root() / APPROVED_RESULT_RELATIVE, "approved fit ledger")
-    analysis = read_json_document(
-        packet_root() / APPROVED_ANALYSIS_RELATIVE, "approved analysis artifact"
-    )
+    ledger_path = packet_root() / APPROVED_RESULT_RELATIVE
+    analysis_path = packet_root() / APPROVED_ANALYSIS_RELATIVE
+    ledger = read_json_document(ledger_path, "approved fit ledger")
+    analysis = read_json_document(analysis_path, "approved analysis artifact")
     require_anchor_comparability(ledger, protocol)
     shape = capacity_shape_map()
     namespace = logical_namespace(run_label)
@@ -1004,6 +1199,8 @@ def plan_document(*, run_label: str, protocol: Any) -> dict[str, object]:
         ],
         "anchor_sample_sd": read_anchor_sample_sd(analysis),
         "anchor_sample_sd_field": ".".join(ANCHOR_SAMPLE_SD_FIELD_PATH),
+        "approved_analysis_sha256": canonical_text_sha256(analysis_path),
+        "approved_fit_ledger_sha256": canonical_text_sha256(ledger_path),
         "assignment_sha256": protocol.assignment_sha256,
         "authority": SWEEP_AUTHORITY,
         "capacity_points": list(CAPACITY_POINTS),
@@ -1013,6 +1210,9 @@ def plan_document(*, run_label: str, protocol: Any) -> dict[str, object]:
         "config_hash": AUTHORIZED_CONFIG_HASH,
         "design_sha256": design_digest(),
         "equivalence_arms": equivalence,
+        "equivalence_artifact_relative_name": (
+            f"{namespace}/{EQUIVALENCE_SUBTREE}/{EQUIVALENCE_ARTIFACT}"
+        ),
         "equivalence_relative_namespace": f"{namespace}/{EQUIVALENCE_SUBTREE}",
         "exit": X_PLAN_OK,
         "logical_output_namespace": namespace,
@@ -1031,6 +1231,7 @@ def plan_document(*, run_label: str, protocol: Any) -> dict[str, object]:
         "new_arms": new_arms,
         "plan_valid": True,
         "role_index_sha256": dict(sorted(AUTHORIZED_ROLE_INDEX_SHA256.items())),
+        "run_artifact_relative_name": f"{namespace}/{RUN_ARTIFACT}",
         "run_label": run_label,
         "training_protocol": protocol.as_document(),
     }
@@ -1172,13 +1373,22 @@ def write_refusal_document(
         require_run_label(run_label)
     directory = Path(base_dir) / REFUSAL_SINK_NAME / (run_label or UNBOUND_LABEL_DIRECTORY)
     directory.mkdir(parents=True, exist_ok=True)
-    text = canonical_json(dict(document))
+    payload = dict(document)
+    candidate = payload.get("attempt_uuid")
+    if not isinstance(candidate, str) or re.fullmatch(
+        r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+        candidate,
+    ) is None:
+        candidate = str(uuid.uuid4())
     for _ in range(8):
-        path = directory / f"{uuid.uuid4()}.json"
+        payload["attempt_uuid"] = candidate
+        path = directory / f"{candidate}.json"
+        text = canonical_json(payload)
         try:
             with path.open("x", encoding="utf-8", newline="\n") as handle:
                 handle.write(text)
         except FileExistsError:
+            candidate = str(uuid.uuid4())
             continue
         return path
     raise CapacitySweepError("a unique refusal artifact name could not be drawn")
@@ -1356,29 +1566,76 @@ def require_complete_sweep(document: Mapping[str, Any]) -> None:
 
     arms = document.get("curve_arms")
     require(isinstance(arms, list), "the run artifact carries no curve arms list")
+    require(
+        all(isinstance(arm, Mapping) for arm in arms),
+        "the run artifact carries a non-object curve arm",
+    )
     reused = [arm for arm in arms if arm.get("status") == ARM_REUSED]
     completed = [arm for arm in arms if arm.get("status") == ARM_COMPLETED]
-    require(
-        len(reused) == len(anchor_arms())
-        and all(arm.get("channels") == ANCHOR_CHANNELS for arm in reused),
-        f"a complete sweep reuses exactly the {len(anchor_arms())} approved anchors",
-    )
-    require(
-        len(completed) == len(curve_arms()),
-        f"a complete sweep completes exactly {len(curve_arms())} new curve arms",
-    )
     require(
         len(arms) == len(reused) + len(completed),
         "the run artifact carries an arm that is neither reused nor completed",
     )
+
+    def _curve_key(arm: Mapping[str, Any]) -> tuple[Any, Any, Any]:
+        channels = arm.get("channels")
+        suite = arm.get("suite")
+        seed = arm.get("seed")
+        require(
+            isinstance(channels, int)
+            and not isinstance(channels, bool)
+            and isinstance(suite, str)
+            and isinstance(seed, int)
+            and not isinstance(seed, bool),
+            "a curve arm carries a malformed identity",
+        )
+        return (channels, suite, seed)
+
+    expected_reused = set(anchor_arms())
+    actual_reused = [_curve_key(arm) for arm in reused]
+    require(
+        len(actual_reused) == len(expected_reused)
+        and len(set(actual_reused)) == len(actual_reused)
+        and set(actual_reused) == expected_reused,
+        f"a complete sweep reuses exactly the {len(anchor_arms())} approved anchor identities",
+    )
+    expected_completed = set(curve_arms())
+    actual_completed = [_curve_key(arm) for arm in completed]
+    require(
+        len(actual_completed) == len(expected_completed)
+        and len(set(actual_completed)) == len(actual_completed)
+        and set(actual_completed) == expected_completed,
+        f"a complete sweep completes exactly the {len(curve_arms())} new curve-arm identities",
+    )
+
     equivalence = document.get("equivalence_arms")
     require(
-        isinstance(equivalence, list) and len(equivalence) == len(EQUIVALENCE_ARMS),
-        f"a complete sweep records exactly {len(EQUIVALENCE_ARMS)} equivalence arms",
+        isinstance(equivalence, list)
+        and all(isinstance(arm, Mapping) for arm in equivalence),
+        "the run artifact carries no valid equivalence arms list",
+    )
+    expected_equivalence = set(EQUIVALENCE_ARMS)
+    actual_equivalence: list[tuple[str, int]] = []
+    for arm in equivalence:
+        suite = arm.get("suite")
+        seed = arm.get("seed")
+        require(
+            isinstance(suite, str)
+            and isinstance(seed, int)
+            and not isinstance(seed, bool),
+            "an equivalence arm carries a malformed identity",
+        )
+        actual_equivalence.append((suite, seed))
+    require(
+        len(actual_equivalence) == len(expected_equivalence)
+        and len(set(actual_equivalence)) == len(actual_equivalence)
+        and set(actual_equivalence) == expected_equivalence,
+        f"a complete sweep records exactly {len(EQUIVALENCE_ARMS)} equivalence-arm identities",
     )
     require(
         all(
-            arm.get("status") == ARM_COMPLETED and arm.get("comparison") == COMPARISON_PASS
+            arm.get("status") == ARM_COMPLETED
+            and arm.get("comparison") == COMPARISON_PASS
             for arm in equivalence
         ),
         "a complete sweep requires both equivalence arms to complete and to pass",
@@ -1462,6 +1719,7 @@ def curve_arm_document(
     checkpoint_sha256: str,
     metrics: Mapping[str, Any],
     final_loss: float,
+    fit_code_identity: Mapping[str, str],
     loss_history: Sequence[float],
     n_examples: int,
 ) -> dict[str, Any]:
@@ -1473,6 +1731,7 @@ def curve_arm_document(
         "checkpoint_relative_name": checkpoint_name,
         "checkpoint_sha256": checkpoint_sha256,
         "final_loss": final_loss,
+        "fit_code_identity": dict(sorted(dict(fit_code_identity).items())),
         "loss_history": list(loss_history),
         "macro_f1": metrics["macro_f1"],
         "n_examples": n_examples,
@@ -1492,11 +1751,14 @@ def run_document(
     reason_class: str | None,
     run_label: str,
     approved_plan_sha256: str,
+    code_identity: Mapping[str, str],
     protocol: Any,
     curve: Sequence[Mapping[str, Any]],
     equivalence: Sequence[Mapping[str, Any]],
-    fits_attempted: int,
-    checkpoints_written: int,
+    equivalence_fits_attempted: int,
+    equivalence_checkpoints_written: int,
+    curve_fits_attempted: int,
+    curve_checkpoints_written: int,
     census: Mapping[str, Any] | None,
     elapsed_s: float,
 ) -> dict[str, object]:
@@ -1509,17 +1771,25 @@ def run_document(
     and elapsed time. A refusal's `reason_class` is recorded; its message never is.
     """
 
+    fits_attempted = equivalence_fits_attempted + curve_fits_attempted
+    checkpoints_written = (
+        equivalence_checkpoints_written + curve_checkpoints_written
+    )
     return {
         "approved_plan_sha256": approved_plan_sha256,
         "authority": SWEEP_AUTHORITY,
         "capacity_points": list(CAPACITY_POINTS),
         "checkpoints_written": checkpoints_written,
-        "code_identity": sweep_code_identity(),
+        "code_identity": dict(sorted(dict(code_identity).items())),
+        "curve_checkpoints_written": curve_checkpoints_written,
+        "curve_fits_attempted": curve_fits_attempted,
         "curve_arms": list(curve),
         "data_census": dict(census) if census is not None else None,
         "design_sha256": DESIGN_CANONICAL_SHA256,
         "elapsed_s": elapsed_s,
+        "equivalence_checkpoints_written": equivalence_checkpoints_written,
         "equivalence_arms": list(equivalence),
+        "equivalence_fits_attempted": equivalence_fits_attempted,
         "exit": exit_name,
         "fits_attempted": fits_attempted,
         "generation_runs": 0,
@@ -1661,16 +1931,32 @@ def _execute_mode(args: argparse.Namespace) -> int:
         return EXIT_CODES[X_DATA_MISSING]
 
     # From here every terminal path writes the run-level document inside the claimed root.
-    shape = capacity_shape_map()
-    ledger = read_json_document(packet_root() / APPROVED_RESULT_RELATIVE, "approved fit ledger")
-    analysis = read_json_document(
-        packet_root() / APPROVED_ANALYSIS_RELATIVE, "approved analysis artifact"
-    )
-    curve: list[dict[str, Any]] = []
-    equivalence: list[dict[str, Any]] = []
-    fits_attempted = 0
-    checkpoints_written = 0
+    # Start with the complete arm identity sets so a refusal never makes downstream arms
+    # disappear. Records are replaced in place as work is reused, completed or refused.
+    curve = initial_curve_arm_records()
+    equivalence = initial_equivalence_arm_records()
+    curve_index = {
+        (arm["channels"], arm["suite"], arm["seed"]): index
+        for index, arm in enumerate(curve)
+    }
+    equivalence_index = {
+        (arm["suite"], arm["seed"]): index
+        for index, arm in enumerate(equivalence)
+    }
+    fit_code_identity = dict(sorted(dict(plan["code_identity"]).items()))
+    equivalence_fits_attempted = 0
+    equivalence_checkpoints_written = 0
+    curve_fits_attempted = 0
+    curve_checkpoints_written = 0
     census: dict[str, Any] | None = None
+
+    def _replace_curve(entry: Mapping[str, Any]) -> None:
+        key = (entry.get("channels"), entry.get("suite"), entry.get("seed"))
+        curve[curve_index[key]] = dict(entry)
+
+    def _replace_equivalence(entry: Mapping[str, Any]) -> None:
+        key = (entry.get("suite"), entry.get("seed"))
+        equivalence[equivalence_index[key]] = dict(entry)
 
     def _terminal(exit_name: str, reason_class: str | None) -> int:
         document = run_document(
@@ -1678,11 +1964,14 @@ def _execute_mode(args: argparse.Namespace) -> int:
             reason_class=reason_class,
             run_label=run_label,
             approved_plan_sha256=plan_digest,
+            code_identity=fit_code_identity,
             protocol=protocol,
             curve=curve,
             equivalence=equivalence,
-            fits_attempted=fits_attempted,
-            checkpoints_written=checkpoints_written,
+            equivalence_fits_attempted=equivalence_fits_attempted,
+            equivalence_checkpoints_written=equivalence_checkpoints_written,
+            curve_fits_attempted=curve_fits_attempted,
+            curve_checkpoints_written=curve_checkpoints_written,
             census=census,
             elapsed_s=time.monotonic() - started,
         )
@@ -1690,8 +1979,16 @@ def _execute_mode(args: argparse.Namespace) -> int:
         return EXIT_CODES[exit_name]
 
     try:
+        shape = capacity_shape_map()
+        ledger = read_json_document(
+            packet_root() / APPROVED_RESULT_RELATIVE, "approved fit ledger"
+        )
+        analysis = read_json_document(
+            packet_root() / APPROVED_ANALYSIS_RELATIVE, "approved analysis artifact"
+        )
         require_anchor_comparability(ledger, protocol)
-        curve.extend(approved_anchor_arms(ledger, analysis))
+        for entry in approved_anchor_arms(ledger, analysis):
+            _replace_curve(entry)
         examples, census = load_dev_examples(args.data_root)
     except DevFitContractError as error:
         print(f"{X_CONTRACT_REFUSED}: {error}")
@@ -1707,15 +2004,21 @@ def _execute_mode(args: argparse.Namespace) -> int:
             checkpoint_dir=packet_root() / APPROVED_CHECKPOINT_RELATIVE,
             scratch_dir=run_root / EQUIVALENCE_SUBTREE,
             protocol=protocol,
+            fit_code_identity=fit_code_identity,
         )
-        equivalence = list(gate["arms"])
-        fits_attempted += sum(
-            1 for arm in equivalence if arm["status"] == ARM_COMPLETED
-        )
-        checkpoints_written += sum(
-            1 for arm in equivalence if arm["status"] == ARM_COMPLETED
-        )
+        for entry in gate["arms"]:
+            _replace_equivalence(entry)
+        equivalence_fits_attempted = int(gate["fits_attempted"])
+        equivalence_checkpoints_written = int(gate["checkpoints_written"])
     except EquivalenceFailure as error:
+        for entry in error.document.get("arms", []):
+            _replace_equivalence(entry)
+        equivalence_fits_attempted = int(
+            error.document.get("fits_attempted", 0)
+        )
+        equivalence_checkpoints_written = int(
+            error.document.get("checkpoints_written", 0)
+        )
         print(f"{X_EQUIVALENCE_FAILED}: {error}")
         return _terminal(X_EQUIVALENCE_FAILED, type(error).__name__)
     except (DevFitContractError, DevFitDataError, CapacitySweepError) as error:
@@ -1730,7 +2033,7 @@ def _execute_mode(args: argparse.Namespace) -> int:
         except DevFitContractError as error:
             print(f"{X_OUTPUT_DIRTY}: {error}")
             return _terminal(X_OUTPUT_DIRTY, type(error).__name__)
-        fits_attempted += 1
+        curve_fits_attempted += 1
         try:
             net, history = fit_arm_at_width(
                 examples[suite],
@@ -1743,7 +2046,7 @@ def _execute_mode(args: argparse.Namespace) -> int:
             )
             metrics = score_arm(net, examples[suite])
         except DevFitContractError as error:
-            curve.append(
+            _replace_curve(
                 {
                     "channels": channels,
                     "reason_class": type(error).__name__,
@@ -1755,7 +2058,7 @@ def _execute_mode(args: argparse.Namespace) -> int:
             print(f"{X_CONTRACT_REFUSED}: {error}")
             return _terminal(X_CONTRACT_REFUSED, type(error).__name__)
         except (DevFitDataError, RuntimeError) as error:
-            curve.append(
+            _replace_curve(
                 {
                     "channels": channels,
                     "reason_class": type(error).__name__,
@@ -1766,15 +2069,28 @@ def _execute_mode(args: argparse.Namespace) -> int:
             )
             print(f"{X_DATA_MISSING}: {error}")
             return _terminal(X_DATA_MISSING, type(error).__name__)
-        buffer = io.BytesIO()
-        torch.save(net.state_dict(), buffer)
-        payload = buffer.getvalue()
-        relative = checkpoint_relative_name(channels, suite, seed)
-        (run_root / relative).parent.mkdir(parents=True, exist_ok=True)
-        (run_root / relative).write_bytes(payload)
-        checkpoints_written += 1
-        curve.append(
-            curve_arm_document(
+        try:
+            buffer = io.BytesIO()
+            torch.save(net.state_dict(), buffer)
+            payload = buffer.getvalue()
+            relative = checkpoint_relative_name(channels, suite, seed)
+            (run_root / relative).parent.mkdir(parents=True, exist_ok=True)
+            (run_root / relative).write_bytes(payload)
+        except (OSError, RuntimeError, TypeError, ValueError) as error:
+            _replace_curve(
+                {
+                    "channels": channels,
+                    "reason_class": type(error).__name__,
+                    "seed": seed,
+                    "status": ARM_REFUSED,
+                    "suite": suite,
+                }
+            )
+            print(f"{X_DATA_MISSING}: {error}")
+            return _terminal(X_DATA_MISSING, type(error).__name__)
+        curve_checkpoints_written += 1
+        try:
+            completed_arm = curve_arm_document(
                 channels=channels,
                 suite=suite,
                 seed=seed,
@@ -1783,10 +2099,26 @@ def _execute_mode(args: argparse.Namespace) -> int:
                 checkpoint_sha256=hashlib.sha256(payload).hexdigest(),
                 metrics=metrics,
                 final_loss=history[-1],
+                fit_code_identity=fit_code_identity,
                 loss_history=history,
                 n_examples=len(examples[suite]),
             )
-        )
+        except (KeyError, TypeError, ValueError, IndexError) as error:
+            _replace_curve(
+                {
+                    "channels": channels,
+                    "checkpoint_relative_name": relative,
+                    "checkpoint_sha256": hashlib.sha256(payload).hexdigest(),
+                    "fit_code_identity": fit_code_identity,
+                    "reason_class": type(error).__name__,
+                    "seed": seed,
+                    "status": ARM_REFUSED,
+                    "suite": suite,
+                }
+            )
+            print(f"{X_DATA_MISSING}: {error}")
+            return _terminal(X_DATA_MISSING, type(error).__name__)
+        _replace_curve(completed_arm)
         print(
             f"fitted {channels} channels {suite} seed {seed}: "
             f"macro-F1 {metrics['macro_f1']:.6f}, final loss {history[-1]:.6f}"
