@@ -1,69 +1,134 @@
 # Summary of Only Necessary Context - Claude
 
-*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 99, 2026-08-08.*
+*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 100, 2026-08-09.*
 
-**PRUNE NOTE, S99.** Same rule as S77-S98 - *a closed loop keeps its lesson, not its transcript*. S99 retires: the "S99 FIRST" head block (superseded by the block below), and the parts of the FINDING AU block that were open questions rather than standing rules - **the "CODEX MAY RULE AGAINST 2" clause is spent** (Codex ruled FOR it in its S98) and the S98 mutation table is superseded by the wider S99 two-state one below. **Nothing was dropped that is not closed, superseded, or preserved as a numbered limitation or lesson.** FINDING AT's block, the declined non-finding, the two S97 scope statements, the spent-plan block and the Step-4 authorization block are all KEPT: none is closed by anything that happened in S99.
+**PRUNE NOTE, S100.** Same rule as S77-S99 - *a closed loop keeps its lesson, not its transcript*. S100 retires: the "S100 FIRST" head block (superseded by the block below) and the pre-registered gate-2 digest table inside it, **because the prediction was TAKEN and the artifact matched it exactly** - what survives is the one-line lesson about pre-registration, not the 20-line delta table. The FINDING AU block, FINDING AT's block, the declined non-finding, the two S97 scope statements and the executable description are all KEPT: none is closed by anything that happened in S100. **Nothing was dropped that is not closed, superseded, or preserved as a numbered limitation or lesson.**
 
-## S100 FIRST - THE EXECUTABLE LOOP IS CLOSED. THE NEXT MOVE IS CODEX'S PLAN AT `stage1-run-2`, AND I ALREADY KNOW WHAT DIGEST IT MUST HAVE.
+## S101 FIRST - GATE 2 IS CLOSED AND MY AUTHORIZATION HALF IS LIVE. THE NEXT MOVE IS CODEX'S HALF, THEN THE RUN.
 
 ```text
-*** DO NOT RUN --mode execute.  There is still no valid plan and no live authorization.
-    DO NOT PUBLISH A PLAN EITHER.  Gate 2 is CODEX'S to run - one agent produces the
-    artifact, the other audits it as a second instrument, and that separation has found
-    something real at every plan gate so far.  If Codex has ALREADY published it when this
-    session starts, then my job IS the audit, and the first check is the digest below. ***
+*** DO NOT RUN --mode execute UNLESS CODEX'S STEP-4 HALF IS PHYSICALLY IN THE TRANSCRIPT.
+    Mine is at my S100 authorization turn and it is LIVE - it names ffb00965..., label
+    stage1-run-2, base Reproducibility Packet/results/capacity_sweep, executable blob
+    53e5dcb7, 42 fits / 42 checkpoints / 0 else.  ONE HALF IS NOT AN AUTHORIZATION.
+    If Codex's half IS there when this session starts, THE RUN IS MINE TO DO. ***
 
-THE FOUR GATES.  GATE 1 IS CLOSED.
-  1  CLOSED S99.  Both agents explicitly approve 53e5dcb7 / 6d49edde.  Codex ruled FOR the
-     above-C9 placement in its S98.  DO NOT REOPEN EITHER FILE.
-  2  Codex publishes the zero-fit plan at run label stage1-run-2; I audit it; both approve.
-  3  a NEW Step-4 joint authorization naming THAT digest.  The old halves are spent.
+THE FOUR GATES.  GATES 1 AND 2 ARE CLOSED.
+  1  CLOSED S99.  Both agents explicitly approve 53e5dcb7 / 6d49edde.  DO NOT REOPEN.
+  2  CLOSED S100.  Codex published the plan (its S99); I audited it in three parts and
+     approved the exact bytes.  Both approvals name the same state.  DO NOT REOPEN.
+  3  the Step-4 joint authorization.  MY HALF IS ISSUED.  CODEX'S IS NOT.
   4  the run.  Then both agents review the exact state; THEN section 5.4; THEN C7.
 
-*** THE PRE-REGISTERED GATE-2 DIGEST - I MEASURED IT IN S99 BEFORE THE ARTIFACT EXISTS ***
-  ffb009650ae4cedd37a1b0c7b9beaef1c0c1555fa4583111cb22e9c0f9b7cb31   13,786 B
-  raw == canonical (zero CR bytes, no final newline).  Produced by three plan-mode runs at
-  --run-label stage1-run-2 into three DIFFERENT scratch --output-dir under the system temp
-  tree: ONE digest, so the destination does not enter the document and SECTION 7.1'S
-  BYTE-DETERMINISM HOLDS UNDER THE REPAIRED MODULE (it was last measured in S97 against the
-  PRE-AU executable and is NOT inherited - lesson 153).
-  Delta vs the spent bdf674d5 plan, FULL LEAF DEPTH, no import from utils.capacity_sweep:
-    413 leaves each side.  0 added / 0 removed / 48 CHANGED, and they are exactly:
-      40 new_arms[*].checkpoint_relative_name      2 equivalence_arms[*].checkpoint_...
-      equivalence_artifact_relative_name           equivalence_relative_namespace
-      logical_output_namespace                     run_artifact_relative_name
-      run_label                                    code_identity.capacity_sweep.py
-    code_identity.capacity_sweep.py moves d91db2ef... -> be07d95e..., which IS the approved
-    executable's own canonical digest.  The ten anchors, BOTH approved document digests, the
-    protocol block, the budget (42/42/0/0/0) and the other EIGHT code identities are
-    byte-identical to the spent plan.
-  *** IF CODEX'S PUBLISHED PLAN IS NOT ffb00965... AT 13,786 B, ONE OF US IS WRONG AND WE
-      SETTLE IT BEFORE ANY FIT.  Do not "re-derive" a new expectation to match what is on
-      disk - an expectation formed after seeing the artifact is a different instrument. ***
+THE LIVE APPROVED PLAN - quote the canonical digest first.
+  Reproducibility Packet/results/capacity_sweep/plans/stage1-run-2/capacity_sweep_plan.json
+    Git blob   d7104e55b4fb9be3fbfa6bd685b002a055409673
+    canonical  ffb009650ae4cedd37a1b0c7b9beaef1c0c1555fa4583111cb22e9c0f9b7cb31
+    13,786 B, zero CR, no BOM, no final newline, pure ASCII, raw == canonical HERE.
+  *** IT IS IN A PLAN-HISTORY DIRECTORY, NOT AT THE BASE.  That is Codex's deliberate
+      choice and it is RIGHT: overwriting the consumed plan would destroy the bytes the
+      failed evidence names, and writing at the future run root would make C2's atomic
+      claim fail by construction.  The design pins no deposit location - plan mode's
+      --output-dir is a free operator choice, and C1 refuses only results/dev_fit. ***
 
-  Reproducibility Packet/scripts/utils/capacity_sweep.py       blob 53e5dcb7   APPROVED xx2
-    canonical be07d95e4b4b9fa1a8934a165681fdbc9e7e885236bd1de3c38b661288f641fa
-    98,181 B / 2,280 lines / LF / no BOM / pure ASCII.  UNCHANGED by Codex's review - I
-    verified that by hashing the working tree, not by accepting the claim.
-  Reproducibility Packet/tests/test_capacity_sweep.py          blob 6d49edde   APPROVED xx2
-    canonical 640f23b5990d9fc9f17fe0eeb39bbf9192abaa26ab1726653d9df9942c1747d3
-    217 tests.  Codex's +16/-3 edit to ONE test.  FULL PACKET SUITE 1,768 GREEN, S99.
-    *** NEVER REVIEW AGAIN: 2dc93297 (my S98 handoff), 61d4fb97 / 8e97f6a9, and everything
-        before them.  All superseded. ***
+THE APPROVED CODE STATE - unchanged since S99, verified again S100 by hashing the tree.
+  scripts/utils/capacity_sweep.py   blob 53e5dcb7   canonical be07d95e...f641fa
+  tests/test_capacity_sweep.py      blob 6d49edde   canonical 640f23b5...747d3   217 tests
+  protocol/capacity-escalation-v0.1.md  blob b45efa47  canonical 05109d97...c15e002  FROZEN
+  FULL PACKET SUITE 1,768 GREEN, S100.
+  *** NEVER REVIEW AGAIN: 2dc93297, 61d4fb97 / 8e97f6a9, and everything before them. ***
 
-  Reproducibility Packet/protocol/capacity-escalation-v0.1.md  blob b45efa47   UNTOUCHED
-    canonical/raw 05109d97...c15e002.  FROZEN, five rounds, verified untouched again S99.
-    A correction bumps the version and git mv's, and MUST move DESIGN_CANONICAL_SHA256.
-    *** THE AU REPAIR DID NOT NEED A DESIGN CHANGE.  C2 already said "one output directory
-        per capacity point"; the CODE was what disagreed with it. ***
+THE TEN ANCHORS, and the ONE figure that checks all ten at once (measured S100):
+  a37b2f769a150e562132cc3111c392ba6e3e8c92f04765508bc1322c9e9908c6
+  = sha256 of the ten raw .pt digests joined by \n in order C1 seed0..4 then S seed0..4.
+  C1: 6403e894 c5cbb9da 154b9190 7a4b0e7e deccc979
+  S : 119b2f98 49880844 3ed91a36 ec099cc7 eb9dbb0c
 
-*** DIGEST DOMAIN, and we have both been sloppy: "canonical/raw" as ONE figure is a property
-    of THIS WORKING TREE.  .gitattributes pins eol=lf for the schema, the assignment JSON and
-    protocol/*.md, and DELIBERATELY NOT for .py - a fresh Windows clone renders both files
-    CRLF and the RAW digests move.  Nothing load-bearing depends on it: code_identity()
-    digests in the line-ending-invariant Protocol-P text domain.  QUOTE THE CANONICAL ONE
-    FIRST.  Stated in the chat as a scope note; I did NOT ask for a .gitattributes change. ***
+*** THE PRE-REGISTRATION WORKED AND THAT IS THE LESSON TO CARRY, NOT THE TABLE.  In S99 I
+    published the digest and byte count the next plan MUST have, before it existed; in S99
+    Codex produced exactly it; in S100 I approved it.  An expectation formed BEFORE the
+    artifact exists is a different instrument from one formed after.  DO THIS AGAIN at the
+    next artifact whose content is predictable.  Do not re-derive an expectation to match
+    what is already on disk. ***
 ```
+
+## THE PLAN-HISTORY LOCATION - settled in S100, and the one thing to keep from it
+
+```text
+THE QUESTION: can a document's APPROVAL depend on WHERE the document is kept?  NO, and I
+measured it rather than reading require_authorized_plan and concluding.
+  the SAME bytes authenticate at a flat scratch dir, at a three-deep scratch dir, and
+  UNDER A DIFFERENT FILE NAME.  The document nowhere records its own path.  No declared
+  destination mentions plans/.  A one-token edit at those same foreign locations is still
+  refused.  require_authorized_plan REBUILDS plan_document() and requires exact equality,
+  so the gate names a DOCUMENT and the path is only how you hand it over.
+  *** --approved-plan IS AN EXPLICIT PATH ARGUMENT, DECOUPLED FROM --base-dir.  The plan's
+      location cannot reach execute mode's write locations at all. ***
+
+THE SCOPE NOTE I RAISED AND DID NOT ESCALATE: the plan history RESERVES ONE NAME in the
+run-label namespace.  C2 binds the run root to <base>/<run_label>/ and `plans` is a legal
+label under ^[a-z0-9][a-z0-9-]{2,31}$.  MEASURED in a temp replica of the base:
+  stage1-run-2  IS claimable beside the plan history
+  `plans`       is REFUSED with RunRootOccupied - the SAME refusal, at the SAME exit, that
+                already protects the preserved stage1-run-1 evidence
+So it fails in the direction that preserves the record.  NOT A DEFECT.  I asked only that
+every future plan go under plans/<label>/ so the reservation stays exactly ONE name.
+ALSO CHECKED: no packet document, runbook, test or README names the OLD plan path as
+something to pass to --approved-plan, so no stale instruction points at the spent plan.
+```
+
+## THE S100 AUDIT SET - 136 checks, and it is the shape to reuse for ANY published artifact
+
+```text
+PART A  106 checks, IMPORTS NOTHING from the module.  Physical state; canonical-JSON
+  conformance by BYTE-COMPARING a compact re-emission; every bound identity recomputed from
+  the file on disk; nine code identities recomputed and the eight compared to the approved
+  ledger; the AT binding end to end; ten anchors vs their .pt AND vs the ledger's recorded
+  digests; forty arms rebuilt as {16,24,40,48}x{C1,S}x0-4 with section 4.2 GREPPED OUT OF
+  THE FROZEN DESIGN'S OWN TEXT; 44 distinct packet-relative destinations; no absolute path
+  in any value OR member name; budget re-derived from the plan's own arm lists; the two
+  analysis constants retrieved through the field paths the plan itself names; then a
+  FULL-LEAF DELTA vs the consumed plan (413/413, 0 added, 0 removed, 48 changed, and every
+  path leaf differing ONLY by the label - checked as an EQUALITY, not by reading the list).
+PART B  25 checks, drives the module's gates IN CALL ORDER, ending at load_dev_examples
+  (C1 152 / S 152).  TWO NEGATIVE CONTROLS: a flipped hex char refused, a one-token body
+  edit refused.  AND ONE DRIVEN ASSUMPTION: the consumed bdf674d5 plan is STILL REFUSED
+  ("written by a different code state") - a spent plan cannot be resurrected by pointing
+  --approved-plan at it.  Plus byte-determinism at a FOURTH destination.
+PART C  5 checks, the run-label namespace replica above.
+
+*** PART A FAILED FOUR CHECKS ON ITS FIRST PASS AND ALL FOUR WERE MINE.  manifest_sha256
+    and the three role_index_sha256 entries bind in the RAW domain (945/945/473/473 CRLF
+    pairs) and my probe applied the tracked-text rule to GENERATED data.  This is my OWN
+    S97 scope note arriving from the other side.  THE FIX IS TO ASSERT BOTH DIRECTIONS -
+    raw matches AND canonical does not - so a future silent domain move fails loudly. ***
+*** MY PART-B PROBE ALSO GUESSED capacity_point_directory's SIGNATURE (it takes ONE arg and
+    returns a BARE component).  READ THE FUNCTION; do not remember it.  Same family. ***
+*** RUN THE EXECUTABLE AS `-B -m utils.capacity_sweep` FROM THE PACKET'S scripts/ DIR.
+    Invoking it by file path from the project root breaks its package imports. ***
+```
+
+## THE TIMESTAMP FAILURE, S100 - mine, and the gate that now prevents it
+
+```text
+MY AUTHORIZATION-HALF HEADER SAID 00:34 PDT.  THE WRITE LANDED AT 00:17:45 PDT.  Sixteen
+minutes into the FUTURE.  The correction turn after it said 00:23 against a ~00:21:15
+write - smaller, same direction, same cause: I STAMPED EACH HEADER WHILE DRAFTING AND
+NEVER RE-READ THE CLOCK AT THE APPEND.  For a long message those are minutes apart.
+  SAME FAMILY AS: a field name remembered rather than read, the rollout count carried
+  rather than recounted, a digest domain assumed rather than measured.
+  WHY FORWARD SKEW IS THE HARMFUL DIRECTION: AgentPrompt says the timestamp is what lets
+  the director audit ORDER.  Reconciled against file mtimes a message appears to postdate
+  its own write, and sixteen minutes is enough to invert an apparent order between two
+  agents working the same day.  THE PHYSICAL-TAIL CHECK CANNOT SEE THIS - that is why it
+  survived every prior monitoring session.
+THE FIX IS A GATE, NOT A RESOLUTION.  append_chat.py now parses the timestamp out of
+--header and compares it to the clock INSIDE THE WRITER, AT THE WRITE, refusing beyond
++/-120 s (--max-skew-s).  Both skewed headers STAND AS POSTED; the correction is appended
+forward of them.  Logged in Transcript Order Monitoring.
+*** MEASURE THE CLOCK IN THE SAME COMMAND THAT WRITES.  Do not carry a stamp across turns. ***
+```
+
 
 ## FINDING AU - the defect the run found, the repair, and what must not be undone
 
@@ -184,12 +249,14 @@ THE ONE COMPLETED CURVE ARM, WHICH LICENSES NOTHING:
       NEW LABEL writes a NEW FILE; do not overwrite c048b54b, it is the state the AU run
       consumed and the run artifact names its digest. ***
 
-BOTH STEP-4 HALVES ARE SPENT WITH IT.  Codex's (its S97, transcript line 26,911) and mine
-(my S98).  Neither carries over to a new digest - section 7.3 says a retry is a second
-execution and a second authorization, and BOTH halves named bdf674d5 explicitly.
+BOTH S98-ERA STEP-4 HALVES ARE SPENT WITH IT.  Codex's (its S97, transcript line 26,911)
+and mine (my S98).  Neither carries over to a new digest - section 7.3 says a retry is a
+second execution and a second authorization, and BOTH halves named bdf674d5 explicitly.
+*** THE REPLACEMENT HALVES: MINE IS ISSUED (my S100 authorization turn, naming ffb00965).
+    CODEX'S DOES NOT EXIST YET.  Do not read one half broadly. ***
 ```
 
-## WHAT MY HALF OF A STEP-4 AUTHORIZATION MUST DO - unchanged, and it worked
+## WHAT MY HALF OF A STEP-4 AUTHORIZATION MUST DO - unchanged, it worked twice, and the S100 one is LIVE
 
 ```text
 It is its own turn, never folded into a review (bundling converts a review into a spend).
@@ -233,7 +300,7 @@ THE FOUR RESIDUALS, and none of them is a reason to withhold a half:
     returns).  Excluding by pid alone leaves the shim behind. ***
 ```
 
-## THE PRE-SPEND CHECK SET - 62 checks, and it is the shape to reuse
+## THE PRE-SPEND CHECK SET - 62 checks (S98). Superseded in coverage by the S100 136-check set above; kept because its PART B call order and its negative control are the shape
 
 ```text
 PART A imports nothing from the module under test (48 checks): frozen design digest; plan
@@ -351,6 +418,7 @@ sweep_code_identity()  NINE entries: the eight from trainer.training_code_identi
 
 capacity_shape_map()   Constructs all five nets, reads n_parameters and receptive_field
   OFF THE NETWORK, and requires the design's section-4.2 table.
+```
 
 ## READ THIS FIRST — Protocol P lives in a file, not in this summary
 
@@ -376,7 +444,7 @@ Settled — do not reopen, do not edit v2.3.3.  Codex S55: no bump for the Stage
 ## Where the project is
 
 - **Phase 2 (Execution) is OPEN.** All Phase-1 gates in force. **Schema v1.0 + Amendment A1 in force.** Contract changes run through the **amendment protocol**.
-- I am **Claude**; last session was **Session 99**; next session I run is **Session 100 (a normal session - NOT a progress-report session)**. **THE S96 REGULAR PROGRESS REPORT'S LOOP IS CLOSED** at `agents/Claude/Progress Reports/Progress Report Session 96.md`, blob `c824173c`, raw `eeeaf53d...`, 13,935 B / 231 lines - **Codex explicitly approved those exact bytes unchanged in its S97 and I had already approved them. DO NOT REOPEN.** **MY NEXT REGULAR IS SESSION 104**, or sooner if a phase transition or an approved written Claim-Sheet amendment fires. **THE S88 REPORT'S LOOP IS CLOSED** at blob `58276bb4` (canonical `1e359749...`) - Codex explicitly approved those exact bytes in its S89 and I had already approved them. **DO NOT REOPEN.** *(The S80 report, covering S73-S80, is still unreviewed by Codex; the S72 one was read in Codex's S72 general recent-work review, which found no correction to carry, so no explicit review cycle ever opened on it.)* **A2 ALREADY FIRED AN AMENDMENT-TRIGGERED REPORT AND IT WAS CODEX'S TO WRITE** (its S76 wrote the approving turn); that does not reset either counter.
+- I am **Claude**; last session was **Session 100**; next session I run is **Session 101 (a normal session - NOT a progress-report session)**. **THE S96 REGULAR PROGRESS REPORT'S LOOP IS CLOSED** at `agents/Claude/Progress Reports/Progress Report Session 96.md`, blob `c824173c`, raw `eeeaf53d...`, 13,935 B / 231 lines - **Codex explicitly approved those exact bytes unchanged in its S97 and I had already approved them. DO NOT REOPEN.** **MY NEXT REGULAR IS SESSION 104**, or sooner if a phase transition or an approved written Claim-Sheet amendment fires. **THE S88 REPORT'S LOOP IS CLOSED** at blob `58276bb4` (canonical `1e359749...`) - Codex explicitly approved those exact bytes in its S89 and I had already approved them. **DO NOT REOPEN.** *(The S80 report, covering S73-S80, is still unreviewed by Codex; the S72 one was read in Codex's S72 general recent-work review, which found no correction to carry, so no explicit review cycle ever opened on it.)* **A2 ALREADY FIRED AN AMENDMENT-TRIGGERED REPORT AND IT WAS CODEX'S TO WRITE** (its S76 wrote the approving turn); that does not reset either counter.
 - **`config.json` is deliberately NOT frozen** and does not exist. All hashes are `dev-`; no `dev-` trace may enter confirmatory analysis.
 - Real data exists: `data/gate3-base-dev-pilot-val-c1-s` (3.86 GB, git-ignored, local only). 472 reservations / 944 manifest rows / C1+S / dev 152, pilot 152, val 168. **Test untouched: 0 identities, 0 payloads.** **THE "SLATED FOR FULL REGENERATION FROM ZERO AFTER A2" EXPECTATION IS RETIRED AS OF MY S75 — see A2.3.** Option C inserts no severity, so no seed ordinal shifts and A2 by itself invalidates none of this. If the set is ever superseded it is for some other reason, under its own authorization. **Still: read them, do not build on them** — nothing downstream of them is authorized either way.
 - **THE PAYLOAD-BOUNDARY EXTENSION HAS RUN — Codex's S73, 127 physical rollouts, `X_CASE_EMPTY`, and the result artifact is JOINTLY APPROVED (Codex S73 / me S74).** The measurement is spent and no further payload-extension execution is authorized. **A2 IS IN FORCE at `baa8fd53…` / `203aab77…` — both agents approved those exact bytes (me S76, Codex S76). The two-file loop is CLOSED and the amendment is not to be reopened or status-edited.**
@@ -412,6 +480,15 @@ MY S98 IS THE FIRST SESSION SINCE S84 TO SPEND ANYTHING, AND THE FIRST EVER TO S
   *** THE FIT COUNTER IS NOW 13 LIFETIME: ten S84 development fits + three S98 sweep fits.
       The three S98 fits came out of the 42-fit Stage-1 budget, which is now SPENT ALONG
       WITH ITS PLAN - a re-run under a new authorization is a fresh 42, not 39. ***
+MY S100 SPENT ZERO OF EVERYTHING - no fit, no checkpoint, no generation, no rollout, and NO
+  PUBLISHED PLAN ARTIFACT and NO --mode execute INVOCATION.  A three-part audit of one JSON
+  document (136 checks), an owner approval closing gate 2, my Step-4 authorization half, and
+  one plan-mode determinism probe into a system-temp scratch dir.  Every write outside the
+  closeout documents went to a TemporaryDirectory.  Working tree clean before and after.
+  *** ITS REAL-DATA TOUCHES WERE READS ONLY: manifest.csv and the three index.csv files
+  (to settle the digest domain), the ten approved .pt opened ONLY to hash their bytes, and
+  the 304 authorized dev rows loaded by load_dev_examples as the last pre-spend check. ***
+  PILOT/VAL/TEST: 0.  *** ROLLOUT COUNT UNCHANGED AT 278.  FIT COUNTER UNCHANGED AT 13. ***
 MY S99 SPENT ZERO OF EVERYTHING - no fit, no checkpoint, no generation, no rollout, and NO
   PUBLISHED PLAN ARTIFACT.  *** AND IT TOUCHED NO REAL DATA AT ALL - no manifest, no .npz,
   no approved checkpoint, not even a hash of one.  Plan mode takes no --data-root, and the
@@ -2340,11 +2417,35 @@ and state the number in the chat before the other agent produces it.** The conve
 matters as much: **if the published artifact does not match, do NOT re-derive a new
 expectation to fit what is on disk.** That is the whole value, spent.
 
+162. **[NEW S100] A FIGURE THAT COMES FROM AN INSTRUMENT MUST BE TAKEN FROM THE INSTRUMENT AT
+THE MOMENT IT IS USED - AND A TIMESTAMP IS SUCH A FIGURE.** I stamped a transcript header
+while drafting and appended sixteen minutes later, publishing a time in the future. The header
+time is an instrument reading about *when the file changed*, and drafting is not writing. This
+is the same family as a field name remembered rather than read (S98), a rollout count carried
+rather than recounted (five times), and a digest domain assumed rather than measured (S97/S100)
+- but it is the first one where the wrong value was *my own clock*, which felt too obvious to
+check. **The general form: the more mechanical a figure feels, the less likely anyone re-reads
+it.** And the fix generalizes too - **do not resolve to be careful; put the comparison inside
+the tool that performs the action**, where it can refuse. `append_chat.py` now measures the
+clock at the write and refuses beyond ±120 s. *(Corollary, and the reason this survived so
+long: the physical-tail assertion this project has run for twenty sessions cannot see a
+timestamp error at all. A check that has never failed may be watching the wrong axis.)*
+
+163. **[NEW S100] "THE LOCATION OBVIOUSLY CANNOT MATTER" IS A HYPOTHESIS.** When Codex moved
+the plan into a plan-history directory, the tempting move was to read `require_authorized_plan`,
+see that it takes an explicit path and rebuilds the document, and conclude. I measured instead:
+the same bytes at three locations and under a different filename, plus a corrupted copy at those
+same locations to prove the acceptance was not vacuous. It cost four lines. **A negative control
+is what separates "the gate accepted it" from "the gate accepts anything."** The same session's
+temp-replica probe (part C) is the general shape: **rebuild the real directory layout under a
+TemporaryDirectory and drive the REAL guard at it** whenever the question is "what would the
+executable do if…".
+
 ## Pointers
 
 - **THE STAGE-1 EXECUTABLE AND ITS TESTS - JOINTLY APPROVED S99, LOOP CLOSED, DO NOT REOPEN:** `Reproducibility Packet/scripts/utils/capacity_sweep.py` blob `53e5dcb7` / canonical `be07d95e4b4b9fa1a8934a165681fdbc9e7e885236bd1de3c38b661288f641fa`, and `Reproducibility Packet/tests/test_capacity_sweep.py` blob `6d49edde` / canonical `640f23b5990d9fc9f17fe0eeb39bbf9192abaa26ab1726653d9df9942c1747d3`, **217 focused tests, 1,768 full packet suite, both re-run green in S99 (also under `python -O`).** Codex approved the pair in its S98; I approved the same pair unchanged in my S99 after the ten-case two-state sweep. **The next thing to touch this pair is a NEW finding, not a re-review.**
 - **THE CAPACITY-ESCALATION DESIGN - FROZEN AND JOINTLY APPROVED, DO NOT REOPEN: `Reproducibility Packet/protocol/capacity-escalation-v0.1.md`, blob `b45efa47`, canonical/raw sha256 `05109d973f1611756456a01aea8a0aebf7c33ec73e5243225f1f733e3c15e002`, 72,630 B / 1,084 lines / LF / raw == canonical / no BOM.** Codex approved these exact bytes in its S91 and I had already approved them, so both approvals name the same state. **FIVE ROUNDS.** *(This bullet said "round four, blob `b2f650e1`, authorizes nothing" through my S92 and S93 while the head block said FROZEN the whole time - my own summary contradicting itself, which is lesson 65 exactly, caught in S93 by grepping the file rather than reading it. Same failure as the S64 progress-report status line. **A status clause that has been true for several consecutive rewrites is the most likely thing to be carried into one where it is false.**)* **Superseded, NEVER review or build from: `b2f650e1` (mine S90), `b359ba0b` (Codex S90), `51c86f68` (mine S89), `618d9ada` (Codex S89 — SUPERSEDED BUT NOT REJECTED; both its corrections AD and AE are preserved in the frozen state, uncontested), `ccd12ef4` (mine S88), `e1c8f77c` (Codex S88 — likewise preserved), `b86d46aa` (mine S87, which Codex BLOCKED).** **IT IS STILL NAMED v0.1 AND THAT IS NOW PERMANENT: a correction bumps the version and `git mv`s, and MUST move `DESIGN_CANONICAL_SHA256` in `capacity_sweep.py` with it. Editing v0.1 in place turns plan mode RED.** **WHAT THE FREEZE AUTHORIZED, AND ONLY THIS: writing the executable and its tests.** **READ THE FILE - this block is an index, not the document.** Settled and NOT to be re-derived: **no Claim Sheet amendment is needed** (Slot 9 (b) IS limitation 127 restated, and Slot 14 already contracts "the within-suite capacity sweep"); **width and not depth**, because `n_blocks` moves the receptive field too; **the ten approved 32-channel arms are REUSED, never re-fitted as curve arms, and carry status `REUSED` rather than `COMPLETED`**; **every point stays inside Slot 9's rung-1 band**, so `enforce_rung1_band` stays ON and Stage 1 does not climb the ladder; **the executable emits NO VERDICT AT ALL**, with the interpretation pre-registered as prose in §5.4, applied jointly, and **no observation licensing any action**, Stage 2 included; **the absolute per-suite curves are first-class outputs**; **`{16, 24, 32, 40, 48}`, 50 arms, 40 new**; **§4.3 states the seed claim as three claims with three scopes** (suite pairing IS real CRN at fixed `(c,k)`; row order IS common across widths; initialization is NOT); **§2.1 reconciles Slot 14 with bound 5** — development-only instrument diagnosis and capacity-search history, never held-out evidence, a headline result, or a capacity selection. **RULED BY CODEX S88 AND CLOSED: Route A** (new module `scripts/utils/capacity_sweep.py`; `dev_fit_trainer.py` NOT edited; because the module imports `arm_loss` from it, **the trainer STAYS in the sweep's code identity** — all eight historical entries match exactly and the new module is a **ninth**); **one derived label, made post-anchor**; **6-dp `ROUND_HALF_EVEN` as a numerical tie rule carrying no inferential meaning**; **`PARTIAL` points excluded from the eligible subsequence**; **TWO C9 arms, `(C1,0)` and `(S,4)` → 42 fits / 42 checkpoints, not 41**. **The load-bearing invariants are C9 (the two-arm equivalence gate, limitation 134), C10 (no partial run may present itself as a curve), the `run_label` field (S89, limitation 136), and — new at S90 — C2's binding of the run root to `<base>/<run_label>/` (limitation 138), which is what gives the audit claim and the fresh-root rule a mechanism.** **`run_label` does NOT make an authorization mechanically single-use — Codex's AD, accepted; the residual is a different base directory or a copied workspace, and §7.1 states it at that width.** **§7.3: a retry is a SECOND execution and needs a SECOND joint authorization at a new `run_label`.** **§4.4 carries the exact call site of the copied loop (limitation 137) — read it before writing one line of the executable — and its table is the complete PROJECT-DEFINED surface (six names), not the complete Python call surface; the control flow and the torch/numpy expressions are copied, and C9 is the backstop over the whole seam.** **C9's own precondition is MEASURED (S90): the width-parameterized constructor reproduces the approved net bit-identically at 32 channels, both C9 seeds.**
-- **THE STEP-3 PLAN ARTIFACT - JOINTLY APPROVED IN S97 AND *SUPERSEDED* IN S98 BY THE FINDING-AU REPAIR. IT IS NOT RUNNABLE AND ITS TWO AUTHORIZATION HALVES ARE SPENT. DO NOT RE-AUDIT IT, DO NOT APPROVE IT, DO NOT DELETE IT - it is the state the AU run consumed, and the run artifact names its digest. A regeneration goes to a NEW LABEL and a NEW FILE.** `Reproducibility Packet/results/capacity_sweep/capacity_sweep_plan.json`, blob `c048b54b8081271d76a6adacf8526d201c446c17`, canonical == raw `bdf674d5f717e5256904ca12d9670a8e02ca0351fb9b5d625a38809d1bf1c0a5`, **13,786 B**, one canonical JSON record, pure ASCII, **no CR and no LF at all**, no BOM, no terminal newline, and re-emitting the parsed document under `sort_keys` + `(",",":")` + `ensure_ascii=False` + `allow_nan=False` reproduces it **byte for byte**. Thirty top-level keys; 10 read-only anchors + 40 new arms + 2 C9 arms; 44 declared output paths all under `results/capacity_sweep/stage1-run-1/`; budget 42/42/0/0/0; nine code identities; `training_protocol` IDENTICAL to the approved ledger's including the two-entry `window_schedule`. **Run and approved by Codex S96; approved unchanged by me S97 after a 94-check independent audit, a full-leaf-depth diff, a 3-destination determinism measurement and a 22-case gate-neighbour sweep.** **SUPERSEDED, DO NOT APPROVE, DO NOT RE-AUDIT, DO NOT DELETE:** blob `d2584d28`, canonical == raw `740d5db96657c7a5e9a86b49816daf091439e7661a6bd971fb8ce6ab3ae1c00e` — owner-approved by Codex S94 and audited 59/59 by me S95, then invalidated when the AT repair moved the sweep's digest; `require_authorized_plan` refuses it with *"the authorized plan was written by a different code state"*, which I re-drove in S97. It is kept unregenerated as the visible state that produced AT. **DO NOT run `--mode execute`: it needs `--approved-plan-sha256` AND `--data-root`, and both are gated on the Step-4 joint authorization, which DOES NOT EXIST — neither agent has issued a half.**
+- **THE STEP-3 PLAN ARTIFACT - JOINTLY APPROVED IN S97 AND *SUPERSEDED* IN S98 BY THE FINDING-AU REPAIR. IT IS NOT RUNNABLE AND ITS TWO AUTHORIZATION HALVES ARE SPENT. DO NOT RE-AUDIT IT, DO NOT APPROVE IT, DO NOT DELETE IT - it is the state the AU run consumed, and the run artifact names its digest. A regeneration goes to a NEW LABEL and a NEW FILE.** `Reproducibility Packet/results/capacity_sweep/capacity_sweep_plan.json`, blob `c048b54b8081271d76a6adacf8526d201c446c17`, canonical == raw `bdf674d5f717e5256904ca12d9670a8e02ca0351fb9b5d625a38809d1bf1c0a5`, **13,786 B**, one canonical JSON record, pure ASCII, **no CR and no LF at all**, no BOM, no terminal newline, and re-emitting the parsed document under `sort_keys` + `(",",":")` + `ensure_ascii=False` + `allow_nan=False` reproduces it **byte for byte**. Thirty top-level keys; 10 read-only anchors + 40 new arms + 2 C9 arms; 44 declared output paths all under `results/capacity_sweep/stage1-run-1/`; budget 42/42/0/0/0; nine code identities; `training_protocol` IDENTICAL to the approved ledger's including the two-entry `window_schedule`. **Run and approved by Codex S96; approved unchanged by me S97 after a 94-check independent audit, a full-leaf-depth diff, a 3-destination determinism measurement and a 22-case gate-neighbour sweep.** **SUPERSEDED, DO NOT APPROVE, DO NOT RE-AUDIT, DO NOT DELETE:** blob `d2584d28`, canonical == raw `740d5db96657c7a5e9a86b49816daf091439e7661a6bd971fb8ce6ab3ae1c00e` — owner-approved by Codex S94 and audited 59/59 by me S95, then invalidated when the AT repair moved the sweep's digest; `require_authorized_plan` refuses it with *"the authorized plan was written by a different code state"*, which I re-drove in S97. It is kept unregenerated as the visible state that produced AT. **DO NOT run `--mode execute` AGAINST THIS SPENT PLAN AT ALL.** *(Status of the LIVE plan and its authorization, updated S100: the runnable plan is `results/capacity_sweep/plans/stage1-run-2/capacity_sweep_plan.json`, blob `d7104e55`, canonical `ffb009650ae4cedd37a1b0c7b9beaef1c0c1555fa4583111cb22e9c0f9b7cb31`, 13,786 B — **jointly approved, Codex S99 and me S100, gate 2 CLOSED**. **MY Step-4 half is ISSUED (my S100 turn); CODEX'S IS NOT.** One half authorizes nothing. See the S101 FIRST block at the top of this file, which is the authority on gate state — this bullet is an index.)*
 - **Protocol P (in force, JOINTLY APPROVED): `Reproducibility Packet/protocol/protocol-p-v2.3.3.md`, canonical sha256 `5689dad7…8bdf421f`. READ THE FILE.**
 - **The payload-boundary extension — JOINTLY APPROVED AND FROZEN, NOT YET EXECUTABLE: `Reproducibility Packet/protocol/payload-boundary-extension-v0.2.md`, canonical sha256 `538ae06b…df33b6a`, blob `d9f6e188`, 71,188 bytes, 1,285 lines, LF, raw == canonical.** Approved by me S63 and by Codex S63; **DO NOT EDIT IT — a change needs a version bump and a `git mv`.** It authorizes **Step 2 only**: build and review the three prerequisites. READ THE FILE — the blocks above are an index, not the document. Superseded states, never cite or build from them: v0.1 (`32a03930…`, blob `903962f8`, bytes in `Claude Session 61`), and inside v0.2 `c7facc13`/`e734c498…` (my S62 handoff) and `3d72e1f4`/`e5192eaa…` (Codex's S62 edits, which I did not approve).
 - **THE PAYLOAD-BOUNDARY EXTENSION IS FULLY SPENT AND CLOSED. NOTHING HERE IS OPEN.** All three Step-2 prerequisites jointly approved (S71); Step 3 run and its plan approved by BOTH agents (me S72, Codex S72); Step 4 authorized by both halves (me S73, Codex S73); **STEP 5 RAN ONCE - Codex S73, 127 physical rollouts, `X_CASE_EMPTY` - and its result artifact is JOINTLY APPROVED (Codex S73, me S74 after 130 checks).** The measurement is spent; no further execution is authorized. *(This bullet and the block below both said "CODEX OWES THE SECOND READ" through every rewrite from S73 to S95, while the Order line six sections up said Codex completed that read in its S72 and that Step 5 had run. My own summary contradicting itself for twenty-three sessions: lesson 65 again, and caught in S96 only by grepping the file rather than reading it. **A status clause about ANOTHER agent's obligation is the most likely one to rot, because nothing in my own work forces me to revisit it.**)*
@@ -2440,7 +2541,32 @@ Run either read from the packet dir; zero rollouts, ~0.3 s each:
 - **Phase-2 chat:** `chats/Claude-Codex/Phase 2 Integration and Config Freeze/...- Active.md` — **S98 STATE: 27,322 lines / 1,701,780 bytes, sha256 `f9c12e5b03ba2b9d7969e70c319054500651fb98dfba120d612e0be788f63a5b`. My S98 is `+338/-0` across THREE turns in two writes (the pre-spend measurements and residuals; my authorization half, deliberately its own turn; and the execution record with finding AU). The pre-write state (1,680,736 B / 26,984 lines, sha `99b4a43f...`) EQUALLED Codex's published post-write sha at the end of its S97 exactly, so nothing moved between sessions. **CODEX OWNS THE NEXT TURN: the review of `53e5dcb7`/`2dc93297`, and specifically a ruling on whether the cleanliness guard belongs ABOVE the C9 gate or below it.** All six gates passed on both writes, asserted inside the writer (`append_turn.py`).** *(Historical — S95 STATE: 26,289 lines / 1,639,880 bytes after my ONE append, sha256 `f4cc6efc14ff259b74a53c4af15ff0993bedbf4da8001ee3852120e81e5fcaf2`. My S95 is `+213/-0`, a single tail hunk, header unique at line 26,078, Claude physically last, all SIX gates passed. The pre-write state (1,626,311 B / 26,076 lines, sha `f2781d59...`) EQUALLED Codex's published post-write sha at the end of its S94, so nothing moved between sessions. CODEX OWNS THE NEXT TURN: the ruling on finding AT, and then the same-state close of Step 3.** **Historical, kept only because the discipline below is still the discipline — S91 STATE: 24,956 lines / 1,564,456 bytes, sha256 `b7a229df9dda785f...`. My S91 is `+132/-0`, a single tail hunk, header unique at line 24,826, Claude physically last, the pre-write state (1,556,240 bytes / 24,824 lines, sha `194ebb26...`) asserted byte-identical INSIDE the writer, the turn asserted PURE ASCII before writing, and the prefix re-verified byte-identical afterwards. *** KEEP THE ASCII ASSERTION — it fired in S90 and caught a real violation (section signs, em dashes). It is not ceremony. *** **CODEX OWNS THE NEXT TURN: the same-state reviewer re-review of `b45efa47` (the design). If it judges limitation 139 wrong — if C9's scratch root should live outside the claimed run root — then it also has to say what preserves the failed run's equivalence evidence across a retry, because §7.3 currently claims that preservation and the reserved subtree is the only thing supplying it. I said exactly that in the turn and wrote the argument INTO §7.3 and §11 so a future session can judge it rather than inherit it.** *(Prior S90 state: 24,726 lines / 1,550,920 bytes, sha `64fc16df...`, my S90 `+131/-0`, header at line 24,597.)* *(Codex's S88 reported final 1,525,692 B / 24,297 lines; my own pre-write read matched exactly, so its append was clean and nothing moved between sessions. Prior S88 state: 24,178 lines / 1,518,959 bytes, my S88 `+203/-0`.)* *** THE S82 APPEND-ORDER RECURRENCE STILL BINDS: Codex's S82 review landed at physical line 19,334 and was restated at the true tail, so **the chronological order is permanently broken in the middle and the PHYSICAL TAIL is the authoritative order.** *** **If a judgment comes back contested and one exchange does not settle it from source, ESCALATE to the director rather than trade turns.** Do NOT re-open: the extension document (both approved `538ae06b`), the five S62 edits, the unified Option-B rule, the four S62 questions, the measure-first ruling, the payload analyzer/tests, the role-coverage states, the readback ruling, `.gitattributes`, the Stage-C label, Step 25, the screen result, the plan default, A2, Codex's two S77 rulings, its four S78 rulings, its S80 ruling on the forty escapes, its S81 Finding-G ruling, its S83 rulings on the sixth exit and the `_exact_steps` deletion, the closed attribution rung, the closed dev-fit contract, or the closed trainer. **The file is MIXED-EOL** — Codex appends LF, the older bulk is CRLF; append LF and verify additions-only rather than assuming.
 - **Monitoring chat:** `chats/Claude-Codex-Human/Transcript Order Monitoring/…- Active.md` — **S98 ADDED NOTHING: NO RECURRENCE.** Verified at the git level rather than assumed: Codex's S97 commit `1923717` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -26907,3 +26907,78 @@`, additions only (`+75/-0`), its header landing at line 26,911 after my S97 header at 26,624, and it touches this monitoring file not at all. My own two appends are likewise tail-only, `+177/-0` and `+161/-0`. **The duty is to flag recurrences, so a clean session adds no note — but verify at the git level regardless, and DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S95 ADDED NOTHING: NO RECURRENCE.** Verified at the git level rather than assumed: Codex's S94 commit `5d407f4` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -25916,3 +25916,161 @@`, additions only (`+158/-0`), and touches this monitoring file not at all; its two S94 turns landed at lines 25,920 and 26,000, both after my S94 header at 25,734. My own append is likewise a single tail hunk, `+213/-0`. **The duty is to flag recurrences, so a clean session adds no note — but verify at the git level regardless, and DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S91 ADDED NOTHING: NO RECURRENCE.** Verified rather than assumed: my pre-write read of the Phase-2 transcript (1,556,240 B / 24,824 lines) equalled Codex's S90 reported POST-write figures exactly, so its append was clean and nothing moved between sessions; Codex's own S90 report independently records `+98/-0` additions-only with its header at line 24,728 and the monitoring file untouched. My own append is likewise a single tail hunk, `+132/-0`. *(Prior: **S90 ADDED NOTHING: NO RECURRENCE.** Codex's S89 commit `553defa` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -24500,3 +24500,96 @@`, additions only (`+93/-0`), and touches this monitoring file not at all. My own append was a single tail hunk `@@ -24593,3 +24593,134 @@`, `+131/-0`.)* *(Prior: **S89 ADDED NOTHING: NO RECURRENCE.** Codex's S88 commit `f836982` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -24176,3 +24176,122 @@`, additions only (`+119/-0`), and touches this monitoring file not at all. My own append is likewise a single tail hunk `@@ -24295,3 +24295,208 @@`.)* *(Prior: **S88 ADDED NOTHING: NO RECURRENCE.** Codex's S87 commit `08434d2` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -23790,3 +23790,186 @@`, additions only (`+183/-0`), and touches this monitoring file not at all; it also touched NO production file. My own append is likewise a single tail hunk. **The duty is to flag recurrences, so a clean session adds no note - but verify at the git level regardless, and DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S87 ADDED NOTHING: NO RECURRENCE.** Verified at the Git level rather than assumed: Codex's S86 commit `56c790c` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -23525,3 +23525,92 @@`, additions only (`+89/-0`), and touches this monitoring file not at all. My own append is likewise a single tail hunk `@@ -23614,3 +23614,179 @@`. **The duty is to flag recurrences, so a clean session adds no note - but verify at the git level regardless, and DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S86 ADDED NOTHING: NO RECURRENCE.** Verified at the Git level rather than assumed: Codex's S85 commit `f5ee81a` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -23249,0 +23250,98 @@`, additions only, landing after my S85 header, and it touches this monitoring file not at all. My own append is likewise a single tail hunk `@@ -23347,0 +23348,180 @@`. **The duty is to flag recurrences, so a clean session adds no note — but verify at the git level regardless, and DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S85 ADDED NOTHING: NO RECURRENCE.** Verified at the Git level rather than assumed: Codex's S84 commit is a SINGLE hunk `@@ -22897,0 +22898,125 @@` on the Phase-2 transcript — additions only, at the then-physical tail, after all three of my S84 headers — and it touches this monitoring file not at all. My own append is likewise a single tail hunk `@@ -23022,0 +23023,227 @@`. **The duty is to flag recurrences, so a clean session adds no note — but verify at the git level regardless, and DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S84 ADDED NOTHING: NO RECURRENCE.** Verified two ways rather than assumed: at the git level Codex's S83 commit is `+76/-0` on the Phase-2 transcript and touches this file not at all; and my own pre-write read of the transcript (1,428,567 bytes, sha256 `0411d1f2…`) equalled Codex's reported POST-write figures exactly, so its append was clean and nothing moved between sessions. **The duty is to flag recurrences, so a clean session adds no note — but verify at the git level regardless.** *(Prior state, unchanged on disk: 251 lines / 15,255 bytes; my S83 note is `+47/-0`, header unique at line 208, physically last.)* It records my independent git-level verification of the S82 recurrence (additions-only, both files), the point that the transcript's chronological order is now permanently broken in the middle, and the general rule Codex's own byte-assertion failure produced: **on a mixed-EOL file a PATCH and a BYTE APPEND are different operations, and only the second can promise a byte-identical prefix.** *(Historical: **118 lines; last post was mine at S74. NO RECURRENCE IN S75 OR S76, so no note was added — the duty is to flag recurrences.** S76 check, at the git level: Codex's two S75 appends landed as a single `+126/−0` hunk at line 20,001, after the recorded 20,000-line tail, nothing inserted before the boundary and nothing moved. **DO NOT EXTEND THE STREAK NUMBER FROM MEMORY — it has been wrong five times running in this project. Sweep the transcript's commit history if a number is actually wanted.** *(Stale historical figures below, kept only so a reader knows they are stale:* **streak FORTY-TWO**: Codex's S71 append verified at the git level in my S72 — commit `5250aa4`, `+63/−0`, header unique and correctly ordered after mine — and my own S72 append passed all five gates. *(Prior: **streak FORTY-ONE**: Codex's S70 append verified at the git level in my S71 — `+110/−0`, prior content a byte-identical prefix, header unique, physically last — and my own S71 append passed all five gates.)* *(Prior: **streak thirty-nine**: Codex's S69 append was `+92/−0` with its header unique at line 18,257 and physically last, verified at the git level in my S70, and my S70 append passed all five gates — pre-write prefix retained byte-for-byte with an identical SHA-256 asserted *inside* the writer, header unique, physically last, `+165/−0`.)* The duty is to flag recurrences, so a clean session adds no note; verify at the git level regardless.
 
-## Scratchpad (S99, NOT committed)
+## Scratchpad (S100, NOT committed)
+
+```text
+<session scratchpad>/
+  audit_a_plan.py    *** THE PUBLISHED-ARTIFACT AUDIT, 106 checks, IMPORTS NOTHING from the
+                     producer.  Successor to S97's probe3.  Keep its two helpers - canon()
+                     and rawd() side by side, and dig() for retrieving a value through the
+                     field path the DOCUMENT names.  Its section 13 is a self-contained
+                     full-leaf delta so a separate diff script is no longer needed. ***
+  audit_b_gates.py   drives the module's gates IN CALL ORDER with TWO negative controls, the
+                     three-location authentication measurement, the spent-plan refusal driven
+                     rather than assumed, and byte-determinism at a fresh destination.
+                     argparse'd (--data-root, --skip-data) so it runs without the dataset.
+  audit_c_namespace.py
+                     the TEMP-REPLICA probe.  Rebuild the real directory shape under a
+                     TemporaryDirectory and drive the REAL guard at it.  Reach for this
+                     whenever a question is "what would the executable do if...".
+  append_chat.py     *** NOW SIX GATES: prior digest, no CRLF, header uniqueness, byte
+                     append, prefix re-hash, physical-tail ASSERTED (not printed), and the
+                     new one - HEADER TIMESTAMP vs the clock AT THE WRITE, +/-120 s. ***
+  readme_append.py   byte-level Live-Run README appender; anchor asserted unique, prefix AND
+                     suffix asserted after the write.
+  turn1_audit.md / turn2_auth.md / turn3_ts.md / tom.md / new_head.md
+```
+
+## Scratchpad (S99, superseded - still on disk and still the right shapes)
 
 ```text
 <session scratchpad>/

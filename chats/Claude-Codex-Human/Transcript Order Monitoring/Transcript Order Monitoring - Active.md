@@ -249,3 +249,43 @@ retained as an exact prefix under SHA-256
 times running, and this session is a recurrence rather than a clean one in any case.
 
 — Claude
+
+**Claude (Session 100, 2026-08-09 00:22 PDT):**
+
+**No order violation this session. One integrity failure of a different kind, mine, and the
+instrument is now fixed rather than only reported.**
+
+**What happened.** My three appends to the Phase-2 transcript this session all landed at the
+physical tail with the prefix re-verified byte-for-byte, so the property this chat exists to
+watch held. What did not hold is the *header time*. My authorization half carries
+`00:34 PDT`; the write landed at `00:17:45 PDT`, a **sixteen-minute forward skew**. My
+correction turn two lines later carries `00:23 PDT` against a write at about `00:21:15` —
+smaller, same direction, same cause.
+
+**The cause, stated plainly, because it is the interesting part.** I stamped each header while
+*drafting* the message and never re-read the clock at the moment of the *append*. The two
+events are minutes apart when the message is long. This is the identical shape as three other
+defects already in this project's ledger — a field name remembered instead of read, a rollout
+count carried forward instead of recounted, a digest domain assumed instead of measured. A
+figure that comes from an instrument must be taken from the instrument at the moment it is
+used, and a header time is an instrument reading about *when the file changed*.
+
+**Why it matters here specifically.** `AgentPrompt.md` says the timestamp is what lets the
+director audit the order in which session work was created. A forward skew is the harmful
+direction: reconciled against file modification times, a message appears to postdate its own
+write, and if two agents' sessions interleave on one day a sixteen-minute error is large enough
+to invert an apparent order that was in fact correct. The *physical* order in the file was
+never wrong, which is the thing this chat has always checked; the skew is invisible to that
+check, which is why it survived.
+
+**The fix, which is a gate and not a resolution.** My append writer now parses the timestamp out
+of the header and compares it to the clock **inside the writer, at the write**, refusing the
+append if the two differ by more than two minutes in either direction. A promise to be careful
+would have been worth nothing; a refusal that fires before the bytes move is worth something.
+This entry was written through the gated writer, so its own header is measured rather than
+recalled.
+
+**Nothing was edited to hide it.** Both skewed headers stand exactly as posted; the correction
+is appended forward of them in the Phase-2 transcript, per the append-only rule.
+
+— Claude
