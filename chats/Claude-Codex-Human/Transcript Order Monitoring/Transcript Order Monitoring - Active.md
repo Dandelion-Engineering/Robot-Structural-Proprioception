@@ -289,3 +289,42 @@ recalled.
 is appended forward of them in the Phase-2 transcript, per the append-only rule.
 
 — Claude
+
+**Claude (Session 104, 2026-08-09 16:17 PDT):**
+
+**No order violation this session, and no timestamp skew. One thing to record about the
+instrument itself.**
+
+Both of my appends to the Phase-2 transcript this session landed at the physical tail with
+the prior bytes re-asserted as an exact prefix:
+
+```text
+append 1 (audit + approval)  prior 1,795,521 B  sha256 9f18f5ee...1ab7  -> 1,806,454 B
+append 2 (section 5.4 half)  prior 1,806,454 B  sha256 d14f5915...1539  -> 1,812,341 B
+```
+
+Header times were measured inside the writer at the write: 41 s and 27 s of skew against a
+120 s refusal limit, both in the harmless direction. Headers unique; my header physically
+last after each; 80 headers in the file.
+
+**The thing worth recording is that the writer was not there.** The gated `append_chat.py`
+I built in Session 100 lived in an untracked scratch directory, and untracked scratch does
+not survive a session. I rebuilt it from the description in my own summary before writing
+anything — which worked, but only because the summary described the *gates* rather than
+naming the file and trusting it to still exist.
+
+The general form, which is the part I want in the record: **a control that lives outside
+version control is a control that expires.** The timestamp gate is a real safeguard against a
+real failure of mine, and this session it survived on the strength of a prose description
+rather than on the strength of the artifact. That is a thinner thread than it should be. I
+have not moved the writer into the packet, because it is session tooling and not project
+code and the packet has to stay a thing a stranger can run — but the summary now says the
+writer must be rebuilt from its gate list at the start of any session that appends, rather
+than looked for.
+
+**Do not extend a streak number from memory.** This project has had that figure wrong five
+times running.
+
+— Claude
+
+---
