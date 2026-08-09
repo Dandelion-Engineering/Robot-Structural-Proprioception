@@ -6,7 +6,7 @@ This folder contains Codex-owned research, source records, and continuity for th
 
 - [`Literature Foundation.md`](Literature%20Foundation.md) — Codex's independent Phase-0 field survey. It is a concluded research input; corrections discovered later propagate into current artifacts rather than rewriting the foundation.
 - [`references.md`](references.md) — living source ledger for Codex's project work, including Phase-1 review sources. Reconcile it with Claude's independent ledger when the project bibliography is assembled.
-- [`Config Freeze Readiness Review.md`](Config%20Freeze%20Readiness%20Review.md) — Session-26 gate audit that established the seven-gate path to final freeze. Its same-state review is closed; Gates 1 and 3 plus the current Gate-2 base roles are complete. Amendment A2 is in force. Gate-4 rung 1, its dev-fit contract, assignment-derived window policy, first ten development-only fits, bounded in-sample analysis, strengthened analysis tests and public forward correction are jointly settled. The first authorized capacity sweep failed safely after two C9 fits and one curve fit on Finding AU. Codex approves repaired production blob `53e5dcb7...` and reviewer-edited test blob `6d49edde...`; Claude owner re-review is open. The old plan and both authorization halves are spent, so no retry, replacement plan, capacity analysis or later gate is authorized and final confirmatory config remains blocked.
+- [`Config Freeze Readiness Review.md`](Config%20Freeze%20Readiness%20Review.md) — Session-26 gate audit that established the seven-gate path to final freeze. Its same-state review is closed; Gates 1 and 3 plus the current Gate-2 base roles are complete. Amendment A2 is in force. Gate-4 rung 1, its dev-fit contract, assignment-derived window policy, first ten development-only fits, bounded in-sample analysis, strengthened analysis tests and public forward correction are jointly settled. The first authorized capacity sweep failed safely after two C9 fits and one curve fit on Finding AU. The repaired production/test pair is now jointly approved. Replacement zero-fit plan blob `d7104e55...` / SHA-256 `ffb00965...b7cb31` is published and Codex-approved; Claude's independent plan review remains open. Both old authorization halves are spent, no fresh half exists, and every fit, capacity analysis, later-role read and final confirmatory config remains blocked.
 
 ## Continuity and session record
 
@@ -109,6 +109,7 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`Session Summaries/HumanReport96.md`](Session%20Summaries/HumanReport96.md) — detailed record of Codex Session 96 (returned test approval close, corrected zero-fit plan regeneration and independent audit, 1,765-test verification, regular progress report, and Claude plan-review handoff before any fit).
 - [`Session Summaries/HumanReport97.md`](Session%20Summaries/HumanReport97.md) — detailed record of Codex Session 97 (Step-3 closure intake, clean-machine checkpoint ruling, Claude progress-report approval, ten-anchor preflight, and one-half Step-4 authorization with execution still blocked).
 - [`Session Summaries/HumanReport98.md`](Session%20Summaries/HumanReport98.md) — detailed record of Codex Session 98 (Finding-AU failed-run audit, approval of the once-per-point and above-C9 repair, skipped-directory mutation, reviewer-edited test approval, and owner handback before any replacement plan).
+- [`Session Summaries/HumanReport99.md`](Session%20Summaries/HumanReport99.md) — detailed record of Codex Session 99 (Finding-AU loop closure intake, exact predicted `stage1-run-2` plan publication, independent 413-leaf audit, owner approval, and Claude handoff with execution still blocked).
 - [`Progress Reports/Progress Report Session 8.md`](Progress%20Reports/Progress%20Report%20Session%208.md) — first regular every-eighth-session director update at the Accessible-Piece bar.
 - [`Progress Reports/Progress Report Session 16.md`](Progress%20Reports/Progress%20Report%20Session%2016.md) — second regular director update, covering the synchronous-probe correction, noisy pilot, real contact integration, and matched-contact BLOCK.
 - [`Progress Reports/Progress Report Session 24.md`](Progress%20Reports/Progress%20Report%20Session%2024.md) — third regular director update, covering the bounded-task redesign, information/control split, structural-action block, actuator headroom, and corrected probability-channel boundary; next regular Codex report is Session 32.
@@ -331,5 +332,6 @@ agents/Codex/
     ├── HumanReport95.md
     ├── HumanReport96.md
     ├── HumanReport97.md
-    └── HumanReport98.md
+    ├── HumanReport98.md
+    └── HumanReport99.md
 ```
