@@ -1,6 +1,6 @@
 # Summary of Only Necessary Context - Codex
 
-**Last rewritten:** 2026-08-08 - Codex Session 97
+**Last rewritten:** 2026-08-08 - Codex Session 98
 
 ## Resume here
 
@@ -9,122 +9,160 @@ The project remains in **Phase 2 - Execution**. Final configuration is **UNFROZE
 unmaterialized. Every Protocol-P measurement, payload extension, first learned fit, in-sample
 analysis and capacity action remains development evidence only.
 
-The capacity design, Route-A executable/tests and corrected official zero-fit plan are jointly
-approved. Step 3 is closed. The immediate gate is **Claude's independent decision on the second
-Step-4 authorization half**:
+The first authorized Stage-1 capacity sweep ran once at `stage1-run-1` and failed safely after
+three fits. Finding AU is repaired in production, but the executable/test review loop is **open on
+Claude** because Codex reviewer-edited the returned test file.
 
 ```text
-joint capacity design approval                COMPLETE
-joint Route-A executable/test approval        COMPLETE
-corrected zero-fit plan creation              COMPLETE
-joint exact-state plan approval (Step 3)      COMPLETE
-Codex Step-4 authorization half               ISSUED
-Claude Step-4 authorization half              ABSENT
-execute permission                            ABSENT
-C9 and forty curve fits                       BLOCKED
+joint capacity design approval                    COMPLETE
+old Route-A executable/test approval              SUPERSEDED BY AU REPAIR
+stage1-run-1 plan                                 CONSUMED / SUPERSEDED / PRESERVED
+old Step-4 halves                                 SPENT
+stage1-run-1 execution                            SPENT ONCE; FAILED SAFELY
+Finding-AU production review by Codex             APPROVED
+Finding-AU reviewer test state                    APPROVED BY CODEX / OPEN ON CLAUDE
+stage1-run-2 plan                                 ABSENT / BLOCKED
+fresh Step-4 authorization                        ABSENT / BLOCKED
+retry execution                                   BLOCKED
 ```
 
-No execute command may run until Claude physically records a matching half that names the exact
-approved plan digest. One half is not authorization.
+Do not run `--mode plan` or `--mode execute` yet. Claude must genuinely re-review the exact
+reviewer test blob first. A reviewer edit and handoff are not owner approval.
 
-## Exact approved capacity state
+## Finding AU and the preserved failed run
+
+Claude Session 98 recorded its matching old Step-4 half and executed the single authorized
+`stage1-run-1` invocation. It ran from 2026-08-08 16:15:53 to 16:16:26 PDT and terminated at
+`X_OUTPUT_DIRTY` on the second curve arm.
 
 ```text
-Reproducibility Packet/protocol/capacity-escalation-v0.1.md
-  Git blob                 b45efa477de10331ca61e1af73b2834b22df3fb6
-  canonical/raw SHA-256    05109d973f1611756456a01aea8a0aebf7c33ec73e5243225f1f733e3c15e002
+fits attempted             3 = 2 C9 equivalence + 1 curve
+checkpoints written        3 = 2 C9 equivalence + 1 curve
+curve census               10 REUSED / 1 COMPLETED / 39 UNATTEMPTED
+rollouts / generation      0 / 0
+non-development reads      0
+elapsed_s                  31.313
+```
 
+Mechanism: `_execute_mode` called `require_clean_capacity_point(point_dir)` once per **arm**
+against a directory ten arms share. The first width-16 arm wrote its checkpoint; the second
+width-16 arm found that checkpoint and treated this run's own output as an earlier attempt. The
+executable could never complete more than one arm per capacity point.
+
+The preserved evidence is:
+
+```text
+Reproducibility Packet/results/capacity_sweep/stage1-run-1/capacity_sweep_result.json
+  Git blob                 32743393908cf7a5f2109eabb034eafe849d78a7
+  raw SHA-256              2be7e421cfff103296b94a1ba3c539320a334f8e242e4352994b10be54817559
+
+.../stage1-run-1/_equivalence/capacity_sweep_equivalence.json
+  Git blob                 cd8bdc1421961c6d7b3a828992e8f22996003370
+  raw SHA-256              e5afaec2b525d38f8a8d421bcc74d3370b97edc9e84a9b8035d88725946b8182
+```
+
+Three `.pt` files under the failed root are Git-ignored but present. Their raw digests match the
+tracked JSON. Section 7.3 controls: do not delete, clean, reuse, move or import from this root.
+
+## What survived the failed run
+
+C9 passed end to end through the complete fit path:
+
+```text
+C1 seed 0   produced 6403e894... == approved 6403e894...   PASS
+S  seed 4   produced eb9dbb0c... == approved eb9dbb0c...   PASS
+```
+
+This is valid development evidence that the old approved width-parameterized executable reproduced
+the approved 32-channel fit bytes across both suites and two seeds. It does not license a curve,
+capacity choice, analysis or confirmatory claim. Because the AU repair moved the executable bytes,
+the eventual conforming retry must re-run and re-establish C9; the old pass is not inherited.
+
+The one completed curve arm is 16 channels / C1 / seed 0 with in-sample macro-F1 0.463789,
+accuracy 0.802632, final loss 0.152582 and 10,586 parameters. It is a partial-run record only.
+C10 correctly leaves thirty-nine arms `UNATTEMPTED`, so section 5.4 cannot be applied.
+
+## Exact open executable/test state
+
+Codex explicitly approves:
+
+```text
 Reproducibility Packet/scripts/utils/capacity_sweep.py
-  Git blob                 61d4fb97c2d87606134cbf0a1e1c4458e4997cd6
-  canonical/raw SHA-256    d91db2effbdc05001eebd3838eee19852f4fd7b4e90f684543f224a1e45f821e
+  Git blob                 53e5dcb79d4f8c131b6856fd5fa57fce6049976a
+  canonical/raw SHA-256    be07d95e4b4b9fa1a8934a165681fdbc9e7e885236bd1de3c38b661288f641fa
 
 Reproducibility Packet/tests/test_capacity_sweep.py
-  Git blob                 8e97f6a94a3c5ac12e6ac85376913c9104424725
-  canonical/raw SHA-256    61f700fb4b6c51df495cdfca1c0fa0b5aacb3d9021c0c04e3cee2a72746b99e0
+  Git blob                 6d49edde03e24a262e4246669fad8e42859c6f8a
+  canonical/raw SHA-256    640f23b5990d9fc9f17fe0eeb39bbf9192abaa26ab1726653d9df9942c1747d3
+```
 
+Production repair:
+
+1. iterate the four distinct `curve_arms()` channel values and call the real point-cleanliness
+   guard once for each; and
+2. do so above C9, after the atomic root claim and authenticated dev-input load but before any fit.
+
+Codex approves both properties. Moving the check below C9 would spend two fits before a known
+output refusal and would not close the foreign-writer race, which is an explicit residual either
+way.
+
+Codex found one returned-test gap: mutating the loop to check only `[48]` still passed all three
+Claude tests. The reviewer edit wraps the real guard and requires the exact call sequence
+`channels_016`, `channels_024`, `channels_040`, `channels_048`. That mutation now fails.
+
+Exact-state verification:
+
+```text
+test_capacity_sweep.py, normal       217 passed
+test_capacity_sweep.py, python -O     217 passed, expected pytest warning
+full packet                           1,768 passed
+compileall                            clean
+git diff --check                      clean
+skipped-point mutation                caught
+```
+
+Claude explicitly approved its earlier test blob `2dc93297...`, not Codex's `6d49edde...` edit.
+The loop closes only if Claude genuinely reopens and explicitly approves the exact reviewer pair.
+
+## Consumed plan and required restart sequence
+
+The consumed plan remains preserved:
+
+```text
 Reproducibility Packet/results/capacity_sweep/capacity_sweep_plan.json
   Git blob                 c048b54b8081271d76a6adacf8526d201c446c17
   canonical/raw SHA-256    bdf674d5f717e5256904ca12d9670a8e02ca0351fb9b5d625a38809d1bf1c0a5
-  physical state           13,786 B / one canonical JSON line / no final newline
+  run label                stage1-run-1
 ```
 
-Both agents explicitly approve the same plan bytes. Claude's Session-97 audit re-derived 413
-leaves independently, found exactly one change from the superseded plan, measured plan-byte
-determinism across two scratch destinations plus the published artifact, and drove the plan gate
-against one valid artifact plus twenty-one neighbours. Step 3 is genuinely closed.
+The repaired module refuses it with `DevFitContractError: the authorized plan was written by a
+different code state`. Do not overwrite this file: it is the exact plan the failed evidence names.
 
-## Codex Step-4 half
+The conforming order is four separate gates:
 
-Codex Session 97 issued one authorization half for exactly one execution of plan SHA-256
-`bdf674d5f717e5256904ca12d9670a8e02ca0351fb9b5d625a38809d1bf1c0a5`, run label
-`stage1-run-1`, in the current tree with packet-relative base `results/capacity_sweep` and the ten
-pre-existing approved 32-channel checkpoints.
+1. Claude owner-reviews and approves the exact AU repair pair.
+2. One zero-fit plan is generated at new label `stage1-run-2`; both agents independently approve
+   its exact bytes.
+3. A fresh two-half Step-4 joint authorization names that new digest, label, base, executable,
+   anchors and maximum budget.
+4. One retry runs both C9 fits plus all forty curve fits from the fresh root. Then both agents
+   review the exact result before section 5.4 or C7.
 
-The maximum budget is exactly:
-
-```text
-two C9 equivalence fits
-forty new curve fits       widths 16/24/40/48 x suites C1/S x seeds 0-4
-checkpoint writes         42 maximum
-generation                0
-rollouts                   0
-non-development reads      0
-```
-
-C9 must pass before any curve arm. Before the eventual command, the runner must re-check all ten
-anchor digests, the unchanged plan/code state, absence of `stage1-run-1`, and absence of a
-concurrent packet/root writer. Claude must independently issue the matching half first.
-
-## Session-97 local preflight
-
-```text
-plan SHA-256                         bdf674d5...1c0a5 exact
-plan/ledger/physical checkpoint      10 / 10 exact matches
-all packet checkpoints               exactly those ten under results/dev_fit
-foreign .pt files                    0
-delivered data root                  present
-stage1-run-1 root                    absent
-config/config.json                   absent
-full packet suite                    1,765 passed in 119.21 s
-fits/checkpoints/generation/rollouts 0 / 0 / 0 / 0 this session
-pilot/validation/test reads          0 / 0 / 0
-lifetime Protocol-P rollouts         278 unchanged
-```
+No old authorization half carries forward. The retry is a second execution and requires a second
+joint act.
 
 ## Clean-machine checkpoint obligation
 
-Claude Session 97 correctly surfaced that the ten approved anchor checkpoints exist only as
-Git-ignored files in this working tree. Execute mode reads them from the fixed packet-relative
-`results/dev_fit` namespace and offers no checkpoint-directory override. The packet's current
-regeneration/analyzer instructions write/read `results/dev_fit_reproduced`, so a clean reader
-following the runbook still cannot run the capacity sweep.
+The approved ten anchor checkpoints and the failed run's three checkpoint files exist only as
+Git-ignored files in this working tree. A completed retry would add forty-two more ignored files.
+This is not a `director_requests.md` item and does not block a correctly authorized local
+development measurement, but it is a real **Phase-3 Reproducibility Packet obligation**.
 
-Codex ruled:
-
-- This is **not** a `director_requests.md` item. It needs no Randy identity, access or judgment.
-- It does not block the local development measurement once both authorization halves exist; the
-  current tree holds all exact approved bytes.
-- It is a real agent-owned **Phase-3 Reproducibility Packet obligation**.
-- Before packet completion, either fresh-machine regeneration must reproduce all ten raw digests
-  and an authenticated promotion/install step must place them into `results/dev_fit`, or the exact
-  approved bytes must be available through a documented authenticated packet data path.
-- Disclosure alone cannot satisfy the packet playbook's binary fresh-environment gate. If neither
-  route works, the packet remains explicitly incomplete for this sweep.
-- Do not weaken C9 with a free checkpoint-directory flag.
-
-## Claude Session-96 progress report
-
-Both agents now approve the exact report:
-
-```text
-agents/Claude/Progress Reports/Progress Report Session 96.md
-  Git blob                 c824173cb0d75bd7e10ca5b20567004af89a0ba7
-  raw SHA-256              eeeaf53d8ef8074fb74c4b58bd4c374e88462386844154eae6246bbc3f27e157
-```
-
-Codex Session 97 approved it unchanged. It accurately explains finding AT, states the
-twelve-Claude-session scientific-result gap, reports no Slot-8 change, and preserves all
-reserved-data and confirmatory boundaries. The report review loop is closed.
+Before packet completion, either fresh-machine regeneration must reproduce raw checkpoint digests
+and an authenticated promotion/install step must put them in the namespace the sweep reads, or the
+exact bytes must be obtainable through a documented authenticated packet data path. Disclosure
+alone cannot satisfy the binary fresh-environment gate. Do not weaken C9 with a free checkpoint
+directory override.
 
 ## First Gate-4 fit and bounded analysis
 
@@ -136,12 +174,11 @@ Reproducibility Packet/results/dev_fit/dev_fit_result.json
   Git blob           d4cefb61067f1e28c9ba34a1be41d060e8fb5fbe
 ```
 
-Claude Session 84 ran C1/S x seeds 0-4 once, CPU, twenty epochs, batch eight, learning rate
-`1e-3`, 152 in-sample examples per arm. The read-only analysis remains jointly approved:
+The approved read-only analysis remains:
 
 ```text
 Reproducibility Packet/scripts/analyze_dev_fit.py
-  Git blob  31381b18f4f1c375128b91367c2193cb49ae84d4
+  Git blob           31381b18f4f1c375128b91367c2193cb49ae84d4
 
 Reproducibility Packet/results/dev_fit/dev_fit_analysis.json
   Git blob           0d00b5ca55fc9bba65440c009c1568ec5f5470b7
@@ -151,7 +188,7 @@ Reproducibility Packet/results/dev_fit/dev_fit_analysis.json
 Dev census is healthy 8 / structure 16 / actuator 32 / sensor 96 / OOD 0. In-sample mean
 macro-F1 was C1 0.682 and S 0.650; paired S-C1 mean `-0.0321`, sample SD `0.1496`. These values
 show optimizer/data-path operation on training examples only, not generalization, a suite result,
-OOD performance or capacity choice.
+OOD performance or a capacity choice.
 
 ## Amendment A2 and payload boundary
 
@@ -165,29 +202,28 @@ Accessible Claim Sheet.md   203aab77f1f244f0a11943955a6f8ec123944030
 The one authorized payload-boundary result remains closed at canonical SHA-256
 `7746372f...9aa04`, outcome `X_CASE_EMPTY`, complete mass coverage, replay pass and 127 extension
 rollouts. It licenses no fitted curve, mechanism, config freeze or confirmatory conclusion.
-Lifetime Protocol-P-related physical rollouts remain **278**: 151 before the extension plus its
-one spent 127-rollout invocation.
+Lifetime Protocol-P-related physical rollouts remain **278**.
 
 ## Transcript and public state
 
-Codex Session 97 appended one verified additions-only turn to the active Phase-2 transcript:
+Codex Session 98 appended one verified additions-only turn to the active Phase-2 transcript:
 
 ```text
-pre-write bytes       1,676,645
-pre-write lines       26,909
-pre-write SHA-256     dd317527adb02326de68ea5c49db6f7b85b9ea10e28cb0f7e15296f8d8fdcf01
-final bytes           1,680,736
-final lines           26,984
-final SHA-256         99b4a43fa56fd957f440d16bc3c2ab69ce1ff307c8a699a6721aede7df4ac526
+pre-write bytes       1,701,780
+pre-write LF count    27,322
+pre-write SHA-256     f9c12e5b03ba2b9d7969e70c319054500651fb98dfba120d612e0be788f63a5b
+final bytes           1,705,838
+final LF count        27,397
+final SHA-256         a03f87a26ac2b7f6506b294c757b6776a67ca894f9cae649a915cda3a508065f
 prefix retained       exact
-header                unique at line 26,911, after boundary
+header                unique at physical line 27,324
 Git diff              +75 / -0
 last agent            Codex
 ```
 
-No Transcript Order Monitoring note was required. The public README has one new lean milestone:
-one of two Step-4 authorization halves exists, training remains blocked, and the clean-machine
-anchor path is an open Phase-3 obligation.
+No Transcript Order Monitoring note was required. The public README already has Claude's lean
+Finding-AU milestone and was deliberately left unchanged in Codex Session 98 because this session
+is an open review handoff, not a newly closed public artifact or phase.
 
 ## Freeze sequence and authorization boundary
 
@@ -202,11 +238,12 @@ draft config and role-separated storage
   -> untouched confirmatory generation/read
 ```
 
-Absent Claude's matching Step-4 half, all remain blocked:
+Blocked until the AU loop, new plan review and fresh authorization close:
 
 - both C9 fits and all forty capacity curve fits;
 - every capacity checkpoint write;
-- C7 capacity analysis construction or execution;
+- plan regeneration before Claude owner approval;
+- C7 construction or execution and section-5.4 interpretation;
 - pilot, validation or test outcome reads;
 - capacity selection or probability/detection/abstention/OOD/uncertainty thresholds;
 - new data generation, replacement, supersession or regeneration;
@@ -218,22 +255,21 @@ Absent Claude's matching Step-4 half, all remain blocked:
 
 ## Next session
 
-- Next Codex session number: **98**.
+- Next Codex session number: **99**.
 - Next regular Codex progress report: **Session 104** unless an event trigger fires sooner.
-- First inspect whether Claude has issued a matching Step-4 half naming exact SHA-256
-  `bdf674d5...1c0a5`.
-- If Claude has not, do not execute. Continue only work independently authorized by the live
-  transcript.
-- If both halves exist, recheck the ten approved checkpoint digests, exact plan/code state,
-  absent `stage1-run-1` root and writer isolation before the single execute command.
-- After execution, do not interpret or build C7 until both agents review the exact result and
-  equivalence artifacts.
+- First inspect whether Claude genuinely approved test blob `6d49edde...` with production blob
+  `53e5dcb7...`.
+- If not, do not plan or execute; continue only independently authorized work in the live thread.
+- If exact owner approval exists, plan mode may generate one new `stage1-run-2` artifact with zero
+  fits. Preserve the consumed `stage1-run-1` plan and failed root.
+- Plan approval, fresh Step-4 authorization, retry execution, exact result review, section 5.4 and
+  C7 remain separate gates.
 
 ## Workflow rules
 
-- Explicit same-state approval only. Creation, edits, handoffs, downstream use and silence are
-  not approval.
-- One authorization half is not joint permission.
+- Explicit same-state approval only. Creation, edits, handoffs, downstream use and silence are not
+  approval.
+- An old plan or authorization half never carries across a producer-code change or retry.
 - Use `./venv` and packet-scoped commands; never bare Python or root-wide pytest.
 - Keep development screens, confirmatory evidence, detection, attribution, information, action
   authorization and control outcome separate.

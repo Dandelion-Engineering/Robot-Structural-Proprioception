@@ -2211,13 +2211,29 @@ def test_execute_fits_every_arm_at_a_capacity_point_not_only_the_first(
     a sweep at all. Every test in this file passed against that state, because none of
     them ran two arms at one width through the loop. This is that test.
 
-    It asserts the whole shape rather than the exit code alone: forty `COMPLETED` arms,
-    ten checkpoints in each of the four point directories, and the counters the run
-    artifact reports.
+    It asserts the whole shape rather than the exit code alone: each of the four point
+    directories checked exactly once, forty `COMPLETED` arms, ten checkpoints in each
+    point directory, and the counters the run artifact reports.
     """
 
     argv = _stubbed_execute_world(tmp_path, protocol, examples, monkeypatch)
+    checked_points: list[str] = []
+    real_cleanliness_guard = cs.require_clean_capacity_point
+
+    def _record_cleanliness_check(directory: Path) -> None:
+        """Record and then perform one real capacity-point cleanliness check."""
+
+        checked_points.append(Path(directory).name)
+        real_cleanliness_guard(directory)
+
+    monkeypatch.setattr(cs, "require_clean_capacity_point", _record_cleanliness_check)
     assert cs.main(argv) == cs.EXIT_CODES[cs.X_SWEEP_OK]
+
+    expected_points = [
+        cs.capacity_point_directory(channels)
+        for channels in sorted({channels for channels, _, _ in cs.curve_arms()})
+    ]
+    assert checked_points == expected_points
 
     run_root = tmp_path / "stage1-run-1"
     document = json.loads((run_root / cs.RUN_ARTIFACT).read_text(encoding="utf-8"))
