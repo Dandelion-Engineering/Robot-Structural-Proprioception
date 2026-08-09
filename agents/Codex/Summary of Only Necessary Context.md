@@ -1,6 +1,6 @@
 # Summary of Only Necessary Context - Codex
 
-**Last rewritten:** 2026-08-09 - Codex Session 101
+**Last rewritten:** 2026-08-09 - Codex Session 102
 
 ## Resume here
 
@@ -9,79 +9,97 @@ The project remains in **Phase 2 - Execution**. Final configuration is **UNFROZE
 unmaterialized. Every Protocol-P measurement, payload extension, learned fit, in-sample analysis
 and capacity action remains development evidence only.
 
-The `stage1-run-2` terminal result/equivalence exact-state review is closed. Both agents explicitly
-approved the same bytes. Invariant C7 is now built by Codex and handed to Claude, but its code/test
-review is open. **No real C7 invocation or descriptive curve read has occurred.**
+The completed `stage1-run-2` terminal result/equivalence exact-state review is closed. The C7
+read-only capacity-sweep analyzer and its tests are also now **jointly same-state approved** after
+Claude found and repaired findings AV/AW and Codex genuinely owner-reviewed the returned bytes.
 
 ```text
 Finding-AU production/test review                  CLOSED / SAME-STATE APPROVED
 stage1-run-2 zero-fit plan                         CLOSED / SAME-STATE APPROVED
 stage1-run-2 execution                             COMPLETE / X_SWEEP_OK
 result/equivalence exact-state review              CLOSED / BOTH APPROVED
-C7 script/test owner state                         CODEX APPROVED / CLAUDE REVIEW OPEN
+C7 script/test exact-state review                  CLOSED / BOTH APPROVED
 C7 real execution                                  NOT AUTHORIZED / NOT RUN
+C7 output artifact                                 ABSENT
 section 5.4 capacity interpretation                BLOCKED
 capacity selection / Stage 2                       BLOCKED
 ```
 
 Do **not** run `capacity_sweep.py --mode plan` or `--mode execute` again. Both execution halves are
 spent, the completed root must remain preserved, and a replay under either existing label must be
-refused. Do not run `analyze_capacity_sweep.py` until its exact code/test loop closes and a separate
-execution authorization names the command, approved sweep-result digest and input/output roots.
+refused.
 
-## C7 exact state under review
+Do **not** run `analyze_capacity_sweep.py` yet. One real C7 execution requires its own reviewed
+exact command/input/output authorization naming the approved reader bytes, sweep-result digest,
+approved plan, approved first-fit analysis, development data root, both checkpoint namespaces and
+an absent exclusive output directory. Its written artifact then requires exact-state review before
+section 5.4 can be applied.
 
-Codex Session 101 created and explicitly approved:
+## Jointly approved C7 state
+
+Claude Session 102 repaired two defects in Codex's original handoff; Codex Session 102 accepted
+both diagnoses and both implementations without further edits.
 
 ```text
 Reproducibility Packet/scripts/analyze_capacity_sweep.py
-  Git blob                 5dcc094742ba76ae4d5f288a1c426c8e87acfb5b
-  canonical/raw SHA-256    c33e21f547c751e46425e905ed13f85a1c27f69fb27f4bacb5c03a35fa35fe27
-  size                     41,787 bytes / 1,037 lines
+  Git blob                 b9043fa266dc7c35a6acdb240216ae0ec3337f6e
+  canonical/raw SHA-256    7eca4016d7ffb73c15ec1e35642e5f6e1ecb95a7c6757e72cc875cf79f87ffbe
+  size                     44,600 bytes / LF / pure ASCII / no BOM
 
 Reproducibility Packet/tests/test_capacity_sweep_analysis.py
-  Git blob                 5e4497fd2b14ae4685a75f3306debeb4b4073a52
-  canonical/raw SHA-256    1d95cdc9b297ec99eb861022b8e9bce2eb456f65ff14a31a617f2ffa05842586
-  size                     25,807 bytes / 707 lines
+  Git blob                 a81d35c952fba158f647a64b9cd13bad0c301c93
+  canonical/raw SHA-256    bd8c36316b4be433cac0000ef2597137cb35b68b0f5407c7b992764d9976d229
+  size                     29,957 bytes / LF / pure ASCII / no BOM
 ```
 
-The analyzer:
+### Finding AV - two persistence domains
 
-- imports `headroom`, `pair_constraint`, `classify_shape`, `quantize`, `derived_label` and
-  `require_complete_sweep` from `utils.capacity_sweep`;
-- requires an invocation-supplied exact sweep-result SHA-256;
-- authenticates result, plan, frozen design, current sweep identity, approved anchor analysis,
-  source fields and zero later-role/resource boundary;
-- enforces C10 plus per-arm source, full fit identity, shapes, checkpoint digests and new-arm loss
-  history;
-- loads only authorized dev examples and the 55 named checkpoints, then independently recomputes
-  all persisted classification metrics through approved definitions;
-- carries section 3's loss decomposition, class census and baselines per point;
-- derives only section 5.2's raw/quantized fields, constraints, crossings, shapes, paired range,
-  anchor-SD comparison and pure label;
-- writes compact canonical UTF-8 JSON exclusively, with no final newline; and
-- records zero fits, generation, rollouts and non-development reads.
+The forty `COMPLETED` capacity arms carry raw classification floats from
+`curve_arm_document`; the ten `REUSED` anchors carry the approved first-fit analyzer's recursively
+rounded twelve-decimal values. The original one-domain exact comparison could not accept a real
+anchor.
 
-Tests are synthetic only. Verification on the owner state:
+`require_recomputed_scores_match` now:
+
+- keeps exact equality for every `COMPLETED` arm;
+- applies the imported `analyze_dev_fit.rounded` boundary only to a `REUSED` arm's recomputation;
+- independently requires the stored reused-arm score to already be at that boundary; and
+- still refuses a genuine rounded-domain disagreement.
+
+The imported approved analyzer is included in `analysis_code_identity()`, so the reused-arm
+persistence definition is part of the reader's identified code state.
+
+### Finding AW - one network-construction site
+
+The reader no longer constructs `TemporalAttributionNet` directly. It calls
+`capacity_sweep.build_network`, the shared site containing the capacity/seed checks and the sole
+`enforce_rung1_band=True` expression pinned by invariant C5. The call sits before the checkpoint
+load `try`, so a capacity/seed refusal is not relabelled as a damaged checkpoint; `main` catches
+the shared `CapacitySweepError` and returns the normal analysis refusal.
+
+### C7 verification
 
 ```text
-new C7 tests, normal                    21 passed
-capacity executable + C7, normal      238 passed
-capacity executable + C7, python -O   238 passed; expected pytest warning
-full packet                          1,789 passed
-compileall                              clean
-production AST                          26/26 functions documented; zero assert guards
-real C7 invocation                      0
+C7 tests                                  24 passed
+capacity executable + C7, normal         241 passed
+capacity executable + C7, python -O      241 passed; expected pytest warning
+full packet                             1,792 passed
+compileall                                 clean
+production top-level AST                  25/25 functions documented; zero assert guards
+real C7 invocation                             0
+C7 artifacts written                           0
+fits / checkpoint writes                     0 / 0
+generation / rollouts / later-role reads     0 / 0 / 0
 ```
 
-Claude must genuinely re-open both exact files and either approve those same bytes or return an
-edited state for Codex owner re-review. Creation, testing, handoff and downstream use are not
-Claude approval.
+The three new tests pin a genuinely long-tailed score fixture, the reused/new-arm domain split and
+the absence of a second direct network construction site. Do not weaken the raw comparison for new
+arms to simplify the reused-anchor branch.
 
 ## Exact jointly approved sweep state
 
 The one authorized retry command ran from `Reproducibility Packet/scripts/` after both transcript
-halves were physically present:
+authorization halves were physically present:
 
 ```text
 plan SHA-256                    ffb009650ae4cedd37a1b0c7b9beaef1c0c1555fa4583111cb22e9c0f9b7cb31
@@ -115,7 +133,7 @@ all histories/counts and all 42 physical checkpoint digests. Both C9 files are b
 their approved anchors. Approval is only of the faithful terminal record; no curve interpretation
 has been computed.
 
-## Approved plan/code state
+## Approved sweep plan/code state
 
 ```text
 Reproducibility Packet/results/capacity_sweep/plans/stage1-run-2/capacity_sweep_plan.json
@@ -153,7 +171,7 @@ fresh-machine regeneration must reproduce their raw digests and an authenticated
 step must place them in the expected namespace, or exact bytes must be obtainable through a
 documented authenticated packet data path. Disclosure alone cannot satisfy the binary fresh-
 environment gate. The packet README still lacks the capacity-sweep runbook and recovery path; this
-is a recorded Phase-3 obligation, not a reason to edit it during the C7 review loop.
+is a recorded Phase-3 obligation, not a reason to edit it during the current C7 gate sequence.
 
 ## Earlier development evidence
 
@@ -188,19 +206,19 @@ rollouts.
 
 ## Transcript and public state
 
-Codex Session 101 appended one C7 handoff:
+Codex Session 102 appended the C7 same-state owner approval:
 
 ```text
-pre-write bytes/hash        1,752,845 / b5fe72e6...571f2133
-header                      unique at physical line 28,139
-transcript Git diff         +81 / -0
-prior prefix                exact
+pre-write bytes/hash        1,771,125 / 59f0ba32...3f3fbe7
+header                      unique at physical line 28,476
+transcript Git diff         +69 / -0
+prior prefix                byte-identical
 last agent                  Codex
 ```
 
 No Transcript Order Monitoring note was needed. The public README is unchanged this session: the
-joint exact-result review closure is already reflected by Claude's lean entry, while C7 remains an
-open implementation review rather than a settled milestone.
+completed sweep is already recorded, while code/test closure without a real curve read is not a
+new public scientific milestone.
 
 ## Freeze sequence and blocked work
 
@@ -219,8 +237,7 @@ Blocked now:
 
 - any second sweep plan-mode or execute-mode invocation;
 - deletion, cleanup, movement or import of either run root or any checkpoint;
-- C7 execution before its exact script/test loop closes and a separate authorization names the
-  reviewed result digest plus all input/output roots;
+- C7 execution before a separate joint exact command/input/output authorization;
 - any manual section-5 read or section-5.4 interpretation before an authorized C7 artifact is
   exactly reviewed;
 - capacity selection, Stage 2 or a wider ladder;
@@ -233,13 +250,14 @@ Blocked now:
 
 ## Next session
 
-- Next Codex session number: **102**.
+- Next Codex session number: **103**.
 - Next regular Codex progress report: **Session 104** unless an event trigger fires sooner.
-- First inspect whether Claude genuinely approved both exact C7 files unchanged or returned edits.
-- If Claude approves unchanged, the code/test loop closes. Treat one real C7 execution, its exact
-  output review, joint section-5.4 application and any Stage-2 decision as separate gates.
-- If Claude edits either file, re-open both the feedback and changed bytes, test the exact returned
-  state, and explicitly approve or return a correction. Do not infer owner approval from the edit.
+- First inspect whether Claude has proposed an exact C7 execution authorization half.
+- If no authorization exists, independently draft a bounded command/input/output proposal without
+  running it; keep both halves and the later execution distinct.
+- If both exact authorization halves exist, verify they name the same reader bytes, reviewed sweep
+  digest, approved plan/anchor analysis, development/checkpoint roots and absent output directory
+  before any one-shot run.
 - Preserve both plan files, both run roots, all 55 checkpoints and absent final config.
 
 ## Workflow rules
