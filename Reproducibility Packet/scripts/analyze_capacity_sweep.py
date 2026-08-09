@@ -28,7 +28,7 @@ import torch
 
 import analyze_dev_fit as approved_analysis
 from utils import capacity_sweep as sweep
-from utils.attribution_net import TemporalAttributionNet, deterministic_conv_precision
+from utils.attribution_net import deterministic_conv_precision
 from utils.dev_fit_contract import code_identity
 from utils.protocol_p import canonical_text_sha256
 from utils.capacity_sweep import (
@@ -513,6 +513,62 @@ def checkpoint_path(
     )
 
 
+def require_recomputed_scores_match(
+    arm: Mapping[str, Any], metrics: Mapping[str, Any]
+) -> None:
+    """Compare a recomputed score to the persisted one **in the domain it was persisted in**.
+
+    Inputs: one normalized arm and the freshly recomputed metric mapping. Outputs: none.
+    Purpose: the two arm kinds reach the terminal record through different writers, and
+    their scores therefore live in different numeric domains.
+
+    A `COMPLETED` curve arm's scores are the sweep executable's own raw
+    `classification_metrics` floats, written by `curve_arm_document` without rounding, so
+    they are compared **exactly** -- the strongest available check, and unchanged here.
+
+    A `REUSED` anchor's scores reach the record from the approved first-fit analysis,
+    which persists its entire report through `analyze_dev_fit.rounded` -- a twelve-decimal
+    boundary. Comparing a raw recomputation with a persisted twelve-decimal value is a
+    domain error rather than a disagreement about the model. Measured in Session 102 from
+    the published artifact alone: every one of the ten anchors' exact macro-F1 differs
+    from its persisted rendering, as do thirty-two of the forty per-class F1 values, so
+    an exact comparison refused the first anchor it reached and no complete sweep could
+    ever have been read. This is the same shape as the project's rule (cc): a value must
+    be compared in the domain of the writer that produced it.
+
+    **Both directions are asserted for a reused anchor.** The persisted value is required
+    to be at that boundary as well, so if the approved analysis ever stopped rounding,
+    this would fail loudly instead of quietly becoming a comparison of a value with
+    itself. The rounding is not restated here; `analyze_dev_fit.rounded` is the one
+    definition and it is imported.
+    """
+
+    stored = {
+        "accuracy": arm["accuracy"],
+        "macro_f1": arm["macro_f1"],
+        "per_class_f1": arm["per_class_f1"],
+    }
+    recomputed = {key: metrics[key] for key in stored}
+    if arm["status"] == sweep.ARM_REUSED:
+        try:
+            recomputed = approved_analysis.rounded(recomputed)
+            boundary = approved_analysis.rounded(dict(stored))
+        except approved_analysis.DevFitAnalysisError as error:
+            raise CapacitySweepAnalysisError(
+                "a reused anchor's score cannot be taken to the approved analyzer's "
+                "persistence boundary"
+            ) from error
+        require(
+            boundary == stored,
+            "a reused anchor's persisted score is not at the approved first-fit "
+            "analysis's persistence boundary",
+        )
+    require(
+        recomputed == stored,
+        "a recomputed checkpoint score differs from the terminal record",
+    )
+
+
 def evaluate_arm_context(
     arm: Mapping[str, Any], examples: Sequence[Any], checkpoint: Path
 ) -> dict[str, float]:
@@ -524,13 +580,13 @@ def evaluate_arm_context(
         sweep.trainer.file_sha256(checkpoint) == arm["checkpoint_sha256"],
         "a checkpoint differs from the digest in the terminal record",
     )
+    # The one construction site is `capacity_sweep.build_network`, which is where
+    # invariant C5's `enforce_rung1_band=True` lives and where an AST test pins it to a
+    # single expression. A second constructor call here would be a second definition of
+    # the network under review, outside the reach of that test.
+    network = sweep.build_network(channels=arm["channels"], seed=arm["seed"])
     try:
         state = torch.load(checkpoint, map_location="cpu", weights_only=True)
-        network = TemporalAttributionNet(
-            channels=arm["channels"],
-            seed=arm["seed"],
-            enforce_rung1_band=True,
-        )
         network.load_state_dict(state, strict=True)
     except (OSError, RuntimeError, TypeError, ValueError) as error:
         raise CapacitySweepAnalysisError("a capacity checkpoint cannot be loaded") from error
@@ -547,12 +603,7 @@ def evaluate_arm_context(
         prediction,
         n_classes=len(approved_analysis.SOURCE_CLASS_ORDER),
     )
-    require(
-        metrics["accuracy"] == arm["accuracy"]
-        and metrics["macro_f1"] == arm["macro_f1"]
-        and metrics["per_class_f1"] == arm["per_class_f1"],
-        "a recomputed checkpoint score differs from the terminal record",
-    )
+    require_recomputed_scores_match(arm, metrics)
     return {
         key: finite_number(value, f"post-fit {key}") for key, value in loss_terms.items()
     }

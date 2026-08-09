@@ -532,7 +532,7 @@ def test_checkpoint_success_path_recomputes_metrics_and_returns_loss_terms(
             )
 
     monkeypatch.setattr(analysis.torch, "load", lambda *_, **__: {"synthetic": True})
-    monkeypatch.setattr(analysis, "TemporalAttributionNet", lambda **_: FakeNetwork())
+    monkeypatch.setattr(analysis.sweep, "build_network", lambda **_: FakeNetwork())
     monkeypatch.setattr(analysis, "deterministic_conv_precision", nullcontext)
     monkeypatch.setattr(
         analysis.sweep,
@@ -553,6 +553,104 @@ def test_checkpoint_success_path_recomputes_metrics_and_returns_loss_terms(
     broken["macro_f1"] = 0.51
     with pytest.raises(analysis.CapacitySweepAnalysisError, match="score differs"):
         analysis.evaluate_arm_context(broken, [object(), object()], checkpoint)
+
+
+def _long_tailed_scores() -> dict:
+    """Return one metric mapping whose floats do NOT survive the 12-decimal boundary.
+
+    Every value is a `2*TP/(2*TP+FP+FN)`-shaped rational over the real 152-example split,
+    which is what `classification_metrics` actually returns. A fixture built from values
+    that happen to be exact at twelve decimals cannot see the difference between the two
+    persistence domains, and that is precisely why the first version of this suite passed
+    while the reader refused every reused anchor.
+    """
+
+    per_class = dict(
+        zip(approved_analysis.SOURCE_CLASS_ORDER, (86 / 138, 1 / 3, 5 / 7, 96 / 152))
+    )
+    return {
+        "accuracy": 131 / 152,
+        "macro_f1": sum(per_class.values()) / len(per_class),
+        "per_class_f1": per_class,
+    }
+
+
+def test_the_score_fixture_is_not_degenerate_at_the_persistence_boundary():
+    """The fixture below is only a test of the domain rule if rounding moves it."""
+
+    raw = _long_tailed_scores()
+    assert approved_analysis.rounded(dict(raw)) != raw
+    assert approved_analysis.rounded(raw["macro_f1"]) != raw["macro_f1"]
+
+
+def test_a_reused_anchor_is_compared_at_the_approved_analyzers_persistence_boundary():
+    """A REUSED anchor is persisted through `analyze_dev_fit.rounded`; a new arm is not.
+
+    Measured against the published artifacts in Session 102: all ten approved anchors
+    carry the twelve-decimal rendering while all forty new arms carry the raw float, so
+    one exact comparison for both kinds could never have read a complete sweep.
+    """
+
+    raw = _long_tailed_scores()
+    persisted = approved_analysis.rounded(dict(raw))
+
+    reused = _arm(cs.ANCHOR_CHANNELS, "C1", 0, 0.5)
+    reused.update(persisted)
+    assert reused["status"] == cs.ARM_REUSED
+    analysis.require_recomputed_scores_match(reused, raw)
+
+    # The same pair on a new arm must still refuse: there the raw float is what was
+    # written, so exact equality is available and is the stronger check.
+    completed = _arm(16, "C1", 0, 0.5)
+    completed.update(persisted)
+    assert completed["status"] == cs.ARM_COMPLETED
+    with pytest.raises(analysis.CapacitySweepAnalysisError, match="score differs"):
+        analysis.require_recomputed_scores_match(completed, raw)
+    analysis.require_recomputed_scores_match(completed | raw, raw)
+
+    # Both directions: an anchor whose persisted score is not at that boundary is a
+    # different document from the one this rule describes, and is refused as such.
+    off_boundary = dict(reused)
+    off_boundary["macro_f1"] = raw["macro_f1"]
+    with pytest.raises(
+        analysis.CapacitySweepAnalysisError, match="persistence boundary"
+    ):
+        analysis.require_recomputed_scores_match(off_boundary, raw)
+
+    # And the rule still refuses a real disagreement, one quantum above the boundary.
+    disagreeing = dict(raw)
+    disagreeing["macro_f1"] = raw["macro_f1"] + 1e-6
+    with pytest.raises(analysis.CapacitySweepAnalysisError, match="score differs"):
+        analysis.require_recomputed_scores_match(reused, disagreeing)
+
+
+def test_the_reader_adds_no_second_network_construction_site():
+    """Invariant C5's guard is pinned by an AST test that parses only `capacity_sweep.py`.
+
+    A constructor call in this file would be a second construction of the network under
+    review, in a file that test cannot see, and the sweep suite would stay green while
+    the two definitions drifted. The reader must go through `build_network` instead.
+    """
+
+    tree = ast.parse(Path(analysis.__file__).read_text(encoding="utf-8"))
+    calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call)]
+    assert not [
+        keyword
+        for node in calls
+        for keyword in node.keywords
+        if keyword.arg == "enforce_rung1_band"
+    ]
+    assert not [
+        node
+        for node in calls
+        if isinstance(node.func, ast.Name) and node.func.id == "TemporalAttributionNet"
+    ]
+    assert "TemporalAttributionNet" not in vars(analysis)
+    assert [
+        node
+        for node in calls
+        if isinstance(node.func, ast.Attribute) and node.func.attr == "build_network"
+    ]
 
 
 def test_development_loader_binds_manifest_assignment_class_census_and_ood(
