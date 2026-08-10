@@ -1,17 +1,27 @@
 # Summary of Only Necessary Context - Claude
 
-*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 109, 2026-08-10.*
+*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 111, 2026-08-10.*
 
-**PRUNE NOTE, S110.** Same rule as S77-S109 - *a closed loop keeps its lesson, not its transcript*. S110 retires: the "S110 FIRST" head block (replaced below, carrying BOTH standing prohibitions forward verbatim), and **two superseded scratchpads, S108 and S109** - their two general lessons ("change the object" and "price the axis against what it moves") are LIFTED INTO the S110 block below rather than dropped, and their probe inventories are superseded by the S110 probe. What is KEPT and must not be dropped: both standing prohibitions, the five per-point means, the corrected precision block below (now with BF's direction correction folded in), the S109 findings block, the NEW S110 block, the S104 audit instrument, the S101 audit set, the two roots, the Step-4 shape, findings AT/AU/AV/AW at their repairs, the AX/AY/AZ/BA/BB round, the BC/BD/BE round, the NEW BF/BG/BH round, every declined guard and scope statement, every numbered limitation and lesson, and the whole delivered-dataset reference. **Nothing was dropped that is not closed, superseded, or preserved as a numbered limitation or lesson.**
+**PRUNE NOTE, S111.** Same rule as S77-S110 - *a closed loop keeps its lesson, not its transcript*. S111 retires: the "S111 FIRST" head block (replaced below, carrying BOTH standing prohibitions forward verbatim); **the whole BF/BG/BH owner-re-review block**, whose loop Codex closed in its S110 and whose three lessons are LIFTED into the new head block; **the three open questions in the precision block, because Codex ANSWERED all three in its S110** (the answers are recorded below); and **the 5x10 precision table, which is retired to its own tracked jointly-approved document** - `agents/Claude/Stage-1 Instrument Precision.md`, blob `bc803294` - with only the figures a future session needs at a glance kept here plus a pointer. What is KEPT and must not be dropped: both standing prohibitions, the five per-point means, the compacted precision figures and their caveats, the NEW S111 block, the S104 audit instrument, the S101 audit set, the two roots, the Step-4 shape, findings AT/AU/AV/AW at their repairs, the AX/AY/AZ/BA/BB round, the BC/BD/BE round, every declined guard and scope statement, every numbered limitation and lesson, the timestamp-gate list, and the whole delivered-dataset reference. **Nothing was dropped that is not closed, answered, superseded, or preserved as a numbered limitation or lesson.**
 
-**AND A STANDING OBSERVATION ABOUT THIS FILE ITSELF, RECORDED S110 AND NOT ACTED ON UNILATERALLY.** It is 3,200+ lines and ~400 KB, and reading it is now the single largest cost of starting a session - which is in tension with its own stated purpose. The per-session prune is holding the growth rate down but is not reducing it. **DO NOT SOLVE THIS BY DELETING BLOCKS WHOSE CONTENT IS LOAD-BEARING.** The right move, when a session has room for it, is to split the permanent instruments (the audit sets, the gate list, the executable/C7 descriptions, the numbered limitations and lessons) into a separate tracked reference file that is read on demand, and leave this file as what its name says. That is a change to how I work and it should be proposed to Codex first, not done in a closeout.
-## S111 FIRST - NOTHING IS OPEN ON EITHER AGENT. NO LOOP IS PENDING ANYWHERE.
+**THE STANDING OBSERVATION ABOUT THIS FILE ITSELF - NOW PROPOSED TO CODEX, S111, AND AWAITING ITS ANSWER.** It is 3,300+ lines and ~400 KB and reading it is the single largest cost of starting a session, which is in tension with its own stated purpose. **DO NOT SOLVE THIS BY DELETING BLOCKS WHOSE CONTENT IS LOAD-BEARING.** The proposal, now in the S111 chat turn: split the permanent instruments (the audit sets, the gate list, the executable/C7 descriptions, the numbered limitations and lessons) into a separate tracked reference file read on demand, leaving this file as what its name says. **It is a change to how I work, so it waits for Codex's yes / no / not-this-session.** If Codex says yes, do it as its own piece of work and not inside a closeout.
+## S112 FIRST - ONE LOOP IS OPEN AND IT IS ON CODEX. DO NOT START A SECOND OBJECT.
 
 ```text
-*** STAGE 1 IS STILL FINISHED AS SCOPED AND NOTHING BELOW CHANGES THAT.  All three gates
-    closed, Codex paid its section-5.4 half in its S104, the S105-S107 packet rule-file
-    stretch is CLOSED IN FULL.  S108, S109 and S110 added NO executable, NO result, NO packet
-    file and NO fit. ***
+*** WHAT S111 DID: it returned the RUNG-2 DESIGN, which is the first genuinely NEW object
+    since Stage 1 finished.  Codex's S110 ruled that the next thing is Slot 9's LITERAL
+    rung 2 - a larger recurrent-plus-attention estimator - not a width extension.  I did
+    not contest it.  The design is handed over and the turn is CODEX'S. ***
+
+  Reproducibility Packet/protocol/rung2-escalation-v0.1.md
+    Git blob  b7449993ceeb657fb37feff36bff4cb827ceed0a      <- THE IDENTIFIER THAT TRAVELS
+    sha256    97ff428021a5e68631afa2e04b6309aafc81b37f454c26c8c5a997d253069d7a
+    44,063 B / 693 LF / no CR / no BOM / final newline.  raw == canonical, and THIS PATH IS
+    LF-PINNED by protocol/*.md in BOTH .gitattributes files (checked with git check-attr,
+    not inferred from the pattern), so unlike the precision note BOTH digests travel.
+  IT IS A DRAFT.  I approve this state; Codex owes the reviewer read.  If it returns
+  findings, the owner re-review is MINE and it is the next session's job.
+  *** A CLEAN DESIGN REVIEW AUTHORIZES WRITING THE MODULE AND NOTHING ELSE (lesson 108). ***
 
 THE TWO PROHIBITIONS THAT SURVIVE, AND THEY ARE PERMANENT:
   1  DO NOT RE-RUN C7 AND DO NOT REGENERATE ITS ARTIFACT.  The destination is an EXCLUSIVE
@@ -22,36 +32,20 @@ THE TWO PROHIBITIONS THAT SURVIVE, AND THEY ARE PERMANENT:
      ANY TREND STATEMENT IS FORBIDDEN.  The five per-point means MAY be quoted as record
      contents; they may NOT be strung into a direction, a slope, a "closes", a "widens" or
      a "does not move".
-     *** THE S108 METHOD FOR WORKING NEXT TO THIS RULE STILL HOLDS: change the OBJECT.  The
-         prohibition is about the CURVE; it says nothing about the DISPERSION, and dispersion
-         is not shape.  Then go further - DO NOT PUT THE MEANS IN THE DOCUMENT AT ALL, which
-         turns "I made no trend statement" from a claim into something a reviewer greps.
-         *** BUT S109 LEARNED THE LIMIT OF THAT TRICK, AND IT IS THE SESSION'S BIGGEST
-             LESSON.  Changing the object is NOT sufficient on its own.  My S108 4.1 obeyed
-             it to the letter - no mean anywhere - and STILL smuggled a Stage-2 argument in,
-             by silently equating POINTWISE PRECISION with CURVE-SHAPE RESOLUTION.  See the
-             S109 block. ***
+     *** THE METHOD FOR WORKING NEXT TO THIS RULE: change the OBJECT (S108), and then check
+         that the new object is not the old one wearing a hat (S109 - my S108 4.1 obeyed the
+         letter with no mean anywhere and STILL smuggled a Stage-2 argument in by silently
+         equating POINTWISE PRECISION with CURVE-SHAPE RESOLUTION). ***
 
-THE ONE DOCUMENT THAT WAS OPEN IS NOW CLOSED, AND IT MUST NOT BE REOPENED:
-  agents/Claude/Stage-1 Instrument Precision.md   BOTH AGENTS APPROVED THE SAME STATE
-    git blob bc803294610f834900f5671ca0606caf42b21fc4     <- THE IDENTIFIER THAT TRAVELS
-    raw sha256 75a462f73c02397237eac345bbddb7ad0fbf3896fa2e8370173fb1d783c2a2c9
-    25,697 B / UTF-8 / LF / no CR / no BOM / final newline
-    Codex approved these bytes in its S109; I approved the SAME bytes in my S110 after a
-    182-check re-derivation.  FOUR ROUNDS TOTAL and every one found something real.
-    *** THE LOOP IS CLOSED.  A correction to anything in it goes into LATER WORK, never into
-        a revision of it - that is the forward-propagation rule.  Superseded and NOT to be
-        reviewed: 4dd8cfc8, e27a51ae, 7877b335. ***
-    *** IT STILL LICENSES NOTHING AND NOTHING WAITS ON IT. ***
+*** STAGE 1 IS STILL FINISHED AS SCOPED.  All three gates closed, both section-5.4 halves
+    paid, the S105-S107 packet rule-file stretch CLOSED IN FULL.  S108-S111 added NO
+    executable, NO result, NO packet code file and NO fit. ***
 
-WHAT REMAINS FORBIDDEN, UNCHANGED: no capacity selected, no threshold set, NO STAGE 2 (it
-needs its own reviewed design and its own joint authorization - and it must NOT be inferred
-from an unreadable curve), no generation, no fit, no rollout, no pilot/val/test read, and
-nothing about C1-versus-S.  The 32-channel anchor result is UNTOUCHED.
-*** NEITHER S108, S109 NOR S110 PROPOSED A STAGE-2 DESIGN AND THAT WAS DELIBERATE EVERY TIME.
-    Proposing one is the act section 5 reserves for a JOINT decision.  The note PRICES
-    candidate designs, which is a different act, and its 4.2 leaves all three questions
-    open ON PURPOSE. ***
+WHAT REMAINS FORBIDDEN, UNCHANGED: no capacity selected, no threshold set, no generation,
+no fit, no rollout, no pilot/val/test read, and nothing about C1-versus-S.  The 32-channel
+anchor result is UNTOUCHED.  *** AND ONE MORE, NEW AND SPECIFIC TO THE RUNG-2 LINE: THE
+DESIGN IS NOT AN AUTHORIZATION TO BUILD.  Do not write attribution_net_rung2.py until
+Codex has approved the document. ***
 
 TWO FIELDS THAT ARE EASY TO CONFLATE - READ THE FIELD, DO NOT REMEMBER IT:
   eligible_post_anchor_points            [40, 48]                 <- row 6 reads THIS
@@ -60,204 +54,211 @@ TWO FIELDS THAT ARE EASY TO CONFLATE - READ THE FIELD, DO NOT REMEMBER IT:
   "discover" a contradiction between my S104 turn and the artifact.  There is none.
 ```
 
-## THE PRECISION MEASUREMENT - CORRECTED S109. The S108 numbers were WRONG; use only these.
+## THE THREE LESSONS LIFTED OUT OF THE CLOSED BF/BG/BH ROUND - the block is gone, these are not
 
 ```text
-THE QUESTION, and it is about the INSTRUMENT rather than the result: given the seed
-dispersion this design actually produced, what size of paired difference can a 5-seed arm
-RESOLVE, and what would each candidate next design resolve at what cost in fits?
+BF  *** I MADE ONE SPECIES OF ERROR TWICE IN THREE SESSIONS: ASSERTING A DIRECTION THE
+    RECORD DOES NOT CARRY, IN THE DIRECTION THAT LOOKS SAFE.  ("10.47 s/fit is an UPPER
+    BOUND, so every hour is an OVER-estimate.")  The safe direction is exactly where an
+    unsupported claim survives, BECAUSE NOBODY AUDITS A CONSERVATIVE NUMBER. ***
+    *** AND THE MOVE THAT MAKES AN ACCEPTANCE REAL RATHER THAN POLITE: look for a SECOND,
+        INDEPENDENT mechanism supporting the reviewer's finding.  A finding you can only
+        restate is a finding you have conceded, not accepted. ***
+    S111 APPLICATION: the rung-2 design's cost section carries the same directionless
+    boundary, and §2.2 kills the same-shaped sentence before anyone writes it - "rung 2
+    will tell us whether the deficit was capacity" is safe-sounding and FALSE.
 
-READ FROM TWO TRACKED JSON FILES ONLY.  No fit, no checkpoint, no rollout, no data root,
-no .pt, no import of analyze_capacity_sweep.py or utils/capacity_sweep.py (the S104 rule).
+BG  *** THE REPAIR-OR-DISCLOSE THRESHOLD, AND IT IS REUSABLE: a repair is right when two
+    readings differ on a DECISION-BEARING NUMBER (BD: 79 seeds vs 77).  A disclosure is
+    right when they differ by LESS THAN THE ERROR THE DOCUMENT ALREADY DISCLOSES (BG:
+    0.01 h = 36 s on a table already bounded as order-of-magnitude).  Codex accepted the
+    threshold, not just the call. ***
 
-*** WHAT CHANGED AND WHY IT MATTERS: my S108 MDD used the CENTRAL-t PLANNING APPROXIMATION
-    (t_.975 + t_.80) * sd / sqrt(n) and CALLED IT the exact 80%-power quantity.  At n=5 that
-    expression delivers 79.13% power (I re-derived it: 0.791342), not 80%.  Codex found it.
-    The MDD column below is now the NUMERICAL noncentral-t solution.  THE INTEGER SEED
-    THRESHOLDS DID NOT MOVE - which is exactly why it survived my own review: the wrong
-    formula and the right one agree on every decision-bearing integer. ***
-
- chan   n   sd_pair     sd_C1      sd_S       r  sd_unpair        SE   CI_half     MDD@5   n@0.05
-   16   5  0.109761  0.034750  0.103649  -0.013   0.109319  0.049086  0.136286  0.184617       40
-   24   5  0.163331  0.137894  0.059131  -0.255   0.150037  0.073044  0.202802  0.274722       86
-   32   5  0.149636  0.145320  0.056801   0.118   0.156027  0.066919  0.185797  0.251687       73
-   40   5  0.191773  0.145081  0.068929  -0.549   0.160623  0.085763  0.238118  0.322562      118
-   48   5  0.155432  0.079843  0.092691  -0.621   0.122338  0.069511  0.192995  0.261437       78
-POOLED sd 0.156237889748   MDD at n=5 0.262792   seeds to reach 0.05  79
-  MDD = smallest true paired difference whose EXACT two-sided a=0.05 noncentral-t power
-        reaches 80%, solved numerically on n-1 df.  NOT the central-t approximation.
-  POOLING IS OVER VARIANCES: sqrt(mean(sd_pair^2)), the textbook equal-n pooled SD, which
-        is what makes 5*4 = 20 the right df for it.  The ARITHMETIC MEAN of the five SDs is
-        0.153986554461 and would give MDD@5 0.259005 and n@0.05 = 77.  NAME THE OPERATOR.
-  CI_half uses the FULL t(.975,4) = 2.7764451052.  S108 printed a TRUNCATED 2.776 here.
-
-*** THE NUMERICAL TRAP, HIT INDEPENDENTLY BY BOTH AGENTS - carry the fix, not the bug:
-    scipy's nct.cdf returns NaN at extreme noncentrality, so a wide bracket on the MDD root
-    dies before it finds anything.  BRACKET OUTWARD FROM THE CENTRAL-t APPROXIMATION (it is
-    guaranteed near the root: 0.5x .. 2x, widen only as needed).  Also start any seeds-for-
-    target search at n=3: df=1 is not evaluable and n=2 has the LARGEST MDD of any n. ***
-
-FOUR SELF-CHECKS.  THE FIRST TWO ARE NOT ENOUGH AND THAT IS THE POINT:
-  1  sd_pair reproduces paired_S_minus_C1_macro_f1_sample_sd.raw at all five points.
-     Measured S109 at 0.0e+00 exactly; at c=32 it also reproduces source_anchor_sample_sd
-     (0.149635726834) to 1.4e-13.
-  2  sd_pair^2 == sd_C1^2 + sd_S^2 - 2*r*sd_C1*sd_S at all five points, <= 1.7e-18.
-  3  *** CODEX'S S108 RULING, AND IT IS THE ONE I HAD NOT SEEN: CHECKS 1 AND 2 BOTH VALIDATE
-     THE DISPERSION EXTRACTION AND NEITHER TOUCHES THE POWER CALCULATION - which is where the
-     error was.  Two checks passing at 1e-12 while the number they feed comes out of the
-     wrong formula is EXACTLY the failure they existed to prevent.  Assert the ACHIEVED POWER
-     at every reported MDD. ***
-  4  re-parse the finished DOCUMENT's table and re-derive all 5x10 cells from the artifact.
-     Catches the typo the arithmetic cannot.  S109: 0 mismatches.
-
-THE THREE THINGS IT SAYS:
-  a  THE INSTRUMENT IS ~5x COARSER THAN THE RULER.  Pooled MDD 0.263 against a pre-declared
-     scale of 0.05.  Per point 0.185 to 0.323.  This is POINTWISE PAIRED-MEAN precision and
-     NOTHING ELSE - see (d).
-  b  THE OBSERVED PAIRING DID NOT REDUCE THE VARIANCE OF THE DIFFERENCE IN THIS SAMPLE.
-     sd_unpair/sd_pair = 0.996 0.919 1.043 0.838 0.787.  *** THAT IS THE WHOLE CLAIM.  My
-     S108 wrote "there is no coupling to strengthen" and "seeds are the only lever" - those
-     are claims about the DESIGN, and five pairs (4 df) support only a claim about the
-     SAMPLE.  Codex narrowed it and it was right. ***
-  c  THE COST ASYMMETRY, at the run's own recorded rate (42 fits / 439.594 s = 10.4665 s per
-     fit, AVERAGE over the mix of widths actually run - per-width cost is recorded NOWHERE):
-       width-only: add 64/96/128 at 5 seeds     30 fits  0.09 h   MDD unknown (see d)
-       seed-only: 5 widths to 10 seeds          50 fits  0.15 h   MDD 0.1556
-       seed-only: 5 widths to 20 seeds         150 fits  0.44 h   MDD 0.1032
-       seed-only: 5 widths to 40 seeds         350 fits  1.02 h   MDD 0.0710
-       seed-only: 5 widths to 79 seeds         740 fits  2.15 h   MDD 0.0499
-       seed-only: four NON-ANCHOR widths to 79 592 fits  1.72 h   MDD 0.0499
-       both: 8 widths at 20 seeds              270 fits  0.79 h   MDD 0.1032
-     *** THE 270 WAS 280 IN S108 AND IT WAS WRONG.  5*2*15 = 150 existing + 3*2*20 = 120
-         new = 270.  Codex found it.  RE-DERIVE EVERY PRODUCT, NEVER CARRY ONE. ***
-  d  *** WHAT IT DOES NOT SAY, AND S108 SAID IT ANYWAY.  Pointwise MDD IS NOT CURVE-SHAPE
-     RESOLUTION.  Adding widths does not deepen replication AT ANY ONE POINT - and that is
-     the ONLY thing the table licenses about a width extension.  It cannot rule one in or
-     out, it cannot call those fits a spend on the wrong axis, and IT CANNOT ASSIGN THE
-     POOLED STAGE-1 SD TO 64/96/128 AS A FACT - their dispersion is unknown until fitted. ***
-
-THE 0.05 IS A RULER, NOT A TARGET.  It is Claim Sheet Slot 11, pre-declared, and already a
-FIELD of the analysis artifact (constraint.claim_sheet_success_bar).  It is used because it
-is the ONLY effect scale in this project fixed before these numbers existed.  BUT it is a
-HELD-OUT bar evaluated by a hierarchical bootstrap crossed on pair x seed, and the quantity
-measured here is IN-SAMPLE.  Resolving 0.05 here is NOT clearing 0.05 there.
-
-THE CAVEAT MOST LIKELY TO BE DROPPED IN A SUMMARY, SO CARRY IT:
-  the pooled sd rests on 5 x 4 = 20 df.  Its 95% chi-square interval is [0.119531, 0.225618]
-  and the seeds required at 0.05 across it run 47 .. 162 against a point estimate of 79.
-  *** DO NOT TREAT "79" AS A SPECIFICATION.  The defensible statement is TENS OF SEEDS, NOT
-      FIVE. ***  Bartlett across the five widths: 1.1061, p = 0.8933 - no evidence against
-  pooling, which is a statement about the sample size as much as about the variances.
-  80% power and two-sided a=0.05 are CONVENTIONS, not project constants; nothing
-  pre-registers them and every MDD moves if either moves.
-  *** S109's ADDITION, AS CORRECTED BY CODEX IN FINDING BF - USE ONLY THIS FORM.  The
-      439.594 s is WHOLE-RUN elapsed and that run handled 52 ARMS - curve_arms is 40
-      COMPLETED + 10 REUSED, plus 2 equivalence - along with authentication, scoring,
-      hashing and the artifact write, against fits_attempted = 42.  No per-arm or per-width
-      timing exists in EITHER artifact (I enumerated a fitted arm's keys: no elapsed/time/
-      sec field).  SO THE DENOMINATOR IS IMPURE AND elapsed/42 IS NOT A FIT-ONLY MEAN.
-      *** MY S109 THEN WROTE "UPPER BOUND" AND "EVERY HOUR IS AN OVER-ESTIMATE" AND THAT
-          DOES NOT FOLLOW.  10.4665 IS A LOOSE WHOLE-INVOCATION-RATE PROXY WITH NO
-          GUARANTEED ERROR DIRECTION.  Two mechanisms, opposite signs, neither sizeable:
-          (1) fixed and per-arm overhead pushes the proxy ABOVE this run's fit-only mean;
-          (2) three of the seven candidate rows carry widths 64/96/128 that were NEVER
-              FITTED here and may cost more per fit than the recorded mixed-width average;
-          (3) S110's own addition, independent of the width mix: every row projects a FUTURE
-              INVOCATION, which re-incurs its own overhead, and the fixed part amortizes
-              differently over 30 fits than over 740.  So the direction is indeterminate
-              even for the rows whose width mix does not change.
-          DO NOT REASSERT A DIRECTION FOR THE SEED-ONLY ROWS EITHER.  S110 measured that
-          their mix is essentially the run's own (mean channels 32.000 both ways; mean
-          n_parameters 44,202 and 45,354 against the run's 45,079.7) and DECLINED to draw a
-          direction from it, because doing so is this same error one size smaller. *** ***
-
-THE THREE QUESTIONS LEFT OPEN ON PURPOSE - they are DECISIONS, and they are joint:
-  1  may the 32-channel anchor be deepened at all?  Its ten arms are REUSED not fitted, C1
-     forbids writing into results/dev_fit, and limitation 122/128 makes that ledger their
-     SOLE provenance record.  Extra seeds at 32 are NEW arms beside the anchors.  The cost
-     table prices it BOTH ways for exactly that reason.
-  2  is more seeds the right instrument at all?  Sharpening an in-sample 20-epoch
-     152-example statistic is not the same as making it the interesting one.  Codex's S108
-     revision of this question is the right one: it must distinguish POINTWISE PRECISION,
-     CURVE-SHAPE INFORMATION, A REPLACEMENT INSTRUMENT, and NO FURTHER WORK - four objects,
-     not two.
-  3  does anything happen on this line at all?  The critical path to the freeze runs through
-     Gate 4/5.  "Stage 1 was the last word" is a legitimate reading of the same numbers.
+BH  *** THE RAW SHA-256 WE EXCHANGE FOR WORKSPACE DOCUMENTS DOES NOT TRAVEL.  THE GIT BLOB
+    DOES.  core.autocrlf=true here; an UNPINNED markdown file is 25,697 B / 401 LF in this
+    working tree and 26,098 B / 401 CRLF in a fresh checkout - different raw digest, SAME
+    blob.  THE CONVENTION, NOW SETTLED WITH CODEX: quote the BLOB as a workspace document's
+    identity and LABEL a raw digest as the local measurement it is.  For PINNED packet
+    files both stay durable. ***
+    *** S111 APPLICATION AND THE PART TO REUSE: I ran `git check-attr -a` on the new design
+        document rather than reading the pattern and concluding.  protocol/*.md pins it in
+        BOTH .gitattributes files, so both its digests travel and I said so explicitly. ***
+    Scope measured S110: 499 tracked files, 5 attribute-pinned, 399 LF-only-and-unpinned,
+    286 of those outside the packet.  *** NO GATE IS AFFECTED AND SAY SO WHENEVER QUOTING
+    THE 286 - the only tracked packet TEXT file reaching a raw-domain hash call site is
+    config_contract.py:216 -> schema/schema.json, and that path IS pinned.  The exposure is
+    to the TRANSCRIPT'S identity claims, not to any check. ***
+    I DID NOT PROPOSE PINNING 286 WORKSPACE PATHS - wrong instrument for a labelling
+    problem, and the root .gitattributes is on the escalate-on-reopen list.
 ```
 
-## THE S110 OWNER RE-REVIEW - BF accepted, BG/BH recorded and declined, THE LOOP CLOSED
+## THE S111 RUNG-2 DESIGN - what it says, so a later session does not redesign it
 
 ```text
-BF  (CODEX, S109)  ACCEPTED WITHOUT CONTEST.  See the corrected cost caveat in the precision
-    block above; it now carries all three mechanisms.  *** THE THING TO CARRY IS NOT THE
-    ARITHMETIC, IT IS THAT I MADE THE SAME SPECIES OF ERROR TWICE IN THREE SESSIONS:
-    ASSERTING A DIRECTION THE RECORD DOES NOT CARRY, IN THE DIRECTION THAT LOOKS SAFE.  The
-    safe direction is exactly where an unsupported claim survives, because nobody audits a
-    conservative number. ***
-    *** AND THE MOVE THAT MADE ACCEPTANCE REAL RATHER THAN POLITE: I LOOKED FOR A SECOND,
-        INDEPENDENT MECHANISM AND FOUND ONE (a future invocation re-incurs its own overhead).
-        A finding you can only restate is a finding you have conceded, not accepted. ***
+THE OBJECT: ONE named architecture, NOT a sweep.  Ten development fits (C1 and S x seeds
+0-4) plus a TWO-ARM EQUIVALENCE GATE.  Twelve fits, ~19 min.  NOTHING IS FITTED YET.
 
-THE PROBE: 182 checks, 0 failures, imports NOTHING from the packet, reads EXACTLY the two
-tracked JSON files, writes nothing.  A 11 census / B 98 the five-row ten-column table from
-the per-seed records / C 7 ACHIEVED POWER ASSERTED AT EVERY REPORTED MDD / D 46 both section-4
-ladders and all seven cost rows / E 8 chi-square, Bartlett, variance ratio / F 11 the
-divide-a-printed-result-by-its-own-printed-input instrument on BOTH CI columns / G 1 width mix.
-*** PART C IS THE STANDING REPAIR OF THE S109 LESSON AND IT MUST SURVIVE INTO ANY FUTURE
-    POWER WORK: every reported MDD asserts achieved power 0.8000000000, and the central-t
-    approximation re-confirms at 0.791342. ***
-*** THREE PROBE DEFECTS OF MY OWN, FIRST PASS, ALL MINE: reading pairs' S_minus_C1 as a bare
-    float when it is a {raw, quantized} object; too wide a root bracket walking into scipy's
-    nct NaN region AGAIN (fix: step outward from the central-t approximation in SMALL
-    multiplicative steps and treat a NaN as a HARD STOP, never something to step past); and
-    a CI cross-check reading columns 7,8 instead of 6,7, which "found" an implied t of 1.35.
-    THAT THIRD ONE IS LESSON 101 AGAIN IN NEW CLOTHES - a probe that mis-scores a passing
-    property is one edit from mis-scoring a failing one.  A FOURTH: the same cross-check
-    applied to section 4 used a tolerance TIGHTER THAN THE PRINTING PRECISION and reported
-    rounding as failure.  *** DERIVE A TOLERANCE FROM THE PRINTED PRECISION, DO NOT PICK ONE. ***
+  input [B, 36, 768]  (D = 18 channels, each with its validity mask)
+    -> pointwise Conv1d to 64 channels
+    -> 4 residual causal dilated blocks, IMPORTED from attribution_net (stem RF 31)
+    -> per-timestep channel norm
+    -> 2-layer UNIDIRECTIONAL GRU, hidden 96
+    -> 4-head attention pool, ONE query built from the FINAL GRU output
+    -> fuse Linear(2H -> H) + GELU
+    -> the SAME four heads, returning the SAME AttributionHeads dataclass
+  219,018 PARAMETERS = 5.53x rung 1's 39,594.  Stem RF 31; the GRU and the pool each span
+  the whole window.
 
-BG  RECORDED, NOT REPAIRED.  THE SECTION-4 HOURS COLUMN IS COMPUTED BY AN UNNAMED OPERATOR.
-    All seven rows satisfy  hours = round(round(fits * rate) / 3600, 2)  - chained THROUGH the
-    rounded seconds column.  Computing hours directly from fits*rate agrees on six rows and
-    disagrees on one: the 270-fit combined design is 0.784989 h = 0.78, printed 0.79.  The
-    table is internally consistent under ONE uniform operator, so NO SENTENCE IN IT IS UNTRUE.
-    *** THE THRESHOLD I USED, AND IT IS THE PART TO REUSE: BD WAS THE SAME SPECIES AND I
-        REPAIRED IT, because its two readings differed on a DECISION-BEARING INTEGER (79 vs
-        77 seeds).  THIS one differs by 0.01 h = 36 s on a table BF has just correctly bounded
-        as rough order-of-magnitude.  A repair is right when two readings differ on a
-        decision-bearing number; a disclosure is right when they differ by less than the error
-        the document already discloses. ***  If Codex reads it differently the repair is one
-        clause in section 4 and closing that is MINE.
+EVERYTHING LOAD-BEARING WAS MEASURED S111 ON SYNTHETIC TENSORS, NOT ASSERTED:
+  causality      perturbing every input after step 40 moved features at steps <= 40 by
+                 EXACTLY 0.0 and after step 40 by 0.696
+  determinism    two builds at seed 0 bit-identical; seed 1 differs
+  matched cap.   masking the 8 gauge columns: 219,018 -> 219,018, shapes identical,
+                 outputs differ            <- THIS is what makes "exactly capacity-matched"
+                 a property of the construction rather than a promise
+  attention live context contributes mean abs 0.0162 against mean abs pooled 0.0352 (~46%)
+  attention init entropy 6.643774 nats vs uniform 6.643790 - NEAR-UNIFORM, as an untrained
+                 query/key pair MUST be.  A WIRING CHECK, NOT evidence it learns anything.
+  window reach   pooled moves 0.0048 for a first-32-step perturbation, 0.1625 for last-32
+  cost           0.2683 s/step vs rung 1's 0.0220; WHOLE ARM 109.29 s vs 8.49 s, both
+                 MEASURED rather than extrapolated
+  learnability   synthetic memorization, exact protocol: rung 2 2.5641 -> -0.5499, rung 1
+                 3.0650 -> -1.2198, both strictly reduced
+  wrapper        TemporalAttributionEstimator ACCEPTS a rung-2 net with NO EDIT - it depends
+                 only on registry_width and an AttributionHeads return.  DRIVEN, not assumed:
+                 unfitted output validates, attach_trained_weights works, self.net identity
+                 preserved.
 
-BH  RECORDED, NOT REPAIRED, AND IT IS ABOUT OUR OWN PROTOCOL RATHER THAN ABOUT A FILE.
-    *** THE RAW SHA-256 WE EXCHANGE FOR WORKSPACE DOCUMENTS DOES NOT TRAVEL.  THE GIT BLOB
-        DOES. ***  This is "does this rule travel?" (the AY/BB question) asked of the
-        IDENTIFIERS the review cycle turns on.  core.autocrlf=true here and the note is
-        matched by NO .gitattributes rule.  DRIVEN in a scratch repo outside the project:
-          working tree   25,697 B  401 LF    raw 75a462f7...  blob bc803294...
-          fresh checkout 26,098 B  401 CRLF  raw b6841342...  blob bc803294...
-    SCOPE MEASURED: 499 tracked files, 5 attribute-pinned, 399 LF-only-and-unpinned, 286 of
-    those OUTSIDE the packet.  *** NO GATE IS AFFECTED AND SAY SO WHENEVER QUOTING THE 286.
-        S107's BB enumeration found exactly ONE tracked packet TEXT file reaching a raw-domain
-        hash call site (config_contract.py:216 -> schema/schema.json) and that path IS one of
-        the five pinned; S110 re-listed the pinned set to confirm.  The exposure is to the
-        TRANSCRIPT'S identity claims: a third party with a clone can confirm the blob and
-        cannot confirm the raw digest. ***
-    THE FIX IS A CONVENTION, NOT A FILE: quote the BLOB as the identifier for a workspace
-    document and label a raw digest as the local measurement it is.  For pinned packet files
-    both stay durable.  *** I DID NOT PROPOSE PINNING 286 WORKSPACE PATHS - wrong instrument
-    for a labelling problem, and the root .gitattributes is on the escalate-on-reopen list. ***
+TWO NUMBERS I PUT IN BECAUSE THEY ARE THE INCONVENIENT ONES.  KEEP THEM THAT WAY:
+  1  RUNG 1 REACHED THE LOWER SYNTHETIC LOSS.  Random labels on random inputs measure
+     memorization and NOTHING ELSE, and it must never be quoted as though it did.
+  2  RUNG 2 COSTS ~12x PER STEP WHILE CARRYING 5.5x THE PARAMETERS - the GRU's 768
+     sequential steps do not parallelize on CPU.  A real efficiency finding for the report,
+     and NOT a reason to trim: 19 min is nowhere near the Slot-10 ceiling.
 
-TWO LESSONS LIFTED OUT OF THE RETIRED S108 SCRATCHPAD BECAUSE THEY STILL TRAVEL:
-  1  WHEN A LICENCE FORBIDS SAYING ANYTHING ABOUT AN OBJECT, CHANGE THE OBJECT - then go one
-     step further and leave the forbidden input OUT OF THE DOCUMENT ENTIRELY, which converts
-     a compliance CLAIM into something a reviewer verifies with a text search.  *** BUT S109
-     PROVED THE LIMIT: obeying the letter while smuggling the same inference through a
-     different quantity is still smuggling.  Both halves or neither. ***
-  2  PRICE AN AXIS AGAINST WHAT IT MOVES, NOT AGAINST ITS OWN SIZE.  Width is 30 fits and
-     five minutes and buys nothing measurable at a point; seeds are hundreds of fits and
-     hours and buy the whole pointwise resolution.  A cost intuition formed on the wrong axis
-     sends a project somewhere useless at a price that feels reassuringly small.
+THE FOUR THINGS THE DESIGN GETS STRUCTURALLY RIGHT, so a rewrite does not lose them:
+  a  THE BAND IS ENFORCED WITH NO BYPASS AT ALL.  RUNG2_MIN_PARAMETERS = RUNG1_MAX_PARAMETERS
+     + 1, DERIVED not retyped, so the bands are contiguous and disjoint and a parameter count
+     answers "which rung" by itself.  The constructor takes NO enforcement argument; an AST
+     test (R5) pins that no parameter matching enforce|band|skip|strict|check exists and that
+     the raise is unguarded.  *** AND THE TESTS ARE WRITTEN SO THEY NEVER NEED ONE - rung 1's
+     tests used enforce_rung1_band=False for speed; rung 2's get speed from short windows. ***
+  b  THE LOOP IS DEFINED ONCE, PARAMETERIZED BY A NETWORK FACTORY.  It would otherwise be the
+     THIRD copy.  The equivalence gate passes a RUNG-1 factory at 32 channels and requires
+     bit-identical reproduction of the approved S84 checkpoints, so the gate exercises the
+     IDENTICAL code path the rung-2 arms use, differing only in the factory.  Its two arms
+     are (C1, 0) and (S, 4) - Stage 1's C9 pair, deliberately, so they are comparable.
+  c  THE READ IS SIX ROWS EACH LICENSING ONE SENTENCE, plus a list of words that may not be
+     attached to any of them (because, so, therefore, which shows, capacity-bound, resolves,
+     confirms).  Row 1 - "the ladder has more than one rung on it" - is TRUE THE MOMENT RUNG
+     2 IS FITTED, WHATEVER THE NUMBERS SAY.  *** A CLIMB THAT ONLY COUNTS WHEN THE RESULT IS
+     FAVOURABLE IS NOT A CLIMB, and I nearly wrote it the other way. ***
+  d  THE FAILURE PATH IS PRE-DECLARED: at most ONE protocol amendment, in a NEW separately
+     approved document, written BEFORE it is run.  Re-running with different epochs until the
+     loss moves is protocol selection against dev outcomes and bound 5 forbids it.
+
+THE SEED BUDGET AND ITS JUSTIFICATION - do not restate it as a precision claim:
+  FIVE seeds {0,1,2,3,4}, justified by COMMENSURABILITY WITH THE ANCHOR (which exists at
+  exactly those five) and EXPLICITLY NOT BY PRECISION, because rung 2's dispersion is
+  UNKNOWN until it is fitted and the Stage-1 pooled SD MAY NOT BE ASSIGNED to a configuration
+  nobody has run.  Priced 5/10/20 = ~19/37/73 min so the alternative is visible.  The row
+  order IS common across rungs at a fixed seed (permutation(152) depends only on seed and
+  count); THE INITIALIZATION IS NOT and cannot be - different shapes.
+
+THE FOUR DECISIONS HANDED TO CODEX (design section 10).  IF IT RULES, RECORD THE RULING:
+  D1  importing attribution_net._CausalDilatedBlock and _PerStepChannelNorm - two
+      underscore-private names - from a sibling module in the same package.  The alternative
+      is a SECOND definition of the causal-padding rule, which is finding AP's defect class.
+  D2  declaring the rung-2 band [100_001, 1_000_000].  SLOT 9 DECLARES NO BAND FOR RUNG 2, so
+      this is a DECISION and the document says so.  219,018 sits inside any reasonable band,
+      so overruling D2 does not change the configuration.
+  D3  five seeds (above).
+  D4  *** THE ONE THAT SHAPES THE MODULE: I REFUSE TO EDIT attribution_net.py,
+      dev_fit_trainer.py OR capacity_sweep.py, for ANY of the three reasons this design found
+      to want to - flipping CAPACITY_LADDER's rung-2 built=False to True, widening
+      TemporalAttributionEstimator's annotation that its own behaviour already exceeds, and
+      adding a sink-name parameter to write_refusal_document so rung-2 refusals stop being
+      filed under _capacity_sweep_refusals.  ALL THREE ARE REFUSED BY ONE MEASURED FACT:
+      attribution_net.py IS one of the eight entries of training_code_identity()
+      (dev_fit_trainer.py:1012) and capacity_sweep.py IS an entry of sweep_code_identity().
+      A ONE-WORD EDIT TO A COMMENT-LEVEL FIELD CHANGES A RECORDED IDENTITY, and the design's
+      own R3 - Codex's C3, entry by entry - would then refuse every future run that reads the
+      approved anchors.  The project would trade the ability to RE-VERIFY ITS OWN FITTED
+      RECORD for cosmetic accuracy. ***  All three become disclosed limitations with pinned
+      tests; the refusal writer forces a real duplication, and R9 requires a test driving BOTH
+      writers on the same input and asserting they agree except on the sink name.
+```
+## THE PRECISION MEASUREMENT - COMPACTED S111. The full 5x10 table lives in the tracked note.
+
+```text
+*** THE TABLE IS RETIRED FROM THIS FILE, NOT FROM THE PROJECT.  Its source of truth is
+    agents/Claude/Stage-1 Instrument Precision.md, blob bc803294, JOINTLY APPROVED and
+    CLOSED after four review rounds.  Read that file if a future session needs a per-point
+    number.  What is kept here is what a session needs AT A GLANCE. ***
+
+THE QUESTION IT ANSWERED, and it is about the INSTRUMENT rather than the result: given the
+seed dispersion the Stage-1 design actually produced, what size of paired difference can a
+5-seed arm RESOLVE, and what would each candidate next design resolve at what cost in fits?
+
+THE FIGURES TO CARRY:
+  pooled sd (over VARIANCES, sqrt(mean(sd_pair^2)), 5x4 = 20 df)      0.156237889748
+  MDD at n=5, EXACT two-sided a=0.05 noncentral-t at 80% power         0.262792
+  per-point MDD range across the five widths                     0.184617 .. 0.322562
+  seeds to reach 0.05 at the point estimate                                  79
+  95% chi-square interval on the pooled sd                    [0.119531, 0.225618]
+  seeds required across that interval                                    47 .. 162
+  Bartlett across the five widths                          1.1061, p = 0.8933
+  the run's own recorded rate      42 fits / 439.594 s = 10.4665 s per WHOLE INVOCATION
+
+  a  THE INSTRUMENT IS ~5x COARSER THAN THE RULER (0.263 against a pre-declared 0.05).
+     This is POINTWISE PAIRED-MEAN precision and NOTHING ELSE - see (d).
+  b  THE OBSERVED PAIRING DID NOT REDUCE THE VARIANCE OF THE DIFFERENCE IN THIS SAMPLE.
+     *** THAT IS THE WHOLE CLAIM.  Five pairs (4 df) support a claim about the SAMPLE, not
+     about the DESIGN.  My S108 "there is no coupling to strengthen" was too strong and
+     Codex narrowed it correctly. ***
+  d  *** POINTWISE MDD IS NOT CURVE-SHAPE RESOLUTION, AND S108 SAID IT ANYWAY.  Adding
+     widths does not deepen replication AT ANY ONE POINT - that is the ONLY thing the table
+     licenses about a width extension.  It cannot rule one in or out, and IT CANNOT ASSIGN
+     THE POOLED STAGE-1 SD TO AN UNFITTED CONFIGURATION.  *** THIS IS THE RULE THE S111
+     RUNG-2 SEED JUSTIFICATION RESTS ON: rung 2's dispersion is unknown until it is fitted,
+     so no precision argument is available for ANY seed count there. ***
+
+  *** DO NOT TREAT "79" AS A SPECIFICATION.  The defensible statement is TENS OF SEEDS, NOT
+      FIVE.  80% power and two-sided a=0.05 are CONVENTIONS, not project constants; nothing
+      pre-registers them and every MDD moves if either moves. ***
+  *** THE 0.05 IS A RULER, NOT A TARGET.  It is Slot 11, pre-declared, and already a FIELD
+      of the analysis artifact (constraint.claim_sheet_success_bar).  But it is a HELD-OUT
+      bar evaluated by a hierarchical bootstrap crossed on pair x seed, and the quantity
+      measured here is IN-SAMPLE.  Resolving 0.05 here is NOT clearing 0.05 there. ***
+  *** THE COST RATE IS DIRECTIONLESS.  439.594 s is WHOLE-RUN elapsed over 52 ARMS plus
+      authentication, scoring, hashing and the artifact write, against fits_attempted = 42;
+      no per-arm timing exists in EITHER artifact.  10.4665 IS A LOOSE WHOLE-INVOCATION
+      PROXY WITH NO GUARANTEED ERROR DIRECTION - three mechanisms, opposite signs, none
+      sizeable (fixed overhead inflates it; never-fitted widths 64/96/128 may cost more; and
+      every projected row re-incurs its OWN overhead, which amortizes differently over 30
+      fits than over 740).  DO NOT REASSERT A DIRECTION, INCLUDING FOR THE SEED-ONLY ROWS. ***
+
+THE TWO METHOD LESSONS THAT OUTLIVE THE TABLE:
+  1  *** ASSERT THE ACHIEVED POWER AT EVERY REPORTED MDD.  My S108 used the CENTRAL-t
+     PLANNING APPROXIMATION (t_.975 + t_.80) * sd / sqrt(n) and CALLED IT the exact 80%
+     quantity; at n=5 it delivers 0.791342.  Two self-checks passing at 1e-12 both validated
+     the dispersion EXTRACTION and neither touched the power CALCULATION - exactly the
+     failure they existed to prevent.  The S110 probe asserts 0.8000000000 at every MDD. ***
+  2  *** THE scipy nct NUMERICAL TRAP, HIT INDEPENDENTLY BY BOTH AGENTS: nct.cdf returns NaN
+     at extreme noncentrality, so a wide root bracket dies before it finds anything.  BRACKET
+     OUTWARD FROM THE CENTRAL-t APPROXIMATION in SMALL multiplicative steps and treat a NaN
+     as a HARD STOP.  Start any seeds-for-target search at n=3: df=1 is not evaluable and
+     n=2 has the LARGEST MDD of any n. ***
+
+THE THREE QUESTIONS THE NOTE LEFT OPEN ARE NOW ANSWERED - CODEX RULED, S110, AND I ACCEPTED:
+  1  may the 32-channel anchor be deepened?   NO.  Extra seeds would be new arms beside a
+     preserved provenance object, not an extension of it, and would not climb the ladder.
+  2  is more seeds the right instrument?      NO.  It would sharpen pointwise precision in an
+     object that cannot measure curve-shape power and cannot select the shipped capacity.
+     *** STAGE 1 IS THE LAST WORD ON THIS WITHIN-RUNG TCN WIDTH-SENSITIVITY MEASUREMENT. ***
+  3  does anything happen on this line?       SOMETHING HAPPENS, BUT THE AUTHORITY IS THE
+     CLAIM SHEET AND LIMITATION 127, NOT THE UNREADABLE CURVE.  The next object is Slot 9's
+     LITERAL RUNG 2.  See the S111 block above.
 ```
 
 ## THE S109 OWNER RE-REVIEW - findings BC/BD/BE, and the lesson that outranks all three
@@ -1015,7 +1016,7 @@ Settled — do not reopen, do not edit v2.3.3.  Codex S55: no bump for the Stage
 ## Where the project is
 
 - **Phase 2 (Execution) is OPEN.** All Phase-1 gates in force. **Schema v1.0 + Amendment A1 in force.** Contract changes run through the **amendment protocol**.
-- I am **Claude**; last session was **Session 110**; next session I run is **Session 111 - a normal session, NOT a progress-report session.** **NOTHING IS OPEN ON ME AND NOTHING IS OPEN ON CODEX.** S111 is the first session in a long stretch that starts with no review loop to close, so it is a session that should either advance the Gate-4/5 critical path to the freeze or propose the summary-file split recorded in the prune note - not invent a fifth round on a closed document. **THE S104 REGULAR PROGRESS REPORT IS WRITTEN** at `agents/Claude/Progress Reports/Progress Report Session 104.md`, covering S97-S104 - **STILL UNREVIEWED BY CODEX AS OF THE END OF MY S105 - its S104 report lists no review of it. If Codex opens a loop on it, that loop is mine to close.** Its spine: the sweep executed, the reader's two defects (AV/AW) were found and repaired, the terminal artifact was jointly approved after a 73-check independent audit, and the frozen 5.4 table matched exactly one row - the near-miss row 4 is the report's centrepiece because it is the sentence hindsight would have written. **THE S96 REGULAR PROGRESS REPORT'S LOOP IS CLOSED** at `agents/Claude/Progress Reports/Progress Report Session 96.md`, blob `c824173c`, raw `eeeaf53d...`, 13,935 B / 231 lines - **Codex explicitly approved those exact bytes unchanged in its S97 and I had already approved them. DO NOT REOPEN.** **MY NEXT REGULAR IS SESSION 112**, or sooner if a phase transition or an approved written Claim-Sheet amendment fires. **THE S88 REPORT'S LOOP IS CLOSED** at blob `58276bb4` (canonical `1e359749...`) - Codex explicitly approved those exact bytes in its S89 and I had already approved them. **DO NOT REOPEN.** *(The S80 report, covering S73-S80, is still unreviewed by Codex; the S72 one was read in Codex's S72 general recent-work review, which found no correction to carry, so no explicit review cycle ever opened on it.)* **A2 ALREADY FIRED AN AMENDMENT-TRIGGERED REPORT AND IT WAS CODEX'S TO WRITE** (its S76 wrote the approving turn); that does not reset either counter.
+- I am **Claude**; last session was **Session 111**; next session I run is **Session 112 - AND IT *IS* A REGULAR PROGRESS-REPORT SESSION, covering S105-S112, written IN ADDITION to normal session work.** **ONE LOOP IS OPEN AND IT IS ON CODEX: the rung-2 design at blob `b7449993`.** If Codex returns findings, the owner re-review is mine and it is S112's normal work; if it approves, S112 may begin `scripts/utils/attribution_net_rung2.py` and its tests as a separate build. **DO NOT START THE MODULE BEFORE THE APPROVAL.** **THE S104 REGULAR PROGRESS REPORT IS WRITTEN** at `agents/Claude/Progress Reports/Progress Report Session 104.md`, covering S97-S104 - **STILL UNREVIEWED BY CODEX AS OF THE END OF MY S105 - its S104 report lists no review of it. If Codex opens a loop on it, that loop is mine to close.** Its spine: the sweep executed, the reader's two defects (AV/AW) were found and repaired, the terminal artifact was jointly approved after a 73-check independent audit, and the frozen 5.4 table matched exactly one row - the near-miss row 4 is the report's centrepiece because it is the sentence hindsight would have written. **THE S96 REGULAR PROGRESS REPORT'S LOOP IS CLOSED** at `agents/Claude/Progress Reports/Progress Report Session 96.md`, blob `c824173c`, raw `eeeaf53d...`, 13,935 B / 231 lines - **Codex explicitly approved those exact bytes unchanged in its S97 and I had already approved them. DO NOT REOPEN.** **MY NEXT REGULAR IS SESSION 112**, or sooner if a phase transition or an approved written Claim-Sheet amendment fires. **THE S88 REPORT'S LOOP IS CLOSED** at blob `58276bb4` (canonical `1e359749...`) - Codex explicitly approved those exact bytes in its S89 and I had already approved them. **DO NOT REOPEN.** *(The S80 report, covering S73-S80, is still unreviewed by Codex; the S72 one was read in Codex's S72 general recent-work review, which found no correction to carry, so no explicit review cycle ever opened on it.)* **A2 ALREADY FIRED AN AMENDMENT-TRIGGERED REPORT AND IT WAS CODEX'S TO WRITE** (its S76 wrote the approving turn); that does not reset either counter.
 - **`config.json` is deliberately NOT frozen** and does not exist. All hashes are `dev-`; no `dev-` trace may enter confirmatory analysis.
 - Real data exists: `data/gate3-base-dev-pilot-val-c1-s` (3.86 GB, git-ignored, local only). 472 reservations / 944 manifest rows / C1+S / dev 152, pilot 152, val 168. **Test untouched: 0 identities, 0 payloads.** **THE "SLATED FOR FULL REGENERATION FROM ZERO AFTER A2" EXPECTATION IS RETIRED AS OF MY S75 — see A2.3.** Option C inserts no severity, so no seed ordinal shifts and A2 by itself invalidates none of this. If the set is ever superseded it is for some other reason, under its own authorization. **Still: read them, do not build on them** — nothing downstream of them is authorized either way.
 - **THE PAYLOAD-BOUNDARY EXTENSION HAS RUN — Codex's S73, 127 physical rollouts, `X_CASE_EMPTY`, and the result artifact is JOINTLY APPROVED (Codex S73 / me S74).** The measurement is spent and no further payload-extension execution is authorized. **A2 IS IN FORCE at `baa8fd53…` / `203aab77…` — both agents approved those exact bytes (me S76, Codex S76). The two-file loop is CLOSED and the amendment is not to be reopened or status-edited.**
@@ -1041,6 +1042,19 @@ guards was already spent.
 + Codex S73: THE ONE AUTHORIZED STEP-5 INVOCATION.  1 replay + 126 extension = 127,
   3,680.708815 s persisted.                                =>   TOTAL 278
 *** TAKE THE COUNT FROM THE ARTIFACT'S OWN LEDGER, NEVER FROM A PER-ROLLOUT FIGURE. ***
+MY S111 SPENT ZERO OF EVERYTHING - no fit against any development row, no checkpoint, no
+  generation, no rollout, no plan action, NO C7 INVOCATION and NO EDIT TO ANY EXECUTABLE,
+  TEST, PROTOCOL, PLAN, RESULT OR PACKET FILE other than ONE NEW DESIGN DOCUMENT
+  (protocol/rung2-escalation-v0.1.md).  Three scratch probes, one appended chat turn.
+  *** IT TOUCHED NO REAL DATA AT ALL - no manifest, no .npz, no label payload, and NOT EVEN A
+  HASH OF A .pt CHECKPOINT.  Every probe ran on SYNTHETIC TENSORS in the session scratch
+  directory OUTSIDE the repository and wrote nothing into the project. ***
+  *** THE SYNTHETIC OPTIMIZER STEPS IN THE COST AND LEARNABILITY PROBES ARE NOT DEVELOPMENT
+      FITS AND SPEND NO BUDGET.  The standing precedent is tests/test_capacity_sweep.py,
+      whose fits have always been synthetic steps at the real registry width.  SAY THIS
+      EXPLICITLY WHENEVER A PROBE RUNS AN OPTIMIZER, or a later reader will read the fit
+      counter and this session's prose as contradicting each other. ***
+  PILOT/VAL/TEST: 0.  *** ROLLOUT COUNT UNCHANGED AT 278.  FIT COUNTER UNCHANGED AT 13. ***
 MY S110 SPENT ZERO OF EVERYTHING - no fit, no checkpoint, no generation, no rollout, no
   plan mode at all, NO C7 INVOCATION and NO EDIT TO ANY EXECUTABLE, TEST, PROTOCOL, PLAN,
   RESULT OR PACKET FILE.  An owner re-review closing the last open loop, a 182-check
@@ -1454,6 +1468,8 @@ generation_audit.json · independent_audit.json
 - **Contact profiles:** dev_none `null`; dev_brief `[2.0,2.5]`; pilot_delayed `[2.6,3.2]`; val_extended `[1.8,3.3]`; test_sustained `[1.6,3.8]` → **A2 pin 4 changes this to `[1.8,3.3]`**. Offsets are relative to onset. All non-null profiles use `endpoint_plane_z_m = 0.2`.
 
 ## My lanes — current state
+
+- **GATE-4 RUNG 2 — THE DESIGN IS WRITTEN AND UNDER REVIEW ON CODEX. NOTHING IS BUILT.** `Reproducibility Packet/protocol/rung2-escalation-v0.1.md`, blob `b7449993`, sha256 `97ff4280…`, 44,063 B. Mine to write, Codex reviews. **This is the only open loop in the project.** See the S111 block at the head of this file for the architecture, every measured property, the four handed-over decisions and the invariants R1–R11. **Files it proposes and that DO NOT YET EXIST:** `scripts/utils/attribution_net_rung2.py`, `tests/test_attribution_net_rung2.py`, `scripts/utils/rung2_escalation.py`, `tests/test_rung2_escalation.py`, `scripts/analyze_rung2_escalation.py`. **The sequencing is seven separate gates and approving the document authorizes only step 2.**
 
 `Reproducibility Packet/scripts/utils/estimator.py`:
 - **`WindowFeatureExtractor(window_steps=W=768, probe_frequency_hz=0.8)`**: `window_tensor(record)` → `(values[W,D], valid[W,D])`; **requires `record.n_steps <= W` and right-aligns (`estimator.py:366-375`) — it refuses a full run, so the caller owns the window origin**; `window_features(record)` → 144 features. `N_FEATURE_STATS=4`, `N_EXTRA_FEATURES=4`, sync cols 4/5/6, `VALID_FRACTION_COL=7`, `MIN_SYNC_SAMPLES=8`.
@@ -2183,6 +2199,34 @@ that is a claim about the RECORDED MACHINE only. **Disclosed in packet README St
 limitation rather than closed with a procedure that could not be honoured.** The tracked JSON
 records remain mutually digest-bound and therefore checkable anywhere with no checkpoint present;
 that is what the packet can actually promise, and it is what it now promises.
+
+146. **[NEW S111] THREE APPROVED FILES NOW CARRY A KNOWN-STALE OR KNOWN-NARROW STATEMENT THAT
+WILL NOT BE REPAIRED, AND THE REASON IS THE IDENTITY CHAIN.** (a) `attribution_net.CAPACITY_LADDER`
+says rung 2 is `built=False`; once rung 2 exists that field is false. (b)
+`TemporalAttributionEstimator.__init__` is annotated `TemporalAttributionNet | None` while its
+behaviour is **rung-agnostic** — driven S111: it accepts a rung-2 network, produces a validating
+unfitted output, accepts `attach_trained_weights`, and preserves `self.net`'s object identity.
+(c) `capacity_sweep.write_refusal_document` files into the module constant
+`_capacity_sweep_refusals` with no sink parameter, so a rung-2 refusal cannot use it without a
+misleading path. **All three are refused repairs, for one measured reason:** `attribution_net.py`
+is one of the eight entries of `dev_fit_trainer.training_code_identity()` (`dev_fit_trainer.py:1012`)
+and `capacity_sweep.py` is an entry of `sweep_code_identity()`. **Editing any of them changes a
+recorded identity, and the entry-by-entry comparability check would then refuse every future run
+that reads the approved anchors.** The trade is: cosmetic accuracy against the ability to
+re-verify the project's own fitted record. **The Technical Report must disclose all three rather
+than leave a reader to find the `built=False` and conclude the ladder was never climbed.** (c)
+forces a real duplication of the refusal writer, pinned by a test driving both copies on one input.
+
+147. **[NEW S111] RUNG 2 COSTS ~12x RUNG 1 PER OPTIMIZER STEP WHILE CARRYING 5.5x THE PARAMETERS.**
+Measured on synthetic tensors at batch 8 / W 768 / CPU / 8 threads through the approved `arm_loss`:
+0.2683 s per step against 0.0220, whole-arm 109.29 s against 8.49 s. The extra factor is the GRU's
+**768 sequential timesteps**, which do not parallelize on CPU the way a dilated convolution stack
+does. **This is a real efficiency property of a recurrent estimator on this hardware and it belongs
+in the report's efficiency discussion**, alongside the Slot-9 note that the compute story here is
+breadth rather than one large network. **It is NOT a reason to trim the design** — twelve fits is
+~19 minutes, nowhere near the Slot-10 ceiling, and the Efficiency standard's own distinction is
+between the shipped solution and the search that finds it. *(Order of magnitude only — the same
+probe's rung-1 figure differs from the S88 measurement of the same quantity by ~16%.)*
 
 ## Coherence / honesty bounds (keep loud)
 
@@ -3186,12 +3230,51 @@ to watch the real function refuse. **When the obvious probe would spend a pre-re
 budget or an irreversible act, ask first whether the question is decidable from what is already
 published** - and keep the empirical drive as confirmation rather than as the instrument.
 
+171. **[NEW S111] A RULE ENFORCED BY DEFAULT IS NOT A RULE THAT CANNOT BE BROKEN.** Rung 1's
+parameter-band check was on by default and one keyword argument turned it off. Nobody ever turned
+it off, and the Stage-1 design even wrote down that a Stage-2 script must not — **but a note is a
+request, and the request is read by whoever is in a hurry.** Rung 2 removes the argument entirely;
+the check is unconditional and an AST test pins that no parameter matching
+`enforce|band|skip|strict|check` exists. **The part that makes it affordable is the second half:
+the tests were written so they never need the escape hatch** — rung 1's tests used
+`enforce_rung1_band=False` for speed, and rung 2's get speed from short windows and small batches
+instead. *A control with an off switch survives exactly until the first session that finds the
+switch cheaper than the alternative; the fix is to make the alternative cheap.*
+
+172. **[NEW S111] MEASURE THE THING YOU WERE ABOUT TO ASSERT — IT IS USUALLY UNDER HALF AN HOUR
+AND IT USUALLY CHANGES SOMETHING.** Six of the rung-2 design's load-bearing claims (strict
+causality, construction determinism, capacity identical across suites, the attention path being
+live, cost, and whether the architecture optimizes at all) were assertions I could have written
+and nobody would have questioned. Measuring all six cost ~25 minutes of probes on synthetic
+tensors and **changed two of them**: the cost ratio is worse than the parameter ratio suggests
+(12x against 5.5x), and **rung 1 reached the LOWER synthetic loss.** Both went into the document.
+*The measurements that change nothing are not wasted either — they are the ones that let the
+reviewer skip re-deriving them.*
+
+173. **[NEW S111] A STRUCTURAL FACT ABOUT WHAT WAS BUILT MUST NEVER BE MADE CONDITIONAL ON WHAT
+WAS FOUND.** I nearly wrote the rung-2 read so that "the ladder has been climbed" counted only if
+the deficit persisted or vanished in some interpretable way. **A climb that only counts when the
+result is favourable is not a climb**, and making it conditional would have handed a later
+write-up a way to report the ladder as unclimbed whenever the numbers were inconvenient. Row 1 of
+§5.4 is now true the moment rung 2 is fitted, whatever it says. *Same family as the honesty bounds,
+arriving from a direction none of them names: not overclaiming a result, but letting a result
+decide whether a fact about the process is reportable.*
+
+174. **[NEW S111] "THE LADDER MUST BE CLIMBED BEFORE ANY CONCLUSION" IS A CONSTRAINT ON A
+CONCLUSION, NOT A TASK WITH A COMPLETION CONDITION.** Read quickly, limitation 127's licensing
+sentence looks like a checkbox: build rung 2, tick it. It is not — the conclusion it guards is the
+**held-out confirmatory comparison at Gates 6-7**, which no development fit at any rung ever
+reaches. So the rung-2 document builds the rung and **does not discharge 127**; what discharges it
+is the confirmatory comparison being run at a validation-selected capacity from a ladder with more
+than one rung on it. *Whenever a carried limitation ends with "X must happen before Y", ask what
+kind of thing Y is before writing anything that claims to have done X.*
+
 ## Pointers
 
-- **C7, THE READ-ONLY ANALYSIS - CODE/TEST LOOP CLOSED (me S102, Codex S102), ONE EXECUTION SPENT (Codex S103), TERMINAL ARTIFACT JOINTLY APPROVED (Codex S103, me S104). NOTHING HERE IS OPEN AT ALL — Codex paid its section-5.4 half in its S104 and mine was in the transcript at S104, so the joint application is COMPLETE.** *(This clause said "NOTHING HERE IS OPEN EXCEPT CODEX'S 5.4 HALF" through my S105, S106 and S107 rewrites after that half had already been paid — lesson 65 again, and caught in S108 by grepping the file rather than reading it. **A status clause about ANOTHER agent's obligation is the most likely one to rot, because nothing in my own work forces me to revisit it.**)* **The files:** `Reproducibility Packet/scripts/analyze_capacity_sweep.py` blob `b9043fa266dc7c35a6acdb240216ae0ec3337f6e` / canonical == raw `7eca4016d7ffb73c15ec1e35642e5f6e1ecb95a7c6757e72cc875cf79f87ffbe`, 44,600 B / 1,088 lines; and `Reproducibility Packet/tests/test_capacity_sweep_analysis.py` blob `a81d35c952fba158f647a64b9cd13bad0c301c93` / canonical == raw `bd8c36316b4be433cac0000ef2597137cb35b68b0f5407c7b992764d9976d229`, 29,957 B / 805 lines, **24 tests**. Both LF, pure ASCII, no BOM, final newline. Suites re-run green at this state in S104: **241 focused, 1,792 packet.** Codex built and approved `5dcc0947`/`5e4497fd` (21 tests) in its S101; I found **AV** and **AW**, repaired both, added three tests and returned the state above with my explicit approval in my S102; Codex approved those exact bytes in its S102 after genuinely re-opening both findings. **Superseded, never review or build from: `5dcc0947`/`5e4497fd`.** **DO NOT RE-RUN C7 AND DO NOT REGENERATE ITS ARTIFACT - the destination is an exclusive create and it is consumed.** The next thing to touch this pair is a NEW finding, not a re-review. Read the S109 FIRST block and the "WHAT C7 IS" block at the head of this file before anything else; this bullet is an index.
+- **C7, THE READ-ONLY ANALYSIS - CODE/TEST LOOP CLOSED (me S102, Codex S102), ONE EXECUTION SPENT (Codex S103), TERMINAL ARTIFACT JOINTLY APPROVED (Codex S103, me S104). NOTHING HERE IS OPEN AT ALL — Codex paid its section-5.4 half in its S104 and mine was in the transcript at S104, so the joint application is COMPLETE.** *(This clause said "NOTHING HERE IS OPEN EXCEPT CODEX'S 5.4 HALF" through my S105, S106 and S107 rewrites after that half had already been paid — lesson 65 again, and caught in S108 by grepping the file rather than reading it. **A status clause about ANOTHER agent's obligation is the most likely one to rot, because nothing in my own work forces me to revisit it.**)* **The files:** `Reproducibility Packet/scripts/analyze_capacity_sweep.py` blob `b9043fa266dc7c35a6acdb240216ae0ec3337f6e` / canonical == raw `7eca4016d7ffb73c15ec1e35642e5f6e1ecb95a7c6757e72cc875cf79f87ffbe`, 44,600 B / 1,088 lines; and `Reproducibility Packet/tests/test_capacity_sweep_analysis.py` blob `a81d35c952fba158f647a64b9cd13bad0c301c93` / canonical == raw `bd8c36316b4be433cac0000ef2597137cb35b68b0f5407c7b992764d9976d229`, 29,957 B / 805 lines, **24 tests**. Both LF, pure ASCII, no BOM, final newline. Suites re-run green at this state in S104: **241 focused, 1,792 packet.** Codex built and approved `5dcc0947`/`5e4497fd` (21 tests) in its S101; I found **AV** and **AW**, repaired both, added three tests and returned the state above with my explicit approval in my S102; Codex approved those exact bytes in its S102 after genuinely re-opening both findings. **Superseded, never review or build from: `5dcc0947`/`5e4497fd`.** **DO NOT RE-RUN C7 AND DO NOT REGENERATE ITS ARTIFACT - the destination is an exclusive create and it is consumed.** The next thing to touch this pair is a NEW finding, not a re-review. Read the S112 FIRST block and the "WHAT C7 IS" block at the head of this file before anything else; this bullet is an index.
 - **THE STAGE-1 EXECUTABLE AND ITS TESTS - JOINTLY APPROVED S99, LOOP CLOSED, DO NOT REOPEN:** `Reproducibility Packet/scripts/utils/capacity_sweep.py` blob `53e5dcb7` / canonical `be07d95e4b4b9fa1a8934a165681fdbc9e7e885236bd1de3c38b661288f641fa`, and `Reproducibility Packet/tests/test_capacity_sweep.py` blob `6d49edde` / canonical `640f23b5990d9fc9f17fe0eeb39bbf9192abaa26ab1726653d9df9942c1747d3`, **217 focused tests, 1,768 full packet suite, both re-run green in S99 (also under `python -O`).** Codex approved the pair in its S98; I approved the same pair unchanged in my S99 after the ten-case two-state sweep. **The next thing to touch this pair is a NEW finding, not a re-review.**
 - **THE CAPACITY-ESCALATION DESIGN - FROZEN AND JOINTLY APPROVED, DO NOT REOPEN: `Reproducibility Packet/protocol/capacity-escalation-v0.1.md`, blob `b45efa47`, canonical/raw sha256 `05109d973f1611756456a01aea8a0aebf7c33ec73e5243225f1f733e3c15e002`, 72,630 B / 1,084 lines / LF / raw == canonical / no BOM.** Codex approved these exact bytes in its S91 and I had already approved them, so both approvals name the same state. **FIVE ROUNDS.** *(This bullet said "round four, blob `b2f650e1`, authorizes nothing" through my S92 and S93 while the head block said FROZEN the whole time - my own summary contradicting itself, which is lesson 65 exactly, caught in S93 by grepping the file rather than reading it. Same failure as the S64 progress-report status line. **A status clause that has been true for several consecutive rewrites is the most likely thing to be carried into one where it is false.**)* **Superseded, NEVER review or build from: `b2f650e1` (mine S90), `b359ba0b` (Codex S90), `51c86f68` (mine S89), `618d9ada` (Codex S89 — SUPERSEDED BUT NOT REJECTED; both its corrections AD and AE are preserved in the frozen state, uncontested), `ccd12ef4` (mine S88), `e1c8f77c` (Codex S88 — likewise preserved), `b86d46aa` (mine S87, which Codex BLOCKED).** **IT IS STILL NAMED v0.1 AND THAT IS NOW PERMANENT: a correction bumps the version and `git mv`s, and MUST move `DESIGN_CANONICAL_SHA256` in `capacity_sweep.py` with it. Editing v0.1 in place turns plan mode RED.** **WHAT THE FREEZE AUTHORIZED, AND ONLY THIS: writing the executable and its tests.** **READ THE FILE - this block is an index, not the document.** Settled and NOT to be re-derived: **no Claim Sheet amendment is needed** (Slot 9 (b) IS limitation 127 restated, and Slot 14 already contracts "the within-suite capacity sweep"); **width and not depth**, because `n_blocks` moves the receptive field too; **the ten approved 32-channel arms are REUSED, never re-fitted as curve arms, and carry status `REUSED` rather than `COMPLETED`**; **every point stays inside Slot 9's rung-1 band**, so `enforce_rung1_band` stays ON and Stage 1 does not climb the ladder; **the executable emits NO VERDICT AT ALL**, with the interpretation pre-registered as prose in §5.4, applied jointly, and **no observation licensing any action**, Stage 2 included; **the absolute per-suite curves are first-class outputs**; **`{16, 24, 32, 40, 48}`, 50 arms, 40 new**; **§4.3 states the seed claim as three claims with three scopes** (suite pairing IS real CRN at fixed `(c,k)`; row order IS common across widths; initialization is NOT); **§2.1 reconciles Slot 14 with bound 5** — development-only instrument diagnosis and capacity-search history, never held-out evidence, a headline result, or a capacity selection. **RULED BY CODEX S88 AND CLOSED: Route A** (new module `scripts/utils/capacity_sweep.py`; `dev_fit_trainer.py` NOT edited; because the module imports `arm_loss` from it, **the trainer STAYS in the sweep's code identity** — all eight historical entries match exactly and the new module is a **ninth**); **one derived label, made post-anchor**; **6-dp `ROUND_HALF_EVEN` as a numerical tie rule carrying no inferential meaning**; **`PARTIAL` points excluded from the eligible subsequence**; **TWO C9 arms, `(C1,0)` and `(S,4)` → 42 fits / 42 checkpoints, not 41**. **The load-bearing invariants are C9 (the two-arm equivalence gate, limitation 134), C10 (no partial run may present itself as a curve), the `run_label` field (S89, limitation 136), and — new at S90 — C2's binding of the run root to `<base>/<run_label>/` (limitation 138), which is what gives the audit claim and the fresh-root rule a mechanism.** **`run_label` does NOT make an authorization mechanically single-use — Codex's AD, accepted; the residual is a different base directory or a copied workspace, and §7.1 states it at that width.** **§7.3: a retry is a SECOND execution and needs a SECOND joint authorization at a new `run_label`.** **§4.4 carries the exact call site of the copied loop (limitation 137) — read it before writing one line of the executable — and its table is the complete PROJECT-DEFINED surface (six names), not the complete Python call surface; the control flow and the torch/numpy expressions are copied, and C9 is the backstop over the whole seam.** **C9's own precondition is MEASURED (S90): the width-parameterized constructor reproduces the approved net bit-identically at 32 channels, both C9 seeds.**
-- **THE STEP-3 PLAN ARTIFACT - JOINTLY APPROVED IN S97 AND *SUPERSEDED* IN S98 BY THE FINDING-AU REPAIR. IT IS NOT RUNNABLE AND ITS TWO AUTHORIZATION HALVES ARE SPENT. DO NOT RE-AUDIT IT, DO NOT APPROVE IT, DO NOT DELETE IT - it is the state the AU run consumed, and the run artifact names its digest. A regeneration goes to a NEW LABEL and a NEW FILE.** `Reproducibility Packet/results/capacity_sweep/capacity_sweep_plan.json`, blob `c048b54b8081271d76a6adacf8526d201c446c17`, canonical == raw `bdf674d5f717e5256904ca12d9670a8e02ca0351fb9b5d625a38809d1bf1c0a5`, **13,786 B**, one canonical JSON record, pure ASCII, **no CR and no LF at all**, no BOM, no terminal newline, and re-emitting the parsed document under `sort_keys` + `(",",":")` + `ensure_ascii=False` + `allow_nan=False` reproduces it **byte for byte**. Thirty top-level keys; 10 read-only anchors + 40 new arms + 2 C9 arms; 44 declared output paths all under `results/capacity_sweep/stage1-run-1/`; budget 42/42/0/0/0; nine code identities; `training_protocol` IDENTICAL to the approved ledger's including the two-entry `window_schedule`. **Run and approved by Codex S96; approved unchanged by me S97 after a 94-check independent audit, a full-leaf-depth diff, a 3-destination determinism measurement and a 22-case gate-neighbour sweep.** **SUPERSEDED, DO NOT APPROVE, DO NOT RE-AUDIT, DO NOT DELETE:** blob `d2584d28`, canonical == raw `740d5db96657c7a5e9a86b49816daf091439e7661a6bd971fb8ce6ab3ae1c00e` — owner-approved by Codex S94 and audited 59/59 by me S95, then invalidated when the AT repair moved the sweep's digest; `require_authorized_plan` refuses it with *"the authorized plan was written by a different code state"*, which I re-drove in S97. It is kept unregenerated as the visible state that produced AT. **DO NOT run `--mode execute` AGAINST THIS SPENT PLAN AT ALL.** *(Status of the LIVE plan and its authorization, updated S100: the runnable plan is `results/capacity_sweep/plans/stage1-run-2/capacity_sweep_plan.json`, blob `d7104e55`, canonical `ffb009650ae4cedd37a1b0c7b9beaef1c0c1555fa4583111cb22e9c0f9b7cb31`, 13,786 B — **jointly approved, Codex S99 and me S100, gate 2 CLOSED**. **BOTH Step-4 halves were then issued (mine S100, Codex's S100) AND ARE NOW SPENT: Codex ran the one authorized execution in its S100 and the sweep completed, `X_SWEEP_OK`, 42/42.** This plan is therefore CONSUMED as well; do not re-audit it, do not delete it, and do not point `--approved-plan` at it again. See the S109 FIRST block at the top of this file, which is the authority on gate state — this bullet is an index.)*
+- **THE STEP-3 PLAN ARTIFACT - JOINTLY APPROVED IN S97 AND *SUPERSEDED* IN S98 BY THE FINDING-AU REPAIR. IT IS NOT RUNNABLE AND ITS TWO AUTHORIZATION HALVES ARE SPENT. DO NOT RE-AUDIT IT, DO NOT APPROVE IT, DO NOT DELETE IT - it is the state the AU run consumed, and the run artifact names its digest. A regeneration goes to a NEW LABEL and a NEW FILE.** `Reproducibility Packet/results/capacity_sweep/capacity_sweep_plan.json`, blob `c048b54b8081271d76a6adacf8526d201c446c17`, canonical == raw `bdf674d5f717e5256904ca12d9670a8e02ca0351fb9b5d625a38809d1bf1c0a5`, **13,786 B**, one canonical JSON record, pure ASCII, **no CR and no LF at all**, no BOM, no terminal newline, and re-emitting the parsed document under `sort_keys` + `(",",":")` + `ensure_ascii=False` + `allow_nan=False` reproduces it **byte for byte**. Thirty top-level keys; 10 read-only anchors + 40 new arms + 2 C9 arms; 44 declared output paths all under `results/capacity_sweep/stage1-run-1/`; budget 42/42/0/0/0; nine code identities; `training_protocol` IDENTICAL to the approved ledger's including the two-entry `window_schedule`. **Run and approved by Codex S96; approved unchanged by me S97 after a 94-check independent audit, a full-leaf-depth diff, a 3-destination determinism measurement and a 22-case gate-neighbour sweep.** **SUPERSEDED, DO NOT APPROVE, DO NOT RE-AUDIT, DO NOT DELETE:** blob `d2584d28`, canonical == raw `740d5db96657c7a5e9a86b49816daf091439e7661a6bd971fb8ce6ab3ae1c00e` — owner-approved by Codex S94 and audited 59/59 by me S95, then invalidated when the AT repair moved the sweep's digest; `require_authorized_plan` refuses it with *"the authorized plan was written by a different code state"*, which I re-drove in S97. It is kept unregenerated as the visible state that produced AT. **DO NOT run `--mode execute` AGAINST THIS SPENT PLAN AT ALL.** *(Status of the LIVE plan and its authorization, updated S100: the runnable plan is `results/capacity_sweep/plans/stage1-run-2/capacity_sweep_plan.json`, blob `d7104e55`, canonical `ffb009650ae4cedd37a1b0c7b9beaef1c0c1555fa4583111cb22e9c0f9b7cb31`, 13,786 B — **jointly approved, Codex S99 and me S100, gate 2 CLOSED**. **BOTH Step-4 halves were then issued (mine S100, Codex's S100) AND ARE NOW SPENT: Codex ran the one authorized execution in its S100 and the sweep completed, `X_SWEEP_OK`, 42/42.** This plan is therefore CONSUMED as well; do not re-audit it, do not delete it, and do not point `--approved-plan` at it again. See the S112 FIRST block at the top of this file, which is the authority on gate state — this bullet is an index.)*
 - **Protocol P (in force, JOINTLY APPROVED): `Reproducibility Packet/protocol/protocol-p-v2.3.3.md`, canonical sha256 `5689dad7…8bdf421f`. READ THE FILE.**
 - **The payload-boundary extension — JOINTLY APPROVED AND FROZEN, NOT YET EXECUTABLE: `Reproducibility Packet/protocol/payload-boundary-extension-v0.2.md`, canonical sha256 `538ae06b…df33b6a`, blob `d9f6e188`, 71,188 bytes, 1,285 lines, LF, raw == canonical.** Approved by me S63 and by Codex S63; **DO NOT EDIT IT — a change needs a version bump and a `git mv`.** It authorizes **Step 2 only**: build and review the three prerequisites. READ THE FILE — the blocks above are an index, not the document. Superseded states, never cite or build from them: v0.1 (`32a03930…`, blob `903962f8`, bytes in `Claude Session 61`), and inside v0.2 `c7facc13`/`e734c498…` (my S62 handoff) and `3d72e1f4`/`e5192eaa…` (Codex's S62 edits, which I did not approve).
 - **THE PAYLOAD-BOUNDARY EXTENSION IS FULLY SPENT AND CLOSED. NOTHING HERE IS OPEN.** All three Step-2 prerequisites jointly approved (S71); Step 3 run and its plan approved by BOTH agents (me S72, Codex S72); Step 4 authorized by both halves (me S73, Codex S73); **STEP 5 RAN ONCE - Codex S73, 127 physical rollouts, `X_CASE_EMPTY` - and its result artifact is JOINTLY APPROVED (Codex S73, me S74 after 130 checks).** The measurement is spent; no further execution is authorized. *(This bullet and the block below both said "CODEX OWES THE SECOND READ" through every rewrite from S73 to S95, while the Order line six sections up said Codex completed that read in its S72 and that Step 5 had run. My own summary contradicting itself for twenty-three sessions: lesson 65 again, and caught in S96 only by grepping the file rather than reading it. **A status clause about ANOTHER agent's obligation is the most likely one to rot, because nothing in my own work forces me to revisit it.**)*
@@ -3288,29 +3371,46 @@ Run either read from the packet dir; zero rollouts, ~0.3 s each:
 '` measured from the tail, not assumed.** **NOBODY OWES A TURN. The Stage-1 precision note is closed at blob `bc803294` with both agents approving the same bytes, and no other loop is open on either agent.** The two things I put to Codex in that turn are DECLINED REPAIRS, not open loops: BG (the hours column's unnamed operator) and BH (the raw digest we exchange for workspace documents does not survive a clone; the Git blob does). If Codex overrules either, closing it is MINE. *(Historical — S106 STATE: 29,626 lines / 1,836,684 bytes, sha256 `c626492bebf5c25628660f7a59fdd1a979873107abcbe6ec53121d2723a64e45`. My S106 is `+149/-0`, a single tail hunk at `@@ -29477,0 +29478,149 @@`, one turn, header unique, Claude physically last of 252 headers. The pre-write state (1,827,336 B / 29,477 lines, sha `18120a11...`) is what Codex's S105 append left; its commit `584771c` touches the transcript as a single tail hunk `@@ -29386,0 +29387,91 @@`, additions only, so nothing moved between sessions. ALL EIGHT WRITER GATES PASSED; declared and written 00:16 PDT.** **CODEX OWNS THE NEXT TURN: the owner re-review of packet `.gitignore` blob `fd106b95`, and specifically whether it accepts finding AZ's scope - if it would rather keep the block narrow to the steps that produced it, that is a ruling I will take rather than re-argue.** *(Historical - S105 STATE: 29,386 lines / 1,822,376 bytes, sha256 `733e0d63dfaac82b7142e84db228c88ce1df249c1adf3a6819208a2b7bae4023`. My S105 is `+125/-0`, a single tail hunk at `@@ -29261,0 +29262,125 @@`, one turn, header unique, Claude physically last of 250 headers. The pre-write state (1,815,147 B / 29,261 lines, sha `0f38d229...`) is what Codex's S104 append left; its commit `82cadbf` touches the transcript as a single tail hunk `@@ -29209,0 +29210,52 @@`, additions only, so nothing moved between sessions. ALL SEVEN WRITER GATES PASSED plus the character-domain check; declared 20:25, written 20:25:10.** **NOBODY OWES A TURN. Codex may review packet README Steps 28-29 when convenient - documentation, not a gate - and the two questions I put to it are whether the cross-machine reproduction claim should be stronger than I allowed, and whether Step 29 should print the five per-point means at all. If it returns edits, the owner re-review is MINE.** *(Historical — S103 STATE: 28,755 lines / 1,786,439 bytes, sha256 `a71d915f74f4860b26980033dc63180b2e01c24f037516427796bf46b320b85d`. My S103 is `+211/-0`, a single tail hunk at `@@ -28542,3 +28542,214 @@`, one turn (my C7 execution authorization half), header unique, Claude physically last of 244 headers. The pre-write state (1,774,694 B / 28,544 lines, sha `6e698a2d...`) is what Codex's S102 append left; its commit `e901065` touches the transcript as a single tail hunk `@@ -28473,3 +28473,72 @@`, additions only, so nothing moved between sessions. **ALL SEVEN WRITER GATES PASSED. The timestamp gate is now STRONGER: the writer BUILDS the header from the clock at the write rather than parsing a hand-authored one, so skew is structurally impossible rather than merely refused - declared 12:17, written 12:17:11.** **CODEX OWNS THE NEXT TURN: its matching authorization half, plus any objection to the destination or to the run/audit split - I asked for both BEFORE the write, because an exclusive create makes the first destination the only cheap one.** *(Historical - S102 STATE: 28,475 lines / 1,771,125 bytes, sha256 `59f0ba32588a05d1842d395ddace8af498d77fb9fb39fe2313e0d978c3f3fbe7`. My S102 is `+257/-0`, a single tail hunk at `@@ -28218,0 +28219,257 @@`, one turn, header unique, Claude physically last. The pre-write state (1,757,341 B / 28,218 lines, sha `6b6b68f1...`) is what Codex's S101 append left; its own commit `de46798` touches the transcript as a single tail hunk `@@ -28137,0 +28138,81 @@`, additions only, so nothing moved between sessions. **ALL SEVEN WRITER GATES PASSED, including the timestamp gate: header declared 08:26 PDT, written 08:26:38 PDT.** **CODEX OWNS THE NEXT TURN: the owner re-review of `b9043fa2`/`a81d35c9`, and specifically whether it accepts finding AV's diagnosis AND its implementation - if it would rather round both sides or bind the anchor domain some other way, that is a real disagreement and I asked for it now rather than after the read.**** *(Historical — **S98 STATE: 27,322 lines / 1,701,780 bytes, sha256 `f9c12e5b03ba2b9d7969e70c319054500651fb98dfba120d612e0be788f63a5b`. My S98 is `+338/-0` across THREE turns in two writes (the pre-spend measurements and residuals; my authorization half, deliberately its own turn; and the execution record with finding AU). The pre-write state (1,680,736 B / 26,984 lines, sha `99b4a43f...`) EQUALLED Codex's published post-write sha at the end of its S97 exactly, so nothing moved between sessions. **CODEX OWNS THE NEXT TURN: the review of `53e5dcb7`/`2dc93297`, and specifically a ruling on whether the cleanliness guard belongs ABOVE the C9 gate or below it.** All six gates passed on both writes, asserted inside the writer (`append_turn.py`).** *(Historical — S95 STATE: 26,289 lines / 1,639,880 bytes after my ONE append, sha256 `f4cc6efc14ff259b74a53c4af15ff0993bedbf4da8001ee3852120e81e5fcaf2`. My S95 is `+213/-0`, a single tail hunk, header unique at line 26,078, Claude physically last, all SIX gates passed. The pre-write state (1,626,311 B / 26,076 lines, sha `f2781d59...`) EQUALLED Codex's published post-write sha at the end of its S94, so nothing moved between sessions. CODEX OWNS THE NEXT TURN: the ruling on finding AT, and then the same-state close of Step 3.** **Historical, kept only because the discipline below is still the discipline — S91 STATE: 24,956 lines / 1,564,456 bytes, sha256 `b7a229df9dda785f...`. My S91 is `+132/-0`, a single tail hunk, header unique at line 24,826, Claude physically last, the pre-write state (1,556,240 bytes / 24,824 lines, sha `194ebb26...`) asserted byte-identical INSIDE the writer, the turn asserted PURE ASCII before writing, and the prefix re-verified byte-identical afterwards. *** KEEP THE ASCII ASSERTION — it fired in S90 and caught a real violation (section signs, em dashes). It is not ceremony. *** **CODEX OWNS THE NEXT TURN: the same-state reviewer re-review of `b45efa47` (the design). If it judges limitation 139 wrong — if C9's scratch root should live outside the claimed run root — then it also has to say what preserves the failed run's equivalence evidence across a retry, because §7.3 currently claims that preservation and the reserved subtree is the only thing supplying it. I said exactly that in the turn and wrote the argument INTO §7.3 and §11 so a future session can judge it rather than inherit it.** *(Prior S90 state: 24,726 lines / 1,550,920 bytes, sha `64fc16df...`, my S90 `+131/-0`, header at line 24,597.)* *(Codex's S88 reported final 1,525,692 B / 24,297 lines; my own pre-write read matched exactly, so its append was clean and nothing moved between sessions. Prior S88 state: 24,178 lines / 1,518,959 bytes, my S88 `+203/-0`.)* *** THE S82 APPEND-ORDER RECURRENCE STILL BINDS: Codex's S82 review landed at physical line 19,334 and was restated at the true tail, so **the chronological order is permanently broken in the middle and the PHYSICAL TAIL is the authoritative order.** *** **If a judgment comes back contested and one exchange does not settle it from source, ESCALATE to the director rather than trade turns.** Do NOT re-open: the extension document (both approved `538ae06b`), the five S62 edits, the unified Option-B rule, the four S62 questions, the measure-first ruling, the payload analyzer/tests, the role-coverage states, the readback ruling, `.gitattributes`, the Stage-C label, Step 25, the screen result, the plan default, A2, Codex's two S77 rulings, its four S78 rulings, its S80 ruling on the forty escapes, its S81 Finding-G ruling, its S83 rulings on the sixth exit and the `_exact_steps` deletion, the closed attribution rung, the closed dev-fit contract, or the closed trainer. **The file is MIXED-EOL** — Codex appends LF, the older bulk is CRLF; append LF and verify additions-only rather than assuming.
 - **Monitoring chat:** `chats/Claude-Codex-Human/Transcript Order Monitoring/…- Active.md` — **S108 ADDED AN ENTRY, AND NOT BECAUSE OF A RECURRENCE — THERE WAS NONE.** Codex's S107 commit `5bf2c8a` touches the Phase-2 transcript as a single tail hunk `+79/-0`, additions only, and touches this monitoring file not at all; my own append is likewise `+76/-0`. The entry exists because **the rebuilt writer itself had a defect** — gate 5's recognizer was blind to 40 of this project's real header forms — found by reconciling my S108 count of 215 against my own S107 record of 254. Corrected, verified sound for this session, and written into THE TIMESTAMP GATE block. **DO NOT EXTEND A STREAK NUMBER FROM MEMORY, AND DO NOT COMPARE A HEADER COUNT ACROSS REBUILDS — it is a property of the recognizer, not of the transcript.** *(Prior: **S106 ADDED NOTHING: NO RECURRENCE.** Verified at the git level rather than assumed: Codex's S105 commit `584771c` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -29386,0 +29387,91 @@`, additions only, and touches this monitoring file not at all; my own append is likewise a single tail hunk, `+149/-0`. **DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S105 ADDED NOTHING: NO RECURRENCE.** Verified at the git level rather than assumed: Codex's S104 commit `82cadbf` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -29209,0 +29210,52 @@`, additions only, and touches this monitoring file not at all; my own append is likewise a single tail hunk, `+125/-0`. **DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S103 ADDED NOTHING: NO RECURRENCE.** Verified at the git level rather than assumed: Codex's S102 commit `e901065` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -28473,3 +28473,72 @@`, additions only, and touches this monitoring file not at all; my own append is likewise a single tail hunk, `+211/-0`. **DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S102 ADDED NOTHING: NO RECURRENCE.** Verified at the git level rather than assumed: Codex's S101 commit `de46798` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -28137,0 +28138,81 @@`, additions only, its header landing at line 28,139 after my S101 header at 27,963, and it touches this monitoring file not at all; my own append is likewise a single tail hunk, `+257/-0`. **The duty is to flag recurrences, so a clean session adds no note — but verify at the git level regardless, and DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S98 ADDED NOTHING: NO RECURRENCE.** Verified at the git level rather than assumed: Codex's S97 commit `1923717` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -26907,3 +26907,78 @@`, additions only (`+75/-0`), its header landing at line 26,911 after my S97 header at 26,624, and it touches this monitoring file not at all. My own two appends are likewise tail-only, `+177/-0` and `+161/-0`. **The duty is to flag recurrences, so a clean session adds no note — but verify at the git level regardless, and DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S95 ADDED NOTHING: NO RECURRENCE.** Verified at the git level rather than assumed: Codex's S94 commit `5d407f4` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -25916,3 +25916,161 @@`, additions only (`+158/-0`), and touches this monitoring file not at all; its two S94 turns landed at lines 25,920 and 26,000, both after my S94 header at 25,734. My own append is likewise a single tail hunk, `+213/-0`. **The duty is to flag recurrences, so a clean session adds no note — but verify at the git level regardless, and DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S91 ADDED NOTHING: NO RECURRENCE.** Verified rather than assumed: my pre-write read of the Phase-2 transcript (1,556,240 B / 24,824 lines) equalled Codex's S90 reported POST-write figures exactly, so its append was clean and nothing moved between sessions; Codex's own S90 report independently records `+98/-0` additions-only with its header at line 24,728 and the monitoring file untouched. My own append is likewise a single tail hunk, `+132/-0`. *(Prior: **S90 ADDED NOTHING: NO RECURRENCE.** Codex's S89 commit `553defa` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -24500,3 +24500,96 @@`, additions only (`+93/-0`), and touches this monitoring file not at all. My own append was a single tail hunk `@@ -24593,3 +24593,134 @@`, `+131/-0`.)* *(Prior: **S89 ADDED NOTHING: NO RECURRENCE.** Codex's S88 commit `f836982` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -24176,3 +24176,122 @@`, additions only (`+119/-0`), and touches this monitoring file not at all. My own append is likewise a single tail hunk `@@ -24295,3 +24295,208 @@`.)* *(Prior: **S88 ADDED NOTHING: NO RECURRENCE.** Codex's S87 commit `08434d2` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -23790,3 +23790,186 @@`, additions only (`+183/-0`), and touches this monitoring file not at all; it also touched NO production file. My own append is likewise a single tail hunk. **The duty is to flag recurrences, so a clean session adds no note - but verify at the git level regardless, and DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S87 ADDED NOTHING: NO RECURRENCE.** Verified at the Git level rather than assumed: Codex's S86 commit `56c790c` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -23525,3 +23525,92 @@`, additions only (`+89/-0`), and touches this monitoring file not at all. My own append is likewise a single tail hunk `@@ -23614,3 +23614,179 @@`. **The duty is to flag recurrences, so a clean session adds no note - but verify at the git level regardless, and DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S86 ADDED NOTHING: NO RECURRENCE.** Verified at the Git level rather than assumed: Codex's S85 commit `f5ee81a` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -23249,0 +23250,98 @@`, additions only, landing after my S85 header, and it touches this monitoring file not at all. My own append is likewise a single tail hunk `@@ -23347,0 +23348,180 @@`. **The duty is to flag recurrences, so a clean session adds no note — but verify at the git level regardless, and DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S85 ADDED NOTHING: NO RECURRENCE.** Verified at the Git level rather than assumed: Codex's S84 commit is a SINGLE hunk `@@ -22897,0 +22898,125 @@` on the Phase-2 transcript — additions only, at the then-physical tail, after all three of my S84 headers — and it touches this monitoring file not at all. My own append is likewise a single tail hunk `@@ -23022,0 +23023,227 @@`. **The duty is to flag recurrences, so a clean session adds no note — but verify at the git level regardless, and DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S84 ADDED NOTHING: NO RECURRENCE.** Verified two ways rather than assumed: at the git level Codex's S83 commit is `+76/-0` on the Phase-2 transcript and touches this file not at all; and my own pre-write read of the transcript (1,428,567 bytes, sha256 `0411d1f2…`) equalled Codex's reported POST-write figures exactly, so its append was clean and nothing moved between sessions. **The duty is to flag recurrences, so a clean session adds no note — but verify at the git level regardless.** *(Prior state, unchanged on disk: 251 lines / 15,255 bytes; my S83 note is `+47/-0`, header unique at line 208, physically last.)* It records my independent git-level verification of the S82 recurrence (additions-only, both files), the point that the transcript's chronological order is now permanently broken in the middle, and the general rule Codex's own byte-assertion failure produced: **on a mixed-EOL file a PATCH and a BYTE APPEND are different operations, and only the second can promise a byte-identical prefix.** *(Historical: **118 lines; last post was mine at S74. NO RECURRENCE IN S75 OR S76, so no note was added — the duty is to flag recurrences.** S76 check, at the git level: Codex's two S75 appends landed as a single `+126/−0` hunk at line 20,001, after the recorded 20,000-line tail, nothing inserted before the boundary and nothing moved. **DO NOT EXTEND THE STREAK NUMBER FROM MEMORY — it has been wrong five times running in this project. Sweep the transcript's commit history if a number is actually wanted.** *(Stale historical figures below, kept only so a reader knows they are stale:* **streak FORTY-TWO**: Codex's S71 append verified at the git level in my S72 — commit `5250aa4`, `+63/−0`, header unique and correctly ordered after mine — and my own S72 append passed all five gates. *(Prior: **streak FORTY-ONE**: Codex's S70 append verified at the git level in my S71 — `+110/−0`, prior content a byte-identical prefix, header unique, physically last — and my own S71 append passed all five gates.)* *(Prior: **streak thirty-nine**: Codex's S69 append was `+92/−0` with its header unique at line 18,257 and physically last, verified at the git level in my S70, and my S70 append passed all five gates — pre-write prefix retained byte-for-byte with an identical SHA-256 asserted *inside* the writer, header unique, physically last, `+165/−0`.)* The duty is to flag recurrences, so a clean session adds no note; verify at the git level regardless.
 
-## Scratchpad (S110, NOT committed) - THE OWNER RE-REVIEW SHAPE AT ITS CURRENT BEST
+## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 
 ```text
 <session scratchpad>/
-  s110_rereview_probe.py  SEVEN PARTS, and the ORDER is the instrument.  A 11 the census the
-                 REVIEWER'S OWN EDIT rests on - check the facts a correction asserts before
-                 accepting it; B 98 the whole five-row ten-column table re-derived from the
-                 per-seed records, INCLUDING that each persisted difference really is S - C1
-                 and that each printed row is PHYSICALLY PRESENT in the document verbatim;
-                 C 7 ACHIEVED POWER ASSERTED AT EVERY REPORTED MDD; D 46 both ladders and all
-                 seven cost rows with every product re-derived, never carried; E 8 the
-                 caveats; F 11 divide-a-printed-result-by-its-own-printed-input on BOTH CI
-                 columns; G 1 the width mix of each candidate against the run's own.
-                 *** IT IMPORTS NOTHING FROM THE PACKET, READS EXACTLY TWO TRACKED JSON FILES
-                     AND WRITES NOTHING.  That is what makes it a re-derivation. ***
-                 *** RE-DERIVE THE WHOLE DOCUMENT, NOT THE DIFF.  S108, S109 and S110 each
-                     found something in a part the previous review had not gone near. ***
-  eolprobe/      the BH experiment: a THROWAWAY GIT REPO outside the project at
-                 core.autocrlf=true.  Commit the file, delete it, check it out, measure.
-                 *** DRIVE AN EOL CLAIM, NEVER INFER ONE - this is the S107 BB method, and it
-                     is three lines of shell. ***
-  append_chat.py REBUILT A SIXTH TIME from the timestamp-gate block, at full strength.
-  s110_body.md   one file per appended turn, so --body is a file and never a shell string.
+  rung2_probe.py             THE PROTOTYPE LIVES IN THE PROBE, NOT IN THE PACKET.  It defines
+                 the candidate architecture as a throwaway class, IMPORTING the approved
+                 building blocks, and measures five things by CONSTRUCTION: A a 7-row candidate
+                 grid (parameters, layer census, stem receptive field); B causality by
+                 TRUNCATION (perturb everything after a cut, require EXACTLY 0.0 change at or
+                 before it); C determinism at one seed and difference across seeds; D suite
+                 agnosticism by MASKING the gauge columns and comparing parameter count, shape
+                 and output; E one optimizer step timed through the APPROVED arm_loss.
+                 *** THIS IS THE WHOLE METHOD: WRITE THE DESIGN AGAINST MEASURED NUMBERS, NOT
+                     AGAINST ARITHMETIC YOU DID IN YOUR HEAD.  It cost ~25 min and changed two
+                     of the six claims it checked. ***
+  rung2_attention_probe.py   THE MECHANISM-IS-LIVE CHECK, and it is the S84 gauge-channel
+                 discipline applied to an architecture: a path that is wired but INERT is worse
+                 than one that is absent, because it looks like capacity.  Measures attention
+                 entropy against uniform, the context's contribution against the pooled
+                 magnitude, and sensitivity to a FIRST-32-step versus a LAST-32-step
+                 perturbation.  *** REPORT "NEAR-UNIFORM AT INITIALIZATION" AS THE EXPECTED
+                     RESULT IT IS, and say out loud that it is a wiring check rather than
+                     evidence the mechanism learns. ***
+  rung2_learnability_probe.py  THE CHEAPEST DE-RISKING AVAILABLE: run the EXACT fixed protocol
+                 (20 epochs, batch 8, lr 1e-3, Adam, 152 examples) on RANDOM inputs with RANDOM
+                 fixed targets, for the new architecture AND the old one.  It answers "does this
+                 optimize at all under a protocol chosen for a different architecture" without
+                 touching one development row.  *** A SYNTHETIC OPTIMIZER STEP IS NOT A
+                     DEVELOPMENT FIT - the precedent is tests/test_capacity_sweep.py - AND THE
+                     BOUNDARY STATEMENT MUST SAY SO EXPLICITLY. ***
+  prune_summary.py           THE CLOSEOUT EDIT AS AN ASSERTED SCRIPT: delete/replace regions BY
+                 INDEX, assert every boundary line BEFORE writing, and assert afterwards that
+                 the retired headings are gone AND that six kept headings survive.  A closeout
+                 that cuts 182 lines out of a 3,500-line file should not be done by hand.
+  append_chat.py REBUILT A SEVENTH TIME from the timestamp-gate block, at full strength.
+                 *** GATE 1 CAUGHT SOMETHING WORTH RECORDING: the prior-bytes digest it measured
+                     (941dc96f...) EQUALS the post-write digest Codex published in its own S110
+                     report - an independent confirmation that nothing touched the transcript
+                     between the two sessions, obtained for free. ***
+  turn_s111.md   one file per appended turn, so --body-file is a file and never a shell string.
 ```
 
 *** S106 LESSON, KEPT: my post-write check on the workspace README FAILED because I chose a
