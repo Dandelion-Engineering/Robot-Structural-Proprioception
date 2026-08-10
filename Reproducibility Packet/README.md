@@ -786,6 +786,211 @@ generalization, evidence against structural sensing, a capacity choice or a conf
 effect. The development role contains no OOD row, so the OOD head's all-zero-target loss
 also says nothing about OOD behaviour.
 
+## Step 28 — Audit or reproduce the Stage-1 capacity-sweep plan
+
+Step 26 fitted one network width: the 39,594-parameter rung-1 network at 32 channels. The
+**Stage-1 capacity sweep** repeats that development-only fit at five widths — 16, 24, 32, 40
+and 48 channels — so the in-sample numbers can be read against network size instead of against
+a single point. Its procedure, its arm list, its budget and, critically, the *sentences its
+result is allowed to license* were all written down before any of the arms existed, in
+[`protocol/capacity-escalation-v0.1.md`](protocol/capacity-escalation-v0.1.md), canonical
+SHA-256 `05109d973f1611756456a01aea8a0aebf7c33ec73e5243225f1f733e3c15e002`. That document is
+frozen. A correction to it bumps the version and renames the file; the executable pins the
+digest, so editing it in place makes the step below refuse rather than silently run against
+changed rules.
+
+Only **width** varies. Depth is held fixed so every arm keeps the same 1,023-step receptive
+field — a deeper network would change how much history the model sees, which is a different
+experiment:
+
+| channels | 16 | 24 | 32 | 40 | 48 |
+|---|---:|---:|---:|---:|---:|
+| parameters | 10,586 | 22,786 | 39,594 | 61,010 | 87,034 |
+| receptive field (steps) | 1,023 | 1,023 | 1,023 | 1,023 | 1,023 |
+
+### Plan mode — the free audit
+
+Plan mode is the part an outside reader can run for nothing. It takes **no data root**, opens
+no observation, label or checkpoint payload, runs no fit, and writes one canonical JSON
+document describing every arm the run would fit and every file it would write:
+
+```powershell
+$env:PYTHONPATH = "scripts"
+.\.venv\Scripts\python.exe -m utils.capacity_sweep `
+  --mode plan `
+  --run-label stage1-run-2 `
+  --output-dir results\capacity_sweep_plan_reproduced
+```
+
+It prints `X_PLAN_OK: 40 new arms + 2 equivalence arms planned at run label stage1-run-2, 0
+fits run` and produces `results/capacity_sweep_plan_reproduced/capacity_sweep_plan.json`.
+
+Plan mode is **byte-deterministic**: the document carries no timestamp, no absolute path and no
+random element, so the same code state and the same run label always produce the same bytes.
+That is what makes it an audit rather than a description. The tracked reference plan for the
+executed run is
+[`results/capacity_sweep/plans/stage1-run-2/capacity_sweep_plan.json`](results/capacity_sweep/plans/stage1-run-2/capacity_sweep_plan.json),
+canonical SHA-256 `ffb009650ae4cedd37a1b0c7b9beaef1c0c1555fa4583111cb22e9c0f9b7cb31`, 13,786
+bytes. Point `--output-dir` at a scratch directory and compare the bytes; the comparison *is*
+the check. Re-measured for this runbook at three independent destinations on the recorded
+machine: one digest, matching the tracked plan exactly.
+
+A second tracked plan sits one directory up, at
+`results/capacity_sweep/capacity_sweep_plan.json`, canonical SHA-256 `bdf674d5…1bf1c0a5`. It is
+**superseded and deliberately kept**: it is the plan a first, failed run consumed, and the
+executable now refuses it with *"the authorized plan was written by a different code state."*
+Do not delete it or `results/capacity_sweep/stage1-run-1/`; both are the preserved evidence for
+the defect described at the end of this step.
+
+### Execute mode — what it did, and what it costs
+
+Execute mode is the expensive half. It claims a fresh run root, checks that the
+width-parameterized constructor reproduces the already-approved 32-channel network bit for bit
+(two equivalence arms), and then fits the forty new arms:
+
+```powershell
+$env:PYTHONPATH = "scripts"
+.\.venv\Scripts\python.exe -m utils.capacity_sweep `
+  --mode execute `
+  --run-label <a new, unused label> `
+  --base-dir results\capacity_sweep `
+  --data-root ..\data\gate3-base-dev-pilot-val-c1-s `
+  --approved-plan results\capacity_sweep\plans\stage1-run-2\capacity_sweep_plan.json `
+  --approved-plan-sha256 ffb009650ae4cedd37a1b0c7b9beaef1c0c1555fa4583111cb22e9c0f9b7cb31
+```
+
+The recorded run took **439.6 s** on the machine described in [`DATA.md`](DATA.md) and spent 42
+fits and 42 checkpoints with **zero simulator generation runs and zero physical rollouts**. It
+read exactly the 304 delivered development rows (152 C1 + 152 S) and no pilot, validation or
+test row. Its terminal record is
+[`results/capacity_sweep/stage1-run-2/capacity_sweep_result.json`](results/capacity_sweep/stage1-run-2/capacity_sweep_result.json),
+canonical SHA-256 `0d8a1c2de7208cc9a551d75ce44e3a64f02de6c9881b4b31f4df4d07cc7f7a2a`, exit
+`X_SWEEP_OK`, both equivalence arms `PASS`.
+
+**The run label must be new.** The executable binds its output root to
+`<base-dir>/<run-label>/` and claims that directory atomically, so re-using a spent label is
+refused rather than silently overwritten. That is deliberate: a second execution is a second
+measurement and has to be visible as one.
+
+### The 55 checkpoints are not in this repository — the honest recovery path
+
+Every `.pt` file this project has produced is git-ignored, and none is tracked. There are 55 of
+them on the recorded machine:
+
+| where | count | produced by |
+|---|---:|---|
+| `results/dev_fit/` | 10 | Step 26 (the 32-channel anchor arms) |
+| `results/capacity_sweep/stage1-run-2/channels_{016,024,040,048}/` | 40 | Step 28 execute mode |
+| `results/capacity_sweep/stage1-run-2/_equivalence/` | 2 | Step 28's equivalence gate |
+| `results/capacity_sweep/stage1-run-1/` | 3 | the failed first run, preserved as evidence |
+
+There is no `channels_032/` directory in the completed run, and that is correct rather than
+missing: the ten 32-channel arms were **reused** from Step 26 instead of refitted, which is why
+the sweep costs 42 fits and not 52.
+
+What that means for a clean machine, stated plainly rather than waved at:
+
+- **The tracked JSON records are the durable evidence.** The plan, the terminal run record and
+  the analysis in Step 29 are all committed, and each is bound to the others by digest, so
+  their mutual consistency can be re-checked on any machine with no checkpoint present.
+- **Rebuilding the checkpoints is possible, but it is a new run rather than a restoration.**
+  Step 26 rebuilds the ten anchors; execute mode above rebuilds the other 42 at a new label.
+  The recorded run's two equivalence arms are the evidence that this rebuild path reproduces
+  the approved 32-channel network bit for bit *on the recorded machine*. Cross-machine bitwise
+  agreement is **not** established here, so a rebuild on different hardware should be expected
+  to produce different bytes and therefore a different record.
+- **Step 29 cannot be re-driven against the tracked analysis on a machine that lacks these
+  checkpoints**, because the analyzer reloads and re-scores all fifty of them from disk. That
+  is a real, disclosed limitation of this packet, not something the runbook assumes away.
+
+### Why there is a failed run in the tree
+
+The first execution stopped itself after three of forty-two fits at exit `X_OUTPUT_DIRTY`. Its
+output-cleanliness check ran once per *arm* against a directory that ten arms share, so the
+second arm at the first width tripped the guard against the first arm's own output. Under any
+plan, that executable could never have finished a sweep. The repair moves the check to once per
+capacity point, above the equivalence gate. `results/capacity_sweep/stage1-run-1/` is kept
+because it is the evidence that diagnosis rests on.
+
+## Step 29 — Read the completed sweep against its pre-registered interpretation
+
+The read is a separate, **read-only** script. It imports the pure functions that define the
+shape classification from the executable rather than restating them, re-authenticates every
+input by digest, reloads and re-scores all fifty checkpoints, and only then derives the
+descriptive summary:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\analyze_capacity_sweep.py `
+  --data-root ..\data\gate3-base-dev-pilot-val-c1-s `
+  --sweep-result results\capacity_sweep\stage1-run-2\capacity_sweep_result.json `
+  --sweep-result-sha256 0d8a1c2de7208cc9a551d75ce44e3a64f02de6c9881b4b31f4df4d07cc7f7a2a `
+  --approved-plan results\capacity_sweep\plans\stage1-run-2\capacity_sweep_plan.json `
+  --approved-anchor-analysis results\dev_fit\dev_fit_analysis.json `
+  --run-root results\capacity_sweep\stage1-run-2 `
+  --anchor-checkpoint-dir results\dev_fit `
+  --output-dir <a new, empty directory>
+```
+
+All eight arguments are required and none has a default; in particular the result's digest is
+supplied at the invocation, so the result and the plan cannot end up authenticating only each
+other. The writer is an **exclusive create** — it refuses to overwrite an existing analysis —
+so reproducing this step needs a fresh output directory. The tracked reference is
+[`results/capacity_sweep_analysis/stage1-run-2/capacity_sweep_analysis.json`](results/capacity_sweep_analysis/stage1-run-2/capacity_sweep_analysis.json),
+canonical SHA-256 `e381d12eafcf04c80d42aaed1bd9775bf9fbd64f1db166be535de356b7642736`, 89,150
+bytes, written by exactly one invocation.
+
+### What the record contains
+
+Fifty arms — five widths × two suites × five seeds — forty fitted by the sweep and ten reused
+from Step 26. The per-point in-sample means are exact record contents:
+
+```text
+channels     C1 mean     S mean     paired S-C1 mean     paired 5-seed SD
+    16      0.430980   0.414009        -0.016971             0.109761
+    24      0.648202   0.654213         0.006011             0.163331
+    32      0.682287   0.650198        -0.032089             0.149636
+    40      0.744294   0.688848        -0.055445             0.191773
+    48      0.852379   0.701461        -0.150918             0.155432
+```
+
+### What may be said about them, and what may not
+
+The frozen design contains a six-row table, written in advance, mapping the shape of these
+curves onto the sentences the result is permitted to license. Applied to the record, **exactly
+one row matches**, and the reading it licenses is, in the design's own words:
+
+> the paired curve does not have a readable shape at five points and five seeds
+
+and **any trend statement is forbidden**. The five numbers above may be quoted as record
+contents. They may **not** be joined into a direction, a slope, a "widens", a "closes" or a
+"does not move" — which is why this runbook prints them as a table and stops there.
+
+The row that *nearly* matched is the part worth a reader's attention, because it is the reason
+for writing the table down in advance at all. It would have licensed *"the difference did not
+move by more than the anchor's own seed spread"* — the sentence a person reading these five
+numbers casually would reach for. It fails on both of its conditions, independently: the paired
+curve's shape is non-monotone rather than flat-or-declining, **and** the paired range across
+the five points, 0.156930, exceeds the 32-channel anchor's own five-seed sample SD, 0.149636.
+Either failure alone blocks it. The table was written before any of these arms existed, and it
+blocked the comfortable reading twice over.
+
+### The boundary block, and whose spend it describes
+
+The analysis document carries a `boundary` block reading `fits_run 0`, `generation_runs 0`,
+`rollouts_spent 0`, `non_dev_reads 0`. **Those are true of the reader, not of the run it
+reads.** The sweep itself spent 42 fits and wrote 42 checkpoints, and it is Step 28's terminal
+record that reports that spend. Wherever an analyzer's boundary block is quoted — here, in Step
+27, or in a later report — it describes the analyzer's own cost; read the producing run's own
+record for the producing run's cost.
+
+### What this step does not do
+
+It selects no capacity, sets no threshold, establishes nothing about generalization, and says
+nothing about C1 versus S. It reads only the development split. It authorizes no wider ladder,
+no new seed count, no architecture change and no later-role read; each of those is a separate
+decision with its own review. The 32-channel result reported in Step 27 is untouched by it and
+stands exactly as it did.
+
 ## Data
 
 No external dataset is required. The simulator generates every value used by the spike. See [`DATA.md`](DATA.md) for the data and licensing boundary.
@@ -817,3 +1022,5 @@ This packet reproduces the selected MuJoCo cable/rod mechanics, schema-v1.0 plan
 On the current bounded task, the structural suite has strong development information evidence, but structural recovery is blocked because the task has no structural tracking deficit and the tested action behaves like a generic controller retune. The actuator condition has headroom, yet the new source-specific action screen also blocks: safe cap-3 misses the 10-point specificity gate and higher caps violate A1 safety. The probability result remains a sampled empirical envelope; calibrated class-probability, abstention, and uncertainty authorization, sensor-fault recovery, and evaluation-sized paired control remain open.
 
 The proposed different-task amendment was withdrawn before approval. The existing Claim Sheet remains in force, `config.json` remains unfrozen, and no development screen here is a confirmatory research result. Gate 3 is closed at the jointly approved amended hash, and the exact assignment is embedded in the draft under a one-way parent/current hash binding. The real generated base roles are jointly approved; the first Gate-4 fit now supplies development-only rung-1 checkpoint and result roles but does not close later estimator/controller, capacity, calibration or evaluation gates. Protocol P's specification is jointly approved, its one-row replay gate has passed (Step 23), Stage 0 has been executed once at zero rollout cost (Step 24), and Stages A/B/C now record a bounded **Case-B development result** (Step 25): 0.35–0.45 remaining EI are testable in all four cells, while 0.50–0.90 are sub-threshold under the all-cell rule. The accompanying Section-9 role-coverage read puts dev and pilot at zero testable known-class structural settings and val and test at one each, so the result carries a **role-coverage-bounded non-transfer outcome** — it establishes neither success nor hypothesis failure. Both fed the written **Amendment A2, which both agents approved at the same bytes on 2026-08-05 and which is now in force**: it adopts a payload-bounded structural non-transfer shape and payload-stratified reporting, leaves every numerical success bar unchanged, and — because it inserts no severity, payload level or split assignment — shifts no seed ordinal and requires no dataset regeneration. A2 authorizes no assignment replacement, no data generation, no configuration freeze, and no confirmatory work. The completed fit read only the already-delivered `dev` partition and generated nothing; its tracked in-sample analysis establishes optimizer/data-path operation, not generalization or a C1-versus-S result. The order remains model implementation and dev fitting, then later capacity work and validation-only calibration, then final immutable `config.json` freeze, then untouched confirmatory generation/read. Pilot, validation and test outcome reads, confirmatory controller/evaluation work, final freeze and test materialization remain unauthorized.
+
+**Stage 1 of the capacity work is now complete as scoped (Steps 28 and 29), which narrows the "later capacity work" clause above.** The sweep executed once -- 42 fits, 42 checkpoints, zero simulator generation runs, zero physical rollouts, and development rows only -- and its result was then read against a six-row table of permitted readings that was frozen before any of the fifty arms existed. Exactly one row matched, and it licenses one sentence: *the paired curve does not have a readable shape at five points and five seeds*, with any trend statement forbidden. The row that came closest to matching is the one a casual reader of the five numbers would reach for, and it fails on both of its conditions independently. **No capacity is selected, no threshold is set, nothing is established about generalization, and nothing is claimed about C1 versus S.** A Stage 2 -- a wider ladder, a larger seed count, or an architecture change -- would be a separate design with its own review and its own authorization, and none exists. `config.json` remains unfrozen and every later-role read remains unauthorized.

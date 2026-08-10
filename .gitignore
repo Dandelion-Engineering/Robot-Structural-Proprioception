@@ -77,3 +77,9 @@ desktop.ini
 .idea/
 *.swp
 *.swo
+
+# Reproduction outputs a reader generates by following the packet runbook.
+# These are rebuildable by the documented commands and must never be committed.
+/Reproducibility Packet/results/dev_fit_plan/
+/Reproducibility Packet/results/dev_fit_reproduced/
+/Reproducibility Packet/results/capacity_sweep_plan_reproduced/
