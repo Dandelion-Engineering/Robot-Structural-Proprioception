@@ -6,7 +6,7 @@ This folder contains Codex-owned research, source records, and continuity for th
 
 - [`Literature Foundation.md`](Literature%20Foundation.md) — Codex's independent Phase-0 field survey. It is a concluded research input; corrections discovered later propagate into current artifacts rather than rewriting the foundation.
 - [`references.md`](references.md) — living source ledger for Codex's project work, including Phase-1 review sources. Reconcile it with Claude's independent ledger when the project bibliography is assembled.
-- [`Config Freeze Readiness Review.md`](Config%20Freeze%20Readiness%20Review.md) — Session-26 gate audit that established the seven-gate path to final freeze. Its same-state review is closed; Gates 1 and 3 plus the current Gate-2 base roles are complete. Amendment A2 is in force. Gate-4 rung 1, its dev-fit contract, assignment-derived window policy, first ten development-only fits, bounded in-sample analysis, strengthened analysis tests and public forward correction are jointly settled. The first authorized capacity sweep failed safely after two C9 fits and one curve fit on Finding AU. The repaired production/test pair and replacement zero-fit plan are jointly approved. The one freshly authorized `stage1-run-2` retry completed all 42 fits/checkpoints, and both agents approved its exact result/equivalence state. The C7 read-only analyzer/test loop is closed at jointly approved blobs `b9043fa2...` / `a81d35c9...`, and its one separately authorized real invocation produced artifact blob `3c963059...`. Codex owner-approves those exact artifact bytes; Claude's independent exact-state review remains open. Section 5.4, capacity selection, later-role reads and final confirmatory config remain blocked.
+- [`Config Freeze Readiness Review.md`](Config%20Freeze%20Readiness%20Review.md) — Session-26 gate audit that established the seven-gate path to final freeze. Its same-state review is closed; Gates 1 and 3 plus the current Gate-2 base roles are complete. Amendment A2 is in force. Gate-4 rung 1, its dev-fit contract, assignment-derived window policy, first ten development-only fits, bounded in-sample analysis, strengthened analysis tests and public forward correction are jointly settled. The first authorized capacity sweep failed safely after two C9 fits and one curve fit on Finding AU. The repaired production/test pair and replacement zero-fit plan are jointly approved. The one freshly authorized `stage1-run-2` retry completed all 42 fits/checkpoints, and both agents approved its exact result/equivalence state. The C7 read-only analyzer/test loop is closed at jointly approved blobs `b9043fa2...` / `a81d35c9...`; both agents approve its one-shot artifact blob `3c963059...`. Section 5.4 is now jointly applied: only the `NON_MONOTONE` row matches, so the paired curve has no readable shape at five points and five seeds and no trend statement is licensed. Stage 1 is complete as scoped; capacity selection, Stage 2, later-role reads and final confirmatory config remain separate and blocked.
 
 ## Continuity and session record
 
@@ -114,6 +114,7 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`Session Summaries/HumanReport101.md`](Session%20Summaries/HumanReport101.md) — detailed record of Codex Session 101 (joint terminal-state review closure, C7 read-only analyzer construction, 21-test synthetic gate suite, full-packet verification, and owner-approved Claude handoff before any real curve read).
 - [`Session Summaries/HumanReport102.md`](Session%20Summaries/HumanReport102.md) — detailed record of Codex Session 102 (accepted findings AV/AW, closed the C7 exact code/test loop at jointly approved bytes, verified 1,792 packet tests, and preserved the separate no-read execution gate).
 - [`Session Summaries/HumanReport103.md`](Session%20Summaries/HumanReport103.md) — detailed record of Codex Session 103 (matching C7 authorization half, four-entry census correction, one authorized development-only read, independent owner exact-state audit, and Claude handoff before section 5.4).
+- [`Session Summaries/HumanReport104.md`](Session%20Summaries/HumanReport104.md) — detailed record of Codex Session 104 (Claude same-state artifact approval intake, independent six-row evaluation, matching section-5.4 half, Stage-1 measurement close, and 1,792-test verification).
 - [`Progress Reports/Progress Report Session 8.md`](Progress%20Reports/Progress%20Report%20Session%208.md) — first regular every-eighth-session director update at the Accessible-Piece bar.
 - [`Progress Reports/Progress Report Session 16.md`](Progress%20Reports/Progress%20Report%20Session%2016.md) — second regular director update, covering the synchronous-probe correction, noisy pilot, real contact integration, and matched-contact BLOCK.
 - [`Progress Reports/Progress Report Session 24.md`](Progress%20Reports/Progress%20Report%20Session%2024.md) — third regular director update, covering the bounded-task redesign, information/control split, structural-action block, actuator headroom, and corrected probability-channel boundary; next regular Codex report is Session 32.
@@ -126,6 +127,7 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`Progress Reports/Progress Report Session 80.md`](Progress%20Reports/Progress%20Report%20Session%2080.md) — tenth regular director update, covering the executed payload-boundary result, Amendment A2, the approved but untrained first learned rung, and the still-open bounded fitting-contract review.
 - [`Progress Reports/Progress Report Session 88.md`](Progress%20Reports/Progress%20Report%20Session%2088.md) — eleventh regular director update, covering the first ten learned development fits, bounded in-sample read-back, seed-instability warning, pre-registered width map, and the still-separate executable/plan/execution gates.
 - [`Progress Reports/Progress Report Session 96.md`](Progress%20Reports/Progress%20Report%20Session%2096.md) — twelfth regular director update, covering the frozen width-sweep design, successive executable authorization repairs, corrected zero-fit plan, and the still-separate plan-review/execution gates.
+- [`Progress Reports/Progress Report Session 104.md`](Progress%20Reports/Progress%20Report%20Session%20104.md) — thirteenth regular director update, covering the failed first sweep, repaired retry, exact result and C7 audits, and the jointly applied no-readable-shape interpretation.
 - [`Progress Reports/Progress Report Amendment Payload-Bounded Non-Transfer.md`](Progress%20Reports/Progress%20Report%20Amendment%20Payload-Bounded%20Non-Transfer.md) — event-triggered director update explaining why Option C became the in-force contract, why every numerical bar stayed fixed, and which downstream gates remain closed.
 
 ## Shared files outside this folder
@@ -239,7 +241,8 @@ agents/Codex/
 │   ├── Progress Report Session 72.md
 │   ├── Progress Report Session 80.md
 │   ├── Progress Report Session 88.md
-│   └── Progress Report Session 96.md
+│   ├── Progress Report Session 96.md
+│   └── Progress Report Session 104.md
 ├── references.md
 ├── README.md
 ├── Summary of Only Necessary Context.md
@@ -346,5 +349,6 @@ agents/Codex/
     ├── HumanReport100.md
     ├── HumanReport101.md
     ├── HumanReport102.md
-    └── HumanReport103.md
+    ├── HumanReport103.md
+    └── HumanReport104.md
 ```
