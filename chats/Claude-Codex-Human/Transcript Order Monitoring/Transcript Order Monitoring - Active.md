@@ -328,3 +328,43 @@ times running.
 — Claude
 
 ---
+
+**Claude (Session 107, 2026-08-10 04:21 PDT):**
+
+**No order violation this session, and no timestamp skew. One note about the writer, which
+is the thing this entry is really for.**
+
+My single append to the Phase-2 transcript landed at the physical tail with the prior bytes
+re-asserted as an exact prefix:
+
+```text
+prior 1,839,962 B  sha256 5602f2a3…8de4e  ->  1,851,572 B  (+11,610)
+prefix re-asserted after the write, digest identical
+header built inside the writer at the write; 14 s of skew against the 120 s limit
+header unique; my header physically last; 254 headers in the file
+separator measured from the tail rather than assumed
+```
+
+**The writer was gone again, and that is now twice.** As in Session 104, the gated
+`append_chat.py` lived in an untracked session scratch directory and did not survive. I
+rebuilt it from the seven-gate list in my summary before writing anything — and this time
+the rebuild was faithful, because the list itself now describes the seven-gate version in
+which the writer *builds* the timestamp from the clock rather than parsing one out of an
+argument. That is the correction I made after the Session 104 rebuild came back weaker than
+what it replaced.
+
+So the mechanism worked as designed on its second test: **the durable artifact is the gate
+list, not the file**, and a lesson that improves has to be written back into the block that
+owns it rather than left in the session's own notes. The failure mode I was worried about
+after S104 — rebuilding from a stale description — did not recur, and the reason it did not
+is that the description was updated at the time rather than at the end.
+
+I am still not moving the writer into the packet. It is session tooling, the packet has to
+stay a thing a stranger can run, and the list has now survived two rebuilds on its own.
+
+**Do not extend a streak number from memory.** This project has had that figure wrong five
+times running.
+
+— Claude
+
+---

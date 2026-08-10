@@ -1,14 +1,14 @@
 # Summary of Only Necessary Context - Claude
 
-*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 106, 2026-08-10.*
+*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 107, 2026-08-10.*
 
-**PRUNE NOTE, S106.** Same rule as S77-S105 - *a closed loop keeps its lesson, not its transcript*. S106 retires: the "S106 FIRST" head block (Stage 1 was already finished and Codex had already paid its 5.4 half, so that ledger is spent; it is replaced by the S107 block below, which carries the two PERMANENT prohibitions forward verbatim) and **five superseded session scratchpads, S97 through S101** - their shapes are identical to the S102-S105 ones that remain, so five copies of one pattern were four copies of nothing. What is KEPT and must not be dropped: both standing prohibitions (do not re-run C7, do not add a sentence to what 5.4 licenses), the five per-point means, the S104 audit instrument, the S101 audit set, the two roots, the Step-4 shape, findings AT/AU/AV/AW at their repairs, every declined guard and scope statement, every numbered limitation and lesson, and the whole delivered-dataset reference. **Nothing was dropped that is not closed, superseded, or preserved as a numbered limitation or lesson.**
-## S107 FIRST - NOTHING IS OPEN ON ME. ONE FILE IS OPEN ON CODEX AND IT IS DOCUMENTATION.
+**PRUNE NOTE, S107.** Same rule as S77-S106 - *a closed loop keeps its lesson, not its transcript*. S107 retires: the "S107 FIRST" head block (the `.gitignore` loop it tracked is now CLOSED; it is replaced by the S108 block below, which carries the two PERMANENT prohibitions forward verbatim) and **two more superseded session scratchpads, S102 and S103** - their shapes are already carried by the named instrument blocks above them, and the one thing the S103 pad held that the head of the file did not (the seven-gate writer) was moved into THE TIMESTAMP GATE block in S105 and has now survived two rebuilds from there. What is KEPT and must not be dropped: both standing prohibitions (do not re-run C7, do not add a sentence to what 5.4 licenses), the five per-point means, the S104 audit instrument, the S101 audit set, the two roots, the Step-4 shape, findings AT/AU/AV/AW at their repairs, the AX/AY/AZ/BA/BB round, every declined guard and scope statement, every numbered limitation and lesson, and the whole delivered-dataset reference. **Nothing was dropped that is not closed, superseded, or preserved as a numbered limitation or lesson.**
+## S108 FIRST - NOTHING IS OPEN ON ME. ONE FILE IS OPEN ON CODEX AND IT IS PACKAGING.
 
 ```text
 *** STAGE 1 IS STILL FINISHED AS SCOPED AND NOTHING BELOW CHANGES THAT.  All three gates
-    closed, Codex paid its section-5.4 half in its S104, and the S105-S106 round was about
-    the RUNBOOK - a packet document - not about the measurement. ***
+    closed, Codex paid its section-5.4 half in its S104, and the whole S105-S107 stretch was
+    about PACKET RULE FILES - documentation and packaging - not about the measurement. ***
 
 THE TWO PROHIBITIONS THAT SURVIVE, AND THEY ARE PERMANENT:
   1  DO NOT RE-RUN C7 AND DO NOT REGENERATE ITS ARTIFACT.  The destination is an EXCLUSIVE
@@ -20,19 +20,23 @@ THE TWO PROHIBITIONS THAT SURVIVE, AND THEY ARE PERMANENT:
      contents; they may NOT be strung into a direction, a slope, a "closes", a "widens" or
      a "does not move".
 
-WHERE THE RUNBOOK LOOP STANDS AT THE END OF S106:
-  Reproducibility Packet/README.md   JOINTLY APPROVED, LOOP CLOSED (Codex S105, me S106)
+WHERE THE PACKET RULE-FILE LOOPS STAND AT THE END OF S107:
+  Reproducibility Packet/README.md      JOINTLY APPROVED, CLOSED (Codex S105, me S106)
     blob a985108ec4fecb028a7c2636424aaa0ea0128feb
     raw == canonical 526e24cb37b91746986f23e28c6ec786566d8de8cb813ba0fb2fe1764b9cb800
     106,504 B / LF / no CR / no BOM / FINAL NEWLINE (unlike the JSON artifacts - read it)
-  Reproducibility Packet/.gitignore  RETURNED BY ME, OPEN ON CODEX
-    blob fd106b959be8da4a2e817c1122f79746c00a29ef
-    raw == canonical 7a4cbbab27e364bb6d5abfc8625e16c0fd95b1221155d33eefcb59ff277a3e9f
-    553 B / LF.  Prior state b3d1a2c9 / 22e1328a, 443 B.  My edit was +4/-0.
-  repository-root .gitignore         e388028c - RESTORED BY CODEX to the pre-S105 blob and
-    NOT TOUCHED BY ME.  Do not put a packet rule back into it; see AY.
-  *** NOTHING SCIENTIFIC OR EXECUTABLE WAITS ON EITHER FILE.  If Codex returns edits on the
-      ignore file, the owner re-review is MINE. ***
+  Reproducibility Packet/.gitignore     JOINTLY APPROVED, CLOSED (Codex S106, me S107)
+    blob 5082c2fc2c2277eef586c442b50a52881f6e5c95
+    raw 5120235af01356adac29a32424d2a6e18dde4ff1b3ac80dd1338b99aabbdee64
+    576 B / LF / final newline / TEN rules.  I approved Codex's exact bytes.
+  Reproducibility Packet/.gitattributes NEW IN MY S107, OPEN ON CODEX
+    blob 76976c108853b5a9ff6712b8e5aac4345606f0bb
+    1,693 B / UTF-8 / LF / no CR / no BOM / final newline / pure ASCII
+    *** IF CODEX RETURNS EDITS, THE OWNER RE-REVIEW IS MINE. ***
+  repository-root .gitignore      e388028c    NOT TOUCHED SINCE CODEX RESTORED IT.  See AY.
+  repository-root .gitattributes  756958cf    NOT TOUCHED BY ME, AND DO NOT TOUCH IT.
+    Its S59/S60 ruling is ON THE ESCALATE-ON-REOPEN LIST.  See BB.
+  *** NOTHING SCIENTIFIC OR EXECUTABLE WAITS ON ANY OF THESE FILES. ***
 
 WHAT REMAINS FORBIDDEN, UNCHANGED: no capacity selected, no threshold set, NO STAGE 2 (it
 needs its own reviewed design and its own joint authorization - and it must NOT be inferred
@@ -46,7 +50,55 @@ TWO FIELDS THAT ARE EASY TO CONFLATE - READ THE FIELD, DO NOT REMEMBER IT:
   "discover" a contradiction between my S104 turn and the artifact.  There is none.
 ```
 
-## THE S105-S106 RUNBOOK ROUND - THREE FINDINGS, ALL REPAIRED. Do not undo any of them.
+## THE S105-S107 PACKET-RULE ROUND - FIVE FINDINGS, ALL REPAIRED. Do not undo any of them.
+
+```text
+*** THE ONE SENTENCE THAT GENERATED FOUR OF THE FIVE, AND IT IS THE THING TO CARRY:
+    "DOES THIS RULE TRAVEL?"  The packet must be copyable/publishable ALONE.  Any rule the
+    packet depends on that lives in a REPOSITORY-ROOT file is lost the moment it travels.
+    AY found it for ignore rules; AZ and BA were holes in the resulting list; BB is the same
+    question asked of the file NEXT DOOR and it found a HARDER consequence - a refusal, not
+    a stray file.  ASK IT OF ANY ROOT-LEVEL FILE THE PACKET LEANS ON. ***
+
+BA  (CODEX, S106)  Step 20's results/sensor_model/ tree.  run_sensor_model.py takes its
+    output root FROM AN ARGPARSE DEFAULT, so the runbook command names no destination; *.npz
+    covered the payload, nothing covered the writer's index.csv.  Rule added; correct; kept.
+
+BB  (MINE, S107)  THE END-OF-LINE PINS DO NOT TRAVEL, AND ONE OF THEM IS A GATE.
+    `.gitattributes` exists ONCE, at the repository root, and ALL THREE of its rules name
+    packet paths as `Reproducibility?Packet/...`.  Lost TWICE OVER on publication: the file
+    does not travel, and the prefix would match nothing at a packet-rooted worktree anyway.
+    *** DRIVEN, NOT INFERRED.  config_contract.py:216 compares the draft config's declared
+        schema_sha256 against file_sha256(schema_path), and file_sha256 (line 45) is
+        sha256(read_bytes()) - RAW, NO CRLF FOLDING.  Committed schema.json into a scratch
+        repo at core.autocrlf=true, deleted it, checked it out, called the PACKET'S OWN
+        validator on the result:
+          tracked            15,212 B  670 LF    0dae0dd0...  <- what the draft config declares
+          clone, no attrs    15,882 B  670 CRLF  b11fd1d8...  REFUSED, "configuration
+                             schema_sha256 does not match schema.json bytes"
+          clone, packet attrs 15,212 B 670 LF    0dae0dd0...  ACCEPTED
+        THAT COMPARISON IS ON RUNBOOK STEP 1 (validate_data_contract.py). ***
+    SCOPE, MEASURED SO IT IS NOT OVERCLAIMED: 205 tracked packet files, 123 eol-sensitive,
+    SIXTEEN with a raw digest appearing as a literal in the packet.  FIFTEEN are CANONICAL-
+    domain pins - code_identity is the Protocol-P text digest BY DESIGN (dev_fit_contract.py
+    :443-448 says so and cites S59/S61), and the protocol/assignment pins go through
+    canonical_text_sha256.  Then EVERY raw-domain hash call site in scripts/ enumerated:
+    THIRTEEN, and exactly ONE takes a tracked packet TEXT file -> config_contract.py:216.
+    The other twelve take .pt, .npz, and the data root's GENERATED manifest.csv/index.csv,
+    which git never eol-converts and which bind raw CORRECTLY (the S97 scope statement).
+    REPAIR: new Reproducibility Packet/.gitattributes, 1,693 B, blob 76976c10, three rules
+    re-rooted, comments stating WHICH ONE IS LOAD-BEARING AND WHY THE OTHER TWO ARE NOT.
+    *** TWO DELIBERATE NON-ACTIONS, BOTH STATED IN THE CHAT SO CODEX CAN OVERRULE THE
+        REASONING: (a) the ROOT .gitattributes IS NOT TOUCHED.  AY's precedent would suggest
+        MOVING rather than duplicating; I declined because the two files protect two
+        different publication surfaces, the packet rule already wins where both apply, and -
+        decisively - the S59/S60 .gitattributes ruling is ON THE ESCALATE-ON-REOPEN LIST.
+        A move is an escalation, not a repair.  (b) the packet README IS NOT REOPENED: it is
+        closed at a985108e, no runbook step changes, and a reader never invokes an
+        attributes file. ***
+```
+
+## THE S105-S106 RUNBOOK FINDINGS - Do not undo any of them.
 
 ```text
 AX  (CODEX, S105)  THE DISPLAYED EXECUTE COMMAND COULD NOT DO WHAT ITS PROSE SAID.  My S105
@@ -484,6 +536,14 @@ the SAME command that ran the writer; declared 04:22, written 04:22.
     the head block and not the whole file.  *** WHEN A LESSON IMPROVES, THE IMPROVEMENT MUST
     MOVE INTO THE BLOCK THAT OWNS THE LESSON, NOT ONLY INTO THE SESSION'S SCRATCHPAD. ***
 
+*** S107: THE WRITER WAS GONE A THIRD TIME AND THE BLOCK REBUILT IT AT FULL STRENGTH AGAIN.
+    Two appends, 14 s and 30 s of skew against the 120 s limit, both harmless direction; all
+    seven gates printed their measured values.  THE MECHANISM HAS NOW PASSED TWO INDEPENDENT
+    TESTS, and the reason is the S105 correction: the improvement was written back into THIS
+    block rather than left in the session's own scratchpad.  DO NOT MOVE THE WRITER INTO THE
+    PACKET - it is session tooling and the packet must stay a thing a stranger can run.  The
+    durable artifact is this list, and the list is now load-bearing evidence for itself. ***
+
 THE GATE LIST TO REBUILD FROM (seven; the writer is a BYTE APPEND, never a patch, which is
 what lets it promise a byte-identical prefix on a mixed-EOL file):
   1  re-read the prior bytes, record SHA-256, and RE-ASSERT them as an exact prefix AFTER
@@ -627,7 +687,7 @@ Settled — do not reopen, do not edit v2.3.3.  Codex S55: no bump for the Stage
 ## Where the project is
 
 - **Phase 2 (Execution) is OPEN.** All Phase-1 gates in force. **Schema v1.0 + Amendment A1 in force.** Contract changes run through the **amendment protocol**.
-- I am **Claude**; last session was **Session 106**; next session I run is **Session 107 - a normal session, NOT a progress-report session.** **THE S104 REGULAR PROGRESS REPORT IS WRITTEN** at `agents/Claude/Progress Reports/Progress Report Session 104.md`, covering S97-S104 - **STILL UNREVIEWED BY CODEX AS OF THE END OF MY S105 - its S104 report lists no review of it. If Codex opens a loop on it, that loop is mine to close.** Its spine: the sweep executed, the reader's two defects (AV/AW) were found and repaired, the terminal artifact was jointly approved after a 73-check independent audit, and the frozen 5.4 table matched exactly one row - the near-miss row 4 is the report's centrepiece because it is the sentence hindsight would have written. **THE S96 REGULAR PROGRESS REPORT'S LOOP IS CLOSED** at `agents/Claude/Progress Reports/Progress Report Session 96.md`, blob `c824173c`, raw `eeeaf53d...`, 13,935 B / 231 lines - **Codex explicitly approved those exact bytes unchanged in its S97 and I had already approved them. DO NOT REOPEN.** **MY NEXT REGULAR IS SESSION 112**, or sooner if a phase transition or an approved written Claim-Sheet amendment fires. **THE S88 REPORT'S LOOP IS CLOSED** at blob `58276bb4` (canonical `1e359749...`) - Codex explicitly approved those exact bytes in its S89 and I had already approved them. **DO NOT REOPEN.** *(The S80 report, covering S73-S80, is still unreviewed by Codex; the S72 one was read in Codex's S72 general recent-work review, which found no correction to carry, so no explicit review cycle ever opened on it.)* **A2 ALREADY FIRED AN AMENDMENT-TRIGGERED REPORT AND IT WAS CODEX'S TO WRITE** (its S76 wrote the approving turn); that does not reset either counter.
+- I am **Claude**; last session was **Session 107**; next session I run is **Session 108 - a normal session, NOT a progress-report session.** **THE S104 REGULAR PROGRESS REPORT IS WRITTEN** at `agents/Claude/Progress Reports/Progress Report Session 104.md`, covering S97-S104 - **STILL UNREVIEWED BY CODEX AS OF THE END OF MY S105 - its S104 report lists no review of it. If Codex opens a loop on it, that loop is mine to close.** Its spine: the sweep executed, the reader's two defects (AV/AW) were found and repaired, the terminal artifact was jointly approved after a 73-check independent audit, and the frozen 5.4 table matched exactly one row - the near-miss row 4 is the report's centrepiece because it is the sentence hindsight would have written. **THE S96 REGULAR PROGRESS REPORT'S LOOP IS CLOSED** at `agents/Claude/Progress Reports/Progress Report Session 96.md`, blob `c824173c`, raw `eeeaf53d...`, 13,935 B / 231 lines - **Codex explicitly approved those exact bytes unchanged in its S97 and I had already approved them. DO NOT REOPEN.** **MY NEXT REGULAR IS SESSION 112**, or sooner if a phase transition or an approved written Claim-Sheet amendment fires. **THE S88 REPORT'S LOOP IS CLOSED** at blob `58276bb4` (canonical `1e359749...`) - Codex explicitly approved those exact bytes in its S89 and I had already approved them. **DO NOT REOPEN.** *(The S80 report, covering S73-S80, is still unreviewed by Codex; the S72 one was read in Codex's S72 general recent-work review, which found no correction to carry, so no explicit review cycle ever opened on it.)* **A2 ALREADY FIRED AN AMENDMENT-TRIGGERED REPORT AND IT WAS CODEX'S TO WRITE** (its S76 wrote the approving turn); that does not reset either counter.
 - **`config.json` is deliberately NOT frozen** and does not exist. All hashes are `dev-`; no `dev-` trace may enter confirmatory analysis.
 - Real data exists: `data/gate3-base-dev-pilot-val-c1-s` (3.86 GB, git-ignored, local only). 472 reservations / 944 manifest rows / C1+S / dev 152, pilot 152, val 168. **Test untouched: 0 identities, 0 payloads.** **THE "SLATED FOR FULL REGENERATION FROM ZERO AFTER A2" EXPECTATION IS RETIRED AS OF MY S75 — see A2.3.** Option C inserts no severity, so no seed ordinal shifts and A2 by itself invalidates none of this. If the set is ever superseded it is for some other reason, under its own authorization. **Still: read them, do not build on them** — nothing downstream of them is authorized either way.
 - **THE PAYLOAD-BOUNDARY EXTENSION HAS RUN — Codex's S73, 127 physical rollouts, `X_CASE_EMPTY`, and the result artifact is JOINTLY APPROVED (Codex S73 / me S74).** The measurement is spent and no further payload-extension execution is authorized. **A2 IS IN FORCE at `baa8fd53…` / `203aab77…` — both agents approved those exact bytes (me S76, Codex S76). The two-file loop is CLOSED and the amendment is not to be reopened or status-edited.**
@@ -653,6 +713,16 @@ guards was already spent.
 + Codex S73: THE ONE AUTHORIZED STEP-5 INVOCATION.  1 replay + 126 extension = 127,
   3,680.708815 s persisted.                                =>   TOTAL 278
 *** TAKE THE COUNT FROM THE ARTIFACT'S OWN LEDGER, NEVER FROM A PER-ROLLOUT FIGURE. ***
+MY S107 SPENT ZERO OF EVERYTHING - no fit, no checkpoint, no generation, no rollout, no
+  plan mode at all, NO C7 INVOCATION and NO EDIT TO ANY EXECUTABLE, TEST, PROTOCOL, PLAN OR
+  RESULT.  An owner approval closing the ignore loop, one NEW packet file (.gitattributes),
+  a 93-destination census, a fresh-repo replica sweep, an exhaustive 205-file negative
+  control, a 13-call-site raw-hash enumeration, the 1,792 packet suite, two appended chat
+  turns.  *** IT TOUCHED NO REAL DATA AT ALL - no manifest, no .npz, no label payload, and
+  NOT EVEN A HASH OF A .pt CHECKPOINT.  The eol experiment copies ONE tracked 15 KB JSON
+  file into a scratch repo and nothing else. ***  Every probe write went to the session
+  scratch directory OUTSIDE the repository.
+  PILOT/VAL/TEST: 0.  *** ROLLOUT COUNT UNCHANGED AT 278.  FIT COUNTER UNCHANGED AT 13. ***
 MY S106 SPENT ZERO OF EVERYTHING - no fit, no checkpoint, no generation, no rollout, no
   plan PUBLICATION, NO C7 INVOCATION and NO EDIT TO ANY EXECUTABLE OR TEST.  An owner
   re-review of two reviewer-edited files, one repair to the packet ignore file, the 1,792
@@ -2827,6 +2897,52 @@ Run either read from the packet dir; zero rollouts, ~0.3 s each:
 - **Phase-2 chat:** `chats/Claude-Codex/Phase 2 Integration and Config Freeze/...- Active.md` — **S106 STATE: 29,626 lines / 1,836,684 bytes, sha256 `c626492bebf5c25628660f7a59fdd1a979873107abcbe6ec53121d2723a64e45`. My S106 is `+149/-0`, a single tail hunk at `@@ -29477,0 +29478,149 @@`, one turn, header unique, Claude physically last of 252 headers. The pre-write state (1,827,336 B / 29,477 lines, sha `18120a11...`) is what Codex's S105 append left; its commit `584771c` touches the transcript as a single tail hunk `@@ -29386,0 +29387,91 @@`, additions only, so nothing moved between sessions. ALL EIGHT WRITER GATES PASSED; declared and written 00:16 PDT.** **CODEX OWNS THE NEXT TURN: the owner re-review of packet `.gitignore` blob `fd106b95`, and specifically whether it accepts finding AZ's scope - if it would rather keep the block narrow to the steps that produced it, that is a ruling I will take rather than re-argue.** *(Historical - S105 STATE: 29,386 lines / 1,822,376 bytes, sha256 `733e0d63dfaac82b7142e84db228c88ce1df249c1adf3a6819208a2b7bae4023`. My S105 is `+125/-0`, a single tail hunk at `@@ -29261,0 +29262,125 @@`, one turn, header unique, Claude physically last of 250 headers. The pre-write state (1,815,147 B / 29,261 lines, sha `0f38d229...`) is what Codex's S104 append left; its commit `82cadbf` touches the transcript as a single tail hunk `@@ -29209,0 +29210,52 @@`, additions only, so nothing moved between sessions. ALL SEVEN WRITER GATES PASSED plus the character-domain check; declared 20:25, written 20:25:10.** **NOBODY OWES A TURN. Codex may review packet README Steps 28-29 when convenient - documentation, not a gate - and the two questions I put to it are whether the cross-machine reproduction claim should be stronger than I allowed, and whether Step 29 should print the five per-point means at all. If it returns edits, the owner re-review is MINE.** *(Historical — S103 STATE: 28,755 lines / 1,786,439 bytes, sha256 `a71d915f74f4860b26980033dc63180b2e01c24f037516427796bf46b320b85d`. My S103 is `+211/-0`, a single tail hunk at `@@ -28542,3 +28542,214 @@`, one turn (my C7 execution authorization half), header unique, Claude physically last of 244 headers. The pre-write state (1,774,694 B / 28,544 lines, sha `6e698a2d...`) is what Codex's S102 append left; its commit `e901065` touches the transcript as a single tail hunk `@@ -28473,3 +28473,72 @@`, additions only, so nothing moved between sessions. **ALL SEVEN WRITER GATES PASSED. The timestamp gate is now STRONGER: the writer BUILDS the header from the clock at the write rather than parsing a hand-authored one, so skew is structurally impossible rather than merely refused - declared 12:17, written 12:17:11.** **CODEX OWNS THE NEXT TURN: its matching authorization half, plus any objection to the destination or to the run/audit split - I asked for both BEFORE the write, because an exclusive create makes the first destination the only cheap one.** *(Historical - S102 STATE: 28,475 lines / 1,771,125 bytes, sha256 `59f0ba32588a05d1842d395ddace8af498d77fb9fb39fe2313e0d978c3f3fbe7`. My S102 is `+257/-0`, a single tail hunk at `@@ -28218,0 +28219,257 @@`, one turn, header unique, Claude physically last. The pre-write state (1,757,341 B / 28,218 lines, sha `6b6b68f1...`) is what Codex's S101 append left; its own commit `de46798` touches the transcript as a single tail hunk `@@ -28137,0 +28138,81 @@`, additions only, so nothing moved between sessions. **ALL SEVEN WRITER GATES PASSED, including the timestamp gate: header declared 08:26 PDT, written 08:26:38 PDT.** **CODEX OWNS THE NEXT TURN: the owner re-review of `b9043fa2`/`a81d35c9`, and specifically whether it accepts finding AV's diagnosis AND its implementation - if it would rather round both sides or bind the anchor domain some other way, that is a real disagreement and I asked for it now rather than after the read.**** *(Historical — **S98 STATE: 27,322 lines / 1,701,780 bytes, sha256 `f9c12e5b03ba2b9d7969e70c319054500651fb98dfba120d612e0be788f63a5b`. My S98 is `+338/-0` across THREE turns in two writes (the pre-spend measurements and residuals; my authorization half, deliberately its own turn; and the execution record with finding AU). The pre-write state (1,680,736 B / 26,984 lines, sha `99b4a43f...`) EQUALLED Codex's published post-write sha at the end of its S97 exactly, so nothing moved between sessions. **CODEX OWNS THE NEXT TURN: the review of `53e5dcb7`/`2dc93297`, and specifically a ruling on whether the cleanliness guard belongs ABOVE the C9 gate or below it.** All six gates passed on both writes, asserted inside the writer (`append_turn.py`).** *(Historical — S95 STATE: 26,289 lines / 1,639,880 bytes after my ONE append, sha256 `f4cc6efc14ff259b74a53c4af15ff0993bedbf4da8001ee3852120e81e5fcaf2`. My S95 is `+213/-0`, a single tail hunk, header unique at line 26,078, Claude physically last, all SIX gates passed. The pre-write state (1,626,311 B / 26,076 lines, sha `f2781d59...`) EQUALLED Codex's published post-write sha at the end of its S94, so nothing moved between sessions. CODEX OWNS THE NEXT TURN: the ruling on finding AT, and then the same-state close of Step 3.** **Historical, kept only because the discipline below is still the discipline — S91 STATE: 24,956 lines / 1,564,456 bytes, sha256 `b7a229df9dda785f...`. My S91 is `+132/-0`, a single tail hunk, header unique at line 24,826, Claude physically last, the pre-write state (1,556,240 bytes / 24,824 lines, sha `194ebb26...`) asserted byte-identical INSIDE the writer, the turn asserted PURE ASCII before writing, and the prefix re-verified byte-identical afterwards. *** KEEP THE ASCII ASSERTION — it fired in S90 and caught a real violation (section signs, em dashes). It is not ceremony. *** **CODEX OWNS THE NEXT TURN: the same-state reviewer re-review of `b45efa47` (the design). If it judges limitation 139 wrong — if C9's scratch root should live outside the claimed run root — then it also has to say what preserves the failed run's equivalence evidence across a retry, because §7.3 currently claims that preservation and the reserved subtree is the only thing supplying it. I said exactly that in the turn and wrote the argument INTO §7.3 and §11 so a future session can judge it rather than inherit it.** *(Prior S90 state: 24,726 lines / 1,550,920 bytes, sha `64fc16df...`, my S90 `+131/-0`, header at line 24,597.)* *(Codex's S88 reported final 1,525,692 B / 24,297 lines; my own pre-write read matched exactly, so its append was clean and nothing moved between sessions. Prior S88 state: 24,178 lines / 1,518,959 bytes, my S88 `+203/-0`.)* *** THE S82 APPEND-ORDER RECURRENCE STILL BINDS: Codex's S82 review landed at physical line 19,334 and was restated at the true tail, so **the chronological order is permanently broken in the middle and the PHYSICAL TAIL is the authoritative order.** *** **If a judgment comes back contested and one exchange does not settle it from source, ESCALATE to the director rather than trade turns.** Do NOT re-open: the extension document (both approved `538ae06b`), the five S62 edits, the unified Option-B rule, the four S62 questions, the measure-first ruling, the payload analyzer/tests, the role-coverage states, the readback ruling, `.gitattributes`, the Stage-C label, Step 25, the screen result, the plan default, A2, Codex's two S77 rulings, its four S78 rulings, its S80 ruling on the forty escapes, its S81 Finding-G ruling, its S83 rulings on the sixth exit and the `_exact_steps` deletion, the closed attribution rung, the closed dev-fit contract, or the closed trainer. **The file is MIXED-EOL** — Codex appends LF, the older bulk is CRLF; append LF and verify additions-only rather than assuming.
 - **Monitoring chat:** `chats/Claude-Codex-Human/Transcript Order Monitoring/…- Active.md` — **S106 ADDED NOTHING: NO RECURRENCE.** Verified at the git level rather than assumed: Codex's S105 commit `584771c` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -29386,0 +29387,91 @@`, additions only, and touches this monitoring file not at all; my own append is likewise a single tail hunk, `+149/-0`. **DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S105 ADDED NOTHING: NO RECURRENCE.** Verified at the git level rather than assumed: Codex's S104 commit `82cadbf` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -29209,0 +29210,52 @@`, additions only, and touches this monitoring file not at all; my own append is likewise a single tail hunk, `+125/-0`. **DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S103 ADDED NOTHING: NO RECURRENCE.** Verified at the git level rather than assumed: Codex's S102 commit `e901065` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -28473,3 +28473,72 @@`, additions only, and touches this monitoring file not at all; my own append is likewise a single tail hunk, `+211/-0`. **DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S102 ADDED NOTHING: NO RECURRENCE.** Verified at the git level rather than assumed: Codex's S101 commit `de46798` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -28137,0 +28138,81 @@`, additions only, its header landing at line 28,139 after my S101 header at 27,963, and it touches this monitoring file not at all; my own append is likewise a single tail hunk, `+257/-0`. **The duty is to flag recurrences, so a clean session adds no note — but verify at the git level regardless, and DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S98 ADDED NOTHING: NO RECURRENCE.** Verified at the git level rather than assumed: Codex's S97 commit `1923717` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -26907,3 +26907,78 @@`, additions only (`+75/-0`), its header landing at line 26,911 after my S97 header at 26,624, and it touches this monitoring file not at all. My own two appends are likewise tail-only, `+177/-0` and `+161/-0`. **The duty is to flag recurrences, so a clean session adds no note — but verify at the git level regardless, and DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S95 ADDED NOTHING: NO RECURRENCE.** Verified at the git level rather than assumed: Codex's S94 commit `5d407f4` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -25916,3 +25916,161 @@`, additions only (`+158/-0`), and touches this monitoring file not at all; its two S94 turns landed at lines 25,920 and 26,000, both after my S94 header at 25,734. My own append is likewise a single tail hunk, `+213/-0`. **The duty is to flag recurrences, so a clean session adds no note — but verify at the git level regardless, and DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S91 ADDED NOTHING: NO RECURRENCE.** Verified rather than assumed: my pre-write read of the Phase-2 transcript (1,556,240 B / 24,824 lines) equalled Codex's S90 reported POST-write figures exactly, so its append was clean and nothing moved between sessions; Codex's own S90 report independently records `+98/-0` additions-only with its header at line 24,728 and the monitoring file untouched. My own append is likewise a single tail hunk, `+132/-0`. *(Prior: **S90 ADDED NOTHING: NO RECURRENCE.** Codex's S89 commit `553defa` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -24500,3 +24500,96 @@`, additions only (`+93/-0`), and touches this monitoring file not at all. My own append was a single tail hunk `@@ -24593,3 +24593,134 @@`, `+131/-0`.)* *(Prior: **S89 ADDED NOTHING: NO RECURRENCE.** Codex's S88 commit `f836982` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -24176,3 +24176,122 @@`, additions only (`+119/-0`), and touches this monitoring file not at all. My own append is likewise a single tail hunk `@@ -24295,3 +24295,208 @@`.)* *(Prior: **S88 ADDED NOTHING: NO RECURRENCE.** Codex's S87 commit `08434d2` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -23790,3 +23790,186 @@`, additions only (`+183/-0`), and touches this monitoring file not at all; it also touched NO production file. My own append is likewise a single tail hunk. **The duty is to flag recurrences, so a clean session adds no note - but verify at the git level regardless, and DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S87 ADDED NOTHING: NO RECURRENCE.** Verified at the Git level rather than assumed: Codex's S86 commit `56c790c` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -23525,3 +23525,92 @@`, additions only (`+89/-0`), and touches this monitoring file not at all. My own append is likewise a single tail hunk `@@ -23614,3 +23614,179 @@`. **The duty is to flag recurrences, so a clean session adds no note - but verify at the git level regardless, and DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S86 ADDED NOTHING: NO RECURRENCE.** Verified at the Git level rather than assumed: Codex's S85 commit `f5ee81a` touches the Phase-2 transcript as a SINGLE tail hunk `@@ -23249,0 +23250,98 @@`, additions only, landing after my S85 header, and it touches this monitoring file not at all. My own append is likewise a single tail hunk `@@ -23347,0 +23348,180 @@`. **The duty is to flag recurrences, so a clean session adds no note — but verify at the git level regardless, and DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S85 ADDED NOTHING: NO RECURRENCE.** Verified at the Git level rather than assumed: Codex's S84 commit is a SINGLE hunk `@@ -22897,0 +22898,125 @@` on the Phase-2 transcript — additions only, at the then-physical tail, after all three of my S84 headers — and it touches this monitoring file not at all. My own append is likewise a single tail hunk `@@ -23022,0 +23023,227 @@`. **The duty is to flag recurrences, so a clean session adds no note — but verify at the git level regardless, and DO NOT EXTEND A STREAK NUMBER FROM MEMORY.** *(Prior: **S84 ADDED NOTHING: NO RECURRENCE.** Verified two ways rather than assumed: at the git level Codex's S83 commit is `+76/-0` on the Phase-2 transcript and touches this file not at all; and my own pre-write read of the transcript (1,428,567 bytes, sha256 `0411d1f2…`) equalled Codex's reported POST-write figures exactly, so its append was clean and nothing moved between sessions. **The duty is to flag recurrences, so a clean session adds no note — but verify at the git level regardless.** *(Prior state, unchanged on disk: 251 lines / 15,255 bytes; my S83 note is `+47/-0`, header unique at line 208, physically last.)* It records my independent git-level verification of the S82 recurrence (additions-only, both files), the point that the transcript's chronological order is now permanently broken in the middle, and the general rule Codex's own byte-assertion failure produced: **on a mixed-EOL file a PATCH and a BYTE APPEND are different operations, and only the second can promise a byte-identical prefix.** *(Historical: **118 lines; last post was mine at S74. NO RECURRENCE IN S75 OR S76, so no note was added — the duty is to flag recurrences.** S76 check, at the git level: Codex's two S75 appends landed as a single `+126/−0` hunk at line 20,001, after the recorded 20,000-line tail, nothing inserted before the boundary and nothing moved. **DO NOT EXTEND THE STREAK NUMBER FROM MEMORY — it has been wrong five times running in this project. Sweep the transcript's commit history if a number is actually wanted.** *(Stale historical figures below, kept only so a reader knows they are stale:* **streak FORTY-TWO**: Codex's S71 append verified at the git level in my S72 — commit `5250aa4`, `+63/−0`, header unique and correctly ordered after mine — and my own S72 append passed all five gates. *(Prior: **streak FORTY-ONE**: Codex's S70 append verified at the git level in my S71 — `+110/−0`, prior content a byte-identical prefix, header unique, physically last — and my own S71 append passed all five gates.)* *(Prior: **streak thirty-nine**: Codex's S69 append was `+92/−0` with its header unique at line 18,257 and physically last, verified at the git level in my S70, and my S70 append passed all five gates — pre-write prefix retained byte-for-byte with an identical SHA-256 asserted *inside* the writer, header unique, physically last, `+165/−0`.)* The duty is to flag recurrences, so a clean session adds no note; verify at the git level regardless.
 
+## Scratchpad (S107, NOT committed) - THE FOUR PROBES ARE THE SHAPE TO REUSE FOR ANY "DOES IT TRAVEL" QUESTION
+
+```text
+<session scratchpad>/
+  census_probe.py     THE INSTRUMENT THAT FIXED MY S106 BLIND SPOT.  Builds the runbook's
+                      destination set as a UNION of three independent extractions: every
+                      path token in every ```powershell fence, every backticked path in the
+                      prose, AND THE argparse STRING DEFAULTS OF ALL 41 INVOKED SCRIPTS.
+                      93 destinations; results/ is the ONLY output root in the whole runbook.
+                      *** THE THIRD SOURCE IS WHY BA EXISTED.  My S106 swept DESTINATION
+                          ARGUMENTS.  Step 20 passes NO destination argument.  AN ENUMERATION
+                          WHOSE DOMAIN IS "ARGUMENTS PRESENT" IS STRUCTURALLY BLIND TO
+                          "ARGUMENT ABSENT, DEFAULT USED."  The repair for a skim is care;
+                          the repair for this is a different instrument. ***
+  travel_probe.py     THE MEASUREMENT THAT DECIDES IT, AND THE ONE NEITHER OF US HAD.
+                      `git check-ignore` run INSIDE THIS REPOSITORY CANNOT ANSWER THE
+                      QUESTION - two ignore files are active, so "ignored" does not say WHICH
+                      FILE supplied the rule, and a packet hole can look covered because the
+                      ROOT covers it.  So: git init a scratch repo whose ONLY ignore file is a
+                      BYTE COPY of the packet's (digest re-verified after copying) and ask
+                      there.  111 targets (a file entry as itself; a DIRECTORY entry as BOTH
+                      probe.csv AND probe.npz, so a missing directory rule cannot hide behind
+                      *.npz).  0 lost on copy, 0 uncovered, 9 correctly-visible TRACKED trees.
+  negative_control.py EXHAUSTIVE, NOT SAMPLED: all 205 tracked packet files through the
+                      replica's matcher, 0 ignored.  The replica is the right domain here too
+                      - inside this repo a rule swallowing a tracked file can hide behind
+                      git's "already tracked" behaviour; a repo that tracks NOTHING removes it.
+  eol_travel_probe.py Commits schema.json at core.autocrlf=true, deletes it, checks it out,
+                      then IMPORTS utils.config_contract AND CALLS THE PACKET'S OWN VALIDATOR
+                      on the result.  Both arms plus a tracked-file control.  Finding BB.
+  raw_pin_sweep.py    205 tracked files -> 123 eol-sensitive -> 16 whose RAW digest is a
+                      literal in the packet.  Bounds the finding by measurement.
+  append_chat.py      REBUILT A THIRD TIME from THE TIMESTAMP GATE BLOCK, full strength.
+
+*** THE S101 LESSON FIRED AGAIN AND MY OWN CANARY IS THE ONLY REASON I SAW IT.  My first
+    negative control drove `git check-ignore --stdin` from Python.  ON WINDOWS, TEXT-MODE
+    STDIN TRANSLATES \n TO \r\n, so every path arrived with a trailing CR: `...seed0.pt\r` no
+    longer matches `*.pt`, while `...index.csv\r` STILL matches the DIRECTORY rule
+    /results/sensor_model/.  THE PROBE UNDER-REPORTED WITH NO ERROR ANYWHERE.  Caught only
+    because I had seeded THREE known-ignored paths as a liveness canary and two came back.
+    FIX: pass paths as ARGV.  My summary already said "prefer the measurement that needs no
+    parsing" and I wrote the parsing one anyway.
+    *** SEED A LIVENESS CANARY INTO EVERY SWEEP WHOSE PASSING RESULT IS AN EMPTY SET.  An
+        empty result and a broken probe are the same output. *** ***
+```
+
 ## Scratchpad (S106, NOT committed)
 
 ```text
@@ -2926,61 +3042,3 @@ Run either read from the packet dir; zero rollouts, ~0.3 s each:
     and the answer has to come from the directory.  Same family as the field name remembered
     instead of read and the rollout count carried instead of recounted. ***
 
-## Scratchpad (S103, superseded - the S103 append_chat.py is the one to rebuild, NOT the S100 one)
-
-```text
-<session scratchpad>/
-  pre_auth.py    29 checks: the reader's WHOLE authentication chain against the REAL state,
-                 STOPPING BEFORE derive_analysis.  *** THE ONE PROPERTY THAT MAKES IT A
-                 CHECK RATHER THAN A REPORT OF ONE: every expected constant is quoted from
-                 a PRIMARY RECORD (my own HumanReport, or an approval turn), never from the
-                 file being checked.  Writing it that way is what surfaced that I had been
-                 carrying dev_fit_analysis.json by an 8-hex PREFIX. ***
-  destination.py 10 checks on the write destination, every write under a TemporaryDirectory,
-                 including driving write_exclusive TWICE to see the second one refuse.
-                 *** MEASURE THE SINGLE-USE PROPERTY; DO NOT INFER IT FROM MODE "x". ***
-  append_chat.py SEVEN gates.  *** CHANGED FROM S102 AND KEEP THE CHANGE: the writer now
-                 BUILDS the header timestamp from the clock at the write instead of parsing
-                 a hand-authored --header.  A gate that refuses skew is good; a writer that
-                 cannot produce skew is better. ***
-  readme_update.py / summary_head.py / summary_edits.py
-                 *** THE PATTERN THAT MATTERS, UNCHANGED: put every replacement string in a
-                 .py FILE with a uniqueness assertion before the write and a re-read after.
-                 Never build one in `python -c "..."` from bash - backticks and $ are eaten
-                 by command substitution. ***
-```
-
-*** S103 SELF-CORRECTION WORTH CARRYING: my first draft of pre_auth.py contained two fake
-    checks - one `or True` and one comparing a digest against a string built from its own
-    first eight characters.  Both would have printed PASS unconditionally.  Caught by
-    re-reading my own probe before running it, not by the probe failing.  A PROBE THAT
-    CANNOT FAIL IS INDISTINGUISHABLE FROM ONE THAT PASSED, which is the S101 lesson from
-    the other side. ***
-
-## Scratchpad (S102, superseded - still the right shapes)
-
-```text
-<session scratchpad>/
-  probe_rational.py  *** THE CHEAPEST DECISIVE INSTRUMENT OF THE SESSION.  Reconstructs each
-                     published 12-dp F1 back to its exact 2TP/(2TP+FP+FN) rational by
-                     searching denominators <= 304, then compares floats.  Settled finding AV
-                     with ZERO data reads.  Reach for this shape whenever the empirical probe
-                     would spend something. ***
-  probe_drive.py     drives the reviewed function against ONE real anchor - the confirmation,
-                     not the instrument.  Loads the 304 dev rows and one approved .pt.
-  sufficiency.py     13 checks: the WHOLE authentication chain against the real state,
-                     STOPPING BEFORE derive_analysis.  The shape to reuse before gate 2.
-  mutate.py          two-state sweep, each case twice, restore digest-verified in a finally,
-                     and it reports whether the SPECIFIC naming test caught the case rather
-                     than only whether the suite went red.
-  append_chat.py     SEVEN gates: prior digest, ASCII+no CR, header uniqueness, byte append,
-                     prefix re-hash, physical-tail ASSERTED, and header timestamp vs the clock
-                     AT THE WRITE (+/-120 s).  Stamp the header in the SAME command.
-  rewrite_summary.py / readme_workspace_update.py / digests.py
-                     *** THE PATTERN THAT MATTERS: put every replacement string in a .py FILE
-                     with a uniqueness assertion before the write and a re-read after. ***
-```
-
-*** S102 SELF-CORRECTION WORTH CARRYING: my first repair put two em dashes into a file Codex
-    had written as pure ASCII.  Caught by MEASURING the returned bytes (`b.isascii()`), not by
-    reading them.  Measure the property; do not intend to type carefully. ***

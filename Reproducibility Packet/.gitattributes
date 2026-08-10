@@ -1,0 +1,29 @@
+# Packet-local end-of-line pins.
+#
+# These rules also exist in the repository-root .gitattributes, prefixed with this
+# packet's directory name. They are repeated here because the root file does not
+# travel: this packet is meant to be copied out and published on its own, and a
+# rule written as "Reproducibility?Packet/..." would match nothing in a repository
+# rooted at this directory even if the file were carried along. The root file is
+# deliberately left unchanged; it governs the full-repository checkout, this file
+# governs the packet checkout, and the two agree.
+#
+# This repository is developed on Windows with core.autocrlf=true, so an unpinned
+# text file materializes as CRLF in a fresh clone and any raw-byte digest taken
+# from it breaks.
+
+# LOAD-BEARING. scripts/utils/config_contract.py compares the draft config's
+# declared schema_sha256 against file_sha256(schema.json), which hashes the RAW
+# bytes with no CRLF folding. Without this pin, Step 1's validate_data_contract.py
+# refuses on a fresh Windows clone with "configuration schema_sha256 does not match
+# schema.json bytes". Measured, not assumed: the unpinned checkout is 15,882 bytes
+# with 670 CRLF pairs against the tracked 15,212 bytes with 670 LF.
+schema/schema.json text eol=lf
+
+# Defence in depth. scripts/protocol_p_replay_gate.py pins these two in the
+# CANONICAL domain (utils/protocol_p.py canonical_text_sha256 folds CRLF to LF
+# before digesting), so no gate refuses without these lines. They keep the raw
+# bytes equal to the canonical bytes, which is what the replay gate's
+# raw_equals_canonical diagnostic reports.
+config/proposed-gate3-assignment-v0.1.json text eol=lf
+protocol/*.md text eol=lf
