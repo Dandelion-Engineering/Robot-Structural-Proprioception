@@ -1,6 +1,6 @@
 # Summary of Only Necessary Context — Codex
 
-**Last rewritten:** 2026-08-10 — Codex Session 106
+**Last rewritten:** 2026-08-10 — Codex Session 107
 
 ## Resume here
 
@@ -31,37 +31,41 @@ C7 output artifact review                          CLOSED / BOTH APPROVED
 section 5.4 capacity interpretation                CLOSED / JOINTLY APPLIED
 Stage-1 capacity measurement                       COMPLETE AS SCOPED
 packet Steps 28-29 README review                    CLOSED / BOTH APPROVED
-packet .gitignore review                           OPEN / CODEX EDITED+APPROVED
+packet .gitignore review                           CLOSED / BOTH APPROVED
+packet .gitattributes review                       CLOSED / BOTH APPROVED
 capacity selection / Stage 2                       NOT AUTHORIZED / UNDECIDED
 final configuration                                ABSENT / BLOCKED
 ```
 
-## Active work — packet `.gitignore` owner re-review
+## Current packet-documentation state
 
-Claude Session 106 genuinely reviewed Codex Session 105's returned packet README and
-packet-local ignore file.
+There is no open exact-state review at the end of Codex Session 107.
 
-- Claude accepted Findings AX/AY and approved the exact README bytes Codex approved. The README
-  loop is closed at blob `a985108ec4fecb028a7c2636424aaa0ea0128feb` / raw and canonical
-  SHA-256 `526e24cb37b91746986f23e28c6ec786566d8de8cb813ba0fb2fe1764b9cb800`.
-- Claude found four additional runbook scratch outputs (Finding AZ), added rooted packet-local
-  rules, explicitly approved blob `fd106b95...`, and returned it to Codex.
-- Codex Session 106 accepted all four AZ rules unchanged, then found one remaining omission:
-  Step 20's `run_sensor_model.py` writes a required untracked `index.csv` under the default
-  `results/sensor_model/`, while only the adjacent `.npz` payload was ignored.
-- Codex added one rooted rule, explicitly approved the new packet-ignore state, and handed it
-  back to Claude. Claude same-state review is now the only open documentation gate.
+### Packet README
 
-Exact current packet-ignore state:
+The packet runbook's Stage-1 capacity Steps 28-29 are jointly approved:
+
+```text
+Reproducibility Packet/README.md
+  Git blob                 a985108ec4fecb028a7c2636424aaa0ea0128feb
+  raw/canonical SHA-256    526e24cb37b91746986f23e28c6ec786566d8de8cb813ba0fb2fe1764b9cb800
+```
+
+Finding AX corrected the execute example: execute mode takes the run label from the
+authenticated plan, not `--run-label`, so a fresh-label plan must be generated and hashed first.
+The approved executable also remains hard-bound to the ten original `results/dev_fit`
+checkpoints. Step-26 refits cannot restore those anchors; a new experiment from rebuilt anchors
+would require a new reviewed design and executable boundary.
+
+### Packet `.gitignore`
+
+The packet-output rule set is jointly approved:
 
 ```text
 Reproducibility Packet/.gitignore
   Git blob                 5082c2fc2c2277eef586c442b50a52881f6e5c95
   raw SHA-256              5120235af01356adac29a32424d2a6e18dde4ff1b3ac80dd1338b99aabbdee64
   size / encoding          576 B / UTF-8 / LF / no CR / no BOM / final newline
-
-repository-root .gitignore
-  Git blob                 e388028cf9b2254c164e3b300c50e5f781a99f1a
 ```
 
 The ten rooted runbook scratch rules are:
@@ -79,45 +83,45 @@ The ten rooted runbook scratch rules are:
 /results/capacity_sweep_analysis_reproduced/
 ```
 
-Session-106 verification:
+Claude Session 107 rebuilt the census from 93 destinations and verified the packet file alone
+in a fresh Git replica: no untracked runbook output was uncovered and none of 205 tracked packet
+files was ignored.
+
+### Packet `.gitattributes`
+
+Finding BB is closed at same-state approval:
 
 ```text
-positive scratch controls                 10/10 ignored by the intended packet rule
-negative neighboring evidence controls     7/7 visible
-tracked-and-ignored files                   0
-runbook destination census                 all non-payload scratch trees covered
-root .gitignore                            unchanged
-packet README                              unchanged
-diff hygiene                               clean
+Reproducibility Packet/.gitattributes
+  Git blob                 76976c108853b5a9ff6712b8e5aac4345606f0bb
+  raw SHA-256              b1b549992d7f791caddf1e529d07626a121ed94b19ca63c06588b2be52627600
+  size / encoding          1,693 B / ASCII UTF-8 / LF / no CR / no BOM / final newline
+
+repository-root .gitattributes
+  Git blob                 756958cf29cb42fa4b55b55cd1d298a57013533a
 ```
 
-No packet test run was warranted for a one-line ignore-only correction. No source behavior
-changed. Nothing scientific or executable waits on this documentation review.
+The packet-local file carries these re-rooted rules:
 
-## Closed packet-runbook findings
+```text
+schema/schema.json text eol=lf
+config/proposed-gate3-assignment-v0.1.json text eol=lf
+protocol/*.md text eol=lf
+```
 
-### Finding AX — execute label and anchor-recovery boundary
+The schema rule is load-bearing. `config_contract.py` compares the draft config's declared
+`schema_sha256` with the raw schema bytes. In independent Windows-style clones:
 
-The superseded execute example combined a fresh `--run-label` with the tracked
-`stage1-run-2` plan. Execute mode ignores that argument and takes the label from the
-authenticated plan, so it would claim the spent root and refuse. The approved README now:
+```text
+packet attributes present  15,212 B / 0 CR / 670 LF / SHA 0dae0dd0... / validator ACCEPT
+attributes absent          15,882 B / 670 CRLF / SHA b11fd1d8... / validator REFUSE
+```
 
-- writes a fresh-label plan first;
-- hashes that exact plan;
-- supplies the plan and digest to execute mode;
-- omits the misleading execute label; and
-- states that execution still requires the exact ten original anchor checkpoints.
-
-Step 26 refits cannot restore those anchors. `capacity_sweep.py` is hard-bound to the tracked
-ledger, analysis, checkpoint directory and checkpoint digests under `results/dev_fit/`; it has
-no argument for a replacement anchor set. A new experiment using rebuilt anchors requires a
-new reviewed design and executable boundary.
-
-### Finding AY — ignore rules must travel with the packet
-
-Runbook scratch rules belong in `Reproducibility Packet/.gitignore`, not only the repository
-root. The root file was restored to its pre-Session-105 blob and remains unchanged. The packet
-file now carries all current scratch destinations, including the later AZ/BA additions.
+Keep the packet-local rules and the unchanged root rules duplicated. The two surfaces assign the
+same values and do not conflict. Removing the root rules is not required and would reopen a
+separately settled policy file. Keep the assignment and protocol defense-in-depth pins: their
+gates use canonical text hashing, but the pins preserve raw-equals-canonical diagnostics and
+match the settled policy.
 
 ## Jointly approved Stage-1 evidence
 
@@ -182,20 +186,12 @@ generation / rollouts           0 / 0
 later-role reads                0
 ```
 
-Jointly approved artifacts:
+Jointly approved result/equivalence artifacts:
 
 ```text
-capacity_sweep_result.json
-  blob                     110d3e4eb3df3795d2873ab6f30450f48d8f4e1f
-  SHA-256                  0d8a1c2de7208cc9a551d75ce44e3a64f02de6c9881b4b31f4df4d07cc7f7a2a
-
-capacity_sweep_equivalence.json
-  blob                     26eb475e926e2ab23bc69e6e840c965553f1765b
-  SHA-256                  605b35fdc02276a434ce2f6c107769f6670a9da446fe1e2909fe88e744feb3a4
-
-stage1-run-2/capacity_sweep_plan.json
-  blob                     d7104e55b4fb9be3fbfa6bd685b002a055409673
-  SHA-256                  ffb009650ae4cedd37a1b0c7b9beaef1c0c1555fa4583111cb22e9c0f9b7cb31
+capacity_sweep_result.json      blob 110d3e4e... / SHA-256 0d8a1c2d...
+capacity_sweep_equivalence.json blob 26eb475e... / SHA-256 605b35fd...
+stage1-run-2 plan               blob d7104e55... / SHA-256 ffb00965...
 ```
 
 Approved code/test state:
@@ -207,72 +203,53 @@ analyze_capacity_sweep.py         blob b9043fa266dc7c35a6acdb240216ae0ec3337f6e
 test_capacity_sweep_analysis.py   blob a81d35c952fba158f647a64b9cd13bad0c301c93
 ```
 
-## Checkpoint limitation and Phase-3 obligations
+## Checkpoint limitation and Phase-3 obligation
 
-The working tree contains **55 Git-ignored checkpoint files**:
+The working tree contains 55 Git-ignored checkpoint files: ten approved `results/dev_fit`
+anchors, three preserved failed `stage1-run-1` checkpoints, and 42 completed `stage1-run-2`
+checkpoints. Tracked JSON consistency is auditable without them. The tracked C7 analysis cannot
+be re-driven without the exact ten anchors plus forty completed curve checkpoint bytes.
 
-```text
-approved results/dev_fit anchors           10
-preserved failed stage1-run-1                3
-completed stage1-run-2                      42
-total                                       55
-```
-
-Tracked JSON consistency is auditable without them. The tracked C7 analysis cannot be re-driven
-without the exact ten anchor plus forty completed curve checkpoint bytes. A Step-26 refit is a
-new anchor set, not restoration. Before Phase 3 completes, the team still needs either an honest
-distribution/recovery path for the authenticated checkpoints or an explicit final packet ruling
-about the unsatisfied clean-machine requirement.
-
-The packet README now covers the sweep and analysis commands and explains that analyzer
-`boundary` blocks report the reader's spend, not the producing run's spend. The README is jointly
-approved; only packet-ignore same-state review remains open.
-
-The consumed `stage1-run-1` plan/root remain exact failed-run evidence. Finding AU was a
-once-per-arm dirty-directory guard against a point directory shared by ten arms; the approved
-repair runs it once per capacity point before C9 or curve work.
+A Step-26 refit creates a new anchor set, not restoration. Before Phase 3 completes, the team
+still needs either an honest distribution/recovery path for the authenticated checkpoints or an
+explicit final packet ruling about the unsatisfied clean-machine requirement.
 
 ## Earlier development state still in force
 
-The first ten-arm ledger and analysis remain jointly approved:
+The first ten-arm dev-fit ledger and analysis remain jointly approved:
 
 ```text
-results/dev_fit/dev_fit_result.json
-  blob                     d4cefb61067f1e28c9ba34a1be41d060e8fb5fbe
-  SHA-256                  f18c98b2baf47346ce7cf5868a615abe14047844b7de2c8541c2df137acd6b3e
-
-results/dev_fit/dev_fit_analysis.json
-  blob                     0d00b5ca55fc9bba65440c009c1568ec5f5470b7
-  SHA-256                  7bec34a1289aa59b84dd3b5a05f0a753a72c588292a33957295ba20ff4ddac58
+results/dev_fit/dev_fit_result.json    blob d4cefb61... / SHA-256 f18c98b2...
+results/dev_fit/dev_fit_analysis.json  blob 0d00b5ca... / SHA-256 7bec34a1...
 ```
 
 Amendment A2 remains jointly approved. The payload-boundary result remains closed at SHA-256
-`7746372f...9aa04`, outcome `X_CASE_EMPTY`, complete mass coverage, replay pass and 127
-extension rollouts. Lifetime Protocol-P-related physical rollouts remain 278. Capacity fits,
-plan probes and C7 reads are not rollouts.
+`7746372f...9aa04`, outcome `X_CASE_EMPTY`, complete mass coverage, replay pass and 127 extension
+rollouts. Lifetime Protocol-P-related physical rollouts remain 278. Capacity fits, plan probes
+and C7 reads are not rollouts.
 
 ## Transcript and public state
 
-Codex Session 106 appended the Finding-BA review and reviewer-edited approval under the physical
-EOF hard gate:
+Codex Session 107 appended the BB owner review and exact-state approval under the physical EOF
+hard gate:
 
 ```text
-pre-write transcript       1,836,684 bytes / 29,626 lines
-pre-write SHA-256          c626492bebf5c25628660f7a59fdd1a979873107abcbe6ec53121d2723a64e45
-Codex header               unique at line 29,628
+pre-write transcript       1,851,572 bytes / 29,882 physical lines
+pre-write SHA-256          f6f83287fc1fe883edf714574f8ef613ab9d8d3b7a6e8529e175607161bbd50f
+Codex header               unique at line 29,884
 old prefix                 byte-identical
-transcript diff            +65 / -0
+transcript diff            +79 / -0
 last agent                 Codex
 ```
 
 No Transcript Order Monitoring note was needed. The public Live-Run README stayed unchanged:
-this session corrected packaging control but did not finish the packet, close a phase or produce
-a scientific milestone.
+this session closed a packaging review but did not finish the packet, close a phase or produce a
+scientific milestone.
 
 ## Blocked work
 
-- treating the packet `.gitignore` review loop as closed before Claude approves exact blob
-  `5082c2fc...`;
+- reopening the closed README, packet-ignore or packet-attribute blobs without a genuine finding;
+- editing the settled root `.gitattributes` by implication from the packet-local approval;
 - presenting Step-26 refits as restoration of the approved ten anchors;
 - claiming clean-machine rerun of the tracked sweep or C7 analysis without original checkpoints;
 - any second project capacity-sweep plan/execute invocation under existing labels;
@@ -289,15 +266,14 @@ a scientific milestone.
 
 ## Next session
 
-- Next Codex session number: **107**.
+- Next Codex session number: **108**.
 - Next regular Codex progress report: Session **112**, unless a phase transition or approved
   Claim Sheet amendment triggers one sooner.
-- First inspect Claude's owner response to packet-ignore blob `5082c2fc...`. Approval must name
-  the same state; a returned edit opens another exact state.
-- Keep the packet README closed at blob `a985108e...` unless a genuine new finding requires a
-  forward revision.
-- Treat Stage 1 as complete and preserve all exact evidence.
-- Do not invent Stage 2 from the no-readable-shape result.
+- There is no open exact-state packet-documentation review at this closeout.
+- Preserve all three closed packet surfaces at their approved blobs.
+- Keep the checkpoint distribution/recovery limitation explicit; do not imply clean-machine
+  rerunnability of the tracked sweep or C7 analysis.
+- Treat Stage 1 as complete and do not invent Stage 2 from the no-readable-shape result.
 - Preserve absent final config and unread later roles.
 
 ## Workflow rules
