@@ -842,22 +842,38 @@ executable now refuses it with *"the authorized plan was written by a different 
 Do not delete it or `results/capacity_sweep/stage1-run-1/`; both are the preserved evidence for
 the defect described at the end of this step.
 
-### Execute mode — what it did, and what it costs
+### Execute mode — what it did, what it costs, and what a new label requires
 
 Execute mode is the expensive half. It claims a fresh run root, checks that the
 width-parameterized constructor reproduces the already-approved 32-channel network bit for bit
-(two equivalence arms), and then fits the forty new arms:
+(two equivalence arms), and then fits the forty new arms. The run label comes from the approved
+plan, not from a separate execute-mode argument. A genuinely new run therefore needs a new plan
+and that plan's own digest:
 
 ```powershell
 $env:PYTHONPATH = "scripts"
+$CAPACITY_RUN_LABEL = "stage1-reproduction"
+$CAPACITY_PLAN_DIR = "results\capacity_sweep_plan_new_run"
+.\.venv\Scripts\python.exe -m utils.capacity_sweep `
+  --mode plan `
+  --run-label $CAPACITY_RUN_LABEL `
+  --output-dir $CAPACITY_PLAN_DIR
+$CAPACITY_PLAN = Join-Path $CAPACITY_PLAN_DIR "capacity_sweep_plan.json"
+$CAPACITY_PLAN_SHA256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $CAPACITY_PLAN).Hash.ToLowerInvariant()
 .\.venv\Scripts\python.exe -m utils.capacity_sweep `
   --mode execute `
-  --run-label <a new, unused label> `
   --base-dir results\capacity_sweep `
   --data-root ..\data\gate3-base-dev-pilot-val-c1-s `
-  --approved-plan results\capacity_sweep\plans\stage1-run-2\capacity_sweep_plan.json `
-  --approved-plan-sha256 ffb009650ae4cedd37a1b0c7b9beaef1c0c1555fa4583111cb22e9c0f9b7cb31
+  --approved-plan $CAPACITY_PLAN `
+  --approved-plan-sha256 $CAPACITY_PLAN_SHA256
 ```
+
+This is a **conditional new-run command, not a clean-clone recovery procedure**. Before it can
+fit anything, the executable requires the exact ten original Step-26 checkpoint bytes under
+`results/dev_fit/` and authenticates them against the tracked ledger. A fresh clone does not
+contain those files, so it will fail closed at the equivalence gate. The command is useful on
+the recorded machine, or on a machine to which those exact authenticated checkpoint files have
+been transferred; it is not sufficient on the packet contents alone.
 
 The recorded run took **439.6 s** on the machine described in [`DATA.md`](DATA.md) and spent 42
 fits and 42 checkpoints with **zero simulator generation runs and zero physical rollouts**. It
@@ -872,7 +888,7 @@ canonical SHA-256 `0d8a1c2de7208cc9a551d75ce44e3a64f02de6c9881b4b31f4df4d07cc7f7
 refused rather than silently overwritten. That is deliberate: a second execution is a second
 measurement and has to be visible as one.
 
-### The 55 checkpoints are not in this repository — the honest recovery path
+### The 55 original checkpoints are not in this repository — the honest boundary
 
 Every `.pt` file this project has produced is git-ignored, and none is tracked. There are 55 of
 them on the recorded machine:
@@ -893,15 +909,21 @@ What that means for a clean machine, stated plainly rather than waved at:
 - **The tracked JSON records are the durable evidence.** The plan, the terminal run record and
   the analysis in Step 29 are all committed, and each is bound to the others by digest, so
   their mutual consistency can be re-checked on any machine with no checkpoint present.
-- **Rebuilding the checkpoints is possible, but it is a new run rather than a restoration.**
-  Step 26 rebuilds the ten anchors; execute mode above rebuilds the other 42 at a new label.
-  The recorded run's two equivalence arms are the evidence that this rebuild path reproduces
-  the approved 32-channel network bit for bit *on the recorded machine*. Cross-machine bitwise
-  agreement is **not** established here, so a rebuild on different hardware should be expected
-  to produce different bytes and therefore a different record.
+- **Step 26 can fit a new set of ten anchors, but it does not restore the approved anchors.**
+  Its reproduction command writes under `results/dev_fit_reproduced/`. The capacity-sweep
+  executable is deliberately hard-bound to the tracked ledger and analysis under
+  `results/dev_fit/`, and to the exact checkpoint digests named there; it has no argument that
+  can substitute a newly fitted anchor set. Copying different bytes into the approved directory
+  is refused rather than treated as recovery.
+- **A new capacity experiment from rebuilt anchors needs a new reviewed boundary.** It would
+  need an executable and plan that authenticate the new anchor ledger and analysis. That design
+  does not exist in this packet. The recorded run's two equivalence arms establish bitwise
+  reproduction of the approved 32-channel network *on the recorded machine* only; they are not
+  a cross-machine restoration claim.
 - **Step 29 cannot be re-driven against the tracked analysis on a machine that lacks these
-  checkpoints**, because the analyzer reloads and re-scores all fifty of them from disk. That
-  is a real, disclosed limitation of this packet, not something the runbook assumes away.
+  checkpoints**, because the analyzer reloads and re-scores the ten approved anchors and forty
+  completed curve checkpoints from disk. That is a real, disclosed limitation of this packet,
+  not something the runbook assumes away.
 
 ### Why there is a failed run in the tree
 
@@ -917,7 +939,9 @@ because it is the evidence that diagnosis rests on.
 The read is a separate, **read-only** script. It imports the pure functions that define the
 shape classification from the executable rather than restating them, re-authenticates every
 input by digest, reloads and re-scores all fifty checkpoints, and only then derives the
-descriptive summary:
+descriptive summary. The exact command is copy-paste complete below, but it succeeds only when
+the ten approved anchor and forty completed curve checkpoint files are present with their
+recorded digests:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\analyze_capacity_sweep.py `
@@ -928,7 +952,7 @@ descriptive summary:
   --approved-anchor-analysis results\dev_fit\dev_fit_analysis.json `
   --run-root results\capacity_sweep\stage1-run-2 `
   --anchor-checkpoint-dir results\dev_fit `
-  --output-dir <a new, empty directory>
+  --output-dir results\capacity_sweep_analysis_reproduced
 ```
 
 All eight arguments are required and none has a default; in particular the result's digest is
