@@ -368,3 +368,79 @@ times running.
 — Claude
 
 ---
+
+**Claude (Session 108, 2026-08-10 08:17 PDT):**
+
+**No order violation this session, and no timestamp skew. But the rebuilt writer had a real
+defect and measurement is what found it, so that is what this entry is for.**
+
+My append to the Phase-2 transcript landed at the physical tail with the prior bytes
+re-asserted as an exact prefix:
+
+```text
+prior 1,855,423 B  sha256 1dbcff04…f9f106  ->  1,864,771 B  (+9,348)
+prefix re-asserted after the write, digest identical
+header built inside the writer at the write; declared-stamp gate not exercised (no stamp passed)
+header unique; my header physically last
+separator measured from the tail (b'ex\n\n---\n') rather than assumed
+```
+
+**The writer was gone a fourth time and the gate list rebuilt it again — but weaker, in a
+place the list does not describe.** I wrote gate 5 ("my header must be the LAST header in the
+file") with the recognizer
+
+```text
+^\*\*(Claude|Codex|Randy|Human) \(Session \d+, .*\):\*\*
+```
+
+which reports **215** headers in this transcript. My own Session-107 entry recorded **254**.
+I went to reconcile the two figures rather than assume one was stale, and the difference is
+not drift in the file — it is the recognizer. A permissive pattern,
+`^\*\*[A-Za-z]+ \(Session [^)]*\):\*\*`, finds **255**. The 40 headers the strict one cannot
+see all carry a qualifier where it demands a comma:
+
+```text
+  **Codex (Session 7 tail addendum, 2026-07-17 15:41 PDT):**
+  **Codex (Session 12 tail addendum, 2026-07-20 13:43 PDT):**
+  **Codex (Session 16 pilot handoff, 2026-07-21 17:37 PDT):**
+```
+
+*(Those three are indented by two spaces on purpose. Gate 4 refuses a body containing a turn
+header and cannot tell a quoted one inside a fence from a real one — it refused this entry on
+its first attempt. The right response is to render the quotation so it is not at column 0, not
+to weaken the gate. A control that has to be relaxed to let a document about the control
+through is a control that stops holding the week someone is in a hurry.)*
+
+**Why that is a defect and not a cosmetic count.** Gate 5 exists to catch a turn appended
+below mine. A recognizer that cannot see 40 of this file's real header forms would pass gate 5
+while one of those forms sat underneath my turn — and it would pass *quietly*, because the
+gate prints a number and the number would look fine. I verified the current state under the
+permissive pattern: its last match is my Session-108 header at the same byte offset the strict
+one reports, so **this session's gate 5 result is sound**. The exposure was to a future append,
+not to this one. The writer is corrected and the recognizer is now written into the seven-gate
+list in my summary, with the measured counts and the reason, so the next rebuild inherits it.
+
+**The lesson, which is the same one this block has now taught three times in a row and each
+time somewhere new.** After Session 104 I recorded that a rebuild from the list came back
+weaker than what it replaced, and the fix was to write improvements back into the block that
+owns the lesson. Session 107 confirmed that worked — the rebuild was faithful. This session it
+came back weaker again, and the reason is one level down: **the list described the gates but
+not the recognizer the gates are applied through.** A control is its predicate as much as its
+rule, and a list that carries only the rule regenerates a control whose accept side nobody
+specified. The list now carries both.
+
+The thing that made it visible is worth naming separately, because it is cheap and it is
+reusable: **two independent counts of the same object disagreed, and I reconciled them instead
+of picking one.** The strict count was not wrong-looking. It was only wrong *against another
+number*, and the other number was in a file I had written myself six hours earlier.
+
+I am still not moving the writer into the packet. It is session tooling, the packet must stay
+a thing a stranger can run, and the durable artifact remains the list.
+
+**Do not extend a streak number from memory, and do not compare a header count across
+rebuilds** — it is a property of the recognizer, not of the transcript. This project has had a
+remembered count wrong five times running.
+
+— Claude
+
+---
