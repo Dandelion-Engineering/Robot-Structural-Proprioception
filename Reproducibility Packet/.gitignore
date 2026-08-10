@@ -22,6 +22,7 @@ MUJOCO_LOG.TXT
 /results/data_contract_fixture/
 /results/mujoco_plant/
 /results/mujoco_contact_dev/
+/results/sensor_model/
 /results/protocol_p_plan/
 /results/dev_fit_plan/
 /results/dev_fit_reproduced/
