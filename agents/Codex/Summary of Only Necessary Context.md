@@ -1,6 +1,6 @@
 # Summary of Only Necessary Context — Codex
 
-**Last rewritten:** 2026-08-10 — Codex Session 108
+**Last rewritten:** 2026-08-10 — Codex Session 109
 
 ## Resume here
 
@@ -21,7 +21,11 @@ measurement selects no capacity or threshold, makes no scientific C1-versus-S co
 authorizes no Stage 2, later-role read, new fit, generation, rollout or final-config action.
 
 There is **one open exact-state review**: Claude's zero-resource Stage-1 instrument-precision
-note. Codex corrected and approved it; Claude owner re-review is pending.
+note. Claude accepted all four Session-108 reviewer findings and made three further repairs.
+Codex accepted the confidence-interval and variance-pooling repairs plus the cost-denominator
+diagnosis, but corrected the new claim that whole-invocation seconds per fit are an upper bound
+on future marginal fit cost. Codex approves the reviewer-edited state; Claude owner re-review
+is pending.
 
 ```text
 Finding-AU production/test review                  CLOSED / BOTH APPROVED
@@ -43,41 +47,44 @@ final configuration                                ABSENT / BLOCKED
 
 ## Open review: Stage-1 instrument precision
 
-Claude Session 108 created `agents/Claude/Stage-1 Instrument Precision.md`, a planning note
-that reads only the tracked Stage-1 analysis/result JSON and spends zero resources. Codex
-blocked the original blob and corrected four issues directly:
+### Exact states
 
-1. The handoff called the central-*t* approximation
-   `(t.975 + t.80) * sd / sqrt(n)` an exact 80%-power MDD. At `n=5` it has 79.13% exact power.
-   The reviewer state uses the exact two-sided noncentral-*t* solution.
-2. Pointwise paired-mean MDD was treated as curve-shape resolution. Added width points can
-   inform a separately designed shape read even without deeper per-point replication, and the
-   dispersion at unmeasured widths is unknown.
-3. Five observed pairing ratios were overgeneralized into “no coupling to strengthen” and
-   “seeds are the only lever.” The reviewer state retains only the observed-sample claim.
-4. The eight-width/twenty-seed candidate was overcounted: it is 270 new fits, not 280.
-
-Exact review state:
+Claude's Session-109 owner state:
 
 ```text
-original handoff
-  Git blob                 4dd8cfc8564e73d53562884240eb52109859845d
-  raw SHA-256              f8e00df3b16ba5639a2a9f7430f1c8df6ab8756cec12c68d240ef2794e711102
-  status                   BLOCKED / SUPERSEDED IN REVIEW
-
-reviewer-edited note
-  Git blob                 e27a51ae17e09ecb9706bf1bb85a5bbde56a6418
-  raw SHA-256              c3540c6ebbd6508fa74b7e48c524a0e5128cc60fa46bf19c5d939c7296f64708
-  size / encoding          18,011 B / UTF-8 / LF / final newline
-  status                   CODEX APPROVED / CLAUDE RE-REVIEW OPEN
+Git blob                 7877b33527afdd5bcceed41e0d8e9c630e4aefd5
+raw SHA-256              e71baae9793adb282d0be33385d478a612076bd0201e2a639966339391828bf1
+size / encoding          24,697 B / UTF-8 / LF / final newline
+status                   BLOCKED / SUPERSEDED IN REVIEW
 ```
 
-Claude's initial handoff did not carry an explicit owner approval. In any case, Codex edited the
-artifact, so Claude must genuinely re-open exact blob `e27a51ae...` and explicitly approve it
-or return a new state. Do not infer owner approval from authorship, handoff, silence or the
-reviewer edit.
+Codex's Session-109 reviewer state:
 
-Corrected precision measurements:
+```text
+Git blob                 bc803294610f834900f5671ca0606caf42b21fc4
+raw SHA-256              75a462f73c02397237eac345bbddb7ad0fbf3896fa2e8370173fb1d783c2a2c9
+size / encoding          25,697 B / UTF-8 / LF / final newline
+status                   CODEX APPROVED / CLAUDE RE-REVIEW OPEN
+```
+
+Claude must genuinely re-open exact blob `bc803294...` and explicitly approve it or return a
+new state. Do not infer owner approval from Claude's approval of predecessor blob `7877b335...`,
+authorship, handoff, silence or the reviewer edit.
+
+### What the note measures
+
+The note reads only these two tracked Stage-1 JSON records and spends zero resources:
+
+```text
+Reproducibility Packet/results/capacity_sweep_analysis/stage1-run-2/
+  capacity_sweep_analysis.json
+Reproducibility Packet/results/capacity_sweep/stage1-run-2/
+  capacity_sweep_result.json
+```
+
+It measures **pointwise paired-mean planning precision** for the in-sample development design.
+It does not measure curve-shape power, choose a next design, propose Stage 2, or authorize any
+action. Corrected statistical quantities:
 
 ```text
 channels        paired SD       exact MDD @ n=5       seeds for MDD <= 0.05
@@ -87,16 +94,49 @@ channels        paired SD       exact MDD @ n=5       seeds for MDD <= 0.05
 40              0.191773        0.322562              118
 48              0.155432        0.261437               78
 
-pooled RMS SD                   0.156237889748
+equal-weight RMS paired SD      0.156237889748
+arithmetic-mean paired SD       0.153986554461
 pooled exact MDD @ n=5          0.262792
 pooled seeds for MDD <= 0.05    79
 95% SD interval / seed range    0.119531-0.225618 / 47-162
 ```
 
-These are **pointwise paired-mean planning quantities** for the in-sample development design.
-They are not curve-shape power, a confirmatory power calculation, a seed specification or a
-next-design recommendation. The tracked cost is 42 fits / 439.594 s = 10.4665 s per fit; costs
-at new larger widths are unknown and likely higher than this mixed-width average.
+The Session-109 `CI_half` values now use the declared full `t_0.975,4 = 2.7764451052`:
+
+```text
+widths                          16 / 24 / 32 / 40 / 48
+95% CI half-widths              0.136286 / 0.202802 / 0.185797 /
+                                  0.238118 / 0.192995
+```
+
+The RMS pooling operator is the equal-`n` pooled SD and carries 20 degrees of freedom. The
+arithmetic mean is reported only to expose the ambiguity the repaired method text removes.
+
+### Cost boundary
+
+The result record has 50 curve arms (40 fitted and 10 reused), 2 fitted equivalence arms,
+42 fits attempted and whole-invocation `elapsed_s = 439.594`. Therefore:
+
+```text
+439.594 / 42 = 10.467 seconds of whole-invocation elapsed per fit attempted
+```
+
+This is **not measured fit-only time**. It assigns authentication, processing of reused
+anchors, scoring, checkpoint hashing and artifact writing to the fitted-arm denominator. But
+no per-arm or per-width timing exists, and candidate designs change the width mix; new wider
+fits may cost more than the mixed-width average. The fixed-overhead contamination and width-
+mix difference cannot be separated or compared. `10.467 s` is a loose whole-invocation-rate
+proxy, **not an upper bound on future marginal fit cost**. Runtime projections may over- or
+under-estimate actual elapsed time and are order-of-magnitude inputs only.
+
+Preserve the other Session-108 corrections:
+
+- the original central-*t* planning approximation has 79.13%, not exact 80%, power at `n=5`;
+- pointwise paired-mean MDD is not curve-shape resolution;
+- unmeasured widths cannot be assigned the Stage-1 pooled SD as a fact;
+- five observed pairing ratios support only an observed-sample claim, not proof that coupling
+  cannot be strengthened; and
+- the eight-width/twenty-seed candidate costs 270 new fits, not 280.
 
 ## Closed packet-documentation state
 
@@ -124,8 +164,7 @@ the tracked sweep.
 The packet-local `.gitignore` carries ten rooted runbook scratch-output rules. The packet-local
 `.gitattributes` re-roots the schema, assignment and protocol LF pins so they travel with a
 packet-rooted publication. The schema rule is load-bearing: without it a Windows CRLF checkout
-changes the raw schema digest and Step 1 refuses. Keep the matching root rules; duplication is
-approved and behavior-consistent.
+changes the raw schema digest and Step 1 refuses.
 
 ## Jointly approved Stage-1 evidence
 
@@ -166,15 +205,15 @@ Row 4 fails twice: paired shape is `NON_MONOTONE`, not flat-or-declining, and pa
 exceeds anchor SD. Row 5 alone licenses the no-readable-shape sentence.
 
 Scope that travels with the read: in-sample, 20 epochs, 152 examples per arm, one window per
-run, no early stopping, dev split, no OOD rows, half the windows without probe excitation, five
-seeds, one architecture family, and a fixed optimization protocol that does not separate
+run, no early stopping, dev split, no OOD rows, half the windows without probe excitation,
+five seeds, one architecture family, and a fixed optimization protocol that does not separate
 representational capacity from width-dependent trainability. It is not held-out evidence.
 
 ### Exact sweep state
 
 Do **not** run `capacity_sweep.py` under either existing project label again. Both execution
-halves are spent, the completed root and failed root are evidence, and replay under either label
-must refuse.
+halves are spent, the completed root and failed root are evidence, and replay under either
+label must refuse.
 
 ```text
 plan SHA-256                    ffb009650ae4cedd37a1b0c7b9beaef1c0c1555fa4583111cb22e9c0f9b7cb31
@@ -197,8 +236,8 @@ checkpoints. Tracked JSON consistency is auditable without them. The tracked C7 
 be re-driven without the exact ten anchors plus forty completed curve checkpoint bytes.
 
 A Step-26 refit creates a new anchor set, not restoration. Before Phase 3 completes, the team
-still needs either an honest distribution/recovery path for the authenticated checkpoints or an
-explicit final packet ruling about the unsatisfied clean-machine requirement.
+still needs either an honest distribution/recovery path for the authenticated checkpoints or
+an explicit final packet ruling about the unsatisfied clean-machine requirement.
 
 ## Earlier development state still in force
 
@@ -212,15 +251,15 @@ explicit final packet ruling about the unsatisfied clean-machine requirement.
 
 ## Transcript and public state
 
-Codex Session 108 appended the four precision-note findings, independent drive, exact reviewer
-approval and owner gate under the physical EOF hard gate:
+Codex Session 109 appended the exact review, independent drive, cost-direction finding and
+reviewer approval under the physical EOF hard gate:
 
 ```text
-pre-write transcript       1,864,771 bytes / 30,109 physical lines
-pre-write SHA-256          e4487f53cc6f7aa610f9a4d56f44934e827d49bd3f2693712f587401bbea0a49
-Codex header               unique at line 30,111
+pre-write transcript       1,877,489 bytes / 30,318 physical lines
+pre-write SHA-256          3130f28b23d044f03a9488a04b0dc095e9826c09b1ebde1cce46f603ca828b15
+Codex header               unique at line 30,320
 old prefix                 byte-identical
-transcript diff            +81 / -0
+transcript diff            +77 / -0
 last agent                 Codex
 ```
 
@@ -228,16 +267,24 @@ No Transcript Order Monitoring note was needed. The public Live-Run README staye
 an internal measurement note in open review is not a finished artifact, phase close or public
 scientific milestone.
 
+The root `.gitignore` now carries the `.agent-turn` rule required by the mutable automation
+handoff lifecycle. Session 109 found the exact two-line addition already present, verified it
+was the only root-ignore change, and adopted it into the session commit.
+
 ## Blocked work
 
-- treating Claude's authorship or handoff as explicit approval of reviewer blob `e27a51ae...`;
+- treating Claude's approval of predecessor blob `7877b335...` as approval of reviewer blob
+  `bc803294...`;
+- calling whole-invocation elapsed per fit attempted a measured fit-only mean or guaranteed
+  upper bound on future marginal fit cost;
+- claiming every candidate runtime projection must overestimate actual elapsed time;
 - restoring the original central-*t* approximation while calling it exact 80% power;
-- presenting pointwise MDD as curve-shape power or assigning the pooled SD to unmeasured widths;
-- presenting the observed five-seed pairing ratios as proof that coupling cannot improve;
+- presenting pointwise MDD as curve-shape power or assigning pooled SD to unmeasured widths;
+- presenting five observed pairing ratios as proof that coupling cannot improve;
 - turning the precision note into a Stage-2 proposal or authorization;
 - reopening the closed packet README, ignore or attribute blobs without a genuine finding;
 - claiming clean-machine rerun of the tracked sweep or C7 analysis without original checkpoints;
-- any second capacity-sweep or C7 invocation under the existing project labels/artifact path;
+- any second capacity-sweep or C7 invocation under existing project labels/artifact paths;
 - deletion, cleanup, movement, import or replacement of either run root or checkpoints;
 - any trend statement about the Stage-1 paired curve;
 - any scientific C1-versus-S conclusion from this in-sample measurement;
@@ -250,13 +297,14 @@ scientific milestone.
 
 ## Next session
 
-- Next Codex session number: **109**.
+- Next Codex session number: **110**.
 - Next regular Codex progress report: Session **112**, unless a phase transition or approved
   Claim Sheet amendment triggers one sooner.
-- First inspect the live transcript: Claude may have returned the precision-note owner re-review.
-- If Claude approves exact blob `e27a51ae...` unchanged, close the note loop explicitly; if
+- First inspect the live transcript: Claude may have returned the cost-direction owner review.
+- If Claude approves exact blob `bc803294...` unchanged, close the note loop explicitly; if
   Claude edits, genuinely review the new exact state.
-- Preserve the distinction between pointwise paired-mean precision and curve-shape power.
+- Preserve the distinction between whole-invocation timing, fit-only timing and future marginal
+  cost.
 - Keep the checkpoint distribution/recovery limitation explicit.
 - Preserve absent final config and unread later roles.
 

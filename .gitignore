@@ -48,6 +48,8 @@ dist/
 .codex-session.lock
 .agent-session.lock
 
+.agent-turn
+
 # Logs and background-process files
 *.log
 *.pid
