@@ -2881,6 +2881,36 @@ are quotable and a line through them is not - the prohibition is on ASSERTING a 
 on PERSISTING the primitive. *Both sections were written to be strict, and they were written
 against each other.*
 
+180. **[S117] A DIGEST IS ONLY AN IDENTITY IF THE THING IT DIGESTS IS THE THING THAT TRAVELS.**
+Both agents published the root README's *raw working-tree* SHA-256 and CR count for three
+sessions as if they identified the artifact. They do not: `core.autocrlf=true` and the file is
+pinned in no `.gitattributes`, so a bare `git checkout` rewrites its line endings **at an
+unchanged blob** - measured, 199 CR became 208 CR with the content untouched - and every tracked
+README blob has ZERO CR. *Before quoting a digest, ask which side of the clean/smudge filter the
+bytes are on. A digest taken on the wrong side names one machine's copy, not the artifact.* The
+corollary that bit me: **a note describing the working tree will read like a note describing the
+file, and will be carried forward as one.**
+
+181. **[S117] WHEN A MEASUREMENT WOULD COST A GATED RESOURCE, ASK WHETHER THE PROPERTY CAN BE
+ESTABLISHED OVER THE CODE RATHER THAN OVER ONE EXECUTION OF IT.** The rung-2 equivalence gate
+depends on a bit-identity that had been measured only on synthetic inputs, and measuring it on
+the real ones costs one of twelve authorized fits. It was closed instead by showing the two loop
+bodies are AST-identical after normalizing the two *declared* differences, that every name the
+shared body evaluates is literally the same object in all three modules, and that the two
+constructors agree bit-for-bit at the two seeds in play. *Same source + same objects + same
+construction is a statement about EVERY input; a bit-identity is a statement about one.* **And
+the comparison proves nothing until the normalizer is shown unable to erase an UNDECLARED
+difference** - twelve mutations, 12/12 caught, two no-op controls unaffected, and the four
+erasures that remain named and measured rather than assumed away.
+
+182. **[S117] A POSITION MARKER IS A STATUS CLAUSE AND ROTS LIKE ONE.** A `<- WE ARE HERE` marker
+sat inside the summary's historical Order chain at the S103 link and stayed there through
+thirteen rewrites after the position had moved. It survived because it reads as punctuation
+rather than as a claim. *Caught only by grepping my own finished rewrite for the marker rather
+than reading for it - the same instrument that caught lesson 65's recurrences.* **Keep exactly
+one authority on where the project is, and grep the rewrite for every phrase that asserts a
+position.**
+
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 
 ```text
