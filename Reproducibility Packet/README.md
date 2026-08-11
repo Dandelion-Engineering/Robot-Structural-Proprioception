@@ -888,9 +888,9 @@ canonical SHA-256 `0d8a1c2de7208cc9a551d75ce44e3a64f02de6c9881b4b31f4df4d07cc7f7
 refused rather than silently overwritten. That is deliberate: a second execution is a second
 measurement and has to be visible as one.
 
-### The 55 original checkpoints are not in this repository — the honest boundary
+### The 67 original checkpoints are not in this repository — the honest boundary
 
-Every `.pt` file this project has produced is git-ignored, and none is tracked. There are 55 of
+Every `.pt` file this project has produced is git-ignored, and none is tracked. There are 67 of
 them on the recorded machine:
 
 | where | count | produced by |
@@ -899,6 +899,8 @@ them on the recorded machine:
 | `results/capacity_sweep/stage1-run-2/channels_{016,024,040,048}/` | 40 | Step 28 execute mode |
 | `results/capacity_sweep/stage1-run-2/_equivalence/` | 2 | Step 28's equivalence gate |
 | `results/capacity_sweep/stage1-run-1/` | 3 | the failed first run, preserved as evidence |
+| `results/rung2_escalation/rung2-run-1/` | 10 | Step 30 execute mode (the rung-2 arms) |
+| `results/rung2_escalation/rung2-run-1/_equivalence/` | 2 | Step 30's equivalence gate |
 
 There is no `channels_032/` directory in the completed run, and that is correct rather than
 missing: the ten 32-channel arms were **reused** from Step 26 instead of refitted, which is why
@@ -924,6 +926,9 @@ What that means for a clean machine, stated plainly rather than waved at:
   checkpoints**, because the analyzer reloads and re-scores the ten approved anchors and forty
   completed curve checkpoints from disk. That is a real, disclosed limitation of this packet,
   not something the runbook assumes away.
+- **Step 31 has the same limitation for the same reason.** This table is the packet-wide
+  checkpoint boundary rather than a Step-28 detail; it is written here because Step 28 is where
+  the question first arises, and Steps 30 and 31 inherit it unchanged.
 
 ### Why there is a failed run in the tree
 
@@ -1015,6 +1020,172 @@ no new seed count, no architecture change and no later-role read; each of those 
 decision with its own review. The 32-channel result reported in Step 27 is untouched by it and
 stands exactly as it did.
 
+## Step 30 — Reproduce the rung-2 escalation module, plan and completed run
+
+Slot 9's capacity ladder has a second rung, and Step 30 is the run that put a fit on it. The
+architecture is a different *kind* of network rather than a wider copy of the first: a strided
+convolutional stem feeding a two-layer GRU and a single-head temporal attention pool, built by
+[`scripts/utils/attribution_net_rung2.py`](scripts/utils/attribution_net_rung2.py) at **219,018
+parameters** with a **stem receptive field of 31 samples**. Rung 1 is 39,594 parameters with a
+1,023-sample receptive field, so the two rungs differ in capacity and in temporal reach at once.
+That is a deliberate property of the frozen design, not an accident, and it is the first reason
+nothing here compares the two rungs as points on a curve.
+
+Everything the run is permitted to do is fixed in advance by
+[`protocol/rung2-escalation-v0.1.md`](protocol/rung2-escalation-v0.1.md), SHA-256
+`9a154f902d7a98dcaa3e8bd34109e2ea6c4f29ba08c86a4ad301bfd62e69bf1f`. The executable embeds that
+digest, so editing the design in place turns plan mode red rather than silently authorizing a
+different experiment.
+
+Plan mode is free and writes no checkpoint:
+
+```powershell
+$env:PYTHONPATH = "scripts"
+.\.venv\Scripts\python.exe -m utils.rung2_escalation `
+  --mode plan `
+  --run-label rung2-reproduction `
+  --output-dir results\rung2_escalation_plan_new_run
+```
+
+Execute mode is the expensive half. It claims a fresh run root bound to
+`<base-dir>/<run-label>/`, refits the two approved rung-1 checkpoints to prove the fitting loop
+still reproduces them bit for bit, and only then fits the ten rung-2 arms:
+
+```powershell
+$env:PYTHONPATH = "scripts"
+$RUNG2_PLAN = "results\rung2_escalation_plan_new_run\rung2_escalation_plan.json"
+$RUNG2_PLAN_SHA256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $RUNG2_PLAN).Hash.ToLowerInvariant()
+.\.venv\Scripts\python.exe -m utils.rung2_escalation `
+  --mode execute `
+  --base-dir results\rung2_escalation `
+  --approved-plan $RUNG2_PLAN `
+  --approved-plan-sha256 $RUNG2_PLAN_SHA256 `
+  --data-root ..\data\gate3-base-dev-pilot-val-c1-s
+```
+
+The same honest boundary as Step 28 applies, for the same reason: the equivalence gate
+authenticates the ten original `results/dev_fit/` checkpoint files against the tracked ledger,
+and a fresh clone does not contain them, so this command fails closed on the packet contents
+alone. The run label must be new — the run root is claimed atomically and a spent label is
+refused rather than overwritten.
+
+The recorded run executed once, in one invocation, and its tracked records are:
+
+```text
+results/rung2_escalation/plans/rung2-run-1/rung2_escalation_plan.json
+  canonical == raw SHA-256  b51b0009e25cbd4816ea3eabed033cb1579780dd468c78e0a21e8a1e78941040
+results/rung2_escalation/rung2-run-1/rung2_escalation_result.json
+  canonical == raw SHA-256  9d94b03ee5825b15c3e09d612a9ebdfdcddb959d068ea35da899dbb35ae996ed
+  33,038 bytes, exit X_RUNG2_OK
+results/rung2_escalation/rung2-run-1/_equivalence/rung2_escalation_equivalence.json
+  canonical == raw SHA-256  ddcb5fedeafffda5ebf19f6b973b410f95801c407d9af9302a8ecf7268b4e936
+  6,261 bytes, both equivalence arms PASS
+```
+
+It spent **12 fits and 12 checkpoints — two equivalence arms plus ten rung-2 arms — with zero
+simulator generation runs, zero physical rollouts and zero non-development reads**, and it read
+exactly the 304 delivered development rows (152 C1 + 152 S). It took **1,274.6 s** on the
+machine described in [`DATA.md`](DATA.md).
+
+That runtime is worth stating next to Step 28's, because it is a result in its own right and an
+inconvenient one. Rung 2 carries **5.5× rung 1's parameters** but costs roughly **12× per
+optimizer step**: a GRU's timesteps are sequential and do not parallelize across a CPU the way a
+dilated convolution stack does. On the hardware this project actually has, the cheaper-looking
+axis of the ladder is not the cheaper axis to climb.
+
+## Step 31 — Read the completed rung-2 run against its pre-registered interpretation
+
+The read is a separate, **read-only** script that fits nothing. It re-authenticates every input
+by digest, reloads and re-scores all twelve checkpoints, requires each re-scored value to equal
+the persisted one exactly, and only then derives the descriptive summary. All nine arguments are
+required and none has a default:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\analyze_rung2_escalation.py `
+  --data-root ..\data\gate3-base-dev-pilot-val-c1-s `
+  --run-result results\rung2_escalation\rung2-run-1\rung2_escalation_result.json `
+  --run-result-sha256 9d94b03ee5825b15c3e09d612a9ebdfdcddb959d068ea35da899dbb35ae996ed `
+  --equivalence-artifact results\rung2_escalation\rung2-run-1\_equivalence\rung2_escalation_equivalence.json `
+  --approved-plan results\rung2_escalation\plans\rung2-run-1\rung2_escalation_plan.json `
+  --approved-fit-ledger results\dev_fit\dev_fit_result.json `
+  --approved-anchor-analysis results\dev_fit\dev_fit_analysis.json `
+  --run-root results\rung2_escalation\rung2-run-1 `
+  --output-dir results\rung2_escalation_analysis_reproduced
+```
+
+The result's digest is supplied at the invocation rather than read from the result, so the run
+record and the plan cannot end up authenticating only each other. The writer is an **exclusive
+create** and refuses to overwrite an existing analysis, so reproducing this step needs a fresh
+output directory. The tracked reference is
+[`results/rung2_escalation_analysis/rung2-run-1/rung2_escalation_analysis.json`](results/rung2_escalation_analysis/rung2-run-1/rung2_escalation_analysis.json),
+canonical == raw SHA-256
+`604d72724b4cf11a97ce0af836ecef1163442e9ff7e6423aa2fd0fad9556951c`, 40,270 bytes, written by
+exactly one invocation and reviewed independently by both agents against those exact bytes.
+
+### What may be said about the record, and what may not
+
+The frozen design contains an **ordered** status table and a sign table, both written before any
+of these arms existed. The status table is read top to bottom and exactly one row matches; the
+sign table applies only after the successful status row. Applied to this record, the two
+sentences the design licenses are, in its own words:
+
+> Slot 9's rung 2 is built and fitted; the ladder has more than one rung on it, and the
+> development record contains one rung-2 fit at five seeds under the approved protocol.
+
+> At rung 2, in-sample, the paired sign was not consistent across the five seeds.
+
+The paired macro-F1 signs behind the second sentence are **two negative, one zero and two
+positive** across seeds 0–4. Attaching *because*, *so*, *therefore*, *which shows*,
+*capacity-bound*, *resolves* or *confirms* to either sentence is explicitly forbidden by the
+design, and the two sentences do not become evidence by being placed next to each other.
+
+The artifact also persists a `rung2_minus_rung1` block. **No row of the interpretation table
+licenses any sentence about it.** Two rungs are two points; no trend, slope or direction may be
+asserted across them, and this runbook therefore names the block and stops, rather than printing
+figures whose only use would be the comparison the design forbids. A reader who wants them can
+open the tracked artifact, which is exactly why it is tracked.
+
+### The part a reader must not be allowed to miss
+
+The status sentence above says the objective-reduction check passed. That check is
+**deliberately weak**, and the frozen design says so in writing, before any of this ran: the
+training objective includes a severity Gaussian-NLL term that can drive the total down without
+classification improving, so `OBJECTIVE_REDUCED` is explicitly *not* a learning signal. What the
+record contains is the case that warning describes.
+
+Every one of the ten rung-2 arms scores **F1 = 0.000000 on `healthy` and 0.000000 on
+`structure`**. Four of them — C1 seeds 0 and 4, S seeds 0 and 3 — sit exactly at the artifact's
+own recorded majority-class baseline of accuracy `0.631579` and macro-F1 `0.193548`, which is
+what answering `sensor` to all 152 development examples produces on the 8 / 32 / 96 / 16
+healthy / actuator / sensor / structure census. The other six score a non-zero `actuator` F1 and
+nothing else. The ten rung-1 anchors carried in the same artifact each have four non-zero
+per-class values.
+
+Three things follow, and no more than three:
+
+- **The zeros are on both sides, not merely equal.** Where the paired per-class comparison shows
+  a tie, it is two zeros, and the macro-F1 tie at seed 0 is both arms sitting at the majority
+  value. A sign count over those cells is arithmetically correct and descriptively hollow.
+- **This is not a recording error.** The reader re-scored all twelve checkpoints from
+  authenticated bytes and required *exact* equality with the persisted accuracy, macro-F1 and
+  per-class F1. The read reached `X_ANALYSIS_OK`, so that equality held on every arm.
+- **This is not the failure path either.** The design's failure branches are an equivalence
+  failure, an incomplete run and an objective-check failure. None occurred. Reading the failure
+  path as "or anything else that looks disappointing" would make writing it down in advance
+  meaningless.
+
+No cause is attached here — not capacity, not protocol, not optimization, not data. The
+observation is direct persisted record content, placed next to the licensed sentences so that
+neither can be read without it.
+
+### What this step does not do
+
+It selects no rung, no capacity and no threshold, establishes nothing about generalization, and
+says nothing about C1 versus S. It reads only the development split. It authorizes no retry, no
+wider ladder, no architecture change and no later-role read. Both the run and the read were
+single, separately authorized invocations, and both authorizations are spent; a further run
+needs a new label, a new plan and a fresh joint authorization.
+
 ## Data
 
 No external dataset is required. The simulator generates every value used by the spike. See [`DATA.md`](DATA.md) for the data and licensing boundary.
@@ -1048,3 +1219,5 @@ On the current bounded task, the structural suite has strong development informa
 The proposed different-task amendment was withdrawn before approval. The existing Claim Sheet remains in force, `config.json` remains unfrozen, and no development screen here is a confirmatory research result. Gate 3 is closed at the jointly approved amended hash, and the exact assignment is embedded in the draft under a one-way parent/current hash binding. The real generated base roles are jointly approved; the first Gate-4 fit now supplies development-only rung-1 checkpoint and result roles but does not close later estimator/controller, capacity, calibration or evaluation gates. Protocol P's specification is jointly approved, its one-row replay gate has passed (Step 23), Stage 0 has been executed once at zero rollout cost (Step 24), and Stages A/B/C now record a bounded **Case-B development result** (Step 25): 0.35–0.45 remaining EI are testable in all four cells, while 0.50–0.90 are sub-threshold under the all-cell rule. The accompanying Section-9 role-coverage read puts dev and pilot at zero testable known-class structural settings and val and test at one each, so the result carries a **role-coverage-bounded non-transfer outcome** — it establishes neither success nor hypothesis failure. Both fed the written **Amendment A2, which both agents approved at the same bytes on 2026-08-05 and which is now in force**: it adopts a payload-bounded structural non-transfer shape and payload-stratified reporting, leaves every numerical success bar unchanged, and — because it inserts no severity, payload level or split assignment — shifts no seed ordinal and requires no dataset regeneration. A2 authorizes no assignment replacement, no data generation, no configuration freeze, and no confirmatory work. The completed fit read only the already-delivered `dev` partition and generated nothing; its tracked in-sample analysis establishes optimizer/data-path operation, not generalization or a C1-versus-S result. The order remains model implementation and dev fitting, then later capacity work and validation-only calibration, then final immutable `config.json` freeze, then untouched confirmatory generation/read. Pilot, validation and test outcome reads, confirmatory controller/evaluation work, final freeze and test materialization remain unauthorized.
 
 **Stage 1 of the capacity work is now complete as scoped (Steps 28 and 29), which narrows the "later capacity work" clause above.** The sweep executed once -- 42 fits, 42 checkpoints, zero simulator generation runs, zero physical rollouts, and development rows only -- and its result was then read against a six-row table of permitted readings that was frozen before any of the fifty arms existed. Exactly one row matched, and it licenses one sentence: *the paired curve does not have a readable shape at five points and five seeds*, with any trend statement forbidden. The row that came closest to matching is the one a casual reader of the five numbers would reach for, and it fails on both of its conditions independently. **No capacity is selected, no threshold is set, nothing is established about generalization, and nothing is claimed about C1 versus S.** A Stage 2 -- a wider ladder, a larger seed count, or an architecture change -- would be a separate design with its own review and its own authorization, and none exists. `config.json` remains unfrozen and every later-role read remains unauthorized.
+
+**Slot 9's ladder now has a fitted second rung (Steps 30 and 31).** A 219,018-parameter recurrent-attention architecture ran once under the rung-1 protocol at five seeds -- 12 fits, 12 checkpoints, zero generation runs, zero physical rollouts, development rows only -- and its record was then read against an interpretation table frozen before any of those arms existed. Two sentences are licensed and no more: that the ladder has more than one rung on it with one rung-2 fit at five seeds under the approved protocol, and that the paired sign was not consistent across those five seeds. **That is a statement about what was built, not about what was learned, and the record makes the difference explicit:** all ten rung-2 arms score F1 = 0 on both the `healthy` and `structure` classes, and four of the ten sit exactly at the majority-class baseline. The design's objective-reduction check is deliberately weak and says in advance that it is not a learning signal; the record is the case that warning describes. **No cause is attached, no rung or capacity is selected, no threshold is set, nothing is established about generalization, and nothing is claimed about C1 versus S.** The run and the read were separately authorized single invocations and both authorizations are spent. `config.json` remains unfrozen.

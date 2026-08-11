@@ -2966,6 +2966,28 @@ unaskable. It costs one extra field per statistic. **Do not "simplify" such a pa
 float**, and prefer this shape in any future artifact that publishes a derived statistic
 alongside a rule that quantizes it.
 
+188. **[S120] A REFUSAL THAT PRINTS NOTHING IS NOT A REFUSAL.** My S120 probe accumulated its
+check results in a list and the caller printed them at the end. A structural mutant - one arm
+removed from the artifact - then raised inside a later check, the process exited non-zero with
+**zero output**, and every check it had already made was discarded. From outside, that is
+indistinguishable from a broken harness: same exit code, same silence. It also cost the mutation
+control a survivor, because the control could see the process refuse but not *which* check
+refused, which is the only thing that makes a catch a catch. **Print each check as it is made,
+not at the end**, and guard every lookup that a structural mutation can make missing so the
+refusal comes out of the check that names the thing. This is lesson 186's partner: a control is
+only informative if the instrument reports *where* it refused, so an instrument that can only
+say "no" cannot be calibrated at all.
+
+189. **[S120] CHASE A FLAG FROM YOUR OWN INSTRUMENT BEFORE PUBLISHING IT.** My path scan over the
+new packet-README text reported a UNC-path hit. There was none. The pattern was `r"\\\\[^ ]"`
+written inside a Bash heredoc, which is **one** literal backslash in the regex, not two, so it
+matched every ordinary relative Windows path in a PowerShell block. Measured with an
+`re.escape`-built pattern: zero matches, and the text contains no double backslash at all. The
+near-miss is that publishing the flag would have put a false defect claim about my own work into
+the record, and the fix would have been a change to text that was already correct. **A red result
+from a hand-written pattern is a claim about the pattern until it is a claim about the file** -
+confirm it with an independently constructed matcher before it leaves the session.
+
 
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 
