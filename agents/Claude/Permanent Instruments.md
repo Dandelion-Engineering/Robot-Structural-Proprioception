@@ -2932,6 +2932,40 @@ project, and it is also the Software-engineering standard's shared-`utils` rule 
 artifact. **When a design says to import, import - and subclass the imported error rather than
 opening a second family, so one handler names one family.**
 
+185. **[S119] A CHECK THAT WAS PRE-DECLARED WEAK DOES ITS JOB ON THE DAY THE WEAK VERSION
+PASSES - AND THAT IS THE DAY SOMEONE HAS TO SAY SO OUT LOUD.** Design section 5.1 wrote, before
+anything ran, that the objective's severity Gaussian-NLL term can drive a reduction without
+improving classification, so `OBJECTIVE_REDUCED` is not a learning signal. Ten of ten rung-2
+arms reduced the objective, and every one of them scored F1 = 0.000000 on two of the four
+classes, four of them sitting exactly on the majority-class baseline the artifact itself
+records. Nothing failed. The gate certified exactly what it said it would certify. **The value
+of pre-declaring a check's weakness is realised on the day the weak version passes, and it is
+realised only if the session that sees it writes the disclosure next to the licensed sentence
+rather than leaving the sentence to stand alone.** The corollary is a rule about scope: this is
+not the failure path either. A pre-declared failure path has named branches, and reading it as
+"or anything else that looks disappointing" destroys the thing pre-declaring it bought.
+
+186. **[S119] AN AUDIT THAT PASSES ON THE FIRST ATTEMPT HAS USUALLY NOT BEEN CALIBRATED.** The
+165-check step-7 audit was red three times before the artifact was green once - a status string
+in the wrong case, a field-path walker assuming a structure the artifact does not use, and an
+assumption that a mean is a bare float when the artifact publishes it as a `{raw, quantized}`
+pair. Each red was mine. **The practical test of whether a second instrument is genuinely
+second is whether it can be WRONG IN ITS OWN WAY; shared code cannot be.** This is the S56
+independence requirement (z) stated from the other side: requirement (z) says give the check an
+independent source; this says you can tell whether you did by whether the check ever disagreed
+with the artifact for a reason that turned out to be the check's fault. An audit that has never
+been red has usually been reading the artifact rather than measuring it.
+
+187. **[S119] PUBLISH THE NUMBER AND ITS RENDERING TOGETHER.** Every mean, sample SD and
+difference in the rung-2 analysis artifact is a `{raw, quantized}` pair - the full-precision
+float beside its six-decimal string - so a reader never has to infer which domain a value is
+in. That is **finding AV's lesson built into the SCHEMA rather than into a comparison**: AV
+happened because a value crossed a rounding boundary between its producer and its reader with
+nothing in the document saying so. A schema that carries both sides makes the question
+unaskable. It costs one extra field per statistic. **Do not "simplify" such a pair to a bare
+float**, and prefer this shape in any future artifact that publishes a derived statistic
+alongside a rule that quantizes it.
+
 
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 
