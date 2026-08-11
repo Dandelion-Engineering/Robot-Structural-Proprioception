@@ -1,6 +1,6 @@
 # Summary of Only Necessary Context - Claude
 
-*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 115, 2026-08-11.*
+*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 116, 2026-08-11.*
 
 **S112 SPLIT THIS FILE, AND THAT IS THE FIRST THING TO KNOW ABOUT IT.** It was ~3,430 lines and ~400 KB, and reading it was the single largest cost of starting a session — in tension with its own stated purpose. **Codex approved the split in its S111** with one binding condition: *the current gate map, the current exact-state handoff, and the next-read routing stay here.* So this file is now **current state + gates + routing**, and every permanent instrument moved **verbatim, not summarized** into:
 
@@ -9,29 +9,104 @@
 
 **DO NOT UNDO THE SPLIT BY DRIFTING CONTENT BACK.** If a permanent instrument improves, the improvement goes into **the block that owns it in the reference file** — that is the S105 correction, and it is the reason the append writer's last five rebuilds were faithful. Only *current state* belongs here.
 
-## S116 FIRST - STEP 3 IS BUILT AND OPEN ON CODEX. THE NEXT MOVE IS NOT MINE TO MAKE ALONE.
+## S117 FIRST - STEP 4 IS RUN AND THE PLAN IS OPEN ON CODEX. TWO LOOPS ARE OPEN, BOTH ITS.
 
 ```text
-*** WHAT S115 DID: built step 3 - `scripts/utils/rung2_escalation.py` +
-    `tests/test_rung2_escalation.py` - and handed them to Codex.  THE LOOP IS OPEN ON
-    CODEX.  Also closed the README public-entry loop by approving Codex's exact bytes. ***
+*** WHAT S116 DID: closed nothing of its own and opened two things on Codex.  (1) RAN STEP 4 -
+    one zero-fit plan-mode action, artifact written, audited 132/132 by a SECOND instrument,
+    mutation-controlled 23/23, gate-driven 24/24, and APPROVED BY ME ONLY.  (2) REVIEWER-EDITED
+    Codex's new public-README entry on one real finding, +1/-1, handed back at 9f6297a4. ***
 
-  Reproducibility Packet/scripts/utils/rung2_escalation.py
-    Git blob  735f8dee42d95ae17283f38635e4bafc0b835cf5
-    sha256    324193941344fd6ce0a519902a06a7f635205490f6f91109af7169b809900a9d
-    89,132 B / 2,051 LF / 0 CR / pure ASCII / no BOM / final newline
-  Reproducibility Packet/tests/test_rung2_escalation.py
-    Git blob  7cefcb63b576d46719317d2ce76d538d759d2e89
-    sha256    6e96854474528c8a39e19dbce747b2073329699967424b55192b5ea480c41f83
-    89,321 B / 2,248 LF / 0 CR / pure ASCII.  142 tests.
-  SUITES GREEN AT EXACTLY THESE BYTES: 142 focused (3.58 s), 142 under -O (1 expected
-    pytest warning), 2,004 packet (151.88 s).  1,863 + 142, and nothing else moved.
+  Reproducibility Packet/results/rung2_escalation/plans/rung2-run-1/rung2_escalation_plan.json
+    Git blob  61a2bd220f16edb79dd14b36dae8f90cd768f62d
+    canonical == raw sha256
+              b51b0009e25cbd4816ea3eabed033cb1579780dd468c78e0a21e8a1e78941040
+    9,751 B / ONE canonical JSON line / 0 LF / 0 CR / pure ASCII / no BOM / no final newline
+    exit X_PLAN_OK, 0 fits.  THREE scratch destinations + the real one => ONE digest.
+  README.md   blob 9f6297a4243a5241fc71f425923cb0466e5670f6
+    raw sha256 cfc814f95ee29d0122c197596189f4596632cb4f1c02c69e3db813d91cba1f33
+    145,260 B / 207 LF / 199 CR.  BOTH EOL COUNTS UNCHANGED by my +1/-1.
 
-*** IF CODEX EDITED EITHER FILE, THE OWNER RE-REVIEW IS MINE AND IT IS THE FIRST WORK.
-    Re-open the artifact, drive each finding rather than reading it, keep or contest with
-    a measurement, and approve the EXACT bytes.  READ THE CHAT TAIL BEFORE ANYTHING. ***
-*** IF THE LOOP CLOSED, THAT AUTHORIZES STEP 4 AND NOTHING ELSE: run plan mode for real
-    and have both agents review the artifact.  A closed loop is not an authorization. ***
+*** IF CODEX EDITED EITHER, THE OWNER RE-REVIEW IS MINE AND IT IS THE FIRST WORK.  Re-open the
+    artifact, DRIVE each finding rather than read it, keep or contest with a MEASUREMENT, and
+    approve the EXACT bytes.  READ THE CHAT TAIL BEFORE ANYTHING. ***
+*** IF BOTH LOOPS CLOSED, THAT AUTHORIZES STEP 5 AND NOTHING ELSE - and step 5 is ITSELF two
+    authorization halves, NEITHER OF WHICH EXISTS.  A closed loop is not an authorization. ***
+
+STEP 3 IS CLOSED AT THE BYTES I HANDED OVER.  Codex S115 approved 735f8dee / 7cefcb63
+  UNCHANGED, in ONE round - it edited neither file - and accepted both handed-over judgment
+  calls as STANDING DECISIONS:
+    1  NO `X_OUTPUT_DIRTY` exit.  One atomic absent-root claim leaves no prior arm directory
+       for a same-run cleanliness predicate to inspect.  The absence is PINNED BY A TEST.
+    2  `X_RUNG2_OK` is COMPLETION, not objective success.  All twelve arms may complete while
+       one rung-2 arm is not OBJECTIVE_REDUCED; 5.4's table gives them different rows.
+  It also drove a synthetic scoring refusal after the root claim and confirmed the named
+  `X_DATA_MISSING` terminal persists the run artifact.
+
+*** THE TEST COUNT IS 2,005, NOT 2,004.  My S115 report wrote 1,863 + 142 = 2,004, which is a
+    TYPO in my own arithmetic and nothing else.  Codex corrected it forward; I MEASURED it
+    rather than conceding: collect-only 2005 in 3.02 s, full run 2005 passed in 128.92 s. ***
+
+*** THE COUNTER DEFECT I FOUND IN MY OWN FILE, AND IT IS THE SESSION'S SECOND FINDING.
+    This block used to read `FITS 13 lifetime` and had since S98.  THIRTEEN IS MY OWN SPEND
+    (ten S84 dev fits + three S98 sweep fits).  It NEVER absorbed the 42 fits Codex's S100
+    spent.  The rollout counter sitting NEXT TO IT is project-wide - it includes Codex's S57
+    and S73.  One counter was project-scope and its neighbour was self-scope, under one
+    heading, for eighteen of my sessions.  CORRECTED TO 55 BELOW, WITH THE DERIVATION.
+    *** THE STANDING LESSON: A COUNTER'S SCOPE IS PART OF THE COUNTER.  Two counters under one
+        heading are read as having one scope; if they do not, one of them is silently wrong
+        and nothing in the file will say so.  RE-DERIVE FROM THE ARTIFACTS' OWN LEDGERS. ***
+
+THE README FINDING, so a later session does not re-litigate it.  Codex's 2026-08-11 entry
+  closed with an ABSOLUTE: "No plan artifact, fit, checkpoint, rollout, data generation,
+  reserved-role read, capacity choice, threshold, or final configuration exists."  Four of
+  those ARE project-wide zeros (reserved-role read, capacity choice, threshold, final config).
+  FOUR ARE NOT - and the same public log says so THREE ENTRIES ABOVE ("forty new fits", "the
+  42 training runs").  EVERY precedent entry in that log spells the list with *is authorized*,
+  not *exists*; the entry changed the verb and kept the list.  Repaired +1/-1 by separating the
+  two scopes.  *** AND IT WOULD HAVE GONE FALSE ON ITS OWN DATE, because the plan below was
+  written hours later. ***  I APPENDED NO ENTRY OF MY OWN, deliberately: nothing was finished
+  (one approval, not two), no phase closed, and the step was the one that same entry announced
+  as next.  RE-READ THE PLAYBOOK ANYWAY, EVERY SESSION.
+
+THE S116 AUDIT INSTRUMENT - 132 CHECKS, AND IT IS THE SHAPE TO REUSE FOR ANY PLAN ARTIFACT.
+  It imports NOTHING from rung2_escalation, capacity_sweep, dev_fit_trainer or dev_fit_contract,
+  INCLUDING a locally reimplemented canonical digest - so the executable's own helper is not
+  the thing checking the executable's output.  Groups: 12 document form / 11 host leakage /
+  26 recomputed digests / 12 rung-2 arms / 11 equivalence arms / 15 anchors / 15 band+budget /
+  15 protocol / 7 scope / 8 non-occupancy.  132/132.
+  *** THE MUTATION SWEEP IS WHAT MAKES THE 132 MEAN ANYTHING: 23 single mutations, 23/23 caught
+      BY THE CHECK NAMED FOR EACH, with the two checks that fire on ANY byte change (the pinned
+      file digest, the canonical round-trip) EXCLUDED FROM THE VERDICT - a control that only
+      trips those measures nothing.  Two no-op controls (identical content; reversed key order
+      that canonicalises back) both pass clean. ***
+  *** THE ONE PLACE THE SWEEP IMPROVED THE AUDIT RATHER THAN CONFIRMING IT: I had pinned the
+      run label and the namespace to TWO INDEPENDENT LITERALS, which catches a disagreement
+      between them by accident rather than by a check.  Execute mode claims <base>/<run_label>/,
+      so a plan whose label and destinations disagreed would authorize writes the plan does not
+      describe.  Added H09 (namespace ends with the label) and H10 (every declared path passes
+      through it).  GENERAL FORM: TWO CORRECT LITERALS ARE NOT A BINDING. ***
+
+THE AUTHORIZATION GATE WAS DRIVEN, NOT DESCRIBED - and each mutant was authorized UNDER ITS
+  OWN DIGEST, so the digest comparison could not do the work and only the content checks could
+  refuse.  Real plan ACCEPTED; two byte-equivalent no-op copies ACCEPTED; 23 semantic mutants
+  ALL REFUSED, 0 accepted, by four distinct named reasons (17 "not the plan this executable
+  builds at that run label", 3 protocol, 2 code state, 1 design document).
+  *** A GATE THAT ACCEPTED EVERYTHING WOULD HAVE PASSED AN EXACT-BYTES CHECK IDENTICALLY. ***
+
+WHERE THE PLAN LIVES AND WHY - DO NOT "TIDY" THIS:
+  `results/rung2_escalation/plans/rung2-run-1/` is a SIBLING of the execution root, not inside
+  it.  Execute mode claims `results/rung2_escalation/rung2-run-1/` with ONE atomic create
+  requiring the path to be ABSENT (R2).  Writing the plan into the run root would make the
+  guard refuse the run it exists to admit.  Stage 1's `plans/stage1-run-2/` is the precedent.
+  *** `results/rung2_escalation/rung2-run-1/` MUST NOT EXIST until execution is authorized. ***
+
+CODEX'S FORWARD-LOOKING NOTE, ACCEPTED AS WRITTEN AND NOT ACTED ON: the CONCLUDED Stage-1
+  `tests/test_capacity_sweep.py` still aims `main()` at the REAL protected checkpoint tree in
+  two cases with targeted `finally` cleanup - the same hazard my S115 sweep hit and closed.
+  Safe only while the guard is present, which is the one condition a sweep removes.  NEITHER
+  AGENT REOPENED THE JOINTLY APPROVED STATE.  Whoever next mutates that file must first
+  redirect `capacity_sweep.packet_root` into `tmp_path`.
 
 WHAT THE EXECUTABLE IS, SO A LATER SESSION DOES NOT REDESIGN IT:
   ONE fit loop - `fit_arm(examples, *, seed, network_factory, epochs, batch_size,
@@ -50,24 +125,18 @@ THE PRECONDITION THE WHOLE GATE DEPENDS ON - MEASURED S115, NOT ASSUMED:
   fit_arm(..., network_factory=build_rung1_reference_network) reproduces
   capacity_sweep.fit_arm_at_width(..., channels=32) BIT-IDENTICALLY - every tensor and
   every per-epoch loss - with the caller's global RNG deliberately polluted first.
-  Had that failed, the executable would have been unrunnable in finding AU's shape.
 
-THE MUTATION SWEEP: 23 cases, TWO PASSES IDENTICAL, 0 bad anchors, bytes restored and
-re-verified.  20 real faults CAUGHT; 3 controls SURVIVED.  ONE REAL FAULT SURVIVED THE
-FIRST RUN AND IT IS THE SESSION'S FINDING:
+THE S115 MUTATION SWEEP AND ITS ONE SURVIVOR, KEPT BECAUSE THE LESSON GENERALIZES:
   *** M5 - `network_factory(seed=seed)` -> `network_factory(seed=0)` SURVIVED THE WHOLE
       SUITE.  Every same-seed reproducibility test still passed because BOTH of its runs
       were pinned to the same wrong seed, and the equivalence precondition test happens
       to use seed 0.  Consequence had it shipped: ten arms claiming five seeds and
-      SHARING ONE INITIALIZATION, with a green suite - the five-seed structure the paired
-      read rests on, silently gone.  CLOSED WITH TWO INSTRUMENTS: a recording factory that
-      pins the seed actually handed over, and a behavioural `epochs=0` construction
-      comparison that does not trust the factory contract. ***
-  *** THE STANDING LESSON: TWO TESTS CAN BE BLIND IN THE SAME WAY.  My reproducibility
-      tests compared a seed AGAINST ITSELF, so a fault that replaced the seed everywhere
-      was invisible to ALL of them at once.  REDUNDANCY IS NOT INDEPENDENCE - when a
-      test's two sides are produced by the same parameter, ask what a change to that
-      parameter would look like from inside the test. ***
+      SHARING ONE INITIALIZATION, with a green suite.  CLOSED WITH TWO INSTRUMENTS: a
+      recording factory that pins the seed actually handed over, and a behavioural
+      `epochs=0` construction comparison that does not trust the factory contract. ***
+  *** THE STANDING LESSON: TWO TESTS CAN BE BLIND IN THE SAME WAY.  REDUNDANCY IS NOT
+      INDEPENDENCE - when a test's two sides are produced by the same parameter, ask what a
+      change to that parameter would look like FROM INSIDE the test. ***
 
 TWO MEASURED NON-DEFECTS, RECORDED SO A LATER SESSION DOES NOT "FIX" EITHER:
   N3  Moving `torch.manual_seed(seed)` to AFTER the construction is provably a NO-OP
@@ -75,46 +144,17 @@ TWO MEASURED NON-DEFECTS, RECORDED SO A LATER SESSION DOES NOT "FIX" EITHER:
       loop is identical either way.  The bit-identical comparison above is what shows it.
   N4  In `require_complete_rung2_run`, `len(set(actual)) == len(actual)` is IMPLIED by
       the two conjuncts around it.  Kept for parity with the approved
-      `require_complete_sweep` (whose shape finding T bought) and commented at the line.
+      `require_complete_sweep` and commented at the line.
 
-*** A HAZARD I CREATED, HIT AND CLOSED - AND IT GENERALIZES.  Mutation M19 removes R1's
-    protected-base guard.  The test that catches it aimed `--base-dir` at the REAL
-    `results/dev_fit/nested`, so the mutant WROTE ITS REFUSAL SINK INTO THE PROTECTED
-    TREE before failing.  Four zero-count refusal files; the ten .pt and both approved
-    documents UNTOUCHED (re-measured: dev_fit_result.json canonical f18c98b2...,
-    dev_fit_analysis.json canonical 7bec34a1...); directory removed.  Nothing spent.
-    THE SHAPE IS FINDING AU'S ONE LEVEL OUT: a test that drives a destructive guard by
-    aiming a REAL path at it is safe only while the guard is present - which is the one
-    condition a mutation sweep exists to remove.  REPAIRED BY SPLITTING IT: one test
-    calls `require_permitted_base` on the real path (a pure call; no write reachable even
-    with the guard gone), one drives `main()` against a protected tree REDIRECTED into
+*** THE S115 M19 HAZARD, CLOSED IN MY OWN TESTS AND IT GENERALIZES.  A test that drives a
+    destructive guard by aiming a REAL path at it is safe only while the guard is present -
+    which is the one condition a mutation sweep exists to remove.  REPAIRED BY SPLITTING IT:
+    one test calls `require_permitted_base` on the real path (a pure call; no write reachable
+    even with the guard gone), one drives `main()` against a protected tree REDIRECTED into
     `tmp_path` via `monkeypatch.setattr(cs, "packet_root", ...)` - and it must be
     capacity_sweep's `packet_root`, because `require_permitted_base` is ITS function and
-    resolves the name in ITS globals.  IF ANY OTHER SWEEP IN THIS PACKET POINTS A REAL
-    DESTRUCTIVE PATH AT A GUARD, IT HAS THE SAME EXPOSURE. ***
-
-TWO JUDGMENT CALLS HANDED TO CODEX IN THE S115 TURN - READ ITS REPLY BEFORE ACTING:
-  1  NO `X_OUTPUT_DIRTY` exit.  Rung 2 has one configuration and a root claimed absent by
-     one atomic create, so no directory an earlier attempt could have filled exists.
-     Section 6 lists no such invariant.  The absence is PINNED BY A TEST.
-  2  The executable exits `X_RUNG2_OK` when all twelve arms complete EVEN IF an arm is not
-     `OBJECTIVE_REDUCED`.  R10 gives the objective status to the ANALYZER and 5.4 gives
-     completeness and objective-failure different rows.  The separation is pinned.
-
-PLAN MODE WAS EXERCISED INTO SCRATCH ONLY - THREE DESTINATIONS, ONE DIGEST
-  29867554094517e89608de7d0ca81174e666f1e053864651b7b45f45682cc872 at label
-  `rung2-probe`, 9,751 B, outside the repository.  *** THE GATED PLAN ACTION OF STEP 4 HAS
-  NOT BEEN TAKEN AND NO PLAN ARTIFACT EXISTS UNDER `Reproducibility Packet/results/`.
-  A scratch/tmp_path plan run is a development probe, exactly as `test_capacity_sweep`'s
-  own plan tests are; the gated action is the one whose artifact is submitted for review. ***
-
-THE PUBLIC-ENTRY LOOP IS CLOSED AND I WROTE NOTHING NEW TO THE PUBLIC LOG.  Codex's two
-  corrections to my S114 entry were both KEPT after re-opening the file (one differing
-  line of 206, +1/-1): "five further gated steps" and "nine faults and two harmless
-  controls".  I approved blob e291a229b3ab57fc64287f0d3ba0cde68e5200f6.  Banner untouched
-  (2026-08-10, Phase 2).  *** A BUILD SESSION WHOSE ARTIFACT IS NOT YET REVIEWED IS NONE
-  OF THE THREE TRIGGERS - and Stage 1's precedent agrees: no entry when its executable
-  was built.  RE-READ THE PLAYBOOK ANYWAY, EVERY SESSION. ***
+    resolves the name in ITS globals.  CODEX'S S115 NOTE SAYS THE OLD STAGE-1 HARNESS STILL
+    HAS THIS EXPOSURE; see above. ***
 
 THE TWO PROHIBITIONS THAT SURVIVE, AND THEY ARE PERMANENT:
   1  DO NOT RE-RUN C7 AND DO NOT REGENERATE ITS ARTIFACT.  The destination is an EXCLUSIVE
@@ -128,12 +168,12 @@ THE TWO PROHIBITIONS THAT SURVIVE, AND THEY ARE PERMANENT:
      *** THE METHOD FOR WORKING NEXT TO THIS RULE: change the OBJECT (S108), and then check
          that the new object is not the old one wearing a hat (S109). ***
 
-*** STAGE 1 IS STILL FINISHED AS SCOPED.  S108-S115 added NO fit, NO result, NO rollout. ***
+*** STAGE 1 IS STILL FINISHED AS SCOPED.  S108-S116 added NO fit, NO result, NO rollout. ***
 
 WHAT REMAINS FORBIDDEN, UNCHANGED: no capacity selected, no threshold set, no generation, no
 fit, no rollout, no pilot/val/test read, and nothing about C1-versus-S.  The 32-channel anchor
-result is UNTOUCHED.  *** AND: AN APPROVED EXECUTABLE IS NOT A LICENCE TO FIT.  Four separate
-joint gates stand between today and a rung-2 number. ***
+result is UNTOUCHED.  *** AN APPROVED PLAN IS NOT A LICENCE TO FIT.  Three separate joint
+gates stand between today and a rung-2 number. ***
 
 TWO FIELDS THAT ARE EASY TO CONFLATE - READ THE FIELD, DO NOT REMEMBER IT:
   eligible_post_anchor_points            [40, 48]                 <- row 6 reads THIS
@@ -142,7 +182,7 @@ TWO FIELDS THAT ARE EASY TO CONFLATE - READ THE FIELD, DO NOT REMEMBER IT:
   "discover" a contradiction between my S104 turn and the artifact.  There is none.
 ```
 
-## THE RUNG-2 STATE - design frozen, module approved, EXECUTABLE BUILT AND OPEN, nothing fitted
+## THE RUNG-2 STATE - design frozen, module and executable approved, PLAN WRITTEN AND OPEN, nothing fitted
 
 ```text
 THE DESIGN IS FROZEN AND JOINTLY APPROVED.  DO NOT REOPEN IT AND DO NOT EDIT IT IN PLACE -
@@ -163,14 +203,21 @@ WHAT IS BUILT AND WHAT IS NOT:
             no training loop, no fitting, no persistence.  Plus 71 tests.  S113, JOINTLY
             APPROVED S114 at ca192af0 / c43d33b0.
   BUILT     rung2_escalation.py + tests/test_rung2_escalation.py - S115, 735f8dee / 7cefcb63,
-            142 tests.  *** OPEN ON CODEX.  NOT APPROVED BY ANYONE BUT ME. ***
+            142 tests.  JOINTLY APPROVED S115/S115 - Codex approved UNCHANGED in ONE round.
+  WRITTEN   results/rung2_escalation/plans/rung2-run-1/rung2_escalation_plan.json - S116,
+            blob 61a2bd22, canonical == raw b51b0009...  *** OPEN ON CODEX.  APPROVED BY ME
+            ONLY, after a 132-check second-instrument audit and a 23/23 mutation control. ***
+  MUST NOT  results/rung2_escalation/rung2-run-1/  - the EXECUTION root.  R2 claims it with one
+  EXIST     atomic create requiring ABSENCE.  The plan is a SIBLING in plans/<label>/ for
+            exactly that reason.  Do not create it, do not "tidy" the plan into it.
   NOT BUILT scripts/analyze_rung2_escalation.py.  It is step 6 and is NOT authorized.
 
-THE SEVEN-STEP SEQUENCING, AND STEP 3 IS IN REVIEW:
+THE SEVEN-STEP SEQUENCING, AND STEP 4 IS IN REVIEW:
   1 design reviewed and frozen            DONE (S112, both agents, blob 404c9f1f)
   2 module + tests built and reviewed     DONE (S113/S114, both agents, ca192af0 / c43d33b0)
-  3 executable + tests                    BUILT S115, OPEN ON CODEX        <- WE ARE HERE
-  4 plan mode run and its artifact reviewed        5 execution, two authorization halves
+  3 executable + tests                    DONE (S115/S115, both agents, 735f8dee / 7cefcb63)
+  4 plan run, artifact reviewed           RUN S116, OPEN ON CODEX          <- WE ARE HERE
+  5 execution, TWO authorization halves, NEITHER OF WHICH EXISTS
   6 read-only analyzer                              7 exact-state review, THEN 5.4 jointly
 
 EVERY DESIGN FIGURE WAS REBUILT FROM THE CONSTRUCTED MODULE IN S113, NOT TRANSCRIBED
@@ -230,7 +277,7 @@ TWO NUMBERS THAT ARE IN THE DESIGN BECAUSE THEY ARE THE INCONVENIENT ONES.  KEEP
 ## Where the project is
 
 - **Phase 2 (Execution) is OPEN.** All Phase-1 gates in force. **Schema v1.0 + Amendment A1 in force.** Contract changes run through the **amendment protocol**.
-- I am **Claude**; last session was **Session 115**; next session I run is **Session 116**. **S115 WAS NOT A PROGRESS-REPORT SESSION. MY NEXT REGULAR IS SESSION 120**, or sooner if a phase transition or an approved written Claim-Sheet amendment fires. **EXACTLY ONE REVIEW LOOP IS OPEN IN THE PROJECT AND IT IS OPEN ON CODEX: the step-3 executable and its tests at `735f8dee` / `7cefcb63`, handed over in my S115 turn.** The rung-2 module/test loop closed in my S114 at `ca192af0` / `c43d33b0`, and the README public-entry loop closed in my S115 at `e291a229`; see the head block. **IF CODEX EDITED EITHER STEP-3 FILE, THE OWNER RE-REVIEW IS MINE AND IS THE FIRST WORK OF S116.** The S112 regular progress report is written at `agents/Claude/Progress Reports/Progress Report Session 112.md`, covering S105-S112; **Codex read it in its S112 general recent-work review and raised exactly one correction - the "lunch break" cost phrase - which it carried forward onto the public log rather than into the report, and which I have now approved. No review cycle is open on the report itself.** Its spine: the instrument was measured to be ~5x too coarse for the 0.05 ruler, and the response was to change what we were building rather than buy a sharper version of the same number. **THE S104 REGULAR IS WRITTEN** at `agents/Claude/Progress Reports/Progress Report Session 104.md`, covering S97-S104 - **still unreviewed by Codex; if it opens a loop, that loop is mine to close.** **THE S96 REGULAR'S LOOP IS CLOSED** at blob `c824173c` (Codex S97, me earlier) - **DO NOT REOPEN.** **THE S88 REPORT'S LOOP IS CLOSED** at blob `58276bb4` (Codex S89) - **DO NOT REOPEN.** *(The S80 report, covering S73-S80, is still unreviewed; the S72 one was read in Codex's S72 general recent-work review, which found no correction to carry, so no explicit review cycle ever opened on it.)* **A2 ALREADY FIRED AN AMENDMENT-TRIGGERED REPORT AND IT WAS CODEX'S TO WRITE** (its S76 wrote the approving turn); that does not reset either counter.
+- I am **Claude**; last session was **Session 116**; next session I run is **Session 117**. **S116 WAS NOT A PROGRESS-REPORT SESSION. MY NEXT REGULAR IS SESSION 120**, or sooner if a phase transition or an approved written Claim-Sheet amendment fires. **EXACTLY TWO REVIEW LOOPS ARE OPEN IN THE PROJECT AND BOTH ARE OPEN ON CODEX: (1) the step-4 plan artifact at `61a2bd22` / `b51b0009`, and (2) the public README at `9f6297a4` after my `+1/-1` reviewer edit — both handed over in my S116 turn.** The step-3 executable/test loop CLOSED in Codex's S115 at `735f8dee` / `7cefcb63`, unchanged and in one round; the rung-2 module/test loop closed in my S114 at `ca192af0` / `c43d33b0`; the previous README entry loop closed in my S115 at `e291a229`. See the head block. **IF CODEX EDITED EITHER OPEN ARTIFACT, THE OWNER RE-REVIEW IS MINE AND IS THE FIRST WORK OF S117.** The S112 regular progress report is written at `agents/Claude/Progress Reports/Progress Report Session 112.md`, covering S105-S112; **Codex read it in its S112 general recent-work review and raised exactly one correction - the "lunch break" cost phrase - which it carried forward onto the public log rather than into the report, and which I have now approved. No review cycle is open on the report itself.** Its spine: the instrument was measured to be ~5x too coarse for the 0.05 ruler, and the response was to change what we were building rather than buy a sharper version of the same number. **THE S104 REGULAR IS WRITTEN** at `agents/Claude/Progress Reports/Progress Report Session 104.md`, covering S97-S104 - **still unreviewed by Codex; if it opens a loop, that loop is mine to close.** **THE S96 REGULAR'S LOOP IS CLOSED** at blob `c824173c` (Codex S97, me earlier) - **DO NOT REOPEN.** **THE S88 REPORT'S LOOP IS CLOSED** at blob `58276bb4` (Codex S89) - **DO NOT REOPEN.** *(The S80 report, covering S73-S80, is still unreviewed; the S72 one was read in Codex's S72 general recent-work review, which found no correction to carry, so no explicit review cycle ever opened on it.)* **A2 ALREADY FIRED AN AMENDMENT-TRIGGERED REPORT AND IT WAS CODEX'S TO WRITE** (its S76 wrote the approving turn); that does not reset either counter.
 - **`config.json` is deliberately NOT frozen** and does not exist. All hashes are `dev-`; no `dev-` trace may enter confirmatory analysis.
 - Real data exists: `data/gate3-base-dev-pilot-val-c1-s` (3.86 GB, git-ignored, local only). 472 reservations / 944 manifest rows / C1+S / dev 152, pilot 152, val 168. **Test untouched: 0 identities, 0 payloads.** **THE "SLATED FOR FULL REGENERATION FROM ZERO AFTER A2" EXPECTATION IS RETIRED AS OF MY S75 — see A2.3.** Option C inserts no severity, so no seed ordinal shifts and A2 by itself invalidates none of this. If the set is ever superseded it is for some other reason, under its own authorization. **Still: read them, do not build on them** — nothing downstream of them is authorized either way.
 - **THE PAYLOAD-BOUNDARY EXTENSION HAS RUN — Codex's S73, 127 physical rollouts, `X_CASE_EMPTY`, and the result artifact is JOINTLY APPROVED (Codex S73 / me S74).** The measurement is spent and no further payload-extension execution is authorized. **A2 IS IN FORCE at `baa8fd53…` / `203aab77…` — both agents approved those exact bytes (me S76, Codex S76). The two-file loop is CLOSED and the amendment is not to be reopened or status-edited.**
@@ -238,15 +285,25 @@ TWO NUMBERS THAT ARE IN THE DESIGN BECAUSE THEY ARE THE INCONVENIENT ONES.  KEEP
 - **THE ROLLOUT COUNT HAS BEEN WRONG FIVE TIMES: one → four → thirteen → fourteen → FIFTEEN pre-run. Carry the table, never a remembered number.**
 ```text
 *** THE LIVE COUNTERS.  TAKE THEM FROM HERE; TAKE THE DERIVATION FROM THE REFERENCE FILE. ***
-  ROLLOUTS  278        FITS  13 lifetime (ten S84 development fits + three S98 sweep fits)
+  ROLLOUTS  278        FITS  55 PROJECT-WIDE, and 55 checkpoints
+  *** THE FIT COUNTER READ `13 lifetime` FROM S98 TO S115 AND IT WAS SELF-SCOPE WHILE THE
+      ROLLOUT COUNTER BESIDE IT WAS PROJECT-SCOPE.  Corrected S116.  RE-DERIVE, DO NOT
+      REMEMBER - all three sources agree:
+        fits         10 (dev_fit fits_run) + 3 (stage1-run-1) + 42 (stage1-run-2)  = 55
+        checkpoints  10 + 3 + 42 = 55, and `find results -name "*.pt" | wc -l`      = 55
+        rollouts     15 pre-run replays + 136 (Codex S57) + 127 (Codex S73)         = 278
+      OF THE 55 FITS, 13 ARE MINE (ten S84 dev + three S98 sweep) AND 42 ARE CODEX'S S100.
+      A COUNTER'S SCOPE IS PART OF THE COUNTER; two counters under one heading are read as
+      sharing one scope, and if they do not, nothing in the file will say so. ***
   PILOT / VAL / TEST reads   0, every session, without exception
-  *** MY S105-S115 EACH SPENT ZERO OF EVERYTHING - no fit, no checkpoint, no generation, no
-      rollout, no GATED plan action, NO C7 INVOCATION, and no pilot/val/test read.  S113,
-      S114 AND S115 touched no real data at all: no manifest, no .npz, no label payload, and
-      NOT ONE BYTE OF ANY .pt.  They read source files and ran tests, sweeps and probes on
-      synthetic tensors and synthetic TrainingExample objects.  S115 ran plan mode three
-      times into SCRATCH destinations outside the repository, which is a development probe
-      and not the gated step-4 plan action; no plan artifact exists under the packet. *** 
+  *** MY S105-S116 EACH SPENT ZERO FITS, CHECKPOINTS, ROLLOUTS, GENERATION RUNS, C7
+      INVOCATIONS AND PILOT/VAL/TEST READS.  S113-S116 touched no real data at all: no
+      manifest, no .npz, no label payload, and NOT ONE BYTE OF ANY .pt.  They read source
+      files and ran tests, sweeps and probes on synthetic tensors and synthetic
+      TrainingExample objects.  *** S116 IS THE ONE THAT TOOK THE GATED PLAN ACTION: four
+      plan-mode invocations, three into SCRATCH and ONE into the packet, producing the
+      tracked artifact above.  A PLAN IS NOT A FIT AND NOT A ROLLOUT; it moves no counter
+      here.  S115's three plan runs were scratch-only development probes. *** 
   *** A FIT IS NOT A ROLLOUT and A READ IS NEITHER.  Do not let the counters merge. ***
   *** THE ROLLOUT COUNT HAS BEEN WRONG FIVE TIMES: one -> four -> thirteen -> fourteen ->
       FIFTEEN pre-run.  TAKE THE COUNT FROM THE ARTIFACT'S OWN LEDGER, NEVER FROM A
@@ -279,7 +336,7 @@ Not freeze blockers (still required before completion): Slot-8 verification arti
 
 ## My lanes — current state
 
-- **GATE-4 RUNG 2 — THE DESIGN IS FROZEN AND JOINTLY APPROVED; THE MODULE AND ITS TESTS ARE JOINTLY APPROVED; THE EXECUTABLE AND ITS TESTS ARE BUILT AND OPEN ON CODEX; NOTHING IS FITTED.** Mine to write, Codex reviews. **This is the one open loop in the project.** Design `Reproducibility Packet/protocol/rung2-escalation-v0.1.md` at blob `404c9f1f`; module `Reproducibility Packet/scripts/utils/attribution_net_rung2.py` at blob `ca192af0` + `tests/test_attribution_net_rung2.py` at blob `c43d33b0` (71 tests; **superseded, never build from: `52809287`**); **executable `Reproducibility Packet/scripts/utils/rung2_escalation.py` at blob `735f8dee` + `tests/test_rung2_escalation.py` at blob `7cefcb63` (142 tests), handed to Codex in my S115 turn and approved by me only.** See **THE RUNG-2 STATE** and the head block for the full state, and READ THE DESIGN DOCUMENT for anything they index rather than state. **The file that DOES NOT YET EXIST:** `scripts/analyze_rung2_escalation.py` — step 6, **NOT** authorized. **A closed loop authorizes the next step only, and never a run.**
+- **GATE-4 RUNG 2 — THE DESIGN IS FROZEN; THE MODULE, ITS TESTS, THE EXECUTABLE AND ITS TESTS ARE ALL JOINTLY APPROVED; THE ZERO-FIT PLAN IS WRITTEN AND OPEN ON CODEX; NOTHING IS FITTED.** Mine to write, Codex reviews. Design `Reproducibility Packet/protocol/rung2-escalation-v0.1.md` at blob `404c9f1f`; module `Reproducibility Packet/scripts/utils/attribution_net_rung2.py` at blob `ca192af0` + `tests/test_attribution_net_rung2.py` at blob `c43d33b0` (71 tests; **superseded, never build from: `52809287`**); **executable `Reproducibility Packet/scripts/utils/rung2_escalation.py` at blob `735f8dee` + `tests/test_rung2_escalation.py` at blob `7cefcb63` (142 tests) — JOINTLY APPROVED (me S115, Codex S115 unchanged, one round). DO NOT REOPEN.** **The step-4 plan artifact `Reproducibility Packet/results/rung2_escalation/plans/rung2-run-1/rung2_escalation_plan.json` at blob `61a2bd22`, canonical == raw `b51b0009…`, 9,751 B — approved by ME ONLY in S116; Codex's independent review is step 4's second half and it is OPEN.** See **THE RUNG-2 STATE** and the head block for the full state, and READ THE DESIGN DOCUMENT for anything they index rather than state. **The file that DOES NOT YET EXIST:** `scripts/analyze_rung2_escalation.py` — step 6, **NOT** authorized. **The directory that MUST NOT exist until execution is authorized:** `results/rung2_escalation/rung2-run-1/`. **A closed loop authorizes the next step only, and never a run.**
 
 `Reproducibility Packet/scripts/utils/estimator.py`:
 - **`WindowFeatureExtractor(window_steps=W=768, probe_frequency_hz=0.8)`**: `window_tensor(record)` → `(values[W,D], valid[W,D])`; **requires `record.n_steps <= W` and right-aligns (`estimator.py:366-375`) — it refuses a full run, so the caller owns the window origin**; `window_features(record)` → 144 features. `N_FEATURE_STATS=4`, `N_EXTRA_FEATURES=4`, sync cols 4/5/6, `VALID_FRACTION_COL=7`, `MIN_SYNC_SAMPLES=8`.
@@ -314,7 +371,7 @@ Not freeze blockers (still required before completion): Slot-8 verification arti
 
 - **Simulation-only, one desktop:** Windows 11, Ryzen 7 8700F (8C/16T), RTX 5060 Ti **16 GB VRAM** (sm_120), 32 GB RAM, Python **3.12.10** in `./venv`. Free/OSS, commercial-use-friendly only.
 - **venv has:** numpy 2.5.1, scipy 1.18.0, scikit-learn 1.9.0, matplotlib 3.11.0, mujoco 3.10.0, pandas 3.0.3, control 0.10.2, gymnasium 1.3.0, pytest 9.1.1, **torch 2.11.0+cu128**. **S77 added the FIRST new PACKET dependency since the packet was created: `torch==2.11.0` in `Reproducibility Packet/requirements.txt`, pinned as the BASE version (not `+cu128`) so a reader without a CUDA machine can still run the whole suite.** The venv itself gained nothing — torch was already installed.
-- **Running packet tests:** from the REPO ROOT, `./venv/Scripts/python.exe -m pytest -q "Reproducibility Packet/tests"`. **Scope pytest to that path** — a root-wide invocation collides on duplicate test module names in the ignored `tmp/session6_packet_copy/`. **Full suite 2,004 tests green (S115, 151.88 s - 1,863 + my 142 new `test_rung2_escalation.py` tests, and nothing else moved; the focused file is also green under `python -O`. Prior 1,863 (S114, 140.01 s - Codex measured the same 1,863 in its S113; the two added tests are Codex reviewer edits BK and BL). Prior 1,861 (S113, 144.85 s - 1,792 + my 69 new rung-2 tests, and nothing else moved; the 69 were the first change to this count since S102). Prior 1,792 (S102, 117.85 s - Codex's S101 measured 1,789 and my three new C7 tests are the only change since; prior 1,753 at S93, 128.33 s - 1,750 at Codex S92 + my 3 new; the S92/S93 executable is the first thing to move this count since S86; prior 1,551 at S90, 142.32 s - UNCHANGED for the FOURTH consecutive session, because NEITHER agent has touched an executable file in S87, S88, S89 or S90; Codex's S89 also ran it at 1,551 in 114.44 s, so the count is confirmed from both sides; prior S89, 115.55 s - UNCHANGED, because NEITHER agent touched an executable file in S88 or S89; Codex's S88 was document-only and did not run the suite at all; S88, 119.03 s - UNCHANGED, because S88 added no test and changed no executable at all; S87 119.94 s - UNCHANGED again, because S87 like S86 added no test and only made an existing one able to fail; S86 115.64 s — UNCHANGED from Codex S85's 1,551, because my S86 added no test and only made three existing ones able to fail; `test_dev_fit_analysis.py` collects 35 after Codex's S85 added 5 to my 30; prior 1,546 at S85, 114.73 s; Codex S84 1,526 after it added `test_dev_fit_analysis.py` at 10, which my S85 review took to 30; prior 1,515 at S83, 121.01 s; `test_dev_fit_trainer.py` collects 48 after my S83 review added 11 to Codex's 37; Codex S82 1,504; S82 1,499, 119.64 s; Codex S81 1,487; S81 1,482; prior 1,466 at S80, 128.41 s; `test_dev_fit_contract.py` collects 92 after my S80 review added 15 to Codex's 77; Codex S79 1,451; S79 1,441; Codex S78 1,432; S78 1,430; S77 1,370, 132.81 s, +64 from `test_attribution_net.py`; prior 1,306 at S72, 122.77 s WITH the new `results/payload_boundary_extension/plan.json` present — nothing asserts that directory's absence; S71 126.03 s; Codex S70 1,288 in 123.18 s).** `test_payload_boundary_extension.py` now collects **170** — Codex handed off 36 in S64, I made it 45 in S65, Codex 47 in its S65, my S66 review made it 53, Codex's S66 made it 58, my S67 review made it 71, Codex's S67 made it 76, my S68 review made it 81, Codex's S68 made it 83, my S69 review made it 106, Codex's S69 kept it at 106 (a rename plus three added spellings), my S70 review added 35 (21 of which are one parametrization over `_URI_SCHEMES` x three letter cases), Codex's S70 added 11, and my S71 review added 18 — one equality pin, 11 boundary cases and 6 scheme-character cases. **The two closed Step-2 seam files together collect 124.** Prior: 1,217 (my S68), 1,207 (my S67), 1,189 (my S66), 1,136 (my S64), 1,133 (Codex S63), 1,126 (my S63 and Codex S61), 1,115 (Codex S60), 1,107 (my S60, 150.54 s), 1,021 (S59, 143.00 s), 999 (S58), 975 (S57), 938 (S55), 906 (S54), 750 (S53), 595 (pre-S51 baseline). **Set `PYTHONIOENCODING=utf-8` for anything that prints non-ASCII** — the console is cp1252. **Use ASCII in probe scripts and in anything a gate prints.**
+- **Running packet tests:** from the REPO ROOT, `./venv/Scripts/python.exe -m pytest -q "Reproducibility Packet/tests"`. **Scope pytest to that path** — a root-wide invocation collides on duplicate test module names in the ignored `tmp/session6_packet_copy/`. **Full suite 2,005 tests green (S116, 128.92 s; collect-only also 2,005 in 3.02 s). *** MY S115 REPORT AND HANDOFF SAID 2,004 AND THAT WAS A TYPO IN MY OWN ARITHMETIC: 1,863 + 142 = 2,005. Codex corrected it forward in its S115 and I MEASURED the correction in S116 rather than conceding it. Nothing was added or lost. *** Prior 1,863 + my 142 new `test_rung2_escalation.py` tests, and nothing else moved; the focused file is also green under `python -O` (S115). Prior 1,863 (S114, 140.01 s - Codex measured the same 1,863 in its S113; the two added tests are Codex reviewer edits BK and BL). Prior 1,861 (S113, 144.85 s - 1,792 + my 69 new rung-2 tests, and nothing else moved; the 69 were the first change to this count since S102). Prior 1,792 (S102, 117.85 s - Codex's S101 measured 1,789 and my three new C7 tests are the only change since; prior 1,753 at S93, 128.33 s - 1,750 at Codex S92 + my 3 new; the S92/S93 executable is the first thing to move this count since S86; prior 1,551 at S90, 142.32 s - UNCHANGED for the FOURTH consecutive session, because NEITHER agent has touched an executable file in S87, S88, S89 or S90; Codex's S89 also ran it at 1,551 in 114.44 s, so the count is confirmed from both sides; prior S89, 115.55 s - UNCHANGED, because NEITHER agent touched an executable file in S88 or S89; Codex's S88 was document-only and did not run the suite at all; S88, 119.03 s - UNCHANGED, because S88 added no test and changed no executable at all; S87 119.94 s - UNCHANGED again, because S87 like S86 added no test and only made an existing one able to fail; S86 115.64 s — UNCHANGED from Codex S85's 1,551, because my S86 added no test and only made three existing ones able to fail; `test_dev_fit_analysis.py` collects 35 after Codex's S85 added 5 to my 30; prior 1,546 at S85, 114.73 s; Codex S84 1,526 after it added `test_dev_fit_analysis.py` at 10, which my S85 review took to 30; prior 1,515 at S83, 121.01 s; `test_dev_fit_trainer.py` collects 48 after my S83 review added 11 to Codex's 37; Codex S82 1,504; S82 1,499, 119.64 s; Codex S81 1,487; S81 1,482; prior 1,466 at S80, 128.41 s; `test_dev_fit_contract.py` collects 92 after my S80 review added 15 to Codex's 77; Codex S79 1,451; S79 1,441; Codex S78 1,432; S78 1,430; S77 1,370, 132.81 s, +64 from `test_attribution_net.py`; prior 1,306 at S72, 122.77 s WITH the new `results/payload_boundary_extension/plan.json` present — nothing asserts that directory's absence; S71 126.03 s; Codex S70 1,288 in 123.18 s).** `test_payload_boundary_extension.py` now collects **170** — Codex handed off 36 in S64, I made it 45 in S65, Codex 47 in its S65, my S66 review made it 53, Codex's S66 made it 58, my S67 review made it 71, Codex's S67 made it 76, my S68 review made it 81, Codex's S68 made it 83, my S69 review made it 106, Codex's S69 kept it at 106 (a rename plus three added spellings), my S70 review added 35 (21 of which are one parametrization over `_URI_SCHEMES` x three letter cases), Codex's S70 added 11, and my S71 review added 18 — one equality pin, 11 boundary cases and 6 scheme-character cases. **The two closed Step-2 seam files together collect 124.** Prior: 1,217 (my S68), 1,207 (my S67), 1,189 (my S66), 1,136 (my S64), 1,133 (Codex S63), 1,126 (my S63 and Codex S61), 1,115 (Codex S60), 1,107 (my S60, 150.54 s), 1,021 (S59, 143.00 s), 999 (S58), 975 (S57), 938 (S55), 906 (S54), 750 (S53), 595 (pre-S51 baseline). **Set `PYTHONIOENCODING=utf-8` for anything that prints non-ASCII** — the console is cp1252. **Use ASCII in probe scripts and in anything a gate prints.**
 - **MUTATION SWEEPS — MANDATORY HARNESS SHAPE AFTER S60:** clear `__pycache__` before every run **and** set `PYTHONDONTWRITEBYTECODE=1` in the subprocess env; drop `-x`; translate anchors to the target file's own newline; report bad anchors separately from survivors; restore exact bytes in a `finally` and verify the blob afterwards. **Run the whole sweep twice and require identical results** — that is the cheapest detector for a harness fault.
 - **Packet scripts are invoked FROM the packet directory** (`scripts\<name>.py`, `--output-dir results\<name>`), per its README. From the packet dir the project venv is `..\venv\Scripts\python.exe`. **BUT A MODULE UNDER `scripts/utils/` IS NOT A PACKET SCRIPT AND THIS DOES NOT APPLY TO IT — MEASURED S95.** There is no `utils` package at the packet root and no `scripts/__init__.py`, so from the packet dir `-m utils.<mod>` and `-m scripts.utils.<mod>` both raise `ModuleNotFoundError` and running the file by path fails on its relative import. **Run it from `Reproducibility Packet/scripts/`: `..\..\venv\Scripts\python.exe -B -m utils.<mod> … --output-dir ..\results\<name>`.** **In my PowerShell tool the working directory is not the repo root — use `Set-Location` or absolute paths. My Bash tool's cwd PERSISTS between calls — prefer absolute paths or re-`cd` every time.**
 - **Timings (measured S35–S60):** full packet suite ~150 s; one MuJoCo rollout (3000 steps) **25.6–27.5 s**; a PARTIAL rollout is proportionally cheap — 480 steps ≈ 3.0 s; at reduced fidelity (`point_count=9`, `simulation_timestep_s=2e-4`) 501 control steps ≈ 0.37 s; a 200-realization sensor-only null at W=768 ~40 s; an offline re-observation ≈ instantaneous; the driver's `--mode plan` 0.30–0.33 s; **the payload-extension executable's `--mode plan` 0.36–0.38 s (eight MuJoCo model compilations, zero steps)**; **one driver-file mutation case ≈ 100 s** (a 17-case sweep is ~28 min and belongs in the background); **a small-analyzer mutation case ≈ 0.5–0.7 s with the fixed harness, so a 44-case sweep is under a minute.** **NO figure exists for the pinned `pairs=100` Stage-0 run — see limitation 45; do not invent one.**
@@ -413,9 +470,10 @@ Run either read from the packet dir; zero rollouts, ~0.3 s each:
 - **CONCLUDED director chat:** `chats/Claude-Codex-Human/Better Suited Task/…- Concluded.md` — the withdrawn task-redesign directive. **A2 must stay clear of it.**
 - Director requests: `director_requests.md` (root) — entry 1 (Claim Sheet review) non-blocking, **still awaiting director reply**. Nothing else is blocked on the director.
 - My foundation `agents/Claude/Literature Foundation.md` · ledger `agents/Claude/references.md` (**no S20–S60 entries — reproduction/construction/measurement/review sessions, no external sources read**).
-- **Live-Run README (co-maintained): root `README.md` — Phase 2 / In Progress, banner 2026-08-10.** **MY S115 APPENDED NOTHING AND TOUCHED NO BYTE.** I re-read the playbook in full — as in every session where the answer was NO (105, 106, 107, 108, 113) — and a build session whose artifact is not yet reviewed is none of the three triggers. Stage 1's precedent agrees: no entry was logged when its executable was built. **WHAT DID HAPPEN IS THAT THE ENTRY LOOP CLOSED.** Codex reviewer-edited my S114 entry (+1/-1, one differing line of 206) with two precision corrections — "five further gated steps" not "joint approvals", and "nine faults and two harmless controls" not "eleven defects" — and I approved its exact bytes `e291a229b3ab57fc64287f0d3ba0cde68e5200f6` in my S115 turn after re-opening the file. Both were right; my own sentence had contradicted itself inside one sentence. Post state 144,309 B / 205 LF / 199 CR. **NO LOOP IS OPEN ON THIS FILE.** **MEASURE THE FILE BEFORE ANY APPEND.** Measured S114 and unchanged S115: the running-log entries end in **bare LF** while the surrounding document is CRLF. Match the neighbouring log entry, not the document. **AND THE OUTSTANDING DEBT, UNCHANGED:** the S104 entry that reports the C7 read's result DOES NOT TELL THE AV STORY; dated entries are never edited, so that obligation belongs to the Technical Report. **AND THE ONE CLAUSE CARRIED OUT OF THE PRUNED HISTORY:** the log's date order is out of chronological order in the middle, Codex has a dated correction saying so, and dated entries are never edited — so it stays that way. *(Per-session history of this bullet is in Git and in `Session Summaries/`.)*
-- **Phase-2 chat:** `chats/Claude-Codex/Phase 2 Integration and Config Freeze/...- Active.md` — **S115 STATE: 1,966,069 bytes after my one append (+198/-0, 11,400 B, 0 CR added), prior 1,954,669 B sha256 `2adbf843d6bea5d3e6229938cf75dd4c8e2ae84aa73b537c6e9b09580de687c8`, post sha256 `1fa802bf995827bcea3728e7334e818b21da1a49ce5abfab0a9a01b8e6172945`, one turn, header unique, Codex physically last of 270 headers UNDER THE PERMISSIVE RECOGNIZER before my append (DO NOT COMPARE COUNTS ACROSS REBUILDS). Prefix asserted byte-identical; separator measured from the tail.** *** THE CROSS-AGENT DIGEST CONVENTION OPERATED FOR THE THIRD TIME: my gate-1 PRIOR digest equals the POST-write digest Codex published in its own S114 report, byte for byte, 1,954,669 B both sides. It stays standing and non-blocking; an absent prior digest is not a fault and not a blocker. *** **A TURN IS OWED BY CODEX: the step-3 review.** My S115 turn approved the README bytes, delivered the executable and its tests, reported the mutation sweep and the M19 hazard, and handed over two judgment calls (no `X_OUTPUT_DIRTY`; `X_RUNG2_OK` despite a non-reduced arm). **READ CODEX'S REPLY BEFORE ANY WORK.** The two judgment calls I put to Codex in S113 were both ACCEPTED and are STANDING DECISIONS: the deliberate absence of a `receptive_field` attribute, and the module's non-ASCII docstrings. *** THE S82 APPEND-ORDER RECURRENCE STILL BINDS: the chronological order is permanently broken in the middle and the PHYSICAL TAIL is the authoritative order. *** **If a judgment comes back contested and one exchange does not settle it from source, ESCALATE to the director rather than trade turns.** Do NOT re-open: the extension document, the five S62 edits, the unified Option-B rule, the measure-first ruling, the payload analyzer/tests, the role-coverage states, the readback ruling, `.gitattributes`, Step 25, the screen result, A2, Codex's two S77 rulings, its four S78 rulings, its S80 ruling on the forty escapes, its S81 Finding-G ruling, its S83 rulings, the closed attribution rung, the closed dev-fit contract, the closed trainer, the frozen rung-2 design, the closed rung-2 module, or the closed public-entry loop. **The file is MIXED-EOL** — append LF and verify additions-only rather than assuming. *(Per-session byte histories pruned S113; they are in Git and in `Session Summaries/`.)*
-- **Monitoring chat:** `chats/Claude-Codex-Human/Transcript Order Monitoring/…- Active.md` — **S115 ADDED NOTHING, DELIBERATELY, AND THE CHECK STILL HAPPENED.** Verified at the git level rather than assumed: Codex's S114 commit `9a3cd3b` touches the Phase-2 transcript as a single tail hunk, additions only, and touches this monitoring file not at all; its README edit is +1/-1 on the newest log line and nothing else. My own append this session is likewise a single tail hunk (+198/-0). **No violation, and no open proposal to close.** The check is recorded in `HumanReport115.md` instead. *** THE STANDARD: an entry needs a reason — a fault, or a proposal to close. Do NOT write one just to show the monitoring happened; write the verification into the human report. *** **DO NOT EXTEND A STREAK NUMBER FROM MEMORY, AND DO NOT COMPARE A HEADER COUNT ACROSS REBUILDS** — it is a property of the recognizer, not of the transcript; this project has had a remembered count wrong five times running. *(Per-session history pruned S113; it is in Git and in `Session Summaries/`.)*
+- **Live-Run README (co-maintained): root `README.md` — Phase 2 / In Progress, banner 2026-08-10.** **MY S116 APPENDED NOTHING AND MADE ONE `+1/-1` REVIEWER EDIT, AND THAT EDIT IS AN OPEN LOOP ON CODEX.** I re-read the playbook in full — as in every session where the append answer was NO (105, 106, 107, 108, 113, 115) — and a step whose artifact carries ONE approval is none of the three triggers. **THE FINDING:** Codex's 2026-08-11 entry closed with an absolute — *“No plan artifact, fit, checkpoint, rollout, data generation, reserved-role read, capacity choice, threshold, or final configuration exists.”* Four of those are project-wide zeros; FOUR ARE NOT (55 fits, 55 checkpoints, 278 rollouts, the delivered dataset), **and the same log says so three entries above**. Every precedent entry in this log spells that list with *is authorized*, not *exists*. Repaired by separating the two scopes. It would also have gone false on its own date, because I wrote the plan hours later. **Post state: blob `9f6297a4`, raw sha256 `cfc814f9…`, 145,260 B / 207 LF / 199 CR — BOTH EOL COUNTS UNCHANGED.** **MEASURE THE FILE BEFORE ANY APPEND.** Measured S114–S116 and unchanged: the running-log entries end in **bare LF** while the surrounding document is CRLF. Match the neighbouring log entry, not the document. **AND THE OUTSTANDING DEBT, UNCHANGED:** the S104 entry that reports the C7 read's result DOES NOT TELL THE AV STORY; dated entries are never edited, so that obligation belongs to the Technical Report. **AND THE ONE CLAUSE CARRIED OUT OF THE PRUNED HISTORY:** the log's date order is out of chronological order in the middle, Codex has a dated correction saying so, and dated entries are never edited — so it stays that way. *(Per-session history of this bullet is in Git and in `Session Summaries/`.)*
+- **Phase-2 chat:** `chats/Claude-Codex/Phase 2 Integration and Config Freeze/...- Active.md` — **S116 STATE: 1,984,408 bytes after my one append (+223/-0, 12,969 B, 0 CR added), prior 1,971,439 B / 31,906 LF / 19,456 CR sha256 `e14dea61bc3a83365044bdeaeae5138cd09a6bbe61f773968e7ae744456e1355`, post sha256 `73dda967e9105556fd2d764c2e6efeb304d57a965da739e989ba05db0b831e84`, one turn, header unique, Codex physically last of 271 headers UNDER THE PERMISSIVE RECOGNIZER before my append (DO NOT COMPARE COUNTS ACROSS REBUILDS). Prefix asserted byte-identical; separator measured from the tail as `b"---
+"`.** *** THE CROSS-AGENT DIGEST CONVENTION OPERATED FOR THE FOURTH TIME: my gate-1 PRIOR digest equals the POST-write digest Codex published in its own S115 report, byte for byte, 1,971,439 B both sides. It stays standing and non-blocking; an absent prior digest is not a fault and not a blocker. *** **A TURN IS OWED BY CODEX: the step-4 plan review AND the re-review of my README edit.** My S116 turn accepted its arithmetic correction with a measurement, reported the README finding, delivered the plan artifact, and reported the 132-check audit, the 23/23 mutation control and the 24/24 gate drive. **READ CODEX'S REPLY BEFORE ANY WORK.** Standing decisions from S113/S115, all ACCEPTED and not to be reopened: the deliberate absence of a `receptive_field` attribute; the module's non-ASCII docstrings; no `X_OUTPUT_DIRTY` exit; `X_RUNG2_OK` as completion rather than objective success. *** THE S82 APPEND-ORDER RECURRENCE STILL BINDS: the chronological order is permanently broken in the middle and the PHYSICAL TAIL is the authoritative order. *** **If a judgment comes back contested and one exchange does not settle it from source, ESCALATE to the director rather than trade turns.** Do NOT re-open: the extension document, the five S62 edits, the unified Option-B rule, the measure-first ruling, the payload analyzer/tests, the role-coverage states, the readback ruling, `.gitattributes`, Step 25, the screen result, A2, Codex's two S77 rulings, its four S78 rulings, its S80 ruling on the forty escapes, its S81 Finding-G ruling, its S83 rulings, the closed attribution rung, the closed dev-fit contract, the closed trainer, the frozen rung-2 design, the closed rung-2 module, the closed rung-2 executable, or the closed S114 public-entry loop. **The file is MIXED-EOL** — append LF and verify additions-only rather than assuming. *(Per-session byte histories pruned S113; they are in Git and in `Session Summaries/`.)*
+- **Monitoring chat:** `chats/Claude-Codex-Human/Transcript Order Monitoring/…- Active.md` — **S116 ADDED NOTHING, DELIBERATELY, AND THE CHECK STILL HAPPENED.** Verified at the git level rather than assumed: Codex's S115 commit `5b6379b` touches the Phase-2 transcript as a single tail hunk `@@ -31796,0 +31797,110 @@`, additions only, and touches this monitoring file not at all; its README edit is `+2/-0` on the running-log tail. My own append this session is likewise a single tail hunk (+223/-0). **No violation, and no open proposal to close.** The check is recorded in `HumanReport116.md` instead. *** THE STANDARD: an entry needs a reason — a fault, or a proposal to close. Do NOT write one just to show the monitoring happened; write the verification into the human report. *** **DO NOT EXTEND A STREAK NUMBER FROM MEMORY, AND DO NOT COMPARE A HEADER COUNT ACROSS REBUILDS** — it is a property of the recognizer, not of the transcript; this project has had a remembered count wrong five times running. *(Per-session history pruned S113; it is in Git and in `Session Summaries/`.)*
 
 ## ROUTING - which section of `Permanent Instruments.md` answers which question
 
