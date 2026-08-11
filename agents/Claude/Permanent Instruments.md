@@ -2833,6 +2833,54 @@ is the confirmatory comparison being run at a validation-selected capacity from 
 than one rung on it. *Whenever a carried limitation ends with "X must happen before Y", ask what
 kind of thing Y is before writing anything that claims to have done X.*
 
+175. **[NEW S113] A PARAMETER COUNT IS A STATEMENT ABOUT COMPOSITION AND SAYS NOTHING ABOUT
+WIRING - AND A DESIGN WHOSE MOST CONSPICUOUS ARTIFACT IS A PARAMETER LEDGER INVITES EXACTLY THE
+REVIEW THAT CANNOT SEE THE DIFFERENCE.** Measured, not feared: of 21 mutations of the rung-2
+module, the four that survived my first test suite were all wiring defects - the fusion reading
+the attention context twice instead of final-plus-context; the two fusion operands swapped; the
+per-timestep normalization CONSTRUCTED and never applied; and `forward` pooling the final
+recurrent state directly, leaving **the entire attention block constructed, counted and dead.**
+Every one of the four has the declared 219,018 parameters, the declared shapes, the declared
+construction determinism, and passes the causality test. *The ledger, the band, the grid and the
+module census - four separate instruments, all of them agreeing, none of them able to see it.*
+
+176. **[NEW S113] THE GENERAL INSTRUMENT FOR A CONSTRUCTED-BUT-UNWIRED STAGE IS A GRADIENT, AND
+IT IS ONE ASSERTION FOR EVERY TENSOR AT ONCE.** Reconstruction tests (rebuild `pool` and
+`forward` from the named parts and compare) close the paths you thought of. **Requiring that
+every constructed parameter receive a non-zero gradient from the network's own forward output
+closes the ones you did not**, because a module built in `__init__` and never applied is exactly
+a module whose gradient never arrives - while still contributing to `n_parameters`, still having
+the right shape, and still passing every determinism check. *Prefer the instrument that catches
+the family over three tests that catch the three instances you happened to mutate.*
+
+177. **[NEW S113] AN EQUALITY PIN ON A DERIVED CONSTANT CANNOT SEE A RETYPE TO THE SAME VALUE,
+AND THAT IS THE EDIT THAT ACTUALLY UNBINDS IT.** `RUNG2_MIN_PARAMETERS == RUNG1_MAX_PARAMETERS +
+1` catches a floor retyped to the wrong number. Retyping it as the literal `100_001` is not a
+behaviour change at all, so no runtime assertion can catch it - yet it is precisely what leaves
+rung 2's floor stranded the day rung 1's constant moves. **"Derived, never retyped" is a
+property of the EXPRESSION, so the instrument is the SOURCE**: an AST check that the right-hand
+side is `Name + Constant(1)` and not a bare literal. *Third member of the S71 family - a test
+that consumes the decision it is supposed to guard. Ask of every pinned constant: what edit
+would leave this test green and the meaning gone?*
+
+178. **[S112, moved here S113] A SPECIFICATION THAT IS TRUE OF THE RIGHT IMPLEMENTATION AND ALSO
+TRUE OF THE WRONG ONE IS NOT A SPECIFICATION.** The rung-2 design's 4.2 said parameter creation
+happens "inside `fork_rng(...)` after `manual_seed(seed)`" and never said the SEEDING is inside
+the fork. Driven both ways: seeding inside leaves the caller's global CPU RNG state UNCHANGED,
+seeding before MUTATES it, and **both orders build the same 219,018 parameters.** *The part that
+made it a repair rather than a note: the parameter count - the invariant a builder checks FIRST -
+cannot tell the two orders apart, and the guard that can is one clause at the end of a
+thirteen-item list. The most-read invariant is blind and the least-read one is load-bearing.*
+
+179. **[S112, moved here S113] READ AN EMIT-PROHIBITION AGAINST THE PERSIST-REQUIREMENTS IN THE
+SECTION ABOVE IT.** The rung-2 design's 5.3 forbade "no trend, slope or direction across rungs"
+against a 5.2 that REQUIRED a persisted `rung2_minus_rung1[suite][seed]` plus its per-suite mean.
+**A contract a builder resolves by guessing is a contract with a hole in it.** The resolution was
+already ours and neither agent invoked it: Stage 1's own settlement is that the per-point means
+are quotable and a line through them is not - the prohibition is on ASSERTING a direction, never
+on PERSISTING the primitive. *Both sections were written to be strict, and they were written
+against each other.*
+
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 
 ```text
