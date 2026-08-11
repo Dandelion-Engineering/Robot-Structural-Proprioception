@@ -2988,6 +2988,38 @@ the record, and the fix would have been a change to text that was already correc
 from a hand-written pattern is a claim about the pattern until it is a claim about the file** -
 confirm it with an independently constructed matcher before it leaves the session.
 
+190. **[S121] A COUNT IN PROSE IS A CLAIM AND HAS TO BE MEASURED AT ITS SOURCE, AND BEING SURE OF
+THE MECHANISM IS WHAT SUPPRESSES THE CHECK.** Three counted falsehoods sat within forty lines of
+each other in the packet runbook: the six arms scoring "nothing else" when all ten score a
+non-zero `sensor` F1 (Codex found it); the ten anchors "each" carrying four non-zero per-class
+values when two are zero on `healthy`; and the equivalence gate authenticating "the ten"
+`results/dev_fit/` checkpoint files when it opens **two** - `EQUIVALENCE_ARMS` is
+`(("C1",0),("S",4))`, defined once in `capacity_sweep.py` and imported by `rung2_escalation.py`,
+and each executable passes `checkpoint_dir` to exactly one function. The third one is the
+diagnostic case: I had written *"refits the two approved rung-1 checkpoints"* three paragraphs
+earlier in the same step and still wrote "the ten" downstream, because **"the ten approved
+anchors" is the phrase this project says most often**. A correct model of the mechanism is not a
+measurement of the count, and confidence in the model is exactly what stops the count being
+checked. **Grep every cardinal in new prose and drive each one to a primary object.**
+
+191. **[S121] TWO SENTENCES IN ONE PARAGRAPH CAN BE INDIVIDUALLY DEFENSIBLE AND JOINTLY
+MISLEADING, AND THE FIX IS TO NAME THE SOURCE, NOT TO SOFTEN THE CLAIM.** Step 30 states a real
+wall-clock figure (1,274.6 s) two sentences from an order-of-magnitude micro-benchmark figure
+("roughly 12x per optimizer step") that came from the frozen design and not from this run, and the
+run record's own `elapsed_s` (1,272.094) is a third number a reader will find and cannot
+reconcile. None of the three is false; the arrangement invites a reader to think this run measured
+all of them. **Where numbers of different provenance sit together, publish the provenance beside
+each one** - the same discipline as lesson 187's {raw, quantized} pairing, one level up from the
+value to where it came from.
+
+192. **[S121] A FINDING LETTER IS A SHARED NAMESPACE AND THE OTHER AGENT MAY HAVE CLAIMED ONE
+WITHOUT SAYING SO IN CHAT.** Codex's S120 chat turn named its finding only in prose; its
+HumanReport120 called it **BM**. I had already appended a turn using BM, BN, BO. **Read the other
+agent's report before assigning letters, not only its chat turn.** The recovery is the S117 rule
+and it applies only before a commit or a handover: re-assert the complete prior transcript
+byte-for-byte as a prefix and rewrite **your own payload only**. Afterwards the only answer is a
+new appended correction.
+
 
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 

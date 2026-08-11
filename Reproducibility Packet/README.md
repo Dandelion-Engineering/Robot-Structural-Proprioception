@@ -869,11 +869,13 @@ $CAPACITY_PLAN_SHA256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $CAPACITY_P
 ```
 
 This is a **conditional new-run command, not a clean-clone recovery procedure**. Before it can
-fit anything, the executable requires the exact ten original Step-26 checkpoint bytes under
-`results/dev_fit/` and authenticates them against the tracked ledger. A fresh clone does not
-contain those files, so it will fail closed at the equivalence gate. The command is useful on
-the recorded machine, or on a machine to which those exact authenticated checkpoint files have
-been transferred; it is not sufficient on the packet contents alone.
+fit anything, the executable's equivalence gate requires the exact original Step-26 checkpoint
+bytes for its two equivalence arms — C1 seed 0 and S seed 4 — under `results/dev_fit/`, and
+authenticates those bytes against the digests in the tracked ledger. The other eight Step-26
+arms are carried forward by their recorded digests and scores rather than by their weights. A
+fresh clone does not contain the two files, so it will fail closed at the equivalence gate. The
+command is useful on the recorded machine, or on a machine to which those exact authenticated
+checkpoint files have been transferred; it is not sufficient on the packet contents alone.
 
 The recorded run took **439.6 s** on the machine described in [`DATA.md`](DATA.md) and spent 42
 fits and 42 checkpoints with **zero simulator generation runs and zero physical rollouts**. It
@@ -1063,11 +1065,12 @@ $RUNG2_PLAN_SHA256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $RUNG2_PLAN).H
   --data-root ..\data\gate3-base-dev-pilot-val-c1-s
 ```
 
-The same honest boundary as Step 28 applies, for the same reason: the equivalence gate
-authenticates the ten original `results/dev_fit/` checkpoint files against the tracked ledger,
-and a fresh clone does not contain them, so this command fails closed on the packet contents
-alone. The run label must be new — the run root is claimed atomically and a spent label is
-refused rather than overwritten.
+The same honest boundary as Step 28 applies, for the same reason: the equivalence gate reads the
+two original `results/dev_fit/` checkpoint files it refits — C1 seed 0 and S seed 4, the same two
+arms Step 28's gate uses — and authenticates their bytes against the digests in the tracked
+ledger. A fresh clone does not contain those files, so this command fails closed on the packet
+contents alone. The run label must be new — the run root is claimed atomically and a spent label
+is refused rather than overwritten.
 
 The recorded run executed once, in one invocation, and its tracked records are:
 
@@ -1084,8 +1087,10 @@ results/rung2_escalation/rung2-run-1/_equivalence/rung2_escalation_equivalence.j
 
 It spent **12 fits and 12 checkpoints — two equivalence arms plus ten rung-2 arms — with zero
 simulator generation runs, zero physical rollouts and zero non-development reads**, and it read
-exactly the 304 delivered development rows (152 C1 + 152 S). It took **1,274.6 s** on the
-machine described in [`DATA.md`](DATA.md).
+exactly the 304 delivered development rows (152 C1 + 152 S). It took **1,274.6 s** of process
+wall-clock time on the machine described in [`DATA.md`](DATA.md); the run record's own
+`elapsed_s` field starts inside execute mode and therefore excludes interpreter start-up and
+import time, and it reads **1,272.094 s**. Quote whichever one you can check, and say which.
 
 That runtime is worth stating next to Step 28's, because it is a result in its own right and an
 inconvenient one. Rung 2 carries **5.5× rung 1's parameters** but costs roughly **12× per
@@ -1158,8 +1163,10 @@ Every one of the ten rung-2 arms scores **F1 = 0.000000 on `healthy` and 0.00000
 own recorded majority-class baseline of accuracy `0.631579` and macro-F1 `0.193548`, which is
 what answering `sensor` to all 152 development examples produces on the 8 / 32 / 96 / 16
 healthy / actuator / sensor / structure census. The other six add a non-zero `actuator` F1;
-all ten have a non-zero `sensor` F1. The ten rung-1 anchors carried in the same artifact each
-have four non-zero per-class values.
+all ten have a non-zero `sensor` F1. Every one of the ten rung-1 anchors carried in the same
+artifact is non-zero on `actuator`, `sensor` **and `structure`**; eight of the ten are non-zero
+on `healthy` as well, and the two that are not — C1 seeds 1 and 3 — are zero on that one class
+only.
 
 Three things follow, and no more than three:
 
