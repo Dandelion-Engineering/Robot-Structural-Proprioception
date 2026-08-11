@@ -1,9 +1,11 @@
 # Rung-2 Escalation for the Gate-4 Attribution Estimator — v0.1
 
-**Status:** REVIEW CANDIDATE, written by Claude in Session 111 and edited by Codex in Session
-111. Exact-state approvals live in the Phase-2 chat and Git history, not in this mutable status
-line. Claude's handoff approval named original blob `b7449993ceeb657fb37feff36bff4cb827ceed0a`;
-any later blob requires its own explicit owner and reviewer records.
+**Status:** REVIEW CANDIDATE, written by Claude in Session 111, edited by Codex in Session 111,
+and re-reviewed and edited by Claude in Session 112. Exact-state approvals live in the Phase-2
+chat and Git history, not in this mutable status line. Claude's handoff approval named original
+blob `b7449993ceeb657fb37feff36bff4cb827ceed0a` and Codex's reviewer approval named
+`1f65ab5f32715d8ec405bb362fbf5af302550b13`; **this state is neither of those**, and any later
+blob requires its own explicit owner and reviewer records.
 
 **Nothing in this document authorizes a fit, a checkpoint, a role read, a capacity choice, a
 threshold, a generation, a rollout, or any pilot/validation/test read.** It is a design under
@@ -222,10 +224,14 @@ dropout**; the following `Linear(2H -> H)` is the one fusion projection. Using
 `nn.MultiheadAttention` unchanged would silently add an `H -> H` output projection and would
 produce 228,330 parameters rather than the declared 219,018.
 
-Construction inherits rung 1's RNG isolation: all parameter creation occurs inside
-`torch.random.fork_rng(devices=[], enabled=True)` after `torch.random.manual_seed(seed)`. Thus
-same-seed C1 and S factories start from bit-identical state dictionaries, a different seed
-changes the state, and constructing a network does not advance the caller's CPU RNG stream.
+Construction inherits rung 1's RNG isolation, and the **order** is part of the specification:
+the fork is entered first and `torch.random.manual_seed(seed)` is called **inside** it, so
+every parameter is created within the forked stream. That is `attribution_net.py:317-318`, in
+that order. Seeding *before* the fork builds the identical 219,018 parameters and still leaves
+the caller's global CPU RNG state mutated, so R4's parameter count cannot tell the two orders
+apart; R13's third assertion is the invariant that can. Under the specified order, same-seed C1
+and S factories start from bit-identical state dictionaries, a different seed changes the
+state, and constructing a network does not advance the caller's CPU RNG stream.
 
 **The selected configuration, and it is the only one this document proposes:**
 
@@ -546,7 +552,11 @@ Derived and persisted by the analyzer, each recomputable from the primitives abo
   extra gauge channels carry information.
 - No trend, slope or direction across rungs. **Two rungs are two points**, and the S108/S109
   lesson about stringing point estimates into a direction applies with more force at two points
-  than it did at five.
+  than it did at five. This forbids *asserting* a direction; it does not forbid *persisting* the
+  `rung2_minus_rung1` primitives §5.2 requires. Those are record contents, **no §5.4 row
+  licenses any sentence about them**, and quoting one of their values is not stating a
+  direction. This is Stage 1's own settlement — its five per-point means may be quoted and a
+  line may not be drawn through them — applied to the rung axis.
 - No absolute filesystem path in any artifact.
 
 ### 5.4 The pre-registered interpretation — applied jointly, with ordered failure precedence
