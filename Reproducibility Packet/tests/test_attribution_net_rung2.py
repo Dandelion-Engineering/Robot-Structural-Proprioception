@@ -50,6 +50,8 @@ SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 from utils import attribution_net_rung2 as rung2  # noqa: E402
+from utils import capacity_sweep  # noqa: E402
+from utils import dev_fit_trainer  # noqa: E402
 from utils.attribution_net import (  # noqa: E402
     AttributionHeads,
     CAPACITY_LADDER,
@@ -509,6 +511,42 @@ def test_no_recurrent_feature_depends_on_a_later_input():
     assert float(difference[:, cut + 1 :, :].max()) > 0.0
 
 
+def test_encode_is_the_declared_stem_norm_gru_path_in_order():
+    """Every live stage is connected in the exact order design section 4.2 names.
+
+    Gradient reach catches a stage that is constructed and then left dead. It cannot
+    catch a live stage applied in the wrong slot, or the same live causal blocks
+    traversed in the wrong order: those versions still give every parameter a
+    non-zero gradient and preserve the parameter count, shapes and causality. Rebuild
+    the encoder from its named parts so wiring is checked separately from composition.
+    """
+
+    net = _net(seed=0).eval()
+    batch = _window(steps=32)
+    with torch.no_grad():
+        h = net.input_proj(batch)
+        for block in net.stem:
+            h = block(h)
+        h = net.stem_norm(h)
+        expected, _ = net.gru(h.transpose(1, 2))
+
+        reversed_h = net.input_proj(batch)
+        for block in reversed(net.stem):
+            reversed_h = block(reversed_h)
+        reversed_h = net.stem_norm(reversed_h)
+        reversed_order, _ = net.gru(reversed_h.transpose(1, 2))
+
+        normalized_early = net.stem_norm(net.input_proj(batch))
+        for block in net.stem:
+            normalized_early = block(normalized_early)
+        wrong_slot, _ = net.gru(normalized_early.transpose(1, 2))
+
+        actual = net.encode(batch)
+    assert torch.equal(actual, expected)
+    assert not torch.equal(actual, reversed_order)
+    assert not torch.equal(actual, wrong_slot)
+
+
 def test_the_recurrent_layer_is_unidirectional_and_two_layers_deep():
     net = _net()
     assert net.gru.bidirectional is False
@@ -822,6 +860,32 @@ def test_the_approved_estimator_wrapper_accepts_a_rung_2_network_unedited():
     )
     assert estimator.fitted is True
     assert id(estimator.net) == identity
+
+
+def test_the_approved_score_arm_accepts_a_rung_2_network_unedited():
+    """Disclosed limitation 3: the annotation is narrow, the runtime path is not."""
+
+    examples = []
+    for class_index in (0, 1):
+        rng = np.random.default_rng(class_index + 1)
+        examples.append(
+            dev_fit_trainer.TrainingExample(
+                run_id=f"rung2-synthetic-{class_index}",
+                trajectory_spec_id="rung2-synthetic",
+                values=rng.normal(size=(8, D)),
+                valid=np.ones((8, D), dtype=bool),
+                class_index=class_index,
+                location_index=0,
+                severity=0.25,
+                ood_flag=False,
+            )
+        )
+    metrics = capacity_sweep.score_arm(_net(seed=0), examples)
+    assert set(metrics) == {"accuracy", "macro_f1", "per_class_f1"}
+    assert 0.0 <= metrics["macro_f1"] <= 1.0
+    assert set(metrics["per_class_f1"]) == set(
+        capacity_sweep.approved_analysis.SOURCE_CLASS_ORDER
+    )
 
 
 def test_an_unfitted_rung_2_estimator_still_refuses_to_answer():
