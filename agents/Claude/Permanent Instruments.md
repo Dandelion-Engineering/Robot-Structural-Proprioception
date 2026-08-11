@@ -3020,6 +3020,18 @@ and it applies only before a commit or a handover: re-assert the complete prior 
 byte-for-byte as a prefix and rewrite **your own payload only**. Afterwards the only answer is a
 new appended correction.
 
+193. **[S122] A WARNING YOU WROTE YOURSELF IS NOT A GUARD; THE GUARD IS THE CODE THAT CRASHES.**
+My S122 read-back script opened `arms[].classification.per_class_f1` and died on a `KeyError`.
+That path is not the shape of the `arms[]` rows at all - it is the **template string** the
+`anchor_arms[]` rows carry in `per_class_f1_field` to name where their values came from. I had
+written *"read the field, do not remember it"* into my own continuity file one session earlier
+and walked into the identical conflation anyway. **The lesson is not "be more careful" - that is
+what failed.** It is that the cost was thirty seconds ONLY because the access raised loudly
+instead of silently resolving to something plausible. So: **index the record directly and let a
+wrong path raise**, rather than writing a tolerant accessor (`.get(...)`, a try/except fallback,
+an `if "classification" in arm` branch) that would have made the same mistake return a wrong
+number with no crash. A tolerant accessor over an artifact you did not write converts a loud
+schema error into a silent data error, and this project publishes what those accessors return.
 
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 
@@ -3106,6 +3118,31 @@ guards was already spent.
 + Codex S73: THE ONE AUTHORIZED STEP-5 INVOCATION.  1 replay + 126 extension = 127,
   3,680.708815 s persisted.                                =>   TOTAL 278
 *** TAKE THE COUNT FROM THE ARTIFACT'S OWN LEDGER, NEVER FROM A PER-ROLLOUT FIGURE. ***
++ Codex S117: THE ONE AUTHORIZED RUNG-2 EXECUTION.  12 fits / 12 checkpoints / 0 rollouts,
+  1,274.6 s process wall clock (the run record's own elapsed_s = 1272.094...).
+  *** A FIT IS NOT A ROLLOUT.  THE ROLLOUT TOTAL IS STILL 278; THE FIT TOTAL BECAME 67. ***
+MY S112-S122 SPENT ZERO ROLLOUTS, ZERO FITS, ZERO CHECKPOINTS, ZERO GENERATION RUNS AND ZERO
+  PILOT/VAL/TEST READS, WITH EXACTLY THREE NAMED EXCEPTIONS - and this block was backfilled in
+  S122 from my own continuity record, which had carried it as a summary line rather than as
+  per-session entries.  THE EXCEPTIONS:
+    S116  FOUR PLAN-MODE INVOCATIONS - three into scratch, one into the packet, producing the
+          tracked rung-2 plan artifact.  *** A PLAN IS NOT A FIT AND NOT A ROLLOUT. ***
+    S117  ONE PRE-AUTHORIZATION READ of real data - `load_dev_examples` through the approved
+          loader (dev split only, 304 of 944 rows, 2.1 s) plus a sha256 of ten approved .pt
+          files.  *** A READ IS NEITHER A FIT NOR A ROLLOUT. ***
+    S119  THE ONE AUTHORIZED PRODUCTION ANALYZER INVOCATION on this lane, X_ANALYSIS_OK,
+          11.97 s, ZERO fits.  It read the approved development rows and twelve checkpoints.
+  Everything else across those eleven sessions was review, probes over TRACKED artifacts, and
+  documentation.  Checkpoint count re-measured on disk in S118, S119 and S120: 67 each time.
+MY S122 SPENT ZERO OF EVERYTHING - no fit, no checkpoint, no generation, no rollout, no plan
+  mode, NO C7 OR ANALYZER INVOCATION, and no edit to any executable, test, protocol, plan or
+  result.  One appended public running-log entry (+2/-0), one appended chat turn (+123/-0),
+  one workspace-README lead update, one report, this file's lesson 193 and this record.
+  *** IT TOUCHED NO REAL DATA AT ALL - no manifest, no .npz, no label payload, no checkpoint
+  and not even a hash of one.  The read-back probe opened EXACTLY ONE TRACKED JSON
+  (rung2_escalation_analysis.json) under a digest refusal, plus the run record, the
+  equivalence artifact and the frozen design, and wrote nothing. ***
+  PILOT/VAL/TEST: 0.  *** ROLLOUT COUNT UNCHANGED AT 278.  FIT COUNTER UNCHANGED AT 67. ***
 MY S111 SPENT ZERO OF EVERYTHING - no fit against any development row, no checkpoint, no
   generation, no rollout, no plan action, NO C7 INVOCATION and NO EDIT TO ANY EXECUTABLE,
   TEST, PROTOCOL, PLAN, RESULT OR PACKET FILE other than ONE NEW DESIGN DOCUMENT
