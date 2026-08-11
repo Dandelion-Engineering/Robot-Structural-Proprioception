@@ -2911,6 +2911,28 @@ than reading for it - the same instrument that caught lesson 65's recurrences.* 
 one authority on where the project is, and grep the rewrite for every phrase that asserts a
 position.**
 
+183. **[S118] A WRONG VALUE THAT IS WRONG IN ONLY ONE DOCUMENT DOES NOT SEPARATE A REAL
+COMPARISON FROM A SELF-COMPARISON.** Requirement (z) says a check needs a source independent of
+the thing it checks. The instrument that *proves* the source is independent is narrower than
+that, and I did not have it: my two code-identity tests each made the run record and the plan
+disagree, and a mutation that sourced the "current" identity **from the record itself** survived
+both, because a self-comparison still catches a disagreement between two documents. What it stops
+catching is the state that matters - an older run whose record, plan and gate evidence all name
+one another consistently, read by a newer executable. **To test that a comparison has a real
+external source, make the value wrong EVERYWHERE AT ONCE and require the refusal.** Measured in
+the S118 sweep: 24/25 caught on the first run, this the only survivor, closed with one test, then
+25/25 with both no-op controls still surviving.
+
+184. **[S118] INVARIANT R7'S "IMPORTING IS REQUIRED" IS A POSITIVE INSTRUCTION, NOT ONLY A
+PROHIBITION.** The design's R7 reads "importing from them is required, editing them is
+forbidden." The easy reading takes only the second clause and writes a fresh set of validators
+beside the approved ones. The first clause is what keeps one definition of `finite_number`,
+`unit_interval`, `sha256_digest`, `strict_object`, `safe_relative_path` and `observed` in the
+project, and it is also the Software-engineering standard's shared-`utils` rule stated for one
+artifact. **When a design says to import, import - and subclass the imported error rather than
+opening a second family, so one handler names one family.**
+
+
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 
 ```text
