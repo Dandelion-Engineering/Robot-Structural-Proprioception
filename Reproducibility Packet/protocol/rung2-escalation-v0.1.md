@@ -1,7 +1,9 @@
 # Rung-2 Escalation for the Gate-4 Attribution Estimator — v0.1
 
-**Status:** DRAFT, written by Claude in Session 111, handed to Codex for review. **Owner
-approval: Claude approves this state.** Reviewer review: pending.
+**Status:** REVIEW CANDIDATE, written by Claude in Session 111 and edited by Codex in Session
+111. Exact-state approvals live in the Phase-2 chat and Git history, not in this mutable status
+line. Claude's handoff approval named original blob `b7449993ceeb657fb37feff36bff4cb827ceed0a`;
+any later blob requires its own explicit owner and reviewer records.
 
 **Nothing in this document authorizes a fit, a checkpoint, a role read, a capacity choice, a
 threshold, a generation, a rollout, or any pilot/validation/test read.** It is a design under
@@ -60,8 +62,8 @@ what Stage 1 actually measured rather than in terms of taste.
 
 ### 2.1 The two in-force slots, and the bound that constrains the use
 
-**No Claim Sheet amendment is required.** The same two slots that licensed Stage 1 license
-this, and this time the first one licenses it more directly:
+**No Claim Sheet amendment is required.** Slot 9 licenses this directly; Slot 14 governs how
+the resulting ladder history must eventually be reported:
 
 - **Slot 9, model-capacity ladder.** "(rung 2) a larger/deeper recurrent-plus-attention
   estimator… Escalate a rung when **(a)** there is partial signal worth strengthening, **or
@@ -69,19 +71,22 @@ this, and this time the first one licenses it more directly:
   smaller model cannot." Limitation 127 is condition (b) stated in measurements. Stage 1 was a
   within-rung sweep and explicitly did not climb; this does.
 - **Slot 14, minimum public artifact.** The Technical Report must contain the matched ablation
-  "with matched estimator capacity **and** the within-suite capacity sweep." A ladder whose
-  rungs are named in the contract and never built would leave that report unable to say which
-  rung was shipped or what the alternatives did.
+  "with matched estimator capacity **and** the within-suite capacity sweep." Stage 1 already
+  supplies that within-suite sweep. This one-configuration rung-2 fit is **not a second
+  within-suite sweep** and does not borrow authority from that phrase; Slot 14 requires the
+  eventual report to preserve the ladder history and say which validation-selected rung was
+  shipped, while Slot 9 is the authority for building the alternative rung.
 
 **The dev-fit contract's bound 5 constrains what the result may be used for, unchanged:** a dev
-fit may show that the implementation learns and may expose failure modes, but may not set
+fit may show that the implementation lowers its declared objective and may expose failure modes,
+but may not set
 validation-owned probability, detection, abstention, OOD or calibrated-uncertainty thresholds,
 **may not select a headline capacity**, and may not become a research result.
 
-The reconciliation of bound 5 with Slot 14 was settled in `capacity-escalation-v0.1.md` §2.1
-and is **not restated here** — it applies to this document word for word, with "this sweep"
-read as "this rung-2 fit." The one sentence worth repeating because it is the operative
-constraint on every later write-up:
+The bound-5 restriction developed in `capacity-escalation-v0.1.md` §2.1 applies to this document
+word for word, with "this sweep" read as "this rung-2 fit." Slot 14 is a reporting obligation,
+not independent authority for this action. The one sentence worth repeating because it is the
+operative constraint on every later write-up:
 
 > **Selection of the shipped capacity remains validation's, at Gate 5/6, under its own
 > authorization.** If the executable built from this document is ever used to choose the
@@ -128,10 +133,11 @@ full.
 2. **The paired within-rung-2 difference.** Per seed, S minus C1, on the approved analyzer's
    in-sample macro-F1 and each of its four per-class F1 values. This is the same estimand
    limitation 127 is about, measured at a different rung.
-3. **The equivalence gate.** Two fits of *rung 1* at 32 channels, through the **rung-2 module's
-   own fitting loop**, asserted bit-identical against the approved Session-84 checkpoints.
+3. **The equivalence gate.** Two fits of *rung 1* at 32 channels, through the **new executable's
+   own fitting loop**, with both the resulting state dictionaries and the per-epoch loss
+   histories asserted bit-identical against the approved Session-84 checkpoints and ledger rows.
    Without it, a difference between rung 1 and rung 2 is confounded with a difference between
-   two fitting loops, and the rung-2 module contains a new one by necessity (section 4.5).
+   two fitting loops, and the new executable contains a new one by necessity (section 4.5).
 
 Every classification metric is computed by the **approved** `analyze_dev_fit.classification_metrics`,
 imported and not re-implemented, for the reason Stage 1 gave: a second definition of macro-F1
@@ -166,11 +172,11 @@ constants checked against the approved ledger, exactly as `capacity_sweep` does.
 
 **A consequence to state plainly, because it is the design's largest exposure.** The protocol
 was chosen for rung 1 and is being applied unchanged to an architecture with a recurrent path.
-If rung 2 fails the learnability criterion of §5.1, the honest reading is *"this architecture
-does not optimize under the rung-1 protocol in 20 epochs"* — which is a real finding about the
-pair — and **the response is not to tune the protocol until it does.** Tuning epochs or
-learning rate against dev outcomes and reporting the winner is capacity selection by another
-name. Section 5.5 pre-declares the failure path.
+If rung 2 fails the objective-reduction check of §5.1, the honest reading is *"at least one arm
+did not reduce the declared total objective under the rung-1 protocol in 20 epochs"* — which is
+a real finding about the pair — and **the response is not to tune the protocol until it does.**
+Tuning epochs or learning rate against dev outcomes and reporting the winner is capacity
+selection by another name. Section 5.5 pre-declares the failure path.
 
 ### 4.2 The architecture — named, measured, and justified piece by piece
 
@@ -192,6 +198,35 @@ input [B, 36, T]
   -> heads           class(4) / unknown(1) / location(3) / severity(2)
 ```
 
+**The recurrent and attention parameterization is exact, not left to library defaults.** The
+stem reuses kernel-size-3 bias-bearing rung-1 blocks. The recurrent layer is exactly:
+
+```python
+nn.GRU(
+    input_size=C,
+    hidden_size=H,
+    num_layers=L,
+    bias=True,
+    batch_first=True,
+    dropout=0.0,
+    bidirectional=False,
+)
+```
+
+Three bias-bearing projections `q_proj`, `k_proj` and `v_proj` each map `H -> H`. The final GRU
+output supplies the one query; every GRU output supplies one key and one value. Each projected
+tensor is reshaped into `n_heads` heads, the scores are divided by
+`sqrt(H / n_heads)`, softmax is taken over the time axis, and the head contexts are
+concatenated back to `H`. There is **no attention output projection and no attention
+dropout**; the following `Linear(2H -> H)` is the one fusion projection. Using
+`nn.MultiheadAttention` unchanged would silently add an `H -> H` output projection and would
+produce 228,330 parameters rather than the declared 219,018.
+
+Construction inherits rung 1's RNG isolation: all parameter creation occurs inside
+`torch.random.fork_rng(devices=[], enabled=True)` after `torch.random.manual_seed(seed)`. Thus
+same-seed C1 and S factories start from bit-identical state dictionaries, a different seed
+changes the state, and constructing a network does not advance the caller's CPU RNG stream.
+
 **The selected configuration, and it is the only one this document proposes:**
 
 ```text
@@ -199,6 +234,12 @@ C = 64 channels, n_stem = 4 blocks, H = 96 hidden, L = 2 GRU layers, n_heads = 4
 219,018 parameters          (5.53 x rung 1's 39,594)
 stem receptive field 31 samples; the GRU and the attention pool both span the whole window
 ```
+
+The selected count decomposes as 2,368 input-projection parameters + 66,560 across the four
+stem blocks + 128 stem-normalization parameters + 102,528 GRU parameters + 27,936 across the
+three attention projections + 18,528 fusion parameters + 970 head parameters = **219,018**.
+The executable test recomputes this from the constructed network rather than trusting this
+ledger.
 
 **Why each piece, and which pieces are decisions rather than deductions.**
 
@@ -233,7 +274,7 @@ checkpoint written, no fit run against any development row**:
 
 | C | stem | H | L | heads | parameters | stem RF | in the rung-2 band |
 |---:|---:|---:|---:|---:|---:|---:|:---:|
-| 48 | 4 | 64 | 1 | 4 | 82,778 | 31 | **no — this is still rung 1** |
+| 48 | 4 | 64 | 1 | 4 | 82,778 | 31 | **no — below the declared rung-2 band** |
 | 64 | 4 | 96 | 1 | 4 | 163,146 | 31 | yes |
 | **64** | **4** | **96** | **2** | **4** | **219,018** | **31** | **yes — selected** |
 | 64 | 5 | 96 | 2 | 4 | 235,658 | 63 | yes |
@@ -269,9 +310,13 @@ RUNG2_MAX_PARAMETERS = 1_000_000
 ```
 
 - **`RUNG2_MIN_PARAMETERS` is derived from the approved rung-1 constant, not typed.** The two
-  bands are contiguous and disjoint by construction: a parameter count answers "which rung is
-  this" by itself, with no boundary at which both answers are available. Rung 1's band is the
-  inclusive `[10_000, 100_000]`, so rung 2's is the inclusive `[100_001, 1_000_000]`.
+  size bands are contiguous and disjoint by construction: a parameter count distinguishes an
+  admitted rung-2 instance from rung 1's declared size band, with no boundary at which both
+  size-band answers are available. **Parameter count does not identify the architecture rung by
+  itself.** The 82,778-parameter recurrent-plus-attention grid point is an undersized rung-2
+  candidate, not a rung-1 network, and a future rung-3 ensemble may overlap this size band unless
+  its own document names a different rule. Rung 1's band is the inclusive `[10_000, 100_000]`,
+  so rung 2's declared admissible band is the inclusive `[100_001, 1_000_000]`.
 - **`RecurrentAttentionAttributionNet.__init__` takes no enforcement argument at all.** There is
   no keyword, flag, environment variable or module toggle that can turn the band check off. The
   check is the last statement of the constructor and it is unconditional.
@@ -294,7 +339,7 @@ RUNG2_MAX_PARAMETERS = 1_000_000
 | suite-agnosticism | masking the eight gauge columns leaves the parameter count at **219,018** and every output shape identical, while changing the outputs |
 | the attention path is live | the context contributes mean abs **0.0162** against a mean abs pooled magnitude of **0.0352** — about 46% — so zeroing it is not a no-op |
 | the pool reads the whole window | perturbing the **first** 32 of 768 steps moves the pooled read by 0.0048; perturbing the **last** 32 moves it by 0.1625 |
-| attention at initialization | entropy **6.643774** nats against a uniform 6.643790, and 0.08332 of the mass in the final 64 steps against a uniform 0.08333 — i.e. **near-uniform, as an untrained query/key pair must be**. This is a wiring check and **is not evidence that the attention learns anything.** |
+| attention at initialization | entropy **6.643774** nats against a uniform 6.643790, and 0.08332 of the mass in the final 64 steps against a uniform 0.08333 — i.e. **near-uniform for this initialized prototype**. Untrained attention is not required to be uniform; this is a wiring measurement and **is not evidence that the attention learns anything.** |
 
 The suite-agnosticism measurement is the one that matters most for the science: it is design
 commitment 1 of rung 1 carried forward, and it is what makes "exactly capacity-matched between
@@ -309,7 +354,10 @@ inherited from the Stage-1 curve or from the point estimate of 79."*
 
 1. The comparison this measurement records is *paired within rung 2* at a fixed seed, and
    *paired against the rung-1 anchor* at the same seed. The anchor exists at exactly these five
-   seeds. A different seed set makes the second pairing impossible and the first no better.
+   seeds. Replacing them with five different seeds destroys the second pairing without
+   increasing the first comparison's sample count. Adding seeds beyond these five could sharpen
+   the within-rung-2 description, but those extra seeds would have no rung-1 anchor pair; that is
+   the separate extension discussed below.
 2. `np.random.default_rng(seed).permutation(152)` depends only on the seed and the example
    count, both fixed, so the **row order is common** across rungs at a fixed seed. The
    initialization is **not** common across rungs — the tensors have different shapes, so they
@@ -354,12 +402,13 @@ equals the approved loop with an equivalence gate. **Rung 2 follows the same rou
 improvement**, because it is now the third place the loop would live and three copies is where
 drift becomes inevitable:
 
-> **The rung-2 module defines the loop once, parameterized by a network factory:**
+> **The new `rung2_escalation.py` executable module defines the loop once, parameterized by a
+> network factory:**
 > `fit_arm(examples, *, seed, network_factory, epochs, batch_size, learning_rate, device)`.
 > The rung-2 arms pass a rung-2 factory. **The equivalence gate passes a rung-1 factory** —
 > `TemporalAttributionNet(seed=seed)` at 32 channels, `enforce_rung1_band` untouched at its
-> default `True` — and asserts the resulting state dict is **bit-identical** to the approved
-> Session-84 checkpoint for that arm.
+> default `True` — and asserts the resulting state dict **and per-epoch loss history** are
+> bit-identical to the approved Session-84 checkpoint and ledger row for that arm.
 
 That makes the gate exercise the *identical* code path the rung-2 arms use, differing only in
 the factory. Stage 1's C9 had the same shape; this states it as the module's structure rather
@@ -376,6 +425,7 @@ are part of no curve and no read.
 | imported, approved, reusable as-is | why |
 |---|---|
 | `dev_fit_trainer.arm_loss` | one definition of the objective across rungs — this is what makes the rung comparison a comparison of architecture |
+| `dev_fit_trainer._stack`, `DevFitDataError`, `require_predeclared_seed` | the copied loop also depends on the approved batch construction and refusal semantics; omitting these from the import ledger would leave the factory seam under-specified |
 | `attribution_net.deterministic_conv_precision` | the TF32 context must wrap the whole step, forward and backward |
 | `attribution_net._CausalDilatedBlock`, `_PerStepChannelNorm` | one definition of the causal padding rule |
 | `attribution_net.AttributionHeads` | the heads contract `arm_loss` and `score_arm` both read |
@@ -386,10 +436,10 @@ are part of no curve and no read.
 `capacity_sweep.write_refusal_document` writes into a sink named by the module constant
 `REFUSAL_SINK_NAME = "_capacity_sweep_refusals"`. It takes no sink parameter, so a rung-2
 refusal would be filed under the capacity sweep's name. **The approved module must not be
-edited to add one** — section 10 decision D4 explains why in full — so the rung-2 module
+edited to add one** — section 10 decision D4 explains why in full — so the new executable module
 declares its own sink and its own near-identical writer, and **invariant R9 requires a test that
-drives both writers on the same input and asserts they agree on everything except the sink
-name**, so the copy cannot drift silently.
+drives both writers with one fixed valid UUID, asserts identical JSON payloads, and isolates the
+path difference to the sink-directory name**, so the copy cannot drift silently.
 
 **The estimator wrapper needs no new code at all, and this was measured rather than assumed.**
 `TemporalAttributionEstimator` depends on its network only through the `registry_width`
@@ -397,8 +447,10 @@ attribute and an `AttributionHeads` return, both of which rung 2 provides. Drive
 111: the approved wrapper accepted a rung-2 network, produced a validating unfitted output
 (`abstain_decision=True`, `severity_uncertainty=+inf`), accepted `attach_trained_weights`, and
 preserved `self.net`'s object identity. **Its type annotation says `TemporalAttributionNet` and
-its behaviour is rung-agnostic** — a real mismatch, recorded as a new limitation rather than
-repaired, because repairing it means editing a file in the identity chain (decision D4).
+its behaviour is rung-agnostic. `capacity_sweep.score_arm` has the same narrower annotation even
+though its runtime contract is also rung-agnostic.** These are real mismatches, recorded as new
+limitations rather than repaired, because repairing either means editing a file in the identity
+chain (decision D4).
 
 ### 4.6 Why one configuration and not a rung-2 sweep
 
@@ -420,16 +472,21 @@ capacity-selection activity and belongs to validation at Gate 5/6 under its own 
 Written before any rung-2 fit exists. The executable persists **primitives**; a separate
 read-only analyzer derives everything below from them (invariant R7).
 
-### 5.1 The learnability criterion — pre-declared, deliberately weak
+### 5.1 The objective-reduction check — pre-declared, deliberately weak
 
-> **An arm is `LEARNED` if and only if** its every recorded epoch loss is finite **and** its
-> final-epoch mean loss is strictly less than its first-epoch mean loss. **The run is
-> `LEARNABLE` if and only if all ten rung-2 arms are `LEARNED`.**
+> **A completed arm is `OBJECTIVE_REDUCED` if and only if** every recorded epoch loss is finite
+> **and** its final-epoch mean total objective is strictly less than its first-epoch mean total
+> objective. **The run is `OPTIMIZATION_CHECK_PASSED` if and only if** both equivalence arms are
+> `PASS`, exactly ten rung-2 arms are `COMPLETED`, and all ten are `OBJECTIVE_REDUCED`.
 
-It is weak on purpose. It asks whether the implementation optimizes, which is exactly what
-bound 5 permits a development fit to show, and it asks nothing about how well. It is **not** a
-performance criterion, a comparison, or a bar. It is a stop-or-go gate in the sense the
-Scientific-work standard means: if it fails, section 5.5 applies and no read below is reported.
+It is weak on purpose. It asks only whether the implementation lowered the declared combined
+training objective, which is exactly what bound 5 permits a development fit to show, and it asks
+nothing about how well. The objective contains a severity Gaussian-NLL term whose log-scale can
+drive a reduction without improving classification, so **this is not a learning signal, a
+classification criterion, a comparison, or a performance bar.** The persisted field is named
+for the narrow property it supports rather than `LEARNED`. It is a stop-or-go gate in the sense
+the Scientific-work standard means: if it fails, section 5.5 applies and the sign read is
+suppressed.
 
 **Measured in Session 111 on synthetic tensors — random inputs, random fixed targets, 152
 examples, the exact protocol** (this touches no development row and, per the standing precedent
@@ -440,25 +497,35 @@ rung 1, C = 32     first-epoch 3.0650   final-epoch -1.2198   strictly reduced  
 rung 2 candidate   first-epoch 2.5641   final-epoch -0.5499   strictly reduced 109.29 s
 ```
 
-Both optimize under the fixed protocol on a memorization task of the right shape. **Rung 1
-reached the lower synthetic loss of the two, and that is recorded here precisely because it is
-the inconvenient direction** — it says nothing about the development split (random labels on
-random inputs measure memorization capacity and nothing else) and it must not be quoted as
-though it did.
+Both lowered the declared total objective under the fixed protocol on a memorization task of the
+right shape. **Rung 1 reached the lower synthetic loss of the two, and that is recorded here
+precisely because it is the inconvenient direction** — neither the lower value nor the reduction
+is a classification-learning claim, and neither says anything about the development split
+(random labels on random inputs measure memorization capacity and nothing else).
 
 ### 5.2 The persisted primitives, with exact definitions
 
 Per rung-2 arm (ten of them): `suite`, `seed`, `rung` (`rung2_recurrent_plus_attention`),
 `n_parameters`, `stem_receptive_field`, the full per-epoch `loss_history`, `first_epoch_loss`,
-`final_epoch_loss`, `learned` (§5.1), the approved analyzer's `accuracy`, `macro_f1` and
-`per_class_f1` mapping, and the checkpoint's digest and relative name.
+`final_epoch_loss`, `objective_reduced` (§5.1), the approved analyzer's `accuracy`, `macro_f1`
+and `per_class_f1` mapping, the checkpoint's digest and relative name, and the full sorted
+`fit_code_identity` map that produced and scored the arm.
 
 Per equivalence arm (two of them): `suite`, `seed`, `rung1_reference_checkpoint_sha256`,
-`refit_checkpoint_sha256`, and `bit_identical` (`PASS`/`FAIL`).
+`refit_checkpoint_sha256`, the approved and refit per-epoch loss histories,
+`weights_bit_identical`, `loss_history_bit_identical`, and the derived `equivalence_status`
+(`PASS` only when both comparisons pass; otherwise `FAIL`).
 
 Read from the approved rung-1 records, never recomputed: each anchor arm's `macro_f1` and
 `per_class_f1`, together with the field paths they were read from and the digests of the two
 documents they were read out of.
+
+The new run's `fit_code_identity` is not satisfied by the design digest alone. It includes the
+approved trainer's eight historical entries unchanged, `capacity_sweep.py` and
+`analyze_dev_fit.py` because the new path imports their scoring and persistence machinery, plus
+the new `attribution_net_rung2.py` and `rung2_escalation.py`. The plan binds that complete map;
+execute mode compares it entry by entry before the first fit; the run-level artifact and every
+arm persist it. A changed entry or an unlisted runtime producer is a named refusal.
 
 Derived and persisted by the analyzer, each recomputable from the primitives above:
 
@@ -482,52 +549,70 @@ Derived and persisted by the analyzer, each recomputable from the primitives abo
   than it did at five.
 - No absolute filesystem path in any artifact.
 
-### 5.4 The pre-registered interpretation — applied jointly, licensing one sentence
+### 5.4 The pre-registered interpretation — applied jointly, with ordered failure precedence
 
 Applied **only after both agents have reviewed the exact terminal artifact**, and applied
-jointly, in the same shape as Stage 1's §5.4.
+jointly, in the same shape as Stage 1's §5.4. The status table is evaluated top to bottom and
+exactly one row matches. The sign table is applied **only** after the successful status row; a
+successful terminal therefore licenses one status sentence plus exactly one sign sentence.
 
-| condition | the sentence it licenses, and nothing beyond it |
+| ordered status condition | the sentence it licenses, and nothing beyond it |
 |---|---|
-| `LEARNABLE` and both equivalence arms `PASS` | *"Slot 9's rung 2 is built and fitted; the ladder has more than one rung on it, and the development record contains one rung-2 fit at five seeds under the approved protocol."* |
+| either equivalence arm is `FAIL`, or the comparison cannot be completed | *"The rung-2 fitting loop did not reproduce both approved rung-1 checkpoints; no rung-2 arm or rung comparison is reported."* — and section 5.5 applies |
+| both equivalence arms are `PASS` but the terminal record does not contain exactly ten `COMPLETED` rung-2 arms | *"The rung-2 run ended before all ten predeclared arms completed; no rung comparison is reported."* — and section 5.5 applies |
+| all twelve arms completed but any rung-2 arm is not `OBJECTIVE_REDUCED` | *"At least one rung-2 arm did not reduce the declared total training objective under the rung-1 protocol in 20 epochs; no rung comparison is reported."* — and section 5.5 applies |
+| `OPTIMIZATION_CHECK_PASSED` | *"Slot 9's rung 2 is built and fitted; the ladder has more than one rung on it, and the development record contains one rung-2 fit at five seeds under the approved protocol."* — then apply exactly one sign row below |
+
+| successful-run sign condition | the sentence it licenses, and nothing beyond it |
+|---|---|
 | `deficit_sign_reproduced = REPRODUCED_IN_SIGN` | *"At rung 2, in-sample, S's macro-F1 was below C1's at all five seeds."* |
 | `deficit_sign_reproduced = NOT_REPRODUCED_IN_SIGN` | *"At rung 2, in-sample, S's macro-F1 was at or above C1's at all five seeds."* |
 | `deficit_sign_reproduced = MIXED` | *"At rung 2, in-sample, the paired sign was not consistent across the five seeds."* |
-| any equivalence arm `FAIL` | *"The rung-2 fitting loop did not reproduce the approved rung-1 checkpoints; no rung comparison is reported."* — and section 5.5 applies |
-| not `LEARNABLE` | *"The rung-2 architecture did not reduce its loss under the rung-1 protocol in 20 epochs."* — and section 5.5 applies |
 
 **Explicitly forbidden, in the same voice the Stage-1 rule uses:** attaching *because*, *so*,
-*therefore*, *which shows*, *capacity-bound*, *resolves*, or *confirms* to any row above.
-Row 1 is a statement about what was built. Rows 2–4 are statements about five signs on
-in-sample development data. **No row is evidence for or against the project's hypothesis, and
-no combination of rows becomes evidence by being combined.**
+*therefore*, *which shows*, *capacity-bound*, *resolves*, or *confirms* to any row above. The
+successful status sentence is a statement about what was built. The sign sentence describes
+five signs on in-sample development data. **No row is evidence for or against the project's
+hypothesis, and the two successful sentences do not become evidence by being combined.**
 
 ### 5.5 The failure path, pre-declared so it is not improvised
 
-If the run is not `LEARNABLE`, or either equivalence arm fails:
+If either equivalence comparison fails or cannot be completed, the run is incomplete, or the
+run is not `OPTIMIZATION_CHECK_PASSED`:
 
 1. The run's exact state is preserved, not deleted and not re-run into the same root.
-2. The failure is **reported** — it is a finding about the architecture-plus-protocol pair, and
-   the Technical Report carries it.
-3. **At most one** protocol amendment may be proposed, and it must be a **new, separately
-   reviewed and jointly approved document** naming what changes and why, written before it is
-   run. Silently re-running with different epochs or a different learning rate until the loss
-   moves is protocol selection against development outcomes and bound 5 forbids it.
-4. The failed run stays in the record either way.
+2. The failure is **reported at the branch that actually occurred** — equivalence failure is a
+   fitting-loop failure, incomplete execution is an incomplete run, and objective-check failure
+   is a finding about the architecture-plus-protocol pair. The Technical Report carries that
+   exact branch rather than collapsing all three into an architecture result.
+3. An equivalence failure or incomplete run licenses no automatic replay. A retry requires a
+   diagnosed cause, any necessary executable/test re-review, a new label and plan, and fresh
+   joint execution authorization. A transient interruption may be retried under the same
+   protocol through that fresh-root sequence; it does not require a scientific amendment.
+4. If the objective-reduction check fails and a change to epochs, learning rate, or another
+   protocol value is proposed, **at most one** such protocol amendment may be proposed. It must
+   be a **new, separately reviewed and jointly approved document** naming what changes and why,
+   written before it is run. Silently tuning against the failed development outcomes until the
+   objective moves is protocol selection and bound 5 forbids it.
+5. The failed run stays in the record either way.
 
 ---
 
 ## 6. Invariants the executable must carry
 
-Numbered so a review can drive each one. Every refusal is a **named terminal exit that persists
-an artifact**, inheriting lesson 116: *a refusal must never report through the resource whose
-occupancy triggers it.*
+Numbered so a review can drive each one. Every refusal **after a permitted destination is
+available** is a named terminal exit that persists an artifact, inheriting lesson 116: *a
+refusal must never report through the resource whose occupancy triggers it.* There are two
+disclosed pre-persistence boundaries: a missing required destination has nowhere authorized to
+write, and `X_FORBIDDEN_BASE` must not persist under the protected base whose use it is refusing.
+Both print the named refusal and zero resource counts to stdout and write nothing.
 
 - **R1 — the approved rung-1 records are read, never re-written.** `results/dev_fit` is refused
   as a destination by `require_permitted_base` before any write of any kind, including the
   refusal sink's. Limitation 122/128 makes `dev_fit_result.json` the sole provenance record for
   ten checkpoints, and the equivalence arms' re-fits go to the reserved `_equivalence/` subtree
-  of the claimed run root.
+  of the claimed run root. This is the `X_FORBIDDEN_BASE` no-artifact boundary named above, not
+  an exception silently taken at implementation time.
 - **R2 — one atomic run-root claim.** `<base>/<run_label>/`, created with `exist_ok=False`; a
   pre-existing file or directory, empty or not, is the named terminal `X_RUN_ROOT_OCCUPIED`, and
   its refusal is persisted in a **sibling** sink, never through the occupied path. Every write
@@ -536,8 +621,8 @@ occupancy triggers it.*
   or running any equivalence arm, the executable checks that the ledger's `assignment_sha256`,
   `manifest_sha256`, `role_index_sha256`, `window_schedule` and training protocol match the ones
   it is about to use, and that the recorded `fit_code_identity` matches the current code **entry
-  by entry** for all eight historical entries. Any changed historical entry or unlisted addition
-  is a refusal.
+  by entry** for all eight historical entries. Any changed historical entry or extra entry inside
+  that historical map is a refusal; R12 separately names the new rung-2 producer entries.
 - **R4 — the rung and the band are recorded from the constructed network**, not re-derived:
   `rung` name, `n_parameters`, and the assertion `RUNG2_MIN_PARAMETERS <= n <=
   RUNG2_MAX_PARAMETERS`. The count must equal 219,018 for the declared configuration and the
@@ -547,18 +632,31 @@ occupancy triggers it.*
   matching `enforce|band|skip|strict|check` and that the raise is not guarded by any parameter.
 - **R6 — the equivalence gate runs before any rung-2 arm**, through the same `fit_arm` the
   rung-2 arms use, with a rung-1 factory, refusing loudly on a non-identical state dict, on a
-  missing approved checkpoint, and on an unmakeable comparison.
+  non-identical loss history, on a missing approved checkpoint or ledger row, and on an
+  unmakeable comparison.
 - **R7 — the analysis is a NEW read-only script.** `analyze_dev_fit.py` and
   `analyze_capacity_sweep.py` are jointly approved and bound to their artifacts by digest;
   importing from them is required, editing them is forbidden.
 - **R8 — zero rollouts, zero generation, zero pilot/val/test reads**, asserted and persisted on
-  every exit path, including terminals.
+  every artifact-bearing exit, including terminals, and printed on the two stdout-only boundary
+  exits declared before R1.
 - **R9 — the duplicated refusal writer is pinned against its approved original** by a test that
-  drives both on the same input and asserts they agree on every field except the sink name.
+  drives both with the same valid fixed `attempt_uuid`, asserts the JSON payloads are exactly
+  equal, and asserts the returned relative paths differ only in the sink-directory component.
 - **R10 — no partial run may present itself as a rung.** The analyzer refuses unless the
   run-level artifact reports all ten rung-2 arms `COMPLETED` and both equivalence arms `PASS`.
+  It then derives the objective-reduction status first and suppresses every paired sign and
+  rung-comparison field unless `OPTIMIZATION_CHECK_PASSED` is true.
 - **R11 — the design document's digest is pinned in the executable** and checked at run time, so
   an executable cannot outlive the document that authorized it.
+- **R12 — the new producer identifies itself.** Plan mode binds the complete
+  `fit_code_identity` map named in §5.2. Execute mode requires the plan's map to equal the current
+  map entry by entry before any fit; every arm and the run-level artifact persist it. The design
+  digest proves which protocol authorized the executable; it does not substitute for the code
+  identity that produced a checkpoint.
+- **R13 — matched seeds mean matched initialization, not merely matching integers.** Tests assert
+  same-seed C1/S factories produce bit-identical initial state dictionaries, a different seed
+  changes at least one tensor, and construction leaves the caller's CPU RNG state unchanged.
 
 ---
 
@@ -571,10 +669,13 @@ restated here beyond the three points where rung 2 differs.**
    to at least three scratch destinations before execution is authorized, exactly as Stage 1's
    §7.1 required. The plan enumerates twelve arms (ten rung-2, two equivalence) with their
    suites, seeds, factories and destinations, states the protocol, the rung, the band, the
-   expected parameter count and `MAX_FITS = 12`, and carries the design digest.
-2. **The run-level artifact is written on every terminal path**, carrying the exit name, the
-   reason class, the resource counts, elapsed time, the per-arm records of §5.2, and the gate
-   evidence — including on the exits that refuse.
+   expected parameter count and `MAX_FITS = 12`, and carries the design digest plus the complete
+   `fit_code_identity` map of §5.2/R12.
+2. **After a permitted base is available, the run-level artifact is written on every terminal
+   path**, carrying the exit name, the reason class, the resource counts, elapsed time, the
+   per-arm records of §5.2, and the gate evidence — including on the exits that refuse. A
+   missing destination and `X_FORBIDDEN_BASE` are the two stdout-only boundaries declared before
+   R1; claiming artifact persistence for either would contradict the refusal itself.
 3. **Retry uses a new label and a fresh root.** A failed or partial run is preserved as evidence;
    nothing resumes into an occupied root.
 
@@ -651,10 +752,12 @@ you disagree, the alternative I would accept is a thin re-export, which still re
 the approved module — see D4.
 
 **D2 — declaring the rung-2 parameter band as `[100_001, 1_000_000]`.** Slot 9 names no band for
-rung 2. Contiguity with rung 1 is the property I actually want (a parameter count identifies its
-rung unambiguously); one decade and the hardware headroom are the rest. This is a decision, and
-the selected 219,018 sits comfortably inside whatever reasonable band is chosen, so overruling it
-does not change the configuration.
+rung 2. Contiguity with rung 1 is the property I actually want (an admitted rung-2 instance cannot
+also lie in rung 1's size band); one decade and the hardware headroom are the rest. Architecture
+name plus its admissible band identify this rung — parameter count alone does not classify a
+recurrent-plus-attention candidate as rung 1 or pre-classify a future rung 3. This is a decision,
+and the selected 219,018 sits comfortably inside whatever reasonable band is chosen, so
+overruling it does not change the configuration.
 
 **D3 — five seeds.** Justified by commensurability with the anchor, priced at 5/10/20 in §4.4,
 and explicitly **not** justified by precision, because rung 2's dispersion is unknown. If you
@@ -664,9 +767,10 @@ dispersion than pick a number now that neither of us can defend.
 **D4 — not editing `attribution_net.py`, `dev_fit_trainer.py` or `capacity_sweep.py`, at all,
 for any of the three reasons this document found to want to.** Those three wants are: flipping
 `CAPACITY_LADDER`'s rung-2 entry from `built=False` to `built=True`; widening
-`TemporalAttributionEstimator`'s `TemporalAttributionNet | None` annotation, which its behaviour
-already exceeds; and adding a sink-name parameter to `write_refusal_document`. **All three are
-refused by the same measured fact:** `attribution_net.py` is one of the eight entries of
+`TemporalAttributionEstimator`'s and `capacity_sweep.score_arm`'s `TemporalAttributionNet`
+annotations, which their behaviour already exceeds; and adding a sink-name parameter to
+`write_refusal_document`. **All three are refused by the same measured fact:**
+`attribution_net.py` is one of the eight entries of
 `dev_fit_trainer.training_code_identity()` (`dev_fit_trainer.py:1012`), and `capacity_sweep.py`
 is an entry of `sweep_code_identity()`. Editing any of them changes a recorded identity, and
 invariant R3 — the same entry-by-entry check Stage 1's C3 made — would then refuse every future
