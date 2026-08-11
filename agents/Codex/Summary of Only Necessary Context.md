@@ -1,15 +1,15 @@
 # Summary of Only Necessary Context — Codex
 
-**Last rewritten:** 2026-08-11 — Codex Session 117
+**Last rewritten:** 2026-08-11 — Codex Session 118
 
 ## Resume here
 
 The project remains in **Phase 2 — Execution**, with limited Phase-3 Reproducibility Packet
 assembly underway. Final configuration is **UNFROZEN** and
 `Reproducibility Packet/config/config.json` is absent. Pilot, validation and test roles remain
-unread for capacity, threshold, final-configuration and confirmatory decisions.
+unread for capacity, thresholds, final configuration and confirmatory decisions.
 
-The seven-step rung-2 sequence is now through **Step 5**:
+The seven-step rung-2 sequence is now through **Step 6**:
 
 ```text
 1. design review/freeze                 CLOSED / BOTH APPROVED
@@ -17,19 +17,17 @@ The seven-step rung-2 sequence is now through **Step 5**:
 3. executable/test build/review         CLOSED / BOTH APPROVED
 4. plan mode plus artifact review       CLOSED / BOTH APPROVED
 5. two-half execution + one invocation  SPENT / X_RUNG2_OK
-6. read-only analyzer build/review       OPEN FOR BUILD / NOT APPROVED
-7. exact derived-state review + read     NOT AUTHORIZED
+6. read-only analyzer build/review       CLOSED / BOTH APPROVED
+7. production read + exact-state review 1/2 AUTHORIZATION HALVES / NOT RUN
 ```
 
-The one authorized `rung2-run-1` invocation completed. Both equivalence arms passed, all ten
-rung-2 arms completed, and the raw terminal artifact records 12 fits / 12 checkpoints / 0
-rollouts / 0 generation / 0 non-development reads. Codex's independent raw-state audit passed
-261 checks.
+The one authorized `rung2-run-1` fitting invocation completed in Session 117. The separate
+read-only analyzer implementation is now jointly approved, but it has **not** been invoked on the
+real run. Codex issued one exact production-read authorization half in Session 118; Claude has
+not issued the matching half. **At 1/2 halves no analyzer invocation is authorized.**
 
-**Do not treat that as the derived read.** No analyzer exists, no production analyzer was
-invoked, and section 5.4 was not applied. All ten raw `objective_reduced` primitives are `true`,
-but `OPTIMIZATION_CHECK_PASSED`, paired signs and rung differences remain analyzer-derived
-quantities. They have not been computed or approved.
+Do not derive or state the paired sign, rung differences or optimization status manually from
+the raw result. Do not apply section 5.4. The real analysis artifact does not exist.
 
 ## Exact rung-2 states
 
@@ -85,8 +83,8 @@ bytes / EOL              9,751 B / 0 LF / 0 CR / ASCII / no BOM
 run label                rung2-run-1
 ```
 
-Both agents approve the exact plan. Its two Step-5 authorization halves were spent by the one
-completed invocation. The plan licenses no replay or retry.
+Both agents approve the plan. Its two fitting-execution halves were spent by the one completed
+invocation. It licenses no replay or retry.
 
 ### Step 5 — raw execution artifacts
 
@@ -108,68 +106,111 @@ Reproducibility Packet/results/rung2_escalation/rung2-run-1/
   wall time             1,274.6 s (artifact elapsed_s 1,272.094)
 ```
 
-Codex's separate audit passed **261/261** checks: exact identities/counters/census, canonical
-serialization, ten approved anchors, two bit-identical equivalence arms, ten planned rung-2
-records, all twelve checkpoint digests, rung-2 tensor key/shape/dtype/parameter/finite checks,
-no absolute paths, and production completion-validator acceptance.
+Codex's Session-117 independent audit passed 261/261 checks: exact identities, budgets and
+counters; ten approved anchors; two bit-identical equivalence arms; ten planned rung-2 arms; all
+twelve checkpoint digests and tensor states; canonical serialization; no absolute paths; and
+production completion-validator acceptance.
 
 The raw artifact carries ten true `objective_reduced` primitives. This is not a learning,
-classification, C1-versus-S, capacity, trend, threshold or held-out claim.
+classification, sensor-suite, capacity, trend, threshold or held-out claim.
 
-## Step 6 boundary
-
-The next allowed technical act is **Claude's implementation of the new read-only
-`Reproducibility Packet/scripts/analyze_rung2_escalation.py` plus focused tests**, following
-frozen design sections 5–6. Synthetic/in-memory fixtures may exercise the analyzer during build.
-
-The following are **not** authorized merely because the build is open:
-
-- invoking the production analyzer on `rung2-run-1`;
-- writing the real derived analysis artifact;
-- reading pilot, validation or test roles;
-- applying section 5.4;
-- stating paired signs, rung differences or `OPTIMIZATION_CHECK_PASSED` from an unapproved
-  implementation; or
-- selecting capacity, thresholds or final configuration.
-
-The analyzer code/test pair must first complete an exact same-state review loop. Preserve code
-construction, production invocation, exact derived-state review and joint interpretation as
-separate gates.
-
-## Public README state
-
-Claude's Session-117 reviewer edit to the plan heartbeat is closed at:
+### Step 6 — analyzer and tests
 
 ```text
-README.md
-  Git blob          485d83ce4c76a708899485fa8eb830c6892f156d
-  cleaned SHA-256   efee887595f830c27810d4935ba6555990649c580012611761ebb06b45004586
-  Claude approval   explicit
-  Codex approval    explicit
+Reproducibility Packet/scripts/analyze_rung2_escalation.py
+  Git blob       7cf3cc6a720f15fea61dcec670e119a83a67080f
+  raw SHA-256    8323494348a7a70e2735cf3938a01a273a1f0889ffe75d70435d07d6d291597c
+  bytes / LF     48,308 / 1,125
+
+Reproducibility Packet/tests/test_rung2_escalation_analysis.py
+  Git blob       a642b3d3d96f0f7d011c5f5ccf407f4c9c1e8825
+  raw SHA-256    169a3cb2d4314ee0d7d3887a6d421decbbf8ed15950c6145744f18c57baecede
+  bytes / LF     54,947 / 1,398
 ```
 
-That wording correctly names the separate 132-check author and 107-check reviewer audits, their
-independence from the plan producer, the direct authorization-gate drive and Claude's 23-mutant
-calibration.
+Claude explicitly approved both exact files on handoff. Codex reviewed them against frozen
+sections 5–6, accepted the checkpoint re-scoring, read-only anchor path and six-decimal tie rule,
+and explicitly approved them as-is. Verification at the approved state passed 103 focused, 103
+under `python -O`, and 2,108 packet-wide tests. **Step 6 is CLOSED / BOTH APPROVED.**
 
-Codex later repaired the stale `Last updated` banner from 2026-08-10 to 2026-08-11 and approves:
+Do not reopen this pair. A later artifact problem propagates forward unless it demonstrates a
+real producer defect requiring a new reviewed version.
+
+## Production analyzer authorization — current 1/2 state
+
+Codex authorizes exactly one invocation from `Reproducibility Packet/scripts/`:
 
 ```text
-README.md
-  Git blob          abeac76cad401de682942424c9a9398237d5bdf5
-  cleaned SHA-256   488c2531bfd81028c5513d3e6c281ba93808fcb1020aaa385b7196af33a14731
-  cleaned form      145,938 B / 208 LF / 0 CR
-  delta vs 485d83ce +1 / -1, banner date only
-  Codex approval    explicit
-  Claude review     OPEN
+..\..\venv\Scripts\python.exe -B .\analyze_rung2_escalation.py ^
+  --data-root ..\..\data\gate3-base-dev-pilot-val-c1-s ^
+  --run-result ..\results\rung2_escalation\rung2-run-1\rung2_escalation_result.json ^
+  --run-result-sha256 9d94b03ee5825b15c3e09d612a9ebdfdcddb959d068ea35da899dbb35ae996ed ^
+  --equivalence-artifact ..\results\rung2_escalation\rung2-run-1\_equivalence\rung2_escalation_equivalence.json ^
+  --approved-plan ..\results\rung2_escalation\plans\rung2-run-1\rung2_escalation_plan.json ^
+  --approved-fit-ledger ..\results\dev_fit\dev_fit_result.json ^
+  --approved-anchor-analysis ..\results\dev_fit\dev_fit_analysis.json ^
+  --run-root ..\results\rung2_escalation\rung2-run-1 ^
+  --output-dir ..\results\rung2_escalation_analysis\rung2-run-1
 ```
 
-Claude must genuinely re-open exact blob `abeac76c...`. If approved as-is, the narrow banner
-loop closes. If Claude edits it, review the returned exact state.
+Exact canonical text inputs:
 
-No public raw-execution heartbeat was added. Wait for an approved analyzer-derived read before
-deciding whether a new running-log entry is warranted; do not narrate an unreviewed terminal as a
-result.
+```text
+run result            9d94b03ee5825b15c3e09d612a9ebdfdcddb959d068ea35da899dbb35ae996ed
+equivalence artifact ddcb5fedeafffda5ebf19f6b973b410f95801c407d9af9302a8ecf7268b4e936
+approved plan         b51b0009e25cbd4816ea3eabed033cb1579780dd468c78e0a21e8a1e78941040
+approved fit ledger   f18c98b2baf47346ce7cf5868a615abe14047844b7de2c8541c2df137acd6b3e
+approved analysis     7bec34a1289aa59b84dd3b5a05f0a753a72c588292a33957295ba20ff4ddac58
+```
+
+At Codex closeout, `results/rung2_escalation_analysis/rung2-run-1/` is absent. The authorized
+maximum is one analyzer invocation / zero fits / zero checkpoints / zero rollouts / zero
+generation / zero non-development reads. The invocation may read only the approved development
+rows and twelve named checkpoint files and may exclusively create only
+`rung2_escalation_analysis.json` under that fresh namespace.
+
+Claude must independently check the state and issue a matching exact half before anyone runs the
+command. If the two halves match, one invocation spends both whether it succeeds or refuses. No
+retry or different input/output state is authorized.
+
+## Step 7 boundary
+
+After one jointly authorized production invocation, the resulting exact analysis artifact must
+be reviewed by both agents before section 5.4 is applied. Keep these separate:
+
+1. production analyzer invocation;
+2. exact analysis-artifact integrity/content review by each agent;
+3. joint application of the ordered section-5.4 status row; and
+4. only after a successful status row, joint application of exactly one sign row.
+
+No capacity/rung selection, threshold, validation read or final configuration follows
+automatically from any Step-7 sentence.
+
+## Accepted analyzer rulings
+
+- Re-scoring the ten rung-2 checkpoints is a zero-fit independent metric check and follows the
+  jointly approved Stage-1 analyzer precedent.
+- Rung-1 anchors are re-read from their approved records and never recomputed.
+- Six-decimal quantized zero counts as a tie; an all-tie macro sign is
+  `NOT_REPRODUCED_IN_SIGN`, matching the frozen at-or-above branch.
+- Completeness is checked before data/checkpoint reads; objective status is derived before paired
+  and rung fields; all downstream fields are suppressed together on failure.
+- The analyzer's output is a development-only in-sample descriptive artifact, not a hypothesis
+  verdict or selection.
+
+## Public README and packet runbook
+
+The public plan-entry wording is closed / both approved at README Git blob
+`485d83ce4c76a708899485fa8eb830c6892f156d`. The later one-line `Last updated` repair is also
+closed / both approved at blob `abeac76cad401de682942424c9a9398237d5bdf5`.
+
+No raw-execution or analyzer-build heartbeat has been added. Wait for the jointly reviewed
+derived state before deciding whether a new public running-log entry is warranted.
+
+The packet runbook has no rung-2 lane. Codex's Session-118 ruling: Claude should make one later
+README edit with two consecutive steps — first the module/plan/completed raw execution, then the
+analyzer read and tracked reference — after Step 7, so the second step can name the exact jointly
+reviewed analysis digest. Documentation does not itself authorize execution.
 
 ## Frozen rung-2 design boundaries
 
@@ -203,13 +244,16 @@ rung-2 design                                      CLOSED / BOTH APPROVED
 rung-2 architecture module/test                    CLOSED / BOTH APPROVED
 rung-2 executable/test                             CLOSED / BOTH APPROVED
 rung-2 zero-fit plan                               CLOSED / BOTH APPROVED
-rung-2 execution authorization                     SPENT / ONE INVOCATION COMPLETE
+rung-2 fitting authorization                       SPENT / ONE INVOCATION COMPLETE
 rung-2 raw terminal                                X_RUNG2_OK
 rung-2 raw integrity audit                         CODEX PASSED / 261 CHECKS
-rung-2 analyzer code/test                          OPEN FOR BUILD / NOT APPROVED
-rung-2 production analyzer / joint read            NOT AUTHORIZED
+rung-2 analyzer code/test                          CLOSED / BOTH APPROVED
+rung-2 production analyzer authorization           1/2 HALVES / NOT AUTHORIZED
+rung-2 production analyzer invocation              NOT RUN
+rung-2 exact derived-state review                  NOT AVAILABLE
+rung-2 section 5.4 joint read                      NOT AUTHORIZED
 public plan-entry wording                          CLOSED / BOTH APPROVED
-public last-updated banner                         CODEX APPROVED / CLAUDE REVIEW OPEN
+public last-updated banner                         CLOSED / BOTH APPROVED
 capacity / probability / abstention thresholds     VALIDATION-OWNED / UNDECIDED
 final configuration                                ABSENT / BLOCKED
 ```
@@ -222,8 +266,8 @@ and jointly applied frozen section 5.4. Only row 5 matched:
 > **the paired curve does not have a readable shape at five points and five seeds**
 
 No trend statement is licensed. Do not call the curve closing, widening, shrinking, flat, stable
-or unmoving. The point values may be quoted only as exact record contents. The measurement selects
-no capacity or threshold and makes no scientific C1-versus-S comparison.
+or unmoving. The point values may be quoted only as exact record contents. The measurement
+selects no capacity or threshold and makes no scientific C1-versus-S comparison.
 
 The Stage-1 precision note is closed at Git blob
 `bc803294610f834900f5671ca0606caf42b21fc4`. Do not reopen it or spend more seeds on its current
@@ -232,9 +276,9 @@ timing or a future marginal-cost bound.
 
 ## Checkpoint and packet limitation
 
-The working tree now contains **67 Git-ignored checkpoint files** totaling 19,982,011 bytes:
-ten approved `results/dev_fit` anchors, three preserved failed `stage1-run-1` checkpoints, 42
-completed `stage1-run-2` checkpoints, and twelve completed `rung2-run-1` checkpoints.
+The working tree contains **67 Git-ignored checkpoint files** totaling 19,982,011 bytes: ten
+approved `results/dev_fit` anchors, three preserved failed `stage1-run-1` checkpoints, 42
+completed `stage1-run-2` checkpoints and twelve completed `rung2-run-1` checkpoints.
 
 Tracked JSON consistency is auditable without the checkpoints. Before Phase 3 completes, the
 team still needs either an authenticated clean-machine recovery/distribution path or an explicit
@@ -245,51 +289,36 @@ protected tree and carry targeted cleanup. Do not run mutation experiments again
 harness casually. If reopened, redirect the protected tree into `tmp_path` under a separate
 exact-state review.
 
-## Transcript state and Session-117 recurrence
+## Transcript state
 
-Codex's first authorization append in Session 117 landed at line 19,811, not the physical tail.
-The cause was exact: Codex verified a longer unique EOF anchor, then applied a patch using only
-the repeated `— Claude` signature and separator. Immediate prefix/header/last-agent assertions
-caught it before the project run began.
-
-The misplaced 100-line turn remains preserved. A 52-line dated correction at the physical tail
-restated the exact README approval, 36-check preflight, command, plan digest, base, run label,
-budget, authorization half and non-authorization boundaries. Its complete 2,010,849-byte prior
-state was preserved under SHA-256
-`5667e933f62119e67e599c1b990d7889667ae5dd819a6404900aac55ea28fa09`.
-
-The recurrence is also recorded in the director-visible Transcript Order Monitoring thread. The
-result handoff and banner-correction appends then used complete pre-verified EOF blocks and passed
-all gates. Final technical transcript state:
+Session 118 had no order recurrence. The append used the complete exact EOF block verified
+immediately before writing and passed prefix/header/last-agent/additions-only checks:
 
 ```text
-bytes / LF / CR     2,020,093 / 32,776 / 19,456
-SHA-256             615b9df58ab868cc3425c057d096db9ca68d497122c1931ff3a946f940e4a1b9
-working-tree delta  +277 / -0, two disclosed hunks
-last agent header   Codex Session-117 README banner correction
+bytes / LF / CR     2,036,725 / 33,066 / 19,456
+SHA-256             8251d87b074269072d826bbe17012103190832f96e0beac2731d3eef802afde7
+working-tree delta  +126 / -0, one physical-tail hunk
+last agent header   Codex Session-118 analyzer-authorization half
 ```
 
-Monitoring transcript final state:
+The Session-117 misplaced 100-line turn remains preserved at line 19,811, with its dated
+physical-tail correction. Claude independently verified the repair at the Git level in Session
+118. Do not edit historical transcript content.
 
-```text
-bytes / LF / CR     32,226 / 560 / 127
-SHA-256             385daa3d3a9b2fd2cc7cf71ab559b889d65d5ce529c3de993f4323d843c05d85
-working-tree delta  +33 / -0
-last agent header   Codex Session 117
-```
-
-The durable rule remains: verify a unique multi-line physical EOF anchor, and apply that **same
-complete object**. Verifying a longer block and patching a suffix is a gate violation even if the
-suffix looks like the tail.
+The durable append rule: read the physical UTF-8 tail, record bytes/lines/digest, verify a unique
+multi-line physical-EOF anchor, apply that **same complete object**, then assert the old prefix,
+unique post-boundary header, last-agent predicate and additions-only diff. Verifying a longer
+block and patching a suffix is a gate violation.
 
 ## Blocked work
 
-- replaying or retrying `rung2-run-1` under the spent Step-5 halves;
-- editing or reopening the frozen design, Step-2 pair, Step-3 pair or consumed plan;
-- production analyzer invocation before analyzer code/tests are jointly approved and separately
-  authorized;
-- treating raw true objective flags as an approved derived status or learning result;
-- applying section 5.4 before exact derived-state review by both agents;
+- production analyzer invocation before Claude supplies the matching exact half;
+- any retry or alternative analyzer input/output after the two halves are spent;
+- manual derivation or publication of optimization status, paired signs or rung differences;
+- section 5.4 before exact derived-state review by both agents;
+- replaying or retrying `rung2-run-1` under the spent fitting halves;
+- editing or reopening the frozen design, Step-2 pair, Step-3 pair, consumed plan or approved
+  Step-6 pair;
 - any rung-to-rung or Stage-1 curve trend statement;
 - scientific C1-versus-S conclusions from development evidence;
 - capacity or threshold selection from development;
@@ -300,18 +329,19 @@ suffix looks like the tail.
 
 ## Next session
 
-- Next Codex session number: **118**.
-- Session 118 is not a regular progress-report session; the next regular is 120.
-- First authenticate the physical transcript tail and compare its prior digest to Codex's
-  published `615b9df5...e4a1b9` state if Claude reports it.
-- If Claude approves README blob `abeac76c...`, close that narrow banner loop. If Claude edits
-  it, review the returned exact state.
-- If Claude hands over analyzer code/tests, review only that exact pair against frozen sections
-  5–6. Do not run the production analyzer merely because the code exists.
-- Keep analyzer implementation review, production invocation, exact derived-artifact review and
-  joint section-5.4 application as separate gates.
-- Do not derive or publish paired signs/rung comparisons manually from the raw result while the
-  analyzer gate is open.
+- Next Codex session number: **119**.
+- Session 119 is not a regular progress-report session; the next regular is 120.
+- Authenticate the physical transcript tail and compare its prior digest to Codex's published
+  `8251d87b...afde7` state if Claude reports it.
+- If Claude issues a matching analyzer half, verify literal equality of command, five input
+  digests, output namespace and budget before treating the state as 2/2.
+- If both halves exist, one exact invocation is permitted; no retry is permitted. Preserve any
+  refusal or success artifact.
+- After a successful invocation, review only the exact analysis artifact. Do not apply section
+  5.4 until both agents explicitly approve that same state.
+- Keep invocation, exact-state approval, status-row application and sign-row application as
+  distinct gates.
+- Do not manually inspect the raw metric values while authorization is still open.
 
 ## Workflow rules
 
@@ -323,8 +353,7 @@ suffix looks like the tail.
 - Keep development screens, confirmatory evidence, detection, attribution, information, action
   authorization and control outcome separate.
 - Preserve append-only public and technical history; corrections propagate forward.
-- Before every chat append: read the physical UTF-8 tail, record bytes/lines/digest, verify a
-  unique multi-line physical-EOF anchor, patch against that **entire exact anchor**, then assert
-  the old prefix, unique post-boundary header, last-agent predicate and additions-only diff.
+- Before every chat append, use the complete verified EOF object as the actual write anchor and
+  re-assert the prefix and physical tail after writing.
 - Use header recognizer `^\*\*[A-Za-z]+ \(Session [^)]*\):\*\*` and take header time at append.
 - Keep README updates lean and milestone-based.
