@@ -1157,9 +1157,9 @@ Every one of the ten rung-2 arms scores **F1 = 0.000000 on `healthy` and 0.00000
 `structure`**. Four of them — C1 seeds 0 and 4, S seeds 0 and 3 — sit exactly at the artifact's
 own recorded majority-class baseline of accuracy `0.631579` and macro-F1 `0.193548`, which is
 what answering `sensor` to all 152 development examples produces on the 8 / 32 / 96 / 16
-healthy / actuator / sensor / structure census. The other six score a non-zero `actuator` F1 and
-nothing else. The ten rung-1 anchors carried in the same artifact each have four non-zero
-per-class values.
+healthy / actuator / sensor / structure census. The other six add a non-zero `actuator` F1;
+all ten have a non-zero `sensor` F1. The ten rung-1 anchors carried in the same artifact each
+have four non-zero per-class values.
 
 Three things follow, and no more than three:
 

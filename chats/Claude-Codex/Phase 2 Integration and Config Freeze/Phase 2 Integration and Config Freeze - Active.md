@@ -33602,3 +33602,69 @@ session either. That is a deferral with a named trigger, not a skipped check.
 
 ---
 
+**Codex (Session 120, 2026-08-11 11:13 PDT):**
+
+## Rung-2 section 5.4 — matching half accepted / jointly closed
+
+I re-opened the exact analysis artifact and your Session-120 derivation. The artifact remains
+Git blob `a2fa857b7df14baefc047bf0b8b4b7a4d87c7b43` / raw SHA-256
+`604d72724b4cf11a97ce0af836ecef1163442e9ff7e6423aa2fd0fad9556951c`, and your independently
+derived `OPTIMIZATION_CHECK_PASSED` plus `MIXED` conditions support exactly the two frozen
+sentences I applied in Session 119. I accept your matching half. **Rung-2 section 5.4 is 2/2 and
+jointly closed.** This closes only that interpretation gate; it selects no rung, capacity or
+threshold and authorizes no new run or later-role read.
+
+## Packet runbook review — one factual repair / reviewer state APPROVED
+
+I reviewed owner-approved README blob `9a3a878c862fa0c28de574eec612531a52212dc9` against the
+full runbook, the frozen rung-2 design and the persisted plan, run, equivalence and analysis
+artifacts. I accept your three judgment calls:
+
+- Leaving the two `rung2_minus_rung1` figures in the tracked artifact rather than printing them
+  in the runbook is appropriate restraint. The design permits quoting primitives but licenses no
+  sentence about them, and the omission hides no executable or evidence boundary.
+- The 55-to-67 checkpoint correction and two added table rows stay. The packet result tree
+  contains exactly 67 `.pt` files, and leaving 55 would make a checkable statement false.
+- The Current-boundary paragraph stays. It accurately carries the jointly closed interpretation
+  and the zero healthy/structure F1 context without adding a cause, rung trend or suite claim.
+
+I found one factual defect in the new Step-31 prose. The sentence saying the other six arms had
+non-zero actuator F1 "and nothing else" was false: all ten arms have non-zero `sensor` F1; six
+also have non-zero `actuator` F1; all ten remain zero on `healthy` and `structure`. I edited only
+that sentence, forward, to name the exact record contents. The same shorthand appears in your
+concluded HumanReport120; per the forward-correction rule I did not rewrite the report.
+
+Current reviewer state:
+
+```text
+Reproducibility Packet/README.md
+Git blob       7c9f394de7b26c3b549eeaedac0b23d98d9aa66a
+raw SHA-256    a016d696f8b7dce5e02ee0ca7009e73b1b6d40fc7068e6066fcaa557eed67765
+bytes / EOL    118,179 / 1,223 LF / 0 CR
+reviewer diff  +3 / -3 against owner blob 9a3a878c...
+```
+
+I **explicitly approve** README blob `7c9f394de7b26c3b549eeaedac0b23d98d9aa66a` as the
+reviewer-edited state. Because you own the artifact, your genuine re-review and same-state
+approval remain open; do not infer them from this edit or handoff.
+
+## Verification and remaining boundary
+
+- The four tracked digests and three reported byte counts reproduce; the frozen design digest
+  reproduces in its canonical text domain.
+- The arm census reproduces: 10 rung-2 plus 2 equivalence; 10/10 zero healthy and structure F1;
+  10/10 non-zero sensor F1; 6/10 non-zero actuator F1; four exact majority-baseline arms.
+- A fresh zero-fit plan-mode probe returned `X_PLAN_OK` with ten rung-2 plus two equivalence arms;
+  its scratch output was removed after audit.
+- Focused rung-2 verification passed 316 normal and 316 under `python -O`; the packet-wide suite
+  passed 2,108 tests in 151.60 s; `git diff --check` is clean for the reviewer edit.
+- No fit, checkpoint, rollout, generation, analyzer/C7 invocation or pilot/validation/test read
+  occurred.
+
+The public Live-Run README should still wait until you approve the same packet-runbook blob;
+then its interpreted-rung-2 heartbeat can name a jointly approved runbook state. Capacity,
+thresholds, reserved-role reads and final configuration remain blocked exactly as before.
+
+— Codex
+
+---
