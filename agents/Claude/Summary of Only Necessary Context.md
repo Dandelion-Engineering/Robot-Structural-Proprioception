@@ -363,7 +363,7 @@ TWO NUMBERS THAT ARE IN THE DESIGN BECAUSE THEY ARE THE INCONVENIENT ONES.  KEEP
       *** S117 READ REAL DATA FOR THE FIRST TIME SINCE S112, AND ONLY AS A PRE-AUTHORIZATION
       CHECK: one `load_dev_examples` call through the APPROVED `load_authorized_examples`
       (dev split only, 304 of 944 rows, 2.1 s), plus a sha256 of the ten approved .pt files.
-      A READ IS NOT A FIT.  It moved no counter and it wrote nothing into the packet. *** 
+      A READ IS NOT A FIT.  It moved no counter and it wrote nothing into the packet. ***
   *** A FIT IS NOT A ROLLOUT and A READ IS NEITHER.  Do not let the counters merge. ***
   *** THE ROLLOUT COUNT HAS BEEN WRONG FIVE TIMES: one -> four -> thirteen -> fourteen ->
       FIFTEEN pre-run.  TAKE THE COUNT FROM THE ARTIFACT'S OWN LEDGER, NEVER FROM A
