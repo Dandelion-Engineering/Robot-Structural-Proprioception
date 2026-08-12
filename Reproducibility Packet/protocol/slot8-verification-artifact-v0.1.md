@@ -1,12 +1,16 @@
 # The Director's Verification Artifact — Interface Contract and Synthetic Scaffold — v0.1
 
-**Status:** REVIEWER-EDITED CANDIDATE, ROUND 2. Claude approved the Session-123 draft
+**Status:** OWNER-RE-REVIEWED CANDIDATE, ROUND 3. Claude approved the Session-123 draft
 `260e2042c6b857c2d07cf1f9619cf54af86e5015`; Codex reviewed it in its Session 123, found nine
 contract defects, repaired them and approved `0fabe54741741f7a86c121859bd7110d8664d39d`; Claude's
 Session-124 owner re-review kept all nine repairs unchanged, added two findings of its own and
-approved `d56c25c18218892e651e1c7583175d9e03e6969e`. Codex's Session-124 re-review kept both new
-repairs and narrowed their test contracts; Claude's genuine owner re-review is open. Exact-state
-approvals live in the Phase-2 chat and in Git history, not in this mutable status line.
+approved `d56c25c18218892e651e1c7583175d9e03e6969e`; Codex's Session-124 re-review kept both new
+repairs, narrowed their test contracts and approved `7536a6eba5eb4b293cc7acd3cff64f0351d85216`.
+Claude's Session-125 owner re-review kept both of those narrowings and added two findings of its
+own (the fixture's tracking block was never required to be a valid `j_5s` call, and the shared
+painter had no time argument for the animation it is required to drive). Codex's re-review of this
+state is open. Exact-state approvals live in the Phase-2 chat and in Git history, not in this
+mutable status line.
 
 **Nothing in this document authorizes a fit, a checkpoint, a capacity choice, a probability or
 abstention threshold, a configuration freeze, a generation, a rollout, or any pilot, validation or
@@ -103,10 +107,23 @@ connection record is jointly approved.
 ```
 
 The real-result adapter is the only code permitted to touch a role, a checkpoint or a config.
-Both surfaces are functions of a bundle and nothing else. They share one pure
-`draw_scene(scene)` painter; the interactive wrapper changes which bundle scene it passes to that
-painter, while the scripted wrapper iterates the same scenes. A renderer that opens a file is a
-defect.
+Both surfaces are functions of a bundle and nothing else. They share one pure painter with the
+exact signature
+
+```text
+draw_scene(scene, *, frame) -> figure
+```
+
+**The frame argument is load-bearing and is not an implementation detail.** A2 and section 4.5
+panel 1 require an *animated* two-body view with play/pause and a timeline, and V16 requires each
+case to carry two *time-varying* centerlines. A painter whose entire input is a scene has no lever
+the timeline can move, so a wrapper that may only choose *which scene* cannot animate anything;
+naming the frame here is what keeps the animated view and the published still on one source
+instead of two. The interactive wrapper varies both the scene (radio menu) and the frame (slider /
+`FuncAnimation`); the scripted wrapper iterates the same scenes at a frame **derived from the
+scene** (section 4.6), so the scripted surface remains a function of the bundle alone. The painter
+itself is pure in both: it takes a value and a frame index and returns a figure. A renderer that
+opens a file is a defect.
 
 ---
 
@@ -356,6 +373,7 @@ assert *which* refusal fired; the last row is the success code and is the only z
 | `X_PROVENANCE_UNRESOLVED` | the inputs do not land in exactly one state |
 | `X_BUNDLE_INCOMPLETE` | case IDs are duplicated, a required source case is absent, or a surface omits a bundle case |
 | `X_ARMS_INCOMPLETE` | fewer or more than the two required arms |
+| `X_WINDOW_UNSUPPORTED` | an arm's `tracking` block is not a valid `utils.metrics.j_5s` call at that scene's onset and `window_s` — a non-uniform or non-increasing grid, a non-finite sample, an onset that is not exactly a control sample, or a grid that ends before `onset_time_s + window_s` |
 | `X_SCENE_OK` | success (exit 0) |
 
 ### 4.4 The synthetic fixture
@@ -382,6 +400,24 @@ Requirements on it:
   `detection_time_s` is `NaN` before detection — those are the schema's own defaults, they are what
   a real role will carry, and without them section 4.5's `UNAVAILABLE` branch and the 4.1
   non-finite encoding are both unrendered and untested in the only round that can test them.
+- **Every arm's `tracking` block must be a valid `j_5s` call, and this is a hard fixture
+  requirement rather than an aspiration.** Section 4.1's property 2 claims the panel the director
+  reads and the number the Technical Report reports are the same quantity *because they take the
+  same inputs*. That claim is only checkable if the inputs are ones `j_5s` will actually accept,
+  and the function's preconditions are strict — measured this session against the live
+  `utils.metrics.j_5s`: the grid must be strictly increasing and uniform, every tracking sample
+  must be finite, `onset_time_s` must land on a control sample to within `1e-9`, and the grid must
+  extend through `onset_time_s + window_s` or the call raises *"the analysis window is truncated
+  before onset + window_s"*. **A perfectly ordinary fabricated trace fails this**: 1,000 samples
+  at 100 Hz from 0 s, with a deliberately round onset at 5.0 s, is refused, because that grid ends
+  at 9.99 s and the 5 s window needs a sample at 10.0 s. `linspace(0, 10, 1001)` at the same onset
+  is accepted. The fixture generator must therefore emit grids that cover
+  `onset_time_s + window_s`, and scene construction refuses with `X_WINDOW_UNSUPPORTED` when they
+  do not. Without this, the only round that can exercise property 2 never exercises it, and
+  section 4.5 panel 3 shades a window that extends past the end of the data it is drawn over —
+  the picture and the number disagreeing in exactly the way property 2 exists to prevent. This is
+  the same shape as finding CA: a fixture that cannot reach a branch leaves that branch untested
+  in the only round that can test it.
 - **It declares no truth it does not have.** `truth` may be set for a fixture — it is fabricated
   along with everything else — but it is rendered as **`FABRICATED TRUTH`**, never as an
   unqualified green correctness mark, and the banner governs interpretation. V9 forbids any
@@ -394,9 +430,11 @@ about the robot. Section 6 states this inside the artifact.
 
 One figure, three regions, identical in both surfaces:
 
-1. **The two bodies.** Both arms' animated planar centerlines against the shared task reference,
-   labelled by suite, with the body change and its onset marked. Radio-button menu selection,
-   play/pause and timeline controls satisfy A1/A2 without typed input.
+1. **The two bodies.** Both arms' planar centerlines at the painter's `frame` argument, drawn
+   against the shared task reference and over the faint full sweep of that arm's centerlines
+   across time, labelled by suite, with the body change and its onset marked. Radio-button menu
+   selection selects the scene and play/pause and timeline controls drive `frame`, which is what
+   satisfies A1/A2 without typed input.
 2. **Call and confidence.** Per arm: the class probabilities over
    `("healthy", "structure", "actuator", "sensor")` — the canonical `SOURCE_CLASS_ORDER`, so a
    reader comparing a figure to a table never has to check — the current call, and the
@@ -410,20 +448,31 @@ One figure, three regions, identical in both surfaces:
    non-negative, config-defined **error scale**; the renderer must not call that scale a confidence
    interval unless a later frozen contract gives it coverage semantics, and an infinite scale
    renders as `UNAVAILABLE` rather than as a plot extent.
-3. **Tracking error.** Per arm: the norm of `task_reference - true_task_output` on shared axes,
-   onset marked, and the post-onset window shaded so the director can see the region the project's
-   headline metric integrates over.
+3. **Tracking error.** Per arm: the norm of `task_reference - true_task_output` on shared axes —
+   the same per-sample quantity `j_5s` integrates — with onset marked and the shaded band spanning
+   exactly `[onset_time_s, onset_time_s + window_s]`, so the director can see the region the
+   project's headline metric integrates over. The shaded band is the metric's window and not an
+   approximation of it; a scene whose grid cannot support that band never reaches the renderer,
+   because scene construction already refused it with `X_WINDOW_UNSUPPORTED`.
 
 Panels 2 and 3 are per-arm and side by side. **Neither panel emits a cross-arm derived number.**
 That is section 6 item 4, and it is the constraint most likely to be relaxed by accident.
 
 ### 4.6 The scripted figure path
 
-The scripted wrapper iterates the bundle through the same `draw_scene(scene)` painter under a
-non-interactive backend and calls `savefig(..., format="png", dpi=300)`, per the Standards'
-figure requirement. It writes one PNG and canonical scene JSON per case plus the canonical bundle
-JSON and its SHA-256, so any figure in any report can be traced to both the exact scene and complete
-menu that produced it.
+The scripted wrapper iterates the bundle through the same `draw_scene(scene, *, frame)` painter
+under a non-interactive backend and calls `savefig(..., format="png", dpi=300)`, per the
+Standards' figure requirement. It writes one PNG and canonical scene JSON per case plus the
+canonical bundle JSON and its SHA-256, so any figure in any report can be traced to both the exact
+scene and complete menu that produced it.
+
+**The frame the still draws is derived from the scene, never passed in**, so the scripted surface
+stays a function of the bundle alone and V13's byte-identical requirement has something
+deterministic to bind. It is the control sample at `onset_time_s + window_s` — the last sample the
+headline metric integrates, which section 4.4 now guarantees exists. That choice ties panel 1 to
+panel 3: the body pose the reader sees is the pose at the moment the shaded window closes, rather
+than an arbitrary frame that happens to be first or last in the array. The interactive surface is
+the only place `frame` is free.
 
 The provenance banner is drawn **into the figure** as a figure-level artist, not written into a
 caption or a filename. A caption is separable from the image the moment someone copies the PNG
@@ -502,12 +551,23 @@ module refuses, with code Y, when Z" is.
   produces a byte-identical bundle; output case IDs equal bundle case IDs exactly.
 - **V14 — No cross-arm derived scalar exists.** A test asserts the scene schema and both renderers
   contain no field or label carrying a C1-versus-S difference, ratio or reduction.
-- **V15 — Schema and metric mappings are exact.** The decision-field set equals the machine
-  schema's `estimator_outputs` fields; tracking arrays come from `plant`; and `j_5s` called on the
-  scene's arrays, onset and window reproduces the authenticated recorded value when one exists.
-- **V16 — The body panel contains bodies.** Each fixture case has two time-varying centerlines.
-  The future real adapter must check the distal centerline point against `true_task_output` within
-  a declared tolerance and refuse a geometry mismatch.
+- **V15 — Schema and metric mappings are exact, and the metric is actually called.** The
+  decision-field set equals the machine schema's `estimator_outputs` fields; tracking arrays come
+  from `plant`. **A test calls the live `utils.metrics.j_5s` on every arm of every fixture scene,
+  at that scene's `onset_time_s` and `window_s`, and requires it to return a finite value** — the
+  unconditional half of this invariant, and the only thing that makes section 4.1's property 2
+  checkable in a round with no recorded value to compare against. Tests also assert the four
+  refusal shapes: a non-uniform grid, an off-sample onset, a grid ending before
+  `onset_time_s + window_s`, and a non-finite tracking sample each refuse scene construction with
+  `X_WINDOW_UNSUPPORTED` rather than reaching a renderer. Where an authenticated recorded value
+  exists, `j_5s` on the scene's arrays must additionally reproduce it.
+- **V16 — The body panel contains bodies, and the timeline moves them.** Each fixture case has two
+  time-varying centerlines, and a test asserts `draw_scene` at two different `frame` values
+  produces different body artists for the same scene — otherwise the animation requirement is
+  satisfied by a still. The scripted still's frame is the derived one in section 4.6 and is
+  asserted to be the control sample at `onset_time_s + window_s`. The future real adapter must
+  check the distal centerline point against `true_task_output` within a declared tolerance and
+  refuse a geometry mismatch.
 - **V17 — The fixture bundle exercises the visible failure branches.** Its named scenes jointly
   cover confident correct, confident wrong, abstention, high unknown and an indistinguishable
   C1/S case; tests inspect the rendered artists and menu entries, not only the fixture arrays.
