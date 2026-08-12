@@ -1,6 +1,6 @@
 # The Director's Verification Artifact — Interface Contract and Synthetic Scaffold — v0.1
 
-**Status:** REVIEWER-EDITED CANDIDATE, ROUND 3. Claude approved the Session-123 draft
+**Status:** OWNER-RE-REVIEWED CANDIDATE, ROUND 4. Claude approved the Session-123 draft
 `260e2042c6b857c2d07cf1f9619cf54af86e5015`; Codex reviewed it in its Session 123, found nine
 contract defects, repaired them and approved `0fabe54741741f7a86c121859bd7110d8664d39d`; Claude's
 Session-124 owner re-review kept all nine repairs unchanged, added two findings of its own and
@@ -11,9 +11,16 @@ own (the fixture's tracking block was never required to be a valid `j_5s` call, 
 painter had no time argument for the animation it is required to drive). Codex's Session-125
 re-review kept both repairs and found two interaction defects exposed by the new frame argument:
 the two arms had no single shared playback grid, and the painter had no causal rule for which
-estimator decision was available at a frame. Codex repaired both and approved the returned state;
-Claude's owner re-review is open. Exact-state approvals live in the Phase-2 chat and in Git
-history, not in this mutable status line.
+estimator decision was available at a frame. Codex repaired both and approved that state. Claude's
+Session-126 owner re-review kept both of Codex's diagnoses and both repairs after driving them
+against the live loop, the live role contract and the approved assignment, and narrowed three of
+their consequences plus one count: the controller-log clause bound an unrendered field to a grid
+the live rollout loop offsets by exactly one control interval, so it would have refused every real
+scene (CI); the frame range check was assigned to scene construction, which never receives a frame
+(CJ); the fixture could satisfy the new `NO DECISION YET` requirement with an empty decision trace
+the live role contract forbids (CK); and the section-4.1 lead-in still read "Six properties" over
+an eight-item list (CL). Codex's re-review of this state is open. Exact-state approvals live in the
+Phase-2 chat and in Git history, not in this mutable status line.
 
 **Nothing in this document authorizes a fit, a checkpoint, a capacity choice, a probability or
 abstention threshold, a configuration freeze, a generation, a rollout, or any pilot, validation or
@@ -271,13 +278,13 @@ position is a loud decode failure, never a silent zero. **V19.**
 | `playback_t_s` | `[T]` | fixture, or authenticated C1/S schema-B `plant` roles | the one shared, finite, strictly increasing uniform control grid; every frame-bearing array in both arms is indexed by it |
 | `arms` | exactly 2 | roles or fixture | keyed `C1`, `S`; **exactly two, always both** |
 | `arms[k].body` | `centerline_xy[T,N,2]` | fixture, or derived read-only from schema-B `plant` + authenticated config | the body animation on `playback_t_s`; final centerline point must agree with `true_task_output` |
-| `arms[k].decisions[]` | per decision step | schema D `estimator_outputs` | strictly increasing `step`/`decision_time_s`; exact fields `p_class[4]`, `unknown_score`, `abstain_decision`, **`location_out`**, `severity_out`, `severity_uncertainty`, `detection_time_s` |
+| `arms[k].decisions[]` | **at least one**, per decision step | schema D `estimator_outputs` | strictly increasing `step`/`decision_time_s`; exact fields `p_class[4]`, `unknown_score`, `abstain_decision`, **`location_out`**, `severity_out`, `severity_uncertainty`, `detection_time_s` |
 | `arms[k].tracking` | `task_reference[T,2]`, `true_task_output[T,2]`, `window_s` | schema-B `plant`; window from fixture or authenticated config | with `playback_t_s` and onset in `body_change`, the complete argument set for `utils.metrics.j_5s` |
-| `arms[k].controller_mode[]` | `[T]` strings | `controller_logs` | non-empty and indexed by `playback_t_s`; source `controller_logs.t_s` must match exactly |
+| `arms[k].controller_mode[]` | `[T]` strings | `controller_logs` | non-empty, length `T`, bound to the shared **control-step axis** (`controller_logs.step` is the contiguous 0-based grid in both arms) rather than to `playback_t_s` *values* — see property 3 |
 | `truth` | exact schema-D label struct or `null` | fixture or `labels` | fixture truth is visibly marked **`FABRICATED TRUTH`**; real truth requires an authorized label role |
 | `thresholds` | struct | fixture or authenticated connection record | `abstain_threshold`, `unknown_threshold`; never derived and never silently defaulted |
 
-Six properties of that table and bundle are load-bearing and are not stylistic:
+Eight properties of that table and bundle are load-bearing and are not stylistic:
 
 1. **`decisions[]` renders the schema-D `estimator_outputs` struct exactly, including
    `location_out`, with no renaming and no translation layer.** The scene carries what the schema
@@ -289,10 +296,28 @@ Six properties of that table and bundle are load-bearing and are not stylistic:
    director reads and the metric the Technical Report reports are then provably the same quantity,
    because the plot and the number take the same inputs.
 3. **A frame names one physical time in both arms.** Scene construction requires the C1 and S
-   `plant.t_s` arrays, each arm's body and tracking leading dimension, and both
-   `controller_logs.t_s` arrays to agree exactly with the one `playback_t_s` grid. The fixture is
-   held to the same rule. A per-arm time grid would let `frame=500` show different physical times
-   in C1 and S while still passing every per-arm shape check; that is not a side-by-side replay.
+   `plant.t_s` arrays and each arm's body and tracking leading dimension to agree exactly with the
+   one `playback_t_s` grid. The fixture is held to the same rule. A per-arm time grid would let
+   `frame=500` show different physical times in C1 and S while still passing every per-arm shape
+   check; that is not a side-by-side replay.
+
+   **`controller_mode` binds to the shared control-step axis, not to `playback_t_s` values, and
+   that distinction is measured rather than stylistic.** In the live rollout loop
+   (`utils/online_loop.run_online_rollout`) the controller's decision time for step *k* is read
+   **before** the plant advances, while `cable_plant.advance` steps the physics and only then
+   stamps `PlantStepState.t_s` from `data.time`. For the same `step` index the controller acts at
+   `k * control_dt_s` and the plant record carries `(k + 1) * control_dt_s` — an offset of exactly
+   one control interval, and a recording convention rather than a disagreement about when
+   anything happened. No code in the packet writes a `controller_logs` payload yet, and the live
+   role contract accepts a controller grid beginning at `t = 0`; requiring `controller_logs.t_s`
+   to equal `playback_t_s` element-wise would therefore refuse **every** real scene the day the
+   adapter is written, over a field no panel in 4.5 draws, and the repair would be an edit to this
+   scene contract — which is exactly what section 1.2's design test names as a defect in this
+   design. What *is* guaranteed on both sides is the index: `PrivilegedRecord.validate` requires
+   `plant.step` to be the contiguous 0-based control grid and the role contract requires the same
+   of `controller_logs.step`. Scene construction therefore requires both arms'
+   `controller_logs.step` to be that grid of length `T` and refuses otherwise; it does not compare
+   controller times to `playback_t_s`.
 4. **The call panel is causal in the playback frame.** At `playback_t_s[frame]`, each arm renders
    the greatest `decision_time_s` that is no later than the frame time. Before the first decision
    it renders **`NO DECISION YET`**, with no probability, call, severity or unknown state borrowed
@@ -388,7 +413,7 @@ assert *which* refusal fired; the last row is the success code and is the only z
 | `X_ROLE_UNAUTHORIZED` | a role is not named by the authenticated connection record |
 | `X_IDENTITY_MISMATCH` | a measured config, checkpoint, index or payload SHA-256 differs from the record |
 | `X_PAIR_MISMATCH` | C1/S pair, label fields, onset, time grid or task reference differs |
-| `X_TIMEBASE_MISMATCH` | C1/S plant grids, body/tracking/controller leading axes or controller-log grids do not all bind to one `playback_t_s`, or `frame` is outside that grid |
+| `X_TIMEBASE_MISMATCH` | C1/S plant grids or body/tracking leading axes do not all bind to one `playback_t_s`; a `controller_logs.step` axis is not the contiguous 0-based grid of length `T`; or a surface was asked for a `frame` outside the grid (raised by the painter, surfaced by the CLI as this code — see 4.6) |
 | `X_DECISION_UNSUPPORTED` | decision steps/times are not strictly increasing, a decision lies outside the playback extent, or a call panel cannot apply the causal at-or-before rule |
 | `X_PROVENANCE_UNRESOLVED` | the inputs do not land in exactly one state |
 | `X_BUNDLE_INCOMPLETE` | case IDs are duplicated, a required source case is absent, or a surface omits a bundle case |
@@ -420,12 +445,19 @@ Requirements on it:
   `detection_time_s` is `NaN` before detection — those are the schema's own defaults, they are what
   a real role will carry, and without them section 4.5's `UNAVAILABLE` branch and the 4.1
   non-finite encoding are both unrendered and untested in the only round that can test them.
-- **Its animation has one clock and a visible decision history.** Every body, tracking and
-  controller array in both arms is indexed by the fixture scene's one `playback_t_s` grid. At
-  least one case has two or more strictly ordered decisions that change a visible call-panel
-  state, and the grid begins before the first decision, so the fixture drives both
+- **Its animation has one clock and a visible decision history.** Every body and tracking array
+  in both arms is indexed by the fixture scene's one `playback_t_s` grid, and every
+  `controller_mode` array has length `T` on the same contiguous 0-based step axis (property 3).
+  At least one case has two or more strictly ordered decisions that change a visible call-panel
+  state, and that case's grid begins before its first decision, so the fixture drives both
   `NO DECISION YET` and the causal at-or-before decision selection. Otherwise a moving body could
   coexist with a call panel that quietly displays the run's final diagnosis at every frame.
+  **`NO DECISION YET` is driven by an early *frame* on a scene that has decisions, never by an arm
+  with an empty decision trace.** Every arm carries at least one decision, because the live role
+  contract refuses an `estimator_outputs` payload with none — driven this session:
+  *"estimator_outputs must contain at least one decision"*. An empty-trace arm is the cheapest way
+  to make a call panel read `NO DECISION YET` at every frame, and it would test the pre-decision
+  display on a scene shape no real role can ever produce.
 - **Every arm's `tracking` block must be a valid `j_5s` call, and this is a hard fixture
   requirement rather than an aspiration.** Section 4.1's property 2 claims the panel the director
   reads and the number the Technical Report reports are the same quantity *because they take the
@@ -506,6 +538,16 @@ panel 3: the body pose the reader sees is the pose at the moment the shaded wind
 than an arbitrary frame that happens to be first or last in the array. The interactive surface is
 the only place `frame` is free.
 
+**`draw_scene` refuses a non-integer or out-of-range `frame` by raising, and never clamps it.**
+The range check belongs to the painter rather than to scene construction, because scene
+construction never receives a frame: naming it as a construction-time refusal would leave it
+undischargeable where it is assigned, and the cheap resolution in a build round is a silent clamp
+— an interactive slider that shows the wrong instant while every panel still looks consistent,
+which is the class of silent divergence section 1.3 exists to prevent. Because the painter is a
+function and not a process, this refusal is an exception; the CLI is what turns it into the
+`X_TIMEBASE_MISMATCH` exit. Both wrappers must produce only in-range frames on their own, so a
+raise from the painter is a defect in the wrapper, not a user error.
+
 The provenance banner is drawn **into the figure** as a figure-level artist, not written into a
 caption or a filename. A caption is separable from the image the moment someone copies the PNG
 into a slide; the banner must survive that. **V11.**
@@ -554,10 +596,13 @@ module refuses, with code Y, when Z" is.
 - **V6 — Identities, pairing and the playback clock travel.** Before constructing a real scene,
   tests require exact config/checkpoint/index/payload digests and exact agreement on `pair_id`, all
   schema-D label fields, onset, `task_reference` and the C1/S plant time grids. Scene construction
-  binds that exact grid once as `playback_t_s`, requires every body/tracking/controller leading
-  axis to have its length, requires both `controller_logs.t_s` arrays to equal it exactly, and
-  rejects an out-of-range frame. A one-element mismatch refuses with the corresponding identity,
-  pair or timebase code.
+  binds that exact grid once as `playback_t_s`, requires every body and tracking leading axis to
+  have its length, and requires both arms' `controller_logs.step` to be the contiguous 0-based
+  grid of that length — **not** that `controller_logs.t_s` equal `playback_t_s`, which property 3
+  measures to be one control interval off in the live loop. A test drives a controller payload on
+  that offset grid and requires it to be **accepted**, so the refusal cannot be re-tightened
+  without going red. A one-element mismatch elsewhere refuses with the corresponding identity,
+  pair or timebase code. The frame range check is the painter's (4.6) and is tested there.
 - **V7 — Provenance is computed, never supplied.** There is no CLI argument or public builder
   keyword that sets the provenance state directly. A test asserts a fixture-built scene cannot be
   relabelled through either public construction path.
@@ -612,9 +657,12 @@ module refuses, with code Y, when Z" is.
   must check the distal centerline point against `true_task_output` within a declared tolerance
   and refuse a geometry mismatch.
 - **V17 — The fixture bundle exercises the visible failure branches.** Its named scenes jointly
-  cover confident correct, confident wrong, abstention, high unknown, `NO DECISION YET`, a later
-  changed decision state and an indistinguishable C1/S case; tests inspect the rendered artists
-  and menu entries, not only the fixture arrays.
+  cover confident correct, confident wrong, abstention, high unknown and an indistinguishable
+  C1/S case; tests inspect the rendered artists and menu entries, not only the fixture arrays.
+  `NO DECISION YET` and *a decision state that later changes* are properties of a **(scene,
+  frame) pair**, not of a scene, and are covered by V16 at named frames of a scene that carries at
+  least one decision. A test asserts every fixture arm has a non-empty decision trace, so the
+  pre-decision branch can never be satisfied by an empty one.
 - **V18 — Rendering trains and simulates nothing.** The scene, fixture and renderer modules import
   neither `torch` nor `mujoco`, asserted in a fresh interpreter. The later role adapter must remain
   read-only; if reusing the current role validator would pull in `torch`, it must first separate
