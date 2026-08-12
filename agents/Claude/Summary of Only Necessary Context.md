@@ -1,6 +1,6 @@
 # Summary of Only Necessary Context - Claude
 
-*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 123, 2026-08-12.*
+*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 124, 2026-08-12.*
 
 **S112 SPLIT THIS FILE, AND THAT IS THE FIRST THING TO KNOW ABOUT IT.** It was ~3,430 lines and ~400 KB, and reading it was the single largest cost of starting a session — in tension with its own stated purpose. **Codex approved the split in its S111** with one binding condition: *the current gate map, the current exact-state handoff, and the next-read routing stay here.* So this file is now **current state + gates + routing**, and every permanent instrument moved **verbatim, not summarized** into:
 
@@ -9,27 +9,110 @@
 
 **DO NOT UNDO THE SPLIT BY DRIFTING CONTENT BACK.** If a permanent instrument improves, the improvement goes into **the block that owns it in the reference file** — that is the S105 correction, and it is the reason the append writer's last five rebuilds were faithful. Only *current state* belongs here.
 
-## S124 FIRST - THE PUBLIC README LOOP IS CLOSED. THE ONE OPEN LOOP IS THE SLOT-8 DESIGN, ON CODEX.
+## S125 FIRST - THE SLOT-8 DESIGN IS IN ROUND 2, ON CODEX, AND IT IS THE PROJECT'S ONLY OPEN LOOP.
 
 ```text
-*** WHAT S123 DID: it CLOSED the public-heartbeat loop by approving Codex's exact reviewer
-    bytes, and it OPENED THE SLOT-8 LANE by writing the first object Codex's S122 direction
-    ruling authorized.  THE DIRECTION QUESTION IS ANSWERED AND IS NOT TO BE REASKED. ***
+*** WHAT S124 DID: it was the OWNER RE-REVIEW of the Slot-8 design after Codex blocked it on
+    nine defects.  I KEPT ALL NINE after measuring each one against the contract it names, and
+    ADDED TWO OF MY OWN.  The document is back on Codex at blob `d56c25c1`. ***
 
 *** THE PROJECT STATE IN ONE LINE: EVERY SCIENTIFIC LANE IS STILL SPENT OR SHUT, THE PUBLIC
     README IS CLOSED AT BOTH APPROVALS, AND THE ONLY OPEN LOOP IS THE SLOT-8 DESIGN AT BLOB
-    `260e2042`, WHICH I OWN AND CODEX IS REVIEWING. ***
+    `d56c25c1`, WHICH I OWN AND CODEX IS RE-REVIEWING. ***
 
 THE ONE OPEN LOOP:
   Reproducibility Packet/protocol/slot8-verification-artifact-v0.1.md
-    Git blob              260e2042c6b857c2d07cf1f9619cf54af86e5015
-    raw == canonical      abff8af823ede783d472c87af922fae736073621b51ae4be44981a89412fbd63
-                          29,089 B / 465 LF / 0 CR / final newline / no BOM
+    Git blob              d56c25c18218892e651e1c7583175d9e03e6969e
+    raw == canonical      d51648e137072e2294d2bf16a8d72b8c3bd769c94e8e76c1f8911f56fe1cc40b
+                          41,577 B / 598 LF / 0 CR / final newline / no BOM
     non-ASCII             U+2013 and U+2014 ONLY
     LF-pinned by          packet .gitattributes rule `protocol/*.md text eol=lf`
-  I APPROVED THOSE EXACT BYTES IN MY S123 TURN AND HANDED THEM OVER.  IF CODEX EDITS OR BLOCKS,
-  THE OWNER RE-REVIEW IS MINE.  *** READ THE CHAT TAIL FIRST - the four handed-over decisions
-  D1-D4 are in it, and D1 DECIDES THE SHAPE OF S124. ***
+    owner delta S124      +44 / -8, `git diff --check` clean
+  I APPROVED THOSE EXACT BYTES IN MY S124 TURN AND HANDED THEM OVER.  IF CODEX APPROVES THE SAME
+  BYTES, STEP 1 CLOSES AND STEP 2 (the module, the fixture, both renderers, tests carrying
+  V1-V19) IS AUTHORIZED AND IS MINE.  IF CODEX EDITS OR BLOCKS, THE OWNER RE-REVIEW IS MINE
+  AGAIN AND COMES FIRST.  *** READ THE CHAT TAIL BEFORE ANYTHING ELSE. ***
+  SUPERSEDED, never review or build from: `260e2042` (mine S123), `0fabe547` (Codex S123).
+
+DO NOT OPEN A SECOND LANE.  The direction was ruled by Codex in its S122 - SLOT 8 FIRST, then the
+  Technical Report as an evidence map, then the Accessible Piece - and I accepted all of it
+  without contest.  *** THE DIRECTION QUESTION IS ANSWERED AND IS NOT TO BE REASKED. ***  If
+  nothing has landed from Codex, SAY SO IN CHAT rather than starting something to fill a session.
+
+CODEX'S NINE FINDINGS BR-BZ - ALL ACCEPTED, ALL KEPT, AND EVERY ONE VERIFIED AGAINST AN OBJECT
+OUTSIDE THE DOCUMENT.  DO NOT RE-LITIGATE ANY OF THEM.  What each one actually established:
+  BR  schema.json `roles.estimator_outputs.fields` has EXACTLY NINE keys and `EstimatorOutput`
+      carries the same nine.  My table listed eight; `location_out` was missing.
+  BS  `task_reference` and `true_task_output` are `plant` fields, NOT `controller_logs`; and the
+      live signature is `j_5s(t_s, task_reference, true_task_output, onset_time_s, *,
+      window_s=5.0)`.  My draft dropped `window_s`.  *** THIS IS THE ONE THAT MATTERED MOST: the
+      panel and the published number would have integrated DIFFERENT WINDOWS, invisibly. ***
+  BT  `plant` carries `q_true`, `deform_coords`, `true_task_output` - the fields that make a
+      read-only planar centerline derivable.  Endpoint dots are not two robot copies.
+  BU  MEASURED AND DECISIVE: `role_indexes.base_fields` = [run_id, schema_version, config_hash,
+      npz_path, sha256], with `split` only as an OBSERVATIONS extra.  `pair_id`, `split`, `suite`
+      and `payload_id` live in `identity_manifest`.  A ROLE INDEX CANNOT ESTABLISH A C1/S PAIR.
+  BV  caller-supplied identity strings and an `--authorized-role` flag are not authorization.
+  BW  I DROVE IT: a mutually exclusive pair in which BOTH alternatives are `required=True` is not
+      expressible in argparse, so MY OWN V4 could never have gone green.  Subcommands give mutual
+      exclusion structurally, every argument in each subparser can be required at once, no default
+      leaks, and enumerating `parser._actions` minus `_HelpAction` is a workable equality pin.
+  BX  a permanent no-override `test` refusal would make the eventual confirmatory connection
+      require a CODE REWRITE - contradicting the design's own section-1.2 test.
+  BY  one scene cannot supply a no-typing menu; the bundle is what both surfaces iterate.
+  BZ  `severity_uncertainty`'s schema unit is literally `config_defined_nonnegative_error_scale`.
+      It is NOT an interval and the renderer may not imply coverage.
+
+MY TWO FINDINGS, CA AND CB.  BOTH REPAIRED IN THE STATE I RETURNED.
+  CA  *** THE LOAD-BEARING ONE: THE SCENE AS SPECIFIED COULD NOT HAVE BEEN WRITTEN TO DISK. ***
+      Section 4.1 binds the bundle to the packet's canonical JSON INCLUDING `allow_nan=False`,
+      while the SAME section requires `decisions[]` to mirror schema D exactly with NO translation
+      layer.  MEASURED: `EstimatorOutput.severity_uncertainty` defaults to `+inf`,
+      `detection_time_s` defaults to `NaN`, `validate()` ACCEPTS BOTH (they are contract-valid,
+      not corruption), and `json.dumps(allow_nan=False)` refuses all three of inf/-inf/nan.  So
+      the write fails on EXACTLY the value section 4.5 promises to render as `UNAVAILABLE`, and
+      connecting a real result would have needed a serialization rewrite - the one thing section
+      1.2 forbids.  THIS IS THE S66 SHAPE: a rule forbidding content in an artifact must not be
+      able to stop the write its own specification requires.
+      REPAIRED by defining the encoding ONCE: finite floats -> JSON numbers, non-finite floats ->
+      the three JSON STRINGS "Infinity" / "-Infinity" / "NaN".  `allow_nan=False` STAYS ON, no
+      non-standard token is ever emitted, the map is total and exactly invertible, and it cannot
+      be ambiguous BECAUSE A FINITE FLOAT NEVER ENCODES AS A STRING.  Added V19; added a fixture
+      requirement that one arm carry `+inf` and a pre-detection `NaN`, or the `UNAVAILABLE`
+      branch is never drawn in the only round that can draw it.
+      *** REJECTED ALTERNATIVE, and do not revisit it: forbidding non-finite in the scene and
+      having the future adapter convert.  That converter IS a translation layer, which the design
+      forbids by name, and it discards information the schema deliberately carries. ***
+  CB  V11 said "effective DPI is at least 300", checked from PNG metadata.  MEASURED: PNG stores
+      resolution in `pHYs` as INTEGER pixels per metre, so `savefig(dpi=300)` stores 11811 and
+      `11811 * 0.0254 = 299.9994` - THE CHECK GOES RED ON A CORRECT FIGURE.  Repaired by checking
+      in the domain the value is STORED in: declared DPI exactly 300, and `pHYs` equal to the
+      integer that DPI quantizes to.  SAME REPAIR SHAPE AS FINDING AV.
+  I also retitled the 4.3 table, which was headed "Refusals, all fail-closed" and then carried
+  `X_SCENE_OK`, a zero exit, as its last row.
+
+*** STANDING LESSON 195, AND IT IS THE MOST USEFUL THING S124 PRODUCED.  ALL NINE OF CODEX'S
+    FINDINGS WERE FIELD-LEVEL (wrong role, missing field, incomplete call).  BOTH OF MINE WERE
+    INTERACTION-LEVEL - two rules in the SAME DOCUMENT, each individually sensible, JOINTLY
+    IMPOSSIBLE.  Field-level defects are found by reading against a contract.  Interaction-level
+    defects are only found by asking WHAT HAPPENS WHEN THE THING RUNS.  A review that does only
+    the first kind hands off a document that reads perfectly and cannot be built. ***
+
+THREE MEASUREMENTS THAT FOUND NOTHING.  RECORDED SO A LATER SESSION DOES NOT RE-SPEND THEM:
+  V13 IS ACHIEVABLE - the same figure rendered twice, one second apart, gave 79,473 IDENTICAL
+    bytes and the same sha256.  Matplotlib's only text chunk is `Software: Matplotlib
+    version3.11.0`; THERE IS NO `tIME` CHUNK.  Do not soften V13.
+  V18'S CONDITIONAL ANTECEDENT IS CURRENTLY FALSE - in a fresh interpreter `utils.role_contract`
+    pulls in NEITHER torch NOR mujoco NOR matplotlib, and `utils.metrics` is likewise clean.  The
+    clause is conditional so it is not wrong, but the separation work it anticipates IS NOT OWED.
+  D2 IS GROUNDED - the pinned `matplotlib==3.11.0` in the packet requirements imports
+    `RadioButtons`, `Button`, `Slider` and `FuncAnimation`.  No new packet dependency is needed.
+
+TRANSCRIPT ORDER IS INTACT.  Codex's S123 append is `+118/-0` in ONE hunk at the physical tail
+  (`@@ -34296,3 +34296,121 @@` against a 34,298-LF prior blob), zero deleted lines.  NO
+  MONITORING ENTRY IS OWED and I appended none.  My own S124 append is `+151/-0`, prior
+  `aa8633d2...` / 2,117,536 B, post `f9002d63...` / 2,127,024 B, 0 CR added, prefix asserted
+  byte-identical by the routine that wrote it.
 
 THE PUBLIC README LOOP IS CLOSED.  DO NOT REOPEN IT.
   README.md   (repository root, the public Live-Run README)
@@ -43,6 +126,8 @@ THE PUBLIC README LOOP IS CLOSED.  DO NOT REOPEN IT.
       core.autocrlf=true, pinned by no .gitattributes, so the working tree is CRLF and
       `git hash-object --no-filters` gives a THIRD value (89d9fcac) that is nobody's identity.
       EVERY TRACKED README BLOB HAS ZERO CR.  PUBLISH THE BLOB. ***
+  S123 AND S124 BOTH RAN THE HEARTBEAT CHECK AND APPENDED NOTHING: an open review round is none
+  of the three triggers.  DO NOT LOG THE SLOT-8 DESIGN UNTIL A STEP OF IT ACTUALLY CLOSES.
 
 FINDING BQ - CODEX'S, ACCEPTED IN FULL, AND THE LESSON IS MINE TO CARRY FORWARD.
   My S122 entry closed "Nothing is frozen, the final test set remains untouched, and no research
@@ -57,96 +142,89 @@ FINDING BQ - CODEX'S, ACCEPTED IN FULL, AND THE LESSON IS MINE TO CARRY FORWARD.
       final test set remains untouched" IS EXACTLY TRUE (0 identities, 0 payloads), so two is
       THE WHOLE SET, not a sample.  A REVIEWER BEING RIGHT IS NOT THE SAME STATEMENT AS A
       REVIEWER'S SET BEING COMPLETE - check the clauses it did NOT flag.  Lesson 194. ***
-  CODEX APPENDED A DATED SUCCESSOR ENTRY rather than editing my stale one - MY OWN STANDING RULE
-  ON THIS FILE, APPLIED BY THE OTHER AGENT.  I verified the implementation separately from the
-  diagnosis: +2/-0, zero deleted lines, prior blob a byte prefix, ZERO forbidden interpretive
-  tokens (because/therefore/confirms/which shows/resolves/capacity-bound/trend/cause), and the
-  typography already existed in the file (curly-quote pairs 7 -> 9, unspaced em dashes 6 -> 7).
-  *** CODEX ALSO REPORTED AGAINST ITSELF that its patch left five LF-only endings near the
-      insertion and that it restored uniform CRLF.  I MEASURED IT: 212 CR / 212 LF / 212 CRLF,
-      uniform, blob unchanged.  REPAIRED CORRECTLY.  This is the S119/S120 mixed-EOL hazard
-      recurring and being caught by its own author, which is the outcome the rule was for. ***
-
-THE DIRECTION QUESTION IS ANSWERED.  CODEX'S S122 RULING, AND IT BINDS S124:
-  SLOT 8 FIRST, bounded to a CONTRACT + SYNTHETIC SCAFFOLD - explicitly NOT a demo that presents
-  the current development record as the project's result.  THEN the Technical Report as an
-  evidence map and section scaffold.  THEN the Accessible Piece, only once the report's evidence
-  boundaries have stabilised.  THE FREEZE PATH PROPER REMAINS A SEPARATE JOINT ACT.
-  I ACCEPTED ALL OF IT WITHOUT CONTEST.  *** DO NOT RE-OPEN THE DIRECTION QUESTION. ***
 ```
 
 ```text
-THE SLOT-8 LANE - OPENED S123.  THE DESIGN IS WRITTEN AND UNDER REVIEW; NOTHING IS BUILT.
+THE SLOT-8 LANE - ROUND 2.  THE DESIGN IS WRITTEN AND UNDER REVIEW; NOTHING IS BUILT.
 
 WHY SLOT 8 CANNOT BE BUILT AT ITS FINAL FORM, AND IT IS NOT AN EFFORT PROBLEM.  THREE OF ITS
 FOUR INPUTS DO NOT EXIST:
   frozen config.json naming the run      ABSENT BY GOVERNING DECISION
   a selected capacity + its checkpoints  UNDECIDED - nothing selected, two of three rungs built
   calibrated abstain / unknown thresholds UNDECIDED, VALIDATION-OWNED, GATE 5, SHUT
-  a rendering mechanism                  the ONLY one available, and it is what S123 designed
+  a rendering mechanism                  the ONLY one available, and it is what the design covers
   *** A DEMO BUILT NOW WOULD EITHER INVENT THE FIRST THREE OR SILENTLY ADOPT TODAY'S
       DEVELOPMENT RECORD, AND THE SECOND IS THE DANGEROUS ONE: our record contains a rung-2 arm
       set scoring EXACTLY ZERO on two of four classes.  THE DESIGN EXISTS TO MAKE PRESENTING
       THAT AS A FINDING STRUCTURALLY IMPOSSIBLE, NOT MERELY DISCOURAGED. ***
 
 THE DESIGN TEST THE DOCUMENT IS WRITTEN AGAINST, and the one to hold any revision to:
-  WHEN THE SCIENTIFIC INPUTS FINALLY EXIST, CONNECTING THEM MUST BE A DATA CHANGE AND AN
-  AUTHORIZATION - NOT A REWRITE OF THE DEMO.
+  WHEN THE SCIENTIFIC INPUTS FINALLY EXIST, CONNECTING THEM MUST BE AN AUTHENTICATED DATA CHANGE
+  AND A SEPARATE AUTHORIZATION - NOT A REWRITE OF THE SCENE SCHEMA OR EITHER RENDERER.
+  *** FINDING CA WAS FOUND BY APPLYING EXACTLY THAT TEST TO A REAL VALUE.  USE IT AGAIN. ***
 
-THE SHAPE - ONE OBJECT, TWO PURE RENDERERS:
-  `VerificationScene` is the complete serializable description of ONE side-by-side comparison.
-  ONE builder is the only code permitted to touch a role, a checkpoint or a config.  The
-  interactive view and the scripted 300-DPI path are BOTH functions of a scene and nothing else.
+THE SHAPE - ONE BUNDLE, TWO PURE SURFACES (Codex's BY repair; my S123 draft said one scene):
+  `VerificationBundle` is an ordered, non-empty mapping of unique `case_id` to `VerificationScene`
+  values, and it is the source of the interactive menu.  Both surfaces share ONE pure
+  `draw_scene(scene)` painter; the interactive wrapper changes which scene it passes, the scripted
+  wrapper iterates the same scenes.  Every bundle carries at least one structure, actuator and
+  sensor case, and every scene has EXACTLY TWO arms keyed `C1` and `S`.
   *** A RENDERER THAT OPENS A FILE IS A DEFECT.  Slot 8's own words are "the same comparison",
       and sameness has to be a SINGLE SOURCE rather than a property maintained by hand across
       two code paths - the converse of standing lesson S56. ***
 
-THE THREE LOAD-BEARING DECISIONS, so a later session does not soften any of them:
-  1  THE SCENE CARRIES THE SCHEMA'S OWN STRUCTS, NOT TRANSLATIONS.  `decisions[]` renders the
-     schema-D `estimator_outputs` fields verbatim; `tracking` carries PRECISELY the arguments
-     `utils.metrics.j_5s` takes.  The panel the director reads and the number the Technical
+THE LOAD-BEARING DECISIONS, so a later session does not soften any of them:
+  1  THE SCENE CARRIES THE SCHEMA'S OWN STRUCTS, NOT TRANSLATIONS.  `decisions[]` renders all
+     NINE schema-D `estimator_outputs` fields verbatim INCLUDING `location_out`; `tracking` comes
+     from the privileged `plant` role and carries PRECISELY the arguments `utils.metrics.j_5s`
+     takes, `window_s` INCLUDED.  The panel the director reads and the number the Technical
      Report reports are then the SAME QUANTITY because they take the same inputs.
   2  PROVENANCE IS COMPUTED FROM THE INPUTS, NEVER SUPPLIED - a caller-supplied label can lie.
      States: SYNTHETIC_FIXTURE / DEVELOPMENT_ONLY / FINAL; anything else REFUSES with its own
-     exit code and NO scene is produced.  *** `FINAL` IS CURRENTLY UNREACHABLE - the only config
-     hash in the packet is `dev-712abf27c3f8f3c331ae9b76e3f22c48857334cc15a81e819718165e47753e56`
-     - AND V6 REQUIRES A TEST ASSERTING IT, so the day it becomes reachable the suite goes RED. ***
-  3  NO CROSS-ARM DERIVED NUMBER APPEARS AT ALL THIS ROUND (V13).  Both arms side by side is what
+     exit code and NO scene is produced.  *** BOTH DEVELOPMENT_ONLY AND FINAL ARE CURRENTLY
+     UNREACHABLE - no connection record exists and the only config hash in the packet is
+     `dev-712abf27c3f8f3c331ae9b76e3f22c48857334cc15a81e819718165e47753e56` - AND V8 REQUIRES A
+     TEST ASSERTING IT, so the day either becomes reachable the suite goes RED. ***
+  3  REAL ROLES ARE UNREACHABLE THIS ROUND AND REFUSE `X_CONNECTION_UNAUTHORIZED` BEFORE ANY FILE
+     IS OPENED, because the AUTHENTICATED CONNECTION RECORD that would make them reachable does
+     not exist.  *** BUT THE FINAL TEST SPLIT IS NOT PERMANENTLY DESIGNED OUT - that was Codex's
+     BX, and it is the difference between fail-closed and painted into a corner. ***
+  4  NO CROSS-ARM DERIVED NUMBER APPEARS AT ALL THIS ROUND (V14).  Both arms side by side is what
      Slot 8 asks for; `tracking_reduction_pct` and every other C1-minus-S scalar stay OUT.  A
      single reduction figure under two robots reads as a headline and NOTHING HAS LICENSED ONE.
+  5  NON-FINITE FLOATS ENCODE, THEY DO NOT REFUSE (my CA, V19).  See the head block.
   *** THE HONEST TENSION, NAMED SO A LATER SESSION DOES NOT "RESOLVE" IT BY ACCIDENT: Slot 8's
       whole purpose is a C1-vs-S comparison and every scientific gate forbids saying anything
       about C1 vs S.  THE SPLIT IS: SHOWING TWO THINGS SIDE BY SIDE is contracted; EMITTING A
-      NUMBER THAT COMPARES THEM is not.  I did NOT rule on whether such a number appears once a
-      real result is connected - that is D3 and it belongs to that authorization. ***
+      NUMBER THAT COMPARES THEM is not.  Whether such a number appears once a real result is
+      connected is D3, DELIBERATELY UNRULED, and it belongs to that authorization. ***
 
 THE FIXTURE MUST RENDER THE UNFLATTERING BRANCHES OR IT IS NOT A FIXTURE: a confident CORRECT
-  call, a confident WRONG call, an ABSTENTION, a high unknown score, and AT LEAST ONE SCENE IN
-  WHICH THE TWO ARMS ARE INDISTINGUISHABLE.  Slot 8 names that outcome BY NAME as "the honest
-  negative shown *as* a result", and a demo that cannot draw it can only show a win.
+  call, a confident WRONG call, an ABSTENTION, a high unknown score, AT LEAST ONE SCENE IN
+  WHICH THE TWO ARMS ARE INDISTINGUISHABLE, and - added S124 - AT LEAST ONE ARM CARRYING `+inf`
+  SEVERITY UNCERTAINTY AND A PRE-DETECTION `NaN`.  Slot 8 names the indistinguishable outcome BY
+  NAME as "the honest negative shown *as* a result", and a demo that cannot draw it can only show
+  a win.  Fixture truth renders ONLY as `FABRICATED TRUTH` (D4).
 
-FOURTEEN INVARIANTS V1-V14, each written as A REFUSAL A TEST CAN FAIL rather than a behaviour.
-  The ones most likely to be softened: V2 (pilot/val/test refuse BEFORE any file is opened and NO
-  flag re-enables it), V4 (the no-default test ENUMERATES THE PARSER rather than a hand-written
-  list, so a later argument with a default goes red without anyone remembering), V6, V13, and
-  V14 (imports neither torch nor mujoco, asserted in a FRESH interpreter).
+NINETEEN INVARIANTS V1-V19, each written as A REFUSAL A TEST CAN FAIL rather than a behaviour.
+  The ones most likely to be softened: V2 (real roles refuse BEFORE any file is opened and no
+  flag re-enables it), V4 (the no-default test ENUMERATES THE PARSER by equality, so a later
+  argument with a default goes red without anyone remembering), V8, V13, V14, V18 (imports
+  neither torch nor mujoco, asserted in a FRESH interpreter) and V19.
+  *** THE COUNT IS CARRIED IN PROSE AT SECTION 9 STEP 2 ("V1 through V19").  IF AN INVARIANT IS
+      ADDED OR REMOVED, THAT LINE MOVES WITH IT.  A count beside a list it does not enumerate is
+      a shape that has rotted in this project before. ***
 
-FOUR DECISIONS HANDED OVER RATHER THAN TAKEN ALONE - READ CODEX'S RULING BEFORE BUILDING:
-  D1  DESIGN-THEN-MODULE, OR ONE ROUND FOR BOTH?  Every prior lane froze a design first and I
-      followed that; Codex's wording ("contract and synthetic scaffold") also reads as one round.
-      *** D1 DECIDES WHETHER S124 BUILDS THE MODULE OR WAITS.  IF CODEX SAYS ONE ROUND, BUILD
-      BOTH. ***
-  D2  IS `matplotlib.widgets` SUFFICIENT?  Chosen because it adds NO packet dependency
-      (matplotlib==3.11.0 already pinned) and a browser stack would cost a build step and a
-      fresh-environment failure class.  THE LOAD-BEARING DEPENDENCY CHOICE.
-  D3  DOES ANY CROSS-ARM NUMBER APPEAR ONCE A REAL RESULT IS CONNECTED?  RULED OUT FOR THIS
-      ROUND, DELIBERATELY NOT RULED FOR LATER.
-  D4  MAY A FIXTURE SCENE RENDER `truth` AT ALL?  I lean YES because the confident-wrong-call
-      fixture is the branch that most needs to be visible.
+CODEX'S FOUR RULINGS, ALL ACCEPTED WITHOUT CONTEST, NOT TO BE REASKED:
+  D1  DESIGN FIRST, THEN MODULE.  *** THIS IS WHY S124 BUILT NO CODE. ***
+  D2  `matplotlib.widgets` IS SUFFICIENT, conditional on the module review demonstrating
+      `RadioButtons`, play/pause and timeline behaviour.  Measured available at 3.11.0.
+  D3  NO CROSS-ARM SCALAR THIS ROUND; the later authorized connection decides the final display.
+  D4  FABRICATED TRUTH MAY RENDER, ONLY UNDER THAT EXPLICIT LABEL.
 
 SEQUENCING THE DOCUMENT ITSELF DECLARES - FOUR SEPARATE APPROVALS, NOT ONE:
-  1 design reviewed and frozen                    OPEN, on Codex, blob 260e2042
-  2 module + tests (V1-V14) built and reviewed    NOT STARTED
+  1 design reviewed and frozen                    OPEN, on Codex, blob d56c25c1 (round 2)
+  2 module + tests (V1-V19) built and reviewed    NOT STARTED
   3 fixture figure set generated + runbook step   NOT STARTED
   4 CONNECTING A REAL RESULT                      A SEPARATE JOINT AUTHORIZATION THAT NEITHER
                                                   THIS DOCUMENT NOR STEPS 1-3 GRANTS
@@ -412,7 +490,7 @@ TWO NUMBERS THAT ARE IN THE DESIGN BECAUSE THEY ARE THE INCONVENIENT ONES.  KEEP
 ## Where the project is
 
 - **Phase 2 (Execution) is OPEN.** All Phase-1 gates in force. **Schema v1.0 + Amendment A1 in force.** Contract changes run through the **amendment protocol**.
-- I am **Claude**; last session was **Session 123**; next session I run is **Session 124**. **NONE OF S121–S123 WAS A PROGRESS-REPORT SESSION — S120 was, and `agents/Claude/Progress Reports/Progress Report Session 120.md` covers S113–S120. MY NEXT REGULAR IS SESSION 128**, or sooner if a phase transition or an approved written Claim-Sheet amendment fires. **EXACTLY ONE REVIEW LOOP IS OPEN IN THE PROJECT: the Slot-8 design at `Reproducibility Packet/protocol/slot8-verification-artifact-v0.1.md`, blob `260e2042`, written and approved by me in S123, OPEN ON CODEX - and I OWN it, so if Codex edits or blocks, the owner re-review is MINE. THE PUBLIC README LOOP IS CLOSED at blob `f00ea0d9` (Codex S122 reviewer, me S123 owner) — DO NOT REOPEN IT, and do not reopen Finding BQ, which I accepted in full.** **THE PACKET-RUNBOOK LOOP IS CLOSED: Codex approved blob `f5e677c8` unedited in its S121, accepted BN/BO/BP including the out-of-scope Step-28 repair, and ruled the `roughly 12x` figure stays as written - DO NOT REOPEN ANY OF THAT.** **THE RUNG-2 ANALYSIS ARTIFACT IS NO LONGER OPEN: Codex approved blob `a2fa857b` / `604d7272…` in its S119 after its own 853-check standalone audit, and SECTION 5.4 IS JOINTLY APPLIED AND SPENT (Codex S119 half, my S120 half, same two sentences).** **The step-6 analyzer loop CLOSED in Codex's S118 at `7cf3cc6a` / `a642b3d3` with NO EDIT; the analyzer-authorization halves are SPENT (Codex S118, me S119) and the one authorized read RAN in my S119 — `X_ANALYSIS_OK`, 11.97 s, zero fits.** The README banner loop CLOSED in my S118 at blob `abeac76c`; the README plan-entry loop CLOSED in Codex's S117 at blob `485d83ce`; **step 5 is SPENT — both halves issued and the one authorized run executed in Codex's S117, `X_RUNG2_OK`, 12 fits.** The step-4 plan loop CLOSED in Codex's S116 at `61a2bd22` / `b51b0009`, unchanged, after its own 107-check independent audit; the step-3 executable/test loop closed in Codex's S115 at `735f8dee` / `7cefcb63`; the rung-2 module/test loop closed in my S114 at `ca192af0` / `c43d33b0`; the previous two README entry loops closed at `e291a229` (my S115) and `9f6297a4` (Codex S116, my edit accepted unchanged). See the head block. **THE FIRST WORK OF S124 IS THE CHAT TAIL: whether Codex approved the Slot-8 design at `260e2042` or edited/blocked it, and - the item that actually decides the session's shape - how it ruled on D1 (design-then-module, or one round for both). If D1 says one round, BUILD THE MODULE AND ITS TESTS. If the design came back edited, the owner re-review is mine and comes first. If neither has landed, do NOT start a second lane - the direction is settled and Slot 8 is it; say so in chat rather than starting silently.** *(S121 accepted Codex's BM without contest after reproducing it, and kept its two edited lines verbatim; that is settled and is NOT an open disagreement. My BN/BO/BP are the open items.)* *(S120 also confirmed Codex's degeneracy read: it independently reproduced every part and agreed with the boundary. That is settled and is NOT an open disagreement.)* The S112 regular progress report is written at `agents/Claude/Progress Reports/Progress Report Session 112.md`, covering S105-S112; **Codex read it in its S112 general recent-work review and raised exactly one correction - the "lunch break" cost phrase - which it carried forward onto the public log rather than into the report, and which I have now approved. No review cycle is open on the report itself.** Its spine: the instrument was measured to be ~5x too coarse for the 0.05 ruler, and the response was to change what we were building rather than buy a sharper version of the same number. **THE S104 REGULAR IS WRITTEN** at `agents/Claude/Progress Reports/Progress Report Session 104.md`, covering S97-S104 - **still unreviewed by Codex; if it opens a loop, that loop is mine to close.** **THE S96 REGULAR'S LOOP IS CLOSED** at blob `c824173c` (Codex S97, me earlier) - **DO NOT REOPEN.** **THE S88 REPORT'S LOOP IS CLOSED** at blob `58276bb4` (Codex S89) - **DO NOT REOPEN.** *(The S80 report, covering S73-S80, is still unreviewed; the S72 one was read in Codex's S72 general recent-work review, which found no correction to carry, so no explicit review cycle ever opened on it.)* **A2 ALREADY FIRED AN AMENDMENT-TRIGGERED REPORT AND IT WAS CODEX'S TO WRITE** (its S76 wrote the approving turn); that does not reset either counter.
+- I am **Claude**; last session was **Session 124**; next session I run is **Session 125**. **NONE OF S121–S124 WAS A PROGRESS-REPORT SESSION — S120 was, and `agents/Claude/Progress Reports/Progress Report Session 120.md` covers S113–S120. MY NEXT REGULAR IS SESSION 128**, or sooner if a phase transition or an approved written Claim-Sheet amendment fires. **EXACTLY ONE REVIEW LOOP IS OPEN IN THE PROJECT: the Slot-8 design at `Reproducibility Packet/protocol/slot8-verification-artifact-v0.1.md`, now in ROUND 2 at blob `d56c25c1`, owner-approved by me in S124 after I kept all nine of Codex's findings BR-BZ and added CA and CB, OPEN ON CODEX - and I OWN it, so if Codex edits or blocks, the owner re-review is MINE. Superseded, never build from: `260e2042` (mine S123), `0fabe547` (Codex S123). THE PUBLIC README LOOP IS CLOSED at blob `f00ea0d9` (Codex S122 reviewer, me S123 owner) — DO NOT REOPEN IT, and do not reopen Finding BQ, which I accepted in full.** **THE PACKET-RUNBOOK LOOP IS CLOSED: Codex approved blob `f5e677c8` unedited in its S121, accepted BN/BO/BP including the out-of-scope Step-28 repair, and ruled the `roughly 12x` figure stays as written - DO NOT REOPEN ANY OF THAT.** **THE RUNG-2 ANALYSIS ARTIFACT IS NO LONGER OPEN: Codex approved blob `a2fa857b` / `604d7272…` in its S119 after its own 853-check standalone audit, and SECTION 5.4 IS JOINTLY APPLIED AND SPENT (Codex S119 half, my S120 half, same two sentences).** **The step-6 analyzer loop CLOSED in Codex's S118 at `7cf3cc6a` / `a642b3d3` with NO EDIT; the analyzer-authorization halves are SPENT (Codex S118, me S119) and the one authorized read RAN in my S119 — `X_ANALYSIS_OK`, 11.97 s, zero fits.** The README banner loop CLOSED in my S118 at blob `abeac76c`; the README plan-entry loop CLOSED in Codex's S117 at blob `485d83ce`; **step 5 is SPENT — both halves issued and the one authorized run executed in Codex's S117, `X_RUNG2_OK`, 12 fits.** The step-4 plan loop CLOSED in Codex's S116 at `61a2bd22` / `b51b0009`, unchanged, after its own 107-check independent audit; the step-3 executable/test loop closed in Codex's S115 at `735f8dee` / `7cefcb63`; the rung-2 module/test loop closed in my S114 at `ca192af0` / `c43d33b0`; the previous two README entry loops closed at `e291a229` (my S115) and `9f6297a4` (Codex S116, my edit accepted unchanged). See the head block. **THE FIRST WORK OF S125 IS THE CHAT TAIL: whether Codex approved the round-2 Slot-8 design at `d56c25c1` or edited/blocked it. If Codex approved those exact bytes, STEP 1 IS CLOSED and step 2 is authorized and is mine - build `scripts/utils/verification_scene.py`, `scripts/render_verification_scene.py` and the tests carrying V1-V19. If it came back edited, the owner re-review is mine and comes first. If nothing has landed, do NOT start a second lane - the direction is settled and Slot 8 is it; say so in chat rather than starting silently. D1 IS RULED: design first, then module, so a session that has not yet closed step 1 does not write code.** *(S121 accepted Codex's BM without contest after reproducing it, and kept its two edited lines verbatim; that is settled and is NOT an open disagreement. My BN/BO/BP are the open items.)* *(S120 also confirmed Codex's degeneracy read: it independently reproduced every part and agreed with the boundary. That is settled and is NOT an open disagreement.)* The S112 regular progress report is written at `agents/Claude/Progress Reports/Progress Report Session 112.md`, covering S105-S112; **Codex read it in its S112 general recent-work review and raised exactly one correction - the "lunch break" cost phrase - which it carried forward onto the public log rather than into the report, and which I have now approved. No review cycle is open on the report itself.** Its spine: the instrument was measured to be ~5x too coarse for the 0.05 ruler, and the response was to change what we were building rather than buy a sharper version of the same number. **THE S104 REGULAR IS WRITTEN** at `agents/Claude/Progress Reports/Progress Report Session 104.md`, covering S97-S104 - **still unreviewed by Codex; if it opens a loop, that loop is mine to close.** **THE S96 REGULAR'S LOOP IS CLOSED** at blob `c824173c` (Codex S97, me earlier) - **DO NOT REOPEN.** **THE S88 REPORT'S LOOP IS CLOSED** at blob `58276bb4` (Codex S89) - **DO NOT REOPEN.** *(The S80 report, covering S73-S80, is still unreviewed; the S72 one was read in Codex's S72 general recent-work review, which found no correction to carry, so no explicit review cycle ever opened on it.)* **A2 ALREADY FIRED AN AMENDMENT-TRIGGERED REPORT AND IT WAS CODEX'S TO WRITE** (its S76 wrote the approving turn); that does not reset either counter.
 - **`config.json` is deliberately NOT frozen** and does not exist. All hashes are `dev-`; no `dev-` trace may enter confirmatory analysis.
 - Real data exists: `data/gate3-base-dev-pilot-val-c1-s` (3.86 GB, git-ignored, local only). 472 reservations / 944 manifest rows / C1+S / dev 152, pilot 152, val 168. **Test untouched: 0 identities, 0 payloads.** **THE "SLATED FOR FULL REGENERATION FROM ZERO AFTER A2" EXPECTATION IS RETIRED AS OF MY S75 — see A2.3.** Option C inserts no severity, so no seed ordinal shifts and A2 by itself invalidates none of this. If the set is ever superseded it is for some other reason, under its own authorization. **Still: read them, do not build on them** — nothing downstream of them is authorized either way.
 - **THE PAYLOAD-BOUNDARY EXTENSION HAS RUN — Codex's S73, 127 physical rollouts, `X_CASE_EMPTY`, and the result artifact is JOINTLY APPROVED (Codex S73 / me S74).** The measurement is spent and no further payload-extension execution is authorized. **A2 IS IN FORCE at `baa8fd53…` / `203aab77…` — both agents approved those exact bytes (me S76, Codex S76). The two-file loop is CLOSED and the amendment is not to be reopened or status-edited.**
@@ -435,8 +513,14 @@ TWO NUMBERS THAT ARE IN THE DESIGN BECAUSE THEY ARE THE INCONVENIENT ONES.  KEEP
       A COUNTER'S SCOPE IS PART OF THE COUNTER; two counters under one heading are read as
       sharing one scope, and if they do not, nothing in the file will say so. ***
   PILOT / VAL / TEST reads   0, every session, without exception
-  *** MY S105-S123 EACH SPENT ZERO FITS, CHECKPOINTS, ROLLOUTS, GENERATION RUNS, C7
-      INVOCATIONS AND PILOT/VAL/TEST READS.  *** S123 SPENT ZERO OF EVERYTHING - it read the
+  *** MY S105-S124 EACH SPENT ZERO FITS, CHECKPOINTS, ROLLOUTS, GENERATION RUNS, C7
+      INVOCATIONS AND PILOT/VAL/TEST READS.  *** S124 SPENT ZERO OF EVERYTHING - it read
+      `schema.json`, `utils/estimator.py`, `utils/metrics.py`, `utils/role_contract.py`,
+      `utils/protocol_p.py`, `utils/config_contract.py` and the packet `requirements.txt` AT
+      SOURCE, drove an argparse replica and a matplotlib PNG probe entirely in a SCRATCH
+      DIRECTORY OUTSIDE THE REPOSITORY, edited one tracked design document (+44/-8) and
+      appended one chat turn (+151/-0).  It opened NO real data and ran NO packet test
+      suite.  Checkpoint count unchanged at 67.  *** S123 SPENT ZERO OF EVERYTHING - it read the
       rung-2 analysis artifact under a digest refusal, the Claim Sheet, the draft config's
       `config_hash` and the packet `requirements.txt`, ran `pytest --collect-only` on the packet
       suite (2,108 collected, 35.80 s, UNCHANGED), wrote ONE new tracked design document, and
@@ -498,7 +582,7 @@ Not freeze blockers (still required before completion): **Slot-8 verification ar
 
 ## My lanes — current state
 
-- **SLOT 8 — THE DIRECTOR'S VERIFICATION ARTIFACT. OPENED S123, AND IT IS THE PROJECT'S ONLY OPEN LOOP.** Mine to write, Codex reviews. `Reproducibility Packet/protocol/slot8-verification-artifact-v0.1.md`, blob `260e2042c6b857c2d07cf1f9619cf54af86e5015`, raw == canonical `abff8af8…`, 29,089 B / 465 LF / 0 CR, LF-pinned by the packet `.gitattributes` `protocol/*.md` rule. **I approved those exact bytes in my S123 turn.** **READ THE FILE — the head block is an index, not the document.** It is authoritative on: the `VerificationScene` field table and the three load-bearing properties of it; the required-external-input table (every entry `required=True`, no default anywhere, `--fixture` and `--role-root` mutually exclusive); the three-state provenance machine and its seven exit codes; the fixture's required branches; the six acceptance tests A1–A6; invariants V1–V14; the four things the artifact must **say** it does not do; and the four-step sequencing. **IT AUTHORIZES NOTHING** — not a fit, a threshold, a capacity, a config, a rollout, or a pilot/validation/test read — and step 4 (connecting a real result) is explicitly not pre-approved by the closing of steps 1–3. **Written against Codex's S122 six-bound direction ruling, whose text is quoted verbatim in §2.2 and mapped one-to-one to the section and invariant that discharges each bound.**
+- **SLOT 8 — THE DIRECTOR'S VERIFICATION ARTIFACT. OPENED S123, IN ROUND 2 SINCE S124, AND IT IS THE PROJECT'S ONLY OPEN LOOP.** Mine to write, Codex reviews. `Reproducibility Packet/protocol/slot8-verification-artifact-v0.1.md`, blob `d56c25c18218892e651e1c7583175d9e03e6969e`, raw == canonical `d51648e1…`, 41,577 B / 598 LF / 0 CR, no BOM, final newline, non-ASCII confined to U+2013 and U+2014, LF-pinned by the packet `.gitattributes` `protocol/*.md` rule (`git check-attr` reports `eol: lf`). **I approved those exact bytes in my S124 owner re-review, delta `+44/-8`, `git diff --check` clean, and every one of the eight deleted lines is one I deliberately rewrote — verified from the diff, not from memory.** **SUPERSEDED, never review or build from: `260e2042` (my S123 draft) and `0fabe547` (Codex's S123 reviewer state).** **READ THE FILE — the head block is an index, not the document.** It is authoritative on: the `VerificationBundle`/`VerificationScene` field table and the six load-bearing properties of it; the **two mode-specific subcommand contracts** (`fixture` takes only a required seed and output root; `roles` is specified but unreachable and requires a separately reviewed connection record); the section-4.1 non-finite float encoding; the three-state provenance machine and its ten exit codes; the fixture's required branches; the six acceptance tests A1–A6; **invariants V1–V19**; the four things the artifact must **say** it does not do; and the four-step sequencing. **IT AUTHORIZES NOTHING** — not a fit, a threshold, a capacity, a config, a rollout, or a pilot/validation/test read — and step 4 (connecting a real result) is explicitly not pre-approved by the closing of steps 1–3. **Written against Codex's S122 six-bound direction ruling, whose text is quoted verbatim in §2.2 and mapped one-to-one to the section and invariant that discharges each bound.** **Review history, and it is settled: Codex's S123 blocked my draft on nine contract defects BR–BZ and repaired all nine; my S124 kept all nine after measuring each against the contract it names, and found CA (the scene as specified could not be serialized, because the schema's own `+inf`/`NaN` defaults are contract-valid and the packet's canonical-JSON rule refuses them) and CB (the 300-DPI check was written in the wrong domain and goes red on a correct figure). Codex's D1–D4 rulings are accepted without contest and are NOT to be reasked.**
 
 - **GATE-4 RUNG 2 — ALL SEVEN STEPS ARE CLOSED AND SECTION 5.4 IS JOINTLY APPLIED AND SPENT. THE RUN HAPPENED (Codex S117, `X_RUNG2_OK`, 12 fits / 12 checkpoints / 0 rollouts, 1,274.6 s), THE DESCRIPTIVE READ HAPPENED (me S119, `X_ANALYSIS_OK`, 0 fits, 11.97 s), BOTH AGENTS APPROVED THE DERIVED ARTIFACT (me S119 / Codex S119), AND THE TWO PRE-REGISTERED SENTENCES WERE APPLIED BY CODEX IN ITS S119 AND BY ME IN MY S120. NOTHING FURTHER IS LICENSED AND NOTHING SCIENTIFIC ON THIS LANE IS OPEN — only the packet-runbook documentation loop.** Mine to write, Codex reviews. Design `Reproducibility Packet/protocol/rung2-escalation-v0.1.md` at blob `404c9f1f`; module `scripts/utils/attribution_net_rung2.py` at blob `ca192af0` + `tests/test_attribution_net_rung2.py` at blob `c43d33b0` (71 tests; **superseded, never build from: `52809287`**); executable `scripts/utils/rung2_escalation.py` at blob `735f8dee` + `tests/test_rung2_escalation.py` at blob `7cefcb63` (142 tests) — **JOINTLY APPROVED, DO NOT REOPEN**; plan `results/rung2_escalation/plans/rung2-run-1/rung2_escalation_plan.json` at blob `61a2bd22`, canonical == raw `b51b0009…` — **JOINTLY APPROVED, DO NOT RE-AUDIT AND DO NOT REGENERATE**. **THE TWO RAW RUN ARTIFACTS ARE TRACKED AND MUST NOT BE REGENERATED:** `results/rung2_escalation/rung2-run-1/rung2_escalation_result.json` (blob `0eb78d0f`, raw `9d94b03e…`, 33,038 B) and `…/_equivalence/rung2_escalation_equivalence.json` (blob `351f47f4`, raw `ddcb5fed…`), plus twelve git-ignored `.pt` files — fourteen files exactly. Codex audited that raw state with its own instrument, 261 checks, all passed. **MY STEP-6 BUILD IS JOINTLY APPROVED AND CLOSED (Codex S118, no edit):** `Reproducibility Packet/scripts/analyze_rung2_escalation.py` blob `7cf3cc6a`, canonical == raw `83234943…`, 48,308 B / 1,125 lines; and `Reproducibility Packet/tests/test_rung2_escalation_analysis.py` blob `a642b3d3`, canonical == raw `169a3cb2…`, 54,947 B / 1,398 lines, **103 tests** (packet suite **2,108**). **THE PROJECT'S ONE OPEN LOOP IS NOW THE DERIVED ARTIFACT IT PRODUCED:** `Reproducibility Packet/results/rung2_escalation_analysis/rung2-run-1/rung2_escalation_analysis.json`, blob `a2fa857b`, raw == canonical `604d7272…`, 40,270 B, one line, tracked. I approved those exact bytes in my S119 turn after 165 independent checks and **Codex approved the same bytes in its S119 after its own 853-check standalone audit — THAT LOOP IS CLOSED, DO NOT REOPEN OR RE-AUDIT IT.** **DO NOT REGENERATE IT — the destination is an exclusive create and it is consumed, and both authorization halves are spent.** **THE LANE HAS NO REMAINING ITEM. `Reproducibility Packet/README.md` CLOSED AT BLOB `f5e677c8` (Steps 30 and 31 written my S120; Codex's BM repair its S120; my BN/BO/BP repairs my S121; Codex approved those exact bytes UNEDITED in its S121) - DO NOT REOPEN IT. The lane's account is now PUBLIC as well: the root README's running log carries the heartbeat, published in my S122 at blob `964231a4` and CLOSED at blob `f00ea0d9` after Codex's Finding-BQ scope correction (Codex S122, me S123) — DO NOT REOPEN IT.** See the head block for the nine required arguments, the derived-field list, the three flagged decisions, invariant R7's positive reading, and the M21 mutation survivor and its closure. **THE EXECUTION ROOT NOW EXISTS AND IS CONSUMED — a retry at `rung2-run-1` is impossible by construction, which is what R2 is for; a retry needs a new label, a new plan and a fresh joint authorization.** **A closed review loop authorizes the next step only, and never a run.**
 
@@ -635,7 +719,7 @@ Run either read from the packet dir; zero rollouts, ~0.3 s each:
 - Director requests: `director_requests.md` (root) — entry 1 (Claim Sheet review) non-blocking, **still awaiting director reply**. Nothing else is blocked on the director.
 - My foundation `agents/Claude/Literature Foundation.md` · ledger `agents/Claude/references.md` (**no S20–S60 entries — reproduction/construction/measurement/review sessions, no external sources read**).
 - **Live-Run README (co-maintained): root `README.md` — Phase 2 / In Progress, banner **2026-08-11**, blob `f00ea0d9`, canonical LF `3e22e429…`, 150,506 B / 212 LF / 0 CR.** **THE LOOP IS CLOSED AT BOTH APPROVALS — Codex S122 (reviewer), me S123 (owner re-review). DO NOT REOPEN IT.** My S122 published the deferred rung-2 heartbeat at blob `964231a4` (`+2/-0`, zero deleted lines, banner untouched because it was already correct, degeneracy observation in the SAME PARAGRAPH as the two licensed sentences and after them, as the deferral required); Codex's S122 review then raised **Finding BQ** and appended a dated scope correction rather than editing my entry — my own standing rule applied by the other agent — and I accepted diagnosis and implementation in S123 after checking the one clause BQ did **not** flag. **S123 RAN THE HEARTBEAT CHECK AND APPENDED NOTHING, CORRECTLY: the Slot-8 design is inside an open review round, which is none of the three triggers.** *** THE MEASUREMENT RULE ON THIS FILE, AND IT BINDS BOTH AGENTS: PUBLISH THE FILTERED BLOB. `core.autocrlf=true` and no `.gitattributes` pin, so the working tree is CRLF (raw `0c2c2f19…`, 150,164 B, 210 CR) and `git hash-object --no-filters` gives a THIRD value (`b5ae16bd`) that is nobody's identity. EVERY TRACKED README BLOB HAS ZERO CR. *** *** THE DEFERRAL WAS AN INSTRUMENT, NOT A DELAY, AND IT WORKED: four sessions each ran the check, each declined for a stated reason, and the condition was written down — so the session that published did not have to reconstruct why it had been waiting. USE THAT SHAPE AGAIN. *** I re-read the playbook in full before publishing, as in every session where the append answer was NO (105, 106, 107, 108, 113, 115, 116, 117, 118, 121). **The standing rules on this file are unchanged: an entry earns its place only if a stranger would care; a program still inside an open review round is none of the three triggers; and an entry that leaves an earlier entry's forward-looking sentence standing after it goes stale is a defect, corrected by appending a dated successor and NEVER by editing the entry that went stale.** **The open debt is unchanged and now belongs to the Technical Report:** the entry reporting the capacity read's result never tells the reader that the reader-script as first written could not have read the finished sweep at all.
-- **Phase-2 chat:** `chats/Claude-Codex/Phase 2 Integration and Config Freeze/...- Active.md` — **S123 STATE: 2,110,680 bytes / 34,298 LF / 19,709 CR, sha256 `717af4023d83baa4362d68b03a9d871e9feaf8016a4716e1bb6da07293a18847`, after my one append (`+170/-0`, one tail hunk, 0 CR added, prior `b454b335…` at 2,100,503 B — the exact digest Codex published for its own post-write state, so the transcript is intact end to end).** *(Prior S122 state: 2,094,915 bytes / 34,024 LF / 19,709 CR, sha256 `386b1433…`, after my `+123/-0` append.)* *** S121 REWROTE ITS OWN PAYLOAD ONCE, BEFORE COMMITTING AND BEFORE HANDOVER, to renumber my finding letters after discovering Codex's HumanReport120 had claimed `BM`. THAT IS THE S117 RULE AND IT APPLIES ONLY BEFORE A COMMIT OR A HANDOVER — afterwards the answer is a NEW APPENDED CORRECTION. READ THE OTHER AGENT'S REPORT BEFORE ASSIGNING A FINDING LETTER, NOT ONLY ITS CHAT TURN (lesson 192). *** *** MY APPEND ROUTINE NOW READS THE ENTIRE PRIOR FILE, REFUSES UNLESS ITS SHA-256 MATCHES, WRITES PREFIX-THEN-PAYLOAD, AND RE-READS TO ASSERT BOTH HALVES. USE IT. Codex's S119 proved why: its patch verified and applied the COMPLETE EOF context and STILL normalised fifteen CRLF endings, so a `+99/-0` content diff was honestly clean while the byte-prefix claim was FALSE. A PATCH IS DEFINED OVER LINES; THE CLAIM IS DEFINED OVER BYTES; ON A MIXED-EOL FILE THOSE ARE NOT THE SAME STATEMENT. *** **A TURN IS OWED BY CODEX: the review of the Slot-8 design at blob `260e2042` — approval of those exact bytes, or edits handed back — AND rulings on the four handed-over decisions D1–D4, of which D1 (design-then-module, or one round for both) decides whether S124 builds the module or waits. READ BOTH BEFORE ANY WORK. The two rounds it previously owed are CLOSED: the packet runbook at `f5e677c8` unedited, and the public README, where it raised Finding BQ, appended the correction, approved `f00ea0d9`, and I approved the same bytes in S123.** *(Prior S118 state: 2,029,921 bytes / 32,940 LF / 19,456 CR, sha256 `fd0252642799d9273cccfe0241adb54518cdd6fa8a96760e8a057b27fab89bbe`, after my one append (`+164/-0`, a single tail hunk, 0 CR added). Prior state 2,020,093 B / 32,776 LF / 19,456 CR, sha256 `615b9df58ab868cc3425c057d096db9ca68d497122c1931ff3a946f940e4a1b9`; Codex physically last of 278 headers under the permissive recognizer before my append (DO NOT COMPARE COUNTS ACROSS REBUILDS). Prefix asserted byte-identical.)* *** THE EXPLICIT-PREFIX CLAUSE IS AN OPERATIONAL RULE, NOT A HABIT: Codex's S117 first append landed at line 19,811 because it VERIFIED one anchor and APPLIED another. Its own assertions caught it before any fit; I verified the repair at the Git level (two hunks, `+277/-0`, nothing deleted) and recorded the rule in the monitoring thread. WRITE THE WHOLE PRIOR FILE BACK AS AN EXPLICIT PREFIX. *** *** THE CROSS-AGENT DIGEST CONVENTION STILL STANDS and is non-blocking; an absent prior digest is not a fault and not a blocker. *** **A TURN IS OWED BY CODEX: the review of my step-6 analyzer and its tests at blobs `7cf3cc6a` / `a642b3d3` — approval of those exact bytes, or edits handed back. It was also asked to rule on three flagged decisions (the re-score being in, the anchor re-read, the two label routes) and on the packet-runbook gap.** **READ CODEX'S REPLY BEFORE ANY WORK.** Standing decisions from S113/S115, all ACCEPTED and not to be reopened: the deliberate absence of a `receptive_field` attribute; the module's non-ASCII docstrings; no `X_OUTPUT_DIRTY` exit; `X_RUNG2_OK` as completion rather than objective success. *** THE S82 APPEND-ORDER RECURRENCE STILL BINDS: the chronological order is permanently broken in the middle and the PHYSICAL TAIL is the authoritative order. *** **If a judgment comes back contested and one exchange does not settle it from source, ESCALATE to the director rather than trade turns.** Do NOT re-open: the extension document, the five S62 edits, the unified Option-B rule, the measure-first ruling, the payload analyzer/tests, the role-coverage states, the readback ruling, `.gitattributes`, Step 25, the screen result, A2, Codex's two S77 rulings, its four S78 rulings, its S80 ruling on the forty escapes, its S81 Finding-G ruling, its S83 rulings, the closed attribution rung, the closed dev-fit contract, the closed trainer, the frozen rung-2 design, the closed rung-2 module, the closed rung-2 executable, **the closed rung-2 plan**, **the spent rung-2 run and its two raw artifacts**, or the closed public-entry loops. **The file is MIXED-EOL** — append LF and verify additions-only rather than assuming. *(Per-session byte histories pruned S113; they are in Git and in `Session Summaries/`.)*   *** LIFTED OUT OF AN ORPHANED FRAGMENT REMOVED IN S120, BECAUSE IT SITS NEXT TO AN ABSOLUTE RULE: in S117 I found a wrong check count inside MY OWN turn minutes after writing it and BEFORE COMMITTING, and I corrected it by rewriting my own payload onto a prefix I re-asserted byte-identical. NO PRIOR TURN WAS TOUCHED and nothing was deleted. The append-only rule protects the history; it is NOT a licence to publish a number I know is wrong. IF THIS EVER HAPPENS AFTER A COMMIT OR AFTER A HANDOVER, THE ANSWER IS A NEW APPENDED CORRECTION AND NOTHING ELSE. *** **THE CROSS-AGENT DIGEST CONVENTION STILL STANDS and is non-blocking; an absent prior digest is not a fault and not a blocker.**
+- **Phase-2 chat:** `chats/Claude-Codex/Phase 2 Integration and Config Freeze/...- Active.md` — **S124 STATE: 2,127,024 bytes / 34,567 LF / 19,709 CR, sha256 `f9002d63a20a9412f625b1b8cb4d7f0debe4d00c817a77aae94916c6f548f087`, after my one append (`+151/-0`, one tail hunk, 0 CR added, prior `aa8633d2…` at 2,117,536 B — which is Codex's own post-write S123 state, so the transcript is intact end to end; Codex's S123 append was `+118/-0` in ONE hunk at the physical tail).** *(Prior S123 state: 2,110,680 bytes / 34,298 LF / 19,709 CR, sha256 `717af402…`, after my `+170/-0` append, prior `b454b335…` at 2,100,503 B — the exact digest Codex published for its own post-write state, so the transcript is intact end to end).** *(Prior S122 state: 2,094,915 bytes / 34,024 LF / 19,709 CR, sha256 `386b1433…`, after my `+123/-0` append.)* *** S121 REWROTE ITS OWN PAYLOAD ONCE, BEFORE COMMITTING AND BEFORE HANDOVER, to renumber my finding letters after discovering Codex's HumanReport120 had claimed `BM`. THAT IS THE S117 RULE AND IT APPLIES ONLY BEFORE A COMMIT OR A HANDOVER — afterwards the answer is a NEW APPENDED CORRECTION. READ THE OTHER AGENT'S REPORT BEFORE ASSIGNING A FINDING LETTER, NOT ONLY ITS CHAT TURN (lesson 192). *** *** MY APPEND ROUTINE NOW READS THE ENTIRE PRIOR FILE, REFUSES UNLESS ITS SHA-256 MATCHES, WRITES PREFIX-THEN-PAYLOAD, AND RE-READS TO ASSERT BOTH HALVES. USE IT. Codex's S119 proved why: its patch verified and applied the COMPLETE EOF context and STILL normalised fifteen CRLF endings, so a `+99/-0` content diff was honestly clean while the byte-prefix claim was FALSE. A PATCH IS DEFINED OVER LINES; THE CLAIM IS DEFINED OVER BYTES; ON A MIXED-EOL FILE THOSE ARE NOT THE SAME STATEMENT. *** **A TURN IS OWED BY CODEX: the review of the Slot-8 design at blob `260e2042` — approval of those exact bytes, or edits handed back — AND rulings on the four handed-over decisions D1–D4, of which D1 (design-then-module, or one round for both) decides whether S124 builds the module or waits. READ BOTH BEFORE ANY WORK. The two rounds it previously owed are CLOSED: the packet runbook at `f5e677c8` unedited, and the public README, where it raised Finding BQ, appended the correction, approved `f00ea0d9`, and I approved the same bytes in S123.** *(Prior S118 state: 2,029,921 bytes / 32,940 LF / 19,456 CR, sha256 `fd0252642799d9273cccfe0241adb54518cdd6fa8a96760e8a057b27fab89bbe`, after my one append (`+164/-0`, a single tail hunk, 0 CR added). Prior state 2,020,093 B / 32,776 LF / 19,456 CR, sha256 `615b9df58ab868cc3425c057d096db9ca68d497122c1931ff3a946f940e4a1b9`; Codex physically last of 278 headers under the permissive recognizer before my append (DO NOT COMPARE COUNTS ACROSS REBUILDS). Prefix asserted byte-identical.)* *** THE EXPLICIT-PREFIX CLAUSE IS AN OPERATIONAL RULE, NOT A HABIT: Codex's S117 first append landed at line 19,811 because it VERIFIED one anchor and APPLIED another. Its own assertions caught it before any fit; I verified the repair at the Git level (two hunks, `+277/-0`, nothing deleted) and recorded the rule in the monitoring thread. WRITE THE WHOLE PRIOR FILE BACK AS AN EXPLICIT PREFIX. *** *** THE CROSS-AGENT DIGEST CONVENTION STILL STANDS and is non-blocking; an absent prior digest is not a fault and not a blocker. *** **A TURN IS OWED BY CODEX: the review of my step-6 analyzer and its tests at blobs `7cf3cc6a` / `a642b3d3` — approval of those exact bytes, or edits handed back. It was also asked to rule on three flagged decisions (the re-score being in, the anchor re-read, the two label routes) and on the packet-runbook gap.** **READ CODEX'S REPLY BEFORE ANY WORK.** Standing decisions from S113/S115, all ACCEPTED and not to be reopened: the deliberate absence of a `receptive_field` attribute; the module's non-ASCII docstrings; no `X_OUTPUT_DIRTY` exit; `X_RUNG2_OK` as completion rather than objective success. *** THE S82 APPEND-ORDER RECURRENCE STILL BINDS: the chronological order is permanently broken in the middle and the PHYSICAL TAIL is the authoritative order. *** **If a judgment comes back contested and one exchange does not settle it from source, ESCALATE to the director rather than trade turns.** Do NOT re-open: the extension document, the five S62 edits, the unified Option-B rule, the measure-first ruling, the payload analyzer/tests, the role-coverage states, the readback ruling, `.gitattributes`, Step 25, the screen result, A2, Codex's two S77 rulings, its four S78 rulings, its S80 ruling on the forty escapes, its S81 Finding-G ruling, its S83 rulings, the closed attribution rung, the closed dev-fit contract, the closed trainer, the frozen rung-2 design, the closed rung-2 module, the closed rung-2 executable, **the closed rung-2 plan**, **the spent rung-2 run and its two raw artifacts**, or the closed public-entry loops. **The file is MIXED-EOL** — append LF and verify additions-only rather than assuming. *(Per-session byte histories pruned S113; they are in Git and in `Session Summaries/`.)*   *** LIFTED OUT OF AN ORPHANED FRAGMENT REMOVED IN S120, BECAUSE IT SITS NEXT TO AN ABSOLUTE RULE: in S117 I found a wrong check count inside MY OWN turn minutes after writing it and BEFORE COMMITTING, and I corrected it by rewriting my own payload onto a prefix I re-asserted byte-identical. NO PRIOR TURN WAS TOUCHED and nothing was deleted. The append-only rule protects the history; it is NOT a licence to publish a number I know is wrong. IF THIS EVER HAPPENS AFTER A COMMIT OR AFTER A HANDOVER, THE ANSWER IS A NEW APPENDED CORRECTION AND NOTHING ELSE. *** **THE CROSS-AGENT DIGEST CONVENTION STILL STANDS and is non-blocking; an absent prior digest is not a fault and not a blocker.**
 - **Monitoring chat:** `chats/Claude-Codex-Human/Transcript Order Monitoring/…- Active.md` — **S123 ADDED NOTHING, AND THAT IS THE CORRECT ANSWER: no fault occurred.** I re-ran the monitor's checks against primary objects: the first 2,094,915 bytes reproduce my S122 post-write `386b1433…`, Codex's suffix is 5,588 bytes carrying 104 LF and **ZERO CR**, its S122 header occurs once in the whole file, and the commit delta is `+104/-0`. *(Codex's own S122 EOL repair was on the root README, not on a transcript, and I confirmed the result rather than the claim — 212 CR / 212 LF / 212 CRLF, uniform, blob unchanged. It is not a monitored-property fault and it owed the thread nothing.)* Unchanged at 40,808 B / 714 LF / 161 CR, sha256 `afecac49dec0acddddf38999a082992f61d161c750bc25074702428e6cf4466e`. **Prior — S122 ALSO ADDED NOTHING, AND THAT WAS ALSO CORRECT: no fault occurred. Codex's S121 append verified clean and its published pre-append digest `d4a05457…` equalled what I measured before my own append, so the transcript is intact end to end. THE MONITOR POSTS WHEN THERE IS A FAULT OR A CONFIRMATION OWED, NOT EVERY SESSION.** *(S121 also added nothing, correctly: Codex reported no fault against itself in its S120, its append verified clean (`+66/-0`, one tail hunk, physically last), and MY OWN S121 payload rewrite was pre-commit, pre-handover, prefix-asserted and touched no prior turn — the monitored property held.** Unchanged at 40,808 B / 714 LF / 161 CR, sha256 `afecac49dec0acddddf38999a082992f61d161c750bc25074702428e6cf4466e`. *(S120 ADDED ONE ENTRY, AND IT HAD A REASON: CODEX REPORTED A REAL BYTE-PREFIX FAULT AGAINST ITSELF.** Post state 40,808 B / 714 LF / 161 CR, sha256 `afecac49dec0acddddf38999a082992f61d161c750bc25074702428e6cf4466e`, my append `+53/-0`, prior `089b934e…`. What I posted is the monitor's INDEPENDENT confirmation against primary objects: the claimed 2,052,551-byte boundary reproduces Codex's published pre-write `5563df75…`; the boundary lands exactly at the end of my own S119 turn; commit `4561d29` is ONE tail hunk at `+126/-0` with zero deleted lines; the CRLF-normalised prefix is byte-identical to the blob at `0e7b109` at 33,319 LF both sides; and the file carried 19,709 CR before and after, so Codex's 7,502 appended bytes are pure LF. **THE TRANSFERABLE POINT IS NARROWER AND SHARPER THAN THE TWO BEFORE IT:** the last two recurrences were *verified one object, applied another*; this one is NOT — Codex verified the complete EOF context and applied that same context, and the mechanism STILL moved bytes. A patch is defined over lines, the claim over bytes, and on a mixed-EOL file those are different statements. *(Prior: **S118 ADDED ONE ENTRY FOR A REAL APPEND-ORDER RECURRENCE CODEX REPORTED AGAINST ITSELF.** Post state 34,091 B / 596 LF / 127 CR, sha256 `ede6bf6ad010860b4d7a172997b964e851d08b59460660709c8deacc6ef20dfc`, my append `+36/-0`, prior `385daa3d…`. What I posted is the monitor's independent confirmation: commit `a7d0019` touches the Phase-2 transcript in exactly two hunks at `+277/-0` (`@@ -19808,6 +19808,106 @@` and `@@ -32497,3 +32597,180 @@`), so nothing was deleted, moved or truncated and the misplaced turn is still readable where it landed. **The transferable part, and the reason the entry earned its place:** the cause was *verified one object, applied another* — the same root as the README working-tree digest I retired in S117. Two different failures in two consecutive sessions, one root.)*)* *** THE STANDARD: an entry needs a reason — a fault, or a proposal to close. A fault reported by the other agent IS a reason; a clean check is NOT, and belongs in the human report instead. *** **DO NOT EXTEND A STREAK NUMBER FROM MEMORY, AND DO NOT COMPARE A HEADER COUNT ACROSS REBUILDS** — it is a property of the recognizer, not of the transcript; this project has had a remembered count wrong five times running. *(Per-session history pruned S113; it is in Git and in `Session Summaries/`.)*
 
 ## ROUTING - which section of `Permanent Instruments.md` answers which question

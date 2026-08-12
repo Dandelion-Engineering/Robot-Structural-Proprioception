@@ -1,9 +1,12 @@
 # The Director's Verification Artifact — Interface Contract and Synthetic Scaffold — v0.1
 
-**Status:** REVIEWER-EDITED CANDIDATE. Claude explicitly approved the original Session-123 blob
-`260e2042c6b857c2d07cf1f9619cf54af86e5015`; Codex edited that draft during Session 123 review
-and Claude's genuine owner re-review is open. Exact-state approvals live in the Phase-2 chat and
-in Git history, not in this mutable status line.
+**Status:** OWNER-RE-REVIEWED CANDIDATE, ROUND 2. Claude approved the Session-123 draft
+`260e2042c6b857c2d07cf1f9619cf54af86e5015`; Codex reviewed it in its Session 123, found nine
+contract defects, repaired them and approved `0fabe54741741f7a86c121859bd7110d8664d39d`; Claude's
+Session-124 owner re-review kept all nine of those repairs unchanged and added two findings of its
+own (section 4.1's non-finite encoding, and V11's resolution check). Codex's re-review of this
+state is open. Exact-state approvals live in the Phase-2 chat and in Git history, not in this
+mutable status line.
 
 **Nothing in this document authorizes a fit, a checkpoint, a capacity choice, a probability or
 abstention threshold, a configuration freeze, a generation, a rollout, or any pilot, validation or
@@ -220,6 +223,21 @@ handles, no live model, no callbacks. The bundle serializes to JSON under the pa
 canonical-JSON discipline (`sort_keys`, `(",",":")` separators, `allow_nan=False`), which is what
 makes a figure's provenance auditable after the fact and what lets a reviewer diff two bundles.
 
+**Non-finite floats are part of the schema, so the scene encodes them rather than being unable to
+write them.** `EstimatorOutput.severity_uncertainty` defaults to `+inf` and `detection_time_s` is
+`NaN` before detection, and `EstimatorOutput.validate()` accepts both — they are contract-valid
+values a real `estimator_outputs` role will contain, not corruption. Measured this session:
+`json.dumps` under `allow_nan=False` refuses all three of `inf`, `-inf` and `nan`, and the
+packet's own `protocol_p.canonical_json` docstring says that refusal is deliberate. Left
+unaddressed, the bundle write fails on exactly the value section 4.5 promises to render as
+`UNAVAILABLE`, and connecting a real result would require rewriting the scene serialization —
+which is the one thing section 1.2's design test forbids. Therefore **every float position in a
+scene encodes as a JSON number when finite and as one of the three JSON strings `"Infinity"`,
+`"-Infinity"`, `"NaN"` when not.** `allow_nan=False` stays on and no non-standard JSON token is
+ever emitted; the mapping is total and exactly invertible; it is unambiguous because a finite
+float never encodes as a string; and a string in a float position that is not one of those three
+is a loud decode failure, never a silent zero. **V19.**
+
 | field | shape | source | notes |
 |---|---|---|---|
 | `provenance` | struct | 4.3 | state; connection-record identity; config/checkpoint identities; per-arm run, pair, role-index and payload identities; exact roles read |
@@ -320,7 +338,8 @@ per 1.2. **V8** requires a test that asserts both are unreachable from every inp
 currently contains — so the day either becomes reachable, the suite goes red and forces the
 connection record to be reviewed deliberately.
 
-Refusals, all fail-closed, all with distinct exit codes so a test can assert *which* refusal fired:
+Exit codes. Every refusal below is fail-closed and carries its own distinct code, so a test can
+assert *which* refusal fired; the last row is the success code and is the only zero exit:
 
 | code | fires when |
 |---|---|
@@ -355,7 +374,10 @@ Requirements on it:
   call; an abstention; and a high `unknown_score`. It must include at least one scene in which the
   two arms are **indistinguishable**, because Slot 8 names that outcome explicitly as "the honest
   negative shown *as* a result" and a demo that cannot render it is a demo that can only show a
-  win.
+  win. It must also include at least one arm whose `severity_uncertainty` is `+inf` and whose
+  `detection_time_s` is `NaN` before detection — those are the schema's own defaults, they are what
+  a real role will carry, and without them section 4.5's `UNAVAILABLE` branch and the 4.1
+  non-finite encoding are both unrendered and untested in the only round that can test them.
 - **It declares no truth it does not have.** `truth` may be set for a fixture — it is fabricated
   along with everything else — but it is rendered as **`FABRICATED TRUTH`**, never as an
   unqualified green correctness mark, and the banner governs interpretation. V9 forbids any
@@ -460,7 +482,13 @@ module refuses, with code Y, when Z" is.
 - **V10 — A renderer opens no file.** A test calls both surfaces with a bundle while the working
   directory contains no roles at all, and asserts they render.
 - **V11 — The banner is inside the PNG.** Asserted on the saved figure's artists and by inspecting
-  the saved PNG metadata; effective DPI is at least 300.
+  the saved PNG bytes. **The resolution half of this check is made in the domain the value is
+  stored in.** PNG records resolution in the `pHYs` chunk as *integer* pixels per metre, so a
+  figure written at exactly `dpi=300` stores `round(300 / 0.0254) = 11811`, which back-converts to
+  `299.9994` — a test asserting "recovered DPI >= 300" goes red on a correct figure. Measured this
+  session. The test therefore asserts that the scripted path's declared `savefig` DPI is exactly
+  300 and that the saved `pHYs` chunk equals the integer that DPI quantizes to. Same repair shape
+  as finding AV: compare in the domain the value was persisted in.
 - **V12 — Bundle and scene JSON are canonical and round-trip.** Serialize, parse, serialize is
   byte-identical under the packet's existing canonical-JSON rules.
 - **V13 — The scripted path is deterministic and complete.** The same bundle rendered twice under
@@ -481,6 +509,14 @@ module refuses, with code Y, when Z" is.
   neither `torch` nor `mujoco`, asserted in a fresh interpreter. The later role adapter must remain
   read-only; if reusing the current role validator would pull in `torch`, it must first separate
   the dependency-light schema validation rather than duplicate or weaken it.
+- **V19 — Non-finite schema values survive the round trip and are never silently repaired.** A
+  test builds a scene carrying `severity_uncertainty = +inf` and a pre-detection
+  `detection_time_s = NaN`, serializes it under the section 4.1 rule, asserts the emitted document
+  parses with `allow_nan=False` and contains no bare `Infinity` or `NaN` token, asserts the
+  decoded scene equals the original exactly including the sign of the infinity, and asserts that a
+  string in a float position other than the three named ones refuses loudly rather than decoding
+  to a number. A further test asserts the renderer draws `UNAVAILABLE` for the infinite scale
+  rather than a plot extent.
 
 V18 is worth one sentence of justification, because it looks like an over-constraint. The scene
 layer consumes a fixture now and authenticated recorded roles later — it does not run an estimator
@@ -547,7 +583,7 @@ What is already known and is not free: the packet's full test suite is 2,108 tes
    approve the same bytes. Nothing is built before that.
 2. **The scene, fixture, renderers and fail-closed role stub are built and reviewed.**
    `scripts/utils/verification_scene.py` (the scene and fixture) and
-   `scripts/render_verification_scene.py` (both surfaces), plus tests carrying V1 through V18.
+   `scripts/render_verification_scene.py` (both surfaces), plus tests carrying V1 through V19.
    The role subcommand can only emit `X_CONNECTION_UNAUTHORIZED` before reads in this step.
    Exact-state review cycle.
 3. **The fixture figure set is generated and reviewed.** Scripted path only; scenes and figures
