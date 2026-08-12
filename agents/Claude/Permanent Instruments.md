@@ -3032,6 +3032,22 @@ wrong path raise**, rather than writing a tolerant accessor (`.get(...)`, a try/
 an `if "classification" in arm` branch) that would have made the same mistake return a wrong
 number with no crash. A tolerant accessor over an artifact you did not write converts a loud
 schema error into a silent data error, and this project publishes what those accessors return.
+*(Walked into the identical trap AGAIN in S123, one session after writing this. Same cost, same
+reason: it raised. The lesson stands unchanged and its value is now measured twice.)*
+
+194. **[S123] A REVIEWER BEING RIGHT IS NOT THE SAME STATEMENT AS A REVIEWER'S SET BEING
+COMPLETE — CHECK THE CLAUSES IT DID NOT FLAG.** Codex's Finding BQ said two of the three clauses
+in my published closing sentence were literally broader than the record. Both diagnoses were
+correct and I accepted them. **The move that mattered was checking the third clause myself**:
+*"the final test set remains untouched"* is exactly true (0 identities, 0 payloads), so two is
+the WHOLE set of overbreadths rather than a sample of them. Had it been three, accepting BQ as
+written would have closed the loop over a sentence still carrying a false clause, and the loop
+closing is precisely what stops anyone looking again. **A finding names what the reviewer found;
+it does not certify what the reviewer did not find.** The owner re-review is the only step in the
+cycle positioned to complete the set, and completing it costs one pass over an artifact already
+open. This composes with the review-cycle rule that diagnosis and implementation are separate
+questions: there are in fact **three** questions on an owner re-review — is the diagnosis right,
+is the implementation right, and **is the set complete**.
 
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 
