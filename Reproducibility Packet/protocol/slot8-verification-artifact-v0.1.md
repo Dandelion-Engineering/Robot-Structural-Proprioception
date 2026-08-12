@@ -1,12 +1,12 @@
 # The Director's Verification Artifact — Interface Contract and Synthetic Scaffold — v0.1
 
-**Status:** OWNER-RE-REVIEWED CANDIDATE, ROUND 2. Claude approved the Session-123 draft
+**Status:** REVIEWER-EDITED CANDIDATE, ROUND 2. Claude approved the Session-123 draft
 `260e2042c6b857c2d07cf1f9619cf54af86e5015`; Codex reviewed it in its Session 123, found nine
 contract defects, repaired them and approved `0fabe54741741f7a86c121859bd7110d8664d39d`; Claude's
-Session-124 owner re-review kept all nine of those repairs unchanged and added two findings of its
-own (section 4.1's non-finite encoding, and V11's resolution check). Codex's re-review of this
-state is open. Exact-state approvals live in the Phase-2 chat and in Git history, not in this
-mutable status line.
+Session-124 owner re-review kept all nine repairs unchanged, added two findings of its own and
+approved `d56c25c18218892e651e1c7583175d9e03e6969e`. Codex's Session-124 re-review kept both new
+repairs and narrowed their test contracts; Claude's genuine owner re-review is open. Exact-state
+approvals live in the Phase-2 chat and in Git history, not in this mutable status line.
 
 **Nothing in this document authorizes a fit, a checkpoint, a capacity choice, a probability or
 abstention threshold, a configuration freeze, a generation, a rollout, or any pilot, validation or
@@ -235,8 +235,12 @@ which is the one thing section 1.2's design test forbids. Therefore **every floa
 scene encodes as a JSON number when finite and as one of the three JSON strings `"Infinity"`,
 `"-Infinity"`, `"NaN"` when not.** `allow_nan=False` stays on and no non-standard JSON token is
 ever emitted; the mapping is total and exactly invertible; it is unambiguous because a finite
-float never encodes as a string; and a string in a float position that is not one of those three
-is a loud decode failure, never a silent zero. **V19.**
+float never encodes as a string. This is a wire encoding, not a second estimator schema: decoding
+restores the three strings to their IEEE-754 float values before scene construction and validation.
+The decoder calls `json.loads` with a `parse_constant` callback that always raises, because
+Python's default loader accepts the bare non-standard tokens `NaN`, `Infinity` and `-Infinity`;
+only the three quoted strings in typed float positions are decoded. Any other string in a float
+position is a loud decode failure, never a silent zero. **V19.**
 
 | field | shape | source | notes |
 |---|---|---|---|
@@ -487,10 +491,12 @@ module refuses, with code Y, when Z" is.
   figure written at exactly `dpi=300` stores `round(300 / 0.0254) = 11811`, which back-converts to
   `299.9994` — a test asserting "recovered DPI >= 300" goes red on a correct figure. Measured this
   session. The test therefore asserts that the scripted path's declared `savefig` DPI is exactly
-  300 and that the saved `pHYs` chunk equals the integer that DPI quantizes to. Same repair shape
-  as finding AV: compare in the domain the value was persisted in.
-- **V12 — Bundle and scene JSON are canonical and round-trip.** Serialize, parse, serialize is
-  byte-identical under the packet's existing canonical-JSON rules.
+  300 and that the saved `pHYs` payload is exactly `(11811, 11811, 1)`: horizontal and vertical
+  pixels per metre both equal `round(300 / 0.0254)`, and the unit specifier is metres. Same repair
+  shape as finding AV: compare in the domain the value was persisted in.
+- **V12 — Bundle and scene JSON are canonical and round-trip.** Serialize, strict-parse with the
+  section-4.1 non-standard-constant refusal, then serialize is byte-identical under the packet's
+  existing canonical-JSON rules.
 - **V13 — The scripted path is deterministic and complete.** The same bundle rendered twice under
   the pinned environment produces byte-identical PNG and JSON sets; the fixture at a fixed seed
   produces a byte-identical bundle; output case IDs equal bundle case IDs exactly.
@@ -511,12 +517,15 @@ module refuses, with code Y, when Z" is.
   the dependency-light schema validation rather than duplicate or weaken it.
 - **V19 — Non-finite schema values survive the round trip and are never silently repaired.** A
   test builds a scene carrying `severity_uncertainty = +inf` and a pre-detection
-  `detection_time_s = NaN`, serializes it under the section 4.1 rule, asserts the emitted document
-  parses with `allow_nan=False` and contains no bare `Infinity` or `NaN` token, asserts the
-  decoded scene equals the original exactly including the sign of the infinity, and asserts that a
-  string in a float position other than the three named ones refuses loudly rather than decoding
-  to a number. A further test asserts the renderer draws `UNAVAILABLE` for the infinite scale
-  rather than a plot extent.
+  `detection_time_s = NaN`, serializes it with `allow_nan=False`, and strict-loads it with a
+  `parse_constant` callback that would raise on any bare `NaN`, `Infinity` or `-Infinity`. The
+  decoded values must satisfy `isinf` with positive sign and `isnan`, and re-serializing the
+  decoded scene must reproduce the original canonical bytes; ordinary object equality is not the
+  oracle because IEEE-754 NaN is unequal to itself. A codec-level test pins all three exact string
+  mappings, including negative infinity, and asserts that any other string in a typed float
+  position refuses loudly rather than decoding to a number. Mutant documents carrying each bare
+  non-standard token must also refuse through `parse_constant`. A further test asserts the
+  renderer draws `UNAVAILABLE` for the infinite scale rather than a plot extent.
 
 V18 is worth one sentence of justification, because it looks like an over-constraint. The scene
 layer consumes a fixture now and authenticated recorded roles later — it does not run an estimator
