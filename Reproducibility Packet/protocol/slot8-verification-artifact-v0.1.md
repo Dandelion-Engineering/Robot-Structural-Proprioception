@@ -1,8 +1,9 @@
 # The Director's Verification Artifact — Interface Contract and Synthetic Scaffold — v0.1
 
-**Status:** REVIEW CANDIDATE, written by Claude in Session 123. **Neither agent has approved any
-state of this document.** Exact-state approvals live in the Phase-2 chat and in Git history, not
-in this mutable status line.
+**Status:** REVIEWER-EDITED CANDIDATE. Claude explicitly approved the original Session-123 blob
+`260e2042c6b857c2d07cf1f9619cf54af86e5015`; Codex edited that draft during Session 123 review
+and Claude's genuine owner re-review is open. Exact-state approvals live in the Phase-2 chat and
+in Git history, not in this mutable status line.
 
 **Nothing in this document authorizes a fit, a checkpoint, a capacity choice, a probability or
 abstention threshold, a configuration freeze, a generation, a rollout, or any pilot, validation or
@@ -28,14 +29,14 @@ reader does not have to find the transcript.
 
 Claim Sheet Slot 8 commits the agents, before execution, to build a hands-on artifact that lets
 the director — and anyone who downloads the Reproducibility Packet — verify the result without
-reading the Technical Report end to end. It is one of the four artifacts a Dandelion project must
-have before it can be called complete, it lives inside the Reproducibility Packet, and the
-Project Details working method says in writing that it is **paced into the project rather than
-assembled in the final session**.
+reading the Technical Report end to end. It is a required component of the Reproducibility
+Packet — itself one of the four artifacts a Dandelion project must have before it can be called
+complete — and the Project Details working method says in writing that it is **paced into the
+project rather than assembled in the final session**.
 
 It is also, as of Session 123, **the one named completion requirement that has no object at all**.
 The packet has protocols, executables, tests, results and a runbook; it has nothing a
-non-specialist can open.
+non-specialist can open as the Slot-8 surface.
 
 ### 1.1 The problem, stated plainly
 
@@ -52,20 +53,22 @@ effort. Three of its four inputs do not exist:
 Only the fourth is available. A demo built now would have to either invent the first three or
 silently adopt whatever the current development record happens to contain. The second failure is
 by far the more dangerous, because a development artifact rendered in a finished-looking demo
-reads to a non-specialist as the project's result, and this project's development record contains
-a rung-2 arm set that scores exactly zero on two of four classes. Presenting that as a finding
-would be a misrepresentation this document exists to make structurally impossible.
+reads to a non-specialist as the project's result, and this project's development record has zero
+healthy and structure per-class F1 in all ten rung-2 arms. Presenting that as a finding would be a
+misrepresentation this document exists to make structurally impossible.
 
 ### 1.2 What this document specifies instead
 
 The part that can be built without any of the three missing inputs: **the interface between the
 scientific record and the two presentation surfaces**, plus **a synthetic fixture** that drives
-that interface end to end without a single real number in it.
+that interface end to end without a single real number in it. The real-result entry path is
+specified as an authenticated connection record but remains mechanically unreachable until that
+record exists and has passed its own exact-state review and authorization.
 
 The design test this document is written against, and the one a reviewer should hold it to:
 
-> **When the scientific inputs finally exist, connecting them must be a data change and an
-> authorization — not a rewrite of the demo.**
+> **When the scientific inputs finally exist, connecting them must be an authenticated data
+> change and a separate authorization — not a rewrite of the scene schema or either renderer.**
 
 If a reviewer can find a place where connecting a real result would require editing rendering
 code, that is a defect in this design, not a detail of the later build.
@@ -84,15 +87,23 @@ denomination: standing lesson S56 — *every check must be given a source indepe
 it checks* — and its converse here is that every two things required to be identical must be
 given a **single** source.
 
-So the design is one object and two pure renderers:
+So the design is one bundle and two pure surfaces. A `VerificationBundle` contains the named
+`VerificationScene` objects in the short menu. Two mutually exclusive construction paths produce
+the bundle: the synthetic generator now, and an authenticated real-result adapter only after its
+connection record is jointly approved.
 
 ```text
-  roles / checkpoints / thresholds --> scene builder --> VerificationScene --+--> interactive view
-        (the only code that reads them)   (a value, serializable)            +--> 300-DPI figures
+  synthetic case set + seed --------------------------+
+                                                        +--> VerificationBundle --+--> interactive menu
+  connection record + config + checkpoints + roles -->+    (value, serializable)  +--> 300-DPI PNG set
+             (future, separately authorized adapter)
 ```
 
-The scene builder is the only code permitted to touch a role, a checkpoint or a config. Both
-surfaces are functions of a scene and nothing else. A renderer that opens a file is a defect.
+The real-result adapter is the only code permitted to touch a role, a checkpoint or a config.
+Both surfaces are functions of a bundle and nothing else. They share one pure
+`draw_scene(scene)` painter; the interactive wrapper changes which bundle scene it passes to that
+painter, while the scripted wrapper iterates the same scenes. A renderer that opens a file is a
+defect.
 
 ---
 
@@ -107,8 +118,18 @@ From `Claim Sheet.md`, Slot 8, unedited:
 > watches two copies of the robot run the same task at once: one driven by the **conventional
 > suite C1**, one by the **structural suite S**. A live panel shows, for each copy, (a) its
 > current **fault call and confidence** (or an honest *abstain*), and (b) its **tracking-error
-> trace**. [...] A scripted, non-interactive version produces the same comparison as a set of
-> 300-DPI figures for the reports.
+> trace**. The director sees directly whether the structural robot names the right cause
+> **sooner and more often** and **tracks better after the change** — or whether the two are
+> indistinguishable, which is the honest negative shown *as* a result. A scripted,
+> non-interactive version produces the same comparison as a set of 300-DPI figures for the
+> reports.
+>
+> What the director does: trigger a few changes, watch which robot correctly says *what* happened
+> and *keeps doing the task*, and read the confidence/abstain behavior to see the system decline
+> to guess when the signals are genuinely ambiguous. Naming this artifact now also disciplines
+> the build — the experiment has to be designed so that this comparison is possible and legible.
+> If results reshape what the artifact should show, the Slot-8 entry is amended through the normal
+> protocol.
 
 Slot 8 also says, and this document takes it as binding: *"If results reshape what the artifact
 should show, the Slot-8 entry is amended through the normal protocol."* Nothing here proposes an
@@ -137,17 +158,17 @@ take it on trust:
 
 | bound | discharged by | mechanism |
 |---|---|---|
-| 1 — one shared contract | 1.3, 4.1 | `VerificationScene`; renderers are pure functions of it |
-| 2 — required external inputs, no silent defaults | 4.2 | every scientific input is `required=True`; **V4** forbids a default |
-| 3 — labeled synthetic fixture only | 4.4 | `SYNTHETIC_FIXTURE` provenance; **V7**, **V8** |
-| 4 — fail closed; visible `DEVELOPMENT-ONLY` | 4.3, 4.6 | the provenance state machine; **V5**, **V9**, **V10** |
-| 5 — no pilot/val/test; no choices made | 6 | **V2** (unconditional split refusal), **V3** (no derived choice) |
+| 1 — one shared contract | 1.3, 4.1 | one `VerificationBundle` of `VerificationScene` values; both surfaces share `draw_scene` |
+| 2 — required external inputs, no silent defaults | 4.2 | mode-specific parsers; real-result mode requires one authenticated connection record plus explicit roots; **V3**, **V4** |
+| 3 — labeled synthetic fixture only | 4.4 | `SYNTHETIC_FIXTURE` provenance; **V7**, **V9**, **V17** |
+| 4 — fail closed; visible `DEVELOPMENT-ONLY` | 4.2, 4.3, 4.6 | authenticated connection record, identity/pair checks and provenance state machine; **V2**, **V5**, **V6**, **V9**, **V11** |
+| 5 — no pilot/val/test; no choices made | 4.2, 6 | no connection record exists in this round, so all real-role access refuses before a read; **V2**, **V3** |
 | 6 — return through the review cycle | 9 | sequencing; nothing connects a real result inside this round |
 
 ### 2.3 What this document does not license, stated so it cannot be inferred
 
 - It does **not** license reading `pilot`, `val` or `test` for any purpose, including "just to
-  render a picture". Section 6 makes this a refusal with no override flag.
+  render a picture". Section 4.2 and V2 keep every real-role path unreachable in this round.
 - It does **not** license selecting a capacity, a rung, a width, a probability threshold, an
   abstention threshold or an unknown/OOD threshold. Every one of those is an *input*.
 - It does **not** license writing, freezing or drafting `config.json`.
@@ -167,8 +188,9 @@ expected to exercise the mechanism behind each one.
 - **A1 — Choose without typing.** The director selects one body change from a short named menu
   (Slot 8's examples: *soften link 2 by 30%*, *weaken actuator 1*, *bias encoder 1*). No path, no
   hash, no flag, no code edit.
-- **A2 — See two bodies at once.** Both arms run the same task against the same reference, and
-  the two are visually distinguishable and labelled by suite.
+- **A2 — See two bodies at once.** Both arms replay the same paired task against the same
+  reference, and the two animated planar bodies are visually distinguishable and labelled by
+  suite. Play/pause and timeline controls require no typing.
 - **A3 — Read the call and the confidence, and see an abstention as an abstention.** Not a
   probability bar quietly renamed. An abstaining arm must look different from a confident arm and
   different from a wrong arm.
@@ -177,7 +199,7 @@ expected to exercise the mechanism behind each one.
 - **A5 — Always see what the picture is made of.** Provenance is on screen and in every saved
   figure, never only in a caption or a README.
 - **A6 — Reproduce the stills with one command.** The scripted path regenerates the figure set
-  deterministically from the same scene.
+  deterministically from the same bundle and shared scene painter.
 
 **None of A1–A6 is satisfied *scientifically* by this round.** The synthetic fixture proves the
 mechanism carries the information. It proves nothing about the robot, the suites, or the
@@ -187,88 +209,129 @@ question. Sections 4.4 and 6 say so in the artifact itself, not only here.
 
 ## 4. The design
 
-### 4.1 `VerificationScene` — the one object
+### 4.1 `VerificationBundle` and `VerificationScene` — one surface contract
 
-A scene is the complete, serializable description of exactly one side-by-side comparison. It is a
-value: no file handles, no live model, no callbacks. It serializes to JSON under the packet's
-existing canonical-JSON discipline (`sort_keys`, `(",",":")` separators, `allow_nan=False`), which
-is what makes a figure's provenance auditable after the fact and what lets a reviewer diff two
-scenes.
+A scene is the complete, serializable description of exactly one side-by-side comparison. A
+bundle is an ordered, non-empty mapping of unique `case_id` values to scenes; it is the one object
+both surfaces consume and the source of the interactive menu. Every bundle contains at least one
+structure, actuator and sensor case, and every scene in it agrees on bundle version, provenance
+state, config identity, thresholds and connection-record identity. Both are values: no file
+handles, no live model, no callbacks. The bundle serializes to JSON under the packet's existing
+canonical-JSON discipline (`sort_keys`, `(",",":")` separators, `allow_nan=False`), which is what
+makes a figure's provenance auditable after the fact and what lets a reviewer diff two bundles.
 
 | field | shape | source | notes |
 |---|---|---|---|
-| `provenance` | struct | 4.3 | state, identities, what was read |
-| `body_change` | struct | menu entry | `label`, `source_class`, `location`, `severity`, `onset_time_s` |
+| `provenance` | struct | 4.3 | state; connection-record identity; config/checkpoint identities; per-arm run, pair, role-index and payload identities; exact roles read |
+| `body_change` | struct | menu plus fixture/`labels` | `case_id`, display `label`, and the exact schema-D label fields: `source_class`, `subtype`, `location`, `severity`, `onset_index`, `onset_time_s`, `compound_flag`, `ood_flag` |
 | `arms` | exactly 2 | roles or fixture | keyed `C1`, `S`; **exactly two, always both** |
-| `arms[k].decisions[]` | per decision step | schema D `estimator_outputs` | `step`, `decision_time_s`, `p_class[4]`, `unknown_score`, `abstain_decision`, `severity_out`, `severity_uncertainty`, `detection_time_s` |
-| `arms[k].tracking` | `t_s[T]`, `task_reference[T,2]`, `true_task_output[T,2]` | schema G / `controller_logs` | exactly the arguments `utils.metrics.j_5s` takes |
+| `arms[k].body` | `t_s[T]`, `centerline_xy[T,N,2]` | fixture, or derived read-only from schema-B `plant` + authenticated config | the body animation; final centerline point must agree with `true_task_output` |
+| `arms[k].decisions[]` | per decision step | schema D `estimator_outputs` | `step`, `decision_time_s`, `p_class[4]`, `unknown_score`, `abstain_decision`, **`location_out`**, `severity_out`, `severity_uncertainty`, `detection_time_s` |
+| `arms[k].tracking` | `t_s[T]`, `task_reference[T,2]`, `true_task_output[T,2]`, `window_s` | schema-B `plant`; window from fixture or authenticated config | the complete argument set for `utils.metrics.j_5s`, with onset in `body_change` |
 | `arms[k].controller_mode[]` | `[T]` strings | `controller_logs` | non-empty per the role contract |
-| `truth` | struct or `null` | `labels` | present only when a labeled role was read; `null` for a fixture that declares no truth |
-| `thresholds` | struct | **CLI, required** | `abstain_threshold`, `unknown_threshold`; never derived, never defaulted |
+| `truth` | exact schema-D label struct or `null` | fixture or `labels` | fixture truth is visibly marked **`FABRICATED TRUTH`**; real truth requires an authorized label role |
+| `thresholds` | struct | fixture or authenticated connection record | `abstain_threshold`, `unknown_threshold`; never derived and never silently defaulted |
 
-Three properties of that table are load-bearing and are not stylistic:
+Six properties of that table and bundle are load-bearing and are not stylistic:
 
-1. **`decisions[]` renders the schema-D `estimator_outputs` struct exactly, with no renaming and
-   no translation layer.** The scene carries what the schema already defines. A translation layer
-   is a second definition of the same thing, and the project's existing rule is one source of
-   truth per fact.
-2. **`tracking` carries precisely the arguments `j_5s` takes** (`t_s`, `task_reference`,
-   `true_task_output`, and the onset time already in `body_change`). The panel the director reads
-   and the metric the Technical Report reports are then provably the same quantity, because the
-   plot and the number take the same inputs.
+1. **`decisions[]` renders the schema-D `estimator_outputs` struct exactly, including
+   `location_out`, with no renaming and no translation layer.** The scene carries what the schema
+   already defines. A translation layer is a second definition of the same thing, and the
+   project's existing rule is one source of truth per fact.
+2. **`tracking` comes from the privileged schema-B `plant` role, not `controller_logs`, and
+   carries the complete argument set `j_5s` takes** (`t_s`, `task_reference`,
+   `true_task_output`, `window_s`, and the onset time already in `body_change`). The panel the
+   director reads and the metric the Technical Report reports are then provably the same quantity,
+   because the plot and the number take the same inputs.
 3. **`arms` has exactly two entries and both are always present.** A scene that could carry one
    arm is a scene that can render a one-sided picture, and a one-sided picture is the failure mode
    Slot 8 exists to prevent. V1 makes this a construction-time refusal rather than a convention.
+4. **The body panel has body geometry.** Endpoint traces alone do not satisfy Slot 8's promise
+   that the director can watch two robot copies. The synthetic generator emits analytic
+   centerlines. The future adapter derives planar centerlines read-only from authenticated
+   `q_true`, `deform_coords` and config geometry, without stepping MuJoCo, and checks every distal
+   point against the recorded `true_task_output` within a declared visualization tolerance.
+5. **The two arms are a real pair, not merely two suite labels.** The adapter authenticates the
+   C1/S `pair_id`, case identity, onset, time grid and `task_reference`; any mismatch refuses.
+6. **The menu is data, not renderer state.** Unique case labels and order live in the bundle. Both
+   surfaces must expose every bundle scene; a scripted figure set or interactive menu that drops a
+   case refuses rather than silently publishing a subset.
 
-### 4.2 The required external inputs
+### 4.2 The two mode-specific input contracts
 
-Every scientific input is a `required=True` argparse argument. There is **no default anywhere in
-this list**, and V4 forbids adding one later.
+The CLI has two subcommands rather than one parser with contradictory requirements.
+
+**`fixture` mode — the only executable data path in this round**
+
+| argument | rule |
+|---|---|
+| `--fixture-seed` | required; no default seed |
+| `--output-dir` | required, project-relative |
+
+Fixture mode builds the complete named fixture bundle from one seed; individual cases are selected
+inside the interactive menu, not on the command line. It accepts no config, checkpoint, role,
+split or caller-supplied provenance argument. The generator supplies visibly synthetic identities
+and round fabricated thresholds as fixture data.
+
+**`roles` mode — specified now, unreachable until a separate connection review**
 
 | argument | what it names | why it cannot have a default |
 |---|---|---|
-| `--config-identity` | the config hash the scene claims to depict | a default would silently adopt the current draft config |
-| `--checkpoint-identity` (x2, one per arm) | the sha256 of each arm's fitted weights | a default would silently adopt today's development checkpoints |
-| `--abstain-threshold` | the probability below which a call is declined | this is Gate 5's decision; the scaffold must not make it |
-| `--unknown-threshold` | the unknown/OOD score above which the arm reports out-of-distribution | same |
-| `--role-root` | the directory the roles are read from | Standards: no hard-coded paths |
-| `--authorized-role` (repeatable) | the explicit allowlist of roles this invocation may read | absence of an allowlist is not permission |
-| `--split` | the split being read | must be named explicitly so V2 can refuse it explicitly |
+| `--connection-record` | the reviewed JSON that names every allowed case, role and scientific input | a caller-authored allowlist is not authorization |
+| `--connection-record-sha256` | the exact record identity named by the joint approval | prevents a different record from travelling under the same path |
+| `--config` | the exact frozen config file | the adapter measures it; a hash string alone does not authenticate bytes |
+| `--checkpoint-root` | root for the relative C1/S checkpoint paths in the record | the adapter measures both files against the record |
+| `--role-root` | root containing `manifest.csv`, `plant/`, `labels/`, `estimator_outputs/<suite>/`, and `controller_logs/<suite>/` | manifest rows establish pair/split; role paths and payload identities are measured against the record |
 | `--output-dir` | where scenes and figures are written | Standards: project-relative, passed in |
-| `--fixture` | the synthetic fixture to use *instead of* roles | mutually exclusive with `--role-root`; see 4.4 |
 
-`--fixture` and `--role-root` are mutually exclusive and exactly one is required. There is no
-mode in which the scaffold half-reads a role and fills the rest in from a fixture; that would
-produce a picture whose provenance is genuinely ambiguous, and the provenance state machine below
-has no state for it.
+The connection record is data, not a permission-shaped CLI flag. It contains: record version and
+authority (`DEVELOPMENT_ONLY` or `FINAL`); config semantic identity and file SHA-256; analysis
+window; both thresholds; manifest SHA-256 and exact row identities; render geometry and its
+derivation version; exact split; selected model/rung/width identities; and, per menu case, the
+pair/case identifiers, C1/S run IDs, relative checkpoint paths and SHA-256s, and the role-index and
+role-payload SHA-256s for `plant`, `labels`, `estimator_outputs` and `controller_logs`. Paths
+inside it are packet-relative. The
+runtime authenticates those facts; it does **not** claim that digest matching proves social
+approval. Exact-state approval of the record in the chat is the authorization.
+
+No connection record exists in the packet in this round. Therefore `roles` mode must refuse with
+`X_CONNECTION_UNAUTHORIZED` **before opening any config, checkpoint, role index or payload**. The
+later jointly approved record is what makes the already-specified adapter reachable; no
+`--authorized-role`, `--split`, environment variable or override flag can substitute for it.
+There is no mode in which a scene mixes fixture and role data.
 
 ### 4.3 The provenance state machine
 
-Every scene carries exactly one provenance state, and the state is computed from the inputs — it
-is never passed in, because a caller-supplied provenance label is a label that can lie.
+Every scene carries exactly one provenance state, and the state is computed from the construction
+path plus authenticated inputs — it is never passed in, because a caller-supplied provenance
+label is a label that can lie.
 
 | state | entry condition | how it renders |
 |---|---|---|
-| `SYNTHETIC_FIXTURE` | built from `--fixture` | banner **`SYNTHETIC - NOT A RESULT`** on every surface |
-| `DEVELOPMENT_ONLY` | built from roles, and any of: `config_identity` begins `dev-`; `--split dev`; a checkpoint identity is not carried by a frozen approved record | banner **`DEVELOPMENT-ONLY`** on every surface |
-| `FINAL` | built from roles, non-`dev-` config identity, and every checkpoint identity matched against a frozen record | no banner; the identities are still printed |
+| `SYNTHETIC_FIXTURE` | built by the fixture subcommand | banner **`SYNTHETIC - NOT A RESULT`** on every surface |
+| `DEVELOPMENT_ONLY` | an exact approved development connection record authenticates the roles, and the config is `dev-` and split is `dev` | banner **`DEVELOPMENT-ONLY`** on every surface |
+| `FINAL` | an exact approved final connection record authenticates the named split, non-`dev-` config, checkpoints, pair and all role bytes | no warning banner; identities and **`FINAL RESULT INPUTS`** remain printed |
 | *(refusal)* | anything else | the run exits non-zero with a named code; **no scene is produced** |
 
-`FINAL` is currently unreachable, and that is the correct state of the project rather than a gap
-in the design: no non-`dev-` config hash exists. The state is specified now so the later
-connection is a data change, per 1.2. **V6** requires a test that asserts `FINAL` is unreachable
-from every input the packet currently contains — so the day it becomes reachable, that test goes
-red and forces the decision to be taken deliberately rather than noticed afterwards.
+`DEVELOPMENT_ONLY` and `FINAL` are both currently unreachable, and that is the correct state of
+the project rather than a gap in the design: no connection record exists and no non-`dev-` config
+hash exists. The states are specified now so the later connection is an authenticated data change,
+per 1.2. **V8** requires a test that asserts both are unreachable from every input the packet
+currently contains — so the day either becomes reachable, the suite goes red and forces the
+connection record to be reviewed deliberately.
 
 Refusals, all fail-closed, all with distinct exit codes so a test can assert *which* refusal fired:
 
 | code | fires when |
 |---|---|
-| `X_SPLIT_FORBIDDEN` | `--split` is `pilot`, `val` or `test` — unconditional, no override |
+| `X_CONNECTION_UNAUTHORIZED` | role mode was requested without the exact separately approved connection record; fires before any read |
+| `X_SPLIT_FORBIDDEN` | the record names a split its exact authorization does not permit, or any role/index disagrees with that split |
 | `X_ROLE_ABSENT` | a required role root or index is missing |
-| `X_ROLE_UNAUTHORIZED` | a role was read that `--authorized-role` did not name |
-| `X_IDENTITY_MISMATCH` | a checkpoint's measured sha256 differs from `--checkpoint-identity` |
+| `X_ROLE_UNAUTHORIZED` | a role is not named by the authenticated connection record |
+| `X_IDENTITY_MISMATCH` | a measured config, checkpoint, index or payload SHA-256 differs from the record |
+| `X_PAIR_MISMATCH` | C1/S pair, label fields, onset, time grid or task reference differs |
 | `X_PROVENANCE_UNRESOLVED` | the inputs do not land in exactly one state |
+| `X_BUNDLE_INCOMPLETE` | case IDs are duplicated, a required source case is absent, or a surface omits a bundle case |
 | `X_ARMS_INCOMPLETE` | fewer or more than the two required arms |
 | `X_SCENE_OK` | success (exit 0) |
 
@@ -294,8 +357,9 @@ Requirements on it:
   negative shown *as* a result" and a demo that cannot render it is a demo that can only show a
   win.
 - **It declares no truth it does not have.** `truth` may be set for a fixture — it is fabricated
-  along with everything else — but the banner is what governs interpretation, and V8 forbids any
-  fixture scene from rendering without it.
+  along with everything else — but it is rendered as **`FABRICATED TRUTH`**, never as an
+  unqualified green correctness mark, and the banner governs interpretation. V9 forbids any
+  fixture scene from rendering without both labels.
 
 The fixture is **not** a stand-in for a result, a baseline, a validation, or evidence of anything
 about the robot. Section 6 states this inside the artifact.
@@ -304,13 +368,22 @@ about the robot. Section 6 states this inside the artifact.
 
 One figure, three regions, identical in both surfaces:
 
-1. **The two bodies.** Both arms' configurations against the shared task reference, labelled by
-   suite, with the body change and its onset marked.
+1. **The two bodies.** Both arms' animated planar centerlines against the shared task reference,
+   labelled by suite, with the body change and its onset marked. Radio-button menu selection,
+   play/pause and timeline controls satisfy A1/A2 without typed input.
 2. **Call and confidence.** Per arm: the class probabilities over
    `("healthy", "structure", "actuator", "sensor")` — the canonical `SOURCE_CLASS_ORDER`, so a
    reader comparing a figure to a table never has to check — the current call, and the
-   abstention/unknown state rendered as its own visual state rather than as a low bar. Severity
-   and its uncertainty appear as a point with an interval, never as a bare point.
+   abstention/unknown state rendered as its own visual state rather than as a low bar. The known
+   call follows the packet scorer exactly: stored `abstain_decision=True` renders `ABSTAIN`;
+   otherwise it is `SOURCE_CLASS_ORDER[argmax(p_class)]`. Confidence is `max(p_class)`.
+   `unknown_score >= unknown_threshold` is shown as a separate high-unknown state and does not
+   silently rewrite the stored abstention decision. The thresholds are display/audit references
+   from fixture data or the authenticated connection record, never re-estimated here.
+   `location_out` is shown as the location call or `UNLOCALIZED`. Severity appears beside its
+   non-negative, config-defined **error scale**; the renderer must not call that scale a confidence
+   interval unless a later frozen contract gives it coverage semantics, and an infinite scale
+   renders as `UNAVAILABLE` rather than as a plot extent.
 3. **Tracking error.** Per arm: the norm of `task_reference - true_task_output` on shared axes,
    onset marked, and the post-onset window shaded so the director can see the region the project's
    headline metric integrates over.
@@ -320,13 +393,15 @@ That is section 6 item 4, and it is the constraint most likely to be relaxed by 
 
 ### 4.6 The scripted figure path
 
-The same rendering function, called with a non-interactive backend and `savefig(..., dpi=300)`,
-per the Standards' figure requirement. It writes one figure per scene plus the scene JSON beside
-it, so any figure in any report can be traced to the exact scene that produced it.
+The scripted wrapper iterates the bundle through the same `draw_scene(scene)` painter under a
+non-interactive backend and calls `savefig(..., format="png", dpi=300)`, per the Standards'
+figure requirement. It writes one PNG and canonical scene JSON per case plus the canonical bundle
+JSON and its SHA-256, so any figure in any report can be traced to both the exact scene and complete
+menu that produced it.
 
 The provenance banner is drawn **into the figure** as a figure-level artist, not written into a
 caption or a filename. A caption is separable from the image the moment someone copies the PNG
-into a slide; the banner must survive that. **V10.**
+into a slide; the banner must survive that. **V11.**
 
 ### 4.7 Dependencies — nothing new
 
@@ -349,52 +424,76 @@ the module is written — see section 8, decision D2.
 Each is a property a test must be able to fail. "The module does X" is not an invariant; "the
 module refuses, with code Y, when Z" is.
 
-- **V1 — Two arms or nothing.** A scene cannot be constructed with other than exactly two arms
-  keyed `C1` and `S`. Refusal: `X_ARMS_INCOMPLETE`.
-- **V2 — Pilot, validation and test are unreachable.** `--split` in `{pilot, val, test}` refuses
-  with `X_SPLIT_FORBIDDEN` before any file is opened, and **no flag, environment variable or
-  argument re-enables it.** A test asserts the refusal fires before any read.
+- **V1 — A complete menu, with two arms per case, or nothing.** A bundle requires unique case IDs,
+  at least one structure, actuator and sensor case, and every scene has exactly two arms keyed
+  `C1` and `S`. Refusals: `X_BUNDLE_INCOMPLETE`, `X_ARMS_INCOMPLETE`.
+- **V2 — Real roles are unreachable in this round.** Without the exact separately approved
+  connection record, role mode refuses with `X_CONNECTION_UNAUTHORIZED` before any config,
+  checkpoint, index or payload is opened. No caller-supplied role/split flag or environment
+  variable re-enables it. This prevents a later approved test result from being permanently
+  designed out while keeping pilot/validation/test unread now.
 - **V3 — The module derives no scientific choice.** No threshold, capacity, rung, width or
-  configuration value is computed, inferred, or filled in. A test asserts that removing a required
-  threshold argument fails rather than defaulting.
-- **V4 — No default on any scientific input.** A test enumerates the parser's actions and asserts
-  that every argument in the 4.2 table has `required=True` and `default is None`. This is
-  enumerated from the parser, not from a hand-written list, so adding an argument with a default
-  later goes red without anyone remembering to update the test.
-- **V5 — Fail closed on roles.** An absent role root, an absent index, or a role not named by
-  `--authorized-role` refuses with its own distinct code and produces no scene and no figure.
-- **V6 — `FINAL` is currently unreachable, and provably so.** A test asserts that no input
-  presently in the packet yields `FINAL`. When that changes, the test goes red.
-- **V7 — Provenance is computed, never supplied.** There is no argument, field or keyword that
-  sets the provenance state directly. A test asserts a fixture-built scene cannot be relabelled.
-- **V8 — Every non-`FINAL` scene renders its banner.** A test renders each provenance state and
-  asserts the banner text is present in the figure's artists — not in a caption, not in a
-  filename.
-- **V9 — A renderer opens no file.** A test calls both surfaces with a scene while the working
+  configuration value is computed, inferred, or filled in. In role mode they come only from the
+  authenticated record and are checked against the config/output bytes; in fixture mode they are
+  visibly fabricated fixture fields.
+- **V4 — Mode-specific parsers have no scientific defaults.** Tests assert the exact argument set
+  and requiredness for each 4.2 subcommand, that fixture mode rejects every role argument, that
+  role mode rejects every fixture argument, and that neither parser exposes a provenance,
+  authority, split or role-allowlist override. `argparse`'s help action is excluded explicitly;
+  mutually exclusive mode selection is asserted at the subparser boundary, not by the impossible
+  requirement that both alternatives have `required=True`.
+- **V5 — Fail closed on roles.** An absent role root, an absent index, or a role not named by the
+  connection record refuses with its own distinct code and produces no scene and no figure.
+- **V6 — Identities and pairing travel.** Before constructing a real scene, tests require exact
+  config/checkpoint/index/payload digests and exact agreement on `pair_id`, all schema-D label
+  fields, onset, control time grid and `task_reference`. A one-element mismatch refuses with the
+  corresponding identity or pair code.
+- **V7 — Provenance is computed, never supplied.** There is no CLI argument or public builder
+  keyword that sets the provenance state directly. A test asserts a fixture-built scene cannot be
+  relabelled through either public construction path.
+- **V8 — Real provenance is currently unreachable, and provably so.** A test asserts that no
+  input presently in the packet yields `DEVELOPMENT_ONLY` or `FINAL`. When a connection record is
+  added, the test goes red and is replaced only as part of that record's separate review.
+- **V9 — Every non-`FINAL` scene renders its banner.** A test renders each currently reachable
+  provenance state and asserts the banner text is present in the figure's artists — not in a
+  caption, not in a filename. Fixture truth, when present, also renders `FABRICATED TRUTH`.
+- **V10 — A renderer opens no file.** A test calls both surfaces with a bundle while the working
   directory contains no roles at all, and asserts they render.
-- **V10 — The banner is inside the image.** Asserted on the saved figure's artists, and the saved
-  figure is at least 300 DPI.
-- **V11 — Scene JSON is canonical and round-trips.** Serialize, parse, serialize is byte-identical,
-  under the packet's existing canonical-JSON rules.
-- **V12 — The scripted path is deterministic.** The same scene rendered twice produces
-  byte-identical figure files; the fixture at a fixed seed produces a byte-identical scene.
-- **V13 — No cross-arm derived scalar exists.** A test asserts the scene schema and both renderers
+- **V11 — The banner is inside the PNG.** Asserted on the saved figure's artists and by inspecting
+  the saved PNG metadata; effective DPI is at least 300.
+- **V12 — Bundle and scene JSON are canonical and round-trip.** Serialize, parse, serialize is
+  byte-identical under the packet's existing canonical-JSON rules.
+- **V13 — The scripted path is deterministic and complete.** The same bundle rendered twice under
+  the pinned environment produces byte-identical PNG and JSON sets; the fixture at a fixed seed
+  produces a byte-identical bundle; output case IDs equal bundle case IDs exactly.
+- **V14 — No cross-arm derived scalar exists.** A test asserts the scene schema and both renderers
   contain no field or label carrying a C1-versus-S difference, ratio or reduction.
-- **V14 — The module trains nothing and simulates nothing.** It imports neither `torch` nor
-  `mujoco`, asserted in a fresh interpreter, in the same shape as the dev-fit contract's test.
+- **V15 — Schema and metric mappings are exact.** The decision-field set equals the machine
+  schema's `estimator_outputs` fields; tracking arrays come from `plant`; and `j_5s` called on the
+  scene's arrays, onset and window reproduces the authenticated recorded value when one exists.
+- **V16 — The body panel contains bodies.** Each fixture case has two time-varying centerlines.
+  The future real adapter must check the distal centerline point against `true_task_output` within
+  a declared tolerance and refuse a geometry mismatch.
+- **V17 — The fixture bundle exercises the visible failure branches.** Its named scenes jointly
+  cover confident correct, confident wrong, abstention, high unknown and an indistinguishable
+  C1/S case; tests inspect the rendered artists and menu entries, not only the fixture arrays.
+- **V18 — Rendering trains and simulates nothing.** The scene, fixture and renderer modules import
+  neither `torch` nor `mujoco`, asserted in a fresh interpreter. The later role adapter must remain
+  read-only; if reusing the current role validator would pull in `torch`, it must first separate
+  the dependency-light schema validation rather than duplicate or weaken it.
 
-V14 is worth one sentence of justification, because it looks like an over-constraint. The scene
-builder consumes *recorded* estimator outputs and *recorded* controller logs — it does not run an
-estimator and does not step a plant. Keeping the two heavy dependencies out is what makes the
-Slot-8 surface openable by a reader who installed the packet on a laptop, which is the entire
-point of Slot 8 living inside the packet.
+V18 is worth one sentence of justification, because it looks like an over-constraint. The scene
+layer consumes a fixture now and authenticated recorded roles later — it does not run an estimator
+and does not step a plant. Keeping the two heavy dependencies out is what makes the Slot-8 surface
+openable by a reader who installed the packet on a laptop, which is the entire point of Slot 8
+living inside the packet.
 
 ---
 
 ## 6. What the artifact must not do — and must say it does not do
 
 These four appear **in the artifact**, not only in this document. The first three are printed by
-the module; the fourth is enforced by V13.
+the renderer; the fourth is enforced by V14.
 
 1. **It does not answer the Claim Sheet's question.** The demo shows one comparison at a time on
    named inputs. The project's question is answered by the confirmatory protocol, not by a
@@ -428,23 +527,17 @@ What is already known and is not free: the packet's full test suite is 2,108 tes
 
 ## 8. Decisions I am handing over rather than taking alone
 
-- **D1 — Is the design-then-module split right here?** Every prior lane in this project froze a
-  design before building. I have followed that. Codex's Session-122 wording ("contract and
-  synthetic scaffold") could also be read as one round producing both. I chose the split because
-  the 4.1 field table and section 6's item 4 are exactly the kind of thing that is cheap to
-  contest in prose and expensive to contest after a module and its tests exist. If Codex reads its
-  own ruling as one round, say so and I will build both in the next session.
-- **D2 — Is `matplotlib.widgets` sufficient for A1–A6?** Section 4.7 argues yes, on the Efficiency
-  standard. It is the load-bearing dependency choice in the document and the one worth contesting
-  now.
-- **D3 — When a real result is eventually connected, does any cross-arm number appear?** I have
-  ruled it out for this round (section 6 item 4, V13) and deliberately **not** ruled on the later
-  question. It belongs to whatever authorization connects the result.
-- **D4 — Should `truth` be renderable at all in a fixture scene?** Showing the fabricated truth
-  makes the "confident wrong call" fixture legible, which is why 4.4 allows it. It also puts a
-  green tick next to a fabricated answer. I lean toward allowing it *because* the wrong-call
-  fixture is the one that most needs to be visible, but I can see the argument that a fixture
-  should never render a correctness judgement at all.
+- **D1 — RESOLVED: design, then module.** The split is right. The field/source and authorization
+  defects found in this review are exactly the class that should be corrected before code exists.
+- **D2 — RESOLVED CONDITIONALLY: `matplotlib.widgets` is sufficient for the scaffold.** The pinned
+  3.11.0 environment exposes `RadioButtons`, `Button`, `Slider` and `FuncAnimation`, so it can
+  discharge A1/A2 without a new dependency. The module review must demonstrate menu selection,
+  play/pause and timeline control; failure there returns the surface choice to review.
+- **D3 — RESOLVED FOR THIS ROUND ONLY: no cross-arm scalar.** Whether a later authorized final
+  scene shows one is decided with the connection record, after the confirmatory result exists.
+- **D4 — RESOLVED: fixture truth may render, but only as `FABRICATED TRUTH`.** It makes the
+  confident-wrong branch legible without placing an unqualified correctness mark next to invented
+  data.
 
 ---
 
@@ -452,14 +545,18 @@ What is already known and is not free: the packet's full test suite is 2,108 tes
 
 1. **This document is reviewed and frozen.** Codex reviews it at an exact state; both agents
    approve the same bytes. Nothing is built before that.
-2. **The module and its tests are built and reviewed.** `scripts/utils/verification_scene.py`
-   (the scene, the builder, the fixture) and `scripts/render_verification_scene.py` (both
-   surfaces), plus tests carrying V1 through V14. Exact-state review cycle.
+2. **The scene, fixture, renderers and fail-closed role stub are built and reviewed.**
+   `scripts/utils/verification_scene.py` (the scene and fixture) and
+   `scripts/render_verification_scene.py` (both surfaces), plus tests carrying V1 through V18.
+   The role subcommand can only emit `X_CONNECTION_UNAUTHORIZED` before reads in this step.
+   Exact-state review cycle.
 3. **The fixture figure set is generated and reviewed.** Scripted path only; scenes and figures
    written into the packet; runbook step added to the packet README.
-4. **Connecting a real result is a separate joint authorization** that neither this document nor
-   the closing of steps 1 to 3 grants. It requires, at minimum, the inputs section 1.1 lists as
-   absent.
+4. **Connecting a real result is a separate connection-record design, exact-state review and joint
+   authorization** that neither this document nor the closing of steps 1 to 3 grants. It adds the
+   read-only role adapter against the already-frozen scene schema and renderers, and requires, at
+   minimum, the inputs section 1.1 lists as absent. A final test split is neither licensed now nor
+   permanently designed out; only the later exact authorization can name it.
 
 Steps 1 to 3 are inside what Codex's Session-122 boundary authorizes. Step 4 is not, and this
 document does not pre-approve it.
