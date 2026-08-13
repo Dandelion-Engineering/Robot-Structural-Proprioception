@@ -1,6 +1,6 @@
 # The Director's Verification Artifact — Interface Contract and Synthetic Scaffold — v0.1
 
-**Status:** REVIEWER-EDITED CANDIDATE, ROUND 4. Claude approved the Session-123 draft
+**Status:** OWNER-RE-REVIEWED CANDIDATE, ROUND 5. Claude approved the Session-123 draft
 `260e2042c6b857c2d07cf1f9619cf54af86e5015`; Codex reviewed it in its Session 123, found nine
 contract defects, repaired them and approved `0fabe54741741f7a86c121859bd7110d8664d39d`; Claude's
 Session-124 owner re-review kept all nine repairs unchanged, added two findings of its own and
@@ -23,8 +23,13 @@ read "Six properties" over an eight-item list (CL). Codex's Session-126 re-revie
 repairs and narrowed one factual overclaim in CI's rationale: the packet has a synthetic
 data-contract-fixture writer that copies plant timestamps, no production controller-log writer yet
 fixes the future convention, and the defensible incompatibility is with a faithful live-loop writer
-rather than necessarily every possible writer (CM). Claude's owner re-review is open. Exact-state
-approvals live in the Phase-2 chat and in Git history, not in this mutable status line.
+rather than necessarily every possible writer (CM). Claude's Session-127 owner re-review accepted
+CM after reproducing the synthetic writer and the generator's pending-role declaration at source,
+kept the narrowing unedited, restored the one inference the section-1.2 appeal rests on (CO), and
+found that the `X_WINDOW_UNSUPPORTED` rule enumerated four of the live metric's preconditions while
+directing the implementation to that enumeration, so construction now calls `j_5s` rather than
+re-deriving it (CN). Codex's re-review of this state is open. Exact-state approvals live in the
+Phase-2 chat and in Git history, not in this mutable status line.
 
 **Nothing in this document authorizes a fit, a checkpoint, a capacity choice, a probability or
 abstention threshold, a configuration freeze, a generation, a rollout, or any pilot, validation or
@@ -319,8 +324,9 @@ Eight properties of that table and bundle are load-bearing and are not stylistic
    grid beginning at `t = 0`. Requiring `controller_logs.t_s` to equal `playback_t_s`
    element-wise would reject a faithful production logger that records the live controller's
    actual pre-advance decision time, over a field no panel in 4.5 draws, and would bake an equality
-   into this scene contract that neither the schema nor the role contract promises. That is
-   exactly what section 1.2's design test names as a defect in this design. What *is* guaranteed on
+   into this scene contract that neither the schema nor the role contract promises. Connecting
+   that logger would then require editing this scene contract, and that is exactly what section
+   1.2's design test names as a defect in this design. What *is* guaranteed on
    both sides is the index: `PrivilegedRecord.validate` requires
    `plant.step` to be the contiguous 0-based control grid and the role contract requires the same
    of `controller_logs.step`. Scene construction therefore requires both arms'
@@ -426,7 +432,7 @@ assert *which* refusal fired; the last row is the success code and is the only z
 | `X_PROVENANCE_UNRESOLVED` | the inputs do not land in exactly one state |
 | `X_BUNDLE_INCOMPLETE` | case IDs are duplicated, a required source case is absent, or a surface omits a bundle case |
 | `X_ARMS_INCOMPLETE` | fewer or more than the two required arms |
-| `X_WINDOW_UNSUPPORTED` | an arm's `tracking` block is not a valid `utils.metrics.j_5s` call at that scene's onset and `window_s` — a non-uniform or non-increasing grid, a non-finite sample, an onset that is not exactly a control sample, or a grid that ends before `onset_time_s + window_s` |
+| `X_WINDOW_UNSUPPORTED` | an arm's `tracking` block is not a valid `utils.metrics.j_5s` call at that scene's onset and `window_s`. Scene construction establishes this by **calling the live function** and refusing on any refusal it raises, rather than by re-deriving its preconditions — see 4.4. Refusals reached this way include, and are not limited to, a non-uniform or non-increasing grid, a non-finite sample, an onset that is not exactly a control sample, a grid that ends before `onset_time_s + window_s`, a non-positive `window_s`, and a window spanning fewer than two control samples |
 | `X_SCENE_OK` | success (exit 0) |
 
 ### 4.4 The synthetic fixture
@@ -484,6 +490,19 @@ Requirements on it:
   the picture and the number disagreeing in exactly the way property 2 exists to prevent. This is
   the same shape as finding CA: a fixture that cannot reach a branch leaves that branch untested
   in the only round that can test it.
+- **Scene construction establishes that validity by calling `j_5s` itself, not by re-deriving its
+  preconditions.** The shapes named just above are the ones this design happened to find first;
+  they are not the whole precondition set, and a list of them is a second definition of a
+  fact the live function already owns — the duplication property 1 forbids by name. Driven this
+  session against the live function: a scene satisfying **every one** of those named checks is
+  still refused when `window_s` is zero or negative (*"window_s must be positive"*), and when the
+  window is shorter than one control interval so that only the onset sample falls inside it
+  (*"the analysis window contains fewer than two control samples"*). On a one-sample grid the
+  uniformity check this design names cannot even be evaluated, while the function still refuses.
+  Delegating costs one trapezoid over the scene's own arrays, opens nothing, and cannot fall
+  behind a later change to `j_5s`; re-implementing a subset of a live function's preconditions is
+  how the picture and the number drift apart, which is the divergence property 2 exists to
+  prevent.
 - **It declares no truth it does not have.** `truth` may be set for a fixture — it is fabricated
   along with everything else — but it is rendered as **`FABRICATED TRUTH`**, never as an
   unqualified green correctness mark, and the banner governs interpretation. V9 forbids any
@@ -647,11 +666,15 @@ module refuses, with code Y, when Z" is.
   every fixture scene, at that scene's `onset_time_s` and `window_s`, and requires it to return a
   finite value** — the
   unconditional half of this invariant, and the only thing that makes section 4.1's property 2
-  checkable in a round with no recorded value to compare against. Tests also assert the four
-  refusal shapes: a non-uniform grid, an off-sample onset, a grid ending before
-  `onset_time_s + window_s`, and a non-finite tracking sample each refuse scene construction with
-  `X_WINDOW_UNSUPPORTED` rather than reaching a renderer. Where an authenticated recorded value
-  exists, `j_5s` on the scene's arrays must additionally reproduce it.
+  checkable in a round with no recorded value to compare against. A test also asserts that
+  construction **delegates** the validity check to the live function rather than re-deriving it:
+  every refusal `j_5s` raises on a scene's own arrays must surface as `X_WINDOW_UNSUPPORTED` at
+  construction rather than reaching a renderer. Six refusal shapes are asserted individually — a
+  non-uniform grid, an off-sample onset, a grid ending before `onset_time_s + window_s`, a
+  non-finite tracking sample, a non-positive `window_s`, and a window spanning fewer than two
+  control samples — and the last two are in the list because each passes every other check named
+  in it and is caught only by the call. Where an authenticated recorded value exists,
+  `j_5s` on the scene's arrays must additionally reproduce it.
 - **V16 — The body and call panels share one causal timeline.** Each fixture case has two
   time-varying centerlines, and a test asserts `draw_scene` at two different in-range `frame`
   values produces different body artists for the same scene — otherwise the animation requirement
