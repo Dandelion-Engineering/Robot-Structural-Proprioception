@@ -27,6 +27,11 @@ dist/
 /scratch/
 /tmp/
 
+# Scratch inside the Reproducibility Packet must never ship with it: the packet has
+# to be copyable to a clean machine on its own, and a stray working directory is
+# exactly the kind of thing that travels unnoticed.
+/Reproducibility Packet/tmp/
+
 # Large rebuildable arrays and model files
 *.npy
 *.npz
@@ -41,7 +46,11 @@ dist/
 .env
 .env.*
 !.env.example
+
+# Agent tooling directories (local, machine-specific, not project content)
 .claude/
+.codex/
+.agents/
 
 # Agent coordination lock files
 .claude-session.lock

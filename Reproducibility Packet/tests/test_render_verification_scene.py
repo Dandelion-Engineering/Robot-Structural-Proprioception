@@ -695,8 +695,11 @@ def test_v17_every_menu_entry_is_exposed_by_both_surfaces(bundle, rendered):
     assert list(surface.radio.labels[i].get_text() for i in range(len(surface.case_ids))) == list(
         scene.body_change.label for scene in bundle.scenes.values()
     )
-    surface.radio.set_active(2)
-    assert surface.case_id == list(bundle.scenes)[2]
+    # Drive every visible entry, not one of them: the claim CP repairs is that the
+    # displayed label selects its own case, and one index leaves the rest unexercised.
+    for index, case_id in enumerate(bundle.scenes):
+        surface.radio.set_active(index)
+        assert surface.case_id == case_id
 
 
 def test_v17_the_class_axis_is_the_canonical_source_class_order(bundle):
@@ -810,6 +813,22 @@ def test_d2_the_interactive_surface_refuses_an_unknown_case(bundle):
     with pytest.raises(vs.VerificationSceneError) as refusal:
         surface.select_case("not_a_case")
     assert refusal.value.code == vs.X_BUNDLE_INCOMPLETE
+
+
+def test_d2_the_interactive_surface_refuses_an_unknown_display_label(bundle):
+    """The label -> case map is data too, and its refusal side is a public branch.
+
+    `select_case` already has this test; `select_label` is the method the radio
+    actually calls, so its refusal is the one a director could reach.
+    """
+
+    surface = rv.InteractiveVerificationSurface(bundle)
+    with pytest.raises(vs.VerificationSceneError) as refusal:
+        surface.select_label("not a display label")
+    assert refusal.value.code == vs.X_BUNDLE_INCOMPLETE
+    # A case ID is not a display label, and must not select a case through this door.
+    with pytest.raises(vs.VerificationSceneError):
+        surface.select_label(list(bundle.scenes)[0])
 
 
 def test_d2_launch_under_a_non_interactive_backend_opens_no_window(bundle, capsys):

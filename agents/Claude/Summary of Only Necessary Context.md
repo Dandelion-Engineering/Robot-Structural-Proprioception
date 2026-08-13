@@ -9,56 +9,107 @@
 
 **DO NOT UNDO THE SPLIT BY DRIFTING CONTENT BACK.** If a permanent instrument improves, the improvement goes into **the block that owns it in the reference file** — that is the S105 correction, and it is the reason the append writer's last five rebuilds were faithful. Only *current state* belongs here.
 
-## S129 FIRST - THE SLOT-8 STEP-2 BUILD IS ON CODEX, AND IT IS THE PROJECT'S ONLY OPEN LOOP.
+## S130 FIRST - STEP 2 IS ON CODEX AT ONE CHANGED BLOB, AND IT IS THE PROJECT'S ONLY OPEN LOOP.
 
 ```text
-*** WHAT S128 DID: Codex CLOSED the Slot-8 DESIGN (step 1) in its S127 at blob `0753d4ed`, both
-    agents on the same bytes, and authorized EXACTLY ONE THING - my step-2 build.  I built it.
-    FOUR NEW FILES, 144 NEW TESTS, handed over with my explicit approval. ***
+*** WHAT S129 DID: Codex reviewed my S128 build, found FOUR contract defects (CP/CQ/CR/CS),
+    REPAIRED THEM ITSELF and approved its edited state.  I did the owner re-review: ACCEPTED ALL
+    FOUR DIAGNOSES AND ALL FOUR IMPLEMENTATIONS, then found ONE THING OF MY OWN (CT) and repaired
+    it TEST-ONLY.  BOTH MODULES ARE BYTE-IDENTICAL TO CODEX'S REVIEWER STATE.  ONE BLOB CHANGED. ***
 
 *** THE PROJECT STATE IN ONE LINE: EVERY SCIENTIFIC LANE IS STILL SPENT OR SHUT, THE PUBLIC
     README IS CLOSED AT BOTH APPROVALS, THE SLOT-8 DESIGN IS CLOSED AT BOTH APPROVALS, AND THE
-    ONLY OPEN LOOP IS THE STEP-2 BUILD I OWN AND CODEX IS REVIEWING. ***
+    ONLY OPEN LOOP IS THE STEP-2 BUILD I OWN AND CODEX IS RE-REVIEWING. ***
 
-THE ONE OPEN LOOP - FOUR BLOBS, ALL FOUR APPROVED BY ME IN MY S128 TURN:
-  Reproducibility Packet/scripts/utils/verification_scene.py
-    blob (filtered == --no-filters)  1c45ac0fe214521250a5dc18fa44650da1375c23
-    raw == canonical sha256          81bf4dcffc82454fed91a58da07879c4f703a2b04b67add0fb0a43a76cb5bc7d
-    63,428 B / 1,633 LF / 0 CR
-  Reproducibility Packet/scripts/render_verification_scene.py
-    blob                             4c5ce765034a889d165d1fad82c354323cccfaa1
-    raw == canonical sha256          f94d82903cbccd62dc96f1e375054261d5999d7a8292d341594073882798f4c0
-    28,449 B / 746 LF / 0 CR
-  Reproducibility Packet/tests/test_verification_scene.py
-    blob                             fcc250a01b33ddac241940f41842b014ec8c415c
-    raw == canonical sha256          34c543ec892eafee08607b5205a369d103771aa364d2499e620a03ff6d838418
-    42,477 B / 1,089 LF / 0 CR
-  Reproducibility Packet/tests/test_render_verification_scene.py
-    blob                             0c9f85dba4049b3f73eb6d9ef73601ab437fd76a
-    raw == canonical sha256          d547d390df4bb7245687e7a8848291787d39b5b6e4982af29352f6e2217adc65
-    31,636 B / 795 LF / 0 CR
+THE ONE OPEN LOOP - FOUR BLOBS, ALL FOUR APPROVED BY ME IN MY S129 TURN:
+  Reproducibility Packet/scripts/utils/verification_scene.py           *** UNCHANGED BY ME ***
+    blob (filtered == --no-filters)  c12745abc1fff3f09a6077543cf9dc5cfcc49b3a
+    raw == canonical sha256          d811e0875b7dabeef053ca01ff908f66e3fc3f3472727e4d385478a228251597
+    63,651 B / 1,639 LF / 0 CR
+  Reproducibility Packet/scripts/render_verification_scene.py          *** UNCHANGED BY ME ***
+    blob                             0ae5b19d4a5957d3be662b1aa337c8e3bb9353a5
+    raw == canonical sha256          fd8644d5dbd864ba335ae8e5585d9f65ae2a4f7f256aa997b6780ee29889ce0d
+    30,100 B / 785 LF / 0 CR
+  Reproducibility Packet/tests/test_verification_scene.py              *** UNCHANGED BY ME ***
+    blob                             cf61e5aad09bc5dceab15519e7888fb97fe70b27
+    raw == canonical sha256          b4747571120c6415f9344dd1da5c425932fadc1ca2ca14112236bcd9587a529f
+    43,252 B / 1,111 LF / 0 CR
+  Reproducibility Packet/tests/test_render_verification_scene.py       *** THE ONE I CHANGED ***
+    blob                             1833a4724ed2a20429d202109165c4ba4ca21624
+    raw == canonical sha256          634214fb018c9550e5e7a00c22bd9d0a1f5d6374985d7f0d0c4a66fde2becbed
+    34,780 B / 878 LF / 0 CR         (was `ba7d135a`, 33,822 B / 859 LF)
   ALL FOUR: final newline, no BOM, PURE ASCII, no control byte but LF and TAB.
-  *** `.gitattributes` PINS NOTHING FOR `*.py` (`git check-attr` reports text/eol unspecified),
-      so blob == raw is MEASURED, NOT ENFORCED - I checked `--no-filters` on all four.  A FRESH
-      CLONE MATERIALIZES THESE CRLF and the raw digests above will NOT reproduce; the blobs will.
-      Nothing in the packet hashes these files, so it is a note, not a defect.  I asked Codex
-      whether the four paths want a pin. ***
-  IF CODEX APPROVES THESE EXACT BYTES, STEP 2 CLOSES AND STEP 3 (generate the fixture figure set
-  into the packet + add the runbook step) IS AUTHORIZED AND IS MINE.  IF CODEX EDITS OR BLOCKS,
-  THE OWNER RE-REVIEW IS MINE AND COMES FIRST.  *** READ THE CHAT TAIL BEFORE ANYTHING ELSE. ***
+  *** SUPERSEDED, NEVER REVIEW OR BUILD FROM: my S128 handoff `1c45ac0f` / `4c5ce765` / `fcc250a0` /
+      `0c9f85db`, AND Codex's reviewer test blob `ba7d135a`. ***
+  *** `.gitattributes` PINS NOTHING FOR `*.py`, so blob == raw is MEASURED, NOT ENFORCED - checked
+      `--no-filters` on all four again in S129.  A FRESH CLONE MATERIALIZES THESE CRLF and the raw
+      digests will NOT reproduce; the blobs will.  Nothing in the packet hashes these files.
+      CODEX RULED IN ITS S128 THAT NO EOL PIN IS ADDED, and I accepted: no packet runtime hashes
+      them, Git blobs are the durable identities, and a pin would enlarge the review object without
+      closing a runtime gap.  *** DO NOT REOPEN THE PIN QUESTION. *** ***
+  IF CODEX APPROVES `1833a472`, STEP 2 CLOSES AND STEP 3 (generate the fixture figure set into the
+  packet + add the runbook step) IS AUTHORIZED AND IS MINE.  IF CODEX EDITS OR BLOCKS, THE OWNER
+  RE-REVIEW IS MINE AND COMES FIRST.  *** READ THE CHAT TAIL BEFORE ANYTHING ELSE. ***
 
-TWO QUESTIONS I FLAGGED TO CODEX RATHER THAN SETTLING ALONE.  IF IT HAS RULED, APPLY THE RULING;
-IF IT HAS NOT, DO NOT SETTLE THEM UNILATERALLY IN A LATER SESSION EITHER:
-  Q1  THE DISTAL-POINT GEOMETRY CHECK HAS NO EXIT CODE.  4.1's field table states it
-      ("final centerline point must agree with `true_task_output`") and property 6 / V16 assign it
-      to the future adapter with a declared tolerance - but the 4.3 table names NO code for a
-      geometry mismatch and all twelve would be a lie.  SHIPPED AS a public
-      `require_distal_point_matches_task_output(arm, *, tolerance=CENTERLINE_TASK_OUTPUT_TOL_M)`,
-      called by the fixture generator on every arm, both sides tested - NOT a construction-time
-      refusal.  *** DO NOT INVENT A FOURTEENTH CODE. ***
-  Q2  A DECISION FAILING THE LIVE SCHEMA-D CONTRACT REFUSES WITH `X_DECISION_UNSUPPORTED`.  That
-      is a READING of the 4.3 row, not a literal item in it.  The alternative - not validating
-      decisions at construction - lets a malformed decision reach a renderer.
+CODEX'S FOUR REPAIRS - ACCEPTED IN FULL, DIAGNOSIS AND IMPLEMENTATION.  DO NOT UNDO ANY:
+  CP  THE RADIO MENU SHOWED INTERNAL CASE IDs, NOT THE NAMED BODY-CHANGE LABELS.  *** A1 NAMES THE
+      THREE ENTRIES LITERALLY - "soften link 2 by 30%", "weaken actuator 1", "bias encoder 1" - AND
+      THOSE ARE EXACTLY THE FIXTURE'S `body_change.label` STRINGS.  I read the examples as
+      illustrative; they are the specification.  I WAS WRONG. ***  Radio now shows the labels,
+      `select_label` maps label -> case_id, and `validate_bundle` refuses DUPLICATE labels with
+      `X_BUNDLE_INCOMPLETE` (no fourteenth code).  *** ORDERING IS LOAD-BEARING: `validate_bundle`
+      is the FIRST statement of `__init__`, BEFORE `_case_id_by_label = dict(zip(...))`, so the zip
+      can never silently collapse two entries.  DO NOT MOVE IT. ***
+  CQ  V1 WAS A BUILDER GATE ONLY.  Both `render_bundle` and `InteractiveVerificationSurface` now
+      call `validate_bundle` BEFORE creating a directory or a UI.  *** I CHECKED THE OBVIOUS
+      REGRESSION: the `bundle_version` guard Codex DELETED from `render_bundle` is the FIRST
+      `_require` INSIDE `validate_bundle`, same code - so the replacement is STRICTLY STRONGER, not
+      weaker.  I drove an unknown-version bundle at both surfaces and both refuse.  A DIFF SHOWS
+      WHAT MOVED, NOT WHAT THE DESTINATION ALREADY CONTAINED (lesson 204). ***
+  CR  PLAYBACK MOVED THE PICTURE BUT NOT THE VISIBLE SLIDER.  `advance_frame` is now ONE LINE -
+      `self.slider.set_val((self.frame + 1) % self._n_frames())` - and the frame moves only as a
+      CONSEQUENCE of the slider observer.  *** THAT IS THE RIGHT DIRECTION OF DEPENDENCY: the
+      visible control IS the state.  DO NOT "RESTORE" A DIRECT `self.frame = ...` ASSIGNMENT. ***
+  CS  `--output-dir` DID NOT ENFORCE SECTION 4.2's PROJECT-RELATIVE CONTRACT.  4.2 states it TWICE
+      (fixture "required, project-relative"; roles "Standards: project-relative, passed in").
+      `_project_relative_output_dir` refuses POSIX-rooted, Windows-rooted, drive-qualified and `..`
+      forms on BOTH subcommands, at PARSE time, before any output.  Exits `SystemExit(2)` through
+      argparse - the SAME contract missing-required-argument errors already had, so NO NEW EXIT
+      SURFACE and no fourteenth code.  *** COMPATIBLE WITH STEP 3: packet runbook steps are already
+      invoked FROM the packet directory with packet-relative paths. ***
+
+MY FINDING CT - TEST-ONLY, AND I MADE IT PROVE ITSELF BEFORE KEEPING IT:
+  1  `select_label` IS THE METHOD THE RADIO ACTUALLY CALLS and its refusal branch had NO TEST
+     (`select_case`'s equivalent has had one since S128).  Added.
+  2  THE MENU TEST DROVE `set_active(2)` ALONE - one entry of four.  Now drives EVERY entry.
+  *** THE JUSTIFICATION IS A TWO-MUTANT CONTROL RUN AGAINST BOTH TEST-FILE STATES, and it is the
+      instrument to reuse whenever proposing a test addition:
+        A  unknown label swallowed        SURVIVES reviewer tests (158)  KILLED by mine
+        B  label map swaps 0 and 1,       SURVIVES reviewer tests (158)  KILLED by mine
+           leaving index 2 correct
+      MUTANT B IS THE ONE THAT SETTLES IT.  A test addition that the OTHER version also kills is
+      decorative; I would have dropped either one the control showed was. ***
+
+THE MUTATION CONTROL ON CODEX'S FOUR REPAIRS - 6/6, AND RUN IT AGAIN IF ANY OF THEM IS TOUCHED:
+  GREEN   CONTROL (unmutated)              158 passed
+  KILLED  CP-radio-shows-ids               test_v17_every_menu_entry_is_exposed_by_both_surfaces
+  KILLED  CP-duplicate-labels-allowed      test_v1_interactive_menu_display_labels_must_be_unique
+  KILLED  CQ-surfaces-do-not-validate      test_v1_both_surfaces_refuse_an_incomplete_menu...
+  KILLED  CR-playback-leaves-slider-behind test_d2_play_pause_toggles_and_advances
+  KILLED  CS-output-dir-unconstrained      test_v4_output_directory_is_project_relative...
+  *** THE CONTROL CAME BACK RED THE FIRST TIME AND THE CAUSE WAS MY STAGING, NOT THE CODE: I copied
+      `scripts/` and `tests/` but NOT `schema/`, and the two failures were exactly the two tests
+      that pin field names by EQUALITY against `schema/schema.json`.  A MUTATION CONTROL WITH A RED
+      CONTROL MEASURES NOTHING.  STAGE `scripts`, `tests` AND `schema`. ***
+
+TWO QUESTIONS I FLAGGED IN S128 - BOTH RULED BY CODEX S128, BOTH ACCEPTED BY ME S129 WITHOUT
+CONTEST.  DO NOT REASK EITHER:
+  Q1  DISTAL-POINT GEOMETRY: the helper STAYS as a tested public
+      `require_distal_point_matches_task_output`, called by the fixture generator on every arm, both
+      sides tested - NOT a construction-time refusal.  *** THE STEP-4 CONNECTION-RECORD/ADAPTER
+      DESIGN MUST NAME THE FAIL-CLOSED CODE BEFORE REAL GEOMETRY IS REACHABLE.  DO NOT INVENT A
+      FOURTEENTH CODE NOW. ***
+  Q2  A DECISION FAILING THE LIVE SCHEMA-D CONTRACT KEEPS `X_DECISION_UNSUPPORTED`.
 
 WHAT THE BUILD IS, so a reviewer or a later session does not re-derive it:
   verification_scene.py   the scene/bundle VALUE contract, the canonical-JSON codec (including
@@ -83,7 +134,8 @@ THE FOUR PLACES THE BUILD POINTS AT A FACT'S OWNER INSTEAD OF COPYING IT (lesson
   3  CLASS ORDER IS `utils.metrics.SOURCE_CLASS_ORDER`, imported.
   4  CANONICAL JSON IS `utils.protocol_p.canonical_json`, `allow_nan=False` still on.
   FIELD NAMES ARE PINNED BY EQUALITY AGAINST `schema/schema.json` - the nine `estimator_outputs`
-  fields and the eight `labels` fields, two tests, EQUALITY not adoption.
+  fields and the eight `labels` fields, two tests, EQUALITY not adoption.  *** THOSE TWO ARE THE
+  ONLY TESTS IN THE FOCUSED PAIR THAT NEED A FILE OUTSIDE `scripts/` AND `tests/`. ***
 
 TWO CLOCK FACTS DELIBERATELY LEFT UNBOUND.  BINDING EITHER REJECTS FAITHFUL REAL DATA:
   `controller_t_s` IS NEVER COMPARED TO `playback_t_s` (finding CI).  The fixture deliberately
@@ -96,15 +148,20 @@ TWO CLOCK FACTS DELIBERATELY LEFT UNBOUND.  BINDING EITHER REJECTS FAITHFUL REAL
     `plant.t_s[onset_index]` is one control interval LATER than `onset_time_s` in real data.
     Only `onset_time_s` is used, and only by the live metric. ***
 
-THE TWO TESTS THAT MUST NOT BE DELETED, AND WHY:
+THE FOUR TESTS THAT MUST NOT BE DELETED, AND WHY:
   V15 DELEGATION - monkeypatches `j_5s` to raise a SENTINEL STRING no design document contains and
     requires construction to refuse CARRYING THAT SENTENCE.  An AST test also asserts the call
     exists, but that one is satisfied by a function that calls and ignores.  *** ONLY THE
     MONKEYPATCH TEST CAN HOLD THE DELEGATION.  Deleting it is how CN comes back.  Lesson 201. ***
   V6 ACCEPT SIDE - a controller payload on the one-interval-offset grid is REQUIRED TO BE
     ACCEPTED.  Deleting it is how CI comes back.
+  `test_v17_every_menu_entry_is_exposed_by_both_surfaces` - MUST KEEP DRIVING EVERY ENTRY.  Cutting
+    it back to one `set_active` is exactly mutant B, and mutant B passes.  Lesson 205.
+  `test_d2_the_interactive_surface_refuses_an_unknown_display_label` - the only test on the refusal
+    branch of the method the RADIO actually calls.
 
-ONE THING I NEARLY GOT WRONG AND ONLY V15 SAVED ME FROM.  RECORDED SO IT IS NOT RE-INTRODUCED:
+ONE THING I NEARLY GOT WRONG IN S128 AND ONLY V15 SAVED ME FROM.  RECORDED SO IT IS NOT
+RE-INTRODUCED:
   I ALMOST CHECKED `playback_t_s` FOR UNIFORMITY / MONOTONICITY / FINITENESS AT CONSTRUCTION under
   `X_TIMEBASE_MISMATCH`.  *** THAT WOULD HAVE BROKEN V15, which requires a NON-UNIFORM GRID to
   surface as `X_WINDOW_UNSUPPORTED` - my check would have pre-empted the delegation for exactly
@@ -113,11 +170,13 @@ ONE THING I NEARLY GOT WRONG AND ONLY V15 SAVED ME FROM.  RECORDED SO IT IS NOT 
 
 THE FIXTURE - FOUR CASES, AND ONE DELIBERATE CHOICE IN IT:
   `soften_link_2` (structure), `weaken_actuator_1` (actuator), `bias_encoder_1` (sensor),
-  `indistinguishable_softening` (structure).  Jointly cover: confident correct, confident WRONG,
-  an abstention, a high `unknown_score`, an INDISTINGUISHABLE pair, `+inf` severity scale with a
-  pre-detection `NaN`, and a decision state that CHANGES (S on case 1 abstains at 1.5 s and
-  resolves to `structure` at 3.0 s).  Every arm carries TWO decisions; the grid starts at 0.05 s
-  so every case drives `NO DECISION YET` at an early frame.
+  `indistinguishable_softening` (structure).  *** THE DISPLAY LABELS ARE DATA AND MUST STAY UNIQUE:
+  "Soften link 2 by 30%", "Weaken actuator 1", "Bias encoder 1", "Soften link 1 by 10% (the two
+  suites are indistinguishable)".  THE FIRST THREE ARE A1'S OWN WORDS. ***
+  Jointly cover: confident correct, confident WRONG, an abstention, a high `unknown_score`, an
+  INDISTINGUISHABLE pair, `+inf` severity scale with a pre-detection `NaN`, and a decision state
+  that CHANGES (S on case 1 abstains at 1.5 s and resolves to `structure` at 3.0 s).  Every arm
+  carries TWO decisions; the grid starts at 0.05 s so every case drives `NO DECISION YET` early.
   GRID: 141 samples at 20 Hz on the plant's own `(k+1)*dt` convention; onset EXACTLY on sample 19
   at 1.000 s; window close EXACTLY on sample 119 at 6.000 s; grid runs on to 7.05 s so the derived
   scripted frame is INTERIOR, not terminal.
@@ -127,57 +186,64 @@ THE FIXTURE - FOUR CASES, AND ONE DELIBERATE CHOICE IN IT:
       menu whose every panel favoured the structural suite is the exact misreading this whole
       design exists to prevent.  DO NOT "IMPROVE" THE FIXTURE INTO A WIN. ***
 
-MEASURED S128, on this machine at the pinned matplotlib 3.11.0:
-  fixture bundle build            0.004 s
-  one scene painted               0.032 s
-  full scripted figure set        1.747 s   (4 PNG at 300 DPI + 4 scene JSON + bundle + digest)
-  canonical bundle document       340,741 B
+MEASURED S129, on this machine at the pinned matplotlib 3.11.0:
+  focused suite                   159 passed, 25.17 s   (144 at my S128 handoff, 158 after Codex)
+  focused under `python -O`       159 passed, 26.40 s   (one expected pytest -O warning)
+  independent owner probe         48/48
+  packet-wide fallback            1,344 passed, 1 failed, 28 collection errors
   canonical bundle sha256         3bf51e9440ec32c7cb7484f70ecfc80c1d5c97d3fb53b8dc0e1f44add5459d70
-  one 300-DPI PNG                 440,690 - 459,160 B
-  pHYs payload on every PNG       (11811, 11811, 1)
-  Section 7 of the design asked for exactly those three timings.  Byte-identical across two
-  renders into different destinations, `filecmp.cmp(shallow=False)` over every written file.
-  *** V11'S BYTE HALF IS REAL: `savefig` writes the banner and the fixture disclaimer into PNG
-      `tEXt` metadata beside the figure-level artist that draws them, so the test finds the exact
-      strings in the file's bytes rather than trying to read a rasterization. ***
+  canonical bundle document       340,741 B, ten files written, four 300-DPI stills
+  *** THE BUNDLE DIGEST IS UNCHANGED FROM S128.  THE FOUR REPAIRS CHANGED WHAT THE MENU SHOWS AND
+      WHAT THE SURFACES REFUSE, AND NOTHING ABOUT WHAT THE FIXTURE IS.  Re-measure this after any
+      touch to the fixture; a moved digest means the DATA moved, which is a different review. ***
 
-*** THE MUJOCO BLOCK - READ THIS BEFORE QUOTING ANY SUITE COUNT. ***
-  `import mujoco` FAILS AT THE INTERPRETER LEVEL on this machine as of S128:
+TWO MEASURED NON-FINDINGS FROM S129.  DO NOT "DISCOVER" EITHER AS A DEFECT LATER:
+  1  `--output-dir ""` IS ACCEPTED and resolves to `Path(".")`, so a figure set would land in the
+     current directory rather than a subdirectory.  It is project-relative and escapes nothing, so
+     it does not violate 4.2.
+  2  `select_case` REPAINTS TWICE per case switch - once through the slider observer and once
+     through its own trailing `_refresh()`.  That is MY code, unchanged by the review, and at
+     0.032 s per paint it is imperceptible.  Not worth enlarging the review object.
+
+*** THE MUJOCO BLOCK - READ THIS BEFORE QUOTING ANY SUITE COUNT.  RE-MEASURED S129, UNCHANGED. ***
+  `import mujoco` FAILS AT THE INTERPRETER LEVEL on this machine:
     ImportError: DLL load failed while importing _functions:
     An Application Control policy has blocked this file.
   A WINDOWS APPLICATION CONTROL / WDAC POLICY, NOT A PROJECT REGRESSION.  28 packet test modules
   import MuJoCo transitively and fail AT COLLECTION; a 29th test fails inside the same import.
-  *** THE PACKET'S FULL-SUITE COUNT IS THEREFORE UNMEASURABLE WHILE THIS HOLDS.  DO NOT QUOTE A
-      SMALLER NUMBER AS IF IT WERE THE SUITE. ***  Honest S128 measurement:
-    whole suite, --continue-on-collection-errors   1,328 passed, 1 failed, 28 collection errors
-                                                   all 29 traced to the single import
-    my two new files alone                         144 passed, 21.20 s
-    my two new files under `python -O`             144 passed, 25.79 s
+  S129 counted the string "Application Control policy has blocked" and got EXACTLY 29 - one per
+  affected module - so all 29 terminate at the one cause and none reaches the Slot-8 lane.
+  *** THE PACKET'S FULL-SUITE COUNT IS THEREFORE UNMEASURABLE WHILE THIS HOLDS.  1,344 IS NOT THE
+      SUITE.  DO NOT QUOTE A SMALLER NUMBER AS IF IT WERE. ***
   LOGGED AS `director_requests.md` ENTRY 2 (director-only: nobody but Randy changes a security
-  policy).  THE SLOT-8 LANE IS UNAFFECTED - V18 asserts in a FRESH INTERPRETER that neither module
-  imports `torch` or `mujoco`, which is also what makes the packet openable on a laptop.
+  policy).  STILL OPEN; S129 re-measured it and added no new entry, because the existing one is
+  still accurate.  THE SLOT-8 LANE IS UNAFFECTED - V18 asserts in a FRESH INTERPRETER that neither
+  module imports `torch` or `mujoco`, which is also what makes the packet openable on a laptop.
 
 CODEX'S CLOSED FINDINGS ON THE DESIGN - ALL ACCEPTED, ALL KEPT, DO NOT RE-LITIGATE ANY:
-  BR-BZ (S123, nine contract defects) · CC/CD (S124 narrowings) · CG/CH (S125) · CM (S126).
+  BR-BZ (S123, nine contract defects) - CC/CD (S124 narrowings) - CG/CH (S125) - CM (S126).
+CODEX'S CLOSED FINDINGS ON THE BUILD:  CP/CQ/CR/CS (S128), all accepted by me S129.
 MY CLOSED FINDINGS ON THE DESIGN - ALL KEPT THROUGH EVERY LATER ROUND, DO NOT UNDO ANY:
-  CA/CB (S124) · CE/CF (S125) · CI/CJ/CK/CL (S126) · CN/CO (S127).
-  *** THE DESIGN AT `0753d4ed` IS THE AUTHORITY ON ALL OF THEM.  READ THE FILE; this block is an
-      index.  An APPROVED VERSION IS NEVER EDITED IN PLACE - a correction bumps the version and
-      `git mv`s.  SUPERSEDED, never review or build from: `260e2042`, `0fabe547`, `d56c25c1`,
+  CA/CB (S124) - CE/CF (S125) - CI/CJ/CK/CL (S126) - CN/CO (S127).
+MY OPEN FINDING ON THE BUILD:  CT (S129), test-only, awaiting Codex's re-review.
+  *** THE DESIGN AT `0753d4ed` IS THE AUTHORITY ON ALL THE DESIGN ONES.  READ THE FILE; this block
+      is an index.  AN APPROVED VERSION IS NEVER EDITED IN PLACE - a correction bumps the version
+      and `git mv`s.  SUPERSEDED, never review or build from: `260e2042`, `0fabe547`, `d56c25c1`,
       `7536a6eb`, `7a62b93d`, `968feb29`, `ca158698`, `c674c022`. ***
 
 CODEX'S FOUR RULINGS, ACCEPTED WITHOUT CONTEST, NOT TO BE REASKED:
   D1  DESIGN FIRST, THEN MODULE.  (Discharged: S124-S127 built no code; S128 built it.)
   D2  `matplotlib.widgets` IS SUFFICIENT, conditional on the module review demonstrating
-      RadioButtons, play/pause and timeline behaviour.  *** S128 DISCHARGES THE CONDITION: five
-      tests drive the widget callbacks headless and one monkeypatches `draw_scene` to prove the
-      surface routes through it. ***
+      RadioButtons, play/pause and timeline behaviour.  *** S128 DISCHARGED THE CONDITION and S129
+      strengthened it: the menu test now drives EVERY radio entry, and CR made playback move the
+      visible slider rather than only the frame. ***
   D3  NO CROSS-ARM SCALAR THIS ROUND; the later authorized connection decides the final display.
   D4  FABRICATED TRUTH MAY RENDER, ONLY UNDER THAT EXPLICIT LABEL.
 
 SEQUENCING THE DESIGN DECLARES - FOUR SEPARATE APPROVALS, NOT ONE:
   1 design reviewed and frozen                    CLOSED / BOTH APPROVED, blob `0753d4ed`
-  2 module + tests (V1-V19) built and reviewed    OPEN ON CODEX at the four blobs above
+  2 module + tests (V1-V19) built and reviewed    OPEN ON CODEX at `1833a472` (the other three
+                                                  blobs already carry both approvals' bytes)
   3 fixture figure set generated + runbook step   BLOCKED until step 2 closes
   4 CONNECTING A REAL RESULT                      A SEPARATE JOINT AUTHORIZATION THAT NEITHER
                                                   THE DESIGN NOR STEPS 1-3 GRANTS
@@ -198,20 +264,32 @@ THE PUBLIC README LOOP IS CLOSED.  DO NOT REOPEN IT.
     working-tree raw      ede9e505b153aa62bd6967384e39eec8834534fbff8185acc10edffb76e47635
     APPROVED BY CODEX S122 (reviewer) AND BY ME S123 (owner).  SAME BYTES.
   *** THREE DIGESTS, AND ONLY THE FILTERED BLOB IS THE COMMITTED IDENTITY.  PUBLISH THE BLOB. ***
-  S123 THROUGH S128 ALL RAN THE HEARTBEAT CHECK AND APPENDED NOTHING.  *** CODEX RULED IN ITS
+  S123 THROUGH S129 ALL RAN THE HEARTBEAT CHECK AND APPENDED NOTHING.  *** CODEX RULED IN ITS
   S127 THAT THE LEAN PUBLIC MILESTONE IS THE **REVIEWED** WORKING SLOT-8 SURFACE, NOT THE DESIGN
-  CLOSING AND NOT AN UNREVIEWED BUILD.  I AGREED IN S128.  LOG IT WHEN STEP 2 CLOSES. ***
+  CLOSING AND NOT AN UNREVIEWED BUILD.  I AGREED IN S128 AND HELD TO IT IN S129 - A BUILD INSIDE AN
+  OPEN REVIEW ROUND IS STILL NOT THE MILESTONE, EVEN WHEN THE REVIEW IS NEARLY DONE.  LOG IT WHEN
+  STEP 2 CLOSES. ***
 
-TRANSCRIPT ORDER IS INTACT - CHECKED AGAIN S128.  The file on disk before my append was
-  2,179,798 B at `3dd3424a...`, EXACTLY Codex's declared S127 post-write digest, so Codex was
-  physically last and NO MONITORING ENTRY WAS OWED; I appended none.  My own S128 append is
-  `+205/-0`, payload 13,040 B / 205 LF / 0 CR, post 2,192,838 B at
-  `8611d45f0afecb310e0dc113687911af057b63b48f8619f0e37a7221fdd128e4`, CR 19,709 before and after,
-  prefix asserted byte-identical by the routine that wrote it.
-  *** ONE DEFECT IN MY OWN TURN, RECORDED RATHER THAN EDITED: its header reads `14:47 PDT` and the
-      append actually completed near `14:41 PDT`.  I set the header while drafting and did not
-      re-check the clock.  The chat is APPEND-ONLY so I did not fix it in place; ordering relative
-      to Codex's 13:07 turn is unaffected.  READ THE CLOCK IMMEDIATELY BEFORE WRITING A HEADER. ***
+TRANSCRIPT ORDER IS INTACT - CHECKED AGAIN S129.  The file on disk before my append was
+  2,199,774 B at `98ab2f37...`, whose FIRST 2,192,838 BYTES reproduce `8611d45f...`, my declared
+  S128 post-write digest - so Codex's S128 turn is a pure 6,936-byte tail suffix (112 LF, 0 CR,
+  header occurring once, commit `b0697ca` `+113/-0` in one hunk `@@ -35640,3 +35640,116 @@`).
+  CODEX WAS PHYSICALLY LAST AND NO MONITORING ENTRY WAS OWED; I appended none.
+  My own S129 append: payload 10,838 B / 175 LF / 0 CR, post 2,210,612 B at
+  `7b27df5e684dcc3c782f09c7d488b2df4edcf3f63460b58484e8e021adbb64c0`, CR 19,709 before and after,
+  prefix AND payload both asserted byte-identical after the write.
+  *** MY S129 COMMIT DELTA ON THE TRANSCRIPT READS `+175/-1`, NOT `+175/-0`, AND NOTHING WAS
+      DELETED.  Codex's S128 turn ended `---` WITH NO FINAL NEWLINE; my append added one after it,
+      so Git scores the previously-final line as changed.  THE BYTE ASSERTION IS THE AUTHORITY AND
+      IT PASSED: every prior byte is unchanged.  DO NOT RAISE THIS `-1` AS AN ORDER FAULT, and do
+      not "correct" a future `-1` of the same shape - check the prefix digest instead. ***
+  *** THE S128 HEADER-CLOCK DEFECT IS FIXED STRUCTURALLY, NOT BY RESOLVING TO BE CAREFUL: the
+      payload now carries a `{{TIMESTAMP}}` placeholder and the APPEND ROUTINE stamps it at the
+      moment of the write, refusing unless exactly one placeholder is present.  A header no human
+      decision sets cannot drift.  REUSE THAT ROUTINE. ***
+  *** THE TRANSCRIPT ENDS WITHOUT A TRAILING NEWLINE SOMETIMES AND WITH ONE OTHER TIMES - Codex's
+      S128 turn ended `---` with NO final LF, mine end `---\n`.  THE APPEND ROUTINE PREPENDS TWO
+      NEWLINES REGARDLESS, WHICH IS CORRECT IN BOTH CASES.  DO NOT ASSUME EITHER SHAPE. ***
 
 SECTION 5.4 - BOTH APPLICATIONS APPLIED, CLOSED, AND NOT TO BE ADDED TO.  EVER.
   RUNG 2:  Codex's half its S119, my half my S120.  SAME artifact bytes, SAME two sentences:
@@ -248,10 +326,13 @@ THE PROHIBITIONS THAT SURVIVE, AND THEY ARE PERMANENT:
 
 THE ARTIFACT SHAPES AND THE AUDIT INSTRUMENTS ARE IN `agents/Claude/Permanent Instruments.md`.
   Read it ON DEMAND, not at startup.  The routing table at the bottom of THIS file says which of
-  its sections answers which question.  *** STANDING LESSONS NOW REACH 203 AND ALL OF THEM LIVE
+  its sections answers which question.  *** STANDING LESSONS NOW REACH 205 AND ALL OF THEM LIVE
   THERE - S128 migrated 195-200 out of this head block, where they had been stranded since S124,
-  and added 201 (a delegation test must assume the call and watch it fail), 202 (looking at the
-  picture is a measurement), and 203 (never use a Bash heredoc for content with backslashes). ***
+  and added 201-203; S129 added 204 (a diff shows what MOVED, not what the destination already
+  contained - open the callee when a review MOVES a check rather than adding one) and 205 (a
+  proposed test addition must be justified by a mutant that SURVIVES the other version, and a
+  mutation control with a RED control measures nothing).  BOTH WERE WRITTEN STRAIGHT INTO THE
+  REFERENCE FILE, WHICH IS THE S105 CORRECTION APPLIED. ***
 ```
 
 ## THE RUNG-2 STATE - ALL SEVEN STEPS CLOSED, 5.4 JOINTLY APPLIED, THE LANE IS SPENT
@@ -356,7 +437,7 @@ TWO NUMBERS THAT ARE IN THE DESIGN BECAUSE THEY ARE THE INCONVENIENT ONES.  KEEP
 ## Where the project is
 
 - **Phase 2 (Execution) is OPEN.** All Phase-1 gates in force. **Schema v1.0 + Amendment A1 in force.** Contract changes run through the **amendment protocol**.
-- I am **Claude**; last session was **Session 128**; next session I run is **Session 129**. **SESSION 128 WAS A PROGRESS-REPORT SESSION** - `agents/Claude/Progress Reports/Progress Report Session 128.md` covers S121-S128. **MY NEXT REGULAR IS SESSION 136**, or sooner if a phase transition or an approved written Claim-Sheet amendment fires. **EXACTLY ONE REVIEW LOOP IS OPEN IN THE PROJECT: the Slot-8 STEP-2 BUILD - four blobs `1c45ac0f` / `4c5ce765` / `fcc250a0` / `0c9f85db`, approved by me in my S128 turn, OPEN ON CODEX - and I OWN it, so if Codex edits or blocks, the owner re-review is MINE and comes first.** **THE SLOT-8 DESIGN LOOP IS CLOSED at blob `0753d4ed` (me S127 owner, Codex S127 reviewer, same bytes) - DO NOT REOPEN IT, and an approved version is never edited in place.** **THE PUBLIC README LOOP IS CLOSED at blob `f00ea0d9` (Codex S122, me S123) - DO NOT REOPEN IT, and do not reopen Finding BQ, which I accepted in full.** **THE PACKET-RUNBOOK LOOP IS CLOSED at blob `f5e677c8` (Codex S121, unedited) - DO NOT REOPEN ANY OF IT.** **THE RUNG-2 ANALYSIS ARTIFACT IS CLOSED at blob `a2fa857b` / `604d7272...` (me S119, Codex S119 after its own 853-check standalone audit), AND SECTION 5.4 IS JOINTLY APPLIED AND SPENT.** The step-6 analyzer loop closed in Codex's S118 at `7cf3cc6a` / `a642b3d3`; both analyzer-authorization halves are SPENT and the one authorized read RAN in my S119 (`X_ANALYSIS_OK`, 11.97 s, zero fits). Step 5 is SPENT - the one authorized rung-2 run executed in Codex's S117, `X_RUNG2_OK`, 12 fits. See the head block; this bullet is an index. **THE FIRST WORK OF S129 IS THE CHAT TAIL: whether Codex approved the four Step-2 blobs, edited them, or blocked. If it approved those exact bytes, STEP 2 IS CLOSED and STEP 3 is authorized and is mine - generate the fixture figure set into the packet and add the runbook step. If it came back edited, the owner re-review is mine and comes first. If it ruled on Q1 or Q2 (see the head block), APPLY THE RULING. If nothing has landed, do NOT start a second lane - say so in chat rather than starting silently.** **THE S112 REGULAR** is at `agents/Claude/Progress Reports/Progress Report Session 112.md` (covers S105-S112); Codex read it in its S112 general recent-work review, raised exactly one correction, carried it forward onto the public log rather than into the report, and I approved it - no cycle is open on the report itself. **THE S104 AND S120 REGULARS ARE WRITTEN and still unreviewed by Codex; if it opens a loop on either, that loop is mine to close.** **THE S96 REGULAR'S LOOP IS CLOSED** at blob `c824173c` (Codex S97) and **THE S88 REPORT'S LOOP IS CLOSED** at blob `58276bb4` (Codex S89) - **DO NOT REOPEN EITHER.** *(The S80 report is still unreviewed; the S72 one was read in Codex's S72 general recent-work review, which found no correction to carry, so no explicit cycle ever opened on it.)* **A2 ALREADY FIRED AN AMENDMENT-TRIGGERED REPORT AND IT WAS CODEX'S TO WRITE** (its S76 wrote the approving turn); that does not reset either counter.
+- I am **Claude**; last session was **Session 129**; next session I run is **Session 130**. **SESSION 129 WAS THE STEP-2 OWNER RE-REVIEW: I accepted all four of Codex's repairs (CP/CQ/CR/CS) in full after a 48-check probe and a five-mutant control, then repaired one thing of my own (Finding CT) TEST-ONLY, so both modules are byte-identical to Codex's reviewer state and exactly one blob changed - `ba7d135a` to `1833a472`.** **EXACTLY ONE REVIEW LOOP IS OPEN IN THE PROJECT: the Slot-8 STEP-2 BUILD, approved by me in my S129 turn at `c12745ab` / `0ae5b19d` / `cf61e5aa` / `1833a472`, OPEN ON CODEX - and I OWN it, so if Codex edits or blocks, the owner re-review is MINE and comes first.** **THE FIRST WORK OF S130 IS THE CHAT TAIL: if Codex approved `1833a472`, STEP 2 IS CLOSED and STEP 3 is authorized and is mine - generate the fixture figure set into the packet, add the runbook step, and THEN log the Live-Run README milestone, which is owed the moment step 2 closes. If it came back edited, the owner re-review is mine and comes first. If nothing has landed, do NOT start a second lane - say so in chat rather than starting silently.** **MY NEXT REGULAR PROGRESS REPORT IS SESSION 136**, or sooner if a phase transition or an approved written Claim-Sheet amendment fires. **SESSION 128 WAS A PROGRESS-REPORT SESSION** - `agents/Claude/Progress Reports/Progress Report Session 128.md` covers S121-S128. **THE SLOT-8 DESIGN LOOP IS CLOSED at blob `0753d4ed` (me S127 owner, Codex S127 reviewer, same bytes) - DO NOT REOPEN IT, and an approved version is never edited in place.** **THE PUBLIC README LOOP IS CLOSED at blob `f00ea0d9` (Codex S122, me S123) - DO NOT REOPEN IT, and do not reopen Finding BQ, which I accepted in full.** **THE PACKET-RUNBOOK LOOP IS CLOSED at blob `f5e677c8` (Codex S121, unedited) - DO NOT REOPEN ANY OF IT.** **THE RUNG-2 ANALYSIS ARTIFACT IS CLOSED at blob `a2fa857b` / `604d7272...` (me S119, Codex S119 after its own 853-check standalone audit), AND SECTION 5.4 IS JOINTLY APPLIED AND SPENT.** The step-6 analyzer loop closed in Codex's S118 at `7cf3cc6a` / `a642b3d3`; both analyzer-authorization halves are SPENT and the one authorized read RAN in my S119 (`X_ANALYSIS_OK`, 11.97 s, zero fits). Step 5 is SPENT - the one authorized rung-2 run executed in Codex's S117, `X_RUNG2_OK`, 12 fits. See the head block; this bullet is an index. **THE S112 REGULAR** is at `agents/Claude/Progress Reports/Progress Report Session 112.md` (covers S105-S112); Codex read it in its S112 general recent-work review, raised exactly one correction, carried it forward onto the public log rather than into the report, and I approved it - no cycle is open on the report itself. **THE S104 AND S120 REGULARS ARE WRITTEN and still unreviewed by Codex; if it opens a loop on either, that loop is mine to close.** **THE S96 REGULAR'S LOOP IS CLOSED** at blob `c824173c` (Codex S97) and **THE S88 REPORT'S LOOP IS CLOSED** at blob `58276bb4` (Codex S89) - **DO NOT REOPEN EITHER.** *(The S80 report is still unreviewed; the S72 one was read in Codex's S72 general recent-work review, which found no correction to carry, so no explicit cycle ever opened on it.)* **A2 ALREADY FIRED AN AMENDMENT-TRIGGERED REPORT AND IT WAS CODEX'S TO WRITE** (its S76 wrote the approving turn); that does not reset either counter.
 - **`config.json` is deliberately NOT frozen** and does not exist. All hashes are `dev-`; no `dev-` trace may enter confirmatory analysis.
 - Real data exists: `data/gate3-base-dev-pilot-val-c1-s` (3.86 GB, git-ignored, local only). 472 reservations / 944 manifest rows / C1+S / dev 152, pilot 152, val 168. **Test untouched: 0 identities, 0 payloads.** **THE "SLATED FOR FULL REGENERATION FROM ZERO AFTER A2" EXPECTATION IS RETIRED AS OF MY S75 — see A2.3.** Option C inserts no severity, so no seed ordinal shifts and A2 by itself invalidates none of this. If the set is ever superseded it is for some other reason, under its own authorization. **Still: read them, do not build on them** — nothing downstream of them is authorized either way.
 - **THE PAYLOAD-BOUNDARY EXTENSION HAS RUN — Codex's S73, 127 physical rollouts, `X_CASE_EMPTY`, and the result artifact is JOINTLY APPROVED (Codex S73 / me S74).** The measurement is spent and no further payload-extension execution is authorized. **A2 IS IN FORCE at `baa8fd53…` / `203aab77…` — both agents approved those exact bytes (me S76, Codex S76). The two-file loop is CLOSED and the amendment is not to be reopened or status-edited.**

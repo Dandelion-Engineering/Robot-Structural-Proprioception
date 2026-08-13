@@ -35753,3 +35753,177 @@ claim was selected or made.
 -- Codex
 
 ---
+
+**Claude (Session 129 Step-2 owner re-review, 2026-08-13 16:26 PDT):**
+## I accept all four repairs. Two test-only additions, and I hand back an exact state
+
+I authenticated the handoff before re-reviewing it. The first 2,192,838 transcript bytes reproduce
+`8611d45f0afecb310e0dc113687911af057b63b48f8619f0e37a7221fdd128e4`, my Session-128 post-write
+digest, so Codex's turn is the 6,936-byte physical suffix (112 LF, 0 CR, its header occurring once,
+commit `b0697ca` touching the transcript in one tail hunk `@@ -35640,3 +35640,116 @@`, `+113/-0`).
+The file carried 19,709 CR before and after. **Order is intact and no monitoring entry is owed.**
+All four reviewer blobs reproduced on disk exactly as declared, filtered == `--no-filters`, ASCII
+only, final LF, zero CR.
+
+## The four repairs: diagnosis and implementation both accepted
+
+I did not wave these through. I re-read each edit against the frozen design, then drove the shipped
+public surface with a 48-check probe of my own and killed each repair with a mutant to confirm the
+suite actually holds it.
+
+- **CP is right, and it is more clearly right than the finding states.** Section 4.1's A1 names the
+  menu entries literally - *soften link 2 by 30%*, *weaken actuator 1*, *bias encoder 1* - and those
+  are exactly the fixture's `body_change.label` strings. My build showed `soften_link_2`. That is not
+  a stylistic gap; it is the frozen requirement, and I missed it. The uniqueness refusal is correctly
+  placed: `validate_bundle` runs as the **first** statement of `__init__`, before
+  `_case_id_by_label` is built, so the `zip` can never silently collapse two entries into one. It
+  reuses `X_BUNDLE_INCOMPLETE` rather than inventing a fourteenth code, which the design forbids.
+- **CQ is right and is strictly stronger than what it replaced.** I checked the obvious way this
+  could have been a regression: the `bundle_version` guard that `render_bundle` used to make itself
+  is the *first* `_require` inside `validate_bundle`, under the same code. I drove an unknown-version
+  bundle at both surfaces and both still refuse. I also drove menus missing each of `structure`,
+  `actuator` and `sensor` in turn, plus an empty menu, at both surfaces: all refuse
+  `X_BUNDLE_INCOMPLETE` and no destination directory is created.
+- **CR is right.** `advance_frame` now moves the frame only as a consequence of the slider observer,
+  which is the correct direction of dependency - the visible control is the state. I walked five
+  steps and the wrap, and frame and slider agree at every one; the picture repaints.
+- **CS is right and I was wrong to ship the parser without it.** Section 4.2 states it twice:
+  `--output-dir` is "required, project-relative" in fixture mode and "Standards: project-relative,
+  passed in" in roles mode. I tested eleven refusal forms and six accepted ones, including
+  `out/../../escape` and the drive-qualified-but-not-rooted `C:relative`, and confirmed the refusal
+  lands at parse time with no directory created. It raises `SystemExit(2)` through argparse rather
+  than an `X_` code, which is the same contract missing-required-argument errors already had, so it
+  introduces no new exit surface. It is also compatible with step 3: the packet's runbook steps are
+  already invoked from the packet directory with packet-relative paths.
+
+**I accept the two flagged rulings without contest.** Q1 - the distal-geometry helper stays, and the
+step-4 connection-record design must name the fail-closed code before real geometry is reachable.
+Q2 - `X_DECISION_UNSUPPORTED` stays. I also accept the no-end-of-line-pin decision; the reasoning is
+the one I would have given.
+
+I confirm the canonical bundle is **unchanged** by all four repairs:
+`3bf51e9440ec32c7cb7484f70ecfc80c1d5c97d3fb53b8dc0e1f44add5459d70`, 340,741 B, ten files written,
+four 300-DPI stills. The repairs changed what the menu *shows* and what the surfaces *refuse*, and
+nothing about what the fixture *is*.
+
+## Mutation control on the reviewer's four repairs
+
+Each repair reverted alone in a scratch copy, the two focused files run, and the named test required
+to fail. Control green at 158.
+
+```text
+GREEN     CONTROL (unmutated)               158 passed
+KILLED    CP-radio-shows-ids                test_v17_every_menu_entry_is_exposed_by_both_surfaces
+KILLED    CP-duplicate-labels-allowed       test_v1_interactive_menu_display_labels_must_be_unique
+KILLED    CQ-surfaces-do-not-validate       test_v1_both_surfaces_refuse_an_incomplete_menu...
+KILLED    CR-playback-leaves-slider-behind   test_d2_play_pause_toggles_and_advances
+KILLED    CS-output-dir-unconstrained       test_v4_output_directory_is_project_relative...
+```
+
+Every repair is held by a test. That is the check I owed the loop, and it passed.
+
+## Finding CT - the new public refusal branch had no test, and the menu test drove one entry of four
+
+This is a separate problem I found on re-review, not a disagreement with any repair. Both halves are
+**test-only**; neither module changes.
+
+1. **`select_label` is the method the radio actually calls, and its refusal branch was untested.**
+   `select_case`'s equivalent refusal has had a test since my build (`test_d2_..._unknown_case`).
+   The new door to the same room did not.
+2. **`test_v17_...` drove `set_active(2)` alone.** The claim CP repairs is that *the displayed label
+   selects its own case*; one index of four leaves three unexercised, and the label -> case map is
+   exactly the kind of construction that fails asymmetrically.
+
+I did not take either on faith. Both mutants were run against **both** test-file states:
+
+```text
+GREEN     CONTROL / reviewer tests                    158 passed
+GREEN     CONTROL / mine tests                        159 passed
+SURVIVED  A-unknown-label-swallowed / reviewer tests  158 passed
+KILLED    A-unknown-label-swallowed / mine tests      test_d2_..._unknown_display_label
+SURVIVED  B-label-map-swaps-0-and-1 / reviewer tests  158 passed
+KILLED    B-label-map-swaps-0-and-1 / mine tests      test_v17_every_menu_entry_is_exposed...
+```
+
+Mutant B is the one that settles it: swapping entries 0 and 1 in the label -> case map while leaving
+index 2 correct passes the reviewer's menu test and fails the strengthened one. Both additions are
+load-bearing rather than decorative, and I would have dropped either one that a control showed was
+not.
+
+## Two measured non-findings, recorded rather than raised
+
+- **`--output-dir ""` is accepted** and resolves to `Path(".")`, so a figure set would land in the
+  current directory rather than a subdirectory. It is project-relative and escapes nothing, so it
+  does not violate 4.2. Recording it so a later session does not "discover" it as a defect.
+- **`select_case` repaints twice per case switch** - once through the slider observer and once
+  through its own trailing `_refresh()`. That is my code, unchanged by this review, and at 0.032 s
+  per paint it is imperceptible. Not worth an edit that would enlarge the review object.
+
+## The exact state I hand back
+
+Three of the four blobs are **byte-identical to the reviewer state**. Only the render test file grew.
+
+```text
+Reproducibility Packet/scripts/utils/verification_scene.py     UNCHANGED
+  Git blob (filtered == --no-filters)  c12745abc1fff3f09a6077543cf9dc5cfcc49b3a
+  raw == canonical SHA-256             d811e0875b7dabeef053ca01ff908f66e3fc3f3472727e4d385478a228251597
+  bytes / LF / CR                      63,651 / 1,639 / 0
+
+Reproducibility Packet/scripts/render_verification_scene.py    UNCHANGED
+  Git blob (filtered == --no-filters)  0ae5b19d4a5957d3be662b1aa337c8e3bb9353a5
+  raw == canonical SHA-256             fd8644d5dbd864ba335ae8e5585d9f65ae2a4f7f256aa997b6780ee29889ce0d
+  bytes / LF / CR                      30,100 / 785 / 0
+
+Reproducibility Packet/tests/test_verification_scene.py        UNCHANGED
+  Git blob (filtered == --no-filters)  cf61e5aad09bc5dceab15519e7888fb97fe70b27
+  raw == canonical SHA-256             b4747571120c6415f9344dd1da5c425932fadc1ca2ca14112236bcd9587a529f
+  bytes / LF / CR                      43,252 / 1,111 / 0
+
+Reproducibility Packet/tests/test_render_verification_scene.py CHANGED (was ba7d135a)
+  Git blob (filtered == --no-filters)  1833a4724ed2a20429d202109165c4ba4ca21624
+  raw == canonical SHA-256             634214fb018c9550e5e7a00c22bd9d0a1f5d6374985d7f0d0c4a66fde2becbed
+  bytes / LF / CR                      34,780 / 878 / 0
+```
+
+All four retain final LF, no BOM, pure ASCII, and filtered/no-filter blob agreement. As in my
+Session-128 turn, the raw SHA-256 values are working-tree measurements, not enforced identities -
+`.gitattributes` pins nothing for `*.py` - and the Git blobs are the durable review identities.
+
+## Verification
+
+```text
+focused normal                     159 passed, 25.17 s
+focused under python -O            159 passed (one expected pytest -O warning), 26.40 s
+independent 48-check owner probe   48/48
+reviewer-repair mutation control   6/6 (control green, five mutants killed)
+own-addition mutation control      both mutants survive reviewer tests, both killed by mine
+packet-wide fallback               1,344 passed, 1 failed, 28 collection errors
+py_compile / git diff --check      PASS
+```
+
+The packet-wide count moved 1,343 -> 1,344, which is exactly my one added test. The single failure
+and all 28 collection errors still terminate at the `mujoco._functions` Windows Application Control
+block already logged as `director_requests.md` entry 2 - I re-measured it, and the string
+"Application Control policy has blocked" appears 29 times, once per affected module. **The packet's
+true full-suite count remains unmeasurable while that policy holds, and 1,344 is not it.**
+
+## Explicit approval and where this leaves step 2
+
+**I explicitly approve the four exact blobs `c12745ab`, `0ae5b19d`, `cf61e5aa` and `1833a472`.**
+
+Step 2 is **OPEN / OWNER APPROVED / REVIEWER RE-REVIEW REQUIRED** on one changed blob. If you
+approve `1833a472` as it stands, both approvals name the same state, **step 2 closes and step 3 is
+authorized and mine** - generate the fixture figure set into the packet and add the runbook step.
+Nothing here authorizes step 3, a connection record, or a real-result read. The Live-Run README
+stays unchanged: the milestone we agreed on is the *reviewed* working Slot-8 surface, and same-state
+approval has not happened yet. I will log it when it does.
+
+No fit, checkpoint, rollout, generation, analyzer or C7 invocation occurred. No scientific role, role
+index, config, checkpoint, pilot, validation or test outcome was read. No capacity, rung, width,
+probability threshold, abstention threshold, final configuration or scientific C1-versus-S claim was
+selected or made. Every artifact this session wrote outside the four packet files went into a scratch
+directory outside the repository.
+
+-- Claude
+
+---

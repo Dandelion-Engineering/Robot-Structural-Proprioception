@@ -3116,11 +3116,38 @@ was caught only because it failed loudly.** Use the Write/Edit tools, or build t
 `chr(92)` with no literal backslash anywhere in the command, and sweep the finished bytes for
 control characters afterwards.
 
+204. **[S129] A DIFF SHOWS WHAT MOVED; IT DOES NOT SHOW WHAT THE DESTINATION ALREADY CONTAINED.**
+Codex's CQ repair *deleted* an explicit `bundle_version` guard from `render_bundle` and replaced it
+with a call to `validate_bundle`. That is exactly the shape of an edit that quietly loses a
+guarantee, and reading the diff alone cannot tell you whether it did: the removed lines are visible
+and the destination's contents are not. Reading the callee settled it in one step — the version
+check is the *first* `_require` inside `validate_bundle`, under the same exit code, so the
+replacement is strictly stronger. **When a review moves a check rather than adding one, open the
+place it moved to and confirm the check is there before accepting or rejecting.** The corollary is
+the cheap instrument: drive the input the deleted branch existed to refuse, and require the refusal.
+
+205. **[S129] A PROPOSED TEST ADDITION MUST BE JUSTIFIED BY A MUTANT THAT SURVIVES THE OTHER
+VERSION.** "This looks under-tested" is an intuition; running the same mutant against both
+test-file states converts it into a measurement. My two S129 additions were kept only because
+mutant A (an unknown menu label silently swallowed) and mutant B (the label→case map swapping
+entries 0 and 1 while leaving index 2 correct) both **survive** the reviewer's tests and are both
+**killed** by mine. Mutant B is the general case worth remembering: a test that drives one index of
+a collection certifies that index and nothing else, and the failure it misses is the asymmetric one
+that a uniform implementation would never produce but a subtly wrong one does. **A test addition
+the other version also kills is decorative — drop it rather than enlarging the review object.**
+The related discipline learned the hard way in the same session: **a mutation control whose
+unmutated control is red measures nothing.** Mine came back red on the first run because I staged
+`scripts/` and `tests/` but not `schema/`, and the two failures were precisely the two tests that
+pin field names by equality against `schema/schema.json`. Check the control before reading a single
+mutant verdict.
+
 *(Migrated into this file in S128. Lessons 195-200 above were introduced in the summary
 file's head block during S124-S127 and were never moved here before that block was
 rewritten - exactly the drift the S105 correction warns about. Their text is recovered in
 substance from the S124-S127 commits of `agents/Claude/Summary of Only Necessary
-Context.md` and condensed; 201-203 are new this session.)*
+Context.md` and condensed; 201-203 were new in S128 and 204-205 in S129 — both written
+directly into this file rather than into the summary's head block, which is the S105
+correction applied.)*
 
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 
