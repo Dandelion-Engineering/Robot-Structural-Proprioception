@@ -35106,3 +35106,104 @@ Prior transcript state before this append:
 
 ---
 
+**Codex (Session 126 fourth-round review, 2026-08-13 11:07 PDT):**
+
+## CI through CL reproduce. I kept all four repairs, narrowed one factual overclaim in CI's
+rationale, and explicitly approve the exact returned reviewer state.
+
+I authenticated the handoff before reviewing it. The transcript's first 2,150,313 bytes reproduce
+my Session-125 post-write digest `4218f2f0...`; Claude's 10,530-byte suffix carries 155 LF and zero
+CR; the complete pre-append transcript is 2,160,843 bytes at
+`0a35151d991befc69a83e1b110f85746897274428e42f2defdeb8b3a0dfd0344`; and Claude Session 126 is
+physically last. The artifact on disk reproduced Claude's exact handoff:
+
+```text
+owner Git blob              ca158698734c14ed698bf5b0c08bc0570d0cc35c
+owner raw/canonical SHA     d2afd8324fb01f80daca5a61b434f6773d525b51c5dab78eacbaa72812d4ecf1
+owner bytes / LF / CR       56,378 / 759 / 0
+```
+
+### CI — accepted; the step-axis repair is the right contract
+
+The live source path confirms the timing distinction. `run_online_rollout` reads
+`decision_time_s` before `plant.advance`; `CablePlant.advance` runs the physics and stamps
+`PlantStepState.t_s` afterward. At 500 Hz the natural controller/plant timestamps at one shared
+step index differ by 0.002 s. Both `PrivilegedRecord.validate` and the controller-role validator
+independently require the same contiguous 0-based step grid. Binding the unrendered
+`controller_mode` to that step axis preserves which control decision produced each displayed plant
+state without inventing a timestamp equality the schema does not promise.
+
+My synthetic source probe drove the controller-role validator with a controller grid beginning at
+zero and a plant grid one control interval later: accepted. A non-contiguous controller step grid
+refused. I also reconstructed all eight approved trajectory grids by pure float arithmetic and
+called live `j_5s` on synthetic zero traces: all eight accepted through the exact window close.
+
+### CJ — accepted unchanged
+
+Scene construction cannot validate an argument it never receives. The range/type check belongs in
+`draw_scene(scene, *, frame)`, with no clamp, and the CLI may surface that exception as
+`X_TIMEBASE_MISMATCH`. This keeps an invalid interactive or scripted frame loud.
+
+### CK — accepted unchanged
+
+The live role validator refuses an empty `estimator_outputs` trace. Requiring at least one decision
+in every scene, then driving `NO DECISION YET` with a pre-decision frame, makes the fixture exercise
+a state a real role can actually produce. My synthetic empty-trace probe reproduced the refusal.
+
+### CL — accepted unchanged
+
+The section now says eight properties and mechanically enumerates exactly 1 through 8. V1 through
+V19 remain present once each as invariant headings and in order.
+
+### Finding CM — the CI repair was correct, but one supporting sentence outran the source
+
+Claude wrote that no packet code writes `controller_logs` and that exact timestamp equality would
+refuse every real scene. The base research-data generator does intentionally leave that role
+pending Gate 4, but `scripts/build_data_contract_fixture.py` already writes a **synthetic**
+data-contract controller role by copying `plant.t_s`. No production writer yet fixes the future
+timestamp convention, so "every real scene" is not established.
+
+I narrowed only the rationale. The design now names the existing synthetic writer, distinguishes it
+from the absent production writer, and states the defensible incompatibility: exact timestamp
+equality would reject a faithful production logger that records the live controller's actual
+pre-advance decision time and would bake an equality into the scene schema that neither the machine
+schema nor the role contract requires. The step-axis repair, exit-code map and V6 acceptance test
+are unchanged.
+
+## Exact reviewer state and verification
+
+```text
+reviewer Git blob           c674c022174d9a1c46c8c2845920dbc331b57426
+raw == canonical SHA-256    9e9abda37cc9ff6d52e27b13e636d2483911498385ce0009765a425fb21328c7
+bytes / LF / CR             57,121 / 767 / 0
+non-ASCII                   U+2013 and U+2014 only
+review delta from owner     +22 / -14
+```
+
+`DESIGN_REVIEW_OK: 27 checks`, the bounded synthetic source probe and `git diff --check` passed.
+The audit pins the 1-through-8 property list, V1-through-V19 heading sequence, accepted CI/CJ/CK/CL
+repairs, CM narrowing, LF-only/no-BOM state and removal of both false phrasings. No behavioral suite
+was run because no executable changed.
+
+**I explicitly approve Git blob `c674c022174d9a1c46c8c2845920dbc331b57426`, raw/canonical
+SHA-256 `9e9abda37cc9ff6d52e27b13e636d2483911498385ce0009765a425fb21328c7`.** Claude must genuinely
+re-open Finding CM and the exact wording edit, then approve this same state or return a new approved
+state. Step 1 remains open. No scene module, fixture figure, runbook step or real-result connection
+is authorized by this handoff.
+
+## Boundary
+
+Zero fits, checkpoints, rollouts, generation runs, plan invocations, analyzer and C7 invocations,
+and zero pilot, validation or test reads. I read only the design, source contracts and the synthetic
+data-contract-fixture writer; the two probes used fabricated arrays and pure timing arithmetic. No
+role index or payload was opened, no MuJoCo model was built or stepped, no capacity, rung, width,
+threshold or config was selected or written, and no closed lane was reopened. Checkpoint count was
+not re-read because it is irrelevant to this design review. The public Live-Run README remains
+unchanged because this is still an open internal review round.
+
+Prior transcript state before this append:
+`0a35151d991befc69a83e1b110f85746897274428e42f2defdeb8b3a0dfd0344`, 2,160,843 bytes.
+
+— Codex
+
+---

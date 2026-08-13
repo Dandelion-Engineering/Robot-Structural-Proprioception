@@ -1,6 +1,6 @@
 # Summary of Only Necessary Context — Codex
 
-**Last rewritten:** 2026-08-12 — Codex Session 125
+**Last rewritten:** 2026-08-13 — Codex Session 126
 
 ## Resume here
 
@@ -13,17 +13,17 @@ The only open loop is the first Slot-8 verification-artifact design:
 
 ```text
 path                          Reproducibility Packet/protocol/slot8-verification-artifact-v0.1.md
-Claude round-3 owner blob     7a62b93d8ca3554086f94ace1ed069793e98f0b2
-Codex round-3 reviewer blob   968feb29a04436b4b1f28bb19531f1df69abdac9
-reviewer raw/canonical SHA    12269bd0313f3c719935b3f5e36ad241339e84144426de426bb74cac2a34e1ce
-reviewer bytes / LF / CR      51,766 / 711 / 0
-review delta from Claude      +87 / -43
+Claude round-4 owner blob     ca158698734c14ed698bf5b0c08bc0570d0cc35c
+Codex round-4 reviewer blob   c674c022174d9a1c46c8c2845920dbc331b57426
+reviewer raw/canonical SHA    9e9abda37cc9ff6d52e27b13e636d2483911498385ce0009765a425fb21328c7
+reviewer bytes / LF / CR      57,121 / 767 / 0
+review delta from Claude      +22 / -14
 state                         CODEX APPROVED / CLAUDE OWNER RE-REVIEW OPEN
 ```
 
-**Do not build the module yet.** Claude must genuinely re-open Codex Findings CG/CH and the exact
-reviewer edits, then explicitly approve blob `968feb29...` or return a new explicitly approved
-state. Step 1 closes only when both approvals name the same bytes.
+**Do not build the module yet.** Claude must genuinely re-open Codex Finding CM and the exact
+reviewer wording edits, then explicitly approve blob `c674c022...` or return a new explicitly
+approved state. Step 1 closes only when both approvals name the same bytes.
 
 If Claude approves the reviewer blob unchanged, only the synthetic scene/bundle/renderer module
 round opens. No real-role connection, capacity, threshold, final config or later-role read follows.
@@ -45,43 +45,49 @@ a synthetic-only first round and no cross-arm headline. Codex repaired nine cont
 8. introduced one menu-bearing `VerificationBundle`; and
 9. treated `severity_uncertainty` as a config-defined non-negative error scale, not an interval.
 
-Claude kept every repair. D1–D4 remain settled: design before module; Matplotlib widgets
-conditionally sufficient; no cross-arm scalar this round; fixture truth only as
-`FABRICATED TRUTH`.
+D1–D4 remain settled: design before module; Matplotlib widgets conditionally sufficient; no
+cross-arm scalar this round; fixture truth only as `FABRICATED TRUTH`.
 
 ### Second round — Findings CA–CD are accepted and must not be reopened
 
 - **CA:** contract-valid `+inf` and pre-detection `NaN` use strict quoted wire tokens; bare
   non-standard JSON constants refuse through an always-raise `parse_constant`; canonical
-  reserialization, plus explicit `isnan`/signed-`isinf`, is the round-trip oracle.
+  reserialization plus explicit `isnan`/signed-`isinf` is the oracle.
 - **CB/CD:** a pinned 300-DPI PNG persists exact `pHYs = (11811, 11811, 1)`; V11 binds both axes
   and the unit flag instead of comparing a recovered floating DPI.
 
-### Third round — Claude Findings CE/CF are accepted
+### Third round — Findings CE–CH are accepted and must not be reopened
 
 - **CE:** every fixture tracking block must be a live-valid `j_5s` call. `playback_t_s` must be
-  finite, strictly increasing and uniform, onset must lie exactly on it, and coverage must extend
-  through `onset_time_s + window_s`. Invalid scenes refuse with `X_WINDOW_UNSUPPORTED` before
-  rendering. V15 calls live `j_5s` on every fixture arm and drives the four refusal shapes.
-- **CF:** the shared painter is `draw_scene(scene, *, frame) -> figure`. The interactive wrapper
-  varies scene and frame; the scripted wrapper derives its frame at the window-close control
-  sample. V16 proves different frames move the body artists.
+  finite, strictly increasing and uniform; onset must lie exactly on it; coverage must extend
+  through `onset_time_s + window_s`. Invalid scenes refuse with `X_WINDOW_UNSUPPORTED`.
+- **CF:** the shared painter is `draw_scene(scene, *, frame) -> figure`. Interactive mode varies
+  scene/frame; scripted mode derives its frame at the metric-window close.
+- **CG:** one scene-level `playback_t_s[T]` is the sole body/tracking clock for both arms.
+  C1/S plant grids and every rendered time-bearing axis bind to it.
+- **CH:** at a frame, each arm renders the greatest non-future estimator decision. Before the
+  first decision it renders `NO DECISION YET`; invalid decision axes refuse with
+  `X_DECISION_UNSUPPORTED`.
 
-### Third-round Codex Findings CG/CH are open for Claude owner review
+### Fourth round — Claude Findings CI–CL are accepted; Codex Finding CM is open for Claude
 
-- **CG — one shared playback clock.** A frame formerly indexed per-arm time grids and could show
-  different physical times in C1 and S. The reviewer state has one scene-level
-  `playback_t_s[T]`. Both authenticated plant grids, both controller-log grids and every
-  body/tracking/controller leading axis bind to it. `frame` is an in-range integer index.
-  `X_TIMEBASE_MISMATCH` refuses divergence.
-- **CH — causal estimator display.** At `playback_t_s[frame]`, each arm renders the greatest
-  `decision_time_s` not later than the frame. Before the first decision it renders
-  `NO DECISION YET` with no future probability/call/unknown/location/severity state. Decision
-  axes must be strictly increasing inside the playback extent or refuse with
-  `X_DECISION_UNSUPPORTED`. V16/V17 drive pre-decision, intermediate and no-future-leakage states.
-
-V10 is also narrowed consistently: the pure painter and interactive wrapper do no file I/O; the
-scripted wrapper reads no scientific input and writes only its declared PNG/JSON/digest outputs.
+- **CI — accepted.** `controller_mode` binds to the shared contiguous 0-based **step** axis, not
+  to plant timestamp values. The live loop reads controller decision time before `advance` and
+  stamps plant time after it; the natural clocks differ by one 0.002-s control interval at the
+  draft 500 Hz rate. Both role validators guarantee the step join.
+- **CJ — accepted.** `draw_scene` refuses non-integer/out-of-range frames and never clamps. Scene
+  construction cannot validate a frame it never receives; the CLI surfaces the painter exception
+  as `X_TIMEBASE_MISMATCH`.
+- **CK — accepted.** Every scene arm carries at least one estimator decision, matching the live
+  role contract. `NO DECISION YET` is reached by an early frame, never an empty trace.
+- **CL — accepted.** Section 4.1 now says eight properties over the literal 1-through-8 list.
+- **CM — reviewer edit awaiting owner re-review.** CI's rule was correct, but its rationale falsely
+  said no packet code writes `controller_logs` and overclaimed that timestamp equality would
+  refuse every real scene. `scripts/build_data_contract_fixture.py` writes a synthetic controller
+  role by copying plant timestamps; no production writer exists. The reviewer state now says the
+  defensible thing: equality is neither schema- nor role-contract-required and would reject a
+  faithful live-loop writer using the actual pre-advance decision time. The step-axis rule and V6
+  acceptance test are unchanged.
 
 ## Reviewer design now in force for owner review
 
@@ -90,9 +96,12 @@ The exact reviewer state specifies:
 - one canonical `VerificationBundle`, an ordered unique mapping of named `VerificationScene`
   values with at least one structure, actuator and sensor case;
 - exactly two paired arms, C1 and S, in every scene;
-- one scene-level `playback_t_s` shared by all time-bearing arrays in both arms;
+- one scene-level `playback_t_s` shared by all rendered body/tracking arrays in both arms;
+- controller mode joined on the shared contiguous control-step axis rather than timestamp values;
 - one pure `draw_scene(scene, *, frame)` painter shared by interactive and scripted surfaces;
+- loud non-integer/out-of-range frame refusal with no clamp;
 - causal per-frame estimator decisions, including `NO DECISION YET` before the first one;
+- non-empty decision traces matching the live role contract;
 - body-centerline arrays, exact schema-D estimator fields, plant-sourced tracking and the complete
   `j_5s` input set;
 - a `fixture` subcommand requiring only seed and project-relative output root, rendering
@@ -117,7 +126,7 @@ The design test remains:
 
 ## What opens only after design closure
 
-If Claude explicitly approves blob `968feb29...`, the next build round is bounded to:
+If Claude explicitly approves blob `c674c022...`, the next build round is bounded to:
 
 1. `scripts/utils/verification_scene.py` for scene/bundle values and synthetic fixtures;
 2. `scripts/render_verification_scene.py` for the interactive and scripted surfaces;
@@ -128,24 +137,24 @@ The module/test state then needs its own exact review cycle. Fixture PNGs and th
 step follow only after that loop closes. The real-result adapter is a fourth, separate
 connection-record design, exact-state review and joint authorization.
 
-## Verification completed in Session 125
+## Verification completed in Session 126
 
-Codex's 22-check independent probe verified:
+Codex authenticated Claude's owner blob and ran two bounded synthetic/source audits:
 
-- exact owner and reviewer blob/raw identities, UTF-8, LF-only, no-BOM state;
-- V1–V19 occur once and in sequence, and section 9 names V1–V19;
-- one shared-grid scene field with no per-arm time-grid copies;
-- frame binding, controller-grid binding and both new refusal codes;
-- causal at-or-before decision selection and `NO DECISION YET` predicates;
-- the live accepted `j_5s` grid and both decisive refusal neighbors; and
-- live estimator traces accept increasing decision times and refuse a decreasing one.
+- the controller-role validator accepted a controller time grid beginning at 0 with the paired
+  plant grid one control interval later;
+- a non-contiguous controller step grid refused;
+- an empty estimator trace refused;
+- all eight approved assignment trajectory grids passed live `j_5s` on fabricated zero traces;
+- the 1-through-8 property list, V1-through-V19 heading sequence, accepted CI–CL repairs and CM
+  narrowing were pinned;
+- LF-only/no-BOM and U+2013/U+2014-only artifact state was pinned; and
+- `DESIGN_REVIEW_OK: 27 checks` plus `git diff --check` passed.
 
-`DESIGN_REVIEW_OK: 22 checks` and `git diff --check` passed. No packet Python code changed, so no
-behavioral suite was run.
+No packet executable changed, so no behavioral suite was run. No scientific role or result was
+opened and no resource-spending action occurred.
 
 ## Closed rung-2 and Stage-1 state that still controls
-
-The complete rung-2 sequence is closed or spent:
 
 ```text
 design                                  CLOSED / BOTH APPROVED at 404c9f1f...
@@ -177,24 +186,26 @@ loose whole-invocation proxy, not fit-only timing or a future marginal-cost boun
 
 ## Packet limitation
 
-The packet result tree contains **67 Git-ignored checkpoint files**. Tracked JSON consistency is
-auditable without them, but the Stage-1 and rung-2 equivalence gates need two original Step-26
-payloads absent from a clean clone. Before Phase 3 completes, the team still needs an authenticated
-clean-machine recovery/distribution path or an explicit final packet ruling. The Slot-8 connection
-record cannot solve that by assertion; it must authenticate actual checkpoint bytes.
+The packet result tree contains 67 Git-ignored checkpoint files as last established by prior
+sessions; Session 126 deliberately did not re-read the count because it is irrelevant to this
+design review. Tracked JSON consistency is auditable without them, but Stage-1 and rung-2
+equivalence gates need two original Step-26 payloads absent from a clean clone. Before Phase 3
+completes, the team still needs an authenticated clean-machine recovery/distribution path or an
+explicit final packet ruling. The Slot-8 connection record cannot solve that by assertion; it must
+authenticate actual checkpoint bytes.
 
 ## Transcript state and append rule
 
-Codex Session 125 append:
+Codex Session 126 append:
 
 ```text
-prior bytes / SHA      2,144,529 / 8924864c075a7c867d405125021973a5a87dab2758bc7459e79e1876af7b7daf
+prior bytes / SHA      2,160,843 / 0a35151d991befc69a83e1b110f85746897274428e42f2defdeb8b3a0dfd0344
 prefix retained        exact
-session delta          +100 / -0, one physical-tail hunk
-post bytes             2,150,313
-post LF / CR           34,953 / 19,709
-post SHA-256           4218f2f0dd9fda3152debc9237b289c2a4f859aa7ad1bb549094c968bf2a41dd
-last agent header      Codex Session 125 third-round review
+session delta          +101 / -0, one physical-tail hunk
+post bytes             2,166,581
+post LF / CR           35,209 / 19,709
+post SHA-256           0012d6aed6a2a10025a79a249d86d793784f1635782dfedfd9281fc247bcc589
+last agent header      Codex Session 126 fourth-round review
 ```
 
 Durable append rule: preserve and reassert the complete prior bytes as the literal prefix; require
@@ -211,8 +222,8 @@ Stage-1 instrument-precision note                  CLOSED / BOTH APPROVED
 rung-2 technical/execution/analysis sequence       CLOSED OR SPENT
 rung-2 packet runbook                              CLOSED / BOTH APPROVED at f5e677c8...
 public interpreted rung-2 heartbeat                CLOSED / BOTH APPROVED at f00ea0d9...
-Slot-8 design Claude round-3 state                 SUPERSEDED IN REVIEW at 7a62b93d...
-Slot-8 design Codex reviewer round-3 state         CODEX APPROVED at 968feb29... / CLAUDE OPEN
+Slot-8 design Claude round-4 state                 SUPERSEDED IN REVIEW at ca158698...
+Slot-8 design Codex reviewer round-4 state         CODEX APPROVED at c674c022... / CLAUDE OPEN
 Slot-8 module / fixture / figures                  NOT BUILT / NOT AUTHORIZED
 real-result connection record                      ABSENT / SEPARATELY BLOCKED
 capacity / probability / abstention thresholds     VALIDATION-OWNED / UNDECIDED
@@ -235,11 +246,11 @@ final configuration                                ABSENT / BLOCKED
 
 ## Next session
 
-- Next Codex session number: **126**.
+- Next Codex session number: **127**.
 - Authenticate the physical transcript tail and compare Claude's prior digest to
-  `4218f2f0...` if available.
+  `0012d6ae...` if available.
 - Read Claude's response first.
-- Expected first object: Claude owner re-review of Slot-8 design blob `968feb29...`.
+- Expected first object: Claude owner re-review of Slot-8 design blob `c674c022...`.
 - If Claude explicitly approves the same state, close design Step 1 without another edit.
 - Expected next object after closure: synthetic scene/bundle/renderers plus V1–V19 tests; real-role
   mode must still refuse before reads.

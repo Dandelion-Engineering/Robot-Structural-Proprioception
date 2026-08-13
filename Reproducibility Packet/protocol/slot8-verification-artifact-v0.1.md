@@ -1,6 +1,6 @@
 # The Director's Verification Artifact — Interface Contract and Synthetic Scaffold — v0.1
 
-**Status:** OWNER-RE-REVIEWED CANDIDATE, ROUND 4. Claude approved the Session-123 draft
+**Status:** REVIEWER-EDITED CANDIDATE, ROUND 4. Claude approved the Session-123 draft
 `260e2042c6b857c2d07cf1f9619cf54af86e5015`; Codex reviewed it in its Session 123, found nine
 contract defects, repaired them and approved `0fabe54741741f7a86c121859bd7110d8664d39d`; Claude's
 Session-124 owner re-review kept all nine repairs unchanged, added two findings of its own and
@@ -14,13 +14,17 @@ the two arms had no single shared playback grid, and the painter had no causal r
 estimator decision was available at a frame. Codex repaired both and approved that state. Claude's
 Session-126 owner re-review kept both of Codex's diagnoses and both repairs after driving them
 against the live loop, the live role contract and the approved assignment, and narrowed three of
-their consequences plus one count: the controller-log clause bound an unrendered field to a grid
-the live rollout loop offsets by exactly one control interval, so it would have refused every real
-scene (CI); the frame range check was assigned to scene construction, which never receives a frame
-(CJ); the fixture could satisfy the new `NO DECISION YET` requirement with an empty decision trace
-the live role contract forbids (CK); and the section-4.1 lead-in still read "Six properties" over
-an eight-item list (CL). Codex's re-review of this state is open. Exact-state approvals live in the
-Phase-2 chat and in Git history, not in this mutable status line.
+their consequences plus one count: the controller-log clause bound an unrendered field to a time
+equality neither the schema nor the role contract promises and which disagrees with the live loop's
+natural pre/post-advance timestamps (CI); the frame range check was assigned to scene construction,
+which never receives a frame (CJ); the fixture could satisfy the new `NO DECISION YET` requirement
+with an empty decision trace the live role contract forbids (CK); and the section-4.1 lead-in still
+read "Six properties" over an eight-item list (CL). Codex's Session-126 re-review kept all four
+repairs and narrowed one factual overclaim in CI's rationale: the packet has a synthetic
+data-contract-fixture writer that copies plant timestamps, no production controller-log writer yet
+fixes the future convention, and the defensible incompatibility is with a faithful live-loop writer
+rather than necessarily every possible writer (CM). Claude's owner re-review is open. Exact-state
+approvals live in the Phase-2 chat and in Git history, not in this mutable status line.
 
 **Nothing in this document authorizes a fit, a checkpoint, a capacity choice, a probability or
 abstention threshold, a configuration freeze, a generation, a rollout, or any pilot, validation or
@@ -308,12 +312,16 @@ Eight properties of that table and bundle are load-bearing and are not stylistic
    stamps `PlantStepState.t_s` from `data.time`. For the same `step` index the controller acts at
    `k * control_dt_s` and the plant record carries `(k + 1) * control_dt_s` — an offset of exactly
    one control interval, and a recording convention rather than a disagreement about when
-   anything happened. No code in the packet writes a `controller_logs` payload yet, and the live
-   role contract accepts a controller grid beginning at `t = 0`; requiring `controller_logs.t_s`
-   to equal `playback_t_s` element-wise would therefore refuse **every** real scene the day the
-   adapter is written, over a field no panel in 4.5 draws, and the repair would be an edit to this
-   scene contract — which is exactly what section 1.2's design test names as a defect in this
-   design. What *is* guaranteed on both sides is the index: `PrivilegedRecord.validate` requires
+   anything happened. The base research-data generator intentionally leaves `controller_logs`
+   pending Gate 4. The packet's only existing controller-log writer is the synthetic data-contract
+   fixture in `build_data_contract_fixture.py`; it copies `plant.t_s` and therefore does not
+   establish a production timestamp convention. The live role contract also accepts a controller
+   grid beginning at `t = 0`. Requiring `controller_logs.t_s` to equal `playback_t_s`
+   element-wise would reject a faithful production logger that records the live controller's
+   actual pre-advance decision time, over a field no panel in 4.5 draws, and would bake an equality
+   into this scene contract that neither the schema nor the role contract promises. That is
+   exactly what section 1.2's design test names as a defect in this design. What *is* guaranteed on
+   both sides is the index: `PrivilegedRecord.validate` requires
    `plant.step` to be the contiguous 0-based control grid and the role contract requires the same
    of `controller_logs.step`. Scene construction therefore requires both arms'
    `controller_logs.step` to be that grid of length `T` and refuses otherwise; it does not compare
