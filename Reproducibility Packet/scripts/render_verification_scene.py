@@ -38,7 +38,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any, Mapping, Sequence
 
 import matplotlib
@@ -75,6 +75,7 @@ from utils.verification_scene import (
     decision_at_frame,
     derived_frame,
     require_frame,
+    validate_bundle,
 )
 
 FIGURE_SIZE_IN: tuple[float, float] = (12.0, 8.5)
@@ -103,6 +104,31 @@ _RC_PARAMS: dict[str, Any] = {
 }
 
 _NON_INTERACTIVE_BACKENDS = {"agg", "cairo", "pdf", "pgf", "ps", "svg", "template"}
+
+
+def _project_relative_output_dir(value: str) -> Path:
+    """Parse the section-4.2 output directory without letting it escape the packet.
+
+    Both Windows and POSIX rooted forms are refused so the same CLI contract holds
+    on either platform. Parent traversal is refused for the same reason: a path can
+    be lexically relative while still naming a destination outside the copied
+    packet. This is CLI validation, before any output is written.
+    """
+
+    windows = PureWindowsPath(value)
+    posix = PurePosixPath(value)
+    if (
+        windows.is_absolute()
+        or posix.is_absolute()
+        or bool(windows.drive)
+        or bool(windows.root)
+        or ".." in windows.parts
+        or ".." in posix.parts
+    ):
+        raise argparse.ArgumentTypeError(
+            "output directory must be project-relative and contain no parent traversal"
+        )
+    return Path(value)
 
 
 # --------------------------------------------------------------------------- #
@@ -461,10 +487,9 @@ def render_bundle(bundle: VerificationBundle, output_dir: Path) -> dict[str, Any
         at, and the canonical bundle digest.
     """
 
-    if bundle.bundle_version != BUNDLE_VERSION:
-        raise VerificationSceneError(
-            X_BUNDLE_INCOMPLETE, f"unknown bundle version {bundle.bundle_version!r}"
-        )
+    # V1 applies to the surfaces, not only to the builders. Validate before the
+    # destination exists so an incomplete menu cannot leave a partial publication.
+    validate_bundle(bundle)
     destination = Path(output_dir)
     destination.mkdir(parents=True, exist_ok=True)
 
@@ -528,13 +553,17 @@ class InteractiveVerificationSurface:
     """
 
     def __init__(self, bundle: VerificationBundle, *, frame_interval_ms: int = 120) -> None:
+        # V1 and property 8 are surface gates too. In particular, duplicate human-
+        # readable labels cannot safely back a radio-button label -> case mapping.
+        validate_bundle(bundle)
+
         import matplotlib.pyplot as plt
         from matplotlib.widgets import Button, RadioButtons, Slider
 
-        if not bundle.scenes:
-            raise VerificationSceneError(X_BUNDLE_INCOMPLETE, "an interactive menu needs a case")
         self.bundle = bundle
         self.case_ids = list(bundle.scenes)
+        self.case_labels = [bundle.scenes[case_id].body_change.label for case_id in self.case_ids]
+        self._case_id_by_label = dict(zip(self.case_labels, self.case_ids))
         self.case_id = self.case_ids[0]
         self.frame = 0
         self.playing = False
@@ -549,8 +578,8 @@ class InteractiveVerificationSurface:
 
         self._radio_axis = self.figure.add_axes((0.03, 0.01, 0.30, 0.13))
         self._radio_axis.set_title("body change", fontsize=8.0)
-        self.radio = RadioButtons(self._radio_axis, tuple(self.case_ids))
-        self.radio.on_clicked(self.select_case)
+        self.radio = RadioButtons(self._radio_axis, tuple(self.case_labels))
+        self.radio.on_clicked(self.select_label)
 
         self._slider_axis = self.figure.add_axes((0.42, 0.075, 0.44, 0.03))
         self.slider = Slider(
@@ -595,7 +624,7 @@ class InteractiveVerificationSurface:
 
     # -- widget callbacks --------------------------------------------------- #
     def select_case(self, case_id: str) -> None:
-        """Radio-button callback: choose a body change from the menu (A1)."""
+        """Select one case by its stable internal ID."""
 
         if case_id not in self.bundle.scenes:
             raise VerificationSceneError(
@@ -608,6 +637,17 @@ class InteractiveVerificationSurface:
         self.slider.set_val(self.frame)
         self._refresh()
 
+    def select_label(self, label: str) -> None:
+        """Radio callback: choose the human-readable body change shown in the menu (A1)."""
+
+        try:
+            case_id = self._case_id_by_label[label]
+        except KeyError:
+            raise VerificationSceneError(
+                X_BUNDLE_INCOMPLETE, f"{label!r} is not a display label in this bundle"
+            ) from None
+        self.select_case(case_id)
+
     def set_frame(self, value: Any) -> None:
         """Slider callback: move the timeline (A2)."""
 
@@ -615,10 +655,9 @@ class InteractiveVerificationSurface:
         self._refresh()
 
     def advance_frame(self, *_: Any) -> None:
-        """One animation step: wrap around the end of the playback grid."""
+        """One animation step: wrap and move the visible timeline with the picture."""
 
-        self.frame = (self.frame + 1) % self._n_frames()
-        self._refresh()
+        self.slider.set_val((self.frame + 1) % self._n_frames())
 
     def toggle_play(self, *_: Any) -> None:
         """Button callback: play/pause the animation (A2)."""
@@ -679,7 +718,7 @@ def build_parser() -> argparse.ArgumentParser:
         "fixture", help="build and render the labeled synthetic fixture bundle"
     )
     fixture.add_argument("--fixture-seed", type=int, required=True)
-    fixture.add_argument("--output-dir", type=Path, required=True)
+    fixture.add_argument("--output-dir", type=_project_relative_output_dir, required=True)
 
     roles = modes.add_parser(
         "roles", help="specified real-result path; refuses without a connection record"
@@ -689,7 +728,7 @@ def build_parser() -> argparse.ArgumentParser:
     roles.add_argument("--config", type=Path, required=True)
     roles.add_argument("--checkpoint-root", type=Path, required=True)
     roles.add_argument("--role-root", type=Path, required=True)
-    roles.add_argument("--output-dir", type=Path, required=True)
+    roles.add_argument("--output-dir", type=_project_relative_output_dir, required=True)
     return parser
 
 

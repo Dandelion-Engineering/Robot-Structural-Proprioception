@@ -698,6 +698,12 @@ def validate_bundle(bundle: VerificationBundle) -> None:
         f"a bundle must contain at least one {'/'.join(REQUIRED_SOURCE_CLASSES)} case; "
         f"missing {missing}",
     )
+    labels = [scene.body_change.label for scene in bundle.scenes.values()]
+    _require(
+        len(labels) == len(set(labels)),
+        X_BUNDLE_INCOMPLETE,
+        "interactive-menu display labels must be unique",
+    )
     states = {scene.provenance.state for scene in bundle.scenes.values()}
     _require(
         states == {bundle.provenance_state},

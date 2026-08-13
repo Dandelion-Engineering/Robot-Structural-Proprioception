@@ -18,6 +18,7 @@ Invariants carried in this file (the scene half lives in `test_verification_scen
 from __future__ import annotations
 
 import ast
+import dataclasses
 import filecmp
 import hashlib
 import json
@@ -203,12 +204,50 @@ def test_v4_role_mode_rejects_the_fixture_argument():
         )
 
 
+@pytest.mark.parametrize(
+    "output_dir",
+    [
+        str(Path.cwd().resolve() / "absolute-output"),
+        "C:\\absolute-output",
+        "\\rooted-output",
+        "/absolute-output",
+        "..\\outside",
+        "../outside",
+    ],
+)
+@pytest.mark.parametrize("mode", ["fixture", "roles"])
+def test_v4_output_directory_is_project_relative_without_traversal(mode, output_dir):
+    """The section-4.2 path rule is enforced by the CLI, not left in prose."""
+
+    if mode == "fixture":
+        argv = ["fixture", "--fixture-seed", "7", "--output-dir", output_dir]
+    else:
+        argv = [
+            "roles",
+            "--connection-record",
+            "record.json",
+            "--connection-record-sha256",
+            "0" * 64,
+            "--config",
+            "config.json",
+            "--checkpoint-root",
+            "checkpoints",
+            "--role-root",
+            "roles",
+            "--output-dir",
+            output_dir,
+        ]
+    with pytest.raises(SystemExit):
+        rv.parse_args(argv)
+
+
 # --------------------------------------------------------------------------- #
 # V2 / V5 - fail closed on roles, before anything is opened.
 # --------------------------------------------------------------------------- #
-def test_v2_role_mode_exits_with_the_connection_code(capsys, tmp_path):
+def test_v2_role_mode_exits_with_the_connection_code(capsys, tmp_path, monkeypatch):
     """The CLI turns the refusal into its own distinct non-zero exit."""
 
+    monkeypatch.chdir(tmp_path)
     code = rv.main(
         [
             "roles",
@@ -223,7 +262,7 @@ def test_v2_role_mode_exits_with_the_connection_code(capsys, tmp_path):
             "--role-root",
             str(tmp_path / "roles"),
             "--output-dir",
-            str(tmp_path / "out"),
+            "out",
         ]
     )
     assert code == vs.EXIT_CODES[vs.X_CONNECTION_UNAUTHORIZED]
@@ -231,9 +270,10 @@ def test_v2_role_mode_exits_with_the_connection_code(capsys, tmp_path):
     assert vs.X_CONNECTION_UNAUTHORIZED in capsys.readouterr().err
 
 
-def test_v5_role_mode_produces_no_scene_no_figure_and_no_output_directory(tmp_path):
+def test_v5_role_mode_produces_no_scene_no_figure_and_no_output_directory(tmp_path, monkeypatch):
     """Fail closed: nothing is created, not even the directory it was told to write to."""
 
+    monkeypatch.chdir(tmp_path)
     output = tmp_path / "out"
     rv.main(
         [
@@ -249,7 +289,7 @@ def test_v5_role_mode_produces_no_scene_no_figure_and_no_output_directory(tmp_pa
             "--role-root",
             str(tmp_path / "roles"),
             "--output-dir",
-            str(output),
+            "out",
         ]
     )
     assert not output.exists()
@@ -331,6 +371,25 @@ def test_v10_the_scripted_path_writes_only_its_declared_outputs(rendered, bundle
     assert manifest["bundle_sha256"] == hashlib.sha256(
         (destination / rv.BUNDLE_JSON_NAME).read_bytes()
     ).hexdigest()
+
+
+def test_v1_both_surfaces_refuse_an_incomplete_menu_before_any_output(tmp_path, bundle):
+    """V1 is a surface gate: a builder bypass cannot publish or display a subset."""
+
+    scenes = {
+        case_id: scene
+        for case_id, scene in bundle.scenes.items()
+        if scene.body_change.change.source_class != "sensor"
+    }
+    partial = dataclasses.replace(bundle, scenes=scenes)
+    destination = tmp_path / "partial"
+    with pytest.raises(vs.VerificationSceneError) as scripted:
+        rv.render_bundle(partial, destination)
+    assert scripted.value.code == vs.X_BUNDLE_INCOMPLETE
+    assert not destination.exists()
+    with pytest.raises(vs.VerificationSceneError) as interactive:
+        rv.InteractiveVerificationSurface(partial)
+    assert interactive.value.code == vs.X_BUNDLE_INCOMPLETE
 
 
 def test_v10_the_painter_and_the_interactive_surface_contain_no_write_call():
@@ -427,11 +486,12 @@ def test_v13_the_written_scene_documents_are_the_canonical_ones(rendered, bundle
         assert vs.scene_from_json(vs.loads_strict(written.decode("utf-8"))).case_id == case_id
 
 
-def test_v13_cli_fixture_mode_writes_the_same_set(tmp_path, bundle, capsys):
+def test_v13_cli_fixture_mode_writes_the_same_set(tmp_path, bundle, capsys, monkeypatch):
     """The one-command reproduction path (A6) produces the reviewed bytes."""
 
+    monkeypatch.chdir(tmp_path)
     output = tmp_path / "cli"
-    code = rv.main(["fixture", "--fixture-seed", str(FIXTURE_SEED), "--output-dir", str(output)])
+    code = rv.main(["fixture", "--fixture-seed", str(FIXTURE_SEED), "--output-dir", "cli"])
     assert code == vs.EXIT_CODES[vs.X_SCENE_OK] == 0
     reference = tmp_path / "reference"
     rv.render_bundle(bundle, reference)
@@ -633,8 +693,10 @@ def test_v17_every_menu_entry_is_exposed_by_both_surfaces(bundle, rendered):
     assert [case["case_id"] for case in manifest["cases"]] == list(bundle.scenes)
     surface = rv.InteractiveVerificationSurface(bundle)
     assert list(surface.radio.labels[i].get_text() for i in range(len(surface.case_ids))) == list(
-        bundle.scenes
+        scene.body_change.label for scene in bundle.scenes.values()
     )
+    surface.radio.set_active(2)
+    assert surface.case_id == list(bundle.scenes)[2]
 
 
 def test_v17_the_class_axis_is_the_canonical_source_class_order(bundle):
@@ -726,7 +788,7 @@ def test_d2_the_timeline_moves_the_frame(bundle):
 
 
 def test_d2_play_pause_toggles_and_advances(bundle):
-    """A2: play/pause is a state, and one animation step moves the frame."""
+    """A2: play/pause is a state, and playback moves the frame and visible timeline."""
 
     surface = rv.InteractiveVerificationSurface(bundle)
     assert surface.playing is False
@@ -735,8 +797,10 @@ def test_d2_play_pause_toggles_and_advances(bundle):
     surface.toggle_play()
     assert surface.playing is False
     surface.frame = surface.scene.n_frames - 1
+    surface.slider.set_val(surface.frame)
     surface.advance_frame()
     assert surface.frame == 0
+    assert surface.slider.val == 0
 
 
 def test_d2_the_interactive_surface_refuses_an_unknown_case(bundle):

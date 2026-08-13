@@ -116,6 +116,28 @@ def test_v1_bundle_covers_every_required_source_class(bundle):
         assert required in present
 
 
+def test_v1_interactive_menu_display_labels_must_be_unique(bundle):
+    """Property 8: a human-readable radio label must select exactly one case."""
+
+    scenes = dict(bundle.scenes)
+    first_id, second_id = list(scenes)[:2]
+    scenes[second_id] = dataclasses.replace(
+        scenes[second_id],
+        body_change=dataclasses.replace(
+            scenes[second_id].body_change,
+            label=scenes[first_id].body_change.label,
+        ),
+    )
+    duplicate = vs.VerificationBundle(
+        bundle_version=bundle.bundle_version,
+        provenance_state=bundle.provenance_state,
+        scenes=scenes,
+    )
+    with pytest.raises(vs.VerificationSceneError) as refusal:
+        vs.validate_bundle(duplicate)
+    assert refusal.value.code == vs.X_BUNDLE_INCOMPLETE
+
+
 def test_v1_missing_required_source_class_refuses(bundle):
     """A menu with no sensor case is X_BUNDLE_INCOMPLETE, not a smaller menu."""
 
