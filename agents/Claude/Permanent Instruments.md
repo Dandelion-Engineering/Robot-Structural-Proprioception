@@ -3049,6 +3049,79 @@ open. This composes with the review-cycle rule that diagnosis and implementation
 questions: there are in fact **three** questions on an owner re-review — is the diagnosis right,
 is the implementation right, and **is the set complete**.
 
+195. **[S124] FIELD-LEVEL DEFECTS ARE FOUND BY READING; INTERACTION-LEVEL DEFECTS ARE ONLY FOUND
+BY ASKING WHAT HAPPENS WHEN THE THING RUNS.** All nine of Codex's S123 findings were field-level
+(wrong role, missing field, incomplete call). Both of mine were interaction-level — two rules in
+the **same document**, each individually sensible, **jointly impossible**. A review that does only
+the first kind hands off a document that reads perfectly and cannot be built.
+
+196. **[S125] LESSON 195 CONFIRMED A SECOND TIME IN THE SAME DIRECTION, AND THE INSTRUMENT NAMED.**
+Both of Codex's S124 findings were field-level; both of mine were interaction-level. Two rounds
+running. The instrument that finds the second kind is not *"is this sentence true"* — it is **what
+happens when the thing runs**, and this round's version was literally two questions: *"what does
+the slider move?"* and *"what does `j_5s` do with the numbers this fixture will actually hand
+it?"* **Both answers required leaving the document.**
+
+197. **[S126] THE MOST USEFUL QUESTION IN A RENDERING DESIGN IS "WHICH PANEL DRAWS THIS?"** A
+constraint on a **rendered** quantity earns its strictness. A constraint on a
+**carried-but-unrendered** quantity is pure downside risk: it can refuse, and it can never be seen
+to be right. That question is what turned CI from *"an unusually strict rule"* into *"a rule that
+refuses every real scene over something nobody looks at"*.
+
+198. **[S126] AND THEN IT REVERSED: THE NEXT NOTCH OUT IS "DOES THIS RULE SURVIVE CONTACT WITH AN
+OBJECT OUTSIDE THE DOCUMENT?"** Both of Codex's S125 findings were interaction-level — the harder
+kind, and the kind I had been the only one finding for two rounds. What was left for me was one
+notch further out: not *"do two rules in this document conflict"* but *"does this document's rule
+survive contact with an object outside it"*. CI needed two source files and a driven validator; CJ
+needed asking which function receives which argument; CK needed driving a live contract with an
+empty payload. **The loop converges: the remaining defects get structurally smaller each round.**
+
+199. **[S127] THE RECURRING DEFECT IN A SPECIFICATION HAS ONE SHAPE — A RULE STATED GENERALLY AND
+THEN DISCHARGED BY A PARTIAL ENUMERATION, WHERE THE ENUMERATION IS WHAT THE IMPLEMENTATION WILL
+ACTUALLY FOLLOW.** It appeared four times in one document: CA, CE, CI, CN. **The question that
+finds it: when this document names a fact that some other object already owns, does it POINT at
+that object or COPY it?** A copy takes on an obligation to stay current that nothing in this
+project enforces. Ask it alongside lesson 197's *"which panel draws this?"*. **[S128 addendum: the
+enforcement mechanism, when you can build one, is a test that makes the copy impossible rather
+than a comment asking for it — see lesson 201.]**
+
+200. **[S127] A REVIEWER BEING RIGHT IS NOT A REASON TO SKIP THE MEASUREMENT, AND THE MEASUREMENT
+PAYS FOR ITSELF TWICE.** Finding CM was a narrow wording correction I could have taken on
+authority at zero cost. Reproducing it is what put me inside `role_contract.py` and `metrics.py`
+in the same session, **and CN came out of that**. This is lesson 194's rule (check the clauses the
+reviewer did *not* flag) paying a second dividend.
+
+201. **[S128] A TEST THAT ASSERTS A CALL HAPPENED IS WEAKER THAN A TEST THAT ASSUMES THE CALL AND
+WATCHES IT FAIL.** An AST test proving `_validate_tracking_window` contains a `j_5s` call is
+satisfied by a function that calls it and ignores the result. **The load-bearing test replaces the
+delegated-to function with one that raises a sentence no design document contains, and requires
+that exact sentence to appear in the refusal.** Both are in the suite; only the second can hold a
+delegation in place. This is the executable form of lesson 199: where a specification says *point,
+do not copy*, the test that enforces it must make the copy detectable, not merely make the
+pointing visible.
+
+202. **[S128] LOOKING AT THE PICTURE IS A MEASUREMENT, AND NO INVARIANT SUBSTITUTES FOR IT.**
+Nineteen invariants and 144 tests passed on a figure whose fabricated-truth line overlapped its
+title, whose equal-aspect body panel was a sliver, and whose panel titles ran off the axes. The
+tests check what the artifact must never **do**; none of them checks whether a human can **read**
+it — and for a *director's* verification artifact that is the property the whole thing exists for.
+Render to scratch and open the image before handing it over.
+
+203. **[S128] NEVER USE A BASH HEREDOC FOR CONTENT CONTAINING BACKSLASHES.** Three in-place edits
+this session went through `python - <<'PY'`, and the shell collapsed backslash sequences despite
+the quoted delimiter: one replacement pattern silently failed to match, one wrote a vertical tab
+into a tracked document where `..\venv` belonged, and one turned `re.compile(r"\bci\b")` into
+`re.compile(r"ci")` — which then matched *"confidence"*. **Two of the three were silent; the third
+was caught only because it failed loudly.** Use the Write/Edit tools, or build the string from
+`chr(92)` with no literal backslash anywhere in the command, and sweep the finished bytes for
+control characters afterwards.
+
+*(Migrated into this file in S128. Lessons 195-200 above were introduced in the summary
+file's head block during S124-S127 and were never moved here before that block was
+rewritten - exactly the drift the S105 correction warns about. Their text is recovered in
+substance from the S124-S127 commits of `agents/Claude/Summary of Only Necessary
+Context.md` and condensed; 201-203 are new this session.)*
+
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 
 ```text
