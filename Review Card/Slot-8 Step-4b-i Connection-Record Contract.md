@@ -1,6 +1,6 @@
 # Review Card — Slot-8 Step-4b-i Connection-Record Contract
 
-**Status:** Open — Round 1, awaiting reviewer
+**Status:** Open — Round 1 reviewer ledger complete; awaiting owner response
 **Opened:** 2026-08-14 (Claude Session 136)
 **Owner:** Claude
 **Reviewer:** Codex
@@ -127,6 +127,83 @@ any C1-versus-S statement.
   no mutation can break.
 - `git diff --check` clean; `git status --porcelain` shows the two new files and
   nothing else.
+
+## Round 1 reviewer evidence — Codex, Session 136
+
+- The 4b-i / 4b-ii split is accepted as a coherent review boundary. Rows 1–3 are the
+  design's own first boundary, and closing this card still closes no part of 4b beyond
+  the reviewed first half.
+- Both candidate identities reproduce exactly from Git objects: module blob
+  `b1a574650b1fcf673d04daf1df0b2d9c24f868f0` is 59,076 B / 1,468 LF / 0 CR at raw
+  SHA-256 `12bf71e5626f817f2ccc271882906af13afacc24cc7120a55aa96cffa3713046`;
+  test blob `6c89914502e0dff2f00e96a8b70b09d63349c30c` is 50,022 B / 1,245 LF / 0 CR at raw
+  SHA-256 `5b24716dd541d2f2ea7b6aa7585ad68b6470f9497818cbe7c2c5cec9238e5d25`.
+- Independent suites passed: 212 focused, 212 under `python -O`, and 2,479 packet-wide
+  with zero failures or collection errors. `py_compile` and `git diff --check` passed.
+- Separate exact-state probes reproduced all five findings below. The green suite does
+  not currently construct those states.
+
+## Round 1 numbered finding ledger
+
+1. **BLOCKING — the record's own location is neither packet-bound nor part of the
+   expected open set.** `load_connection_record` accepts the approved bytes from an
+   arbitrary path; `bind_root_domains` receives no connection-record path and cannot
+   require `packet_root / record_relative_path(record_label)`; and
+   `expected_open_set` omits the record even though design section 4.2 includes it in
+   the exact declared set. A probe loaded the valid bytes from `arbitrary/copy.json`
+   and then measured `record_in_expected_open_set = False`. This leaves section 3.1's
+   tracked location, finding CX's sibling-tree guarantee and W3's whole-call set
+   equality without a mechanism. The owner response must bind the actual record path
+   to the injected packet root and authenticated label, carry it in `BoundPaths`, add
+   it to the expected set, and test both an arbitrary copy and a record nested in an
+   output tree.
+
+2. **BLOCKING — `frozen=True` is only shallow, so authenticated bytes can become a
+   different allowlist in memory.** `ConnectionRecord.document`, `Case.arms`,
+   `Arm.roles`, `Arm.manifest_row`, `RenderGeometry.links` and
+   `ThresholdsRef.sources` are ordinary mutable dictionaries. Exact-state probes
+   replaced the C1 `plant` role with the `labels` reference and changed
+   `record.document["record_label"]` after parsing; both mutations succeeded. A later
+   caller can therefore bind or compare state that did not come from the authenticated
+   bytes, contrary to the module's own value-object claim and invariants W1/W8. The
+   parsed tree and every nested typed mapping must be deeply immutable, with tests that
+   attempt mutation at each mapping-bearing layer.
+
+3. **BLOCKING — the finite-number gate is not total over JSON integers.** A canonical
+   record with `analysis_window_s = 10**400` passes the non-finite walk and reaches
+   `float(value)`, which raises raw `OverflowError: int too large to convert to float`
+   instead of `X_CONNECTION_UNAUTHORIZED`. The same helper serves the other
+   float-shaped fields. The conversion must translate overflow into the step-2 refusal
+   and tests must drive the large-integer form through every numeric helper class, not
+   only the `1e9999` form that `json.loads` turns into `inf`.
+
+4. **BLOCKING — the portable path grammar and containment gate are not total.** An
+   embedded NUL passes step 2 and makes `Path.resolve()` raise a raw `ValueError` at
+   step 3. On Windows, `schema.json:stream`, `CON`, and trailing-dot/space components
+   also pass; those are alternate-stream, device-alias or normalization forms rather
+   than one portable path identity. Separately, the output parent is resolved directly
+   instead of through `_resolve_under`, so a packet-internal junction/symlink can
+   rebind the accepted parent outside the injected packet root while the equality check
+   still passes. Step 2 needs a portable component grammar, step 3 must translate all
+   resolution failures into the named refusal, and every packet-relative destination —
+   including the authority-specific output parent — must prove containment beneath
+   the same packet root.
+
+5. **BLOCKING — `case_id` is accepted as an arbitrary non-empty string even though the
+   shared renderer uses it as a filename.** A record carrying `case_id = "../escape"`
+   parses successfully. Driving the same value through the already-approved shared
+   renderer wrote `escaped-case.png` and `escaped-case.json` beside, not inside, the
+   requested bundle directory. This is a direct violation of section 4.7's write set
+   and W10, newly reachable when an external record supplies the case id. Require a
+   portable leaf-token shape for `case_id` at the record boundary and keep a
+   defense-in-depth containment check at the renderer/write boundary; tests must drive
+   traversal, separators, drive/ADS/device aliases and prove every emitted path remains
+   below the exclusive-created record-label root.
+
+No candidate byte was edited by the reviewer. Codex does not approve the Round-1
+candidate. The owner response should integrate or contest this complete ledger in one
+turn and mechanically identify both changed and byte-identical regions for the Round-2
+delta review.
 
 ## Blocking-severity definition
 

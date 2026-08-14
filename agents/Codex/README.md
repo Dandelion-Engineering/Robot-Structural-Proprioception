@@ -6,7 +6,7 @@ This folder contains Codex-owned research, source records, and continuity for th
 
 - [`Literature Foundation.md`](Literature%20Foundation.md) — Codex's independent Phase-0 field survey. It is a concluded research input; corrections discovered later propagate into current artifacts rather than rewriting the foundation.
 - [`references.md`](references.md) — living source ledger for Codex's project work, including Phase-1 review sources. Reconcile it with Claude's independent ledger when the project bibliography is assembled.
-- [`Config Freeze Readiness Review.md`](Config%20Freeze%20Readiness%20Review.md) — authoritative gate audit for final-config readiness and the surviving design and authorization boundaries. Stage 1 and rung 2 remain complete only as scoped development screens. Slot-8 Steps 1–4a are closed / both approved, with the Step-4a connection-record design fixed at Git blob `032db166...` / raw SHA-256 `f761a673...`. Only a new, separately reviewed Step-4b adapter-and-test build is licensed; every real-role read, capacity or threshold choice, final configuration, and later gate remains blocked.
+- [`Config Freeze Readiness Review.md`](Config%20Freeze%20Readiness%20Review.md) — authoritative gate audit for final-config readiness and the surviving design and authorization boundaries. Stage 1 and rung 2 remain complete only as scoped development screens. Slot-8 Steps 1–4a are closed / both approved, with the Step-4a connection-record design fixed at Git blob `032db166...` / raw SHA-256 `f761a673...`. Step 4b-i is open after Codex's five-finding Round-1 block; Step 4b-ii, every real-role read, capacity or threshold choice, final configuration, and later gate remain blocked.
 
 ## Continuity and session record
 
@@ -146,6 +146,7 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`Session Summaries/HumanReport133.md`](Session%20Summaries/HumanReport133.md) — detailed record of Codex Session 133 (accepted Claude's DA authority-scoped config gloss and DB portable-P5 repair, found and repaired the missing positive branch test as DC/B8, approved exact reviewer blob `b968886f...`, passed a 44-check design audit, and left Claude owner re-review open before 4b).
 - [`Session Summaries/HumanReport134.md`](Session%20Summaries/HumanReport134.md) — detailed record of Codex Session 134 (found and repaired the validator-only false-positive as DE/B8, installed the director's superseding review-boundary protocol, concluded the oversized Phase-2 chat, corrected the migration rule to preserve the current state without retroactive escalation, and opened the Step-4a transition Review Card and narrow subject chat without authorizing 4b).
 - [`Session Summaries/HumanReport135.md`](Session%20Summaries/HumanReport135.md) — detailed record of Codex Session 135 (performed the Round-2 delta review, approved exact owner blob `032db166...`, closed Step 4a / both approved, incorporated three review-method refinements, and published the lean design-closure heartbeat without opening a data or execution gate).
+- [`Session Summaries/HumanReport136.md`](Session%20Summaries/HumanReport136.md) — detailed record of Codex Session 136 (accepted the Step-4b-i split, reproduced 212 focused and 2,479 packet-wide passing tests, found five blocking record-identity/immutability/numeric/path/output failures, posted the complete Round-1 ledger without editing the candidate, and left 4b-ii closed).
 - [`Progress Reports/Progress Report Session 8.md`](Progress%20Reports/Progress%20Report%20Session%208.md) — first regular every-eighth-session director update at the Accessible-Piece bar.
 - [`Progress Reports/Progress Report Session 16.md`](Progress%20Reports/Progress%20Report%20Session%2016.md) — second regular director update, covering the synchronous-probe correction, noisy pilot, real contact integration, and matched-contact BLOCK.
 - [`Progress Reports/Progress Report Session 24.md`](Progress%20Reports/Progress%20Report%20Session%2024.md) — third regular director update, covering the bounded-task redesign, information/control split, structural-action block, actuator headroom, and corrected probability-channel boundary; next regular Codex report is Session 32.
@@ -162,6 +163,7 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`Progress Reports/Progress Report Session 112.md`](Progress%20Reports/Progress%20Report%20Session%20112.md) — fourteenth regular director update, covering packet portability closure, the Stage-1 precision audit, the separate rung-2 direction, exact design closure, and the public cost correction.
 - [`Progress Reports/Progress Report Session 120.md`](Progress%20Reports/Progress%20Report%20Session%20120.md) — fifteenth regular director update, covering the rung-2 implementation/plan/run/analyzer sequence, jointly closed interpretation, zero healthy/structure F1 finding, packet-runbook review and still-blocked later gates.
 - [`Progress Reports/Progress Report Session 128.md`](Progress%20Reports/Progress%20Report%20Session%20128.md) — sixteenth regular director update, covering public rung-2 closure, seven-round Slot-8 design convergence, the first verification-artifact implementation, Codex's four reviewer repairs, the exact remaining owner-review gate, and the local MuJoCo import blocker.
+- [`Progress Reports/Progress Report Session 136.md`](Progress%20Reports/Progress%20Report%20Session%20136.md) — seventeenth regular director update, covering synthetic fixture closure, Step-4a and Review Card convergence, the first Step-4b-i candidate, the green-suite/blocked-contract distinction, and the preserved scientific gates.
 - [`Progress Reports/Progress Report Amendment Payload-Bounded Non-Transfer.md`](Progress%20Reports/Progress%20Report%20Amendment%20Payload-Bounded%20Non-Transfer.md) — event-triggered director update explaining why Option C became the in-force contract, why every numerical bar stayed fixed, and which downstream gates remain closed.
 
 ## Shared files outside this folder
@@ -292,7 +294,8 @@ agents/Codex/
 │   ├── Progress Report Session 104.md
 │   ├── Progress Report Session 112.md
 │   ├── Progress Report Session 120.md
-│   └── Progress Report Session 128.md
+│   ├── Progress Report Session 128.md
+│   └── Progress Report Session 136.md
 ├── references.md
 ├── README.md
 ├── Summary of Only Necessary Context.md
@@ -431,5 +434,6 @@ agents/Codex/
     ├── HumanReport132.md
     ├── HumanReport133.md
     ├── HumanReport134.md
-    └── HumanReport135.md
+    ├── HumanReport135.md
+    └── HumanReport136.md
 ```

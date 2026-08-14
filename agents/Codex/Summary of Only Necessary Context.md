@@ -1,71 +1,106 @@
 # Summary of Only Necessary Context — Codex
 
-Last completely rewritten after Codex Session 135 on 2026-08-14.
+Last completely rewritten after Codex Session 136 on 2026-08-14.
 
 ## Resume here
 
 - Branch: `main`.
-- The director's Review Card and convergence method governs formal review and supersedes the remainder of `Playbooks/review-cycle.md` where the two conflict.
-- Slot-8 Steps 1–3 remain closed / both approved.
-- Slot-8 Step 4a is now **CLOSED / BOTH APPROVED**. Both agents approve exact design Git blob `032db1666efbe00adec5696de70424d531ba33a2`, raw SHA-256 `f761a673ff8fcca6c58fe530a3faaed57630315a87a5e241d8ca9675a13c4ffc`, 83,181 bytes / 1,062 LF / 0 CR.
-- The closed card is `Review Card/Slot-8 Step-4a Connection-Record Design.md`. The concluded subject chat and its summary are under `chats/Claude-Codex/Slot-8 Step-4a Connection-Record Design/`. Do not append new work to the concluded transcript.
-- Only a **new, separately reviewed Step-4b adapter-and-test build** is licensed. Claude owns the next build unless labor is explicitly reassigned. It should begin with a new Step-4b Review Card and subject-scoped chat.
-- No production connection record, real role/index/payload/checkpoint/result read, Step 4c–4f work, capacity or threshold choice, final configuration, adapter run, or C1-versus-S claim is authorized.
-- The next regular Codex progress report is Session 136.
+- Slot-8 Steps 1–3 and Step 4a are closed / both approved. Step-4a exact design blob is
+  `032db1666efbe00adec5696de70424d531ba33a2`, raw SHA-256
+  `f761a673ff8fcca6c58fe530a3faaed57630315a87a5e241d8ca9675a13c4ffc`, 83,181 bytes /
+  1,062 LF / 0 CR.
+- Step 4b-i is **OPEN — Round 1 reviewer ledger complete; awaiting Claude's owner response**. Codex
+  does not approve either candidate. Claude owns the response unless labor is explicitly reassigned.
+- Governing card: `Review Card/Slot-8 Step-4b-i Connection-Record Contract.md`.
+- Active narrow chat: `chats/Claude-Codex/Slot-8 Step-4b-i Connection-Record Contract/Slot-8 Step-4b-i
+  Connection-Record Contract - Active.md`.
+- Step 4b-ii has not started and is not authorized while 4b-i is open. Even 4b-i closure would approve
+  only record parsing/binding, not source reads, bundle construction, persistence or full Step 4b.
+- No production connection record, real role/index/payload/checkpoint/result read, Step 4c–4f work,
+  capacity or threshold choice, final configuration, adapter run, or C1-versus-S claim is authorized.
+- The next regular Codex progress report is Session 144.
 
-## Exact Step-4a outcome
+## Exact Step-4b-i candidate and evidence
 
-- Claude's corrected prior baseline blob is `968fa895fb81a04bfc04f4b743d8d03f3a1af612`; the shorter identifier transcribed in the earlier card did not name a Git object and is corrected in the closed record.
-- Codex's Round-1 reviewer proposal was blob `425ce0118bddc44daccfa69b19362aec6ea70d00`.
-- Claude's Round-2 candidate `032db166...` changed only the disputed real-adapter branch and directly related acceptance/audit text; the remaining bytes were mechanically compared to the reviewer proposal.
-- The accepted seam is one internal roles-mode entry point after record authentication, governed by one explicit packet root for Step-3 domain binding, Step-4 config authentication, Step-5 source lookup, and output-parent derivation.
-- B8 must exercise four config branches under an isolated temporary packet root: development/draft pass, final/draft refusal, final/frozen pass, and development/frozen refusal. Both positive legs must reach the deliberate Step-5 corrupted-source refusal.
-- W8 must positively prove that the unchanged public path derives and binds the live packet root.
-- The broader seam is necessary: a Step-4-only helper would return before Step 5 and could not establish that accepted config state reaches the deliberate later refusal without consulting the live packet.
-- Codex's final audit passed `DESIGN_REVIEW_OK: 72 checks`; focused config-contract tests passed 18/18. No executable changed, so the 2,267-test packet suite was not rerun in Session 135.
-- The stale `build_role_bundle` docstring gloss is a non-blocking additive Step-4b follow-up, not a defect in the approved design.
+- Module: `Reproducibility Packet/scripts/utils/connection_record.py`, Git blob
+  `b1a574650b1fcf673d04daf1df0b2d9c24f868f0`, raw SHA-256
+  `12bf71e5626f817f2ccc271882906af13afacc24cc7120a55aa96cffa3713046`, 59,076 bytes /
+  1,468 LF / 0 CR.
+- Tests: `Reproducibility Packet/tests/test_connection_record.py`, Git blob
+  `6c89914502e0dff2f00e96a8b70b09d63349c30c`, raw SHA-256
+  `5b24716dd541d2f2ea7b6aa7585ad68b6470f9497818cbe7c2c5cec9238e5d25`, 50,022 bytes /
+  1,245 LF / 0 CR.
+- Verification passed 212 focused tests, the same 212 under `python -O`, `py_compile`, and 2,479
+  packet-wide tests with zero failures or collection errors. `git diff --check` was clean.
+- The green suite does not construct the five blocking states below. No candidate source or test was
+  edited by Codex.
 
-## Step-4b implementation boundary
+## Complete Round-1 blocker ledger
 
-- Create a new Review Card and narrow subject chat; do not reopen Step 4a.
-- Implement only the approved adapter seam and its synthetic tests. Keep one explicit packet root authoritative across the roles-mode path.
-- All test writes must remain below the isolated temporary packet root. The live `Reproducibility Packet` must never gain `config.json`.
-- The public path remains behaviorally unchanged and must be covered by the positive live-root binding test.
-- Preserve refusal-before-scientific-read behavior. Passing Step 4 does not authorize a role payload, checkpoint, output or result read.
-- Exact-state review of the new adapter/test candidate is required before any downstream use. Step 4b completion will not itself authorize 4c–4f or any real-data action.
+1. **Record path/open set:** valid bytes load from an arbitrary path; `bind_root_domains` has no actual
+   record path to bind against `packet_root / record_relative_path(record_label)`; and
+   `expected_open_set` omits the record. Bind the real path, carry it in `BoundPaths`, include it in W3's
+   exact set, and test arbitrary/output-tree copies.
+2. **Deep immutability:** frozen dataclasses contain mutable `document`, `arms`, `roles`, `manifest_row`,
+   `links` and `sources` mappings. Exact probes mutated both a role reference and the retained record
+   label. Deep-freeze every parsed mapping and test mutation refusal at every typed layer.
+3. **Huge integer:** `analysis_window_s = 10**400` raises raw `OverflowError` during `float()` instead of
+   `X_CONNECTION_UNAUTHORIZED`. Translate overflow/conversion failures and cover the large-integer form
+   across numeric helper classes.
+4. **Portable paths/containment:** embedded NUL reaches raw `ValueError`; Windows ADS, device names and
+   trailing-dot/space components pass; the output parent bypasses `_resolve_under`, permitting a
+   junction/symlink escape. Define a total portable component grammar, translate resolution failures and
+   prove every packet-relative source and destination remains under one injected root.
+5. **`case_id` output traversal:** arbitrary non-empty strings reach renderer filenames. The integration
+   probe wrote `../escaped-case` PNG/JSON beside the requested bundle directory. Require a portable leaf
+   token at the record boundary and writer-side containment; test traversal, separators, drive/ADS/device
+   aliases and the observed write set.
 
-## Review protocol refinements adopted in Session 135
+Claude must integrate or contest the whole ledger in one owner response and name both changed and
+mechanically byte-identical regions. Round 2 is delta-only: review each disposition, the named acceptance
+tests and regressions introduced by the delta. Do not restart a whole-file audit absent contrary evidence.
 
-- Every candidate named in a Review Card must carry full Git blob ID, raw SHA-256, byte count and EOL state. The card writer verifies each Git identifier with `git cat-file -t` before posting it.
-- Acceptance criteria name durable artifact properties. Script names, private audit predicate counts and similar instrumentation belong in the evidence log, not in the acceptance contract.
-- A delta response explicitly identifies both changed and byte-identical regions and records mechanical evidence for the comparison.
-- These rules are now in both `Review Card/README.md` and the superseding section of `Playbooks/review-cycle.md`.
-- The active director-visible feedback chat is `chats/Claude-Codex-Human/Review Boundary and Convergence/Review Boundary and Convergence - Active.md`. Both agents accepted the refinements; no human triage is open.
+## Review and chat protocol
+
+- The director's Review Card and convergence method governs formal review and supersedes the remainder
+  of `Playbooks/review-cycle.md` where they conflict.
+- Authenticate every candidate with its full Git blob, raw digest, byte count and EOL figures; verify the
+  Git object resolves before relying on it.
+- A reviewer records the complete numbered ledger in Round 1. The owner answers every item and identifies
+  changed plus unchanged regions. Round 2 is a bounded delta review.
+- Same-state explicit approval by both agents is required. Green tests, reviewer edits, downstream use,
+  a handoff or silence are not approval.
+- Use the active Step-4b-i chat only for this first-half contract. Do not append to concluded Step-4a or
+  other concluded subject chats.
+- The director-visible Review Boundary and Convergence chat is only for method feedback/problems, not the
+  subject decision. No method triage is currently open.
+- Use Transcript Order Monitoring only if the same writer's message appears after a verified opposite-agent
+  EOF tail. No recurrence occurred in Session 136.
+
+## Session-136 public and continuity state
+
+- `agents/Codex/Progress Reports/Progress Report Session 136.md` covers Sessions 129–136: closure of the
+  synthetic fixture, Step-4a convergence, the Review Card rollout and the current blocked implementation.
+- Root `README.md` was intentionally not changed. A rejected first-half candidate is not a finished public
+  milestone, and the Session-135 heartbeat already states the active boundary.
+- `agents/Codex/Session Summaries/HumanReport136.md` records the exact probes, evidence, decision and
+  preserved authority limits.
+- Non-blocking general recent-work note: Claude's HumanReport136 files-updated list omits
+  `agents/Claude/Permanent Instruments.md`, although the Claude Session-136 commit changed it by 25 lines.
+  Claude should reconcile that record; it does not affect the formal Step-4b-i verdict.
 
 ## Existing durable boundaries
 
-- Stage 1 is complete only as a development screen: no readable paired shape at five points/five seeds, no licensed trend statement, no capacity or threshold selected.
-- Rung 2 is complete only as scoped. Its fit and analyzer invocations are spent. All ten arms have zero healthy and structure F1; this observed fact accompanies the weak objective/sign description without a causal claim.
-- Packet-runbook and interpreted public-heartbeat loops remain closed / both approved at their recorded exact states.
-- The verified synthetic Slot-8 artifact reproduces byte-for-byte, its figures are 300 DPI, and its role path refuses before opening a scientific file.
+- Stage 1 remains complete only as a development screen: no readable paired shape at five points/five
+  seeds, no licensed trend statement, and no capacity or threshold selected.
+- Rung 2 remains complete only as scoped. Its fit/analyzer invocations are spent; all ten arms have zero
+  healthy and structure F1, which is an observed development fact rather than a causal claim.
+- The verified synthetic Slot-8 fixture is four deterministic 300-DPI case figures under
+  `Reproducibility Packet/results/verification_fixture/`. It proves the display mechanism, not a scientific
+  result, and its real-role path refuses before a scientific file opens.
 - Project counters remain 278 rollouts, 67 fits, 67 checkpoints, and zero pilot/validation/test reads.
-- Amendment A2, role separation, no-exploratory-recompute rules, and all unspent authorization gates remain in force.
-
-## Session 135 evidence and public state
-
-- The focused command `venv\Scripts\python.exe -m pytest "Reproducibility Packet\tests\test_data_contract.py" -q` passed 18 tests.
-- The full design instrument passed 72 checks against the exact approved bytes.
-- No role index, role payload, checkpoint, estimator output, controller log or result was opened. No MuJoCo model was built; no rollout, fit, generation or render ran; and no config, connection record or production output was written.
-- Root `README.md` now has a lean 2026-08-14 heartbeat: the connection design is approved by both agents, while only the synthetic Step-4b build is open. This Codex-authored heartbeat is available for Claude's general recent-work review; it does not itself open a formal review cycle.
-- `agents/Codex/Session Summaries/HumanReport135.md` is the detailed record of the review, evidence, method update, public edit and preserved boundary.
-
-## Chat and continuity routing
-
-- Do not append to concluded `chats/Claude-Codex/Phase 2 Integration and Config Freeze/`.
-- Do not append to concluded `chats/Claude-Codex/Slot-8 Step-4a Connection-Record Design/`.
-- Use the active Review Boundary and Convergence chat only for method feedback or problems caused by the method.
-- Use `chats/Claude-Codex-Human/Transcript Order Monitoring/Transcript Order Monitoring - Active.md` only if the same writer's message again appears after the verified opposite-agent EOF tail. No recurrence occurred in Session 135.
-- Formal Step-4b work needs a new subject-scoped chat and Review Card. General recent-work review does not require a formal cycle unless a blocker or substantive disagreement is flagged.
+- Amendment A2, role separation, no-exploratory-recompute rules, the 67-checkpoint distribution/recovery
+  issue, the non-blocking Claim Sheet director request, and all unspent scientific gates remain in force.
 
 ## Append-only transcript discipline
 
