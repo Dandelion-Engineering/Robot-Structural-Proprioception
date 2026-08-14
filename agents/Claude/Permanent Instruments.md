@@ -3195,6 +3195,47 @@ correction applied.)*
   move.  The canonical JSONs carry no newline and the PNGs round-trip as binary, so neither is
   pinned — pinning what does not move is exactly the object enlargement the ruling refuses. ***
 
+210. **[S131] A BLOCKED STATUS IS A MEASUREMENT AND ROTS LIKE ONE — RE-MEASURE IT BEFORE CARRYING
+  IT FORWARD AGAIN.**  "Slot-8 step 4 is blocked on three inputs that do not exist" was written in
+  S123 and carried unexamined through eight of my sessions.  It was roughly two thirds false.  The
+  frozen design's step 4 bundles four separable things — the connection-record design, the adapter
+  build, the record itself, and the authorized run — and only the last two actually need the
+  missing inputs.  *** WHAT FALSIFIED IT WAS A FILE THE PACKET ALREADY HAD:
+  `scripts/build_data_contract_fixture.py` writes a role-complete, schema-conformant storage tree
+  and imports neither `mujoco` nor `torch`, so the adapter can be built and driven end to end
+  today.  I found it by opening the packet's own scripts while writing the design, not by thinking
+  harder about the blocker. ***  THE GENERAL FORM: lesson 65 says a status clause true for several
+  rewrites is the most likely to be carried into one where it is false — this is that lesson
+  applied to a BLOCKER rather than to a review state, and blockers are worse, because nothing in
+  the work forces you to revisit one.  ASK OF EVERY CARRIED BLOCKER: *is it one thing, or several
+  bundled under one name, and is every one of them actually blocked?*
+
+211. **[S131] A SHARED CONSTANT WHOSE COMMENT ARGUES FOR WHY IT IS SHARED IS A GOOD PLACE TO LOOK
+  FOR A DEFECT.**  `CENTERLINE_TASK_OUTPUT_TOL_M = 1.0e-9` carries a comment saying it is declared
+  once "so the fixture generator and the future read-only role adapter check the same thing with
+  the same number".  That comment is an ARGUMENT, and the argument is wrong: the fixture's distal
+  point IS its task output by construction, so 1 nm measures construction exactness, while the
+  adapter compares an independently derived forward-kinematic endpoint against a MuJoCo site
+  position, where 1 nm is a bit-equality demand.  *** THE COMMENT IS WHAT MADE IT FINDABLE.  A bare
+  constant invites no scrutiny; a constant with a justification invites exactly one question — *is
+  the justification true?* — and that question is cheap and occasionally very productive. ***  THE
+  FAILURE MODE IT WOULD HAVE CAUSED IS THE EXPENSIVE PART: the adapter would refuse every real arm,
+  and the obvious repair under time pressure is to loosen the SHARED constant, silently weakening
+  the fixture's check at the same time.  WHEN ONE VALUE IS ASKED TO BE TWO THINGS, SPLIT IT, AND
+  MEASURE THE NEW ONE RATHER THAN CHOOSING IT.
+
+212. **[S131] `%Z` RENDERS THE LONG TIMEZONE NAME ON WINDOWS — CHECK THE RENDERED HEADER, NOT THE
+  FORMAT STRING.**  My first S131 transcript append stamped "2026-08-13 20:21 Pacific Daylight
+  Time" where the project's convention is "PDT", because `datetime.strftime("%Z")` on this machine
+  returns the full name.  Caught in the same turn, before committing and before handover, and
+  corrected by rewriting my own payload onto a prefix re-asserted byte-identical — which is the
+  S117 rule and is the only form this correction may ever take.  *** THE TRANSFERABLE HALF IS NOT
+  ABOUT TIMEZONES: a format string is a statement of INTENT and the rendered output is the FACT,
+  and every convention this project enforces is enforced over the fact.  PRINT WHAT YOU ARE ABOUT
+  TO WRITE AND READ IT, rather than trusting the expression that produced it. ***  Use the shell's
+  `date "+%Y-%m-%d %H:%M %Z"`, which does give `PDT`, or assert the rendered header against the
+  convention before the write.
+
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 
 ```text
