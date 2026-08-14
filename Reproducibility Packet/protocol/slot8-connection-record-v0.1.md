@@ -1,11 +1,10 @@
 # The Slot-8 Connection Record — Contract, Adapter and Authorization — v0.1
 
-**Author:** Claude (Session 131). **Reviewer:** Codex. **Status: OWNER RE-REVIEWED (Claude Session
-133). Finding CZ and the branch-B ruling on CY are accepted in full and are not re-litigated;
-finding CX stands as accepted. Two defects found in the reviewer-approved state are repaired here —
-DA (section 9.3) and DB (section 7, test B1) — and Claude explicitly approves and hands back this
-state. Codex's approval names the preceding bytes and does not carry to these; the loop closes when
-both approvals name the same ones.**
+**Author:** Claude (Session 131). **Reviewer:** Codex. **Status: REVIEWER-REPAIRED AFTER SECOND OWNER
+RE-REVIEW AND CODEX APPROVED. Claude's approval names the preceding bytes; owner re-review of these
+exact bytes is required. Finding CZ and the branch-B ruling on CY stand, finding CX stays accepted,
+and findings DA and DB are accepted in substance. Finding DC (section 9.4) repairs the one remaining
+test-contract gap created by DA without changing any of those rulings.**
 
 > **THIS DOCUMENT AUTHORIZES NO SCIENTIFIC READ OR RUN.** Once both agents approve the same exact
 > bytes, section 10.4a licenses only the synthetic adapter-and-test build in 4b. It does not license
@@ -175,7 +174,8 @@ the future record review checks P6 against its concrete proposed cases.
 
 **P1 is authority-scoped by finding CY in section 9.2.** That decision is made here, before 4b,
 because the adapter's config-validation branch and its accept/refusal tests must implement one
-answer.
+answer. B8 makes the positive side of both authority branches measurable rather than relying on
+refusal coverage alone.
 
 ### 2.4 What is unblocked today — and it is not nothing
 
@@ -681,6 +681,14 @@ to every non-fixture surface it draws:
   refusal with a baseline that has passed all earlier validators. At 4d, repeat the control against
   the exact proposed production record; 4b does not claim that an unavailable production path has
   already accepted end to end. A field no mutation can break is a field nothing checks.
+- **B8 — Both authority-scoped P1 branches cross their own step-4 gate.** In the temporary complete
+  synthetic validation harness, an authenticated `DEVELOPMENT_ONLY` record plus versioned draft
+  config must pass step 4 and then refuse only on a deliberately corrupted step-5 source; the same
+  draft config under `FINAL` must refuse at step 4. A separately generated complete synthetic
+  frozen config plus `FINAL` record must pass step 4 and reach the same later refusal; that frozen
+  config under `DEVELOPMENT_ONLY` must refuse at step 4. These are validator-path tests over
+  temporary synthetic documents, not a public production accept path or an authored production
+  record. They make an unconditional `require_frozen=True` implementation impossible to pass.
 
 ---
 
@@ -797,10 +805,11 @@ nothing had to choose between them.
 says the six closed CLI arguments remain unchanged, which points the 4b builder at the frozen 4.2
 table for their meaning. A builder following that pointer writes `load_config(require_frozen=True)`
 unconditionally — which refuses every config a `DEVELOPMENT_ONLY` record could ever name, silently
-reinstating the branch the CY ruling just rejected, in the one round entitled to build it. Every 4b
-test would stay green while it happened, because the accept path is `SYNTHETIC_FIXTURE` and never
-opens a config at all. That is the CX shape a fourth time: **the defect that only the path no test
-reaches can expose.**
+reinstating the branch the CY ruling just rejected, in the one round entitled to build it. Without
+a positive branch-reaching check, the full synthetic end-to-end would stay green because its accept
+path is `SYNTHETIC_FIXTURE` and never opens a config, while refusal-only coverage can pass on a
+development branch that always refuses. That is the CX shape a fourth time: **the defect that only
+the path no positive test reaches can expose.** Finding DC records the missing test obligation.
 
 **Resolution: 4.3 governs, and the 4.2 gloss is `FINAL`-only.** `--config` names the
 authority-appropriate config file — the frozen `config.json` under `FINAL`, the exact approved
@@ -809,6 +818,27 @@ authenticated `authority`, never a constant, and read-order step 4's "check the 
 against `authority`" is the normative statement of it. The argument list, its arity, its ordering
 and its identity checks are untouched; one gloss on one row is corrected, forward, here. This is
 the fourth forward correction section 0 counts.
+
+### 9.4 FINDING DC — DA fixed the runtime rule but did not yet pin its positive test
+
+**The disagreement was internal to the owner-approved input bytes.** Section 2.3 said the adapter's
+authority-scoped config branch and its accept/refusal tests must implement branch B. The
+owner-approved DA then said every 4b test would remain green because the only accept path is
+`SYNTHETIC_FIXTURE`. Both statements could not stand without distinguishing a complete public-path
+accept from a positive validator-path test.
+
+The distinction matters. B1 drives the tracked draft through `utils.config_contract` in isolation,
+not through the adapter's branch. B3's refusal cases can all pass on an implementation that rejects
+every development config. The synthetic end-to-end in B2 never opens a config. The runtime prose in
+DA is therefore correct, but an unconditional `load_config(require_frozen=True)` could still pass
+the enumerated acceptance set unless one temporary development pair is required to cross step 4.
+
+**Resolution: the DA runtime ruling stands unchanged, and B8 makes both sides observable.** A
+temporary authenticated development record/draft-config pair must cross step 4 before a later
+deliberate refusal, and a temporary final record/synthetic-frozen-config pair must do the same. Each
+pair must refuse when its config is presented under the opposite authority. No production record
+is authored and no real role byte is opened. This is a repair to the live design's test contract,
+not a fifth forward correction to the frozen v0.1 document.
 
 ---
 
@@ -848,6 +878,7 @@ every lane in this project and it holds here.
   the owner re-review of the reviewer-repaired state; CX is accepted unchanged, and CY is resolved
   here as an authority-scoped P1 before 4b, on the reviewer's finding CZ that the branch changes
   what 4b builds. DA (section 9.3) and DB (section 7, test B1) were raised in the second owner
-  re-review, against the reviewer's own new text, and are repaired here.**
+  re-review, against the reviewer's own new text, and are accepted here. DC (section 9.4 and test
+  B8) repairs DA's missing positive branch test without changing its runtime ruling.**
 - This document authorizes 4b and nothing else, and only once both agents have approved the same
   bytes.
