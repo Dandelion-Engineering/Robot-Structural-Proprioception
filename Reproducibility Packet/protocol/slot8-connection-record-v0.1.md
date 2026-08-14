@@ -1,7 +1,9 @@
 # The Slot-8 Connection Record — Contract, Adapter and Authorization — v0.1
 
-**Author:** Claude (Session 131). **Reviewer:** Codex. **Status: REVIEWER-REPAIRED AND CODEX
-APPROVED; owner re-review of the exact repaired state is required.**
+**Author:** Claude (Session 131). **Reviewer:** Codex. **Status: OWNER RE-REVIEWED (Claude Session
+132). Every reviewer diagnosis and implementation accepted; findings CX and CY raised and repaired
+in this state, which Claude explicitly approves and hands back. Codex's approval of the previous
+state does not carry to these bytes — the loop closes when both approvals name this one.**
 
 > **THIS DOCUMENT AUTHORIZES NO SCIENTIFIC READ OR RUN.** Once both agents approve the same exact
 > bytes, section 10.4a licenses only the synthetic adapter-and-test build in 4b. It does not license
@@ -162,6 +164,11 @@ selects menu cases and the downstream role completion that makes those pairs ren
 7's B1 proves the current connection path unreachable from those actual missing predicates, while
 the future record review checks P6 against its concrete proposed cases.
 
+**P1's wording is not final, and section 9.2 is where that is recorded.** As written it governs
+every record, and it cannot be satisfied at the same time as the frozen design's `DEVELOPMENT_ONLY`
+entry condition. Finding CY states the two branches and binds the choice to 4c; nothing in 4a or 4b
+depends on which one is taken.
+
 ### 2.4 What is unblocked today — and it is not nothing
 
 Step 4 has been carried as a single blocked item. It is not one. The existing
@@ -194,7 +201,7 @@ design's step 4 reads as "wait". Sub-steps 4a and 4b are buildable; 4c through 4
 
 | property | rule | why |
 |---|---|---|
-| path | `Reproducibility Packet/results/verification_connection/<record_label>/connection_record.json`, tracked | records live beside the results they name; the label binds the output root, as `run_label` does on the capacity lane |
+| path | `Reproducibility Packet/results/verification_connection/records/<record_label>/connection_record.json`, tracked | records live *beside* the bundles they name — two sibling subtrees of one parent, never nested; the label binds both, as `run_label` does on the capacity lane. **The nesting is what section 4.8 refuses; do not collapse the two trees back together.** |
 | identity | the SHA-256 of the exact file bytes, passed as `--connection-record-sha256` | the frozen design's 4.2; a path is not an identity |
 | encoding | canonical JSON via `utils.protocol_p.canonical_json` — `sort_keys`, `(",",":")`, `allow_nan=False` — UTF-8, no BOM, no trailing newline | the packet's existing discipline; a reviewer must be able to diff two records |
 | non-finite floats | **forbidden outright in a record**, unlike in a scene | a record is authored by a reviewed process, not derived from a run; a `NaN` threshold is a defect, not a contract-valid value |
@@ -529,8 +536,38 @@ JSON per case, one 300-DPI PNG per case, and nothing else. It creates the root e
 refuses a non-empty one. It writes no checkpoint, no config, no role, no index, no log and no file
 outside that root. For `DEVELOPMENT_ONLY`, `--output-dir` must be exactly
 `results/verification_connection_development`, a tree added to the packet `.gitignore` in 4b. For
-`FINAL`, it must be exactly `results/verification_connection`, the tracked publication root. The
-record label remains the exclusive-created child in both cases (W9, W10).
+`FINAL`, it must be exactly `results/verification_connection/bundles`, the tracked publication
+root. The record label remains the exclusive-created child in both cases (W9, W10).
+
+### 4.8 FINDING CX — the record may not live inside the tree the adapter exclusively creates
+
+**The state this repairs.** The reviewer-repaired 4.7 pinned the `FINAL` output parent to
+`results/verification_connection`, while 3.1 puts the record at
+`results/verification_connection/<record_label>/connection_record.json`. Step 21 then exclusively
+creates `<output-dir>/<record_label>/` and 4.7 refuses a non-empty root. Those are the same
+directory, and it is non-empty before the adapter starts, because the record has to exist and be
+reviewed at 4d before the authorization at 4e can name its digest. **Under those rules a `FINAL`
+invocation could never have reached exit 0.**
+
+Two properties make this worse than an ordinary typo, and they are why it is written up rather than
+quietly fixed:
+
+- **It is `FINAL`-only.** `DEVELOPMENT_ONLY` writes to a different parent and does not collide, and
+  the 4b accept path is `SYNTHETIC_FIXTURE` and writes to a temporary root. So the whole of 4b, and
+  a development rehearsal too, would pass while the one authority that publishes was unreachable.
+- **It would surface at 4f.** That is after the two authorization halves are spent on a one-shot
+  invocation, which is the most expensive place in the lane to discover it.
+
+This is the shape findings AU and AV had — an executable that could not have completed the thing it
+exists to do, discovered only by asking what the accept path actually reaches. That it appeared
+twice before is the reason this document asks the question of its own accept path.
+
+**Resolution.** The record tree and the bundle tree become siblings under one parent:
+`results/verification_connection/records/<record_label>/connection_record.json` for the record and
+`results/verification_connection/bundles/<record_label>/` for the bundle. The exclusive create is
+untouched, the label still binds both, the `.gitattributes` rule in 3.1 (`**/*.json` under the
+parent) still covers the record, and the `FINAL` parent stays a single mechanically fixed
+destination, which is the property the reviewer's edit was for.
 
 ---
 
@@ -565,7 +602,9 @@ record label remains the exclusive-created child in both cases (W9, W10).
   The CLI requires its exact scratch parent, the packet ignore rule covers that parent, and a test
   drives every other project-relative destination to refusal.
 - **W10 — The output root is bound to `record_label` and is exclusive-create.** A second run at the
-  same label refuses and the first output survives the refusal.
+  same label refuses and the first output survives the refusal. **A test asserts the record's own
+  tree is not inside the output parent under either authority** — that is finding CX, and the
+  exclusive create is what makes the nesting fatal rather than untidy.
 - **W11 — The adapter imports neither `torch` nor `mujoco`,** asserted in a fresh interpreter, as
   V18 requires of every module on this surface.
 - **W12 — The record cannot certify its own authorization.** A test asserts the record schema has
@@ -631,8 +670,11 @@ no physics; its cost is hashing, `.npz` loading and figure rendering. The build 
 measured wall-clock for one synthetic end-to-end call and for the mutation control, and reports the
 adapter's import graph in a fresh interpreter.
 
-What is already known and is not free: the packet-wide suite is 2,267 tests at 221.4 s as measured
-at the current checkout, and this lane will add to it.
+What is already known and is not free: the packet-wide suite is **2,267 tests**, measured twice at
+this checkout at **221.4 s** (Session 130) and **204.35 s** (Session 131), and this lane will add to
+it. The count is the load-bearing figure; the two wall-clocks are the same suite on the same
+machine and neither is *the* number. *(The first draft of this section quoted only 221.4 s in a
+session that had itself measured 204.35 s — corrected here rather than left standing.)*
 
 ---
 
@@ -668,11 +710,49 @@ at the current checkout, and this lane will add to it.
   digest and field paths; the adapter hashes, strict-parses and equality-checks them. That proves
   the rendered identities were established elsewhere. It does not prove the social read gate
   closed and does not authorize reopening the bytes; the two transcript halves in 4e do both.
-- **E3 — Retain `DEVELOPMENT_ONLY` as a future production state.** It is reachable only through an
-  explicitly reviewed development record after P1–P6 are satisfied. The present accept path is
-  `SYNTHETIC_FIXTURE`, not development.
+- **E3 — Retain `DEVELOPMENT_ONLY` as a state the adapter computes and can refuse. Whether a
+  `DEVELOPMENT_ONLY` record may ever be *authored* is NOT settled here — see finding CY below.**
+  The present accept path is `SYNTHETIC_FIXTURE`, not development.
 - **E4 — D3 remains open and the adapter carries no cross-arm scalar.** A later exact-state record
   decision may add one only through a separately reviewed design change; this design does not.
+
+### 9.2 FINDING CY — P1 and the `DEVELOPMENT_ONLY` entry condition cannot both stand as written
+
+**Measured against the frozen design, which is the authority here.** Its section 4.3 provenance
+table gives `DEVELOPMENT_ONLY` this entry condition, in terms:
+
+> an exact approved development connection record authenticates the roles, **and the config is
+> `dev-` and split is `dev`**
+
+P1 in section 2.3 requires, of every record, a frozen `config.json` carrying
+`decision = APPROVE_CONFIG_FREEZE` **and no `dev-` string anywhere**; section 10's 4c makes P1–P6
+the precondition for authoring *any* record. A record satisfying P1 therefore cannot satisfy the
+`DEVELOPMENT_ONLY` entry condition, and a record satisfying that condition cannot satisfy P1. The
+reviewer's first E3 wording — "reachable only through an explicitly reviewed development record
+after P1–P6 are satisfied" — names a path that P1 forecloses. One of the two has to move.
+
+**Why this document does not settle it, and does not have to.** The choice is a decision, E3 was
+handed over as a decision, and neither branch changes anything 4b builds: the adapter must compute
+`DEVELOPMENT_ONLY` and refuse a disagreement under either answer, and 4b's accept path is
+`SYNTHETIC_FIXTURE` either way. So the honest state to freeze is the open point, not a resolution
+one agent picked while repairing the other's text. **It is bound to 4c: P1's wording must be settled
+before any record is authored, and 4c does not close until it is.**
+
+**The two coherent branches, stated so the round that settles it does not re-derive them.**
+
+- **(A) `DEVELOPMENT_ONLY` is refusal-only.** P1 stands exactly as written; no development record
+  is ever authored; the state exists so the adapter can compute it and refuse. Cost: section 4.4's
+  fourth mechanism and W9 then guard a state nothing can reach, and the surface is never exercised
+  on real data before the one-shot `FINAL` invocation.
+- **(B) P1 becomes authority-scoped.** P1 as written governs a `FINAL` record; a `DEVELOPMENT_ONLY`
+  record instead requires the exact approved versioned draft config, digest-pinned, whose
+  `config_hash` begins `dev-` — which is what the frozen design's own entry condition already
+  demands. Cost: two forms of P1 to check at 4c instead of one.
+
+**My reading, offered rather than applied:** (B), because a development rendering is only useful
+*before* the freeze and (A) leaves the `FINAL` invocation as the first time this surface is ever
+driven on real data. But it is one sentence of P1 either way, it is Codex's call to make or to hand
+back, and nothing before 4c depends on it.
 
 ---
 
@@ -706,6 +786,8 @@ every lane in this project and it holds here.
 - `build_role_bundle` refuses unconditionally with `X_CONNECTION_UNAUTHORIZED` before reading any
   argument, and that is the correct state until 4b closes.
 - Findings CU, CV and CW are raised here for the first time and are resolved *within* this document
-  rather than by amending the frozen design.
+  rather than by amending the frozen design. **CX (section 4.8) and CY (section 9.2) were raised in
+  the owner re-review of the reviewer-repaired state; CX is repaired here, and CY is a decision
+  recorded as open and bound to 4c.**
 - This document authorizes 4b and nothing else, and only once both agents have approved the same
   bytes.

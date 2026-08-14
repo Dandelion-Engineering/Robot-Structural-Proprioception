@@ -3236,6 +3236,51 @@ correction applied.)*
   `date "+%Y-%m-%d %H:%M %Z"`, which does give `PDT`, or assert the rendered header against the
   convention before the write.
 
+213. **[S132] A DEFECT THAT ONLY THE UNREACHABLE PATH CAN EXPOSE IS THE EXPENSIVE KIND — ASK WHAT
+  THE ACCEPT PATH ACTUALLY REACHES.**  Finding CX: the Step-4 design pinned the `FINAL` output
+  parent to the same tree the connection record itself lives in, while the adapter must create its
+  output root EXCLUSIVELY and refuse a non-empty one.  Those are one directory, and it is non-empty
+  before the adapter starts, because the record must exist and be reviewed before the authorization
+  that names its digest.  *** A `FINAL` INVOCATION COULD NEVER HAVE REACHED EXIT 0 — and every test
+  the next build round writes would have PASSED, because that round's accept path is synthetic and
+  writes to a temporary root.  It would have surfaced at the last sub-step, after a one-shot
+  authorization had been spent. ***  THE GENERAL FORM, and this project has now paid for it THREE
+  TIMES — AU (the sweep executable could not have completed a sweep under any plan), AV (C7 could
+  not have completed the read it exists to perform), CX — is that a guard, a destination rule or a
+  precondition can be individually correct and jointly impossible, and the tests that would catch it
+  are exactly the ones the current round cannot run.  *** THE QUESTION THAT FOUND ALL THREE IS THE
+  SAME ONE: enumerate what the REAL accept path touches, and check that nothing on it is already
+  occupied, already spent, or already refused.  Ask it of every design before approving it, not of
+  every executable after building it. ***
+
+214. **[S132] A RULING CAN BE INCONSISTENT WITH A PRECONDITION WITHOUT EITHER BEING WRONG ALONE.**
+  Finding CY: Codex's E3 ruling said a `DEVELOPMENT_ONLY` record is reachable "after P1–P6 are
+  satisfied", while P1 — which I wrote a session earlier — requires a frozen config with no `dev-`
+  string, and the frozen design's own entry condition for that authority requires a `dev-` config.
+  Neither statement is wrong in isolation; they were written in different sessions for different
+  purposes and they collide only in the merged document.  *** THIS IS AN ARGUMENT FOR THE OWNER
+  RE-REVIEW STEP EXISTING INDEPENDENT OF WHETHER THE REVIEWER'S EDITS WERE GOOD — here all eight of
+  them were, and the collision still appeared.  A collision of this shape is invisible to whoever
+  wrote either half; only a cold read of the merged artifact finds it. ***  AND THE SECOND HALF:
+  when what you find is a DECISION rather than a bug, and the decision was explicitly handed to the
+  other agent, the repair is to REMOVE THE FALSE SENTENCE, write out both branches so the round
+  that settles it does not re-derive them, bind the choice to the sub-step where it first matters,
+  and state your own preference AS a preference.  Choosing its content while "repairing" it is the
+  mirror image of the failure the re-review exists to prevent.
+
+215. **[S132] REPRODUCING A NUMBER IS NOT THE SAME AS CONFIRMING A FINDING — AND SAYING WHY THEY
+  DIFFER IS WORTH MORE THAN EITHER.**  Codex reported the contract fixture's geometry incoherence
+  as a 2.81–6.20 mm endpoint miss.  My own probe gave 2.549–4.513 mm.  The gap is not a
+  disagreement: mine is a rigid reconstruction contributing ZERO deformation, its contributes a
+  WRONG one, so its figure is necessarily larger.  *** WHAT CARRIED THE FINDING WAS THE STRUCTURAL
+  FACT, READ AT SOURCE, NOT EITHER NUMBER: `deform_coords` is drawn from an independent random
+  phase set and `true_task_output` is computed from `curvature_true` alone, so the deformation
+  channel enters the tip NOWHERE. ***  Quietly adopting the reviewer's number would have published
+  a figure I had not produced; treating the mismatch as a defect would have opened a round over
+  nothing.  THE RULE: when you cannot reproduce a collaborator's measurement, first ask whether you
+  measured the same object — and if you did not, report both with the reason, and name the
+  structural fact that makes the finding hold regardless of which number is quoted.
+
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 
 ```text
