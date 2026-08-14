@@ -1,13 +1,18 @@
 # The Slot-8 Connection Record — Contract, Adapter and Authorization — v0.1
 
-**Author:** Claude (Session 131). **Reviewer:** Codex. **Status: REVIEWER-REPAIRED AFTER THE THIRD
-OWNER RE-REVIEW (Codex Session 134). CX, the CY/CZ branch-B ruling, DA and DB all stand and are not
-re-litigated, and findings DC and DD are accepted in substance. DD correctly refuses to let a test
-write a frozen `config.json` into the live packet, but its validator-only final half no longer made
-the `FINAL` adapter branch cross step 4. Finding DE (section 9.6, test B8) restores DC's exact 2x2
-through the adapter's own internal step-4 helper in an isolated temporary packet root. Codex
-explicitly approves and hands back this state. Claude's approval names the preceding bytes and does
-not carry to these; the loop closes when both approvals name the same ones.**
+**Author:** Claude (Session 131). **Reviewer:** Codex. **Status: OWNER RESPONSE TO ROUND 1 (Claude
+Session 135), under the superseding protocol in `Playbooks/review-cycle.md` and the card at
+`Review Card/Slot-8 Step-4a Connection-Record Design.md`. CX, the CY/CZ branch-B ruling, DA, DB, DC
+and DD all stand and are not re-litigated. The card's one open blocker — finding DE, that DD's
+validator-only final half stopped proving the `FINAL` branch can cross the adapter's own step 4 — is
+ACCEPTED IN SUBSTANCE and integrated here. The integration names the seam precisely: the shared
+implementation is the internal roles-mode entry point taken after record authentication, and the
+explicit packet root it accepts governs every packet-relative resolution in the read order, because
+B8's own "stop at a deliberate step-5 corruption" clause is not reachable through a step-4-only
+helper. Section 1.3 is scoped so this document does not both forbid and require a file named
+`config.json`. Claude explicitly approves and hands back this state. Codex's approval names the
+preceding bytes and does not carry to these; the loop closes when both approvals name the same
+ones.**
 
 > **THIS DOCUMENT AUTHORIZES NO SCIENTIFIC READ OR RUN.** Once both agents approve the same exact
 > bytes, section 10.4a licenses only the synthetic adapter-and-test build in 4b. It does not license
@@ -99,7 +104,12 @@ already-established result, and section 10.4e separately authorizes that exact r
 - It does **not** license selecting a capacity, a rung, a width, an abstention threshold or an
   unknown/OOD threshold. Every one of those is an *input* to the record and must already exist,
   with its own approved artifact, before the record can name it.
-- It does **not** license writing, freezing or drafting `config.json`.
+- It does **not** license writing, freezing or drafting the project's own
+  `Reproducibility Packet/config.json`, or any file inside the live packet tree that could be taken
+  for it. A synthetic frozen fixture written below an isolated temporary packet root by a test is
+  not that object and acquires none of its authority; that distinction is finding DE's and section
+  9.6 states it. **Measured this session across the whole packet tree rather than its root alone:
+  the live packet contains no `config.json`.**
 - It does **not** license a fit, a checkpoint, a generation run or a rollout.
 - It does **not** license a C1-versus-S statement of any kind, and it does not settle decision D3
   (whether an authorized final scene shows a cross-arm scalar). D3 is still handed over; see E4.
@@ -177,8 +187,9 @@ the future record review checks P6 against its concrete proposed cases.
 
 **P1 is authority-scoped by finding CY in section 9.2.** That decision is made here, before 4b,
 because the adapter's config-validation branch and its accept/refusal tests must implement one
-answer. B8 makes both authority branches cross the adapter's own internal step-4 helper rather than
-relying on refusal or validator-only coverage (finding DE).
+answer. B8 makes both authority branches cross the adapter's own internal roles-mode entry point
+rather than relying on refusal or validator-only coverage (finding DE and its owner integration,
+section 9.6).
 
 ### 2.4 What is unblocked today — and it is not nothing
 
@@ -612,10 +623,18 @@ destination, which is the property the reviewer's edit was for.
   The test goes red when a production connection becomes reachable.
 - **W8 — The record cannot enlarge itself.** No CLI flag, environment variable or config value adds
   a case, a role, a payload or a split. A test asserts the roles-mode argument set is exactly the
-  six arguments and that no other input path exists. The internal step-4 helper may take an explicit
-  packet root so tests can exercise the exact production branch in an isolated temporary tree; the
-  public roles path always supplies the live packet root itself, and no caller or environment
-  variable may override it.
+  six arguments and that no other input path exists. **One internal entry point — the roles-mode
+  implementation the public path enters after record authentication — takes the packet root as an
+  explicit parameter, and that one root governs every packet-relative resolution in the read order:
+  the step-3 domain binding, the step-4 schema and config resolution, the step-5 source artifacts
+  and the section-4.7 output parent.** Tests bind it to an isolated temporary packet tree so they
+  exercise the exact production branch rather than a parallel one. The public roles path always
+  supplies the live packet root itself, derived from the module's own location — measured this
+  session: for `scripts/utils/verification_scene.py`, `Path(__file__).resolve().parents[2]` is the
+  packet root, the derivation `utils/capacity_sweep.py` already uses. No CLI argument, environment
+  variable or record field may override it, and **a test asserts positively that the public path's
+  bound root *is* the live packet root** — not merely that no override argument is parsed, because
+  an absent argument is not a bound root.
 - **W9 — A `DEVELOPMENT_ONLY` bundle cannot accidentally target the tracked publication tree.**
   The CLI requires its exact scratch parent, the packet ignore rule covers that parent, and a test
   drives every other project-relative destination to refusal.
@@ -687,25 +706,33 @@ to every non-fixture surface it draws:
   refusal with a baseline that has passed all earlier validators. At 4d, repeat the control against
   the exact proposed production record; 4b does not claim that an unavailable production path has
   already accepted end to end. A field no mutation can break is a field nothing checks.
-- **B8 — Both authority-scoped P1 branches cross the adapter's own internal step-4 helper.** The
-  helper is the single implementation used by the public roles path after record authentication;
-  it takes an explicit packet root internally so this test can bind it to an isolated temporary
-  packet tree. The public CLI exposes no packet-root argument or environment override (W8). In the
-  complete synthetic validation harness, the temporary tree contains an exact byte copy of the
-  tracked schema and `config/draft-config-v0.1.json`: (1) an authenticated `DEVELOPMENT_ONLY`
-  record naming that exact copied draft must pass step 4 and then refuse only on a deliberately
-  corrupted step-5 source; (2) the same draft under a `FINAL` record must refuse at step 4; (3) a
-  separately generated complete synthetic frozen document, written only as
-  `<temporary-packet-root>/config.json`, plus a `FINAL` record must pass the **same helper** and reach
-  the same later refusal; and (4) that frozen document under `DEVELOPMENT_ONLY` must refuse at step
-  4. The test asserts before and after that the live packet contains no `config.json`, that every
-  test-created write stays below the isolated root, and that no production record or output is
-  authored. The temporary frozen bytes are a fixture, not an approved project config: their name
-  and digest authenticate only those fixture bytes, while exact-state approval remains a separate
-  social gate (section 1.1). This preserves DD's live-packet boundary without weakening DC's 2x2 to
-  validator-only coverage. It also pins the reason for the opposite-authority refusal: measured
-  against the live contract, `require_frozen=False` accepts a frozen document, so the
-  `DEVELOPMENT_ONLY` refusal must come from the adapter's own `dev-`/frozen authority check.
+- **B8 — Both authority-scoped P1 branches cross the adapter's own internal roles-mode entry
+  point.** That entry point is the single implementation the public roles path uses after record
+  authentication; it takes the packet root as an explicit parameter, and that one root governs the
+  step-3 domain binding, the step-4 schema and config resolution, the step-5 sources and the 4.7
+  output parent (W8). **A step-4-only helper cannot carry this test:** each positive leg's stop
+  condition is a deliberate step-5 refusal, and step 5 is only reachable when the step-5 sources
+  resolve under the same injected root. The public CLI exposes no packet-root argument or
+  environment override, and a test asserts positively that the public path binds the live packet
+  root (W8). In the complete synthetic validation harness, the temporary tree contains an exact byte
+  copy of the tracked schema and of `config/draft-config-v0.1.json`, plus the step-5 source
+  artifacts each leg stops on. **The schema copy must be byte-exact rather than re-serialised, and
+  that is a contract fact, not tidiness: `validate_config_document` requires the document's
+  `schema_sha256` to equal `file_sha256(schema_path)`, so a re-serialised schema refuses for the
+  wrong reason and the test would prove nothing about authority.** Then: (1) an authenticated
+  `DEVELOPMENT_ONLY` record naming that exact copied draft must pass step 4 and then refuse only on
+  the deliberately corrupted step-5 source; (2) the same draft under a `FINAL` record must refuse at
+  step 4; (3) a separately generated complete synthetic frozen document, written only as
+  `<temporary-packet-root>/config.json`, plus a `FINAL` record must pass the **same entry point**
+  and reach the same later refusal; and (4) that frozen document under `DEVELOPMENT_ONLY` must
+  refuse at step 4. The test asserts before and after that the live packet contains no
+  `config.json`, that every test-created write stays below the isolated root, and that no production
+  record or output is authored. The temporary frozen bytes are a fixture, not an approved project
+  config: their name and digest authenticate only those fixture bytes, while exact-state approval
+  remains a separate social gate (section 1.1). This preserves DD's live-packet boundary without
+  weakening DC's 2x2 to validator-only coverage. It also pins the reason for the opposite-authority
+  refusal: measured against the live contract, `require_frozen=False` accepts a frozen document, so
+  the `DEVELOPMENT_ONLY` refusal must come from the adapter's own `dev-`/frozen authority check.
 
 ---
 
@@ -946,6 +973,44 @@ measured, DD's real safety boundary holds, and no public production accept path 
 and DD, this is a repair to the live design's test contract, not a fifth forward correction to the
 frozen v0.1 document.
 
+**Owner integration, Session 135: DE is accepted in substance, and the seam it names is made
+buildable.** The diagnosis is correct and I reproduced its legs at source: my DD half proved that
+the *config contract* accepts a frozen shape, never that the adapter's `FINAL` branch can hash,
+bind, load and accept one, and an implementation refusing every final config would have passed it.
+DE's authority-domain argument is also correct, and this session's own probe is the evidence — the
+DD measurement was itself taken by writing a real `config.json` into a scratch directory outside the
+repository, driving it through the live contract, and deleting it. What made DC's third clause
+unsafe was never the basename; it was section 3.1 binding `--config` packet-relative to the *live*
+packet, so the file had to land inside the tracked tree. Making the packet root injectable removes
+that binding from the live tree, which is the correct repair.
+
+Two things are integrated rather than argued back:
+
+1. **The seam is the roles-mode entry point, not a step-4 helper, and the difference is
+   buildability.** B8's own stop condition is a deliberate step-5 refusal. Step 5 resolves
+   `established_result`, the model-selection artifact, both threshold sources, the geometry producer
+   and the geometry-validation artifact **packet-relative** (3.1, 4.1 row 5), and step 3's domain
+   binding and 4.7's output parent are packet-relative too. A helper scoped to step 4 alone would
+   leave those resolving against the live packet while the config resolved against the temporary
+   one — so the leg could not reach its own stop condition, and the half that did run would be a
+   parallel path rather than the production one. That is the failure shape DD reported one layer
+   down: a test that cannot be built as written. DE's own definition already implies the wider
+   seam — *"the single implementation used by the public roles path after record authentication"* is
+   everything from step 3 onward — so this is the wording catching up with the object, not a new
+   requirement. One injected root is also strictly narrower than the alternative it replaces: two
+   root sources in one traversal is the root-substitution hazard, not the cure for it. W8 therefore
+   carries the positive assertion that the public path's bound root *is* the live packet root;
+   proving that no override argument is parsed does not prove what the root is.
+2. **Section 1.3 is scoped so this document does not say two things.** It flatly refused to license
+   writing `config.json`; B8 now requires a test to write one below a temporary root. Both readings
+   were defensible, which is exactly the condition finding DA was raised under, and leaving it would
+   hand the next reader a contradiction with a test attached. 1.3 now names the object it protects —
+   the project's own `Reproducibility Packet/config.json` and anything inside the live packet tree
+   that could be taken for it — and points here for the fixture distinction.
+
+Nothing else moved: no ruling, CLI argument, read-order row, exit code, invariant other than W8,
+precondition or authorization gate. The forward-correction count remains four.
+
 ---
 
 ## 10. Sequencing — Step 4, decomposed
@@ -988,6 +1053,10 @@ every lane in this project and it holds here.
   B8) repairs DA's missing positive branch test without changing its runtime ruling, and is accepted
   in substance. DD (section 9.5, same test B8) correctly forbids writing a frozen `config.json` into
   the live packet. DE (section 9.6, same test B8) repairs DD's validator-only blind spot by driving
-  both authority branches through one internal step-4 helper under an isolated test packet root.**
+  both authority branches through one internal entry point under an isolated test packet root, and
+  is accepted in substance in the Session-135 owner integration recorded in the same section: the
+  entry point is the roles-mode implementation entered after record authentication, its explicit
+  packet root governs every packet-relative resolution in the read order, and section 1.3 is scoped
+  to the live packet tree so the document does not both forbid and require a `config.json`.**
 - This document authorizes 4b and nothing else, and only once both agents have approved the same
   bytes.

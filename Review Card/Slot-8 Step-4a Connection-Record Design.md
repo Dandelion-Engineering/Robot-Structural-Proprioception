@@ -1,6 +1,7 @@
 # Review Card — Slot-8 Step-4a Connection-Record Design
 
-**Status:** Active — owner response to Round 1 pending
+**Status:** Active — owner response to Round 1 delivered (Claude Session 135); Round 2 is Codex's
+and is delta-only
 **Transition basis:** Director ruling, 2026-08-14
 **Owner:** Claude
 **Reviewer:** Codex
@@ -12,13 +13,24 @@ This card preserves the review exactly where it stood when the superseding metho
 Phase-2 exchanges are historical and do not consume the new three-round limit.
 
 - Round 1 owner candidate: `Reproducibility Packet/protocol/slot8-connection-record-v0.1.md`, Git
-  blob `968fa8959fc3b106895e794589c41954d0c2f901`.
+  blob `968fa895fb81a04bfc04f4b743d8d03f3a1af612`, raw SHA-256
+  `3fe6255c26a02c8d42e822b881b4d49ab4c5cde84acc2f1d7faf2d9a4e6cfbd4`, 73,640 bytes / 951 LF / 0 CR.
+  **Mechanical correction, Claude Session 135:** this line first named blob
+  `968fa8959fc3b106895e794589c41954d0c2f901`, which is not an object in this repository —
+  `git cat-file -t` refuses it. The correct id is above and is the state Codex's own Round-1 chat
+  message and Session-134 report body both authenticate by raw digest. Nothing else about the
+  baseline changes.
 - Round 1 reviewer response: finding 1 / formerly DE, with proposed integrated artifact Git blob
   `425ce0118bddc44daccfa69b19362aec6ea70d00`, raw SHA-256
   `a270d95d891037f70e5d08fafd15dadfcd1f69c40d95ca978cd9927bdc057400`, 77,105 bytes / 993 LF /
-  0 CR.
-- New-method position: Round 1 full-artifact review is complete. Claude's next response is the
-  owner half of round-trip 1. Codex's next review is Round 2 and is delta-only.
+  0 CR. Both digests reproduced independently in Claude Session 135.
+- Round-trip 1, owner half (Claude Session 135): finding 1 accepted in substance and integrated.
+  Owner candidate Git blob `032db1666efbe00adec5696de70424d531ba33a2`, raw SHA-256
+  `f761a673ff8fcca6c58fe530a3faaed57630315a87a5e241d8ca9675a13c4ffc`, 83,181 bytes / 1,062 LF /
+  0 CR, LF-pinned (measured with `git check-attr`). Owner audit `DESIGN_REVIEW_OK: 133 checks,
+  0 failed`; focused config-contract suite 18/18.
+- New-method position: Round 1 full-artifact review is complete and its owner half is delivered.
+  Codex's next review is Round 2 and is delta-only.
 - Settled findings from the pre-method review remain settled and are not reopened.
 
 ## Purpose
@@ -46,6 +58,16 @@ work.
    final configuration. The design must require a positive final-config case through the same
    internal Step-4 helper used by the public roles path, under an isolated temporary packet root,
    while proving that the public path remains bound to the live packet and exposes no override.
+
+   **Disposition (Claude Session 135, owner half of round-trip 1): accepted in substance and
+   integrated.** Both authority branches now cross one internal roles-mode entry point entered after
+   record authentication; the explicit packet root that entry point accepts governs every
+   packet-relative resolution in the read order (step-3 domain binding, step-4 schema/config
+   resolution, step-5 sources, section-4.7 output parent), because B8's own stop condition is a
+   deliberate step-5 refusal and a step-4-only helper cannot reach it. W8 additionally requires a
+   *positive* assertion that the public path's bound root is the live packet root. Section 1.3 is
+   scoped to the live packet tree so the document does not both forbid and require a file named
+   `config.json`. See section 9.6, "Owner integration, Session 135".
 
 No other Round 1 findings are open. Any newly raised pre-existing blocker is governed by the
 LATE-BLOCKER rule.

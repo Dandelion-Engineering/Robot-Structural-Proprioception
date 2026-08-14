@@ -1,6 +1,6 @@
 # Summary of Only Necessary Context - Claude
 
-*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 134, 2026-08-14.*
+*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 135, 2026-08-14.*
 
 **S112 SPLIT THIS FILE, AND THAT IS THE FIRST THING TO KNOW ABOUT IT.** It was ~3,430 lines and ~400 KB, and reading it was the single largest cost of starting a session — in tension with its own stated purpose. **Codex approved the split in its S111** with one binding condition: *the current gate map, the current exact-state handoff, and the next-read routing stay here.* So this file is now **current state + gates + routing**, and every permanent instrument moved **verbatim, not summarized** into:
 
@@ -9,47 +9,82 @@
 
 **DO NOT UNDO THE SPLIT BY DRIFTING CONTENT BACK.** If a permanent instrument improves, the improvement goes into **the block that owns it in the reference file** — that is the S105 correction, and it is the reason the append writer's last five rebuilds were faithful. Only *current state* belongs here.
 
-## S135 FIRST - THE STEP-4 DESIGN IS BACK ON CODEX AT MY THRICE-REPAIRED BYTES, AND IT IS THE ONLY OPEN LOOP.
+## S136 FIRST - THE REVIEW METHOD CHANGED, AND THE STEP-4 DESIGN IS ON CODEX AT ROUND 2, DELTA-ONLY.
 
 ```text
-*** WHAT S134 DID: THE THIRD OWNER RE-REVIEW.  Codex reviewed my S133 state in its S133,
-    ACCEPTED DA AND DB IN SUBSTANCE, raised ONE finding of its own (DC - my DA sentence "every 4b
-    test would stay green" was an OVERCLAIM, and the enumerated acceptance set could still be
-    satisfied by an unconditional `require_frozen=True`), REPAIRED IT by adding test B8 and handed
-    back its own approved state `b968886f`.  I ACCEPTED DC IN SUBSTANCE AND KEPT ITS 2x2 - after
-    reproducing each leg of its argument at source - AND THEN FOUND THAT B8 COULD NOT BE BUILT AT
-    ALL.  That is finding DD, REPAIRED BY ME.  I approved and handed back at `968fa895`. ***
+*** THE FIRST THING TO KNOW, AND IT IS NEW: RANDY REPLACED THE OPEN-ENDED REVIEW LOOP.  The
+    SUPERSEDING PROTOCOL is appended to `Playbooks/review-cycle.md` and OVERRIDES THE REST OF THAT
+    PLAYBOOK.  READ IT BEFORE ANY REVIEW WORK.  Codex implemented it in its S134; the playbook names
+    MY S135 as my implementation session, and I ran the first owner half under it.
+      - THE OWNER WRITES A REVIEW CARD before review begins, in the root `Review Card/` folder,
+        naming the exact candidate state, scope, purpose, acceptance tests, blocking-severity
+        definition and explicit exclusions.
+      - ROUND 1 IS THE ONLY FULL-ARTIFACT REVIEW and must record EVERY reasonably discoverable
+        finding in ONE numbered ledger.  ROUND 2 AND LATER ARE DELTA-ONLY.
+      - A new pre-existing blocker after Round 1 is a LATE-BLOCKER and must say why it was missed.
+      - AT MOST THREE OWNER-REVIEWER ROUND-TRIPS.  THE LIMIT NEVER FORCES APPROVAL; the outcome must
+        be Approved / Approved with Follow-ups / Revisions Required / Split-Redesign / Escalated.
+      - Once both agents approve the scoped candidate THE REVIEW CLOSES.  Later implementation,
+        amendments, data gates or versions get NEW CARDS AND NEW CHATS.
+      - Reviewers may apply MECHANICAL corrections directly; substantive ones are proposed.
+      - TRANSITION RULING (Randy, after Codex first got it wrong): a review already in progress
+        STARTS THE NEW METHOD AT ITS THEN-CURRENT STATE.  The pre-method rounds do NOT consume the
+        limit and do NOT cause retroactive escalation.  Codex's S134 full review IS Round 1. ***
+
+*** ALSO NEW: THE `Phase 2 Integration and Config Freeze` CHAT IS CONCLUDED at Randy's instruction -
+    "all of Phase 2" is not a bounded subject.  IT RECEIVES NO FURTHER WORK.  Slot-8 Step-4a review
+    now lives ONLY in `chats/Claude-Codex/Slot-8 Step-4a Connection-Record Design/...Active.md`, and
+    the method itself is discussed in `chats/Claude-Codex-Human/Review Boundary and Convergence/`. ***
+
+*** WHAT S135 DID: THE OWNER HALF OF ROUND-TRIP 1.  Codex's Round-1 ledger had ONE open blocker,
+    finding DE - my S134 DD repair moved B8's FINAL half onto the VALIDATOR path, so an
+    implementation that REFUSED EVERY FINAL CONFIG could have passed the whole enumerated set.  IT
+    IS RIGHT, and it is DC's blind spot one authority over.  I ACCEPTED IT AND INTEGRATED IT RATHER
+    THAN RAISING A NEW FINDING - see lesson 221.  I approved and handed back at `032db166`. ***
 
 *** THE PROJECT STATE IN ONE LINE: EVERY SCIENTIFIC LANE IS STILL SPENT OR SHUT, SLOT-8 STEPS 1,
-    2 AND 3 ARE ALL CLOSED AT BOTH APPROVALS, AND THE ONLY OPEN LOOP IS THE STEP-4 DESIGN I OWN
-    AND CODEX IS RE-REVIEWING. ***
+    2 AND 3 ARE ALL CLOSED AT BOTH APPROVALS, AND THE ONLY OPEN LOOP IS THE STEP-4a DESIGN I OWN,
+    AT ROUND 2 ON CODEX, DELTA-ONLY. ***
 
-THE ONE OPEN LOOP - ONE FILE, APPROVED BY ME IN MY S134 TURN.  *** READ THE CHAT TAIL BEFORE
-ANYTHING ELSE. ***
-  Reproducibility Packet/protocol/slot8-connection-record-v0.1.md
-    blob   968fa895fb81a04bfc04f4b743d8d03f3a1af612
-    raw    3fe6255c26a02c8d42e822b881b4d49ab4c5cde84acc2f1d7faf2d9a4e6cfbd4
-    73,640 B / 951 LF / 0 CR / no BOM / final newline
+THE ONE OPEN LOOP - ONE FILE, APPROVED BY ME IN MY S135 TURN.  *** READ THE REVIEW CARD AND THEN THE
+CHAT TAIL BEFORE ANYTHING ELSE. ***
+  Review Card/Slot-8 Step-4a Connection-Record Design.md          <- THE GOVERNING BOUNDARY
+  Reproducibility Packet/protocol/slot8-connection-record-v0.1.md <- THE ARTIFACT
+    blob   032db1666efbe00adec5696de70424d531ba33a2
+    raw    f761a673ff8fcca6c58fe530a3faaed57630315a87a5e241d8ca9675a13c4ffc
+    83,181 B / 1,062 LF / 0 CR / no BOM / final newline
     LF-pinned by the packet `.gitattributes` `protocol/*.md` rule - MEASURED with `git check-attr`
-    MY OWN AUDIT ON THESE BYTES: DESIGN_REVIEW_OK, 53 checks, 0 failed.
+    MY OWN AUDIT ON THESE BYTES: DESIGN_REVIEW_OK, 133 checks, 0 failed.  *** THAT AUDIT IS BUILT
+    AROUND WHAT DID *NOT* CHANGE - section-by-section BYTE EQUALITY against Codex's own state for
+    every invariant but W8, every acceptance test but B8, and all of 3, 4, 6, 8, 9.1-9.5 and 10.
+    THAT IS WHAT MAKES "DELTA-ONLY" A MEASURED CLAIM INSTEAD OF A COURTESY.  KEEP DOING IT. ***
   *** SUPERSEDED, NEVER REVIEW OR BUILD FROM: `d9ad2169` (my S131 handoff), `8d06792c` (Codex's
       S131 reviewer state), `12b6240b` (my S132 state), `fab21261` (Codex's S132 reviewer state),
-      `806d6fb9` (my S133 state) and `b968886f` (Codex's S133 reviewer state).  AN APPROVED VERSION
-      IS NEVER EDITED IN PLACE. ***
-  *** NOTHING ELSE IN THE REPOSITORY CHANGED IN S134.  No module, no test, no result, no runbook,
-      no README, no `.gitattributes`, no `.gitignore`.  The four Step-2 blobs and the ten Step-3
-      fixture blobs are untouched. ***
-  IF CODEX APPROVES `968fa895`, SUB-STEP 4a CLOSES AND 4b IS AUTHORIZED - BUILDING THE ADAPTER AND
+      `806d6fb9` (my S133 state), `b968886f` (Codex's S133 reviewer state), `968fa895fb81` (my S134
+      state) and `425ce011` (Codex's S134 reviewer state).  AN APPROVED VERSION IS NEVER EDITED IN
+      PLACE. ***
+  *** THE ONLY OTHER TRACKED FILE I CHANGED IN S135 IS THE REVIEW CARD.  No module, no test, no
+      result, no runbook, no public README, no `.gitattributes`, no `.gitignore`.  The four Step-2
+      blobs and the ten Step-3 fixture blobs are untouched. ***
+  IF CODEX APPROVES `032db166`, SUB-STEP 4a CLOSES AND 4b IS AUTHORIZED - BUILDING THE ADAPTER AND
   ITS TESTS AGAINST SYNTHETIC FIXTURES, AND NOTHING ELSE.  IF CODEX EDITS OR BLOCKS, THE OWNER
-  RE-REVIEW IS MINE AND COMES FIRST.
+  RE-REVIEW IS MINE AND COMES FIRST.  *** AND UNDER THE NEW METHOD, ROUND 2 IS DELTA-ONLY: IT
+  REVIEWS MY RESPONSE TO FINDING 1, THE CARD'S ACCEPTANCE TESTS AND ANY REGRESSION I INTRODUCED -
+  NOT THE WHOLE DOCUMENT.  A ROUND-TRIP 3 EXISTS BUT IT IS THE LAST. ***
 
-*** I MADE ONE PROCESS OFFER IN MY S134 TURN AND CODEX HAS NOT ANSWERED IT.  DO NOT TREAT IT AS
-    AGREED, AND DO NOT RE-RAISE IT - I SAID I WOULD NOT.  The offer: this is round SEVEN on 4a and
-    the last three rounds each found a real defect IN THE PREVIOUS ROUND'S OWN NEW TEXT (DA in
-    Codex's CZ repair, DC in my DA repair, DD in Codex's DC repair).  The chain has descended from
-    the DESIGN layer to the TEST-CONTRACT layer, and test-contract questions are the ones 4b settles
-    by WRITING THE TEST.  So: IF CODEX'S NEXT READ FINDS NOTHING ABOVE THE TEST-CONTRACT LAYER, I
-    TAKE ITS APPROVAL AS CLOSING 4a EVEN IF IT WOULD HAVE WORDED B8 DIFFERENTLY.  Its call. ***
+*** THE S134 PROCESS OFFER IS DEAD AND DOES NOT NEED RE-RAISING.  The method supersedes it: the
+    round limit and the five terminal outcomes now answer the question it was asking. ***
+
+*** THE DEFECT I FOUND IN THE GOVERNING CARD, AND IT IS THE ONE TO REMEMBER: the card named my S134
+    baseline as blob `968fa8959fc3b106895e794589c41954d0c2f901`.  THAT OBJECT DOES NOT EXIST.  The
+    real one is `968fa895fb81a04bfc04f4b743d8d03f3a1af612` - THE FIRST EIGHT CHARACTERS ARE
+    IDENTICAL, which is exactly the width this file, the chats and both READMEs quote.  Only
+    `git cat-file -t` catches it.  I CORRECTED THE CARD, added the raw digest and byte figures
+    beside the id, and disclosed it in both chats.  CODEX'S S134 REPORT CARRIES THE SAME WRONG ID
+    AND IS NOT EDITED - the correction propagates FORWARD.  *** STANDING RULE I PROPOSED IN THE
+    GOVERNANCE CHAT AND AM FOLLOWING REGARDLESS: NAME EVERY GOVERNING STATE THREE WAYS - BLOB ID,
+    RAW SHA-256, SIZE/LF - AND RESOLVE EVERY ID AGAINST THE OBJECT STORE BEFORE IT GOVERNS.
+    Lesson 220. ***
 
 *** THE SINGLE MOST IMPORTANT CORRECTION TO CARRY: `ADAPTER_DISTAL_AGREEMENT_TOL_M` IS GONE AND
     MUST NOT BE BUILT.  My S131 summary told a later session to "MEASURE IT IN THE 4b BUILD ROUND
@@ -162,6 +197,42 @@ LOOP AND THEY ARE BOTH ABOUT TEST B8.  READ SECTIONS 9.4 AND 9.5 OF THE DESIGN. 
       B8's opposite-authority refusals are owed to the ADAPTER'S OWN `dev-`/frozen rule at step 4 and
       NEVER to `require_frozen`.  A builder leaning on the flag writes a test that passes for the
       wrong reason. ***
+CODEX'S S134 FINDING DE AND MY S135 OWNER INTEGRATION OF IT.  *** THIS IS THE CURRENT EDGE AND THE
+CARD'S ONLY LEDGER ITEM.  READ SECTION 9.6 OF THE DESIGN, INCLUDING ITS "Owner integration, Session
+135" PARAGRAPH. ***
+  DE  MY DD RESOLUTION LOST DC'S POSITIVE GUARANTEE, AND CODEX IS RIGHT.  Moving B8's FINAL half onto
+      `validate_config_document` proved that THE CONFIG CONTRACT ACCEPTS A FROZEN SHAPE.  It never
+      proved THE ADAPTER'S `FINAL` BRANCH CAN HASH, BIND, LOAD AND ACCEPT ONE - so an implementation
+      refusing every final config passes the whole enumerated set.  DC's blind spot, one authority
+      over.  *** ITS AUTHORITY-DOMAIN POINT IS ALSO RIGHT, AND MY OWN S134 PROBE IS THE EVIDENCE: I
+      MEASURED DD BY WRITING A REAL `config.json` IN A SCRATCH DIRECTORY OUTSIDE THE REPOSITORY.
+      What made DC's third clause unsafe was NEVER THE BASENAME - it was 3.1 binding `--config`
+      packet-relative to the LIVE packet, so the file had to land in the tracked tree.  INJECTING THE
+      PACKET ROOT REMOVES THAT BINDING.  DO NOT RE-ARGUE THIS. ***
+  MY INTEGRATION - TWO THINGS, BOTH IN THE BYTES I APPROVED:
+      1  THE SEAM IS THE ROLES-MODE ENTRY POINT, NOT A "STEP-4 HELPER".  Each positive leg STOPS ON
+         A DELIBERATE STEP-5 REFUSAL, and step 5's artifacts, step 3's domain binding and 4.7's
+         output parent are ALL PACKET-RELATIVE.  A step-4-scoped seam leaves those on the LIVE packet
+         while only the config moves - the leg cannot reach its own stop condition and the half that
+         runs is a PARALLEL path.  *** CODEX'S OWN DEFINITION ALREADY IMPLIED THE WIDER SEAM - "the
+         single implementation used by the public roles path after record authentication" IS
+         everything from step 3 onward.  ONE injected root is also STRICTLY NARROWER than two root
+         sources in one traversal, which IS the substitution hazard.  W8 now also demands a POSITIVE
+         assertion that the public path's bound root IS the live packet root. ***  MEASURED:
+         `Path(__file__).resolve().parents[2]` from `scripts/utils/` IS the packet root, the same
+         derivation `utils/capacity_sweep.py` uses.
+      2  SECTION 1.3 IS SCOPED so the document does not both forbid and require a `config.json`.  It
+         now names the LIVE object - `Reproducibility Packet/config.json` and anything in the live
+         tree that could be taken for it - and points at 9.6.  MEASURED ACROSS THE WHOLE PACKET TREE,
+         NOT ITS ROOT ALONE: THERE IS NO `config.json` ANYWHERE IN THE PACKET.
+      ALSO NOW IN B8, AND A 4b BUILDER WILL LOSE A DAY WITHOUT IT: THE TEMP TREE'S SCHEMA COPY MUST
+      BE BYTE-EXACT, NOT RE-SERIALISED - `validate_config_document` requires the document's
+      `schema_sha256` to EQUAL `file_sha256(schema_path)`, so a pretty-printed copy refuses FOR THE
+      WRONG REASON.
+  *** ONE TRACKED FOLLOW-UP FOR 4b, NOT A FINDING AND NOT ON THIS CARD: `build_role_bundle`'s LIVE
+      DOCSTRING in the closed Step-2 blob still glosses `--config` as "path to the exact frozen
+      config file" - THE SAME SENTENCE DA CORRECTED IN THE DESIGN.  Under branch B that gloss is
+      `FINAL`-ONLY.  THE ADDITIVE 4b EDIT SHOULD FIX IT.  DO NOT TOUCH THE CLOSED BLOB BEFORE 4b. ***
 
 CODEX'S EIGHT S131 REPAIRS - ALL ACCEPTED UNCONTESTED, ALL VERIFIED AGAINST PRIMARY OBJECTS.
 DO NOT RE-LITIGATE ANY OF THEM:
@@ -496,7 +567,7 @@ THE PROHIBITIONS THAT SURVIVE, AND THEY ARE PERMANENT:
 
 THE ARTIFACT SHAPES AND THE AUDIT INSTRUMENTS ARE IN `agents/Claude/Permanent Instruments.md`.
   Read it ON DEMAND, not at startup.  The routing table at the bottom of THIS file says which of
-  its sections answers which question.  *** STANDING LESSONS NOW REACH 219 AND ALL OF THEM LIVE
+  its sections answers which question.  *** STANDING LESSONS NOW REACH 222 AND ALL OF THEM LIVE
   THERE - S132 added 213 (A DEFECT THAT ONLY THE UNREACHABLE PATH CAN EXPOSE IS THE EXPENSIVE
   KIND: CX would have passed every test 4b writes, because 4b's accept path is synthetic and its
   output goes to a temp root - ASK WHAT THE ACCEPT PATH ACTUALLY REACHES, which is the third time
@@ -519,7 +590,15 @@ THE ARTIFACT SHAPES AND THE AUDIT INSTRUMENTS ARE IN `agents/Claude/Permanent In
   without creating the file) and 219 ("TEMPORARY" IS NOT A MITIGATION WHEN THE HAZARD IS EXISTENCE -
   a crashed run does not keep the promise to delete, and CW already ruled the ignore rule is not
   access control, so the only real mitigation is not creating the object).
-  ALL SEVEN WERE WRITTEN STRAIGHT INTO THE REFERENCE FILE, WHICH IS THE S105 CORRECTION APPLIED. ***
+  S135 ADDED 220 (AN ABBREVIATED IDENTIFIER WITH THE RIGHT PREFIX IS NOT A VERIFIED IDENTIFIER - the
+  Review Card's blob id shared its first EIGHT characters with the real one and did not exist; name a
+  governing state THREE ways and resolve every id against the object store), 221 (WHEN YOU OWN THE
+  ARTIFACT, INTEGRATING THE REVIEWER'S REPAIR COSTS ONE ROUND LESS THAN NAMING A NEW FINDING, and the
+  technical content is identical - reserve the finding for DISAGREEMENT; the test is whether you
+  could write the repair yourself in the same session) and 222 (A SEAM NAMED AFTER ONE STEP MUST BE
+  CHECKED AGAINST THE STOP CONDITION OF THE TEST THAT USES IT - ask what the LAST thing the test must
+  reach is, and whether the seam reaches that far).  STANDING LESSONS NOW REACH 222.
+  ALL OF THEM WERE WRITTEN STRAIGHT INTO THE REFERENCE FILE, WHICH IS THE S105 CORRECTION APPLIED. ***
 ```
 
 ## THE RUNG-2 STATE - ALL SEVEN STEPS CLOSED, 5.4 JOINTLY APPLIED, THE LANE IS SPENT
@@ -624,7 +703,7 @@ TWO NUMBERS THAT ARE IN THE DESIGN BECAUSE THEY ARE THE INCONVENIENT ONES.  KEEP
 ## Where the project is
 
 - **Phase 2 (Execution) is OPEN.** All Phase-1 gates in force. **Schema v1.0 + Amendment A1 in force.** Contract changes run through the **amendment protocol**.
-- I am **Claude**; last session was **Session 134**; next session I run is **Session 135**. **SESSION 134 WAS THE THIRD OWNER RE-REVIEW OF THE STEP-4 DESIGN AND IT CLOSED NOTHING: Codex accepted DA and DB in substance, raised its own finding DC (my DA sentence "every 4b test would stay green" was an overclaim, and the enumerated acceptance set could still be satisfied by an unconditional `require_frozen=True`), repaired it by adding test B8 and handed back `b968886f`. I ACCEPTED DC IN SUBSTANCE AND KEPT ITS 2x2 after reproducing each leg at source, then found that B8 could not be built at all - finding DD, because the config contract refuses any frozen document not named exactly `config.json`, and that name is the project's confirmatory-authority token which sections 1.3 and 4.7 of the same document twice refuse to license writing. REPAIRED by keeping the 2x2 and pinning each branch at the layer it can legally reach. I approved and handed back at blob `968fa895` after a 53-check audit. I also made ONE PROCESS OFFER Codex has not answered - see the head block - and I said I would not re-raise it.** **THE PRIOR ROUND, KEPT ONLY FOR ORIENTATION - SESSION 133 WAS THE SECOND OWNER RE-REVIEW OF THE STEP-4 DESIGN AND IT CLOSED NOTHING: Codex reviewed my S132 state in its S132, raised finding CZ (my claim that the CY branch changes nothing 4b builds was false), RULED CY ITSELF as branch B / authority-scoped P1 rather than letting it wait for 4c, repaired the document and handed back its own approved state `fab21261`. I ACCEPTED CZ AND THE RULING IN FULL after checking every clause of the new P1 against `utils/config_contract.py` and driving the live draft config through the validator both ways, then read the repaired state as a fresh artifact and found TWO defects in it - DA (the ruling makes the frozen design's `--config` gloss false on a now-reachable path, and this document points the 4b builder at that wrong row, which would silently reinstate the rejected branch with every 4b test still green; REPAIRED in a new section 9.3) and DB (acceptance test B1 asked 4b to prove precondition P5 unmet from bytes that live outside the packet in the git-ignored 3.86 GB data tree; REPAIRED by proving P5 the way P6 is proved). I approved and handed back at blob `806d6fb9`.** **EXACTLY ONE REVIEW LOOP IS OPEN IN THE PROJECT: the Slot-8 STEP-4 DESIGN at `806d6fb9`, approved by me in my S133 turn, OPEN ON CODEX - and I OWN it, so if Codex edits or blocks, the owner re-review is MINE and comes first.** **THE FIRST WORK OF S134 IS THE CHAT TAIL: if Codex approved those bytes, SUB-STEP 4a IS CLOSED and 4b IS AUTHORIZED - build the adapter and its tests, storage/refusal plumbing against the EXISTING contract fixture and geometry against a DEDICATED COHERENT synthetic fixture, CHOOSE NO REAL-DATA TOLERANCE, implement `require_frozen` AS A FUNCTION OF THE RECORD'S AUTHORITY (finding DA) and PROVE P5 FROM PACKET BYTES ONLY (finding DB). That is a large build round and it is the next real work. If it came back edited, the owner re-review is mine and comes first. If nothing has landed, do NOT start a second lane - say so in chat rather than starting silently.** **MY NEXT REGULAR PROGRESS REPORT IS SESSION 136**, or sooner if a phase transition or an approved written Claim-Sheet amendment fires. **SESSION 128 WAS A PROGRESS-REPORT SESSION** - `agents/Claude/Progress Reports/Progress Report Session 128.md` covers S121-S128. **THE SLOT-8 STEP-1 DESIGN LOOP IS CLOSED at blob `0753d4ed` (me S127, Codex S127), THE STEP-2 LOOP AT `c12745ab`/`0ae5b19d`/`cf61e5aa`/`1833a472` (me S129, Codex S129) and THE STEP-3 LOOP AT the ten fixture blobs + packet README `4bc07f18` + public README `3ab96e38` (me S130, Codex S130) - DO NOT REOPEN ANY OF THEM, and an approved version is never edited in place.** **THE RUNG-2 ANALYSIS ARTIFACT IS CLOSED at blob `a2fa857b` / `604d7272...` (me S119, Codex S119 after its own 853-check standalone audit), AND SECTION 5.4 IS JOINTLY APPLIED AND SPENT.** The step-6 analyzer loop closed in Codex's S118 at `7cf3cc6a` / `a642b3d3`; both analyzer-authorization halves are SPENT and the one authorized read RAN in my S119 (`X_ANALYSIS_OK`, 11.97 s, zero fits). Step 5 is SPENT - the one authorized rung-2 run executed in Codex's S117, `X_RUNG2_OK`, 12 fits. See the head block; this bullet is an index. **THE S112 REGULAR** is at `agents/Claude/Progress Reports/Progress Report Session 112.md` (covers S105-S112); Codex read it in its S112 general recent-work review, raised exactly one correction, carried it forward onto the public log rather than into the report, and I approved it - no cycle is open on the report itself. **THE S104 AND S120 REGULARS ARE WRITTEN and still unreviewed by Codex; if it opens a loop on either, that loop is mine to close.** **THE S96 REGULAR'S LOOP IS CLOSED** at blob `c824173c` (Codex S97) and **THE S88 REPORT'S LOOP IS CLOSED** at blob `58276bb4` (Codex S89) - **DO NOT REOPEN EITHER.** *(The S80 report is still unreviewed; the S72 one was read in Codex's S72 general recent-work review, which found no correction to carry, so no explicit cycle ever opened on it.)* **A2 ALREADY FIRED AN AMENDMENT-TRIGGERED REPORT AND IT WAS CODEX'S TO WRITE** (its S76 wrote the approving turn); that does not reset either counter.
+- I am **Claude**; last session was **Session 135**; next session I run is **Session 136**, and **SESSION 136 IS A REGULAR PROGRESS-REPORT SESSION** (normal session work first, then the report, per the every-eighth rule). **SESSION 135 ADOPTED THE DIRECTOR'S SUPERSEDING REVIEW METHOD AND DELIVERED THE OWNER HALF OF ROUND-TRIP 1 ON THE STEP-4a DESIGN.** Codex's Round-1 ledger carried one open blocker, finding DE: my S134 repair moved B8's `FINAL` half onto the validator path, so an implementation refusing every final config could have passed the whole enumerated set. **I accepted it in substance and INTEGRATED it rather than raising a new finding** — widening the named seam from a "step-4 helper" to the roles-mode entry point entered after record authentication (the test's own stop condition is a deliberate step-5 refusal, and step 5, step 3's domain binding and §4.7's output parent all resolve packet-relative), adding a *positive* W8 assertion that the public path's bound root **is** the live packet root, and scoping §1.3 so the document does not both forbid and require a `config.json`. I approved and handed back **blob `032db166`** after a 133-check audit built around section-by-section byte equality with Codex's own state. **I also found and corrected a defect in the governing Review Card: it named the Round-1 baseline as a Git blob that does not exist (`968fa8959fc3…`, same eight-character prefix as the real `968fa895fb81…`).** **ROUND 2 IS CODEX'S AND IS DELTA-ONLY.** **THE PRIOR ROUND, KEPT ONLY FOR ORIENTATION — SESSION 134 WAS THE THIRD OWNER RE-REVIEW OF THE STEP-4 DESIGN AND IT CLOSED NOTHING: Codex accepted DA and DB in substance, raised its own finding DC (my DA sentence "every 4b test would stay green" was an overclaim, and the enumerated acceptance set could still be satisfied by an unconditional `require_frozen=True`), repaired it by adding test B8 and handed back `b968886f`. I ACCEPTED DC IN SUBSTANCE AND KEPT ITS 2x2 after reproducing each leg at source, then found that B8 could not be built at all - finding DD, because the config contract refuses any frozen document not named exactly `config.json`, and that name is the project's confirmatory-authority token which sections 1.3 and 4.7 of the same document twice refuse to license writing. REPAIRED by keeping the 2x2 and pinning each branch at the layer it can legally reach. I approved and handed back at blob `968fa895` after a 53-check audit. I also made ONE PROCESS OFFER Codex has not answered - see the head block - and I said I would not re-raise it.** **THE PRIOR ROUND, KEPT ONLY FOR ORIENTATION - SESSION 133 WAS THE SECOND OWNER RE-REVIEW OF THE STEP-4 DESIGN AND IT CLOSED NOTHING: Codex reviewed my S132 state in its S132, raised finding CZ (my claim that the CY branch changes nothing 4b builds was false), RULED CY ITSELF as branch B / authority-scoped P1 rather than letting it wait for 4c, repaired the document and handed back its own approved state `fab21261`. I ACCEPTED CZ AND THE RULING IN FULL after checking every clause of the new P1 against `utils/config_contract.py` and driving the live draft config through the validator both ways, then read the repaired state as a fresh artifact and found TWO defects in it - DA (the ruling makes the frozen design's `--config` gloss false on a now-reachable path, and this document points the 4b builder at that wrong row, which would silently reinstate the rejected branch with every 4b test still green; REPAIRED in a new section 9.3) and DB (acceptance test B1 asked 4b to prove precondition P5 unmet from bytes that live outside the packet in the git-ignored 3.86 GB data tree; REPAIRED by proving P5 the way P6 is proved). I approved and handed back at blob `806d6fb9`.** **EXACTLY ONE REVIEW LOOP IS OPEN IN THE PROJECT: the Slot-8 STEP-4 DESIGN at `806d6fb9`, approved by me in my S133 turn, OPEN ON CODEX - and I OWN it, so if Codex edits or blocks, the owner re-review is MINE and comes first.** **THE FIRST WORK OF S134 IS THE CHAT TAIL: if Codex approved those bytes, SUB-STEP 4a IS CLOSED and 4b IS AUTHORIZED - build the adapter and its tests, storage/refusal plumbing against the EXISTING contract fixture and geometry against a DEDICATED COHERENT synthetic fixture, CHOOSE NO REAL-DATA TOLERANCE, implement `require_frozen` AS A FUNCTION OF THE RECORD'S AUTHORITY (finding DA) and PROVE P5 FROM PACKET BYTES ONLY (finding DB). That is a large build round and it is the next real work. If it came back edited, the owner re-review is mine and comes first. If nothing has landed, do NOT start a second lane - say so in chat rather than starting silently.** **MY NEXT REGULAR PROGRESS REPORT IS SESSION 136**, or sooner if a phase transition or an approved written Claim-Sheet amendment fires. **SESSION 128 WAS A PROGRESS-REPORT SESSION** - `agents/Claude/Progress Reports/Progress Report Session 128.md` covers S121-S128. **THE SLOT-8 STEP-1 DESIGN LOOP IS CLOSED at blob `0753d4ed` (me S127, Codex S127), THE STEP-2 LOOP AT `c12745ab`/`0ae5b19d`/`cf61e5aa`/`1833a472` (me S129, Codex S129) and THE STEP-3 LOOP AT the ten fixture blobs + packet README `4bc07f18` + public README `3ab96e38` (me S130, Codex S130) - DO NOT REOPEN ANY OF THEM, and an approved version is never edited in place.** **THE RUNG-2 ANALYSIS ARTIFACT IS CLOSED at blob `a2fa857b` / `604d7272...` (me S119, Codex S119 after its own 853-check standalone audit), AND SECTION 5.4 IS JOINTLY APPLIED AND SPENT.** The step-6 analyzer loop closed in Codex's S118 at `7cf3cc6a` / `a642b3d3`; both analyzer-authorization halves are SPENT and the one authorized read RAN in my S119 (`X_ANALYSIS_OK`, 11.97 s, zero fits). Step 5 is SPENT - the one authorized rung-2 run executed in Codex's S117, `X_RUNG2_OK`, 12 fits. See the head block; this bullet is an index. **THE S112 REGULAR** is at `agents/Claude/Progress Reports/Progress Report Session 112.md` (covers S105-S112); Codex read it in its S112 general recent-work review, raised exactly one correction, carried it forward onto the public log rather than into the report, and I approved it - no cycle is open on the report itself. **THE S104 AND S120 REGULARS ARE WRITTEN and still unreviewed by Codex; if it opens a loop on either, that loop is mine to close.** **THE S96 REGULAR'S LOOP IS CLOSED** at blob `c824173c` (Codex S97) and **THE S88 REPORT'S LOOP IS CLOSED** at blob `58276bb4` (Codex S89) - **DO NOT REOPEN EITHER.** *(The S80 report is still unreviewed; the S72 one was read in Codex's S72 general recent-work review, which found no correction to carry, so no explicit cycle ever opened on it.)* **A2 ALREADY FIRED AN AMENDMENT-TRIGGERED REPORT AND IT WAS CODEX'S TO WRITE** (its S76 wrote the approving turn); that does not reset either counter.
 - **`config.json` is deliberately NOT frozen** and does not exist. All hashes are `dev-`; no `dev-` trace may enter confirmatory analysis.
 - Real data exists: `data/gate3-base-dev-pilot-val-c1-s` (3.86 GB, git-ignored, local only). 472 reservations / 944 manifest rows / C1+S / dev 152, pilot 152, val 168. **Test untouched: 0 identities, 0 payloads.** **THE "SLATED FOR FULL REGENERATION FROM ZERO AFTER A2" EXPECTATION IS RETIRED AS OF MY S75 — see A2.3.** Option C inserts no severity, so no seed ordinal shifts and A2 by itself invalidates none of this. If the set is ever superseded it is for some other reason, under its own authorization. **Still: read them, do not build on them** — nothing downstream of them is authorized either way.
 - **THE PAYLOAD-BOUNDARY EXTENSION HAS RUN — Codex's S73, 127 physical rollouts, `X_CASE_EMPTY`, and the result artifact is JOINTLY APPROVED (Codex S73 / me S74).** The measurement is spent and no further payload-extension execution is authorized. **A2 IS IN FORCE at `baa8fd53…` / `203aab77…` — both agents approved those exact bytes (me S76, Codex S76). The two-file loop is CLOSED and the amendment is not to be reopened or status-edited.**
@@ -647,6 +726,23 @@ TWO NUMBERS THAT ARE IN THE DESIGN BECAUSE THEY ARE THE INCONVENIENT ONES.  KEEP
       A COUNTER'S SCOPE IS PART OF THE COUNTER; two counters under one heading are read as
       sharing one scope, and if they do not, nothing in the file will say so. ***
   PILOT / VAL / TEST reads   0, every session, without exception
+  *** S135 SPENT ZERO OF EVERYTHING - the OWNER HALF OF ROUND-TRIP 1 under the new method.  It read
+      `Playbooks/review-cycle.md`, both new `Review Card/` files and the two new chats; authenticated
+      the new subject chat (1,610 B / 34 LF / 0 CR, sha256 `8e77062e...`, matching HEAD) and BOTH of
+      Codex's published artifact digests; read `utils/config_contract.py`'s validator and loader,
+      `render_verification_scene.py`'s roles CLI and `verification_scene.py`'s `build_role_bundle` AT
+      SOURCE; measured the packet-root derivation and that NO `config.json` exists anywhere in the
+      packet; ran ONE focused test file (`tests/test_data_contract.py`, 18 passed, 0.79 s); edited
+      TWO tracked documents (the design, +104/-35; the Review Card); appended TWO chat turns
+      (+7,832 B and +4,400 B, both prefix-verified); and edited its own report, README, Permanent
+      Instruments (lessons 220-222) and continuity file.
+      *** IT OPENED NO ROLE INDEX, ROLE PAYLOAD, CHECKPOINT, ESTIMATOR OUTPUT, CONTROLLER LOG OR
+      PILOT/VAL/TEST RESULT, BUILT NO MuJoCo MODEL, STEPPED NO ROLLOUT, RAN NO FIT AND RENDERED NO
+      FIGURE.  The packet-wide suite was NOT re-run - no executable file changed; it stands at 2,267
+      as last measured in S131.  Checkpoint count NOT RE-READ; it stands at 67. ***
+      *** NO PROBE FILE WAS CREATED THIS SESSION - unlike S134, nothing needed materialising.  The
+      only scratch artifacts are my audit script and the two chat-turn drafts, all outside the
+      repository. ***
   *** S134 SPENT ZERO OF EVERYTHING - the THIRD STEP-4 OWNER RE-REVIEW.  It authenticated the
       transcript boundary (BOTH of Codex's published prefix digests reproduce byte for byte) and
       the reviewer artifact; read the reviewer's turn and the full diff; re-read

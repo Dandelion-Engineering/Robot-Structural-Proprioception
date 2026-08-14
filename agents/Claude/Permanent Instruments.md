@@ -3341,6 +3341,40 @@ correction applied.)*
   This is the same family as lesson 213 (ask what the accept path actually reaches): both are about
   refusing to accept a guarantee that holds only on the happy path.
 
+220. **[S135] AN ABBREVIATED IDENTIFIER WITH THE RIGHT PREFIX IS NOT A VERIFIED IDENTIFIER.**  The
+  transition Review Card named the state under review as blob
+  `968fa8959fc3b106895e794589c41954d0c2f901`.  *** THAT OBJECT DOES NOT EXIST.  The real one is
+  `968fa895fb81a04bfc04f4b743d8d03f3a1af612` — the first EIGHT characters are identical, which is
+  exactly the width every summary, chat message and continuity file in this project quotes. ***  So
+  every human and agent check that compares "the `968fa895` state" passes, and the only thing that
+  catches it is asking the object store: `git cat-file -t` refuses it in one second.  *** THE RULE:
+  A DOCUMENT THAT GOVERNS AN APPROVAL NAMES ITS STATE THREE WAYS — blob id, raw SHA-256, and
+  size/LF — AND WHOEVER WRITES IT RESOLVES EVERY ID AGAINST THE OBJECT STORE BEFORE IT GOVERNS
+  ANYTHING.  Redundant identifiers make a transcription slip DETECTABLE; a single abbreviated one
+  makes it AUTHORITATIVE. ***  Note where the failure landed: not in the science, but in the
+  machinery that certifies "both agents approved the same exact bytes", which is the one claim the
+  whole review protocol rests on.
+
+221. **[S135] WHEN YOU OWN THE ARTIFACT, INTEGRATING THE REVIEWER'S REPAIR COSTS ONE ROUND LESS THAN
+  NAMING A NEW FINDING — AND THE TECHNICAL CONTENT IS IDENTICAL.**  Codex's DE repair named its
+  shared seam an "internal step-4 helper"; the same test's stop condition is a deliberate step-5
+  refusal, which a step-4-scoped helper cannot reach.  Under the old open-ended loop my last three
+  sessions turned exactly that observation into a lettered finding and handed the pen back, and the
+  review reached round seven.  This time the same content went into the state I approve, with the
+  reasoning recorded in the section that owns it.  *** THE DIFFERENCE IS NOT RIGOUR, IT IS WHO HOLDS
+  THE PEN NEXT.  A new finding says "your text is wrong, fix it"; an integration says "your
+  diagnosis is right, here is it built".  Reserve the finding for when you DISAGREE, and integrate
+  when you agree and can carry it yourself. ***  The generalisable test: if I could write the repair
+  myself in the same session, naming it as a finding is a round spent on protocol, not on the work.
+
+222. **[S135] A SEAM NAMED AFTER ONE STEP MUST BE CHECKED AGAINST THE STOP CONDITION OF THE TEST
+  THAT USES IT.**  The "step-4 helper" was named for the step whose behaviour was in dispute, but
+  the test built on it has to REACH STEP 5 to stop where it is supposed to stop, and step 5's
+  artifacts are packet-relative too.  Naming an injection seam after the step you are arguing about
+  silently under-scopes it.  *** ASK: what is the LAST thing this test must reach, and does the seam
+  reach that far?  If not, either the seam grows or the test cannot be built — which is the same
+  wall finding DD hit one layer down. ***
+
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 
 ```text
