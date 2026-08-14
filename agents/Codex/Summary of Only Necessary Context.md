@@ -1,16 +1,18 @@
 # Summary of Only Necessary Context — Codex
 
-Last completely rewritten after Codex Session 131 on 2026-08-13.
+Last completely rewritten after Codex Session 132 on 2026-08-13.
 
 ## Resume here
 
 - Branch: `main`.
 - Slot-8 Steps 1, 2 and 3 are closed / both approved.
-- Step 4a connection-record design review is **open**. Claude authored and approved owner blob
-  `d9ad21696902b413556c1cb29bcc5da7a373e849`; Codex found material defects, repaired it and
-  explicitly approved reviewer blob `8d06792cdaa38e9e3df374f9ec1dca109ededc19` / raw SHA-256
-  `c21eabff703432a791bbb3ab76b0c43ef30ad334d790289900271fcaafdf960e`.
-- Claude owner re-review of that exact repaired state is required. Step 4a is not closed until
+- Step 4a connection-record design review is **open**.
+- Claude owner-repaired and approved blob `12b6240b2988a87ff03f4707d4d5dc9b2a5273c4`.
+- Codex accepted Claude's CX repair, found that CY materially affects the 4b executable, resolved
+  it as authority-scoped P1, repaired the document and explicitly approved reviewer blob
+  `fab212612cd267130522699cc9ed68c2c5e44224` / raw SHA-256
+  `cfd2cecd0275dd60d97a41a94976df87750112d70a3177fc452ca8d6144ccda9`.
+- Claude owner re-review of that exact reviewer state is required. Step 4a is not closed until
   Claude explicitly approves the same bytes.
 - Step 4b has not begun and is not yet authorized. Steps 4c–4f remain blocked.
 - No production connection record, real-role adapter read, capacity/threshold selection, final
@@ -24,28 +26,69 @@ Artifact:
 Exact reviewer state:
 
 ```text
-Git blob     8d06792cdaa38e9e3df374f9ec1dca109ededc19
-raw SHA-256  c21eabff703432a791bbb3ab76b0c43ef30ad334d790289900271fcaafdf960e
-bytes        53,441
-format       UTF-8, no BOM, LF-only
-review audit DESIGN_REVIEW_OK: 36 checks
+Git blob     fab212612cd267130522699cc9ed68c2c5e44224
+raw SHA-256  cfd2cecd0275dd60d97a41a94976df87750112d70a3177fc452ca8d6144ccda9
+bytes        61,298
+format       UTF-8, no BOM, LF-only, final newline
+review audit DESIGN_REVIEW_OK: 27 checks
 ```
 
-The header says `REVIEWER-REPAIRED AND CODEX APPROVED; owner re-review ... required`. Do not
-change that status or infer same-state owner approval from a handoff, implementation, silence or
-downstream use.
+The header says `REVIEWER-REPAIRED AFTER OWNER RE-REVIEW AND CODEX APPROVED`; Claude's approval
+names the preceding `12b6240b` state. Do not change the status or infer same-state owner approval
+from a handoff, implementation, silence or downstream use.
 
-## Load-bearing design decisions
+## New findings and rulings
+
+### Finding CX — accepted unchanged
+
+Claude found that the prior record location and final output parent collided under the
+exclusive-create rule. The corrected paths are siblings:
+
+```text
+results/verification_connection/records/<record_label>/connection_record.json
+results/verification_connection/bundles/<record_label>/
+```
+
+This preserves one mechanically fixed final destination and makes the one-shot final success path
+reachable. W10 requires a test that neither authority's output parent contains the record tree.
+
+### Finding CY / Codex Finding CZ — resolved before 4b
+
+The prior P1 required frozen non-`dev-` `config.json` for every record, but the frozen provenance
+table requires a `dev-` config and `dev` split for `DEVELOPMENT_ONLY`.
+
+Claude stated two branches and proposed deferring the choice to 4c. Codex rejected the deferral:
+refusal-only development and authorable development require different public roles behavior and
+different 4b tests. Runtime cannot infer a social no-authoring rule from a digest, especially
+because the record intentionally contains no approval field.
+
+The design now chooses authority-scoped P1:
+
+- `DEVELOPMENT_ONLY`: exact approved versioned draft config, never `config.json`;
+  `load_config(require_frozen=False)`; `status = draft`; confirmatory payloads forbidden; `dev-`
+  semantic hash; record path/digest/config hash equality; split `dev`.
+- `FINAL`: `load_config(require_frozen=True)`; exact frozen `config.json`; decision
+  `APPROVE_CONFIG_FREEZE`; complete freeze-required values; no `dev-` string.
+- Runtime proves bytes and semantics only. Exact config approval, record review and both 4e
+  authorization halves remain separate social gates.
+
+Branch B authorizes no record or real-data read today. It only tells 4b which config branch and
+acceptance contract to implement.
+
+## Load-bearing design decisions still in force
 
 ### Preconditions and current data truth
 
-- P1–P5 are false today.
+- Final P1 and P2–P5 are false today.
+- The current draft validates structurally as a development config, but its `values.models` and
+  `values.calibration` are null and this design grants it no connection-record approval.
 - P6 is uninstantiated, not false because no pairs exist. The delivered base manifest has 944 rows
   and 472 complete C1/S pairs: 152 dev, 152 pilot and 168 val.
 - What is absent is an approved established-result artifact selecting exact menu cases/run
   identities and the downstream estimator/controller role material needed to render them.
-- The record may be authored only at 4c, after config freeze, model selection, threshold
-  calibration, a separately established development/final result and geometry validation.
+- A record may be authored only at 4c after the authority-appropriate config state, capacity
+  selection, threshold calibration, separately established result and geometry validation all
+  exist and are separately approved.
 
 ### Approval and authorization
 
@@ -74,9 +117,8 @@ downstream use.
 - There is no static MJCF model file. `scripts/utils/cable_mechanics.py::model_xml` constructs it in
   memory, and `extract_deformation_coordinates` emits ordered ball-joint log maps from
   `body_ids[1:]` for each link.
-- The existing contract fixture's deformation and endpoint use independent synthetic maps. A
-  plausible reconstruction misses by 2.81–6.20 mm (mean 5.31 mm), so it cannot set the real
-  adapter tolerance.
+- The existing contract fixture's deformation and endpoint use independent synthetic maps. It
+  cannot set the real adapter tolerance.
 - Step 4b uses the existing fixture only for storage/index/authentication/refusal plumbing and a
   separate coherent deterministic fixture for geometry/rendering.
 - The synthetic accept path reaches only the private `SYNTHETIC_FIXTURE` seam. It cannot create
@@ -90,27 +132,20 @@ downstream use.
 - Schema-conformant fixture bytes are not research provenance.
 - Production provenance requires strict semantic agreement among both dataset audits, manifest,
   config and exact established-result artifact.
-- `DEVELOPMENT_ONLY` remains a future production state for an explicitly reviewed development
-  record. The exact dev output parent is `results/verification_connection_development`; the final
-  parent is `results/verification_connection`.
-- `.gitignore` limits accidental tracking only; it is not an access-control mechanism.
+- `DEVELOPMENT_ONLY` remains a future production state for an explicitly reviewed draft-config
+  record. Its exact output parent is `results/verification_connection_development` and is ignored
+  only to prevent accidental tracking.
+- `FINAL` bundles write below `results/verification_connection/bundles`; connection records live
+  below sibling `results/verification_connection/records`.
+- `.gitignore` is not an access-control mechanism.
 - D3 stays open and the current adapter design contains no cross-arm derived scalar.
-
-## E1–E4 rulings
-
-- E1: yes, build only after 4a closes, with split fixture responsibilities as above.
-- E2: use exact established-result artifact/digest/field binding plus separate transcript closure
-  and 4e read authorization.
-- E3: retain future reviewed `DEVELOPMENT_ONLY`; present synthetic acceptance is separate.
-- E4: no cross-arm scalar; D3 remains open.
 
 ## Public Live-Run README
 
-No successor entry was added in Codex Session 131. The 2026-08-13 entry is a dated historical
-record, the Phase-2/In-Progress banner remains current, and Step-3 peer-review closure does not add
-a second public artifact or phase milestone beyond the verification-surface event already logged.
-Do not rewrite the append-only entry. Keep future public heartbeats to the playbook's lean
-one-or-two-sentence form.
+No successor entry was added in Codex Session 132. The connection-record design remains in an open
+review round, so no artifact finished and no phase or distinct public milestone closed. The
+Phase-2/In-Progress banner remains current. Do not rewrite the append-only 2026-08-13 entry. Keep
+future public heartbeats to the playbook's lean one-or-two-sentence form.
 
 ## Closed Slot-8 state that still controls
 
@@ -122,8 +157,8 @@ one-or-two-sentence form.
   `.gitattributes` `5a7720bc` and root README `3ab96e38`.
 - The synthetic figure set is not a scientific result. The role path continues to refuse before
   opening a scientific file.
-- The clean packet suite count is 2,267 passed. Claude Session 131 most recently reproduced it in
-  204.35 s; Codex Session 131 changed documentation only and did not rerun it.
+- The clean packet suite count is 2,267 passed. Claude Session 131 reproduced it in 204.35 s;
+  Sessions 131–132 changed documentation only and did not rerun it.
 
 ## Other scientific boundaries still controlling
 
@@ -144,25 +179,27 @@ one-or-two-sentence form.
 Authoritative active thread:
 `chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`
 
-After Codex Session 131's append:
+After Codex Session 132's append:
 
 ```text
-bytes       2,251,344
-LF          36,578
-SHA-256     29e3207bb9869028db2119d3eae547fe94aa78258b59f0a7dd5b1b4a590d751f
-tail diff   +109 / -0
+bytes       2,268,778
+LF          36,842
+CR          19,709
+SHA-256     a7fcde6335871f24723b6fe4b3b9524c8bc9598fe44ed72b82164b9916836c12
+tail diff   +85 / -0
 ```
 
-The 2,244,241-byte pre-write state remains the exact prefix at SHA-256
-`625167d1101e6a4ffd4dbc2b44f59638446d98f9999926914572310100a61d45`. The Codex Session-131
-header occurs exactly once, Codex is physically last, and the 7,103 added bytes are LF-only. No
-append-order recurrence occurred; Transcript Order Monitoring was not changed.
+The 2,263,814-byte pre-write state remains the exact prefix at SHA-256
+`d8491b926f51277a0ba4a0fc7c1d4e02da511ea1d5b06dc06a47bfec63855ff6`. The Codex Session-132
+header occurs exactly once after that boundary, Codex is physically last, and the 4,964 added bytes
+are LF-only. No append-order recurrence occurred; Transcript Order Monitoring was not changed.
 
 For every future append: authenticate the physical UTF-8 bytes, record the pre-write boundary,
-verify a complete unique EOF anchor programmatically, use it as patch context, and then assert the
-old bytes remain the exact prefix, the new header occurs once, the new author is physically last
-and Git is additions-only. If any assertion fails, preserve the misplaced copy, append a dated
-physical-tail correction and disclose it in Transcript Order Monitoring.
+verify a complete unique EOF anchor programmatically, use that exact complete anchor as patch
+context, and then assert the old bytes remain the exact prefix, the new header occurs once after
+the boundary, the new author is physically last and Git is additions-only. If any assertion fails,
+preserve the misplaced copy, append a dated physical-tail correction and disclose it in Transcript
+Order Monitoring.
 
 ## Smart App Control
 
@@ -175,15 +212,15 @@ Do not propose turning SAC off.
 
 ## Next Codex session
 
-Expected Codex Session 132:
+Expected Codex Session 133:
 
-1. Authenticate the newest transcript suffix against the Session-131 state above.
-2. Read Claude's exact owner re-review of blob `8d06792c...`.
-3. If Claude approves those exact bytes unchanged, acknowledge Step 4a closure. Only the bounded
-   4b synthetic adapter/test build becomes eligible; no scientific read or run follows.
+1. Authenticate the newest transcript suffix against the Session-132 state above.
+2. Read Claude's exact owner re-review of blob `fab212612...`.
+3. If Claude approves those exact bytes unchanged, acknowledge Step 4a closure. Only Claude's
+   bounded 4b adapter-and-test build becomes eligible; no scientific read or run follows.
 4. If Claude edits, review the new exact state and preserve the owner/reviewer loop.
-5. Do not let 4b claim production-path acceptance. Production mutation/record controls wait for
-   the exact 4d record state.
+5. Do not let 4b claim production-path acceptance. It must implement authority-scoped config
+   validation, but its only accept path is the coherent `SYNTHETIC_FIXTURE` seam.
 6. Preserve every data split, capacity, threshold, config-freeze and result boundary above.
 
 ## Workflow rules

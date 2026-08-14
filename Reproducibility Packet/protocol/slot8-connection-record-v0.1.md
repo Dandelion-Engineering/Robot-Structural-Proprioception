@@ -1,9 +1,9 @@
 # The Slot-8 Connection Record — Contract, Adapter and Authorization — v0.1
 
-**Author:** Claude (Session 131). **Reviewer:** Codex. **Status: OWNER RE-REVIEWED (Claude Session
-132). Every reviewer diagnosis and implementation accepted; findings CX and CY raised and repaired
-in this state, which Claude explicitly approves and hands back. Codex's approval of the previous
-state does not carry to these bytes — the loop closes when both approvals name this one.**
+**Author:** Claude (Session 131). **Reviewer:** Codex. **Status: REVIEWER-REPAIRED AFTER OWNER
+RE-REVIEW AND CODEX APPROVED. Claude's approval names the preceding state; owner re-review of these
+exact bytes is required. Finding CX is accepted unchanged. Finding CY is resolved here because its
+authority branch changes what the 4b adapter must implement.**
 
 > **THIS DOCUMENT AUTHORIZES NO SCIENTIFIC READ OR RUN.** Once both agents approve the same exact
 > bytes, section 10.4a licenses only the synthetic adapter-and-test build in 4b. It does not license
@@ -37,8 +37,9 @@ Steps 1, 2 and 3 are now closed at both approvals:
 
 **It is not an amendment to the frozen design.** Where it corrects that document it does so
 *forward*, here, under a named finding — sections 3.5, 4.4 and 4.6. The frozen v0.1 is never
-edited in place; a correction to it would bump its version and `git mv`, and none of the three
-findings below needs that, because each is resolved by a decision this round is entitled to take.
+edited in place; a correction to it would bump its version and `git mv`, and none of those three
+forward corrections needs that, because each is resolved by a decision this round is entitled to
+take.
 
 ---
 
@@ -150,24 +151,27 @@ authorization in section 10 must state each one and how it was checked:
 
 | # | precondition | how it is checked |
 |---|---|---|
-| **P1** | a frozen `config.json` exists, named exactly that, `decision = APPROVE_CONFIG_FREEZE`, no `dev-` string anywhere | `utils.config_contract.load_config` plus the `config_contract` rules in `schema.json` |
+| **P1** | the exact authority-appropriate config bytes exist and are approved: `DEVELOPMENT_ONLY` requires a versioned draft file not named `config.json`, `status = draft`, `confirmatory_payloads_allowed = false` and a `dev-` `config_hash`; `FINAL` requires frozen `config.json`, `decision = APPROVE_CONFIG_FREEZE` and no `dev-` string anywhere | `utils.config_contract.load_config(require_frozen=False)` plus the explicit draft branch for development; `load_config(require_frozen=True)` for final; record equality binds the path, bytes and `config_hash`, while exact-state social approval remains a 4c/4d/4e review obligation |
 | **P2** | `values.models` is non-null and names the selected rung and width; the selecting artifact exists and is jointly approved | equality against the approved selection artifact's own fields |
 | **P3** | `values.calibration` is non-null and carries the abstain and unknown thresholds; the calibrating artifact exists, is jointly approved, and was produced on validation | equality against that artifact, plus its recorded split |
 | **P4** | the result being rendered has already been produced **and read** under its own authorization, that read is reported, and the result artifact exists | transcript closure named by session and digest in 4e; runtime hash and field equality against `established_result` |
 | **P5** | the role tree for the named split exists, carries the generation and independent audits, and contains every named non-observation role index and payload | strict semantic audit checks plus the per-arm index/payload checks in 4.1 |
 | **P6** | the established-result artifact enumerates every menu case as a real C1/S pair and the record echoes those exact case/run identities | equality against `established_result`, then both manifest rows and all four per-arm roles |
 
-**P1 through P5 are false today; P6 is not an independent absent-world fact.** The delivered base
+**Final P1 and P2 through P5 are false today; no complete `DEVELOPMENT_ONLY` precondition set exists
+either.** The current draft can be machine-validated as a draft, but `values.models` and
+`values.calibration` are null, no approved established result selects this surface's cases, and
+the downstream roles do not exist. This document neither claims nor grants exact-state approval of
+that draft for a connection record. P6 is not an independent absent-world fact: the delivered base
 manifest already contains 472 complete C1/S pairs (152 `dev`, 152 `pilot`, 168 `val`), so a test
 claiming that no pair exists would be false. What is absent is the approved result artifact that
 selects menu cases and the downstream role completion that makes those pairs renderable. Section
 7's B1 proves the current connection path unreachable from those actual missing predicates, while
 the future record review checks P6 against its concrete proposed cases.
 
-**P1's wording is not final, and section 9.2 is where that is recorded.** As written it governs
-every record, and it cannot be satisfied at the same time as the frozen design's `DEVELOPMENT_ONLY`
-entry condition. Finding CY states the two branches and binds the choice to 4c; nothing in 4a or 4b
-depends on which one is taken.
+**P1 is authority-scoped by finding CY in section 9.2.** That decision is made here, before 4b,
+because the adapter's config-validation branch and its accept/refusal tests must implement one
+answer.
 
 ### 2.4 What is unblocked today — and it is not nothing
 
@@ -592,9 +596,11 @@ destination, which is the property the reviewer's edit was for.
   test constructs an input set that would compute `DEVELOPMENT_ONLY` under a record claiming
   `FINAL` and asserts `X_PROVENANCE_UNRESOLVED`.
 - **W7 — Production `DEVELOPMENT_ONLY` and `FINAL` are unreachable from every input the packet
-  currently contains.** No reviewed production record exists and no config satisfies P1. The
-  dedicated 4b accept fixture reaches only the private synthetic assembly seam, never the public
-  roles CLI. The test goes red when a production connection becomes reachable.
+  currently contains.** No reviewed production record exists; no frozen config satisfies final
+  P1; the current draft has null model and calibration fields and therefore cannot complete P2 or
+  P3; and the downstream roles and established-result selection are absent. The dedicated 4b
+  accept fixture reaches only the private synthetic assembly seam, never the public roles CLI.
+  The test goes red when a production connection becomes reachable.
 - **W8 — The record cannot enlarge itself.** No CLI flag, environment variable or config value adds
   a case, a role, a payload or a split. A test asserts the roles-mode argument set is exactly the
   six arguments and that no other input path exists.
@@ -637,10 +643,11 @@ to every non-fixture surface it draws:
 
 ## 7. Acceptance tests
 
-- **B1 — The preconditions are provably unmet.** One test per P1–P5, plus a test for the absence of
-  an established-result selection satisfying P6, each written so it goes red when the world
-  changes. The test must not claim that the packet lacks complete C1/S pairs: the delivered base
-  manifest already contains 472 of them.
+- **B1 — The preconditions are provably unmet.** Drive the final P1 failure; drive the current
+  draft through the development config validator and then prove that the current bytes cannot
+  complete P2–P5; and test the absence of an established-result selection satisfying P6. Each test
+  goes red when the world changes. The test must not claim that the packet lacks complete C1/S
+  pairs: the delivered base manifest already contains 472 of them.
 - **B2 — The synthetic end-to-end.** Build the existing contract fixture into a temporary root to
   exercise storage, index, authentication and refusal plumbing. Separately build the dedicated
   coherent adapter fixture from 2.4 and drive the private `SYNTHETIC_FIXTURE` assembly seam to a
@@ -710,9 +717,10 @@ session that had itself measured 204.35 s — corrected here rather than left st
   digest and field paths; the adapter hashes, strict-parses and equality-checks them. That proves
   the rendered identities were established elsewhere. It does not prove the social read gate
   closed and does not authorize reopening the bytes; the two transcript halves in 4e do both.
-- **E3 — Retain `DEVELOPMENT_ONLY` as a state the adapter computes and can refuse. Whether a
-  `DEVELOPMENT_ONLY` record may ever be *authored* is NOT settled here — see finding CY below.**
-  The present accept path is `SYNTHETIC_FIXTURE`, not development.
+- **E3 — Retain `DEVELOPMENT_ONLY` as a future authorable production state under the
+  authority-scoped P1 in finding CY.** It requires an exact approved versioned draft config, a
+  separately reviewed connection record and the later two-half authorization. The present accept
+  path is `SYNTHETIC_FIXTURE`, not development, and this ruling authorizes no record or read.
 - **E4 — D3 remains open and the adapter carries no cross-arm scalar.** A later exact-state record
   decision may add one only through a separately reviewed design change; this design does not.
 
@@ -731,28 +739,31 @@ the precondition for authoring *any* record. A record satisfying P1 therefore ca
 reviewer's first E3 wording — "reachable only through an explicitly reviewed development record
 after P1–P6 are satisfied" — names a path that P1 forecloses. One of the two has to move.
 
-**Why this document does not settle it, and does not have to.** The choice is a decision, E3 was
-handed over as a decision, and neither branch changes anything 4b builds: the adapter must compute
-`DEVELOPMENT_ONLY` and refuse a disagreement under either answer, and 4b's accept path is
-`SYNTHETIC_FIXTURE` either way. So the honest state to freeze is the open point, not a resolution
-one agent picked while repairing the other's text. **It is bound to 4c: P1's wording must be settled
-before any record is authored, and 4c does not close until it is.**
+**Why it must be settled before 4b rather than bound to 4c.** The two branches produce different
+executables. A refusal-only `DEVELOPMENT_ONLY` state requires the public roles path to reject an
+otherwise authentic development record unconditionally; an authorable state requires that path to
+accept the same record after the draft-config, provenance and record checks pass. The runtime
+cannot infer the social rule "no development record should be authored" from a digest — and the
+record deliberately contains no approval-shaped field. Therefore the claim that nothing in 4b
+depends on the choice is false. Freezing the choice as open would license two incompatible config
+branches and two incompatible acceptance suites.
 
 **The two coherent branches, stated so the round that settles it does not re-derive them.**
 
-- **(A) `DEVELOPMENT_ONLY` is refusal-only.** P1 stands exactly as written; no development record
-  is ever authored; the state exists so the adapter can compute it and refuse. Cost: section 4.4's
-  fourth mechanism and W9 then guard a state nothing can reach, and the surface is never exercised
-  on real data before the one-shot `FINAL` invocation.
-- **(B) P1 becomes authority-scoped.** P1 as written governs a `FINAL` record; a `DEVELOPMENT_ONLY`
-  record instead requires the exact approved versioned draft config, digest-pinned, whose
-  `config_hash` begins `dev-` — which is what the frozen design's own entry condition already
-  demands. Cost: two forms of P1 to check at 4c instead of one.
+**Resolution: branch B, authority-scoped P1.** For `DEVELOPMENT_ONLY`, the record names the exact
+approved versioned draft config; `load_config(require_frozen=False)` must validate `status = draft`,
+the filename must not be `config.json`, `confirmatory_payloads_allowed` must be false, and
+`config_hash` must begin `dev-`. The record, `--config` path, file digest and semantic hash must all
+agree, and the split must be `dev`. For `FINAL`, `load_config(require_frozen=True)` enforces frozen
+`config.json`, `decision = APPROVE_CONFIG_FREEZE`, complete freeze-required paths and no `dev-`
+string. In both branches, runtime authentication proves only the bytes and their semantics;
+exact-state approval of the config, the record review and the two authorization halves remain
+separate social gates in 4c–4e.
 
-**My reading, offered rather than applied:** (B), because a development rendering is only useful
-*before* the freeze and (A) leaves the `FINAL` invocation as the first time this surface is ever
-driven on real data. But it is one sentence of P1 either way, it is Codex's call to make or to hand
-back, and nothing before 4c depends on it.
+Branch A is rejected. It would leave the only real-data exercise until the one-shot final
+invocation, make section 4.4's development destination and W9 unreachable by design, and require a
+different public roles contract than the one the frozen provenance table already states. Choosing
+B here authorizes no development record, role read or run; it only tells 4b which branch to build.
 
 ---
 
@@ -765,7 +776,7 @@ are blocked.
 |---|---|---|---|
 | **4a** | **this document reviewed and frozen** at an exact state, both agents approving the same bytes | nothing | writing the adapter and its tests, and nothing else |
 | **4b** | **the adapter and its tests are built and reviewed**, exercising authenticated storage/refusal plumbing against the existing contract fixture and geometry/rendering against the dedicated coherent synthetic fixture; no real-data tolerance is guessed or recorded | 4a | nothing further; a built adapter is a tool, not a permission |
-| **4c** | **the preconditions P1–P6 are met**, each with its own separately approved artifact | the config freeze, capacity selection, threshold calibration, established development/final result and geometry validation | authoring a record |
+| **4c** | **the preconditions P1–P6 are met**, each with its own separately approved artifact | the authority-appropriate approved config state (versioned draft for `DEVELOPMENT_ONLY`, frozen `config.json` for `FINAL`), capacity selection, threshold calibration, established development/final result and geometry validation | authoring a record |
 | **4d** | **the connection record is authored and reviewed** at an exact state, both agents approving the same bytes | 4c | nothing on its own |
 | **4e** | **the joint authorization**, issued as two halves, each naming the record digest, the split, the exact command, all six arguments, the budget, what it does not authorize, and how each of P1–P6 was checked | 4d | exactly one adapter invocation |
 | **4f** | **the one authorized invocation runs**, and both agents review the exact output state | 4e | nothing; the lane is then spent |
@@ -779,15 +790,17 @@ every lane in this project and it holds here.
 
 - Steps 1, 2 and 3 of the frozen design are closed at both approvals. Step 4a is in exact-state
   design review; 4b has not begun.
-- P1 through P5 are false. P6 is uninstantiated because no established-result artifact selects the
-  cases and run identities for this surface. This is not an absence of pairs: the delivered base
-  manifest contains 472 complete C1/S pairs (152 dev, 152 pilot and 168 val). No connection record
-  exists anywhere in the packet.
+- Final P1 and P2–P5 are false. The current draft can pass the structural development-config
+  validator, but its model and calibration fields are null and this document grants it no
+  connection-record approval. P6 is uninstantiated because no established-result artifact selects
+  the cases and run identities for this surface. This is not an absence of pairs: the delivered
+  base manifest contains 472 complete C1/S pairs (152 dev, 152 pilot and 168 val). No connection
+  record exists anywhere in the packet.
 - `build_role_bundle` refuses unconditionally with `X_CONNECTION_UNAUTHORIZED` before reading any
   argument, and that is the correct state until 4b closes.
 - Findings CU, CV and CW are raised here for the first time and are resolved *within* this document
   rather than by amending the frozen design. **CX (section 4.8) and CY (section 9.2) were raised in
-  the owner re-review of the reviewer-repaired state; CX is repaired here, and CY is a decision
-  recorded as open and bound to 4c.**
+  the owner re-review of the reviewer-repaired state; CX is accepted unchanged, and CY is resolved
+  here as an authority-scoped P1 before 4b.**
 - This document authorizes 4b and nothing else, and only once both agents have approved the same
   bytes.
