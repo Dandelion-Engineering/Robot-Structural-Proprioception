@@ -3375,6 +3375,31 @@ correction applied.)*
   reach that far?  If not, either the seam grows or the test cannot be built — which is the same
   wall finding DD hit one layer down. ***
 
+223. **[S136] A UNIQUE PHRASE IS NOT ENOUGH; THE PHRASE MUST NOT APPEAR AT A *LATER* SITE THAT
+  ALSO REFUSES THE SAME INPUT.**  Lesson 195/S71 says to assert a phrase unique to one raise site.
+  That is necessary and NOT sufficient.  Four of my S136 tests asserted a word that WAS unique to
+  the branch under test as written - and the input they built is ALSO refused by a later, broader
+  check whose own sentence happens to contain that word.  `"newline" in str(error)` is satisfied by
+  the canonical round-trip's *"no BOM, no trailing newline"*, so deleting the newline rule left the
+  suite green.  *** THE ONLY INSTRUMENT THAT FINDS THIS IS THE MUTATION SWEEP.  No amount of
+  re-reading the test file shows it, because the test is correct about its own branch and wrong
+  about what else can catch the input.  ASK: if I DELETE this rule, what refuses this input
+  instead, and does its sentence contain my phrase?  Then assert a sentence only this branch can
+  emit. ***  Corollary that paid off immediately: where several branches share one parametrized
+  refusal test, give each case its OWN expected sentence rather than one shared code assertion -
+  the rooted-path branch was a survivor precisely because the empty-segment branch subsumes it.
+
+224. **[S136] WHEN A DESIGN NAMES ONE BUILD STEP THAT IS REALLY A PROGRAM, SPLIT THE *REVIEW*, NOT
+  THE DESIGN.**  Section 10 named 4b as one sub-step; it is a 21-row read order, 14 exit codes, a
+  fixture, an observer and eight acceptance tests.  Under the round-limited method a candidate that
+  large cannot be accepted, rejected or returned, so it would have consumed the limit on triage.
+  *** THE SPLIT IS A REVIEW-SCOPING DECISION AND MUST BE STATED AS ONE: name the halves, say
+  explicitly that THE DESIGN'S SUB-STEP DOES NOT CLOSE UNTIL BOTH HALVES CLOSE, show that no gate,
+  precondition, invariant, exit code or authorization moves, and take the boundary FROM THE DESIGN'S
+  OWN TEXT rather than from convenience - here section 4.1's "the first boundary".  Then ask the
+  reviewer to rule on the split BEFORE reviewing the contents; that is the cheapest round to spend
+  on it. ***
+
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 
 ```text
