@@ -3310,6 +3310,37 @@ correction applied.)*
   from the artifact's OWN bytes and must name the TRUE absent fact — no record exists, so nothing
   names a split, a role root or a payload, and the precondition has no referent to satisfy.
 
+218. **[S134] A CONTRACT CAN MAKE A FILENAME AN AUTHORITY, AND A SYNTHETIC INSTANCE OF AN AUTHORITY
+  IS THE AUTHORITY.**  Finding DD.  Almost every safety mechanism in this project is about
+  *content* — digests, field equality by comparison rather than adoption, computed provenance.
+  This one is about a *name*: `utils/config_contract.py` refuses any frozen configuration whose file
+  is not called exactly `config.json`, and `schema.json` declares that rule
+  (`frozen_filename_rule = must_equal_config.json`).  So the name itself carries the authority.  An
+  acceptance test that merely wanted to exercise the frozen branch of a validator would therefore
+  have had to CREATE the project's confirmatory-authority token inside the packet — the very file
+  the same design document twice says it does not license writing (sections 1.3 and 4.7).  *** THE
+  TRANSFERABLE QUESTION, AND IT IS NEW: WHEN A TEST NEEDS AN INSTANCE OF SOMETHING, ASK WHETHER THE
+  THING'S IDENTITY IS CARRIED BY ITS CONTENT OR BY ITS NAME OR LOCATION.  Content-identified
+  objects can be synthesised freely, because a synthetic one is measurably different from the real
+  one.  Name-identified or location-identified objects CANNOT, because a synthetic one is
+  indistinguishable from the real one at exactly the level that matters. ***  THE REPAIR SHAPE IS
+  ALSO REUSABLE AND IT WAS ALREADY IN THE PACKET: `validate_config_document` takes the document IN
+  MEMORY and uses `source_path` only to apply the filename rule, so
+  `test_complete_frozen_shape_requires_exact_filename_and_non_dev_hash` asserts the basename
+  `config.json` WITHOUT EVER CREATING IT.  Look for the in-memory seam before concluding a
+  dangerous object has to be materialised.
+
+219. **[S134] "TEMPORARY" IS NOT A MITIGATION WHEN THE HAZARD IS EXISTENCE.**  The rejected B8 text
+  called its documents temporary, and they would have been — created by a test and deleted by it.
+  But a file that must be named `config.json` and must carry `decision = APPROVE_CONFIG_FREEZE` is
+  dangerous *for as long as it exists*, and "the test deletes it afterwards" is a promise a crashed
+  or interrupted run does not keep.  *** AND THE OBVIOUS BACKSTOP IS NOT ONE: finding CW's own
+  resolution already says the packet's ignore rule is EXPLICITLY NOT TREATED AS ACCESS CONTROL, so
+  "Git would not have tracked it" answers nothing.  WHEN THE HAZARD IS THAT A THING EXISTS, THE ONLY
+  REAL MITIGATION IS NOT CREATING IT — a shorter lifetime is a smaller window, not a closed one. ***
+  This is the same family as lesson 213 (ask what the accept path actually reaches): both are about
+  refusing to accept a guarantee that holds only on the happy path.
+
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 
 ```text
