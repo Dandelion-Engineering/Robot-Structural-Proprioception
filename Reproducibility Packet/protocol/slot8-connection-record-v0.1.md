@@ -1,13 +1,14 @@
 # The Slot-8 Connection Record — Contract, Adapter and Authorization — v0.1
 
-**Author:** Claude (Session 131). **Reviewer:** Codex. **Status: DRAFT, handed over at an exact
-state for review.**
+**Author:** Claude (Session 131). **Reviewer:** Codex. **Status: REVIEWER-REPAIRED AND CODEX
+APPROVED; owner re-review of the exact repaired state is required.**
 
-> **THIS DOCUMENT AUTHORIZES NOTHING.** It does not license authoring a connection record, running
-> the adapter it specifies, opening a config, a checkpoint, a role index, a role payload or a
-> split, selecting a capacity or a threshold, or making any C1-versus-S statement. Writing it is
-> not the authorization. Reviewing it is not the authorization. Freezing it is not the
-> authorization. Section 10 says where the authorization actually lives and what it costs.
+> **THIS DOCUMENT AUTHORIZES NO SCIENTIFIC READ OR RUN.** Once both agents approve the same exact
+> bytes, section 10.4a licenses only the synthetic adapter-and-test build in 4b. It does not license
+> authoring a production connection record, running the adapter against real roles, opening a
+> real-data config, checkpoint, role index, role payload or split, selecting a capacity or threshold, or
+> making any C1-versus-S statement. Writing it is not authorization. Section 10 says where each
+> later authorization lives and what it costs.
 
 ---
 
@@ -48,10 +49,12 @@ role adapter is permitted to open, and every identity it must find inside them.*
 authenticates what the record names. It discovers nothing, defaults nothing, widens nothing, and
 opens nothing the record does not name.
 
-**Approval of the record's exact bytes in the Phase-2 transcript is the authorization.** The
-digest passed on the command line is only how the runtime knows it was handed the approved bytes.
-A digest match is a statement about bytes; it is never a statement about social approval, and the
-record must not contain a field that claims otherwise (property R5, section 3.3).
+**Approval of the record's exact bytes establishes the record state eligible for a later
+authorization; it is not itself executable authorization.** The two separately recorded halves in
+section 10.4e authorize one exact invocation. The digest passed on the command line is only how the
+runtime knows which reviewed bytes it was handed. A digest match is a statement about bytes; it is
+never a statement about social approval, and the record must not contain a field that claims
+otherwise (property R5, section 3.3).
 
 ### 1.2 The two design tests this document is written against
 
@@ -62,8 +65,10 @@ The first is inherited from the frozen design's section 1.2 and still binds:
 
 The second is added here, and it is the one this document exists to make structural:
 
-> **No path through the connection record may cause a scientific read that has not already
-> happened under its own separate authorization.** The verification artifact *presents* a result.
+> **No path through the connection record may discover a scientific result or open scientific
+> role bytes without a separate authorization for that exact read.** The result must already have
+> been established under its own authorization, and the later rendering read must receive the
+> distinct two-half authorization in section 10.4e. The verification artifact *presents* a result.
 > It is never the occasion of one.
 
 The reason is worth stating plainly, because it is the failure this whole lane is shaped to
@@ -71,8 +76,9 @@ prevent. Slot 8 is a presentation commitment. If the adapter's first authorized 
 first time anyone on this team looked at a split, then the demo would have quietly become the
 experiment, and every safeguard the project spends its sessions maintaining — pre-registration,
 exclusive-create destinations, one-shot authorizations, the untouched `test` split — would have
-been routed around by a picture. Section 2.2 turns this test into a checkable precondition rather
-than a warning.
+been routed around by a picture. A later adapter invocation still opens scientific bytes and is
+not made free merely because an earlier read occurred. Section 2.2 binds it to the
+already-established result, and section 10.4e separately authorizes that exact rendering read.
 
 ### 1.3 What this document does not license, stated so it cannot be inferred
 
@@ -121,20 +127,19 @@ separate authorization.**
 
 This does not follow from the frozen design; it follows from design test 2 in section 1.2. Without
 it, a `FINAL` record naming the `test` split would make the adapter's first run the project's
-one-shot confirmatory look, taken for the purpose of drawing a picture. With it, the adapter can
-only ever render a read that has already happened, and rendering it again is not a spend.
+one-shot confirmatory look, taken for the purpose of drawing a picture.
 
-It also produces a clean asymmetry that the record's `authority` field carries:
+The record therefore names the exact already-established result artifact and the field paths that
+bind its split, config, cases and run identities. The adapter hashes and strict-parses that artifact
+before opening a role payload, and requires the record's facts to equal it. That mechanism proves
+that the rendering is attached to an existing result rather than to a future hope; it cannot prove
+that the social read was authorized or closed. The two section-10.4e halves must still name the
+transcript turn that closed the earlier result read and must separately authorize the adapter's own
+role re-open. A previous read does not make a later file access cease to be a read.
 
-- a `DEVELOPMENT_ONLY` record names `dev` rows the project has already read many times;
-  re-running the adapter against it is **not** a scientific spend and may be repeated, which is
-  what lets a packet reader reproduce a figure;
-- a `FINAL` record names rows whose confirmatory read has already happened and been reported;
-  re-rendering them is likewise not a new spend.
-
-There is deliberately no third case. A record naming a split whose authorized read has **not**
-happened is refused at review, not at runtime, because no runtime check can see the difference —
-see W12 and section 9's E2.
+There is deliberately no third authority case. `DEVELOPMENT_ONLY` names `dev`; `FINAL` names the
+approved final split. A record naming a result whose read has not closed is refused in review, and
+a record pointing at no digest-stable result artifact refuses at runtime. See W12 and E2.
 
 ### 2.3 The precondition ledger
 
@@ -146,33 +151,40 @@ authorization in section 10 must state each one and how it was checked:
 | **P1** | a frozen `config.json` exists, named exactly that, `decision = APPROVE_CONFIG_FREEZE`, no `dev-` string anywhere | `utils.config_contract.load_config` plus the `config_contract` rules in `schema.json` |
 | **P2** | `values.models` is non-null and names the selected rung and width; the selecting artifact exists and is jointly approved | equality against the approved selection artifact's own fields |
 | **P3** | `values.calibration` is non-null and carries the abstain and unknown thresholds; the calibrating artifact exists, is jointly approved, and was produced on validation | equality against that artifact, plus its recorded split |
-| **P4** | the result being rendered has already been produced **and read** under its own authorization, and that read is reported | the transcript turn that closed the read, named by session and artifact digest |
-| **P5** | the role tree for the named split exists, is complete for the four non-observation roles, and carries its generation-audit artifact | `generation_audit.json` present and digest-stable; see 4.4 |
-| **P6** | every menu case is a real C1/S pair present in that tree, with both arms | manifest rows for both suites at one `pair_id` |
+| **P4** | the result being rendered has already been produced **and read** under its own authorization, that read is reported, and the result artifact exists | transcript closure named by session and digest in 4e; runtime hash and field equality against `established_result` |
+| **P5** | the role tree for the named split exists, carries the generation and independent audits, and contains every named non-observation role index and payload | strict semantic audit checks plus the per-arm index/payload checks in 4.1 |
+| **P6** | the established-result artifact enumerates every menu case as a real C1/S pair and the record echoes those exact case/run identities | equality against `established_result`, then both manifest rows and all four per-arm roles |
 
-**P1 through P6 are all false today, and section 7's test B1 requires that to be provable.** That
-is the same instrument the frozen design's V8 uses: a test that asserts unreachability goes red on
-the day the world changes, which forces the connection to be reviewed deliberately instead of
-drifting into reach.
+**P1 through P5 are false today; P6 is not an independent absent-world fact.** The delivered base
+manifest already contains 472 complete C1/S pairs (152 `dev`, 152 `pilot`, 168 `val`), so a test
+claiming that no pair exists would be false. What is absent is the approved result artifact that
+selects menu cases and the downstream role completion that makes those pairs renderable. Section
+7's B1 proves the current connection path unreachable from those actual missing predicates, while
+the future record review checks P6 against its concrete proposed cases.
 
 ### 2.4 What is unblocked today — and it is not nothing
 
-Step 4 has been carried as a single blocked item. It is not one. Measured this session:
-`Reproducibility Packet/scripts/build_data_contract_fixture.py` builds a **role-complete synthetic
-storage tree** — a `manifest.csv` with two C1/S pairs (`fixture_dev` on `dev`, `fixture_val` on
-`val`), and `plant/`, `labels/`, `estimator_outputs/<suite>/` and `controller_logs/<suite>/` roots
-each with an `index.csv` and hashed `.npz` payloads. Its plant records come from
-`utils.synthetic_plant.synthetic_privileged_record`, whose module imports only `numpy` and project
-types; **neither it nor the fixture builder imports `mujoco` anywhere in that chain.**
+Step 4 has been carried as a single blocked item. It is not one. The existing
+`build_data_contract_fixture.py` can drive storage, manifest, index and refusal plumbing without a
+research read. It cannot serve as the geometry oracle Claude's first draft assigned to it:
+`synthetic_privileged_record` generates `deform_coords` independently of the `curvature_true` used
+to generate `true_task_output`. A direct reconstruction probe at the delivered fixture settings
+misses that output by 2.81–6.20 mm, not by floating-point noise. Treating that maximum as a real
+adapter tolerance would make the distal check meaningless.
 
-So the adapter can be **built, exercised end to end, and reviewed now**, against a synthetic role
-tree and a synthetic connection record, with every refusal in section 4.1 driven, without any of
-P1–P6 and without opening a single byte of research data. Only three things then remain genuinely
-blocked: authoring the real record, authorizing it, and running it once.
+Sub-step 4b may therefore build the adapter now, but it must add a **dedicated deterministic
+adapter fixture** whose `q_true`, `deform_coords`, centerline and `true_task_output` are generated
+from one dependency-light forward map. That fixture reaches the assembly core only under
+`SYNTHETIC_FIXTURE`; the public `roles` CLI continues to accept only reviewed
+`DEVELOPMENT_ONLY`/`FINAL` records. The existing contract fixture still drives the storage and
+refusal seams. No real tolerance is chosen in 4b: its value and source are later bound by the
+approved geometry-validation artifact named in the record. Thus the implementation and its
+synthetic accept path are buildable now, while real record authoring, real-data tolerance binding,
+authorization and invocation remain blocked.
 
 That is why section 10 splits Step 4 into six sub-steps rather than treating it as one gate, and it
 is the concrete reason this document is worth writing before its preconditions exist: the frozen
-design's step 4 reads as "wait", and roughly two thirds of it is buildable.
+design's step 4 reads as "wait". Sub-steps 4a and 4b are buildable; 4c through 4f are blocked.
 
 ---
 
@@ -186,8 +198,16 @@ design's step 4 reads as "wait", and roughly two thirds of it is buildable.
 | identity | the SHA-256 of the exact file bytes, passed as `--connection-record-sha256` | the frozen design's 4.2; a path is not an identity |
 | encoding | canonical JSON via `utils.protocol_p.canonical_json` — `sort_keys`, `(",",":")`, `allow_nan=False` — UTF-8, no BOM, no trailing newline | the packet's existing discipline; a reviewer must be able to diff two records |
 | non-finite floats | **forbidden outright in a record**, unlike in a scene | a record is authored by a reviewed process, not derived from a run; a `NaN` threshold is a defect, not a contract-valid value |
-| paths inside it | packet-relative; no drive letters, no rooted forms, no `..` | the packet must be copiable to a clean machine |
+| paths inside it | each path declares its root domain; no drive letters, rooted forms or `..` | packet artifacts are packet-relative; payload paths are `--role-root`-relative; checkpoints are `--checkpoint-root`-relative |
 | line endings | LF, pinned by the packet `.gitattributes` `protocol/*.md` rule for this document and by a new `results/verification_connection/**/*.json` rule for the record itself | a Windows checkout must not move a byte the runtime hashes |
+
+The root domains are not interchangeable. The delivered data lives at the machine-selected
+`--role-root`, outside a copied packet; therefore `data_root.relative_path` from the owner draft is
+removed rather than forcing a real data path to pretend it is packet-relative. The six closed CLI
+arguments remain unchanged. `--config` must resolve to the packet-relative `config.relative_path`;
+each role payload must resolve under `--role-root`; each checkpoint must resolve under
+`--checkpoint-root`; every source/result artifact resolves inside the packet; and `--output-dir`
+is constrained by authority as section 4.7 specifies.
 
 ### 3.2 The field table
 
@@ -200,12 +220,18 @@ not an empty value.
 | `record_label` | string, `[a-z0-9-]+` | binds the adapter's output root to `<output-dir>/<record_label>/` |
 | `authority` | `"DEVELOPMENT_ONLY"` or `"FINAL"` | the provenance state the adapter may resolve to, and no other |
 | `split` | one of `"dev"`, `"pilot"`, `"val"`, `"test"` | the exact split every named row must carry |
+| `schema` | `{relative_path, sha256}` | the fixed packet schema used to validate the config and role contracts |
 | `config` | `{relative_path, sha256, config_hash}` | the config file, its bytes, and its semantic identity |
-| `data_root` | `{relative_path, generation_audit_sha256, manifest_sha256}` | the role tree, its generation audit and its manifest — see 4.4 |
+| `data_root` | `{dataset_label, manifest_sha256, generation_audit, independent_audit}`; each audit is `{sha256,status,assignment_hash,config_hash}` | stable identity for the external `--role-root`; both audits are strict-parsed and their echoed fields checked — see 4.4 |
+| `established_result` | `{artifact_relative_path,sha256,split_field_path,config_hash_field_path,cases_field_path}` | the already-produced and already-read result whose cases this surface presents |
 | `analysis_window_s` | float > 0 | the `window_s` every scene carries into `utils.metrics.j_5s` |
-| `thresholds` | `{abstain_threshold, unknown_threshold, source}` | both thresholds **and where each came from** — see 3.4 |
-| `model_selection` | `{rung, width, selection_artifact}` | the capacity that was selected, and the approved artifact that selected it |
-| `render_geometry` | `{derivation_version, model_file, link_segment_lengths_m, deform_layout, distal_tolerance_m}` | everything needed to draw a centerline without importing `mujoco` — see 3.5 |
+| `thresholds` | `{abstain_threshold,unknown_threshold,sources}`; each source is `{artifact_relative_path,sha256,field_path}` | each threshold and its own approved validation source — see 3.4 |
+| `model_selection` | `{rung,width,source}` where source is `{artifact_relative_path,sha256,rung_field_path,width_field_path}` | the capacity and the approved artifact that selected it |
+| `render_geometry` | `{derivation_version,source,planar_convention,links,distal_tolerance_m,tolerance_source}` | the explicit dependency-light chain plus the approved geometry-validation source — see 3.5 and 4.6 |
+| `render_geometry.source` | `{producer_relative_path,producer_sha256,model_id}` | the generated-model producer (`scripts/utils/cable_mechanics.py`), not a nonexistent static model file |
+| `render_geometry.planar_convention` | `{base_xy_m,q_true_convention,rotation_vector_component,projection}` | origin, absolute/relative joint convention, log-map component and x/z projection |
+| `render_geometry.links` | ordered `L1`,`L2` entries, each `{segment_lengths_m,deform_triplets}` | one segment length per body and the exact `deform_coords` triples in emitted order |
+| `render_geometry.tolerance_source` | `{artifact_relative_path,sha256,maximum_deviation_field_path,tolerance_field_path}` | where the real-data agreement and allowed tolerance were established |
 | `cases` | ordered array, at least one entry, unique `case_id` and unique `display_label` | the menu |
 | `cases[i].case_id` | string | the bundle key |
 | `cases[i].display_label` | string | what the director reads in the radio menu |
@@ -213,7 +239,7 @@ not an empty value.
 | `cases[i].arms.C1` / `.S` | `{run_id, manifest_row, checkpoint, roles}` | one arm |
 | `…arms[k].manifest_row` | all 20 schema-A fields, echoed exactly | equality against `manifest.csv`, never adoption |
 | `…arms[k].checkpoint` | `{relative_path, sha256}` | the fitted weights this arm's decisions came from |
-| `…arms[k].roles` | `{plant, labels, estimator_outputs, controller_logs}`, each `{index_sha256, payload_sha256}` | the four non-observation roles, per arm |
+| `…arms[k].roles` | `{plant, labels, estimator_outputs, controller_logs}`, each `{index_sha256,payload_relative_path,payload_sha256}` | the four non-observation roles, per arm; the path is role-root-relative and must equal the authenticated index row |
 
 `cases` must jointly contain at least one `structure`, one `actuator` and one `sensor` case,
 because the frozen design's section 4.1 requires that of every bundle and the adapter cannot
@@ -222,9 +248,11 @@ satisfy it from anything but the record.
 ### 3.3 Six load-bearing properties
 
 1. **The record is an allowlist, not a hint.** Every scientific file the adapter opens is named in
-   it by relative path, or is reachable only through an index whose digest the record covers.
-   There is no directory scan, no glob, no "the rest of this role root", and no CLI flag that adds
-   a file. W3 makes this measured rather than aspirational.
+   it by path and digest, including the packet schema, established result, capacity-selection
+   source, two threshold sources, geometry source and geometry-validation source. Role indexes and
+   payloads additionally name their root-relative paths. There is no directory scan, no glob, no
+   "the rest of this role root", and no CLI flag that adds a file. W3 makes this measured rather
+   than aspirational.
 2. **Manifest rows are checked by equality, not adopted.** The record echoes all 20 schema-A
    fields per arm and the adapter requires them to equal the row it reads from `manifest.csv`. A
    record that merely *pointed at* a row would let the tree change underneath an approved record
@@ -235,24 +263,27 @@ satisfy it from anything but the record.
    requires the computed state to equal the record's `authority`. A disagreement is
    `X_PROVENANCE_UNRESOLVED`. An approved data object constraining an outcome is not the same act
    as a caller labelling one.
-4. **`record_label` binds the output root.** The adapter writes to `<output-dir>/<record_label>/`
-   and nowhere else, and refuses a non-empty destination. This is the Session-90 finding
+4. **`record_label` and `authority` bind the output root.** The adapter writes to
+   `<output-dir>/<record_label>/` and nowhere else, refuses a non-empty destination, and requires
+   the authority-specific parent from section 4.7. This is the Session-90 finding
    (limitation 138) applied on this lane: without it, two runs at one label write into two
    unrelated directories and the audit claim has no mechanism behind it.
 5. **The record does not record its own approval.** No `approved_by`, no `approval_session`, no
    `authorized` boolean. A document cannot authenticate the approval of itself, and a field that
    looks like it does is worse than no field, because a reader will believe it. This is Codex's
-   Session-62 circular-provenance edit applied on a second lane. The approval lives in the
-   transcript and names the record's digest; the record names only facts a runtime can measure.
+   Session-62 circular-provenance edit applied on a second lane. Review approval and the later
+   executable authorization live in the transcript and name the record's digest; the record names
+   only facts a runtime can measure.
 6. **One record, one split, one authority.** No record spans two splits or mixes a development arm
    with a final one. A scene that mixed them would carry one banner over two provenances, which is
    the failure mode the banner exists to prevent.
 
 ### 3.4 Thresholds must carry their provenance, and this is not bookkeeping
 
-`thresholds.source` is `{artifact_relative_path, sha256, field_path}` — the approved calibration
-artifact, its exact bytes, and the path inside it where each number lives. The adapter reads that
-artifact and requires equality.
+`thresholds.sources` has separate `abstain_threshold` and `unknown_threshold` entries, each
+`{artifact_relative_path, sha256, field_path}`. They may name the same artifact, but they cannot
+share one ambiguous field path. The adapter hashes and strict-parses every distinct artifact and
+requires each number to equal its named field.
 
 The reason is that a threshold is the one scientific input in the record that is **small enough to
 type**. Every other one is a file the adapter hashes; a threshold is two floats a well-meaning
@@ -276,8 +307,12 @@ carries **no segment lengths and no body ordering**. And `deform_coords` is not 
 `utils.cable_mechanics.extract_deformation_coordinates` concatenates, for each of the two links,
 the ball-joint **rotation-vector log maps** of `body_ids[1:]` — deliberately excluding the first
 body of each link, which carries the shoulder ball joint and the elbow-side free pose. Its layout
-is therefore a property of the MuJoCo model file, not of the config; `schema.json` says as much,
+is therefore a property of the generated MuJoCo model, not of the config; `schema.json` says as much,
 declaring `deform_coords` with unit `model_defined` and shape `[T, n_def]` at `n_def = 90`.
+
+There is **no static model file** in this packet. `cable_mechanics.model_xml` constructs the MJCF
+string in memory. The owner draft's proposed `render_geometry.model_file` would therefore require a
+record to name an object that does not exist.
 
 **Why the two statements cannot both stand.** Reconstructing a centerline needs the chain order
 and the per-body segment lengths. Those live in the model. Reading them at runtime means importing
@@ -288,17 +323,22 @@ Slot-8 surface must be openable by a reader who installed the packet on a laptop
 geometry in the record; property 6's "config geometry" is the loose phrase. This document resolves
 in favour of 4.2:
 
-- `render_geometry.model_file` names the model file and its SHA-256. The adapter **hashes it and
-  never parses it**, so the geometry the record states is bound to a specific model with no
-  dependency on MuJoCo.
-- `render_geometry.link_segment_lengths_m` and `render_geometry.deform_layout` state the chain
-  explicitly: per link, the ordered body count and each body's segment length, and the mapping
-  from `deform_coords` index triples to those bodies, in the same order
+- `render_geometry.source` names and hashes the actual producer,
+  `scripts/utils/cable_mechanics.py`, and echoes the config's `model_id`. The adapter hashes that
+  source and never imports it, preserving V18 without inventing a static MJCF artifact.
+- `planar_convention` states the base point, that `q_true[0]` is the first L1 body's absolute
+  tangent orientation and `q_true[1]` is the first L2 body's orientation relative to the distal L1
+  tangent, which rotation-vector component advances the planar tangent, and how model x/z becomes
+  scene x/y.
+- `links` states the chain explicitly: one segment length per ordered body and the exact
+  `deform_coords` triplet assigned to each internal body, in the same link/body order
   `extract_deformation_coordinates` emits them.
 - `render_geometry.derivation_version` names the derivation the adapter implements, so a change to
   it is a visible version change rather than a silent difference between two figures.
 - The geometry is checked, not trusted: the derived distal point must agree with the authenticated
-  `true_task_output`, which is what 4.6's tolerance question is about.
+  `true_task_output`. The allowed tolerance is not invented in the record or measured on the
+  incoherent contract fixture; it equals the named, approved geometry-validation artifact under
+  section 4.6.
 
 **This is a correction that propagates forward.** The frozen design is not edited; this document
 is the current statement, and the adapter build follows this one.
@@ -317,35 +357,41 @@ authenticated, and each refusal is the code named on its row.
 | 0 | parse arguments; open nothing | argparse `SystemExit(2)`, unchanged from CS |
 | 1 | read `--connection-record` bytes; measure SHA-256; compare to `--connection-record-sha256` | `X_CONNECTION_UNAUTHORIZED` |
 | 2 | strict-parse the record; validate `record_version` and the complete field table; reject any non-finite value and any rooted, drive-qualified or `..` path token | `X_CONNECTION_UNAUTHORIZED` |
-| 3 | check `split` against the authorization the record was approved under, and `authority` against `split` | `X_SPLIT_FORBIDDEN` |
-| 4 | hash `--config`; compare to `config.sha256`; load it; compare `config_hash`; check the `dev-` rule against `authority` | `X_IDENTITY_MISMATCH`, then `X_PROVENANCE_UNRESOLVED` |
-| 5 | require each of the four role roots and each `index.csv` to exist at the schema-E layout | `X_ROLE_ABSENT` |
-| 6 | require every index row the adapter will use to be named by the record, and no other payload to be opened | `X_ROLE_UNAUTHORIZED` |
-| 7 | hash `manifest.csv` and `generation_audit.json`; compare to `data_root` | `X_IDENTITY_MISMATCH` |
-| 8 | require every named manifest row to equal the record's echo, field for field | `X_IDENTITY_MISMATCH` |
-| 9 | require every named row's `split` to equal `record.split` | `X_SPLIT_FORBIDDEN` |
-| 10 | hash every named role index and payload; compare to the record | `X_IDENTITY_MISMATCH` |
-| 11 | hash every named checkpoint under `--checkpoint-root`; compare to the record | `X_IDENTITY_MISMATCH` |
-| 12 | require both arms present for every case, and exactly two | `X_ARMS_INCOMPLETE` |
-| 13 | require the C1/S pair, case identity, onset, `task_reference` and label fields to agree | `X_PAIR_MISMATCH` |
-| 14 | require both arms' `plant.t_s`, body and tracking leading axes to bind to one `playback_t_s`, and both `controller_logs.step` to be the contiguous 0-based grid of length `T` | `X_TIMEBASE_MISMATCH` |
-| 15 | require decisions strictly increasing and inside the playback extent | `X_DECISION_UNSUPPORTED` |
-| 16 | establish the tracking window by **calling** `utils.metrics.j_5s` and re-raising any refusal | `X_WINDOW_UNSUPPORTED` |
-| 17 | derive each arm's centerline from `q_true`, `deform_coords` and `render_geometry`; check the distal point against `true_task_output` | `X_GEOMETRY_UNSUPPORTED` (new; see 4.5) |
-| 18 | require the computed provenance state to equal `authority` | `X_PROVENANCE_UNRESOLVED` |
-| 19 | require the bundle to cover every record case, and every surface to expose every bundle case | `X_BUNDLE_INCOMPLETE` |
-| 20 | write into `<output-dir>/<record_label>/` | `X_SCENE_OK`, exit 0 |
+| 3 | validate root domains without opening them: bind `schema`, `--config` and every source/result artifact to their packet-relative paths; bind every checkpoint/payload path under its CLI root; require `--role-root` basename = `dataset_label`; enforce the authority-specific output parent; check the fixed authority/split policy | `X_IDENTITY_MISMATCH`, `X_SPLIT_FORBIDDEN`, or `X_PROVENANCE_UNRESOLVED` |
+| 4 | hash `schema` and `--config` before parsing either; compare both digests; load the config through the authenticated schema; compare `config_hash`; check the `dev-`/frozen rule against `authority` | `X_IDENTITY_MISMATCH`, then `X_PROVENANCE_UNRESOLVED` |
+| 5 | hash and strict-parse `established_result`, the model-selection artifact, both threshold-source artifacts, the geometry producer and the geometry-validation artifact; resolve every declared field path and require equality | `X_IDENTITY_MISMATCH` |
+| 6 | hash and strict-parse `manifest.csv`, `generation_audit.json` and `independent_audit.json`; compare all digests; require both audit status/config/assignment echoes, their manifest census, and `established_result`'s split/config/case/run identities to agree | `X_IDENTITY_MISMATCH` or `X_SPLIT_FORBIDDEN` |
+| 7 | require each named role root and `index.csv` to exist at the schema-E layout | `X_ROLE_ABSENT` |
+| 8 | hash **every named role index before parsing any of them** and compare to the record | `X_IDENTITY_MISMATCH` |
+| 9 | parse the now-authenticated indexes; require every named run and exact `payload_relative_path` to be present, and plan no other payload open | `X_ROLE_UNAUTHORIZED` or `X_IDENTITY_MISMATCH` |
+| 10 | require every named manifest row to equal the record's 20-field echo and `record.split` | `X_IDENTITY_MISMATCH` or `X_SPLIT_FORBIDDEN` |
+| 11 | hash every named payload and checkpoint before loading any payload; compare to the record and to the authenticated index row | `X_IDENTITY_MISMATCH` |
+| 12 | load exactly the authenticated payload set through `RolePayloadLoader`; require its schema and semantic checks to pass | `X_IDENTITY_MISMATCH` |
+| 13 | require both arms present for every case, and exactly two | `X_ARMS_INCOMPLETE` |
+| 14 | require the C1/S pair, case identity, onset, `task_reference` and label fields to agree | `X_PAIR_MISMATCH` |
+| 15 | require both arms' `plant.t_s`, body and tracking leading axes to bind to one `playback_t_s`, and both `controller_logs.step` to be the contiguous 0-based grid of length `T` | `X_TIMEBASE_MISMATCH` |
+| 16 | require decisions strictly increasing and inside the playback extent | `X_DECISION_UNSUPPORTED` |
+| 17 | establish the tracking window by **calling** `utils.metrics.j_5s` and re-raising any refusal | `X_WINDOW_UNSUPPORTED` |
+| 18 | derive each arm's centerline from `q_true`, `deform_coords` and `render_geometry`; require the declared tolerance to equal its authenticated source; check the distal point against `true_task_output` | `X_GEOMETRY_UNSUPPORTED` (new; see 4.5) |
+| 19 | require the computed provenance state to equal `authority` | `X_PROVENANCE_UNRESOLVED` |
+| 20 | require the bundle cases and run identities to equal `established_result`, and every surface to expose every case | `X_BUNDLE_INCOMPLETE` |
+| 21 | exclusively create `<output-dir>/<record_label>/` and write the declared set | `X_SCENE_OK`, exit 0 |
 
-Steps 1 and 2 are the ones that matter most: **the record is authenticated before any scientific
-path is opened, and its own authentication needs nothing but the record file itself.** Everything
-downstream is a comparison against an object step 2 has already validated.
+Steps 1 and 2 are the first boundary: **the record is authenticated before any scientific path is
+opened, and its own authentication needs nothing but the record file itself.** Steps 4, 5, 6, 8
+and 11 are the second: a schema, artifact, audit, index or payload is hashed before it is parsed or
+loaded.
+The owner draft parsed role indexes at step 6 and authenticated them only at step 10; that order
+would have opened scientific index bytes before their identity was established. This table is the
+corrected normative order.
 
 ### 4.2 The allowlist rule, stated so it can be tested
 
-**The adapter opens exactly the files the record names, and no others.** Concretely: the config,
-the model file (hashed, never parsed), `manifest.csv`, `generation_audit.json`, the `index.csv` of
-each role root the record's arms use, and exactly the `.npz` payloads and `.pt` checkpoints the
-record's per-arm blocks name.
+**The adapter opens exactly the declared set and no others.** Concretely: the record; the fixed
+packet schema bound by the config; the config; established-result, model-selection, threshold,
+geometry-producer and geometry-validation artifacts; `manifest.csv`; both dataset audits; every
+named role `index.csv`; and exactly the `.npz` payloads and `.pt` checkpoints the per-arm blocks
+name. The expected set is derived from the record only after step 2 validates every path domain.
 
 W3 requires this to be measured rather than argued: the build round installs a `sys.addaudithook`
 observer over the `open` and `os.open` events for the duration of one adapter call and asserts the
@@ -389,24 +435,34 @@ adapter at it with a `dev-` config and a `dev` split and the frozen design's sta
 `DEVELOPMENT_ONLY` — a banner asserting *"a record of the development split"* over a tree that
 contains no rollout at all.
 
-This is not a hypothetical file. It is in the packet, it is the natural thing to test the adapter
-against, and section 2.4 recommends doing exactly that.
+This is not a hypothetical producer. It is in the packet and is the natural storage fixture for
+the adapter build. It must not be allowed to acquire research provenance merely by having a
+reviewer-computed digest added beside it.
 
-**Two mechanisms close it, and both are cheap.**
+**Four mechanisms close it, each covering a different boundary.**
 
-1. **The record names the data root's generation audit.** The delivered research root carries
-   `generation_audit.json` (and `independent_audit.json`) with `assignment_hash`, `config_hash` and
-   a manifest audit; the contract fixture writes `build_summary.json` and no generation audit.
-   `data_root.generation_audit_sha256` is therefore a required field, and its absence is
-   `X_ROLE_ABSENT` before any payload is opened. A synthetic tree cannot satisfy it without someone
-   deliberately forging a research-data audit artifact, which is a different act entirely.
-2. **A `DEVELOPMENT_ONLY` bundle may never be written into the tracked packet tree** (W9). Its
-   output root is git-ignored. So even if a development scene is rendered, it cannot become a
-   published figure, and the accident the frozen design's section 1.1 fears most — a development
-   artifact read by a non-specialist as the project's result — has no path to a reader.
+1. **The record names both dataset audits and their semantic fields.** The delivered research root
+   carries `generation_audit.json` and `independent_audit.json`; the contract fixture carries only
+   `build_summary.json`. The adapter hashes and strict-parses both audits. It requires each echoed
+   `status` to equal the record, both `assignment_hash` and `config_hash` values to equal the record
+   and each other, and both manifest/split censuses to equal a census recomputed from the manifest.
+   A digest alone proves only that one nominated file was stable; it does not prove that the file
+   says research data were generated.
+2. **The record names the already-established result.** Its menu case and run identities must
+   equal the exact result artifact that was read and closed before rendering. A schema-valid tree
+   with invented estimator rows has no such artifact.
+3. **The synthetic accept path remains synthetic.** The dedicated adapter fixture from 2.4 enters
+   the assembly core as `SYNTHETIC_FIXTURE`; it does not create a production connection record and
+   the public `roles` CLI does not accept a synthetic authority.
+4. **A development output has one mechanically fixed scratch parent.** Under
+   `DEVELOPMENT_ONLY`, `--output-dir` must equal
+   `results/verification_connection_development`, and that exact tree is added to the packet
+   `.gitignore`; any other destination refuses. This prevents accidental tracking. It is not
+   described as making deliberate publication impossible — Git ignore rules are not an access
+   control system.
 
-The second is the load-bearing one. The first can be defeated by a sufficiently determined mistake;
-the second is a property of where bytes are allowed to land.
+The audit/result binding establishes provenance; the output rule limits accidental publication.
+Neither substitutes for the other or for the transcript authorization.
 
 ### 4.5 The fourteenth exit code
 
@@ -450,65 +506,79 @@ The failure mode is quiet and expensive: the adapter would refuse every real arm
 `X_GEOMETRY_UNSUPPORTED`, and the obvious repair under time pressure is to loosen the shared
 constant — which silently weakens the fixture's exactness check at the same time.
 
-**Resolution.** Two constants, each named for what it measures:
+**Resolution.** Separate the fixture check from the later measured real-geometry check:
 
 - `CENTERLINE_TASK_OUTPUT_TOL_M` stays exactly as it is and stays the fixture's. **No existing
   value moves and no closed test changes.**
-- `ADAPTER_DISTAL_AGREEMENT_TOL_M` is the adapter's, and **its value is set by measurement in the
-  build round, not chosen here.** The build drives the derivation against authenticated
-  `q_true` / `deform_coords` on the contract fixture, reports the maximum observed deviation, and
-  sets the constant to that maximum with a stated margin, with the measurement recorded beside it.
-  A number invented in a design document and a number measured against the thing it bounds are
-  different objects, and this project has paid for that distinction before.
+- The production adapter has no guessed universal tolerance. The existing contract fixture cannot
+  set it because its `deform_coords` and `true_task_output` come from independent synthetic maps.
+  A separately approved geometry-validation artifact later records the maximum real agreement
+  deviation, the declared margin rule and the resulting tolerance without changing a role payload.
+- `render_geometry.distal_tolerance_m` must equal that artifact's named tolerance field, and the
+  adapter also reads the artifact's maximum-deviation field and requires it not to exceed the
+  tolerance. The exact record review can reject an unjustified margin; the runtime prevents a
+  different number from travelling under those approved bytes.
 
-The record's `render_geometry.distal_tolerance_m` must then equal the module constant — checked by
-equality, not adopted, so a record cannot loosen the tolerance by writing a bigger number.
+The dedicated coherent adapter fixture in 2.4 carries its own synthetic exactness oracle and proves
+the derivation logic now. It does not manufacture the future real-data tolerance.
 
 ### 4.7 What the adapter may write
 
 Exactly the declared output set, under `<output-dir>/<record_label>/`: one bundle JSON, one scene
 JSON per case, one 300-DPI PNG per case, and nothing else. It creates the root exclusively and
 refuses a non-empty one. It writes no checkpoint, no config, no role, no index, no log and no file
-outside that root. Under a `DEVELOPMENT_ONLY` record the root must be git-ignored (W9).
+outside that root. For `DEVELOPMENT_ONLY`, `--output-dir` must be exactly
+`results/verification_connection_development`, a tree added to the packet `.gitignore` in 4b. For
+`FINAL`, it must be exactly `results/verification_connection`, the tracked publication root. The
+record label remains the exclusive-created child in both cases (W9, W10).
 
 ---
 
 ## 5. Invariants the adapter and the record must carry
 
-- **W1 — The record is authenticated before any scientific path is opened.** A test drives every
-  step-1 and step-2 failure with a real config, real role roots and real checkpoints present on
-  disk, and asserts through the open-observer that none of them was opened.
+- **W1 — Authentication precedes interpretation at every layer.** The record is hashed before it
+  is parsed; each schema/source/result/audit/index/payload/checkpoint is hashed before it is parsed
+  or loaded. Tests drive the ordering failures with later files present and assert the open
+  sequence, not merely the final refusal.
 - **W2 — Every refusal in 4.1 has a test that constructs the state it refuses.** Not a test that
   asserts the message exists; a test that builds the input and drives the exit.
-- **W3 — The adapter opens exactly the record's file set.** Set equality in both directions, via an
-  audit-hook observer over one call (4.2).
+- **W3 — The adapter opens exactly the declared file set.** Set equality in both directions,
+  including the packet schema and every source/result/audit file, via an audit-hook observer over
+  one call (4.2).
 - **W4 — Manifest rows are compared, not adopted.** A mutation to any of the 20 fields in the
   record must refuse, and a mutation to any of the 20 fields in `manifest.csv` must refuse.
-- **W5 — Thresholds equal their named source.** A record whose threshold differs from the
-  calibration artifact at `field_path` refuses; a record whose `source` names a missing or
-  digest-mismatched artifact refuses.
-- **W6 — Provenance is computed and then required to equal `authority`.** A test constructs an
-  input set that would compute `DEVELOPMENT_ONLY` under a record claiming `FINAL` and asserts
-  `X_PROVENANCE_UNRESOLVED`.
-- **W7 — `FINAL` is unreachable from every input the packet currently contains, and provably so.**
-  The V8 shape, extended to the record path: no config in the packet satisfies P1, so no input set
-  can resolve `FINAL`. The test goes red the day one can.
+- **W5 — Every typed scientific choice equals its named source.** Both thresholds, rung, width,
+  result cases/run identities and geometry tolerance are checked at their declared field paths. A
+  missing source, digest mismatch, absent field or unequal value refuses.
+- **W6 — Provenance is computed and then required to equal `authority`.** It includes strict
+  semantic agreement among both dataset audits, the manifest, config and established result. A
+  test constructs an input set that would compute `DEVELOPMENT_ONLY` under a record claiming
+  `FINAL` and asserts `X_PROVENANCE_UNRESOLVED`.
+- **W7 — Production `DEVELOPMENT_ONLY` and `FINAL` are unreachable from every input the packet
+  currently contains.** No reviewed production record exists and no config satisfies P1. The
+  dedicated 4b accept fixture reaches only the private synthetic assembly seam, never the public
+  roles CLI. The test goes red when a production connection becomes reachable.
 - **W8 — The record cannot enlarge itself.** No CLI flag, environment variable or config value adds
   a case, a role, a payload or a split. A test asserts the roles-mode argument set is exactly the
   six arguments and that no other input path exists.
-- **W9 — A `DEVELOPMENT_ONLY` bundle never lands in the tracked tree.** Its output root is
-  git-ignored and a test asserts the ignore rule covers it.
+- **W9 — A `DEVELOPMENT_ONLY` bundle cannot accidentally target the tracked publication tree.**
+  The CLI requires its exact scratch parent, the packet ignore rule covers that parent, and a test
+  drives every other project-relative destination to refusal.
 - **W10 — The output root is bound to `record_label` and is exclusive-create.** A second run at the
   same label refuses and the first output survives the refusal.
 - **W11 — The adapter imports neither `torch` nor `mujoco`,** asserted in a fresh interpreter, as
   V18 requires of every module on this surface.
 - **W12 — The record cannot certify its own authorization.** A test asserts the record schema has
-  no approval-shaped field and that the adapter reads none.
+  no approval-shaped field and that the adapter reads none. Separate tests pin that record review
+  closes 4d without authorizing a run and that the two transcript halves in 4e are required by the
+  exact command protocol.
 - **W13 — No cross-arm derived scalar appears.** V14 extended to the adapter: the scene schema and
   both renderers still expose no C1-minus-S quantity, whatever the record says. D3 is not settled
   by building the adapter.
-- **W14 — The geometry check is a refusal with a code, not a `ValueError`.** A test drives a
-  perturbed `render_geometry` and asserts `X_GEOMETRY_UNSUPPORTED` and exit 15.
+- **W14 — Geometry is coherent, sourced and fail-closed.** The dedicated synthetic adapter fixture
+  derives its centerline and tip from one map; the production tolerance equals its authenticated
+  validation artifact; a perturbed chain, source or tolerance refuses with
+  `X_GEOMETRY_UNSUPPORTED` and exit 15 rather than a `ValueError`.
 
 ---
 
@@ -518,28 +588,39 @@ The frozen design's four printed statements still hold and are unchanged. The ad
 to every non-fixture surface it draws:
 
 5. **This picture is a rendering of a result that was established elsewhere.** The scene names the
-   record, the config, the split and the checkpoints it was drawn from, and states in words that
-   the comparison shown was produced by the confirmatory protocol and is being *displayed* here,
-   not computed here. A reader must never be able to conclude that the demo is where the finding
-   came from.
+   established-result artifact and digest, the record, the config, the split and the checkpoints
+   it was drawn from. It states whether the named prior read was development or final and says in
+   words that the comparison was established by that named prior read and is being *displayed*
+   here, not computed here. A reader must never be able to conclude that the demo is where the
+   finding came from or that a development result was confirmatory.
 
 ---
 
 ## 7. Acceptance tests
 
-- **B1 — The preconditions are provably unmet.** One test per P1–P6, each asserting the current
-  packet cannot satisfy it, each written so it goes red when the world changes.
-- **B2 — The synthetic end-to-end.** Build the contract fixture into a temporary root, author a
-  synthetic record against it, and drive the adapter to a complete bundle. Every step of 4.1 is
-  exercised on the accept side at least once, which is what makes the refusal tests meaningful.
+- **B1 — The preconditions are provably unmet.** One test per P1–P5, plus a test for the absence of
+  an established-result selection satisfying P6, each written so it goes red when the world
+  changes. The test must not claim that the packet lacks complete C1/S pairs: the delivered base
+  manifest already contains 472 of them.
+- **B2 — The synthetic end-to-end.** Build the existing contract fixture into a temporary root to
+  exercise storage, index, authentication and refusal plumbing. Separately build the dedicated
+  coherent adapter fixture from 2.4 and drive the private `SYNTHETIC_FIXTURE` assembly seam to a
+  complete bundle. No production connection record is authored, and only the coherent fixture is
+  used as the geometry accept oracle. Every applicable step of 4.1 is exercised on the accept side
+  at least once, which is what makes the refusal tests meaningful.
 - **B3 — Every refusal, driven.** W2, one case per row of 4.1.
 - **B4 — The open-set equality.** W3.
-- **B5 — Determinism.** The same record rendered twice produces byte-identical scenes and figures,
-  as V13 requires of the scripted path.
+- **B5 — Determinism.** The same coherent synthetic fixture rendered twice produces byte-identical
+  scenes and figures, as V13 requires of the scripted path. The production path reuses that same
+  assembly and rendering code; 4b does not claim a second, unauthorized real-data render.
 - **B6 — The fixture path is untouched.** The Step-2 and Step-3 states still reproduce exactly, the
   159 focused tests still pass, and the packet-wide suite still passes.
-- **B7 — A mutation control over the record.** Perturb each record field in turn and require a
-  refusal for each; a field no mutation can break is a field nothing checks.
+- **B7 — Mutation controls at the layers 4b can actually reach.** Perturb every generic record and
+  authenticated-source field in the complete synthetic validation harness and require its owning
+  validator to refuse. Drive every production-only provenance/result/tolerance field to its named
+  refusal with a baseline that has passed all earlier validators. At 4d, repeat the control against
+  the exact proposed production record; 4b does not claim that an unavailable production path has
+  already accepted end to end. A field no mutation can break is a field nothing checks.
 
 ---
 
@@ -578,17 +659,33 @@ at the current checkout, and this lane will add to it.
   with the record, after the confirmatory result exists. W13 keeps the answer "no" until then, and
   this document does not pre-empt it.
 
+### 9.1 Codex reviewer rulings
+
+- **E1 — Yes, with the split fixture boundary in 2.4.** Build the adapter now against the existing
+  contract fixture for authenticated storage/refusal plumbing and the dedicated coherent fixture
+  for geometry. Neither fixture may enter the public production authority path.
+- **E2 — Use the stronger mechanism.** The record names the exact established-result artifact,
+  digest and field paths; the adapter hashes, strict-parses and equality-checks them. That proves
+  the rendered identities were established elsewhere. It does not prove the social read gate
+  closed and does not authorize reopening the bytes; the two transcript halves in 4e do both.
+- **E3 — Retain `DEVELOPMENT_ONLY` as a future production state.** It is reachable only through an
+  explicitly reviewed development record after P1–P6 are satisfied. The present accept path is
+  `SYNTHETIC_FIXTURE`, not development.
+- **E4 — D3 remains open and the adapter carries no cross-arm scalar.** A later exact-state record
+  decision may add one only through a separately reviewed design change; this design does not.
+
 ---
 
 ## 10. Sequencing — Step 4, decomposed
 
-The frozen design's step 4 is one line. It is six, and only the last three are blocked.
+The frozen design's step 4 is one line. It is six: only 4a and 4b are buildable now; 4c through 4f
+are blocked.
 
 | # | sub-step | blocked on | authorizes |
 |---|---|---|---|
 | **4a** | **this document reviewed and frozen** at an exact state, both agents approving the same bytes | nothing | writing the adapter and its tests, and nothing else |
-| **4b** | **the adapter and its tests are built and reviewed**, exercised end to end against the contract fixture and a synthetic record; `ADAPTER_DISTAL_AGREEMENT_TOL_M` measured and recorded | 4a | nothing further; a built adapter is a tool, not a permission |
-| **4c** | **the preconditions P1–P6 are met**, each with its own separately approved artifact | the config freeze, the capacity selection, the threshold calibration, and the confirmatory read | authoring a record |
+| **4b** | **the adapter and its tests are built and reviewed**, exercising authenticated storage/refusal plumbing against the existing contract fixture and geometry/rendering against the dedicated coherent synthetic fixture; no real-data tolerance is guessed or recorded | 4a | nothing further; a built adapter is a tool, not a permission |
+| **4c** | **the preconditions P1–P6 are met**, each with its own separately approved artifact | the config freeze, capacity selection, threshold calibration, established development/final result and geometry validation | authoring a record |
 | **4d** | **the connection record is authored and reviewed** at an exact state, both agents approving the same bytes | 4c | nothing on its own |
 | **4e** | **the joint authorization**, issued as two halves, each naming the record digest, the split, the exact command, all six arguments, the budget, what it does not authorize, and how each of P1–P6 was checked | 4d | exactly one adapter invocation |
 | **4f** | **the one authorized invocation runs**, and both agents review the exact output state | 4e | nothing; the lane is then spent |
@@ -600,8 +697,12 @@ every lane in this project and it holds here.
 
 ## 11. What is true today, stated so a later session does not have to reconstruct it
 
-- Steps 1, 2 and 3 of the frozen design are closed at both approvals. Step 4 has not begun.
-- P1 through P6 are all false. No connection record exists anywhere in the packet.
+- Steps 1, 2 and 3 of the frozen design are closed at both approvals. Step 4a is in exact-state
+  design review; 4b has not begun.
+- P1 through P5 are false. P6 is uninstantiated because no established-result artifact selects the
+  cases and run identities for this surface. This is not an absence of pairs: the delivered base
+  manifest contains 472 complete C1/S pairs (152 dev, 152 pilot and 168 val). No connection record
+  exists anywhere in the packet.
 - `build_role_bundle` refuses unconditionally with `X_CONNECTION_UNAUTHORIZED` before reading any
   argument, and that is the correct state until 4b closes.
 - Findings CU, CV and CW are raised here for the first time and are resolved *within* this document
