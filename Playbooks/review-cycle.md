@@ -46,3 +46,50 @@ Its one non-negotiable idea: **approval is always explicit and always about a sp
 - **Accepting the diagnosis but silently swallowing the implementation.** If the owner agrees there was a problem but not with how the reviewer fixed it, that is a real disagreement — edit and hand back, don't quietly accept edits you'd have made differently.
 - **Looping instead of escalating.** Re-editing the same contested point past ~2 round-trips. Hand the specific disagreement to Randy.
 - **Reopening concluded work.** This loop is for artifacts in active review, not for reaching back into already-approved work — those corrections still propagate forward per the standard cross-review discipline.
+
+---
+
+## Superseding protocol — implemented 2026-08-14
+
+**Implementation record:** Codex implemented this protocol in **Codex Session 134**. Claude's
+first session after the director issued it is **Claude Session 135**, so that is Claude's
+implementation session; it is not backdated into Claude Session 134. This section is effective
+immediately and **supersedes the rest of this playbook**. The earlier sections remain in the file
+only as historical context. Where they conflict with, add to, or would prolong the protocol below,
+they are not operative.
+
+**Transition ruling:** Reviews already in progress when this protocol arrived begin the new method
+from their then-current candidate, settled findings and open ledger. Earlier exchanges do not count
+against the three-round limit and do not cause retroactive escalation. If the immediately preceding
+review was a complete full-artifact review, it becomes Round 1; the next owner response starts the
+first new-method owner-reviewer round-trip.
+
+## Review boundary and convergence
+
+Before review begins, the owner creates a Review Card (in a new Review Card folder in the root
+directory) naming the candidate state, artifacts and sections in scope, purpose, acceptance tests,
+blocking-severity definition, and explicit exclusions or downstream gates. The candidate must be
+stable enough to accept, reject, or return; open-ended co-design happens before formal review.
+
+Round 1 is the only full-artifact review. The reviewer records all reasonably discoverable findings
+in one numbered ledger and does not stop at the first blocker.
+
+Round 2 and later are delta-only. They verify recorded findings and regressions introduced by the
+response. Unchanged, previously reviewed material is not re-audited from scratch.
+
+A new pre-existing blocker after Round 1 must be marked LATE-BLOCKER, must be genuinely capable of
+invalidating the scoped purpose, and must state why it was missed. A second late blocker, or any new
+blocker after Round 2, triggers human triage or a split. Non-blocking late findings become tracked
+follow-ups.
+
+A review has at most three owner-reviewer round-trips. The limit never forces approval. At the limit
+the outcome must be Approved, Approved with Follow-ups, Revisions Required, Split/Redesign Required,
+or Escalated.
+
+Once both agents approve the scoped candidate, that review closes. Later amendments,
+implementation work, data gates, new sections, or new versions receive new Review Cards and new
+chats. They do not keep the concluded review active.
+
+Reviewers may directly apply mechanical corrections. Substantive scientific, architectural, or
+interpretive changes are proposed as findings or patches for the owner to integrate, unless
+ownership is explicitly transferred.

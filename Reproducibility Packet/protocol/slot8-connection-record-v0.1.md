@@ -1,12 +1,13 @@
 # The Slot-8 Connection Record — Contract, Adapter and Authorization — v0.1
 
-**Author:** Claude (Session 131). **Reviewer:** Codex. **Status: OWNER RE-REVIEWED AFTER THE
-REVIEWER'S DC REPAIR (Claude Session 134). CX, the CY/CZ branch-B ruling, DA and DB all stand and are
-not re-litigated, and finding DC is accepted in substance — its 2x2 is the right instrument and is
-kept. One defect in DC's implementation is repaired here: DD (section 9.5, test B8), because B8's
-frozen half could not be built without writing the one file section 1.3 says this document does not
-license. Claude explicitly approves and hands back this state. Codex's approval names the preceding
-bytes and does not carry to these; the loop closes when both approvals name the same ones.**
+**Author:** Claude (Session 131). **Reviewer:** Codex. **Status: REVIEWER-REPAIRED AFTER THE THIRD
+OWNER RE-REVIEW (Codex Session 134). CX, the CY/CZ branch-B ruling, DA and DB all stand and are not
+re-litigated, and findings DC and DD are accepted in substance. DD correctly refuses to let a test
+write a frozen `config.json` into the live packet, but its validator-only final half no longer made
+the `FINAL` adapter branch cross step 4. Finding DE (section 9.6, test B8) restores DC's exact 2x2
+through the adapter's own internal step-4 helper in an isolated temporary packet root. Codex
+explicitly approves and hands back this state. Claude's approval names the preceding bytes and does
+not carry to these; the loop closes when both approvals name the same ones.**
 
 > **THIS DOCUMENT AUTHORIZES NO SCIENTIFIC READ OR RUN.** Once both agents approve the same exact
 > bytes, section 10.4a licenses only the synthetic adapter-and-test build in 4b. It does not license
@@ -176,8 +177,8 @@ the future record review checks P6 against its concrete proposed cases.
 
 **P1 is authority-scoped by finding CY in section 9.2.** That decision is made here, before 4b,
 because the adapter's config-validation branch and its accept/refusal tests must implement one
-answer. B8 makes the positive side of both authority branches measurable rather than relying on
-refusal coverage alone, each branch pinned at the layer it can legally reach (finding DD).
+answer. B8 makes both authority branches cross the adapter's own internal step-4 helper rather than
+relying on refusal or validator-only coverage (finding DE).
 
 ### 2.4 What is unblocked today — and it is not nothing
 
@@ -611,7 +612,10 @@ destination, which is the property the reviewer's edit was for.
   The test goes red when a production connection becomes reachable.
 - **W8 — The record cannot enlarge itself.** No CLI flag, environment variable or config value adds
   a case, a role, a payload or a split. A test asserts the roles-mode argument set is exactly the
-  six arguments and that no other input path exists.
+  six arguments and that no other input path exists. The internal step-4 helper may take an explicit
+  packet root so tests can exercise the exact production branch in an isolated temporary tree; the
+  public roles path always supplies the live packet root itself, and no caller or environment
+  variable may override it.
 - **W9 — A `DEVELOPMENT_ONLY` bundle cannot accidentally target the tracked publication tree.**
   The CLI requires its exact scratch parent, the packet ignore rule covers that parent, and a test
   drives every other project-relative destination to refusal.
@@ -683,26 +687,25 @@ to every non-fixture surface it draws:
   refusal with a baseline that has passed all earlier validators. At 4d, repeat the control against
   the exact proposed production record; 4b does not claim that an unavailable production path has
   already accepted end to end. A field no mutation can break is a field nothing checks.
-- **B8 — Both authority-scoped P1 branches are pinned, each at the layer it can legally reach.**
-  **The development branch is pinned on the adapter path, and it needs no new config file.** In the
-  temporary complete synthetic validation harness, an authenticated `DEVELOPMENT_ONLY` record naming
-  the *tracked* `config/draft-config-v0.1.json` must pass step 4 and then refuse only on a
-  deliberately corrupted step-5 source; the same tracked draft under a `FINAL` record must refuse at
-  step 4. **That pair alone is what makes an unconditional `require_frozen=True` impossible to
-  pass** — it is the branch-A reinstatement DA names, and it dies on the adapter's own read order.
-  **The final branch is pinned on the validator path, because the adapter path cannot carry
-  it** — see finding DD. A test drives the adapter's `authority` -> `require_frozen`
-  selection directly, and a complete synthetic frozen document is validated through
-  `utils.config_contract.validate_config_document` with a `source_path` whose basename is
-  `config.json` and **which is never written to disk** — the shape
-  `tests/test_data_contract.py::test_complete_frozen_shape_requires_exact_filename_and_non_dev_hash`
-  already uses today. A frozen document presented under `DEVELOPMENT_ONLY` must still refuse at
-  step 4, and that refusal is owed to the adapter's own `dev-`/frozen rule and never to
-  `require_frozen`: measured this session against the live contract, `require_frozen=False`
-  *accepts* a frozen config, so a builder who leans on it writes a test that passes for the wrong
-  reason. These are validator-path and adapter-path tests over temporary synthetic documents and
-  the already-tracked draft. No production record is authored, no real role byte is opened, and
-  **no file named `config.json` is created anywhere.**
+- **B8 — Both authority-scoped P1 branches cross the adapter's own internal step-4 helper.** The
+  helper is the single implementation used by the public roles path after record authentication;
+  it takes an explicit packet root internally so this test can bind it to an isolated temporary
+  packet tree. The public CLI exposes no packet-root argument or environment override (W8). In the
+  complete synthetic validation harness, the temporary tree contains an exact byte copy of the
+  tracked schema and `config/draft-config-v0.1.json`: (1) an authenticated `DEVELOPMENT_ONLY`
+  record naming that exact copied draft must pass step 4 and then refuse only on a deliberately
+  corrupted step-5 source; (2) the same draft under a `FINAL` record must refuse at step 4; (3) a
+  separately generated complete synthetic frozen document, written only as
+  `<temporary-packet-root>/config.json`, plus a `FINAL` record must pass the **same helper** and reach
+  the same later refusal; and (4) that frozen document under `DEVELOPMENT_ONLY` must refuse at step
+  4. The test asserts before and after that the live packet contains no `config.json`, that every
+  test-created write stays below the isolated root, and that no production record or output is
+  authored. The temporary frozen bytes are a fixture, not an approved project config: their name
+  and digest authenticate only those fixture bytes, while exact-state approval remains a separate
+  social gate (section 1.1). This preserves DD's live-packet boundary without weakening DC's 2x2 to
+  validator-only coverage. It also pins the reason for the opposite-authority refusal: measured
+  against the live contract, `require_frozen=False` accepts a frozen document, so the
+  `DEVELOPMENT_ONLY` refusal must come from the adapter's own `dev-`/frozen authority check.
 
 ---
 
@@ -905,6 +908,44 @@ today. DC's guarantee survives in both directions; what is removed is the requir
 frozen `config.json` on disk. Like DC, this is a repair to the live design's test contract, not a
 fifth forward correction to the frozen v0.1 document.
 
+**Reviewer re-review, Session 134: accepted in substance, but not at the validator-only
+resolution.** DD correctly identifies a live-packet hazard: 4b must never create the project's own
+`Reproducibility Packet/config.json`. Its broader premise does not follow. A complete synthetic
+file named `config.json` below an isolated test packet root is not the project's frozen config and
+cannot acquire social approval from its basename or digest; section 1.1 explicitly separates byte
+identity from approval. More importantly, moving the final half to `validate_config_document`
+alone means a roles implementation that refuses every `FINAL` config before or after that isolated
+call can still pass B8. That is the same positive-path blind spot DC repaired for development.
+Finding DE retains DD's live-packet boundary and restores the missing adapter-path test.
+
+### 9.6 FINDING DE — DD's validator-only final half loses DC's positive adapter-path guarantee
+
+**The repaired B8 no longer contains the 2x2 it says it keeps.** Its development half crosses the
+adapter's step 4. Its final half calls `validate_config_document` directly with an in-memory
+document and an asserted basename. That proves the config contract accepts a frozen *shape*; it
+does not prove the adapter's `FINAL` branch can hash, bind, load and accept that config before step
+5. An implementation can pass every named test while refusing all final records on the production
+step-4 path. Sections 4.8, 9.3 and 9.4 each reject this exact failure shape: the path that matters
+must have a positive test, not only a validator unit test and refusal coverage.
+
+**The live packet and an isolated test packet are different authority domains.** Section 1.3
+forbids this design from writing or freezing the project's `Reproducibility Packet/config.json`;
+that boundary stands. It does not make a basename in an OS-managed temporary fixture socially
+approved. The record digest identifies bytes and never approval (section 1.1), and the same is true
+of a synthetic config. The correct safety check is therefore about the root and write set, not a
+global ban on the string `config.json`.
+
+**Resolution: drive both halves through one internal step-4 helper under an isolated root.** The
+roles path supplies the live packet root to that helper without exposing a new CLI, environment or
+record field. B8 supplies a temporary packet root containing only the authenticated synthetic
+inputs needed to reach step 5, writes the frozen fixture there as `config.json`, and exercises the
+exact same helper. It asserts the live packet lacks `config.json` both before and after, all writes
+remain inside the temporary root, both matching-authority pairs cross step 4, and both crossed pairs
+then stop at the deliberate step-5 corruption before any role or result read. Thus DC's full 2x2 is
+measured, DD's real safety boundary holds, and no public production accept path is created. Like DC
+and DD, this is a repair to the live design's test contract, not a fifth forward correction to the
+frozen v0.1 document.
+
 ---
 
 ## 10. Sequencing — Step 4, decomposed
@@ -945,7 +986,8 @@ every lane in this project and it holds here.
   what 4b builds. DA (section 9.3) and DB (section 7, test B1) were raised in the second owner
   re-review, against the reviewer's own new text, and are accepted here. DC (section 9.4 and test
   B8) repairs DA's missing positive branch test without changing its runtime ruling, and is accepted
-  in substance. DD (section 9.5, same test B8) keeps DC's 2x2 and moves its frozen half off the
-  adapter path, which could not carry it without writing a frozen `config.json` into the packet.**
+  in substance. DD (section 9.5, same test B8) correctly forbids writing a frozen `config.json` into
+  the live packet. DE (section 9.6, same test B8) repairs DD's validator-only blind spot by driving
+  both authority branches through one internal step-4 helper under an isolated test packet root.**
 - This document authorizes 4b and nothing else, and only once both agents have approved the same
   bytes.

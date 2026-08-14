@@ -1,233 +1,86 @@
 # Summary of Only Necessary Context — Codex
 
-Last completely rewritten after Codex Session 133 on 2026-08-14.
+Last completely rewritten after Codex Session 134 on 2026-08-14.
 
 ## Resume here
 
 - Branch: `main`.
-- Slot-8 Steps 1, 2 and 3 are closed / both approved.
-- Step 4a connection-record design review is **open**.
-- Claude accepted Codex finding CZ and the authority-scoped branch-B ruling, then repaired findings
-  DA and DB and explicitly approved owner blob `806d6fb9f2320ae9d44c758c18cb74a387828335`.
-- Codex accepted DA/DB in substance, found one missing positive branch test as finding DC, repaired
-  the document and explicitly approved reviewer blob
-  `b968886f9bc4edcde0e5013256a8e95633ababb4` / raw SHA-256
-  `73ca1be39dd37eb06f42446a3b20a1d203057bb97fa65260790d746a9679b464`.
-- Claude owner re-review of that exact reviewer state is required. Step 4a is not closed until
-  Claude explicitly approves the same bytes.
-- Step 4b has not begun and is not yet authorized. Steps 4c–4f remain blocked.
-- No production connection record, real-role adapter read, capacity/threshold selection, final
-  config, scientific result or C1-versus-S statement is authorized.
+- The director's Review Card and convergence method is now the governing review protocol. It was implemented for Codex in Session 134 and is first applicable to Claude in Session 135. It supersedes the rest of `Playbooks/review-cycle.md`.
+- The oversized `Phase 2 Integration and Config Freeze` chat is concluded. Do not append new work there.
+- The active three-party governance chat is `chats/Claude-Codex-Human/Review Boundary and Convergence/Review Boundary and Convergence - Active.md`. Read its latest correction for protocol feedback and problems arising from the method.
+- Root `Review Card/README.md` defines the required card fields. New formal reviews need a candidate-specific card and a subject-scoped chat.
+- Slot-8 Steps 1–3 remain closed / both approved.
+- Step-4a is **ACTIVE, NOT YET APPROVED** under `Review Card/Slot-8 Step-4a Connection-Record Design.md` and the narrow active chat `chats/Claude-Codex/Slot-8 Step-4a Connection-Record Design/Slot-8 Step-4a Connection-Record Design - Active.md`.
+- The director corrected the transition: start the new method from the current state. Pre-method exchanges do not consume the new three-round limit and do not cause retroactive escalation.
+- Claude's Round-1 owner candidate is blob `968fa8959fc3b106895e794589c41954d0c2f901`.
+- Codex's completed Round-1 response has one numbered blocker and proposes blob `425ce0118bddc44daccfa69b19362aec6ea70d00`, raw SHA-256 `a270d95d891037f70e5d08fafd15dadfcd1f69c40d95ca978cd9927bdc057400`, 77,105 bytes / 993 LF / 0 CR.
+- The reviewer proposal passed `DESIGN_REVIEW_OK: 72 checks`; focused config-contract tests passed 18/18. Claude's owner response begins new-method round-trip 1; Codex's next review is Round 2 / delta-only.
+- Step 4b is unauthorized. Steps 4c–4f, every real-role connection/read, capacity or threshold selection, and final-configuration work remain blocked.
 
-## Current Step-4 design state
+## Superseding review protocol
 
-Artifact:
-`Reproducibility Packet/protocol/slot8-connection-record-v0.1.md`
+- Before formal review, the owner creates a Review Card naming the candidate state, artifacts and sections in scope, purpose, acceptance tests, blocking-severity definition, exclusions and downstream gates.
+- Round 1 is the only full-artifact review and records all reasonably discoverable findings in one numbered ledger.
+- Round 2 and later are delta-only: verify recorded findings and response-introduced regressions without re-auditing unchanged material.
+- A newly raised pre-existing blocker after Round 1 is a `LATE-BLOCKER`; it must invalidate the scoped purpose and explain why it was missed. A second late blocker, or any new blocker after Round 2, requires human triage or a split. Non-blocking late findings become follow-ups.
+- A review has at most three owner-reviewer round-trips. The limit does not force approval; the terminal outcome must be Approved, Approved with Follow-ups, Revisions Required, Split/Redesign Required, or Escalated.
+- Once both agents approve the scoped candidate, that review closes. Amendments, implementation, data gates, new sections and new versions get new Review Cards and new subject-scoped chats.
+- Reviewers may directly apply mechanical corrections. Substantive scientific, architectural or interpretive changes remain proposed findings or patches for the owner unless ownership is explicitly transferred.
+- Transition rule: an in-progress review keeps its current candidate, settled findings and open ledger; earlier exchanges do not consume the new limit. A complete immediately preceding full-artifact review becomes Round 1.
+- Interpret `mechanical` by effect, not edit size: a wording change that changes authority, scientific meaning or architecture is substantive.
+- An exclusion cannot hide an integration defect that genuinely invalidates the stated scoped purpose.
 
-Exact reviewer state:
+## Current Step-4 technical state
 
-```text
-Git blob     b968886f9bc4edcde0e5013256a8e95633ababb4
-raw SHA-256  73ca1be39dd37eb06f42446a3b20a1d203057bb97fa65260790d746a9679b464
-bytes        67,942
-format       UTF-8, no BOM, LF-only, final newline
-review audit DESIGN_REVIEW_OK: 44 checks
-```
+### Finding DE
 
-The header says `REVIEWER-REPAIRED AFTER SECOND OWNER RE-REVIEW AND CODEX APPROVED`. Claude's
-approval names `806d6fb9...`. Do not infer same-state owner approval from the handoff, downstream
-use or silence.
+Claude's finding-DD repair removed final-config handling from the adapter-path test and left only direct validator checks. That permits an implementation to refuse every final configuration while still passing the proposed suite; the final half no longer positively proves the real Step-4 adapter path.
 
-## Session-133 findings and rulings
+Codex's B8 repair requires one internal Step-4 helper and an isolated temporary packet root. The public roles path stays bound to the live packet root and exposes no CLI or environment override. The temporary root contains exact copies of the tracked schema and draft plus a synthetic `config.json` for the final leg. Both matching authority pairs must pass Step 4 and then stop only at a deliberate Step-5 corruption; both wrong-authority pairs must refuse. The test also proves that the live packet contains no `config.json` and that all writes stay inside the temporary root.
 
-### Findings DA and DB — accepted in substance
+The current artifact is a reviewer proposal, not same-state joint approval. Claude should respond as owner in the narrow Step-4a chat; Codex then performs a delta-only Round-2 review.
 
-- **DA:** the frozen design's `--config` gloss is `FINAL`-only. Under `DEVELOPMENT_ONLY`,
-  `--config` names an exact approved versioned draft file; `require_frozen` is selected from the
-  authenticated record authority, never constant.
-- The live tracked draft reproduces DA's source facts: it validates with
-  `load_config(require_frozen=False)`, carries `status = draft`, `dev-712abf27...`, and null
-  `values.models`, `values.calibration` and `values.evaluation`; it refuses under
-  `require_frozen=True` with `confirmatory operation refuses draft configuration`.
-- **DB:** B1 must remain portable. It proves the current production path unreachable from packet
-  bytes and must not depend on the external 3.86 GB role tree. The external dataset label appears
-  under `tests/` only three times, all as name-validation strings. No connection record is tracked.
+## Chat and transcript state
 
-### Finding DC — reviewer repair now awaiting owner re-review
+- Concluded legacy transcript: `chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Concluded.md`.
+- Legacy summary: `chats/Claude-Codex/Phase 2 Integration and Config Freeze/Summary.md`.
+- Final legacy transcript state: 2,296,416 bytes, SHA-256 `06508a94430ea91f59037a004cfc74773be3959a97fe131ec894d2a2742bf388`.
+- The final Codex close note was appended only after exact-prefix verification; it is 1,158 bytes / 21 LF / 0 CR and is physically last.
+- Active protocol chat: `chats/Claude-Codex-Human/Review Boundary and Convergence/Review Boundary and Convergence - Active.md`.
+- Active Step-4a review chat: `chats/Claude-Codex/Slot-8 Step-4a Connection-Record Design/Slot-8 Step-4a Connection-Record Design - Active.md`.
+- Active transcript-order recurrence log: `chats/Claude-Codex-Human/Transcript Order Monitoring/Transcript Order Monitoring - Active.md`.
+- Future chats should be created by bounded subject and concluded when that subject is done. A whole phase is too broad for one active thread.
 
-DA repaired the runtime prose but did not make branch B positively testable. B1 validates the
-tracked draft outside the adapter, B2's complete synthetic accept path never opens a config, and
-B3's refusal cases can pass on an implementation that rejects every development config.
+## Durable scientific boundaries
 
-New **B8** requires, in the temporary complete synthetic validation harness:
+- The project remains development-only; no final model is frozen and no confirmatory run has occurred.
+- Slot-9 Stage 1 and rung-2 are complete only at their bounded development-screen scopes. No capacity or threshold was selected.
+- All ten rung-2 arms have zero healthy and structure F1. This persisted-value fact may accompany the weak objective/sign description without a causal claim.
+- Slot-8 role use remains synthetic-only. No real role path may connect to or read data without the separate downstream gates.
+- Scientific read/run counters are unchanged in Session 134: no artifact reads and no scientific runs.
 
-1. an authenticated `DEVELOPMENT_ONLY` record/versioned-draft pair passes step 4 and then refuses
-   only at a deliberately corrupted step-5 source;
-2. that draft config under `FINAL` refuses at step 4;
-3. a separately generated synthetic-frozen/`FINAL` pair passes step 4 and reaches the same later
-   refusal; and
-4. that frozen config under `DEVELOPMENT_ONLY` refuses at step 4.
+## Public heartbeat and reports
 
-These are validator-path tests using temporary synthetic documents. They do not author a production
-record, create a public production accept path or open a real role byte. Branch B, DA, DB, CX, CY,
-CZ, the six CLI arguments and every later authorization gate remain unchanged.
+- Root `README.md` was not changed in Session 134: no scientific artifact finished, phase closed, or public milestone changed.
+- No progress report was required in Session 134; it is not an every-eighth Codex session and no scientific phase or amendment closed.
+- The governance and review-status changes are recorded in the agent README, HumanReport134, the playbook, the Review Card README and the scoped chats.
 
-## Load-bearing Step-4 decisions still in force
+## Next-session rules
 
-### Preconditions and current data truth
+1. Read `.agent-turn`, honor the session lock gate, then follow `AgentPrompt.md`.
+2. Read this continuity file, `agents/Codex/README.md`, `agents/Codex/Session Summaries/HumanReport134.md`, and every active shared chat involving Codex.
+3. Read the active Review Boundary and Convergence chat before responding to any Step-4 work.
+4. Do not reopen or append to the concluded Phase-2 transcript.
+5. Continue Step-4a only in its narrow Review Card and subject chat. The next Codex review is Round 2 / delta-only after Claude's owner response.
+6. Do not treat the reviewer candidate as Claude approval or as authorization for Step 4b.
+7. If a new Review Card is opened, enforce the one-ledger, delta-only, late-blocker and three-round-trip rules exactly.
+8. Preserve append-only transcript writes with physical-tail, line-count, exact-prefix, unique-header and post-write assertions.
+9. Keep public claims bounded to direct evidence and preserve all downstream data, capacity, threshold and final-configuration gates.
 
-- Final P1 and P2–P5 are false today. No complete `DEVELOPMENT_ONLY` precondition set exists.
-- The current draft validates structurally as a development config, but its model and calibration
-  fields are null and the design grants it no connection-record approval.
-- P6 is uninstantiated, not false because no pairs exist. The delivered base manifest has 944 rows
-  and 472 complete C1/S pairs: 152 dev, 152 pilot and 168 val.
-- What is absent is an approved established-result artifact selecting exact menu cases/run
-  identities and the downstream estimator/controller role material needed to render them.
-- A production record may be authored only at 4c after the authority-appropriate config state,
-  capacity selection, threshold calibration, separately established result and geometry validation
-  all exist and are separately approved.
+## Session 134 closeout state
 
-### Approval and authorization
-
-1. Both-agent approval of the exact design closes 4a and licenses only the bounded synthetic
-   adapter/test build in 4b.
-2. A later production record's exact-state approval closes 4d but authorizes no run.
-3. Two separately recorded 4e authorization halves must name the exact record digest, split,
-   command, all six arguments, budget and P1–P6 checks. Together they authorize one invocation.
-4. An earlier result read does not make the later rendering read free; the adapter's role re-open
-   needs its own 4e authorization.
-
-### Authentication and allowlist
-
-- The record is authenticated before parsing.
-- Packet schema, config, every source/result/audit, every role index, every payload and every
-  checkpoint are hashed before parsing/loading.
-- The record names the packet schema, established result, model-selection artifact, two threshold
-  sources, generated-geometry producer, geometry-validation artifact, manifest, both dataset
-  audits, role-index/payload paths and checkpoint identities.
-- Packet artifacts are packet-relative; payloads are role-root-relative; checkpoints are
-  checkpoint-root-relative. No scan, glob, default or path-domain substitution is allowed.
-- The record contains no approval/authorization field. Digests identify bytes, not social state.
-
-### Geometry and synthetic fixtures
-
-- There is no static MJCF model file. `scripts/utils/cable_mechanics.py::model_xml` constructs it
-  in memory, and `extract_deformation_coordinates` emits ordered ball-joint log maps from
-  `body_ids[1:]` for each link.
-- The existing contract fixture's deformation and endpoint use independent synthetic maps. It
-  cannot set the real adapter tolerance.
-- Step 4b uses the existing fixture only for storage/index/authentication/refusal plumbing and a
-  separate coherent deterministic fixture for geometry/rendering.
-- The synthetic accept path reaches only the private `SYNTHETIC_FIXTURE` seam. It cannot create
-  production `DEVELOPMENT_ONLY` or `FINAL` authority.
-- The 1 nm `CENTERLINE_TASK_OUTPUT_TOL_M` remains the closed fixture-construction check. A later
-  reviewed geometry-validation artifact sources the production tolerance.
-- Geometry failure receives additive `X_GEOMETRY_UNSUPPORTED`, exit 15; existing codes do not move.
-
-### Provenance and output
-
-- Schema-conformant fixture bytes are not research provenance.
-- Production provenance requires strict semantic agreement among both dataset audits, manifest,
-  config and exact established-result artifact.
-- `DEVELOPMENT_ONLY` remains a future production state for an explicitly reviewed draft-config
-  record. Its exact output parent is `results/verification_connection_development` and is ignored
-  only to prevent accidental tracking.
-- `FINAL` bundles write below `results/verification_connection/bundles`; connection records live
-  below sibling `results/verification_connection/records`.
-- `.gitignore` is not an access-control mechanism.
-- D3 stays open and the current adapter design contains no cross-arm derived scalar.
-
-## Public Live-Run README
-
-No successor entry was added in Codex Session 133. The connection-record design remains in an open
-review round, so no artifact finished and no phase or distinct public milestone closed. The
-Phase-2/In-Progress banner remains current. Do not rewrite the append-only 2026-08-13 entry. Keep
-future public heartbeats to the playbook's lean one-or-two-sentence form.
-
-## Closed Slot-8 state that still controls
-
-- Step 1 design: closed / both approved at blob `0753d4ed...`.
-- Step 2 implementation/tests: closed / both approved at source/test blobs `c12745ab`, `0ae5b19d`,
-  `cf61e5aa` and `1833a472`.
-- Step 3 fixture figure set/runbook: closed / both approved at ten fixture blobs plus packet README
-  `4bc07f18`, packet `.gitattributes` `70ec4e7b`, packet `.gitignore` `ad29de35`, root
-  `.gitattributes` `5a7720bc` and root README `3ab96e38`.
-- The synthetic figure set is not a scientific result. The role path continues to refuse before
-  opening a scientific file.
-- The clean packet suite count is 2,267 passed. Sessions 131–133 changed documentation only and did
-  not rerun it.
-
-## Other scientific boundaries still controlling
-
-- Stage 1 is complete as scoped: no readable five-point/five-seed curve shape and no trend,
-  capacity or threshold statement licensed.
-- Literal Slot-9 rung 2 is complete as scoped. Its fit/analyzer invocations are spent; exact
-  analysis blob `a2fa857b...` / raw SHA-256 `604d7272...` is jointly approved.
-- All ten rung-2 arms have zero healthy and structure F1; this persisted-value observation must
-  accompany the weak objective/sign description without causal attribution.
-- Checkpoint 67 is development-only. No validation, generalization, threshold, final-config or
-  engineering-usability claim follows.
-- Amendment A2 and every development/pilot/validation/confirmatory/test/final boundary remain in
-  force.
-- Current counters remain 278 rollouts, 67 fits and 67 checkpoints; zero pilot/val/test reads.
-
-## Transcript state
-
-Authoritative active thread:
-`chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`
-
-After Codex Session 133's append:
-
-```text
-bytes       2,282,252
-LF          37,048
-CR          19,709
-SHA-256     8519836edeb7885042d2d5f3ce414a404ad92d80bbf75788470962eac6655e78
-tail diff   +74 / -0
-```
-
-The 2,277,858-byte pre-write state remains the exact prefix at SHA-256
-`7643418cf846f75bd4f3c0cb6c4434bd9672911d9ca092aba5d3f4f91ceaba1f`. The Codex Session-133
-header occurs exactly once after that boundary, Codex is physically last, and the 4,394 added bytes
-are LF-only. No append-order recurrence occurred; Transcript Order Monitoring was not changed.
-
-For every future append: authenticate the physical UTF-8 bytes, record the pre-write boundary,
-verify a complete unique EOF anchor programmatically, use the exact complete anchor as the write
-boundary, and then assert the old bytes remain the exact prefix, the new header occurs once after
-the boundary, the new author is physically last and Git is additions-only. If any assertion fails,
-preserve the misplaced copy, append a dated physical-tail correction and disclose it in Transcript
-Order Monitoring.
-
-## Smart App Control
-
-Smart App Control stays on by the director's decision. Before treating a future native-import
-failure as project code, run:
-
-`powershell -ExecutionPolicy Bypass -File "C:\Users\cresp\Documents\Dandelion Engineering\tools\Check-NativeImportBlocks.ps1"`
-
-Do not propose turning SAC off.
-
-## Next Codex session
-
-Expected Codex Session 134:
-
-1. Authenticate the newest transcript suffix against the Session-133 state above.
-2. Read Claude's exact owner re-review of blob `b968886f...` and finding DC/B8.
-3. If Claude approves those exact bytes unchanged, acknowledge Step 4a closure. Only Claude's
-   bounded 4b adapter-and-test build becomes eligible; no scientific read or run follows.
-4. If Claude edits, review the new exact state and preserve the owner/reviewer loop.
-5. When reviewing 4b, require B8's two positive and two wrong-authority branch drives in temporary
-   synthetic documents. An unconditional `require_frozen=True` implementation must fail.
-6. Do not let 4b claim production-path acceptance, author a production record, open real roles or
-   set the production geometry tolerance.
-7. Preserve every data split, capacity, threshold, config-freeze and result boundary above.
-
-## Workflow rules
-
-- Follow `AgentPrompt.md` and obey `.agent-turn` / `.agent-session.lock` before any project work.
-- Live transcript and current repository bytes outrank this continuity file.
-- Require explicit same-state approval. Creation, edits, handoff, downstream use and silence are
-  not approval.
-- Before closeout, check the Live-Run README obligation, review/stage only intentional paths,
-  commit and push, then delete `.agent-session.lock` and only afterward write `Claude` to
-  `.agent-turn`.
+- Codex implemented the superseding review method, established the Review Card directory, opened the active three-party protocol chat and recorded feedback plus the migration correction.
+- Codex concluded and summarized the oversized Phase-2 chat.
+- Codex reviewed Claude's Step-4 design response, added finding DE/B8, and preserved exact evidence without claiming same-state convergence.
+- After the director corrected the initial retroactive escalation, Codex opened the Step-4a transition card and narrow chat at the current state. Round 1 is complete; Claude's owner response is pending.
+- Handoff target after commit and push: Claude Session 135.
