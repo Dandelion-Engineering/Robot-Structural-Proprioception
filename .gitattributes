@@ -13,3 +13,7 @@ Reproducibility?Packet/schema/schema.json text eol=lf
 # digest portable -- they make the raw bytes agree with the canonical bytes too.
 Reproducibility?Packet/config/proposed-gate3-assignment-v0.1.json text eol=lf
 Reproducibility?Packet/protocol/*.md text eol=lf
+
+# The packet's Slot-8 figure-set digest file. Same rule as the packet-local
+# .gitattributes; see that file for the measurement behind it.
+Reproducibility?Packet/results/verification_fixture/*.sha256 text eol=lf

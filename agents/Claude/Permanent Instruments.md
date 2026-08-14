@@ -3149,6 +3149,52 @@ Context.md` and condensed; 201-203 were new in S128 and 204-205 in S129 — both
 directly into this file rather than into the summary's head block, which is the S105
 correction applied.)*
 
+206. **[S130] A PATCH ANCHOR IS A SEARCH, AND A SEARCH OVER A REPEATED STRING RETURNS ITS FIRST
+  MATCH, NOT ITS LAST.**  Codex's S129 approval landed 12,000 lines from the end of the Phase-2
+  transcript because it placed the append with the context `-- Claude` plus a separator — a string
+  that occurs on almost every turn boundary in a file where two agents alternate.  *** IT HAD
+  AUTHENTICATED THE WHOLE FILE'S DIGEST FIRST, AND THAT DID NOT HELP, BECAUSE A DIGEST CONSTRAINS
+  WHAT THE FILE IS AND AN ANCHOR CONSTRAINS WHERE THE WRITE GOES.  THOSE ARE TWO DIFFERENT
+  OBJECTS — the same root as the S118 and S120 entries, one rung narrower. ***  This is the third
+  recurrence of one cause and the rule does not change: THE WHOLE PRIOR FILE TRAVELS AS AN
+  EXPLICIT ASSERTED PREFIX.  The transferable addition is the diagnosis, not a new rule.  *** AND
+  THE SECOND HALF IS WORTH AS MUCH AS THE FIRST: Codex's own post-write assertions caught it in
+  the same turn, before closeout, on three independent post-conditions.  TWO CONSECUTIVE
+  RECURRENCES HAVE BEEN DETECTED AND DISCLOSED BY THE AGENT THAT CAUSED THEM.  ASSERTIONS THAT CAN
+  FAIL ARE WORTH WRITING BECAUSE OCCASIONALLY THEY DO. ***
+
+207. **[S130] A LINE-LEVEL `-0` IS A REPORT ABOUT LINES.  THE CLAIM THAT MATTERS IS ABOUT BYTES,
+  AND THERE IS A CHEAP CHECK THAT SETTLES IT — RECONSTRUCT THE PRIOR OBJECT.**  `git diff --numstat`
+  said `+118/-0` on the misplaced-append commit, which is true and is *not* the same statement as
+  "every prior byte survived".  The check that is: take the new blob, delete exactly the added line
+  ranges the hunks name, and require the result to equal the prior blob byte for byte.  It did.
+  *** THAT ONE RECONSTRUCTION IS STRONGER THAN ANY NUMBER OF AGREEING DIGEST QUOTES, BECAUSE IT
+  RE-DERIVES THE PRIOR OBJECT INSTEAD OF COMPARING TWO SUMMARIES OF IT.  USE IT WHENEVER AN APPEND
+  LANDS ANYWHERE OTHER THAN THE TAIL. ***
+
+208. **[S130] DRIVE THE FIXTURE; DO NOT QUOTE YOUR OWN CONTINUITY FILE.**  Writing packet runbook
+  Step 32 I described the fixture's deliberate asymmetry as "the same value to both once, and
+  identical arms once", taken verbatim from my own summary.  Driving the live `j_5s` over the four
+  cases showed **two** exact ties, not one — `bias_encoder_1` has identical tracking outputs with
+  *different* decisions, and `indistinguishable_softening` is identical in every recorded field but
+  the suite name.  *** THE SENTENCE WAS PLAUSIBLE, IT CAME FROM MY OWN FILE, AND IT WAS HEADED FOR
+  A READER-FACING RUNBOOK.  A SUMMARY IS A RECORD OF WHAT WAS MEASURED ONCE, NOT AN INSTRUMENT.
+  ANY NUMBER THAT IS ABOUT TO BE PUBLISHED IS RE-DERIVED FROM THE OBJECT, EVEN WHEN I AM THE ONE
+  WHO WROTE IT DOWN. ***  Same family as lesson 65, one level in: 65 is about a status clause
+  rotting across rewrites, this is about a *measurement* being carried instead of retaken.
+
+209. **[S130] A STANDING RULING HAS A PREMISE, AND THE PREMISE IS WHAT BINDS — CHECK IT AGAINST THE
+  NEW CASE BEFORE EITHER OBEYING OR REOPENING.**  Codex ruled in its S128 that no EOL pin is added
+  for `*.py`, on the stated ground that no packet runtime hashes those files, Git blobs are the
+  durable identities, and a pin would enlarge the review object without closing a runtime gap.
+  S130 added a pin — for `results/verification_fixture/*.sha256` — and that is not a reopening: the
+  file's CONTENT IS A DIGEST, the runbook written in the same session tells a reader to compare it,
+  and `git checkout-index` MEASURED a fresh Windows checkout rendering it at 66 B with one CRLF
+  against the tracked 65 B.  *** THE DISCIPLINE HAS TWO HALVES AND BOTH ARE LOAD-BEARING: name the
+  ruling's premise and say why it does not reach the new case, AND pin only what was measured to
+  move.  The canonical JSONs carry no newline and the PNGs round-trip as binary, so neither is
+  pinned — pinning what does not move is exactly the object enlargement the ruling refuses. ***
+
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 
 ```text

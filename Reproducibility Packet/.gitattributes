@@ -27,3 +27,14 @@ schema/schema.json text eol=lf
 # raw_equals_canonical diagnostic reports.
 config/proposed-gate3-assignment-v0.1.json text eol=lf
 protocol/*.md text eol=lf
+
+# LOAD-BEARING, and measured rather than assumed. The Slot-8 scripted figure set
+# (runbook Step 32) writes verification_bundle.sha256 as one hex digest plus a
+# single LF. Without this pin a fresh Windows clone materializes it at 66 bytes
+# with one CRLF against the 65 bytes this repository tracks, so a reader who
+# compares the tracked digest file byte for byte against a regenerated one sees a
+# difference the figure set does not have. Measured 2026-08-13 with
+# `git checkout-index`: the .sha256 file diverges, the canonical .json files do
+# not (they carry no newline at all), and the .png files round-trip identically
+# because Git detects them as binary -- so only this pattern is pinned.
+results/verification_fixture/*.sha256 text eol=lf

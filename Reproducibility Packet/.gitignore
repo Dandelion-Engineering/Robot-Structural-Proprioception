@@ -29,3 +29,4 @@ MUJOCO_LOG.TXT
 /results/capacity_sweep_plan_reproduced/
 /results/capacity_sweep_plan_new_run/
 /results/capacity_sweep_analysis_reproduced/
+/results/verification_fixture_reproduced/

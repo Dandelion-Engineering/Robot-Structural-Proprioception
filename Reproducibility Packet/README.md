@@ -1193,6 +1193,82 @@ wider ladder, no architecture change and no later-role read. Both the run and th
 single, separately authorized invocations, and both authorizations are spent; a further run
 needs a new label, a new plan and a fresh joint authorization.
 
+## Step 32 — Reproduce the Slot-8 verification surface on its synthetic fixture
+
+Slot 8 of the Claim Sheet commits the project to building something a non-specialist can engage
+with directly, rather than a claim they have to take on trust. This step reproduces that surface.
+**Everything it draws is fabricated by this packet.** No configuration is frozen yet, no capacity
+or rung is selected, and no abstention or unknown threshold is calibrated, so there is no result
+here to show — and the surface is built now, on a labelled synthetic fixture, precisely so that
+the machinery is reviewed before any real number can travel through it.
+
+```powershell
+$env:MPLBACKEND = "Agg"
+.\.venv\Scripts\python.exe scripts\render_verification_scene.py fixture `
+  --fixture-seed 7 --output-dir results\verification_fixture_reproduced
+```
+
+`--fixture-seed` is required and has no default, and `--output-dir` is refused unless it is
+project-relative. With `MPLBACKEND=Agg` the command writes the figure set, reports that the active
+backend is non-interactive, and exits `0`. **Drop the `MPLBACKEND` line and the same command opens
+the director's menu** on whatever interactive backend the machine has: four named body changes on
+radio buttons, a timeline slider, and a play/pause button. There is nothing to type.
+
+Ten files are written per run: one 300-DPI PNG and one canonical scene JSON for each of the four
+cases, plus the canonical bundle JSON and its SHA-256. The tracked reference set is
+[`results/verification_fixture/`](results/verification_fixture), whose bundle is
+`verification_bundle.json`, 340,741 bytes, SHA-256
+`3bf51e9440ec32c7cb7484f70ecfc80c1d5c97d3fb53b8dc0e1f44add5459d70`. **The whole set is
+byte-deterministic**: rendering the same seed twice reproduces all ten files exactly, which is why
+the step above writes to a separate directory a reader can diff against the tracked one rather
+than overwriting it.
+
+### What each figure shows
+
+Every figure carries a red `SYNTHETIC - NOT A RESULT` banner drawn **into the image** rather than
+into a caption or a filename, so it survives being copied into a slide, and a provenance block
+naming the fixture seed and recording that no configuration, connection record, split or role was
+read. Below that are three regions:
+
+1. **The two bodies** — the C1 and S arms' planar centerlines at the frame being displayed, over
+   the faint sweep of the whole motion, against the shared task reference, with the body change
+   and its onset named.
+2. **Call and confidence** — per arm, the class probabilities in the packet's canonical
+   `healthy / structure / actuator / sensor` order, the current call, and the location and
+   severity read-outs. Abstention is drawn as its own state rather than as a low bar, a high
+   unknown score is named separately and never silently rewrites the stored abstention decision,
+   and an infinite severity error scale renders as `UNAVAILABLE` rather than as a plot extent.
+   Before the first decision the panel reads `NO DECISION YET` and shows no future value.
+3. **Tracking error** — per arm, the same per-sample quantity the project's headline metric
+   integrates, with the shaded band spanning exactly the analysis window `[onset, onset + 5 s]`.
+
+The still is drawn at the frame where that shaded window closes, derived from the scene rather
+than chosen, so the pose the reader sees is the pose at the moment the metric stops integrating.
+
+### The fixture does not flatter the structural suite
+
+The four cases are a structural change, an actuator change, a sensor change, and a pair that is
+deliberately **indistinguishable**. Measured over the analysis window, the fixture gives the
+smaller tracking integral to S on one case (0.111 against 0.324), to C1 on another (0.139 against
+0.366), and exactly the same value to both on the remaining two — one of which is the
+indistinguishable pair, whose two arms are byte-identical in every field but the suite name, so
+nothing on the screen can separate them. Across the menu one arm is confidently **wrong** (C1 calls
+`actuator` at 0.850 confidence where the fabricated truth is `structure`), two abstain, one case
+carries a high unknown score on both arms, and one decision **changes** between frames, from an
+abstention at 1.5 s to a `structure` call at 3.0 s. A synthetic menu whose every panel favoured the
+structural suite would be a demonstration of the hoped-for answer rather than of the surface, and a
+committed test requires at least one case to be smaller for each suite.
+
+### What this step does not do
+
+It reads no configuration, checkpoint, role index, role payload, manifest or split, and it fits,
+generates and rolls out nothing. The script's second subcommand, `roles`, is the read-only adapter
+for a real result; it exists so the shape is reviewed in advance, and in this packet it **refuses
+with `X_CONNECTION_UNAUTHORIZED` before opening any file**, because the reviewed connection record
+that would authorize it does not exist. No flag, split argument or environment variable substitutes
+for that record. Nothing on this surface is evidence, and the figures say so twice in their own
+footer.
+
 ## Data
 
 No external dataset is required. The simulator generates every value used by the spike. See [`DATA.md`](DATA.md) for the data and licensing boundary.
@@ -1228,3 +1304,5 @@ The proposed different-task amendment was withdrawn before approval. The existin
 **Stage 1 of the capacity work is now complete as scoped (Steps 28 and 29), which narrows the "later capacity work" clause above.** The sweep executed once -- 42 fits, 42 checkpoints, zero simulator generation runs, zero physical rollouts, and development rows only -- and its result was then read against a six-row table of permitted readings that was frozen before any of the fifty arms existed. Exactly one row matched, and it licenses one sentence: *the paired curve does not have a readable shape at five points and five seeds*, with any trend statement forbidden. The row that came closest to matching is the one a casual reader of the five numbers would reach for, and it fails on both of its conditions independently. **No capacity is selected, no threshold is set, nothing is established about generalization, and nothing is claimed about C1 versus S.** A Stage 2 -- a wider ladder, a larger seed count, or an architecture change -- would be a separate design with its own review and its own authorization, and none exists. `config.json` remains unfrozen and every later-role read remains unauthorized.
 
 **Slot 9's ladder now has a fitted second rung (Steps 30 and 31).** A 219,018-parameter recurrent-attention architecture ran once under the rung-1 protocol at five seeds -- 12 fits, 12 checkpoints, zero generation runs, zero physical rollouts, development rows only -- and its record was then read against an interpretation table frozen before any of those arms existed. Two sentences are licensed and no more: that the ladder has more than one rung on it with one rung-2 fit at five seeds under the approved protocol, and that the paired sign was not consistent across those five seeds. **That is a statement about what was built, not about what was learned, and the record makes the difference explicit:** all ten rung-2 arms score F1 = 0 on both the `healthy` and `structure` classes, and four of the ten sit exactly at the majority-class baseline. The design's objective-reduction check is deliberately weak and says in advance that it is not a learning signal; the record is the case that warning describes. **No cause is attached, no rung or capacity is selected, no threshold is set, nothing is established about generalization, and nothing is claimed about C1 versus S.** The run and the read were separately authorized single invocations and both authorizations are spent. `config.json` remains unfrozen.
+
+**The Slot-8 verification surface now exists at fixture provenance (Step 32, 2026-08-13).** The paragraph under *Historical boundary* above says this packet "does not yet implement the confirmatory experiment or the interactive verification artifact"; the second half of that sentence is now superseded, and the first half is not. `scripts/utils/verification_scene.py` and `scripts/render_verification_scene.py` build the scene contract, the labelled synthetic fixture, the scripted 300-DPI path and the interactive menu, against a frozen interface design and 159 committed tests; both agents approved the same bytes. **The surface is connected to nothing.** Its `roles` subcommand — the read-only adapter that a real result would arrive through — refuses with `X_CONNECTION_UNAUTHORIZED` before opening any file, because the reviewed connection record that would authorize it does not exist and cannot be substituted for by a flag. Connecting a real result is a separate design, review and joint authorization, and three of its inputs are absent by governing decision: there is no frozen `config.json`, no selected capacity or checkpoints, and no calibrated abstention or unknown thresholds. Every number the surface currently draws was fabricated by this packet and is labelled as such in the image itself.
