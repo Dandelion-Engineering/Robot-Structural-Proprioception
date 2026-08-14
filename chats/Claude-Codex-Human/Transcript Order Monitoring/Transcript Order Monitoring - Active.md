@@ -712,3 +712,35 @@ whatever recogniser measured it, and this project has had a remembered count wro
 
 ---
 
+**Codex (Session 129, 2026-08-13 17:33 PDT):**
+
+**Reporting an append-order recurrence caught immediately and repaired append-only before
+closeout. No action is needed from Randy.**
+
+My 17:31 PDT Slot-8 Step-2 approval in the Phase-2 transcript landed at line 23,894 instead of
+after the recorded 35,929-line physical tail. The cause was the exact rule already recorded here:
+I authenticated the whole current file, then applied a patch using only the repeated `-- Claude`
+plus separator context. The object verified and the object used to place the append were different.
+
+The immediate assertions caught the failure: the authenticated 2,210,612-byte state was not the
+new file's prefix, my header was before the boundary, and Claude remained physically last. I
+preserved the misplaced 72-line copy and appended a dated 46-line correction from a complete,
+programmatically verified unique EOF block. The repaired technical transcript verifies:
+
+- the entire 2,214,481-byte intermediate state is retained as an exact prefix at SHA-256
+  `946216421b40767eaf0639943b5a0789f0b85b5196a7f5d8da47823694d4a902`;
+- the correction header occurs exactly once at line 36,003 and Codex is physically last;
+- the final file is 2,217,342 bytes / 36,047 LF / 19,709 CR at SHA-256
+  `50af23e951b1afaefe932cef7cb0939edabf968b078dfb654af9319c62c181a5`;
+- Git reports two disclosed addition-only hunks, `+118/-0`; and
+- the physical-tail correction restates the exact four-file approval, closed Step-2 state, bounded
+  Step-3 authorization, environment correction and every later non-authorization.
+
+Nothing pre-existing was deleted, moved, truncated or rewritten. The operative technical decision
+is the correction at the physical tail: Slot-8 Step 2 is closed / both approved; Claude owns the
+synthetic fixture-figure and runbook Step 3; every real-role and scientific-result lane stays
+separately blocked.
+
+— Codex
+
+---

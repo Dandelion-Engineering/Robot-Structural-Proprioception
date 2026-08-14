@@ -1,135 +1,195 @@
 # Summary of Only Necessary Context — Codex
 
-Last completely rewritten after Codex Session 128 on 2026-08-13.
+Last completely rewritten after Codex Session 129 on 2026-08-13.
 
 ## Resume here
 
 - Branch: `main`.
-- The first Slot-8 verification-artifact design is closed and jointly approved at Git blob `0753d4edc983dff3d2770bdb52ddc59d515fabbe` / raw and canonical SHA-256 `98e20ae1f37db3dcb034c0d21f2e1fa16667331702fa95725a0b7c739b060fc9`.
-- Claude Session 128 built the bounded Step-2 scene/bundle, synthetic fixture, shared renderer, interactive surface, fail-closed real-role stub and V1–V19 tests.
-- Codex Session 128 reviewed that exact build, accepted Claude's three flagged design decisions, repaired four additional contract gaps (CP–CS), and explicitly approved the exact reviewer state. Claude's explicit same-state owner re-review is still missing, so Step 2 is not closed and Step 3 is not authorized.
-- The public root `README.md` remains unchanged at the jointly approved interpreted rung-2 heartbeat blob `f00ea0d9...`. The internal Slot-8 working-surface review does not yet warrant another public entry.
-- The local Windows environment still cannot import MuJoCo because an Application Control policy blocks `_functions`; the focused Slot-8 suite and all non-MuJoCo packet tests are reproducible here.
+- Slot-8 verification-artifact Step 1 (design) is closed / both approved at blob
+  `0753d4edc983dff3d2770bdb52ddc59d515fabbe` / raw and canonical SHA-256
+  `98e20ae1f37db3dcb034c0d21f2e1fa16667331702fa95725a0b7c739b060fc9`.
+- Slot-8 Step 2 (scene/bundle, synthetic fixture, shared renderer, fail-closed role stub and V1–V19
+  tests) is now **CLOSED / BOTH APPROVED** at the exact four-file state below.
+- Only Claude's bounded Step 3 is authorized: generate the synthetic fixture figure set into the
+  Reproducibility Packet through the approved scripted path, add the corresponding runbook step,
+  and return the exact state for review.
+- Claude also owns the lean root Live-Run README heartbeat for the newly reviewed Slot-8 working
+  surface. Codex left the root README unchanged in Session 129.
+- Step 4 and every real-result lane remain separately blocked: no connection record, real-role
+  adapter/read, scientific role, capacity, threshold, final configuration, fit, rollout or
+  analyzer work is authorized.
 
-## Exact Slot-8 Step-2 reviewer state
+## Exact jointly approved Step-2 state
 
-Codex approves these exact four files:
+Both Claude and Codex explicitly approve these exact four files:
 
 1. `Reproducibility Packet/scripts/utils/verification_scene.py`
    - Git blob / no-filter hash: `c12745abc1fff3f09a6077543cf9dc5cfcc49b3a`
    - raw/canonical SHA-256: `d811e0875b7dabeef053ca01ff908f66e3fc3f3472727e4d385478a228251597`
-   - 63,651 bytes, 1,639 LF, zero CR, final LF present.
+   - 63,651 bytes / 1,639 LF / 0 CR.
 2. `Reproducibility Packet/scripts/render_verification_scene.py`
    - Git blob / no-filter hash: `0ae5b19d4a5957d3be662b1aa337c8e3bb9353a5`
    - raw/canonical SHA-256: `fd8644d5dbd864ba335ae8e5585d9f65ae2a4f7f256aa997b6780ee29889ce0d`
-   - 30,100 bytes, 785 LF, zero CR, final LF present.
+   - 30,100 bytes / 785 LF / 0 CR.
 3. `Reproducibility Packet/tests/test_verification_scene.py`
    - Git blob / no-filter hash: `cf61e5aad09bc5dceab15519e7888fb97fe70b27`
    - raw/canonical SHA-256: `b4747571120c6415f9344dd1da5c425932fadc1ca2ca14112236bcd9587a529f`
-   - 43,252 bytes, 1,111 LF, zero CR, final LF present.
+   - 43,252 bytes / 1,111 LF / 0 CR.
 4. `Reproducibility Packet/tests/test_render_verification_scene.py`
-   - Git blob / no-filter hash: `ba7d135afe62789af06ca114c1f4e904fd09d894`
-   - raw/canonical SHA-256: `08fdeeb64c1d755c077244841f0799e6e5c8099de346baa77c6b8f3b76e4d835`
-   - 33,822 bytes, 859 LF, zero CR, final LF present.
+   - Git blob / no-filter hash: `1833a4724ed2a20429d202109165c4ba4ca21624`
+   - raw/canonical SHA-256: `634214fb018c9550e5e7a00c22bd9d0a1f5d6374985d7f0d0c4a66fde2becbed`
+   - 34,780 bytes / 878 LF / 0 CR.
 
-Do not treat downstream use, silence, or a later edit as approval. Claude must explicitly approve these same four states, or return a new exact state for review.
+All four are pure ASCII, no BOM, final LF, and filtered equal to `--no-filters`. No
+`.gitattributes` rule pins `*.py`, so Git blob identities are the durable review identities and
+raw SHA-256 values are working-tree measurements.
 
-## CP–CS reviewer repairs
+## What closed the final review round
 
-- **CP — visible case identity:** the interactive radio menu now displays the required human-readable `body_change.label`, maps labels back to case IDs, and rejects duplicate visible labels with `X_BUNDLE_INCOMPLETE`.
-- **CQ — surface completeness:** both `render_bundle(...)` and `InteractiveVerificationSurface(...)` now call the shared bundle validator before writing or displaying, so an incomplete bundle cannot bypass the builder's fail-closed path.
-- **CR — shared playback clock:** animation advances through `slider.set_val(...)`, keeping the visible slider, shared frame and repainted panels synchronized.
-- **CS — project-relative output contract:** both CLI surfaces reject absolute, drive-qualified, rooted and parent-traversing output paths under both POSIX and Windows path grammars.
+Codex Session 128 repaired four contract gaps:
 
-The accepted Claude-flagged rulings remain:
+- CP: visible radio entries now use human-readable body-change labels, with duplicate labels
+  refused before the mapping is built.
+- CQ: both scripted and interactive surfaces validate the complete bundle before writing or
+  displaying it.
+- CR: animation advances through the slider observer, so the visible timeline and painted frame
+  remain synchronized.
+- CS: both CLI modes enforce project-relative output paths under Windows and POSIX grammars.
 
-- Leave the synthetic geometry helper as implemented; any future real-role adapter design must assign each deformation code truthfully rather than inheriting a misleading synthetic mapping.
-- A malformed `EstimatorOutput` remains `X_DECISION_UNSUPPORTED`, not `X_ROLE_UNAVAILABLE`.
-- Fixture mode writes the static artifact and then opens the required interactive menu; no extra interactive flag is added.
+Claude Session 129 accepted all four repairs, then changed only the render-test file to add two
+load-bearing checks:
 
-## Verification reproduced in Session 128
+- the public `select_label` callback's unknown-label refusal is pinned;
+- every visible radio entry is driven, so asymmetric label-to-case swaps cannot survive.
 
-- Focused Slot-8 tests: `158 passed` under normal Python.
-- Focused Slot-8 tests: `158 passed` under `python -O` (one expected pytest assertion-rewrite warning).
-- Full packet fallback: `1 failed, 1343 passed, 28 errors`; all 29 non-passes terminate at the same blocked MuJoCo import, including the one body-test failure.
-- `py_compile` passed for both production modules and both test modules.
-- `git diff --check` passed before closeout.
-- Independent interaction probes passed, including visible label selection and slider synchronization.
-- The scripted 300-DPI PNG and interactive wrapper were visually inspected and readable. Scratch images remain outside the repository under the automation visualization workspace.
-- No real-role connection, later-role read, scientific fit, rollout, fixture figure set, or runbook execution occurred.
+Codex Session 129 re-opened the callback/mapping implementation, reviewed the exact diff, reproduced
+the tests and approved `1833a472` unchanged. Both approvals now name the same four-file state.
 
-## Frozen Slot-8 design and sequencing
+## Verification and Smart App Control correction
 
-The jointly approved design still controls all implementation decisions. It permits only:
+The director authorized a separate Repair Agent to diagnose the MuJoCo import block. Its append in
+`director_requests.md` establishes:
 
-- the shared typed scene/bundle model and validation,
-- deterministic synthetic fixture construction,
-- one shared painter used by static and interactive surfaces,
-- the fail-closed real-role loader stub,
-- V1–V19 contract tests.
+- Smart App Control remains on in enforcement mode by the director's decision.
+- The transient block affected unsigned MuJoCo `_functions.cp312-win_amd64.pyd` and cleared without
+  intervention after 397 Code Integrity events from 14:33 through 16:23 PDT.
+- Before treating any future native import failure as code, run:
 
-Sequence:
+  `powershell -ExecutionPolicy Bypass -File "C:\Users\cresp\Documents\Dandelion Engineering\tools\Check-NativeImportBlocks.ps1"`
 
-1. Step 1 design: closed at both approvals on `0753d4ed...`.
-2. Step 2 implementation/tests: Codex reviewer state approved by Codex; Claude owner re-review open.
-3. Any real-role adapter or connection: separate design/review/authorization only after Step 2 closes.
-4. Fixture figure set, runbook integration and later gate work: separately blocked.
+- If a new native block occurs, append a new numbered `director_requests.md` entry with the
+  diagnostic output. Do not absorb it quietly and do not propose turning SAC off; Randy has decided
+  it stays on for now and will reassess after the next incident.
+- A test count measured during a block is discarded as a suite measurement and re-run after the
+  diagnostic reports healthy.
+
+Codex Session 129 ran that diagnostic. It reported all eight native packages healthy and MuJoCo able
+to build and step. Exact verification then passed:
+
+- focused Slot-8 normal: 159 passed in 29.10 s;
+- focused Slot-8 under `python -O`: 159 passed in 29.26 s, one expected warning;
+- standard packet-wide suite: **2,267 passed in 163.71 s, 0 failed, 0 collection errors**.
+
+The degraded 1,328/1,343/1,344 counts in the dated Session-128/129 records are honest measurements
+of a blocked environment and are not suite counts. Do not propagate them into continuity, the
+Technical Report or public artifacts. State the clean 2,267 count when a count is needed and cite
+the `director_requests.md` correction.
+
+## Frozen sequencing and boundaries
+
+The jointly approved Slot-8 design still controls:
+
+1. Step 1 design: closed / both approved.
+2. Step 2 implementation/tests: closed / both approved at the four blobs above.
+3. Step 3 fixture figure set and packet runbook step: now authorized, Claude-owned, exact-state
+   review required before it closes.
+4. Connecting a real result: separate connection-record design, exact-state review and joint
+   authorization only after Step 3; currently blocked.
+
+Step 3 may only run the scripted synthetic fixture path. It must not read config, checkpoints,
+scientific role indices or recorded result payloads, and it does not license any C1-versus-S claim.
 
 ## Closed prior state that still controls
 
-- Stage 1 is complete as scoped. The paired curve has no readable shape at five points and five seeds; no trend statement, capacity choice or threshold selection is licensed.
-- Literal Slot-9 rung 2 is complete as scoped. The one fit invocation and one analyzer invocation are spent. Both agents approve analysis blob `a2fa857b...` / raw SHA-256 `604d7272...`, and frozen section 5.4 is jointly applied at the exact `OPTIMIZATION_CHECK_PASSED` + `MIXED` sentence pair.
-- All ten rung-2 arms have zero healthy and structure F1. That persisted-value observation must accompany the weak objective/sign description without causal attribution.
-- The packet-runbook review is closed at README blob `f5e677c8...`; the public interpreted heartbeat is closed at root README blob `f00ea0d9...`.
-- The Stage-1 precision note is closed and licenses no additional work.
-- Checkpoint `67` remains a bounded development artifact. No confirmatory, validation, generalization, threshold, final-configuration or engineering-usability claim follows.
+- Stage 1 is complete as scoped. Its five-point/five-seed curve has no readable shape; no trend,
+  capacity or threshold statement is licensed.
+- Literal Slot-9 rung 2 is complete as scoped. The one fit invocation and one analyzer invocation
+  are spent. Both agents approve analysis blob `a2fa857b...` / raw SHA-256 `604d7272...`; frozen
+  section 5.4 is jointly applied at `OPTIMIZATION_CHECK_PASSED` + `MIXED`.
+- All ten rung-2 arms have zero healthy and structure F1. This persisted-value observation must
+  accompany the weak objective/sign description without causal attribution.
+- Packet runbook Steps 30–31 are closed at README blob `f5e677c8...`; the interpreted public
+  rung-2 heartbeat is closed at root README blob `f00ea0d9...`.
+- Checkpoint 67 remains a bounded development artifact. No validation, confirmatory,
+  generalization, threshold, final-configuration or engineering-usability claim follows.
+- Claim Sheet Amendment A2 remains in force and all development/pilot/validation/confirmatory
+  boundaries remain intact.
 
-## Transcript state and append rule
+## Transcript state and recurrence record
 
-The authoritative active thread is `chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`.
+The authoritative active thread is
+`chats/Claude-Codex/Phase 2 Integration and Config Freeze/Phase 2 Integration and Config Freeze - Active.md`.
 
-After the Session-128 Codex append it is:
+After Session 129 it is:
 
-- 2,199,774 bytes,
-- 35,754 LF,
-- 19,709 CR,
-- SHA-256 `98ab2f375a7295d026e815538086e2118bab12af2a396a7c3c26e4054486355d`.
+- 2,217,342 bytes;
+- 36,047 LF / 19,709 CR;
+- SHA-256 `50af23e951b1afaefe932cef7cb0939edabf968b078dfb654af9319c62c181a5`.
 
-The newest turn is Codex's `Session 128 Step-2 review`, which records CP–CS, the exact four approved reviewer blobs and the owner re-review ask.
+Codex's first 17:31 approval copy was misplaced at line 23,894 because the patch used repeated
+`-- Claude` separator context. Assertions caught it before closeout. The misplaced copy is preserved;
+the dated physical-tail correction at line 36,003 is operative and restates the exact approval,
+Step-3 authorization, environment correction and later blocks. Git shows two disclosed
+addition-only hunks, `+118/-0`.
 
-All active chats are append-only. Before appending, read the physical UTF-8 byte tail and record byte/line state. Construct the new file as the exact previously authenticated byte prefix plus one LF-only payload. Then assert prefix equality, unique header after the pre-write boundary, physical-last authorship and the new whole-file hash. If any assertion fails, append a dated repair and disclose it in Transcript Order Monitoring.
+Transcript Order Monitoring contains the required disclosure as a single `+32/-0` tail hunk. It is
+42,714 bytes / 746 LF / 161 CR at SHA-256
+`0f73837371e86fcd8a146de4285aa5f3913db61d2af6e3413629d1f05f6bc721`.
+
+For every future active-chat append: authenticate the full current bytes, write only from a
+programmatically verified unique complete EOF block, then assert the exact prior bytes remain the
+prefix, the header occurs once after the boundary, the new author is physically last, and Git is
+additions-only. If any assertion fails, preserve the misplaced copy, append a dated physical-tail
+correction, and report it in Transcript Order Monitoring.
 
 ## Current gate map
 
-- Claim Sheet and accessible companion: jointly approved.
-- Schema v1.0 + A1 and Amendment A2: in force.
-- Gate 1: closed.
+- Claim Sheet and Accessible Claim Sheet: jointly approved; A2 in force.
+- Schema v1.0 + A1 and A2 boundaries: in force.
+- Gates 1 and 3: closed.
 - Gate 2: generic/base-role paths approved.
-- Gate 3: closed.
-- Gate 4: blocked; estimator/controller real-role connection is not authorized.
-- Gates 5–7: blocked.
-- Final `config.json`: does not exist.
+- Gate 4 and Gates 5–7: blocked.
+- Final `config/config.json`: does not exist.
 - Capacity/threshold selection: not authorized.
-- Slot-8 Step 1: closed.
-- Slot-8 Step 2: exact reviewer state awaiting Claude approval.
-- Slot-8 Step 3 and later: blocked.
+- Slot-8 Step 1: closed / both approved.
+- Slot-8 Step 2: closed / both approved.
+- Slot-8 Step 3: authorized, Claude-owned, not yet reviewed.
+- Slot-8 Step 4: blocked.
 
-## Next session
+## Next Codex session
 
-Expected Codex Session 129:
+Expected Codex Session 130:
 
-1. Authenticate the newest Phase-2 transcript suffix against the Session-128 post-state above.
-2. Read Claude's response to the exact four-file handback.
-3. If Claude explicitly approves all four unchanged reviewer blobs, acknowledge and close Step 2. If Claude edits any file, review and verify the new exact state before approval.
-4. Do not authorize or implement Step 3 merely because Step 2 closes. First agree the next bounded design/review lane and preserve every separate authority gate.
-5. Keep the public root README unchanged unless a separately reviewed director-facing update is justified.
+1. Authenticate the newest Phase-2 transcript state against the Session-129 hash above.
+2. Read Claude's Step-2 closure acknowledgement, Live-Run README heartbeat and Step-3 handoff.
+3. Review the generated synthetic figure/scene/bundle/digest set and packet runbook edit against
+   the frozen design and Reproducibility Packet playbook. Verify determinism, completeness,
+   300-DPI `pHYs`, canonical JSON, provenance banners, packet-relative paths and absence of real
+   scientific input reads.
+4. Require exact-state approval before closing Step 3. If any file changes, hand the new exact state
+   back to Claude; do not infer approval from generation or downstream use.
+5. Keep Step 4 and every real-role/scientific-result lane blocked.
 
 ## Workflow rules
 
-- Follow `AgentPrompt.md` on every project turn and obey `.agent-turn` / `.agent-session.lock` before reading project state.
-- Read all Codex-including active chats and summaries before acting; use the live transcript and repository state over stale handoff prose.
-- Preserve Claude ownership of the Slot-8 implementation while Codex is reviewer unless the transcript explicitly reassigns ownership.
-- Require explicit same-state approval. Reviewer edits, downstream use and silence are not approval.
-- Never spend a fit, analyzer, rollout, real-role read or execution authority unless the exact required halves and prerequisites are present.
-- Keep development, pilot, extraction, validation, confirmatory and final claims separate.
-- Use explicit path-scoped commits, verify the remote push, then release the session lock and pass `.agent-turn` to Claude in that order.
+- Follow `AgentPrompt.md` and obey `.agent-turn` / `.agent-session.lock` before reading project
+  state.
+- Read all Codex-including active chats and summaries before acting; live transcript and repository
+  bytes outrank stale continuity prose.
+- Preserve Claude ownership of Step 3 and Codex's reviewer lane.
+- Require explicit same-state approval. Creation, edits, handoffs, downstream use and silence are
+  not approval.
+- Keep development, pilot, validation, confirmatory, test and final claims separate.
+- Before closeout, check the lean public README obligation, update `.gitignore` if needed, review
+  the exact diff, stage only intentional paths, run diff hygiene, commit/push, then delete
+  `.agent-session.lock` and only afterward change `.agent-turn` to `Claude`.

@@ -65,3 +65,112 @@ this single import. The Slot-8 lane needs no MuJoCo and continues normally; noth
 project's current open work depends on a rollout.
 
 *Awaiting director reply.*
+
+### Reply — Repair Agent, 2026-08-13 17:19 PDT: **RESOLVED, but not by anyone's intervention.**
+
+*(Appended under entry 2 per the append-only protocol. The `*Awaiting director reply.*` line above
+is superseded by this note and left standing as the record. I am the **Repair Agent** — a
+separate agent Randy authorized for this specific machine problem, outside the Collaboration
+Station workflow. I am not Claude or Codex and I hold no turn.)*
+
+**MuJoCo works. The block cleared on its own.** Measured at 16:50–16:59 PDT today:
+
+```text
+full packet suite   2,267 passed, 0 failed, 0 collection errors  (164.20 s)
+12 fresh interpreters, each import + build a model + step it     12 ok / 0 failed
+```
+
+**The true full-suite figure is 2,267.** Nothing in the project was wrong; nothing needed repair.
+
+#### What it actually was
+
+Windows **Smart App Control** (SAC) is on this machine in **enforcement mode**
+(`VerifiedAndReputablePolicyState = 1`). SAC refuses to load unsigned native binaries whose cloud
+reputation it does not yet recognise. In the project venv, **321 of 344 native binaries are
+unsigned** — scipy (106), sklearn (69), pandas (45), torch (26), mujoco (22), numpy (19), OpenGL,
+matplotlib, PIL, fontTools. MuJoCo is not special here; it was simply first.
+
+From the Windows Code Integrity log (events 3033/3077, policy ID `{0283ac0f-…}`):
+
+| Time (2026-08-13) | Event |
+|---|---|
+| 8/11–8/12 | Windows updates KB5123304, KB5120708, KB5121003 install |
+| 14:31 | Defender fires a burst of cloud-reputation lookups |
+| 14:33 | First block on `mujoco/_functions.cp312-win_amd64.pyd` |
+| 14:33–16:23 | **397 block events**, every one naming that same single file |
+| 16:24 onward | **Zero blocks.** MuJoCo imports, builds models and steps them |
+
+The file never changed: still unsigned, still stamped 2026-07-16. A Windows update appears to have
+prompted SAC to re-evaluate, and the binary was refused for roughly two hours until Microsoft's
+reputation service vouched for it. **This was an environment fault with a beginning and an end, not
+a project regression and not a permanent condition.**
+
+#### What I did, and what I deliberately did not do
+
+**Did:** diagnosed to root cause from primary evidence (the Code Integrity log and the CI policy
+registry state) rather than from the error string; confirmed stability across 12 fresh interpreters;
+measured the true suite figure; and built two tools at
+`C:\Users\cresp\Documents\Dandelion Engineering\tools\` — **outside this repository**:
+
+- `Check-NativeImportBlocks.ps1` — read-only. Reports SAC state, Code Integrity block events in a
+  window and which files they name, a live import test of eight native packages, and a MuJoCo
+  build-and-step probe. Exit `0` healthy/recovered, `1` a real import problem, `2` Application
+  Control is blocking.
+- `README-SmartAppControl.md` — the full timeline, the options, and what does **not** work
+  (Defender exclusions are a different subsystem; reinstalling returns identical unsigned bytes;
+  running as administrator does not bypass a kernel code-integrity policy).
+
+**Did not:** change any security setting, install or reinstall anything, touch the venv, or modify
+any project file other than this one. **Nothing is committed** — see the handoff note at the end.
+
+#### The correction this owes the record
+
+Sessions 128 and 129 measured the suite *while the block was active* and wrote the conclusion
+**"the packet's full-suite count is unmeasurable"** into entry 2 above, both agents' session
+reports, both continuity summaries, and the Phase-2 chat. Entry 2's own `1,328 passed, 1 failed,
+28 collection errors`, and Session 129's `1,344 passed, 1 failed, 28 collection errors`, are
+**artifacts of the block**. They are honest measurements of a broken environment and worthless as
+measurements of the suite.
+
+Those documents are append-only and dated, so **do not edit them.** Carry the correction forward the
+way the project already handles this: the next session that has cause to state a suite figure states
+**2,267** and cites this note. The Technical Report inherits the same obligation.
+
+#### How to move forward
+
+1. **Before treating any native-import failure as a bug, run the diagnostic.** It answers
+   "environment or code?" in one run:
+   ```
+   powershell -ExecutionPolicy Bypass -File "C:\Users\cresp\Documents\Dandelion Engineering\tools\Check-NativeImportBlocks.ps1"
+   ```
+2. **A number measured during a block is discarded, not published with a caveat.** This is the part
+   that went wrong. Re-run the measurement once the diagnostic reports healthy, and record the
+   clean number. Reporting a degraded figure alongside a disclaimer still puts the wrong number in
+   the record, where a later session will find it and quote it.
+3. **Expect recurrence, and do not absorb it.** SAC remains in enforcement by the director's
+   decision (below). Any unsigned binary here can be blocked again after a Windows update or a
+   package install. **If this happens again — MuJoCo or anything else — append a NEW numbered entry
+   to this file rather than working around it quietly.** Include the diagnostic's output. The
+   director is deciding policy from the pattern of incidents, and an incident that is silently
+   absorbed is one he cannot see.
+4. **Do not propose turning Smart App Control off.** That decision is the director's and he has
+   made it for now.
+
+#### The director's standing decision
+
+**Randy has decided Smart App Control stays ON for the present**, having been shown that the only
+durable fix is to disable it, that doing so is irreversible without a clean Windows reinstall, and
+that it would not disable Defender antivirus, cloud protection, SmartScreen or the firewall. **He
+will reassess after the next incident.** That is the reason for instruction 3: each new entry is
+evidence for a decision he has explicitly deferred, so log every occurrence.
+
+#### Handoff — read before committing
+
+This edit to `director_requests.md` is **uncommitted by instruction.** The next agent to run
+**includes this file in its own session commit**; it does not get a commit of its own and the Repair
+Agent does not commit. Also note: Codex's Session-129 run was **paused before it began any project
+work**, and the `.agent-session.lock` it had already created was **stale** — the working tree was
+clean and no commit followed `12c729f`. I removed that lock so the next scheduled session is not
+refused by it. **`.agent-turn` is untouched and still reads `Codex`.**
+
+— **Repair Agent** (authorized by Randy, 2026-08-13)
