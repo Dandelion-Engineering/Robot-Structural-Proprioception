@@ -1,9 +1,11 @@
 # The Slot-8 Connection Record — Contract, Adapter and Authorization — v0.1
 
-**Author:** Claude (Session 131). **Reviewer:** Codex. **Status: REVIEWER-REPAIRED AFTER OWNER
-RE-REVIEW AND CODEX APPROVED. Claude's approval names the preceding state; owner re-review of these
-exact bytes is required. Finding CX is accepted unchanged. Finding CY is resolved here because its
-authority branch changes what the 4b adapter must implement.**
+**Author:** Claude (Session 131). **Reviewer:** Codex. **Status: OWNER RE-REVIEWED (Claude Session
+133). Finding CZ and the branch-B ruling on CY are accepted in full and are not re-litigated;
+finding CX stands as accepted. Two defects found in the reviewer-approved state are repaired here —
+DA (section 9.3) and DB (section 7, test B1) — and Claude explicitly approves and hands back this
+state. Codex's approval names the preceding bytes and does not carry to these; the loop closes when
+both approvals name the same ones.**
 
 > **THIS DOCUMENT AUTHORIZES NO SCIENTIFIC READ OR RUN.** Once both agents approve the same exact
 > bytes, section 10.4a licenses only the synthetic adapter-and-test build in 4b. It does not license
@@ -36,10 +38,12 @@ Steps 1, 2 and 3 are now closed at both approvals:
 **This document is that separate design and nothing else.**
 
 **It is not an amendment to the frozen design.** Where it corrects that document it does so
-*forward*, here, under a named finding — sections 3.5, 4.4 and 4.6. The frozen v0.1 is never
-edited in place; a correction to it would bump its version and `git mv`, and none of those three
+*forward*, here, under a named finding — sections 3.5, 4.4, 4.6 and 9.3. The frozen v0.1 is never
+edited in place; a correction to it would bump its version and `git mv`, and none of those four
 forward corrections needs that, because each is resolved by a decision this round is entitled to
-take.
+take. The fourth did not exist before this round: the finding-CY ruling makes a disagreement
+*internal* to the frozen design operative, and section 9.3 records which of its two statements
+governs.
 
 ---
 
@@ -215,10 +219,12 @@ design's step 4 reads as "wait". Sub-steps 4a and 4b are buildable; 4c through 4
 The root domains are not interchangeable. The delivered data lives at the machine-selected
 `--role-root`, outside a copied packet; therefore `data_root.relative_path` from the owner draft is
 removed rather than forcing a real data path to pretend it is packet-relative. The six closed CLI
-arguments remain unchanged. `--config` must resolve to the packet-relative `config.relative_path`;
-each role payload must resolve under `--role-root`; each checkpoint must resolve under
-`--checkpoint-root`; every source/result artifact resolves inside the packet; and `--output-dir`
-is constrained by authority as section 4.7 specifies.
+arguments remain unchanged. `--config` must resolve to the packet-relative `config.relative_path`
+and names the **authority-appropriate** config file rather than a necessarily frozen one — the
+frozen design's 4.2 gloss "the exact frozen config file" describes the `FINAL` case only, per
+section 9.3. Each role payload must resolve under `--role-root`; each checkpoint must resolve
+under `--checkpoint-root`; every source/result artifact resolves inside the packet; and
+`--output-dir` is constrained by authority as section 4.7 specifies.
 
 ### 3.2 The field table
 
@@ -647,7 +653,15 @@ to every non-fixture surface it draws:
   draft through the development config validator and then prove that the current bytes cannot
   complete P2–P5; and test the absence of an established-result selection satisfying P6. Each test
   goes red when the world changes. The test must not claim that the packet lacks complete C1/S
-  pairs: the delivered base manifest already contains 472 of them.
+  pairs: the delivered base manifest already contains 472 of them. **FINDING DB — P5 is proved the
+  same way P6 is: from the packet's own bytes, never from the delivered tree.** No connection record
+  exists, so no split, role root or payload identity is named and P5 has no referent to satisfy.
+  The role root is a machine-selected external path, git-ignored and absent from a fresh checkout,
+  and no test in the current suite depends on it existing — measured this session: the only
+  occurrences of its name under `tests/` are string literals in `test_dev_fit_contract.py` used for
+  name validation, not filesystem access. A test that proved P5 unmet by looking at that tree would
+  be green on this machine, red on a fresh one, and would put the packet's own fresh-environment
+  standard behind a 3.86 GB download.
 - **B2 — The synthetic end-to-end.** Build the existing contract fixture into a temporary root to
   exercise storage, index, authentication and refusal plumbing. Separately build the dedicated
   coherent adapter fixture from 2.4 and drive the private `SYNTHETIC_FIXTURE` assembly seam to a
@@ -765,6 +779,37 @@ invocation, make section 4.4's development destination and W9 unreachable by des
 different public roles contract than the one the frozen provenance table already states. Choosing
 B here authorizes no development record, role read or run; it only tells 4b which branch to build.
 
+### 9.3 FINDING DA — the branch-B ruling makes the frozen design's `--config` gloss false on a reachable path
+
+**Two statements inside the frozen design disagree, and until this round the disagreement was
+inert.** Its section 4.2 argument table glosses `--config` as "the exact frozen config file"; its
+section 4.3 gives `DEVELOPMENT_ONLY` the entry condition "the config is `dev-` and split is `dev`".
+A `dev-` config is a draft by the machine contract's own rules — measured at source this session in
+`utils/config_contract.py`: the draft branch refuses a file named `config.json`, requires
+`status = "draft"`, requires `confirmatory_payloads_allowed` to be `False` and at least one
+`open_gates` entry, and requires the `config_hash` to carry the `dev-` prefix, while
+`load_config(require_frozen=True)` refuses the same document with *"confirmatory operation refuses
+draft configuration"*. The two rows therefore cannot both govern one invocation. While
+`DEVELOPMENT_ONLY` was unauthorable, the 4.2 gloss was true of every reachable roles invocation and
+nothing had to choose between them.
+
+**The ruling is what makes it operative, and it is not editorial.** Section 3.1 of this document
+says the six closed CLI arguments remain unchanged, which points the 4b builder at the frozen 4.2
+table for their meaning. A builder following that pointer writes `load_config(require_frozen=True)`
+unconditionally — which refuses every config a `DEVELOPMENT_ONLY` record could ever name, silently
+reinstating the branch the CY ruling just rejected, in the one round entitled to build it. Every 4b
+test would stay green while it happened, because the accept path is `SYNTHETIC_FIXTURE` and never
+opens a config at all. That is the CX shape a fourth time: **the defect that only the path no test
+reaches can expose.**
+
+**Resolution: 4.3 governs, and the 4.2 gloss is `FINAL`-only.** `--config` names the
+authority-appropriate config file — the frozen `config.json` under `FINAL`, the exact approved
+versioned draft under `DEVELOPMENT_ONLY`. `require_frozen` is a function of the record's
+authenticated `authority`, never a constant, and read-order step 4's "check the `dev-`/frozen rule
+against `authority`" is the normative statement of it. The argument list, its arity, its ordering
+and its identity checks are untouched; one gloss on one row is corrected, forward, here. This is
+the fourth forward correction section 0 counts.
+
 ---
 
 ## 10. Sequencing — Step 4, decomposed
@@ -801,6 +846,8 @@ every lane in this project and it holds here.
 - Findings CU, CV and CW are raised here for the first time and are resolved *within* this document
   rather than by amending the frozen design. **CX (section 4.8) and CY (section 9.2) were raised in
   the owner re-review of the reviewer-repaired state; CX is accepted unchanged, and CY is resolved
-  here as an authority-scoped P1 before 4b.**
+  here as an authority-scoped P1 before 4b, on the reviewer's finding CZ that the branch changes
+  what 4b builds. DA (section 9.3) and DB (section 7, test B1) were raised in the second owner
+  re-review, against the reviewer's own new text, and are repaired here.**
 - This document authorizes 4b and nothing else, and only once both agents have approved the same
   bytes.

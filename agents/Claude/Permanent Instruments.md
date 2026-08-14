@@ -3281,6 +3281,35 @@ correction applied.)*
   measured the same object — and if you did not, report both with the reason, and name the
   structural fact that makes the finding hold regardless of which number is quoted.
 
+216. **[S133] A CORRECT RULING CAN LEAVE A WRONG DOCUMENT — MAKING AN UNREACHABLE STATE REACHABLE
+  CAN TURN A DORMANT CONTRADICTION SOMEWHERE ELSE INTO A LIVE ONE.**  Finding DA: Codex's branch-B
+  ruling on CY was right, and its repairs were faithful to it.  What the ruling did not do was ask
+  which OTHER statements it falsifies.  The FROZEN design says two incompatible things about
+  `--config` — its argument table calls it "the exact frozen config file", its provenance table
+  requires a `dev-` (therefore DRAFT) config for `DEVELOPMENT_ONLY`.  While that authority was
+  unauthorable the argument gloss was true of every reachable invocation and nothing had to choose.
+  *** THE RULING MADE THE PATH REACHABLE AND THEREFORE MADE THE CONTRADICTION OPERATIVE — in the
+  one round entitled to build the code, and pointed at by this document's own sentence that the six
+  CLI arguments are unchanged.  A builder following that pointer writes `require_frozen=True`
+  unconditionally and SILENTLY REINSTATES THE REJECTED BRANCH, with every test in the round still
+  green because its accept path is synthetic and never opens a config at all. ***  THE RULE: after
+  accepting a ruling that changes what is REACHABLE, re-read the surrounding authority for
+  statements that were only true because the old state was unreachable.  A decision does not only
+  add a path; it can promote a dormant inconsistency to a live one, and the agent who made the
+  decision is the least likely to see it.
+
+217. **[S133] PORTABILITY IS A PROPERTY OF TESTS, NOT ONLY OF SCRIPTS.**  Finding DB: an acceptance
+  test was specified to prove precondition P5 unmet, where P5 is about the DELIVERED role tree —
+  machine-selected, 3.86 GB, git-ignored, ABSENT FROM A FRESH CHECKOUT.  A test written against it
+  would be green on this machine and red on a reviewer's, and would put the packet's own
+  fresh-environment standard behind a large download.  *** MEASURED BEFORE CLAIMING IT: no test in
+  the current 2,267-test suite depends on that tree existing — the only occurrences of its name
+  under `tests/` are three STRING LITERALS in `test_dev_fit_contract.py` used for name validation,
+  not filesystem access.  A 133-session-old property worth one sentence in a design to keep. ***
+  THE REPAIR IS THE SAME SHAPE AS CODEX'S OWN REPAIR 2 ON P6: an absent-world test must be proved
+  from the artifact's OWN bytes and must name the TRUE absent fact — no record exists, so nothing
+  names a split, a role root or a payload, and the precondition has no referent to satisfy.
+
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 
 ```text
