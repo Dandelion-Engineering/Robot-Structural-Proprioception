@@ -1,11 +1,10 @@
 # Review Card — Slot-8 Step-4a Connection-Record Design
 
-**Status:** Active — owner response to Round 1 delivered (Claude Session 135); Round 2 is Codex's
-and is delta-only
+**Status:** Approved — Round 2 closed / both agents approved the same design bytes
 **Transition basis:** Director ruling, 2026-08-14
 **Owner:** Claude
 **Reviewer:** Codex
-**Subject chat:** `chats/Claude-Codex/Slot-8 Step-4a Connection-Record Design/Slot-8 Step-4a Connection-Record Design - Active.md`
+**Subject chat:** `chats/Claude-Codex/Slot-8 Step-4a Connection-Record Design/Slot-8 Step-4a Connection-Record Design - Concluded.md`
 
 ## Candidate state and round baseline
 
@@ -29,8 +28,12 @@ Phase-2 exchanges are historical and do not consume the new three-round limit.
   `f761a673ff8fcca6c58fe530a3faaed57630315a87a5e241d8ca9675a13c4ffc`, 83,181 bytes / 1,062 LF /
   0 CR, LF-pinned (measured with `git check-attr`). Owner audit `DESIGN_REVIEW_OK: 133 checks,
   0 failed`; focused config-contract suite 18/18.
-- New-method position: Round 1 full-artifact review is complete and its owner half is delivered.
-  Codex's next review is Round 2 and is delta-only.
+- Round 2 reviewer close (Codex Session 135): delta-only review resolved finding 1 without editing
+  the design. Codex explicitly approved the same blob `032db1666efbe00adec5696de70424d531ba33a2`.
+  Codex's updated design audit passed 72/72 checks, the focused config-contract suite passed 18/18,
+  and `git diff --check` was clean.
+- New-method outcome: **Approved**. Step 4a is closed / both approved at the exact owner-candidate
+  bytes above. Only the separately reviewed Step-4b adapter-and-test build is now licensed.
 - Settled findings from the pre-method review remain settled and are not reopened.
 
 ## Purpose
@@ -39,9 +42,10 @@ Determine whether the Step-4a connection-record design is sufficiently complete,
 authority-bounded and testable to freeze as the design prerequisite for a later, separately gated
 Step-4b adapter/test implementation.
 
-Approval of this card closes only the Step-4a design review. It does not authorize Step 4b, any
-real-role connection or read, Step 4c–4f, capacity or threshold selection, or final-configuration
-work.
+Approval of this card closes only the Step-4a design review and licenses the bounded Step-4b
+adapter-and-test build under its own new Review Card; it does not approve a Step-4b implementation
+state or authorize any real-role connection/read, Step 4c–4f, capacity or threshold selection, or
+final-configuration work.
 
 ## Artifacts and sections in scope
 
@@ -59,8 +63,8 @@ work.
    internal Step-4 helper used by the public roles path, under an isolated temporary packet root,
    while proving that the public path remains bound to the live packet and exposes no override.
 
-   **Disposition (Claude Session 135, owner half of round-trip 1): accepted in substance and
-   integrated.** Both authority branches now cross one internal roles-mode entry point entered after
+   **Disposition: resolved / closed.** Claude accepted the finding in substance in Session 135 and
+   integrated. Both authority branches now cross one internal roles-mode entry point entered after
    record authentication; the explicit packet root that entry point accepts governs every
    packet-relative resolution in the read order (step-3 domain binding, step-4 schema/config
    resolution, step-5 sources, section-4.7 output parent), because B8's own stop condition is a
@@ -74,18 +78,20 @@ LATE-BLOCKER rule.
 
 ## Acceptance tests
 
-1. One internal Step-4 helper implements the config-resolution, validation and authority check used
-   by the public roles path.
-2. The public roles path binds that helper to the live packet root and exposes no CLI or environment
-   override.
+1. One internal roles-mode entry point entered after record authentication carries the packet root
+   through the Step-3 domain binding, Step-4 config resolution/validation/authority check, Step-5
+   source resolution and the output-parent check used by the public roles path.
+2. The public roles path binds that entry point to the module-derived live packet root and exposes
+   no CLI or environment override.
 3. An isolated temporary packet root contains exact copies of the tracked schema and draft plus a
    synthetic `config.json` for the final leg.
 4. Both matching authority pairs pass Step 4 and stop only at a deliberate Step-5 corruption.
 5. Both wrong-authority pairs refuse.
 6. The test proves the live packet contains no `config.json` and all test writes remain inside the
    temporary root.
-7. The design audit passes all 72 checks and the existing focused config-contract suite remains
-   18/18 passing.
+7. Each agent's candidate-state audit passes with zero failures, and the existing focused
+   config-contract suite remains 18/18 passing. Instrument-specific check counts are evidence, not
+   properties of the candidate.
 8. Both agents explicitly approve the same exact design bytes.
 
 ## Blocking-severity definition
@@ -109,3 +115,8 @@ work without exact-state approval.
 At most three owner-reviewer round-trips begin from this card's baseline. The limit never forces
 approval. The card must end as Approved, Approved with Follow-ups, Revisions Required,
 Split/Redesign Required, or Escalated.
+
+**Terminal outcome:** Approved in Round 2 on 2026-08-14. Both agents explicitly approved design
+blob `032db1666efbe00adec5696de70424d531ba33a2`; no follow-up blocks Step 4b. The stale
+`build_role_bundle` docstring gloss is tracked for correction within the additive 4b build and does
+not reopen the closed Step-2 state.

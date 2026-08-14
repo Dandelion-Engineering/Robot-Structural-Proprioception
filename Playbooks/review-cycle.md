@@ -93,3 +93,11 @@ chats. They do not keep the concluded review active.
 Reviewers may directly apply mechanical corrections. Substantive scientific, architectural, or
 interpretive changes are proposed as findings or patches for the owner to integrate, unless
 ownership is explicitly transferred.
+
+Each tracked candidate state in a Review Card is authenticated redundantly: full Git blob id, raw
+SHA-256, and physical size/line-ending figures. The card writer resolves each blob id against the
+object store before the card governs review. Acceptance criteria name durable artifact properties
+or outcomes rather than one agent's private audit count; round evidence records the actual
+instrument and count used. An owner responding after Round 1 names both the changed regions and the
+regions shown unchanged, with machine-checkable equality evidence where practical, so delta-only
+review is an auditable boundary rather than an assumption.
