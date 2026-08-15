@@ -6,7 +6,7 @@
 |---|---|
 | **Phase** | Phase 2 — Execution |
 | **Public state** | 🟡 `In Progress` |
-| **Last updated** | 2026-08-14 |
+| **Last updated** | 2026-08-15 |
 
 This is a **public live research run** by [Dandelion Engineering](https://github.com/Dandelion-Engineering). You are watching the work happen. This page is the honest status of the project and — once it concludes — a way for you to check the result yourself. It is not a marketing pitch. While the run is live, expect pivots, dead ends, and negative findings to be recorded here in real time; that transparency is the point.
 
@@ -193,6 +193,8 @@ The whole project runs **in simulation**. We are not building a sensor. We are t
 - **2026-08-14 — The design for connecting an established result to the verification screen is now approved by both agents.** It authorizes only the next synthetic adapter-and-test build; no connection record, real role, scientific-result read, capacity or threshold choice, frozen config, or adapter run is authorized.
 
 - **2026-08-14 — The first half of that fail-closed connection machinery is implemented and jointly approved.** The new contract authenticates and strictly parses a connection record before any scientific file can open, and it refuses path or filename identities that could escape, collide, or leave a partial figure set on another filesystem. The actual adapter is still unbuilt; no production record, real-role or scientific read, configuration choice, or result claim is authorized.
+
+- **2026-08-15 — Correction to the entry above:** “On another filesystem” was too broad: case-insensitive filename collisions and partial output after an overlong case name were reproduced on this project's own Windows filesystem; the 255-character component ceiling is the portability safeguard. Authorization remains unchanged.
 
 ---
 

@@ -1,120 +1,143 @@
 # Summary of Only Necessary Context — Codex
 
-Last completely rewritten after Codex Session 138 on 2026-08-14.
+Last completely rewritten after Codex Session 139 on 2026-08-15.
 
 ## Resume here
 
 - Branch: `main`.
 - Slot-8 Steps 1–3, Step 4a and Step 4b-i are closed / both approved.
-- The exact approved Step-4b-i candidate is:
-  - `Reproducibility Packet/scripts/utils/connection_record.py`, Git blob
-    `312efd5ebf938a212c63de7a92ee2e8e4728ecf0`, raw SHA-256
-    `efc547ad9aab9a3682fb29ebae906bfe314a11531ebb4d4da1095c6a7d3b019a`;
-  - `Reproducibility Packet/tests/test_connection_record.py`, Git blob
-    `f854b894a76eb972f9b2e65903233909f05ef287`, raw SHA-256
-    `2933e80bd72b1786b74acb335c35efaf5412b4c646c04e32332cc7481a52e2aa`;
-  - `Reproducibility Packet/scripts/render_verification_scene.py`, Git blob
-    `2e4b366ead7c47a3d6e71695f845471a2d9d52ef`, raw SHA-256
-    `83473e7aa15c1f072204a4c378044639e41147b7865670018eec8b4bcf7c8ff4`.
-- Governing Step-4b-i card is terminal Approved:
-  `Review Card/Slot-8 Step-4b-i Connection-Record Contract.md`. Its concluded subject record and
-  durable summary are under `chats/Claude-Codex/Slot-8 Step-4b-i Connection-Record Contract/`.
-- Step 4b-ii has not started. Claude is licensed to begin one new adapter build under its own
-  Review Card and subject chat. Full Step 4b is not closed.
+- Step 4b-ii has not started. Claude owns one new adapter-and-test build under its own Review Card
+  and subject chat. Full Step 4b is not closed.
+- Two smaller loops are open and independent of that build:
+  1. Claude owes the Round-2 scope ruling and delta review of the corrected public README candidate.
+  2. Claude owes acceptance or contest of Codex's bounded refinements to the proposed
+     escalation-replacement consensus. Neither review-cycle governing file changed in Session 139.
 - No production connection record, real role/index/payload/checkpoint/result read, Step 4c–4f work,
   capacity or threshold choice, final configuration, adapter run, or C1-versus-S claim is authorized.
 - The next regular Codex progress report is Session 144.
 
-## What Step 4b-i now guarantees
+## Closed Step-4b-i state
 
-- The connection-record layer authenticates and strict-parses read-order rows 1–3, deep-freezes the
-  authenticated state, binds declared domains to one injected packet root and derives the expected
-  open set.
-- Every declared portable path component is bounded at 255 ASCII characters. `case_id` is bounded
-  at 250 so the longest renderer-derived filename remains within the 255-character component limit.
-- Derived case filenames must be disjoint from fixed bundle filenames and from one another under
-  the explicit portable case-insensitive identity.
-- The independent renderer write layer bounds UTF-8 filename bytes and rejects duplicate folded
-  names before resolving paths or writing. Invalid namespaces cannot partially publish.
-- The valid seed-7 four-case bundle remains ten byte-identical files whose reported bundle digest is
-  `3bf51e9440ec32c7cb7484f70ecfc80c1d5c97d3fb53b8dc0e1f44add5459d70`.
+Both agents explicitly approve:
 
-## Exact review evidence
+- `Reproducibility Packet/scripts/utils/connection_record.py`, blob
+  `312efd5ebf938a212c63de7a92ee2e8e4728ecf0`, raw SHA-256
+  `efc547ad9aab9a3682fb29ebae906bfe314a11531ebb4d4da1095c6a7d3b019a`;
+- `Reproducibility Packet/tests/test_connection_record.py`, blob
+  `f854b894a76eb972f9b2e65903233909f05ef287`, raw SHA-256
+  `2933e80bd72b1786b74acb335c35efaf5412b4c646c04e32332cc7481a52e2aa`;
+- `Reproducibility Packet/scripts/render_verification_scene.py`, blob
+  `2e4b366ead7c47a3d6e71695f845471a2d9d52ef`, raw SHA-256
+  `83473e7aa15c1f072204a4c378044639e41147b7865670018eec8b4bcf7c8ff4`.
 
-- 341 focused tests passed in 7.42 s.
-- The same 341 tests passed under `python -O` in 7.44 s, with the expected pytest assertion warning.
-- The packet-wide suite passed 2,608 tests in 203.27 s with no failure or collection error.
-- A separate reviewer-written audit passed 19 checks over the 250/251-character boundary, the
-  255/256 general-component boundary, fixed-name and case-fold collisions, write-layer duplicates,
-  and the valid ten-file/digest path.
-- `py_compile`, `git diff --check`, and seed-7 fixture regeneration passed.
-- The temporary regeneration directory was removed after byte comparison; it contained only
-  reproducible scratch output.
-- Git's actual Round-3 numstats are module `+128/−10`, renderer `+51/−3`, tests `+421/−0`.
-  Claude's owner response quoted different module/renderer totals, but its changed-region map and
-  all unchanged-region claims were correct. Codex corrected only the active Review Card and left the
-  dated owner report and transcript intact.
+The connection-record layer strict-parses and authenticates rows 1–3, deep-freezes the state, binds
+declared paths to one injected packet root and derives the expected open set. Portable components
+stop at 255 ASCII characters; `case_id` stops at 250 so renderer suffixes fit. Fixed/derived output
+names must be case-insensitively disjoint. The renderer independently validates the complete write
+set before any file is published. The seed-7 ten-file fixture remains byte-identical at bundle digest
+`3bf51e9440ec32c7cb7484f70ecfc80c1d5c97d3fb53b8dc0e1f44add5459d70`.
 
-## Step-4b-ii forward decisions
-
-Carry these two already-recorded decisions into the new Step-4b-ii card:
-
-1. `render_geometry.source` names and hashes `scripts/utils/cable_mechanics.py`. Because this is a
-   tracked text file, the adapter must either use its canonical-text digest or add an EOL pin for
-   that exact file. An unpinned raw digest is not portable across a fresh Windows clone.
-2. The required `structure` / `actuator` / `sensor` source-class coverage remains a payload/bundle
-   validation check. It is not a new connection-record field; duplicating the class in the record
-   would permit the record to contradict the authenticated payload.
+Closure evidence: 341 focused, 341 optimized and 2,608 packet-wide passing tests; a separate
+19-check boundary audit; `py_compile`; `git diff --check`; and exact seed-7 regeneration. Do not
+reopen Step 4b-i. Its closure licenses only the separate Step-4b-ii build.
 
 ## Open public README review
 
-- Closing Step 4b-i met the Live-Run README playbook's bounded-artifact trigger. Root `README.md`
-  received one lean additions-only heartbeat that preserves the unbuilt-adapter and all scientific
-  boundaries.
-- Codex explicitly approves README blob `3f5f300612adf988fbaa616c172e7f2f94e2a528`, raw SHA-256
-  `dca6a2e6baf127d937636f41185efd79f1f6d08647767f012ba79288417a424f`, at `+2/−0` from its
-  predecessor.
-- Claude's review is open under `Review Card/Public README Step-4b-i Heartbeat.md` and
-  `chats/Claude-Codex/Public README Step-4b-i Heartbeat/Public README Step-4b-i Heartbeat - Active.md`.
-  This narrow review does not block the Step-4b-ii build.
+Claude's Round-1 review correctly found that “on another filesystem” was too broad. The
+case-insensitive collision and partial-output failure were reproduced on this Windows host; the
+255-character component ceiling is the portability safeguard.
 
-## Review method and chat state
+The original heartbeat was already committed and public, so Codex preserved it byte-for-byte and
+appended a dated forward correction rather than deleting the qualifier. Codex also proposed the
+mechanically required Last-updated date as a narrow scope expansion because the original card had
+excluded the banner.
 
-- The director's Review Card and convergence method supersedes the historical review-cycle text.
-- Same-state explicit approval by both agents is required. Green tests, edits, downstream use,
-  handoff and silence are not approval.
-- The Step-4b-i subject chat is concluded. Do not append new work there.
-- `chats/Claude-Codex-Human/Review Boundary and Convergence/Review Boundary and Convergence - Active.md`
-  remains the active method-feedback chat. Its latest entry records the honest Round-3 closure,
-  review-record numstat correction and no human-triage need.
-- Use Transcript Order Monitoring only for an actual append-order/integrity recurrence. Both
-  Session-138 appends preserved their complete prior byte prefixes, placed one unique Codex header
-  after the boundary and remained additions-only.
+Current owner-approved `README.md` candidate:
 
-## Public, reporting and scientific boundaries
+- blob `11a424b7661cf372f5e9c1a6c5a1b13c01850d16`;
+- raw SHA-256 `f3d1dd86de394bdf528e0cd99d0d93aca4fc0540819d106173ea2a211196851b`;
+- 154,471 bytes / 220 LF / 0 CR / no BOM / final newline.
 
-- `agents/Codex/Session Summaries/HumanReport138.md` is the detailed record. The next regular
-  progress report is Session 144.
-- Stage 1 remains complete only as a development screen: no readable paired shape at five points /
-  five seeds, no licensed trend statement, no capacity or threshold selected.
-- Rung 2 remains complete only as scoped. Its fit/analyzer invocations are spent; all ten arms have
-  zero healthy and structure F1, which is a development observation rather than a causal claim.
-- The verified synthetic Slot-8 fixture proves the display mechanism, not a scientific result. Its
-  real-role path still refuses before a scientific file opens.
-- Project counters remain 278 rollouts, 67 fits, 67 checkpoints, and zero pilot/validation/test reads.
-- Amendment A2, role separation, no-exploratory-recompute rules, the 67-checkpoint distribution /
-  recovery issue, the non-blocking Claim Sheet director request and all unspent scientific gates
-  remain in force.
+Relative to Claude's reviewed blob `3f5f300612adf988fbaa616c172e7f2f94e2a528`, Git reports
+`+3/−1` in exactly two hunks: the Last-updated date and the appended correction plus separator.
+Every other README byte, including the original heartbeat, is unchanged. Codex explicitly approves
+the new blob. Claude owes the Round-2 scope ruling and delta-only review in:
 
-## Append-only transcript discipline
+- `Review Card/Public README Step-4b-i Heartbeat.md`;
+- `chats/Claude-Codex/Public README Step-4b-i Heartbeat/Public README Step-4b-i Heartbeat - Active.md`.
 
-Before any transcript append:
+This narrow public review does not block Claude's Step-4b-ii build.
 
-1. read the UTF-8 physical tail and record byte and line counts;
-2. authenticate the complete prior bytes and programmatically verify a unique multi-line EOF anchor;
-3. apply only against that exact verified tail;
-4. verify the whole pre-write byte sequence is the new file prefix;
-5. verify the new session header occurs exactly once after the old byte boundary; and
-6. reread the physical tail and confirm the new message is last and the Git diff is additions-only.
+## Review-method consensus state
 
-If any assertion fails, stop and repair with a dated append-only correction before commit.
+Randy directed both agents to replace blocking `Escalated` outcomes with agent-side consensus while
+continuing other work. Claude proposed factual-versus-judgment classification, a predeclared factual
+measurement, one narrowing split, fail-closed withholding, and a non-blocking director notice.
+
+Codex agrees with that core. Before implementation, Codex proposed five refinements so the claimed
+cost bound and existing authorization boundaries are real:
+
+1. bundle classification and the first position/probe into the max-round turn;
+2. allow one factual probe and one counterproposal maximum, with no authority to spend gated
+   resources or make external/production reads or writes;
+3. give the once-narrowed judgment card one owner-reviewer round-trip, not three;
+4. require exact separability and a lawful fail-closed state, preserving append-only history; and
+5. make later director reconsideration a new candidate/card, not retroactive approval.
+
+That form costs at most two additional agent sessions for factual resolution and three for judgment
+after the max-round classification turn. Claude's acceptance remains open in
+`chats/Claude-Codex-Human/Review Boundary and Convergence/Review Boundary and Convergence - Active.md`.
+Do not edit `Playbooks/review-cycle.md` or `Review Card/README.md` until consensus is explicit. Once
+Claude accepts, either agent may write the combined rule into both files.
+
+## Step-4b-ii forward decisions
+
+Carry both decisions into Claude's new card:
+
+1. `render_geometry.source.producer_sha256` uses `canonical_text_sha256` for
+   `scripts/utils/cable_mechanics.py`, and the same tracked-text domain applies to any other runtime
+   text digest. Codex independently accepted the basis in Session 139: the current file is 20,987
+   bytes / 527 LF / 0 CR, raw and canonical SHA-256 both
+   `1acaf60c4c4206ece0bb5ce6a6e7b13e26951b34a0f78c07f913015642b5d0bb`, while
+   `core.autocrlf=true`; the packet's standing tracked-text rule and code-identity precedent bind
+   the canonical domain. Do not add an EOL pin merely to make an unportable raw rule pass.
+2. Required `structure` / `actuator` / `sensor` coverage remains a payload/bundle validation check.
+   It is not a new record field; a case's source class comes from its authenticated `labels`
+   payload, so duplicating it in the record would create a contradiction surface.
+
+## Scientific and public boundaries
+
+- Stage 1 is complete only as a development screen: no readable paired shape at five points / five
+  seeds, no licensed trend statement, no capacity or threshold selected.
+- Rung 2 is complete only as scoped. Its fit/analyzer authorizations are spent; all ten arms have
+  zero healthy and structure F1, a development observation rather than a causal claim.
+- The Slot-8 synthetic fixture proves the display mechanism, not a scientific result. The real-role
+  path still refuses before a scientific file opens.
+- Project counters remain 278 rollouts, 67 fits, 67 checkpoints and zero pilot/validation/test reads.
+- Amendment A2, role separation, no-exploratory-recompute rules, the 67-checkpoint distribution and
+  recovery issue, the non-blocking Claim Sheet director request and every unspent gate remain in
+  force.
+- Root `README.md` remains Phase 2 / `In Progress`; the Session-139 correction changed no scientific
+  claim or authorization.
+
+## Chat and append discipline
+
+- The oversized `Phase 2 Integration and Config Freeze` chat is concluded. Never append to it.
+- The Step-4a and Step-4b-i technical subject chats are concluded. Do not reopen them.
+- The only active owner-reviewer chat is the public README heartbeat chat above; Claude owes Round 2.
+- The active three-party method chat contains Codex's pending consensus refinement.
+- Use Transcript Order Monitoring only for an actual integrity/order recurrence or a proposal to
+  close. Session 139 had none.
+
+Before every transcript append:
+
+1. read the UTF-8 physical tail and record byte/line counts and SHA-256;
+2. authenticate the complete prior bytes and verify the actual EOF anchor;
+3. preserve the whole prior byte sequence as the new prefix;
+4. verify the new session header occurs exactly once after the old byte boundary;
+5. reread the physical tail and require an additions-only Git diff; and
+6. if any assertion fails, preserve the failed state and append a dated physical-tail correction
+   before closeout.
+
+Do not use a text patch as evidence of byte preservation on a mixed-EOL file. The asserted prior
+bytes themselves must travel as the prefix.
