@@ -66,6 +66,7 @@ from utils.verification_scene import (
     VerificationScene,
     VerificationSceneError,
     X_BUNDLE_INCOMPLETE,
+    X_IDENTITY_MISMATCH,
     X_SCENE_OK,
     banner_text,
     build_fixture_bundle,
@@ -474,6 +475,59 @@ def _write_bytes(path: Path, payload: bytes) -> None:
         handle.write(payload)
 
 
+def _contained_output_paths(destination: Path, names: Sequence[str]) -> dict[str, Path]:
+    """Resolve every file this bundle will write, proving each is a direct child.
+
+    Args:
+        destination: the bundle output directory.
+        names: every file name the bundle is about to write, in any order.
+
+    Returns:
+        `name -> resolved path`, for every name.
+
+    Raises:
+        VerificationSceneError: `X_IDENTITY_MISMATCH` when any composed path is not a
+            direct child of `destination`. **This build adds no refusal code**, per
+            the standing ruling that a code is not invented for a branch nobody has
+            built. The existing code is the right one on its own terms: the read
+            order gives `X_IDENTITY_MISMATCH` to every claim that some named object
+            is at some named place, and a write that lands outside its declared root
+            is exactly that claim failing.
+
+    Design 4.7 says the adapter writes exactly the declared output set under
+    `<output-dir>/<record_label>/` and nothing outside that root, and W10 makes the
+    root exclusive-create. Both statements are about *paths*, and every per-case path
+    here is composed from `case_id`. While the only bundles that existed were built
+    in-process by this packet, `case_id` was a key nobody could aim; once a connection
+    record supplies it, a value such as `../escape` writes beside the requested
+    directory rather than inside it -- and `Path.name` in the returned manifest would
+    report the innocent leaf. `utils.connection_record` refuses that value at the
+    record boundary. This is the second, independent layer, held where the write
+    actually happens, so the guarantee does not depend on every future producer of a
+    bundle having applied the first one.
+
+    The whole write set is resolved *before* the first byte is written, and there is
+    exactly one call site. Both properties are deliberate: a per-write guard would
+    leave earlier files already on disk when a later name refused, and a guard
+    duplicated at each write would have branches no test could distinguish -- delete
+    the second one and every observable behaviour stays the same, which is a check
+    that holds nothing.
+    """
+
+    resolved_destination = destination.resolve()
+    outputs: dict[str, Path] = {}
+    for name in names:
+        candidate = (destination / name).resolve()
+        if candidate.parent != resolved_destination:
+            raise VerificationSceneError(
+                X_IDENTITY_MISMATCH,
+                f"the scripted figure set would write {candidate}, which is not a "
+                f"direct child of its output root {destination}",
+            )
+        outputs[name] = candidate
+    return outputs
+
+
 def render_bundle(bundle: VerificationBundle, output_dir: Path) -> dict[str, Any]:
     """Write the deterministic figure set for a whole bundle.
 
@@ -493,18 +547,24 @@ def render_bundle(bundle: VerificationBundle, output_dir: Path) -> dict[str, Any
     destination = Path(output_dir)
     destination.mkdir(parents=True, exist_ok=True)
 
+    # The complete write set, proved contained before anything is written.
+    names = [BUNDLE_JSON_NAME, BUNDLE_DIGEST_NAME]
+    for case_id in bundle.scenes:
+        names.extend((f"{case_id}.png", f"{case_id}.json"))
+    outputs = _contained_output_paths(destination, names)
+
     bundle_text = canonical_bundle_text(bundle)
     bundle_bytes = bundle_text.encode("utf-8")
     digest = hashlib.sha256(bundle_bytes).hexdigest()
-    _write_bytes(destination / BUNDLE_JSON_NAME, bundle_bytes)
-    _write_bytes(destination / BUNDLE_DIGEST_NAME, (digest + "\n").encode("utf-8"))
+    _write_bytes(outputs[BUNDLE_JSON_NAME], bundle_bytes)
+    _write_bytes(outputs[BUNDLE_DIGEST_NAME], (digest + "\n").encode("utf-8"))
 
     cases: list[dict[str, Any]] = []
     for case_id, scene in bundle.scenes.items():
         frame = derived_frame(scene)
         figure = draw_scene(scene, frame=frame)
         FigureCanvasAgg(figure)
-        png_path = destination / f"{case_id}.png"
+        png_path = outputs[f"{case_id}.png"]
         figure.savefig(
             png_path,
             format="png",
@@ -518,7 +578,9 @@ def render_bundle(bundle: VerificationBundle, output_dir: Path) -> dict[str, Any
                 ),
             },
         )
-        _write_bytes(destination / f"{case_id}.json", canonical_scene_text(scene).encode("utf-8"))
+        _write_bytes(
+            outputs[f"{case_id}.json"], canonical_scene_text(scene).encode("utf-8")
+        )
         cases.append(
             {
                 "case_id": case_id,

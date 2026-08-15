@@ -3388,6 +3388,13 @@ correction applied.)*
   emit. ***  Corollary that paid off immediately: where several branches share one parametrized
   refusal test, give each case its OWN expected sentence rather than one shared code assertion -
   the rooted-path branch was a survivor precisely because the empty-segment branch subsumes it.
+  *** [S137 RECURRENCE - THE CORRIGIBLE PART IS THAT I KNEW THIS AND STILL DID IT.]  I wrote the
+  S137 `case_id` refusal test as a parametrized list with a bare code assertion, in the same
+  session in which I wrote three OTHER parametrized tests WITH per-case sentences.  TWO of its
+  branches were survivors - the separator branch and the `.`/`..` branch, both subsumed by the
+  portable-component grammar one line later.  *** THE RULE IS THEREFORE UNCONDITIONAL AND NOT A
+  JUDGEMENT CALL: A PARAMETRIZED REFUSAL TEST TAKES A `(input, phrase)` PAIR, ALWAYS.  The moment
+  it takes only inputs, it is measuring the code and not the branch. *** ***
 
 224. **[S136] WHEN A DESIGN NAMES ONE BUILD STEP THAT IS REALLY A PROGRAM, SPLIT THE *REVIEW*, NOT
   THE DESIGN.**  Section 10 named 4b as one sub-step; it is a 21-row read order, 14 exit codes, a
@@ -3399,6 +3406,61 @@ correction applied.)*
   OWN TEXT rather than from convenience - here section 4.1's "the first boundary".  Then ask the
   reviewer to rule on the split BEFORE reviewing the contents; that is the cheapest round to spend
   on it. ***
+
+225. **[S137] A REVIEWER'S BLOCKING FINDING CAN NAME A REPAIR THAT LIVES OUTSIDE THE CARD'S
+  CANDIDATE, AND THERE ARE ONLY THREE MOVES.**  Codex's finding 5 asked for a record-boundary rule
+  AND a defence-in-depth containment check at the writer - and the writer is
+  `render_verification_scene.py`, a CLOSED Step-2 blob that my own card described as untouched.
+  The three moves are: answer half the finding; widen the candidate silently; or widen it and say
+  so.  *** THE THIRD IS THE ONLY ONE THAT IS NOT A DEFECT.  Make the edit, name the file as a
+  SCOPE EXPANSION in both the card and the chat, state that it is additive and adds no new refusal
+  code, and OFFER THE REVERT explicitly - "if you rule this belongs to the next sub-step, it goes
+  back to <blob> and becomes a tracked item there."  The scope of a card is the reviewer's to rule
+  on; the owner's obligation is to make the ruling POSSIBLE rather than to take it alone. ***
+  Corollary measured the same session: when you touch a closed file that PRODUCES a tracked
+  artifact, REGENERATE THE ARTIFACT AND COMPARE EVERY FILE'S DIGEST before claiming the edit is
+  behaviour-preserving.  Ten files, same SHA-256, is a measurement; "it only adds a refusal" is an
+  argument.
+
+226. **[S137] SPELLING AND CONTAINMENT ARE DIFFERENT PROPERTIES AND NEITHER SUBSUMES THE OTHER.**
+  A traversal rule (`..`, rooted, drive) plus a containment proof looks total.  It is not.
+  *** MEASURED ON THIS MACHINE, NOT REASONED ABOUT: an embedded NUL makes `Path.resolve()` raise
+  `ValueError: stat: embedded null character in path`, so it NEVER REACHES the containment
+  comparison at all; writing `schema.json:stream` succeeds and the directory afterwards lists only
+  `schema.json`, because the colon opened an invisible NTFS alternate data stream; writing
+  `trailing.` creates a file that lists as `trailing` and `Path("trailing").exists()` is True, so
+  TWO DISTINCT RECORD SPELLINGS NAME ONE FILE; and `Path("CON").resolve()` returns an
+  ordinary-looking path inside the root, because a DOS device alias is CONTAINED BY EVERY ROOT
+  while naming no file. ***  So a contract over authored paths needs a PORTABLE COMPONENT GRAMMAR
+  (`[A-Za-z0-9._-]+`, no trailing dot, no reserved device stem) as well as containment, and every
+  `.resolve()` on the contract path needs its failure translated into the named refusal - a raw
+  exception out of a contract layer is a silent failure by another name, because the caller gets a
+  traceback where the design specified an exit code.
+
+227. **[S137] `@dataclass(frozen=True)` REBINDS THE ATTRIBUTE, NOT THE OBJECT.**  Every `dict`
+  reached through a frozen attribute is an ordinary mutable dict, so an "authenticated value
+  object" can be edited into a different allowlist without touching one byte of the file that was
+  hashed.  Deep immutability is explicit work: `MappingProxyType` over mappings, TUPLES over arrays
+  (Python has no read-only list), and the proxy must wrap a PRIVATE COPY - a proxy over a dict the
+  caller still holds is the appearance of the property without the property.  *** PROBE EVERY
+  MAPPING-BEARING LAYER SEPARATELY.  A single spot check passes while the other seven stay mutable,
+  and the reviewer found this by mutating two layers I would not have picked. ***  Two consequences
+  to write down rather than let a later session discover: frozen arrays are tuples so `==` against
+  the source `dict` is False wherever an array appears, and `json.dumps` cannot serialise a
+  `MappingProxyType` - state both in the docstring of the field that carries them.
+
+228. **[S137] A TEST THAT SKIPS ON THE ONLY MACHINE THE PROJECT HAS HOLDS NOTHING - FIND THE
+  UNPRIVILEGED EQUIVALENT.**  Two containment guards were "unreachable from a well-formed record",
+  which is the S136/lesson-213 shape.  The honest instrument is a filesystem link, and
+  `Path.symlink_to` on Windows needs Developer Mode or elevation, which this machine does not have
+  - so my first version skipped, permanently, everywhere the project actually runs.  *** A WINDOWS
+  DIRECTORY JUNCTION (`mklink /J`) NEEDS NO PRIVILEGE AND `Path.resolve()` FOLLOWS IT IDENTICALLY.
+  Symlink first, junction second, skip only if both fail. ***  And the construction matters as much
+  as the link: the trap must be built so the EQUALITY STILL HOLDS and only the containment proof
+  separates accept from refuse - link ONLY the record subtree away, so the output-parent check
+  still passes - otherwise the test goes green on the wrong branch and proves nothing.  A test that
+  passes for the right reason and one that passes at all are different tests, and only asking "what
+  would this catch if I reverted the fix?" tells them apart.
 
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 

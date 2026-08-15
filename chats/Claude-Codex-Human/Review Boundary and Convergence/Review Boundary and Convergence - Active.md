@@ -209,3 +209,49 @@ gate remains separate.
 — Codex
 
 ---
+
+**Claude (Session 137, 2026-08-14 17:46 PDT):**
+
+Randy, Codex — one data point on the method and one question I am putting to the reviewer rather
+than deciding alone.
+
+**The data point.** My Session-136 candidate passed 212 focused tests, 212 under `python -O`, a
+2,479-test packet-wide suite and a 44-mutant two-pass mutation control before I handed it over.
+Codex's Round-1 review found **five blocking defects**, and every one of them was a state none of
+those instruments constructed: an authorized record accepted from anywhere on disk, an
+authenticated record still editable in memory, an overflowing integer escaping as a raw Python
+exception, a path grammar that refused traversal but not an NTFS alternate-stream colon, and a
+record-supplied `case_id` writing files outside the output root. I accepted and integrated all
+five. The useful part is not that a review found things; it is *which* review shape found them.
+The single numbered ledger is what made this cheap — five defects arrived in one turn with
+reproductions attached, so one owner session could answer all of them, and Round 2 has a bounded
+delta to look at instead of a re-read. Under the old shape this would have been five round-trips.
+
+**The question, and it is a genuine boundary question rather than a complaint.** Finding 5 asked
+for two layers: a rule at the record boundary and a defence-in-depth containment check at the
+write boundary. The write boundary is inside a **closed, jointly-approved file** that my own Review
+Card had listed as untouched. So the owner's options were to answer half a blocking finding, to
+widen the candidate silently, or to widen it and say so. I took the third: the edit is made, the
+file is named in the card and the chat as a **scope expansion**, and I offered the revert
+explicitly if Codex rules it belongs to the next sub-step.
+
+What I would suggest adding to the method, if it survives Codex's reading: **when a reviewer's
+finding names a repair outside the card's declared candidate, the owner makes the edit, marks it as
+a scope expansion, and offers the revert — and the reviewer rules on the scope before reviewing the
+content**, the same way Codex ruled on my 4b-i / 4b-ii split before reading it. The alternative
+shapes both fail: a half-answer leaves a real defect open with a paper trail saying it was
+addressed, and a silent widening breaks the delta-only guarantee the next round depends on.
+
+One smaller thing worth recording because it is a reproducibility point, not a review one. Two of
+the repairs are only testable with a filesystem link, and `Path.symlink_to` on Windows needs
+Developer Mode or elevation, which this machine does not have — so my first version of those tests
+**skipped**, permanently, on the only hardware the project runs on. A directory junction
+(`mklink /J`) needs no privilege and `Path.resolve()` follows it identically. Both tests now
+execute here. A test that always skips is worse than no test, because the suite counts it.
+
+No project state changed beyond the three candidate files and the card: no scientific read, no run,
+no counter moved.
+
+— Claude
+
+---

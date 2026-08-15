@@ -16,9 +16,10 @@ Concretely:
     `record_version` and the complete section-3.2 field table, rejects every
     non-finite value and every rooted, drive-qualified or `..` path token;
   * **step 3** -- `bind_root_domains` binds each declared path to its own root
-    domain *without opening anything*, requires the `--role-root` basename to equal
-    `dataset_label`, enforces the section-4.7 authority-specific output parent, and
-    checks the fixed authority/split policy.
+    domain *without opening anything*, requires the record's own file to be at the
+    one tracked location section 3.1 gives it, requires the `--role-root` basename
+    to equal `dataset_label`, enforces the section-4.7 authority-specific output
+    parent, and checks the fixed authority/split policy.
 
 `expected_open_set` then derives the section-4.2 allowlist from the bound record. It
 is the "expected" side of invariant W3's set equality and, like everything else here,
@@ -60,6 +61,25 @@ session report.**
      against each one's own named, approved source artifact. A plausibility band
      invented here would be an unapproved number entering the contract through the
      back door, and sub-step 4b is explicitly forbidden from choosing one.
+
+**Three properties this module holds that a field table alone does not imply**, each
+one added because a review probe reached a state the green suite did not construct:
+
+  1. *An authenticated record is immutable all the way down.* `frozen=True` on a
+     dataclass rebinds nothing but the attribute, so a `dict` reached through a frozen
+     attribute is still mutable and a later caller can turn authenticated bytes into a
+     different allowlist without touching the file that was hashed. Every mapping this
+     module hands out is a read-only view over a private copy and every array inside
+     `document` is a tuple.
+  2. *Every path token is one portable name, not merely a spelling without `..`.*
+     An embedded NUL, an NTFS alternate-stream colon, a reserved DOS device stem and a
+     trailing dot all survive a traversal rule and all name something different --
+     or nothing -- on a different platform. Containment cannot catch them: resolution
+     raises before the comparison, and a device alias is contained by every root.
+  3. *A value that becomes a filename is refused as a filename.* `case_id` is written
+     as `<output-root>/<case_id>.png` and `.json` by the already-approved renderer, so
+     the record boundary requires one portable leaf token and the renderer keeps an
+     independent containment check over what it is about to write.
 """
 
 from __future__ import annotations
@@ -70,6 +90,7 @@ import math
 import re
 from dataclasses import dataclass, fields
 from pathlib import Path, PurePosixPath
+from types import MappingProxyType
 from typing import Any, Mapping, Sequence
 
 from utils.storage_contract import IdentityManifestRow, re_full_sha256
@@ -134,6 +155,26 @@ MANIFEST_ROW_INT_FIELDS: frozenset[str] = frozenset(
 _LABEL_PATTERN = re.compile(r"[a-z0-9-]+")
 _DERIVATION_VERSION_PATTERN = re.compile(r"[a-z0-9][a-z0-9.\-]*")
 _UTF8_BOM = b"\xef\xbb\xbf"
+
+#: One portable path component. This is deliberately narrower than "whatever the
+#: local filesystem accepts": a record is authored once and read on whatever machine
+#: reproduces the packet, so a component that means one thing here and another thing
+#: there is not one identity. The class excludes the NUL byte and every other control
+#: character (which reach `Path.resolve()` as a raw `ValueError` rather than a
+#: refusal), the colon (an NTFS alternate data stream designator, so
+#: `schema.json:stream` names a hidden stream on Windows and an ordinary file
+#: elsewhere), the space, and every shell/globbing metacharacter.
+_PORTABLE_SEGMENT_PATTERN = re.compile(r"[A-Za-z0-9._-]+")
+
+#: The DOS device names Windows still resolves ahead of a file of the same stem, in
+#: any directory and with any extension. `CON`, `NUL` and the numbered ports are not
+#: files there at all, so a record naming one names different objects on different
+#: platforms. Compared against the uppercased stem, which is how Windows compares it.
+_RESERVED_DEVICE_STEMS: frozenset[str] = frozenset(
+    {"CON", "PRN", "AUX", "NUL", "CLOCK$"}
+    | {f"COM{digit}" for digit in range(10)}
+    | {f"LPT{digit}" for digit in range(10)}
+)
 
 
 # --------------------------------------------------------------------------- #
@@ -372,11 +413,25 @@ def _require_config_hash(value: Any, where: str) -> str:
 
 
 def _require_finite_float(value: Any, where: str) -> float:
-    """Require one finite JSON number, accepting an integer literal."""
+    """Require one finite JSON number, accepting an integer literal.
+
+    The conversion is guarded rather than assumed. `json.loads` parses an unbounded
+    integer literal exactly -- `10 ** 400` arrives as a Python `int`, passes the
+    non-finite walk (which only inspects floats) and then makes `float()` raise a raw
+    `OverflowError`. A raw exception out of a contract layer is a silent failure by
+    another name: the caller sees a crash instead of the named refusal, and the exit
+    code the design assigned never happens. The overflowing literal is refused here,
+    in the same sentence as any other unrepresentable number.
+    """
 
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise _unauthorized(f"{where} must be a JSON number")
-    number = float(value)
+    try:
+        number = float(value)
+    except (OverflowError, ValueError) as exc:
+        raise _unauthorized(
+            f"{where} is a numeric literal too large to represent as a finite number: {exc}"
+        ) from exc
     if not math.isfinite(number):
         raise _unauthorized(f"{where} must be finite")
     return number
@@ -401,6 +456,44 @@ def _require_positive_int(value: Any, where: str) -> int:
     return value
 
 
+def _require_portable_segment(segment: str, where: str, *, text: str) -> None:
+    """Require one path component to be one portable name on every platform.
+
+    Args:
+        segment: the component, already known to be non-empty and not `.` or `..`.
+        where: a dotted path used in the refusal message.
+        text: the whole token, quoted in the refusal so the reviewer sees the shape.
+
+    Raises:
+        VerificationSceneError: `X_CONNECTION_UNAUTHORIZED` when the component
+            carries a character outside the portable class, ends in a dot or a space
+            (Windows silently strips both, so two distinct records would name one
+            file), or has a stem Windows resolves as a device rather than a file.
+
+    A token rule is the only layer that can refuse these. Containment cannot: an
+    embedded NUL never reaches a containment comparison because `Path.resolve()`
+    raises first, and a device alias is contained by every root while naming no file
+    at all.
+    """
+
+    if _PORTABLE_SEGMENT_PATTERN.fullmatch(segment) is None:
+        raise _unauthorized(
+            f"{where} carries the path component {segment!r}, which is outside the "
+            "portable component class [A-Za-z0-9._-]; got "
+            f"{text!r}"
+        )
+    if segment.endswith("."):
+        raise _unauthorized(
+            f"{where} carries the path component {segment!r}, which ends in a dot that "
+            f"Windows strips; got {text!r}"
+        )
+    if segment.split(".")[0].upper() in _RESERVED_DEVICE_STEMS:
+        raise _unauthorized(
+            f"{where} carries the path component {segment!r}, whose stem is a reserved "
+            f"device name rather than a file on Windows; got {text!r}"
+        )
+
+
 def _require_relative_path(value: Any, where: str) -> PurePosixPath:
     """Require one relative, forward-slash, traversal-free path token.
 
@@ -415,7 +508,8 @@ def _require_relative_path(value: Any, where: str) -> PurePosixPath:
     Raises:
         VerificationSceneError: `X_CONNECTION_UNAUTHORIZED` for an empty token, a
             backslash, a drive designator, a rooted form, a `.` or `..` segment, an
-            empty segment or a trailing separator. The schema calls this rule
+            empty segment, a trailing separator, or any component outside the
+            portable component class. The schema calls this rule
             `project_relative_no_parent_traversal`; every path in a record obeys it,
             and which *root* it is relative to is decided at step 3.
     """
@@ -437,7 +531,92 @@ def _require_relative_path(value: Any, where: str) -> PurePosixPath:
             raise _unauthorized(
                 f"{where} must not contain a '{segment}' segment; got {text!r}"
             )
+        _require_portable_segment(segment, where, text=text)
     return PurePosixPath(text)
+
+
+def _require_leaf_token(value: Any, where: str) -> str:
+    """Require one portable single-component name, because it becomes a filename.
+
+    Args:
+        value: the candidate value.
+        where: a dotted path used in the refusal message.
+
+    Returns:
+        The token.
+
+    Raises:
+        VerificationSceneError: `X_CONNECTION_UNAUTHORIZED` when the token is not
+            exactly one portable path component.
+
+    `case_id` is not only a bundle key. `utils.render_verification_scene.render_bundle`
+    writes `<destination>/<case_id>.png` and `<destination>/<case_id>.json`, so a
+    record supplying `../escape` would write outside the exclusive-created output
+    root -- a direct violation of design section 4.7 and invariant W10, and one that
+    only became reachable when an external record started supplying the case id. The
+    renderer carries a containment check of its own; this is the boundary that refuses
+    the value before it ever becomes a path.
+    """
+
+    text = _require_str(value, where)
+    if "/" in text or "\\" in text:
+        raise _unauthorized(
+            f"{where} is written to disk as a filename and must be one path component "
+            f"carrying no separator; got {text!r}"
+        )
+    if text in {".", ".."}:
+        raise _unauthorized(
+            f"{where} is written to disk as a filename and must not be {text!r}"
+        )
+    _require_portable_segment(text, where, text=text)
+    return text
+
+
+# --------------------------------------------------------------------------- #
+# Immutability. `@dataclass(frozen=True)` rebinds nothing but the attribute itself;
+# a `dict` reached through a frozen attribute is still an ordinary mutable dict, and
+# a caller can therefore turn an authenticated record into a different allowlist
+# without touching a single byte of the file that was hashed. The two helpers below
+# close that gap, and every mapping this module hands out passes through one of them.
+# --------------------------------------------------------------------------- #
+def _freeze(value: Any) -> Any:
+    """Return a deeply immutable view of one parsed JSON value.
+
+    Args:
+        value: any value `json.loads` can produce.
+
+    Returns:
+        Mappings become `MappingProxyType` over frozen items and arrays become
+        tuples; scalars are returned unchanged. Arrays deliberately become tuples
+        rather than read-only list views, because Python has no read-only list and a
+        tuple is the only sequence a later caller cannot append to.
+
+        Two consequences a caller has to know rather than discover. A frozen document
+        compares unequal to the plain `dict` it came from wherever an array appears,
+        so equality against a source document is stated by freezing that document too.
+        And `json.dumps` cannot serialize a `MappingProxyType`, which is deliberate:
+        the record's canonical bytes already exist -- they are the bytes step 1
+        authenticated -- and a second rendering path would be a second answer to the
+        question of what the record says.
+    """
+
+    if isinstance(value, dict):
+        return MappingProxyType({key: _freeze(item) for key, item in value.items()})
+    if isinstance(value, (list, tuple)):
+        return tuple(_freeze(item) for item in value)
+    return value
+
+
+def _frozen_mapping(mapping: Mapping[Any, Any]) -> Mapping[Any, Any]:
+    """Return a read-only view over a copy of `mapping`.
+
+    The copy matters: a proxy over a dict the caller still holds is a read-only
+    handle on a mutable object, which is the appearance of the property without the
+    property. Values are already immutable at every call site -- frozen dataclasses,
+    `Path` objects or values that came through `_freeze`.
+    """
+
+    return MappingProxyType(dict(mapping))
 
 
 # --------------------------------------------------------------------------- #
@@ -619,10 +798,13 @@ class Case:
 class ConnectionRecord:
     """One authenticated, fully validated connection record.
 
-    The `document` field is the exact parsed object. It is kept because read-order
-    steps 4 onward compare record values against files by equality, and a reviewer
-    auditing a refusal needs the bytes the refusal was taken over, not a
-    reconstruction of them.
+    The `document` field is the parsed object, deeply frozen. It is kept because
+    read-order steps 4 onward compare record values against files by equality, and a
+    reviewer auditing a refusal needs what the refusal was taken over, not a
+    reconstruction of it. It is frozen because "what was authenticated" has to keep
+    meaning that: a mutable copy of the authenticated bytes is an allowlist any later
+    caller can widen. Its arrays are tuples and its mappings are read-only views (see
+    `_freeze`), so compare it to a source document by freezing that document too.
     """
 
     record_version: str
@@ -717,7 +899,7 @@ def _parse_thresholds(value: Any) -> ThresholdsRef:
         unknown_threshold=_require_finite_float(
             block["unknown_threshold"], f"{where}.unknown_threshold"
         ),
-        sources=sources,
+        sources=_frozen_mapping(sources),
     )
 
 
@@ -858,10 +1040,12 @@ def _parse_render_geometry(value: Any) -> RenderGeometry:
     )
 
     links_block = _require_mapping(block["links"], f"{where}.links", LINK_IDS)
-    links = {
-        link_id: _parse_link(links_block[link_id], f"{where}.links.{link_id}")
-        for link_id in LINK_IDS
-    }
+    links = _frozen_mapping(
+        {
+            link_id: _parse_link(links_block[link_id], f"{where}.links.{link_id}")
+            for link_id in LINK_IDS
+        }
+    )
     _require_contiguous_triplets(links, where)
 
     tolerance_block = _require_mapping(
@@ -951,7 +1135,7 @@ def _parse_manifest_row(value: Any, where: str) -> Mapping[str, Any]:
             row[name] = item
         else:
             row[name] = _require_str(item, f"{where}.{name}")
-    return row
+    return _frozen_mapping(row)
 
 
 def _parse_arm(value: Any, where: str, *, suite: str, split: str, pair_id: str) -> Arm:
@@ -1009,7 +1193,12 @@ def _parse_arm(value: Any, where: str, *, suite: str, split: str, pair_id: str) 
                 role_block["payload_sha256"], f"{role_where}.payload_sha256"
             ),
         )
-    return Arm(run_id=run_id, manifest_row=row, checkpoint=checkpoint, roles=roles)
+    return Arm(
+        run_id=run_id,
+        manifest_row=row,
+        checkpoint=checkpoint,
+        roles=_frozen_mapping(roles),
+    )
 
 
 def _parse_cases(value: Any, *, split: str) -> tuple[Case, ...]:
@@ -1029,7 +1218,7 @@ def _parse_cases(value: Any, *, split: str) -> tuple[Case, ...]:
     for index, item in enumerate(value):
         where = f"cases[{index}]"
         block = _require_mapping(item, where, ("case_id", "display_label", "pair_id", "arms"))
-        case_id = _require_str(block["case_id"], f"{where}.case_id")
+        case_id = _require_leaf_token(block["case_id"], f"{where}.case_id")
         display_label = _require_str(block["display_label"], f"{where}.display_label")
         pair_id = _require_str(block["pair_id"], f"{where}.pair_id")
         if case_id in seen_ids:
@@ -1048,7 +1237,12 @@ def _parse_cases(value: Any, *, split: str) -> tuple[Case, ...]:
             for suite in SUITE_KEYS
         }
         cases.append(
-            Case(case_id=case_id, display_label=display_label, pair_id=pair_id, arms=arms)
+            Case(
+                case_id=case_id,
+                display_label=display_label,
+                pair_id=pair_id,
+                arms=_frozen_mapping(arms),
+            )
         )
     return tuple(cases)
 
@@ -1169,7 +1363,7 @@ def parse_connection_record(raw: bytes) -> ConnectionRecord:
         model_selection=_parse_model_selection(document["model_selection"]),
         render_geometry=_parse_render_geometry(document["render_geometry"]),
         cases=_parse_cases(document["cases"], split=split),
-        document=document,
+        document=_freeze(document),
     )
     return record
 
@@ -1207,23 +1401,59 @@ class BoundPaths:
             record field may override it.
         role_root: the resolved `--role-root`, whose basename equals `dataset_label`.
         checkpoint_root: the resolved `--checkpoint-root`.
+        record_path: the resolved `--connection-record`, required to be exactly
+            `packet_root / record_relative_path(record_label)`. Section 3.1 gives the
+            record one tracked location; without this binding the authorized bytes
+            could be presented from anywhere, including from inside the tree step 21
+            exclusively creates, which is the state finding CX exists to forbid.
         output_root: `<output-dir>/<record_label>/`, the exclusive-create destination.
         schema_path / config_path: packet-relative, resolved.
         packet_artifacts: every other packet-relative artifact the record names,
             keyed by the dotted record path that named it.
         role_payloads: `(case_id, suite, role) -> resolved payload path`.
         checkpoints: `(case_id, suite) -> resolved checkpoint path`.
+
+    Every mapping is a read-only view for the same reason the record's own mappings
+    are: an allowlist a later caller can edit is not an allowlist.
     """
 
     packet_root: Path
     role_root: Path
     checkpoint_root: Path
+    record_path: Path
     output_root: Path
     schema_path: Path
     config_path: Path
     packet_artifacts: Mapping[str, Path]
     role_payloads: Mapping[tuple[str, str, str], Path]
     checkpoints: Mapping[tuple[str, str], Path]
+
+
+def _resolve_safely(path: Path, *, where: str, code: str) -> Path:
+    """Resolve one path, turning every resolution failure into a named refusal.
+
+    Args:
+        path: the path to resolve. It may name something that does not exist;
+            `Path.resolve()` is non-strict and this module opens nothing.
+        where: what the path is, in the refusal message.
+        code: the refusal code this failure belongs to.
+
+    Returns:
+        The resolved path.
+
+    Raises:
+        VerificationSceneError: carrying `code`. `Path.resolve()` raises `ValueError`
+            on an embedded NUL and `OSError` on several platform-specific shapes, and
+            a raw exception out of a contract layer is a silent failure by another
+            name -- the caller gets a traceback where the design specified an exit
+            code. The step-2 component grammar refuses the reachable forms; this is
+            the layer that keeps the unreachable ones named.
+    """
+
+    try:
+        return Path(path).resolve()
+    except (OSError, ValueError, RuntimeError) as exc:
+        raise _refuse(code, f"{where} could not be resolved to a path: {exc}") from exc
 
 
 def _resolve_under(root: Path, relative: PurePosixPath, *, where: str, code: str) -> Path:
@@ -1237,7 +1467,7 @@ def _resolve_under(root: Path, relative: PurePosixPath, *, where: str, code: str
     caught here rather than one layer later, when the path is about to be opened.
     """
 
-    candidate = (root / Path(*relative.parts)).resolve()
+    candidate = _resolve_safely(root / Path(*relative.parts), where=where, code=code)
     if candidate != root and root not in candidate.parents:
         raise _refuse(
             code,
@@ -1250,6 +1480,7 @@ def bind_root_domains(
     record: ConnectionRecord,
     *,
     packet_root: Path,
+    connection_record_path: Path,
     config_path: Path,
     role_root: Path,
     checkpoint_root: Path,
@@ -1263,21 +1494,28 @@ def bind_root_domains(
             resolution in the read order (invariant W8). It is an explicit parameter
             precisely so that a test can bind an isolated temporary packet tree and
             still exercise this production branch rather than a parallel one.
+        connection_record_path: the `--connection-record` argument -- the path step 1
+            authenticated. Step 1 hashes whatever file it is handed, because that is
+            what "a path is not an identity" means; step 3 is where the authenticated
+            record is required to have come from the one tracked location section 3.1
+            gives it.
         config_path: the `--config` argument.
         role_root: the `--role-root` argument.
         checkpoint_root: the `--checkpoint-root` argument.
         output_dir: the `--output-dir` argument.
 
     Returns:
-        The bound paths, including `<output-dir>/<record_label>/`.
+        The bound paths, including the record's own path and
+        `<output-dir>/<record_label>/`.
 
     Raises:
         VerificationSceneError: `X_SPLIT_FORBIDDEN` when the authority and the split
             disagree; `X_PROVENANCE_UNRESOLVED` when `--output-dir` is not the
             authority's mechanically fixed parent; `X_IDENTITY_MISMATCH` for every
-            other binding failure -- a `--config` that is not the record's declared
-            file, a `--role-root` whose basename is not `dataset_label`, or any path
-            that resolves outside its own root.
+            other binding failure -- a `--connection-record` that is not at the
+            record's own tracked location, a `--config` that is not the record's
+            declared file, a `--role-root` whose basename is not `dataset_label`, or
+            any path that resolves outside its own root.
 
     The three codes are assigned by what the failure is *about*. A split under the
     wrong authority is a split refusal. A destination is a function of the
@@ -1286,19 +1524,60 @@ def bind_root_domains(
     named place, and that is identity.
     """
 
-    resolved_packet_root = Path(packet_root).resolve()
-    resolved_role_root = Path(role_root).resolve()
-    resolved_checkpoint_root = Path(checkpoint_root).resolve()
-    resolved_output_dir = Path(output_dir).resolve()
+    resolved_packet_root = _resolve_safely(
+        packet_root, where="the packet root", code=X_IDENTITY_MISMATCH
+    )
+    resolved_role_root = _resolve_safely(
+        role_root, where="--role-root", code=X_IDENTITY_MISMATCH
+    )
+    resolved_checkpoint_root = _resolve_safely(
+        checkpoint_root, where="--checkpoint-root", code=X_IDENTITY_MISMATCH
+    )
+    resolved_output_dir = _resolve_safely(
+        output_dir, where="--output-dir", code=X_PROVENANCE_UNRESOLVED
+    )
 
     _require_authority_split_policy(record)
 
-    expected_parent = (resolved_packet_root / Path(*OUTPUT_PARENTS[record.authority].parts)).resolve()
+    # The authority's output parent is itself proved to be inside the injected packet
+    # root rather than merely joined to it. A junction or symlink at any component of
+    # `results/` would otherwise let a destination that compares equal to the expected
+    # parent sit physically outside the packet, and the equality check would still be
+    # satisfied -- the destination would be wrong in exactly the way W9 forbids while
+    # every string in the comparison looked right.
+    expected_parent = _resolve_under(
+        resolved_packet_root,
+        OUTPUT_PARENTS[record.authority],
+        where=f"the {record.authority} output parent",
+        code=X_PROVENANCE_UNRESOLVED,
+    )
     if resolved_output_dir != expected_parent:
         raise _refuse(
             X_PROVENANCE_UNRESOLVED,
             f"--output-dir must be exactly {expected_parent} under authority "
             f"{record.authority}; got {resolved_output_dir}",
+        )
+
+    # Finding CX, enforced rather than only documented: the record lives at one
+    # tracked packet-relative location, and that location is a sibling of the bundle
+    # tree, never inside it. Binding it here is also what puts it into the section-4.2
+    # expected open set, which is the only reason W3's set equality can be honest
+    # about a file the adapter has already read.
+    declared_record_path = _resolve_under(
+        resolved_packet_root,
+        record_relative_path(record.record_label),
+        where="the connection record's tracked location",
+        code=X_IDENTITY_MISMATCH,
+    )
+    resolved_record_path = _resolve_safely(
+        connection_record_path, where="--connection-record", code=X_IDENTITY_MISMATCH
+    )
+    if resolved_record_path != declared_record_path:
+        raise _refuse(
+            X_IDENTITY_MISMATCH,
+            f"--connection-record resolves to {resolved_record_path} but a record "
+            f"labelled {record.record_label!r} lives at {declared_record_path}; the "
+            "authorized bytes are not authorized from an arbitrary location",
         )
 
     if resolved_role_root.name != record.data_root.dataset_label:
@@ -1320,7 +1599,9 @@ def bind_root_domains(
         where="config.relative_path",
         code=X_IDENTITY_MISMATCH,
     )
-    resolved_config = Path(config_path).resolve()
+    resolved_config = _resolve_safely(
+        config_path, where="--config", code=X_IDENTITY_MISMATCH
+    )
     if resolved_config != declared_config:
         raise _refuse(
             X_IDENTITY_MISMATCH,
@@ -1384,16 +1665,24 @@ def bind_root_domains(
                     code=X_IDENTITY_MISMATCH,
                 )
 
+    output_root = _resolve_under(
+        resolved_output_dir,
+        PurePosixPath(record.record_label),
+        where="the output root <output-dir>/<record_label>",
+        code=X_PROVENANCE_UNRESOLVED,
+    )
+
     return BoundPaths(
         packet_root=resolved_packet_root,
         role_root=resolved_role_root,
         checkpoint_root=resolved_checkpoint_root,
-        output_root=resolved_output_dir / record.record_label,
+        record_path=resolved_record_path,
+        output_root=output_root,
         schema_path=schema_path,
         config_path=declared_config,
-        packet_artifacts=packet_artifacts,
-        role_payloads=role_payloads,
-        checkpoints=checkpoints,
+        packet_artifacts=_frozen_mapping(packet_artifacts),
+        role_payloads=_frozen_mapping(role_payloads),
+        checkpoints=_frozen_mapping(checkpoints),
     )
 
 
@@ -1430,19 +1719,25 @@ def expected_open_set(record: ConnectionRecord, bound: BoundPaths) -> frozenset[
 
     Returns:
         The section-4.2 allowlist, derived from the record only after step 2 has
-        validated every path domain: the record itself is already read at this point,
-        so the set is the packet schema, the config, the four
-        source/result artifacts plus both threshold sources, the manifest and both
-        dataset audits at the role root, one `index.csv` per named role, and exactly
-        the named payloads and checkpoints. Invariant W3 compares this set to the one
-        an audit hook observes, **in both directions**: a test that only checked
-        "nothing extra" would pass on an adapter that opened nothing at all.
+        validated every path domain: **the record itself**, the packet schema, the
+        config, the four source/result artifacts plus both threshold sources, the
+        manifest and both dataset audits at the role root, one `index.csv` per named
+        role, and exactly the named payloads and checkpoints. Invariant W3 compares
+        this set to the one an audit hook observes, **in both directions**: a test
+        that only checked "nothing extra" would pass on an adapter that opened
+        nothing at all.
+
+        The record is in the set because section 4.2 puts it there and because the
+        observed side cannot honestly leave it out -- step 1 opens the record, so an
+        expected set without it makes the two sides unequal for a file the design
+        requires to be read. That it is *already* read when this function runs is a
+        statement about order, not about membership.
 
     This function does not touch the filesystem. It states what *may* be opened; the
     hook in the second half of sub-step 4b states what *was*.
     """
 
-    paths: set[Path] = {bound.schema_path, bound.config_path}
+    paths: set[Path] = {bound.record_path, bound.schema_path, bound.config_path}
     paths.update(bound.packet_artifacts.values())
     paths.add(bound.role_root / "manifest.csv")
     paths.add(bound.role_root / "generation_audit.json")

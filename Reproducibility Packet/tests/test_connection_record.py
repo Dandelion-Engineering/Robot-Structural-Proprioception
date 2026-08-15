@@ -21,6 +21,8 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import math
+import os
 import subprocess
 import sys
 from pathlib import Path, PurePosixPath
@@ -51,7 +53,12 @@ from utils.connection_record import (  # noqa: E402
     parse_connection_record,
     record_relative_path,
 )
-from utils.connection_record import _resolve_under  # noqa: E402
+from utils.connection_record import (  # noqa: E402
+    _freeze,
+    _frozen_mapping,
+    _resolve_safely,
+    _resolve_under,
+)
 from utils.protocol_p import canonical_json  # noqa: E402
 from utils.storage_contract import IDENTITY_MANIFEST_FIELDS  # noqa: E402
 from utils.verification_scene import (  # noqa: E402
@@ -338,13 +345,24 @@ def roots(tmp_path: Path) -> dict[str, Path]:
     }
 
 
+def tracked_record_path(packet_root: Path, record_label: str) -> Path:
+    """Return the one tracked location section 3.1 gives a record with this label."""
+
+    return packet_root / Path(*record_relative_path(record_label).parts)
+
+
 def bind(document: dict[str, Any], roots: dict[str, Path], **overrides: Any):
-    """Parse a document and bind it against the isolated roots."""
+    """Parse a document and bind it against the isolated roots.
+
+    The `connection_record_path` default is the record's own tracked location under
+    the packet root being bound, because that is the only location step 3 accepts.
+    """
 
     record = parse_connection_record(record_bytes(document))
     packet_root = overrides.pop("packet_root", roots["packet_root"])
     kwargs = {
         "packet_root": packet_root,
+        "connection_record_path": tracked_record_path(packet_root, record.record_label),
         "config_path": packet_root / Path(*PurePosixPath(document["config"]["relative_path"]).parts),
         "role_root": roots["role_root"],
         "checkpoint_root": roots["checkpoint_root"],
@@ -413,7 +431,12 @@ def test_load_connection_record_returns_the_parsed_record(tmp_path: Path) -> Non
     assert record.record_label == "demo-record-1"
     assert record.authority == FINAL
     assert record.split == "val"
-    assert record.document == document
+    # The stored document is deeply frozen, so its arrays are tuples and `==` against
+    # the source dict is False wherever an array appears. Equality is stated by
+    # freezing the source the same way -- a real structural comparison, not a
+    # comparison of two renderings that could both be wrong in the same direction.
+    assert record.document == _freeze(document)
+    assert record.document["record_label"] == "demo-record-1"
 
 
 # --------------------------------------------------------------------------- #
@@ -1180,7 +1203,7 @@ def test_step3_opens_nothing(roots: dict[str, Path]) -> None:
 # --------------------------------------------------------------------------- #
 def test_expected_open_set_is_exactly_the_declared_allowlist(roots: dict[str, Path]) -> None:
     record, bound = bind(valid_document(), roots)
-    expected = {bound.schema_path, bound.config_path}
+    expected = {bound.record_path, bound.schema_path, bound.config_path}
     expected.update(bound.packet_artifacts.values())
     expected.update(
         bound.role_root / name
@@ -1243,3 +1266,683 @@ def test_w11_the_contract_imports_neither_torch_nor_mujoco() -> None:
         check=True,
     )
     assert completed.stdout.split() == ["0", "0"]
+
+
+# --------------------------------------------------------------------------- #
+# Round-1 finding 1 -- the record's own location is bound and is in the open set.
+#
+# The authorized bytes were previously accepted from any path, `bind_root_domains`
+# never saw the record's path, and `expected_open_set` omitted a file step 1 had
+# already opened. Section 3.1 gives a record exactly one tracked location, section
+# 4.2 puts the record in the declared set, and finding CX makes the record tree a
+# sibling of the bundle tree rather than a child of it. All three needed a mechanism.
+# --------------------------------------------------------------------------- #
+@pytest.mark.parametrize("authority", list(AUTHORITIES))
+def test_step3_binds_the_record_to_its_one_tracked_location(
+    roots: dict[str, Path], authority: str
+) -> None:
+    """The accept side, under both authorities: 3.1's location is not FINAL-only."""
+
+    split = "dev" if authority == DEVELOPMENT_ONLY else "val"
+    document = valid_document(authority=authority, split=split)
+    record, bound = bind(document, roots)
+    assert bound.record_path == tracked_record_path(
+        roots["packet_root"], record.record_label
+    )
+    assert bound.record_path.is_relative_to(roots["packet_root"])
+    assert bound.record_path.name == "connection_record.json"
+
+
+def test_step3_refuses_the_authorized_bytes_presented_from_an_arbitrary_path(
+    roots: dict[str, Path],
+) -> None:
+    """A path is not an identity -- and an identity is not a licence to be anywhere.
+
+    Step 1 hashes whatever file it is handed, because that is what "a path is not an
+    identity" means. Step 3 is where the record is required to have come from the
+    location section 3.1 tracks it at. Without this, a copy of the approved bytes
+    dropped anywhere on the machine drives the whole read order.
+    """
+
+    arbitrary = roots["packet_root"].parent / "arbitrary" / "copy.json"
+    with pytest.raises(VerificationSceneError) as excinfo:
+        bind(valid_document(), roots, connection_record_path=arbitrary)
+    assert excinfo.value.code == X_IDENTITY_MISMATCH
+    assert "not authorized from an arbitrary location" in str(excinfo.value)
+
+
+@pytest.mark.parametrize("authority", list(AUTHORITIES))
+def test_step3_refuses_a_record_nested_inside_the_output_tree(
+    roots: dict[str, Path], authority: str
+) -> None:
+    """Finding CX made structural: the record may not live where step 21 creates.
+
+    Under either authority, a record placed inside the output parent would sit in the
+    directory the adapter must exclusively create, so the invocation could never reach
+    exit 0. The location check refuses that arrangement before anything is opened,
+    which is the difference between a documented sibling rule and an enforced one.
+    """
+
+    split = "dev" if authority == DEVELOPMENT_ONLY else "val"
+    document = valid_document(authority=authority, split=split)
+    nested = (
+        roots["packet_root"]
+        / Path(*OUTPUT_PARENTS[authority].parts)
+        / document["record_label"]
+        / "connection_record.json"
+    )
+    with pytest.raises(VerificationSceneError) as excinfo:
+        bind(document, roots, connection_record_path=nested)
+    assert excinfo.value.code == X_IDENTITY_MISMATCH
+    assert "not authorized from an arbitrary location" in str(excinfo.value)
+
+
+def test_step3_refuses_a_record_filed_under_a_different_label(
+    roots: dict[str, Path],
+) -> None:
+    """The label binds the record's directory, not only the output root."""
+
+    wrong = tracked_record_path(roots["packet_root"], "demo-record-2")
+    with pytest.raises(VerificationSceneError) as excinfo:
+        bind(valid_document(), roots, connection_record_path=wrong)
+    assert excinfo.value.code == X_IDENTITY_MISMATCH
+
+
+def test_step3_refuses_a_record_in_the_right_directory_under_the_wrong_name(
+    roots: dict[str, Path],
+) -> None:
+    """`connection_record.json` is the whole path rule, not just the directory."""
+
+    document = valid_document()
+    misnamed = (
+        tracked_record_path(roots["packet_root"], document["record_label"]).parent
+        / "record.json"
+    )
+    with pytest.raises(VerificationSceneError) as excinfo:
+        bind(document, roots, connection_record_path=misnamed)
+    assert excinfo.value.code == X_IDENTITY_MISMATCH
+
+
+def test_expected_open_set_contains_the_record_itself(roots: dict[str, Path]) -> None:
+    """Section 4.2 names the record first, and W3 compares in both directions.
+
+    An expected set that omitted the record would be unequal to any honest observed
+    set, because step 1 opens the record. Leaving it out would have made W3's equality
+    fail in 4b-ii for a correct adapter, or -- worse -- have been "fixed" there by
+    filtering the observed side.
+    """
+
+    record, bound = bind(valid_document(), roots)
+    observed = expected_open_set(record, bound)
+    assert bound.record_path in observed
+    assert tracked_record_path(roots["packet_root"], record.record_label) in observed
+
+
+def test_expected_open_set_moves_with_the_injected_packet_root(
+    roots: dict[str, Path],
+) -> None:
+    """W8 again: the record entry follows the injected root like everything else."""
+
+    other_packet = roots["packet_root"].parent / "other-packet"
+    other_packet.mkdir()
+    record, bound = bind(valid_document(), roots, packet_root=other_packet)
+    assert bound.record_path.is_relative_to(other_packet)
+    assert bound.record_path in expected_open_set(record, bound)
+
+
+# --------------------------------------------------------------------------- #
+# Round-1 finding 2 -- an authenticated record is immutable all the way down.
+#
+# `@dataclass(frozen=True)` rebinds nothing but the attribute. Every mapping reached
+# through a frozen attribute was an ordinary dict, so a later caller could replace a
+# role reference or a record label after authentication and bind an allowlist that
+# never came from the hashed bytes. Each layer below is probed separately, because a
+# single spot check would have passed while the others stayed mutable.
+# --------------------------------------------------------------------------- #
+MAPPING_LAYER_NAMES = (
+    "document",
+    "document.schema",
+    "document.cases[0]",
+    "case.arms",
+    "arm.roles",
+    "arm.manifest_row",
+    "render_geometry.links",
+    "thresholds.sources",
+)
+
+
+def _mapping_layers(record: Any) -> dict[str, Any]:
+    """Return every mapping a caller can reach from a parsed record."""
+
+    case = record.cases[0]
+    arm = case.arms["C1"]
+    return {
+        "document": record.document,
+        "document.schema": record.document["schema"],
+        "document.cases[0]": record.document["cases"][0],
+        "case.arms": case.arms,
+        "arm.roles": arm.roles,
+        "arm.manifest_row": arm.manifest_row,
+        "render_geometry.links": record.render_geometry.links,
+        "thresholds.sources": record.thresholds.sources,
+    }
+
+
+@pytest.mark.parametrize("layer", MAPPING_LAYER_NAMES)
+def test_every_mapping_reachable_from_a_record_refuses_assignment(layer: str) -> None:
+    record = parse_connection_record(record_bytes(valid_document()))
+    mapping = _mapping_layers(record)[layer]
+    with pytest.raises(TypeError):
+        mapping["injected"] = "value"
+    assert "injected" not in mapping
+
+
+@pytest.mark.parametrize("layer", MAPPING_LAYER_NAMES)
+def test_every_mapping_reachable_from_a_record_refuses_deletion(layer: str) -> None:
+    record = parse_connection_record(record_bytes(valid_document()))
+    mapping = _mapping_layers(record)[layer]
+    key = next(iter(mapping))
+    with pytest.raises(TypeError):
+        del mapping[key]
+    assert key in mapping
+
+
+def test_the_exact_probes_the_reviewer_ran_now_refuse() -> None:
+    """Two named mutations from the Round-1 ledger, driven as they were driven.
+
+    The reviewer replaced the C1 `plant` role with the `labels` reference and
+    overwrote `document["record_label"]`; both succeeded on the Round-1 candidate.
+    Re-driving exactly those two is what keeps this repair from being asserted only
+    at the layers I happened to think of.
+    """
+
+    record = parse_connection_record(record_bytes(valid_document()))
+    arm = record.cases[0].arms["C1"]
+    original_plant = arm.roles["plant"]
+    with pytest.raises(TypeError):
+        arm.roles["plant"] = arm.roles["labels"]
+    with pytest.raises(TypeError):
+        record.document["record_label"] = "some-other-label"
+    assert arm.roles["plant"] is original_plant
+    assert record.document["record_label"] == "demo-record-1"
+
+
+def test_record_arrays_are_tuples_rather_than_editable_lists() -> None:
+    """A read-only mapping over a mutable list is the appearance of the property."""
+
+    record = parse_connection_record(record_bytes(valid_document()))
+    assert isinstance(record.document["cases"], tuple)
+    assert isinstance(
+        record.document["render_geometry"]["planar_convention"]["base_xy_m"], tuple
+    )
+    assert isinstance(
+        record.document["render_geometry"]["links"]["L1"]["segment_lengths_m"], tuple
+    )
+    with pytest.raises(AttributeError):
+        record.document["cases"].append("extra")
+
+
+def test_the_frozen_document_is_not_a_view_of_the_callers_dict() -> None:
+    """A proxy over a dict the caller still holds is a read-only handle on a mutable
+    object. The parse takes a private copy, so mutating the source afterwards cannot
+    move what was authenticated."""
+
+    document = valid_document()
+    record = parse_connection_record(record_bytes(document))
+    document["record_label"] = "mutated-after-the-fact"
+    document["cases"][0]["case_id"] = "mutated-case"
+    assert record.document["record_label"] == "demo-record-1"
+    assert record.document["cases"][0]["case_id"] == "case-a"
+    assert record.cases[0].case_id == "case-a"
+
+
+def test_a_frozen_mapping_copies_rather_than_wrapping_the_callers_dict() -> None:
+    """A proxy over a dict its caller still holds is a handle on a mutable object.
+
+    Every call site in the module builds the dict locally, so no input can reach this
+    branch -- which is exactly why it is driven directly. It was a mutation survivor
+    until this test existed: replacing `MappingProxyType(dict(mapping))` with
+    `MappingProxyType(mapping)` changed nothing any other test could observe.
+    """
+
+    source = {"a": 1}
+    view = _frozen_mapping(source)
+    source["b"] = 2
+    assert dict(view) == {"a": 1}
+    with pytest.raises(TypeError):
+        view["c"] = 3
+
+
+def test_resolve_under_names_a_refusal_when_the_root_itself_cannot_resolve(
+    roots: dict[str, Path],
+) -> None:
+    """`_resolve_under` resolves through the guarded helper, not through `.resolve()`.
+
+    The step-2 grammar makes the relative side unable to reach a resolution failure,
+    so the only way to drive this is a root that cannot resolve. Without the guarded
+    call the failure escapes as a raw `ValueError` from inside a contract layer, and
+    the design's exit code never happens -- a mutation survivor until this test.
+    """
+
+    with pytest.raises(VerificationSceneError) as excinfo:
+        _resolve_under(
+            Path(str(roots["packet_root"]) + "\x00suffix"),
+            PurePosixPath("schema/schema.json"),
+            where="probe",
+            code=X_IDENTITY_MISMATCH,
+        )
+    assert excinfo.value.code == X_IDENTITY_MISMATCH
+    assert "could not be resolved to a path" in str(excinfo.value)
+
+
+def test_step3_refuses_a_record_tree_a_link_rebinds_outside_the_packet(
+    roots: dict[str, Path],
+) -> None:
+    """The record's tracked location is proved contained, not merely joined.
+
+    Only the record subtree is linked away, so the authority's output parent still
+    resolves inside the packet and the earlier destination check passes. What is left
+    is a record path that spells out as packet-relative and physically is not, which
+    is the state the containment proof exists for -- and, with a plain join in its
+    place, `--connection-record` pointed at the linked-away file would have been
+    accepted as the tracked location.
+    """
+
+    packet_root = roots["packet_root"]
+    outside = packet_root.parent / "outside-the-packet-records"
+    outside.mkdir()
+    records_parent = packet_root / Path(*RECORD_PARENT.parts)
+    records_parent.parent.mkdir(parents=True, exist_ok=True)
+    _link_directory(records_parent, outside)
+
+    document = valid_document()
+    linked_record = records_parent / document["record_label"] / "connection_record.json"
+    # The trap: the path spells out exactly as the tracked location, and resolves out.
+    assert linked_record.resolve().is_relative_to(outside.resolve())
+    with pytest.raises(VerificationSceneError) as excinfo:
+        bind(document, roots, connection_record_path=linked_record)
+    assert excinfo.value.code == X_IDENTITY_MISMATCH
+    assert "outside its declared root" in str(excinfo.value)
+
+
+def test_bound_path_mappings_refuse_assignment(roots: dict[str, Path]) -> None:
+    """The allowlist inputs are values too: `BoundPaths` carries no editable dict."""
+
+    _, bound = bind(valid_document(), roots)
+    for mapping in (bound.packet_artifacts, bound.role_payloads, bound.checkpoints):
+        with pytest.raises(TypeError):
+            mapping["injected"] = Path("anywhere")
+        assert "injected" not in mapping
+
+
+# --------------------------------------------------------------------------- #
+# Round-1 finding 3 -- the finite-number gate is total over JSON integers.
+#
+# `json.loads` parses an unbounded integer literal exactly, the non-finite walk only
+# inspects floats, and `float(10 ** 400)` then raised a raw `OverflowError`. The
+# existing overflowing-literal test exercises a different path: `1e9999` becomes
+# `inf` inside the parser and never reaches the conversion at all.
+# --------------------------------------------------------------------------- #
+HUGE_INTEGER_LITERAL = 10**400
+
+
+@pytest.mark.parametrize(
+    "dotted",
+    [
+        "analysis_window_s",
+        "thresholds.abstain_threshold",
+        "thresholds.unknown_threshold",
+        "render_geometry.distal_tolerance_m",
+        "render_geometry.planar_convention.base_xy_m.0",
+        "render_geometry.links.L1.segment_lengths_m.0",
+    ],
+)
+def test_step2_refuses_an_overflowing_integer_at_every_float_field(dotted: str) -> None:
+    error = refuse(mutate(valid_document(), dotted, HUGE_INTEGER_LITERAL))
+    assert error.code == X_CONNECTION_UNAUTHORIZED
+    # The sentence is asserted because the code alone is satisfied by any refusal,
+    # and the state this test exists for previously produced no refusal at all.
+    assert "too large to represent as a finite number" in str(error)
+
+
+def test_step2_refuses_a_negative_overflowing_integer() -> None:
+    error = refuse(
+        mutate(valid_document(), "thresholds.abstain_threshold", -HUGE_INTEGER_LITERAL)
+    )
+    assert "too large to represent as a finite number" in str(error)
+
+
+def test_step2_still_accepts_an_ordinary_large_integer_literal() -> None:
+    """The gate is about representability, not about magnitude taste."""
+
+    record = parse_connection_record(
+        record_bytes(mutate(valid_document(), "analysis_window_s", 10**300))
+    )
+    assert math.isfinite(record.analysis_window_s)
+
+
+def test_an_overflowing_integer_survives_the_canonical_round_trip() -> None:
+    """The refusal is the number gate's, not the encoder's -- stated by measurement.
+
+    If canonical JSON could not round-trip `10 ** 400`, the test above would be
+    passing on the encoding branch and the conversion branch would still be raw.
+    """
+
+    document = mutate(valid_document(), "analysis_window_s", HUGE_INTEGER_LITERAL)
+    raw = record_bytes(document)
+    assert json.loads(raw.decode("utf-8"))["analysis_window_s"] == HUGE_INTEGER_LITERAL
+
+
+# --------------------------------------------------------------------------- #
+# Round-1 finding 4 -- one portable path grammar, and total containment.
+#
+# Traversal was refused; portability was not. An embedded NUL reached
+# `Path.resolve()` as a raw `ValueError`; `schema.json:stream` names an NTFS
+# alternate data stream on Windows and an ordinary file elsewhere; `CON` is a device
+# rather than a file; a trailing dot or space is silently stripped by Windows, so two
+# distinct records name one file. None of these can be caught by containment --
+# resolution raises before the comparison, and a device alias is contained by every
+# root.
+# --------------------------------------------------------------------------- #
+@pytest.mark.parametrize(
+    ("token", "phrase"),
+    [
+        ("schema/sch\x00ema.json", "outside the portable component class"),
+        ("schema.json:stream", "outside the portable component class"),
+        ("schema/schema.json:$DATA", "outside the portable component class"),
+        ("sch ema.json", "outside the portable component class"),
+        ("schema/schema .json", "outside the portable component class"),
+        ("schema/sch*ema.json", "outside the portable component class"),
+        ("schema/sch\nema.json", "outside the portable component class"),
+        ("schema/schema.json.", "ends in a dot"),
+        ("schema./schema.json", "ends in a dot"),
+        ("CON", "reserved device name"),
+        ("con.json", "reserved device name"),
+        ("schema/NUL.txt", "reserved device name"),
+        ("COM1/schema.json", "reserved device name"),
+        ("lpt9.json", "reserved device name"),
+        ("aux", "reserved device name"),
+    ],
+)
+def test_step2_refuses_every_non_portable_path_component(token: str, phrase: str) -> None:
+    error = refuse(mutate(valid_document(), "schema.relative_path", token))
+    assert error.code == X_CONNECTION_UNAUTHORIZED
+    assert phrase in str(error)
+
+
+@pytest.mark.parametrize(
+    "dotted",
+    [
+        "schema.relative_path",
+        "config.relative_path",
+        "established_result.artifact_relative_path",
+        "thresholds.sources.abstain_threshold.artifact_relative_path",
+        "model_selection.source.artifact_relative_path",
+        "render_geometry.source.producer_relative_path",
+        "render_geometry.tolerance_source.artifact_relative_path",
+        "cases.0.arms.S.checkpoint.relative_path",
+        "cases.0.arms.S.roles.labels.payload_relative_path",
+    ],
+)
+def test_step2_applies_the_portable_grammar_at_every_declared_position(dotted: str) -> None:
+    assert refuse(mutate(valid_document(), dotted, "artifact.json:stream")).code == (
+        X_CONNECTION_UNAUTHORIZED
+    )
+
+
+@pytest.mark.parametrize(
+    "token",
+    [
+        "schema/schema.json",
+        "config/draft-config-v0.1.json",
+        "scripts/utils/cable_mechanics.py",
+        "results/verification_connection/records/demo-record-1/connection_record.json",
+        "labels/dev/pair_0001_C1.npz",
+        "results/capacity_sweep/stage1-run-2/arm_C1_w32_s0.pt",
+        "CONFIGURATION/values.json",
+        "conference.json",
+        "com10.json",
+    ],
+)
+def test_step2_accepts_the_portable_paths_the_project_actually_uses(token: str) -> None:
+    """The accept side, including three near-misses on the device rule.
+
+    `CONFIGURATION`, `conference.json` and `com10.json` all start like a reserved
+    name and none of them is one. A grammar that refused these would refuse ordinary
+    project files, which is how an over-tight rule gets quietly widened later.
+    """
+
+    record = parse_connection_record(
+        record_bytes(mutate(valid_document(), "schema.relative_path", token))
+    )
+    assert record.schema.relative_path == PurePosixPath(token)
+
+
+def test_resolve_safely_names_a_refusal_where_resolution_would_raise(
+    roots: dict[str, Path],
+) -> None:
+    """A raw exception out of a contract layer is a silent failure by another name.
+
+    The step-2 grammar makes this branch unreachable from a well-formed record, which
+    is exactly why it is driven directly: a guard no input can reach is a guard
+    nothing checks, and this one is the reason a resolution failure produces the
+    design's exit code instead of a traceback.
+    """
+
+    with pytest.raises(VerificationSceneError) as excinfo:
+        _resolve_safely(
+            Path(str(roots["packet_root"]) + "\x00suffix"),
+            where="probe",
+            code=X_IDENTITY_MISMATCH,
+        )
+    assert excinfo.value.code == X_IDENTITY_MISMATCH
+    assert "could not be resolved to a path" in str(excinfo.value)
+
+
+def test_resolve_safely_returns_the_resolved_path_for_an_ordinary_argument(
+    roots: dict[str, Path],
+) -> None:
+    resolved = _resolve_safely(
+        roots["packet_root"] / "schema" / "schema.json",
+        where="probe",
+        code=X_IDENTITY_MISMATCH,
+    )
+    assert resolved == (roots["packet_root"] / "schema" / "schema.json").resolve()
+
+
+def test_the_output_parent_containment_guard_refuses_with_the_provenance_code(
+    roots: dict[str, Path],
+) -> None:
+    """The output parent is proved contained, not merely joined.
+
+    A junction or symlink at any component of `results/` would let a destination that
+    compares equal to the expected parent sit physically outside the packet, and the
+    equality check would still pass. This drives the guard the output-parent
+    derivation now goes through, with the code that derivation assigns.
+    """
+
+    with pytest.raises(VerificationSceneError) as excinfo:
+        _resolve_under(
+            roots["packet_root"],
+            PurePosixPath("../escaped-parent"),
+            where="probe",
+            code=X_PROVENANCE_UNRESOLVED,
+        )
+    assert excinfo.value.code == X_PROVENANCE_UNRESOLVED
+    assert "outside its declared root" in str(excinfo.value)
+
+
+def _link_directory(link: Path, target: Path) -> None:
+    """Make `link` a directory link to `target`, or skip if the platform refuses.
+
+    A plain symlink needs Developer Mode or elevation on Windows and this machine has
+    neither, so the test would have been permanently skipped on the only hardware the
+    project has -- a test that never runs holds nothing. A **junction** needs no
+    privilege at all and `Path.resolve()` follows it exactly as it follows a symlink,
+    which is the whole property under test. Symlink first, junction second, skip only
+    if both are unavailable.
+    """
+
+    try:
+        link.symlink_to(target, target_is_directory=True)
+        return
+    except (OSError, NotImplementedError):
+        pass
+    if os.name != "nt":  # pragma: no cover - platform gate
+        pytest.skip("this platform will not create a directory link")
+    completed = subprocess.run(  # noqa: S603 - fixed argv, no shell
+        ["cmd", "/c", "mklink", "/J", str(link), str(target)],
+        capture_output=True,
+        text=True,
+    )
+    if completed.returncode != 0 or not link.exists():  # pragma: no cover
+        pytest.skip(f"this platform will not create a directory junction: {completed.stderr}")
+
+
+def test_step3_refuses_an_output_parent_a_link_rebinds_outside_the_packet(
+    roots: dict[str, Path],
+) -> None:
+    """The same property end to end, with the trap actually built.
+
+    `results/` becomes a link to a directory outside the packet, so
+    `<packet>/results/verification_connection/bundles` resolves outside the packet
+    while every string in the equality comparison still looks right. The unit test
+    above holds the guard; this one holds the wiring.
+    """
+
+    packet_root = roots["packet_root"]
+    outside = packet_root.parent / "outside-the-packet"
+    escaped_parent = outside / Path(*FINAL_OUTPUT_PARENT.parts)
+    escaped_parent.mkdir(parents=True)
+    _link_directory(packet_root / "results", outside / "results")
+
+    # The trap is built so the *equality* still holds: `--output-dir` is exactly what
+    # `<packet>/results/verification_connection/bundles` resolves to. Only the
+    # containment proof separates this from an accepted destination, so a regression
+    # that dropped `_resolve_under` here would make this test green again.
+    assert (packet_root / Path(*FINAL_OUTPUT_PARENT.parts)).resolve() == escaped_parent.resolve()
+
+    with pytest.raises(VerificationSceneError) as excinfo:
+        bind(valid_document(), roots, output_dir=escaped_parent)
+    assert excinfo.value.code == X_PROVENANCE_UNRESOLVED
+    assert "outside its declared root" in str(excinfo.value)
+
+
+# --------------------------------------------------------------------------- #
+# Round-1 finding 5 -- `case_id` is written to disk as a filename.
+#
+# `render_bundle` composes `<destination>/<case_id>.png` and `.json`. While every
+# bundle was built in-process by this packet, `case_id` was a key nobody could aim.
+# Once a connection record supplies it, `../escape` writes beside the exclusive-
+# created output root -- section 4.7 and W10 -- and `Path.name` in the returned
+# manifest reports the innocent leaf. Two layers: the record boundary refuses the
+# value, and the writer proves containment for whatever it is handed.
+# --------------------------------------------------------------------------- #
+@pytest.mark.parametrize(
+    ("case_id", "phrase"),
+    [
+        ("../escape", "must be one path component carrying no separator"),
+        ("../../escape", "must be one path component carrying no separator"),
+        ("sub/escape", "must be one path component carrying no separator"),
+        ("sub\\escape", "must be one path component carrying no separator"),
+        ("/rooted", "must be one path component carrying no separator"),
+        ("..", "must not be '..'"),
+        (".", "must not be '.'"),
+        ("C:escape", "outside the portable component class"),
+        ("case:stream", "outside the portable component class"),
+        ("case id", "outside the portable component class"),
+        ("case\x00id", "outside the portable component class"),
+        ("CON", "reserved device name"),
+        ("case.", "ends in a dot"),
+        ("", "must be a non-empty string"),
+    ],
+)
+def test_step2_refuses_a_case_id_that_is_not_a_portable_leaf_token(
+    case_id: str, phrase: str
+) -> None:
+    """Each case asserts the sentence its own branch raises, not only the code.
+
+    Measured by the mutation sweep, not reasoned about: with a code-only assertion,
+    deleting the separator branch and deleting the `.`/`..` branch each left this
+    suite green, because the portable-component grammar one line later refuses the
+    same inputs with a different sentence. That is the Session-136 lesson arriving a
+    third time -- a branch subsumed by a later check is held by nothing unless the
+    assertion names what only that branch says.
+    """
+
+    error = refuse(mutate(valid_document(), "cases.0.case_id", case_id))
+    assert error.code == X_CONNECTION_UNAUTHORIZED
+    assert phrase in str(error)
+
+
+@pytest.mark.parametrize("case_id", ["case-a", "case_1", "soften.link.2", "CASE-A", "c"])
+def test_step2_accepts_a_portable_leaf_case_id(case_id: str) -> None:
+    document = mutate(valid_document(), "cases.0.case_id", case_id)
+    record = parse_connection_record(record_bytes(document))
+    assert record.cases[0].case_id == case_id
+
+
+def test_the_renderer_refuses_to_write_a_path_outside_its_output_root(
+    tmp_path: Path,
+) -> None:
+    """The second, independent layer, driven at the write boundary itself."""
+
+    import matplotlib
+
+    matplotlib.use("Agg")
+    from render_verification_scene import _contained_output_paths
+
+    destination = tmp_path / "bundle"
+    destination.mkdir()
+    for name in ("../escaped-case.png", "sub/escaped-case.json", ".."):
+        with pytest.raises(VerificationSceneError) as excinfo:
+            _contained_output_paths(destination, ["bundle.json", name])
+        assert excinfo.value.code == X_IDENTITY_MISMATCH
+        assert "not a direct child of its output root" in str(excinfo.value)
+    accepted = _contained_output_paths(destination, ["bundle.json", "case-a.png"])
+    assert accepted == {
+        "bundle.json": (destination / "bundle.json").resolve(),
+        "case-a.png": (destination / "case-a.png").resolve(),
+    }
+
+
+def test_the_renderer_writes_nothing_outside_its_root_for_an_escaping_case_id(
+    tmp_path: Path,
+) -> None:
+    """The reviewer's probe, re-driven end to end through the approved renderer.
+
+    On the Round-1 candidate this wrote `escaped-case.png` and `escaped-case.json`
+    beside the requested directory and nothing inside it. The record boundary now
+    refuses the value, and this asserts the writer refuses it too -- so the guarantee
+    does not depend on every future producer of a bundle having gone through the
+    record.
+    """
+
+    import dataclasses
+
+    import matplotlib
+
+    matplotlib.use("Agg")
+    from render_verification_scene import render_bundle
+    from utils.verification_scene import build_fixture_bundle
+
+    bundle = build_fixture_bundle(seed=7)
+    first_id, first_scene = next(iter(bundle.scenes.items()))
+    escaped_id = "../escaped-case"
+    escaped_scene = dataclasses.replace(
+        first_scene,
+        body_change=dataclasses.replace(first_scene.body_change, case_id=escaped_id),
+    )
+    scenes = {escaped_id: escaped_scene}
+    scenes.update({key: value for key, value in bundle.scenes.items() if key != first_id})
+    escaping_bundle = dataclasses.replace(bundle, scenes=scenes)
+
+    destination = tmp_path / "bundle"
+    destination.mkdir()
+    with pytest.raises(VerificationSceneError) as excinfo:
+        render_bundle(escaping_bundle, destination)
+    assert excinfo.value.code == X_IDENTITY_MISMATCH
+    # Nothing escaped, and -- because the write set is proved before the first write
+    # -- nothing was written at all, not even the two files whose names are constants.
+    assert sorted(path.name for path in tmp_path.iterdir()) == ["bundle"]
+    assert list(destination.iterdir()) == []
