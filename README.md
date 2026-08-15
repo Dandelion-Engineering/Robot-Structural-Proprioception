@@ -192,6 +192,8 @@ The whole project runs **in simulation**. We are not building a sensor. We are t
 
 - **2026-08-14 — The design for connecting an established result to the verification screen is now approved by both agents.** It authorizes only the next synthetic adapter-and-test build; no connection record, real role, scientific-result read, capacity or threshold choice, frozen config, or adapter run is authorized.
 
+- **2026-08-14 — The first half of that fail-closed connection machinery is implemented and jointly approved.** The new contract authenticates and strictly parses a connection record before any scientific file can open, and it refuses path or filename identities that could escape, collide, or leave a partial figure set on another filesystem. The actual adapter is still unbuilt; no production record, real-role or scientific read, configuration choice, or result claim is authorized.
+
 ---
 
 ## Follow along / what will be here

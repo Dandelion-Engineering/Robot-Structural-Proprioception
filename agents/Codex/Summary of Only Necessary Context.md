@@ -1,112 +1,100 @@
 # Summary of Only Necessary Context — Codex
 
-Last completely rewritten after Codex Session 137 on 2026-08-14.
+Last completely rewritten after Codex Session 138 on 2026-08-14.
 
 ## Resume here
 
 - Branch: `main`.
-- Slot-8 Steps 1–3 and Step 4a are closed / both approved. Step-4a exact design blob is
-  `032db1666efbe00adec5696de70424d531ba33a2`, raw SHA-256
-  `f761a673ff8fcca6c58fe530a3faaed57630315a87a5e241d8ca9675a13c4ffc`.
-- Step 4b-i is **OPEN — Round-2 revisions required; awaiting Claude's one bounded owner response**.
-  Codex does not approve any current candidate blob. The next Codex review is Round 3 and the last
-  review under this card; the round limit never forces approval.
-- Governing card: `Review Card/Slot-8 Step-4b-i Connection-Record Contract.md`.
-- Active subject chat: `chats/Claude-Codex/Slot-8 Step-4b-i Connection-Record Contract/Slot-8
-  Step-4b-i Connection-Record Contract - Active.md`.
-- The proposed renderer scope expansion is accepted. It is part of this card because Finding 5
-  explicitly required a write-boundary guard, but it inherits no approval from its former closed
-  Step-2 state.
-- Step 4b-ii has not started and is not authorized while 4b-i is open. Even 4b-i closure would
-  authorize only a new, separately reviewed 4b-ii build; it would not close full Step 4b.
+- Slot-8 Steps 1–3, Step 4a and Step 4b-i are closed / both approved.
+- The exact approved Step-4b-i candidate is:
+  - `Reproducibility Packet/scripts/utils/connection_record.py`, Git blob
+    `312efd5ebf938a212c63de7a92ee2e8e4728ecf0`, raw SHA-256
+    `efc547ad9aab9a3682fb29ebae906bfe314a11531ebb4d4da1095c6a7d3b019a`;
+  - `Reproducibility Packet/tests/test_connection_record.py`, Git blob
+    `f854b894a76eb972f9b2e65903233909f05ef287`, raw SHA-256
+    `2933e80bd72b1786b74acb335c35efaf5412b4c646c04e32332cc7481a52e2aa`;
+  - `Reproducibility Packet/scripts/render_verification_scene.py`, Git blob
+    `2e4b366ead7c47a3d6e71695f845471a2d9d52ef`, raw SHA-256
+    `83473e7aa15c1f072204a4c378044639e41147b7865670018eec8b4bcf7c8ff4`.
+- Governing Step-4b-i card is terminal Approved:
+  `Review Card/Slot-8 Step-4b-i Connection-Record Contract.md`. Its concluded subject record and
+  durable summary are under `chats/Claude-Codex/Slot-8 Step-4b-i Connection-Record Contract/`.
+- Step 4b-ii has not started. Claude is licensed to begin one new adapter build under its own
+  Review Card and subject chat. Full Step 4b is not closed.
 - No production connection record, real role/index/payload/checkpoint/result read, Step 4c–4f work,
   capacity or threshold choice, final configuration, adapter run, or C1-versus-S claim is authorized.
 - The next regular Codex progress report is Session 144.
 
-## Exact Round-2 candidate — all three unapproved
+## What Step 4b-i now guarantees
 
-- `Reproducibility Packet/scripts/utils/connection_record.py`: Git blob
-  `474f4abc4a646304261f47d536a33e05b7feef65`, raw SHA-256
-  `ead247379da4b0167807eb7d14c3c8f39f48cbb4ac54fbb9c3e0f0908e01fbb3`, 73,745 bytes /
-  1,763 LF / 0 CR.
-- `Reproducibility Packet/tests/test_connection_record.py`: Git blob
-  `73d5d59e6cb4787ee4976c2e11e8acd03ebb55f5`, raw SHA-256
-  `fc0b043afd6cf47610402cd0b2410f2f5a148936956b5cffc169da77a2f2d6c9`, 80,673 bytes /
-  1,948 LF / 0 CR.
-- `Reproducibility Packet/scripts/render_verification_scene.py`: Git blob
-  `d15705e4f0db3816c2cc3f02ad1f21366b0249f1`, raw SHA-256
-  `5ba9222939b350d7e2a6c09a17b6c8f3c6572979d76b45f975279477b7536564`, 33,167 bytes /
-  847 LF / 0 CR. Its earlier approved Step-2 base was
-  `0ae5b19d4a5957d3be662b1aa337c8e3bb9353a5`.
-- Independent verification passed 311 focused, 311 under `python -O`, 2,578 packet-wide,
-  `py_compile` and `git diff --check`.
+- The connection-record layer authenticates and strict-parses read-order rows 1–3, deep-freezes the
+  authenticated state, binds declared domains to one injected packet root and derives the expected
+  open set.
+- Every declared portable path component is bounded at 255 ASCII characters. `case_id` is bounded
+  at 250 so the longest renderer-derived filename remains within the 255-character component limit.
+- Derived case filenames must be disjoint from fixed bundle filenames and from one another under
+  the explicit portable case-insensitive identity.
+- The independent renderer write layer bounds UTF-8 filename bytes and rejects duplicate folded
+  names before resolving paths or writing. Invalid namespaces cannot partially publish.
+- The valid seed-7 four-case bundle remains ten byte-identical files whose reported bundle digest is
+  `3bf51e9440ec32c7cb7484f70ecfc80c1d5c97d3fb53b8dc0e1f44add5459d70`.
 
-## Round-2 disposition
+## Exact review evidence
 
-- Finding 1 closes: the authenticated record is bound to its one tracked packet-relative location,
-  carried by `BoundPaths.record_path`, and included in the exact expected open set.
-- Finding 2 closes: the parsed document and every typed/bound mapping are immutable views over
-  private copies; arrays are tuples.
-- Finding 3 closes: huge JSON integers at float-shaped positions translate to the named refusal.
-- Finding 4's Windows alias/device/trailing-dot grammar, named resolution failures and containment
-  checks reproduce. Its portable-component claim remains incomplete because length is unbounded.
-- Finding 5's traversal refusal and writer containment reproduce, but the output namespace remains
-  non-injective and can partially publish before a raw failure.
+- 341 focused tests passed in 7.42 s.
+- The same 341 tests passed under `python -O` in 7.44 s, with the expected pytest assertion warning.
+- The packet-wide suite passed 2,608 tests in 203.27 s with no failure or collection error.
+- A separate reviewer-written audit passed 19 checks over the 250/251-character boundary, the
+  255/256 general-component boundary, fixed-name and case-fold collisions, write-layer duplicates,
+  and the valid ten-file/digest path.
+- `py_compile`, `git diff --check`, and seed-7 fixture regeneration passed.
+- The temporary regeneration directory was removed after byte comparison; it contained only
+  reproducible scratch output.
+- Git's actual Round-3 numstats are module `+128/−10`, renderer `+51/−3`, tests `+421/−0`.
+  Claude's owner response quoted different module/renderer totals, but its changed-region map and
+  all unchanged-region claims were correct. Codex corrected only the active Review Card and left the
+  dated owner report and transcript intact.
 
-## The one remaining blocking disposition
+## Step-4b-ii forward decisions
 
-Findings 4 and 5 are not fully closed because the accepted output namespace is neither
-length-bounded nor injective. This is not a new unrelated `LATE-BLOCKER`; it is a direct gap in the
-recorded path/filename repair.
+Carry these two already-recorded decisions into the new Step-4b-ii card:
 
-Three exact current-state probes:
+1. `render_geometry.source` names and hashes `scripts/utils/cable_mechanics.py`. Because this is a
+   tracked text file, the adapter must either use its canonical-text digest or add an EOL pin for
+   that exact file. An unpinned raw digest is not portable across a fresh Windows clone.
+2. The required `structure` / `actuator` / `sensor` source-class coverage remains a payload/bundle
+   validation check. It is not a new connection-record field; duplicating the class in the record
+   would permit the record to contradict the authenticated payload.
 
-1. `case_id = "verification_bundle"` is accepted. `render_bundle` overwrites
-   `verification_bundle.json` with the scene JSON. The file no longer equals the canonical bundle
-   document and the returned bundle digest does not hash it.
-2. `Case-A` and `case-a` are accepted as distinct ids. On Windows the renderer reports four cases
-   but writes only eight files instead of ten because the two JSON/PNG pairs collapse
-   case-insensitively.
-3. A 251-character ASCII case id is accepted. Its `.json` filename is 256 characters on Windows.
-   The complete-path helper accepts it; the renderer writes the two fixed bundle files plus the PNG,
-   then raises raw `OSError` while opening the scene JSON, leaving a partial publication.
+## Open public README review
 
-Claude's bounded response must:
-
-- impose portable component lengths at the record boundary;
-- require derived case filenames to be disjoint from fixed bundle filenames and from one another
-  under an explicit portable case-insensitive comparison;
-- enforce the same length/uniqueness properties in `_contained_output_paths` before the first write;
-  and
-- add all three exact probes.
-
-Do not introduce a new item serially in Round 3 unless the superseding late-blocker/triage rule is
-actually satisfied. Review only this disposition, its tests and regressions caused by the delta.
+- Closing Step 4b-i met the Live-Run README playbook's bounded-artifact trigger. Root `README.md`
+  received one lean additions-only heartbeat that preserves the unbuilt-adapter and all scientific
+  boundaries.
+- Codex explicitly approves README blob `3f5f300612adf988fbaa616c172e7f2f94e2a528`, raw SHA-256
+  `dca6a2e6baf127d937636f41185efd79f1f6d08647767f012ba79288417a424f`, at `+2/−0` from its
+  predecessor.
+- Claude's review is open under `Review Card/Public README Step-4b-i Heartbeat.md` and
+  `chats/Claude-Codex/Public README Step-4b-i Heartbeat/Public README Step-4b-i Heartbeat - Active.md`.
+  This narrow review does not block the Step-4b-ii build.
 
 ## Review method and chat state
 
 - The director's Review Card and convergence method supersedes the historical review-cycle text.
-- An out-of-card repair is proposed explicitly, redundantly authenticated, bounded, tied to its
-  prior state and offered with revert/deferral. The reviewer rules scope before content. If accepted,
-  the artifact joins the candidate without inheriting prior approval; if rejected, it returns to its
-  prior state and moves to a new card. Round and late-blocker counters do not reset.
-- Authenticate every candidate with full Git blob, raw SHA-256, byte count and EOL figures, and
-  verify the Git object resolves.
 - Same-state explicit approval by both agents is required. Green tests, edits, downstream use,
   handoff and silence are not approval.
-- Use only the active Step-4b-i subject chat for this contract. The Step-4a and broad Phase-2 chats
-  are concluded.
-- The director-visible Review Boundary and Convergence chat carries method feedback only. The scope
-  rule is adopted and no human triage is currently open.
-- Use Transcript Order Monitoring only for an actual append-order/integrity recurrence. Both Session-
-  137 appends preserved their exact byte prefixes, placed unique headers after the boundaries and
-  remained additions-only.
+- The Step-4b-i subject chat is concluded. Do not append new work there.
+- `chats/Claude-Codex-Human/Review Boundary and Convergence/Review Boundary and Convergence - Active.md`
+  remains the active method-feedback chat. Its latest entry records the honest Round-3 closure,
+  review-record numstat correction and no human-triage need.
+- Use Transcript Order Monitoring only for an actual append-order/integrity recurrence. Both
+  Session-138 appends preserved their complete prior byte prefixes, placed one unique Codex header
+  after the boundary and remained additions-only.
 
 ## Public, reporting and scientific boundaries
 
-- `agents/Codex/Session Summaries/HumanReport137.md` is the detailed record. The next regular progress
-  report is Session 144.
-- Root `README.md` was intentionally unchanged: no bounded artifact or phase closed.
+- `agents/Codex/Session Summaries/HumanReport138.md` is the detailed record. The next regular
+  progress report is Session 144.
 - Stage 1 remains complete only as a development screen: no readable paired shape at five points /
   five seeds, no licensed trend statement, no capacity or threshold selected.
 - Rung 2 remains complete only as scoped. Its fit/analyzer invocations are spent; all ten arms have

@@ -1,10 +1,10 @@
 # Review Card — Slot-8 Step-4b-i Connection-Record Contract
 
-**Status:** Open — Round-3 owner response delivered (Claude Session 138); with Codex for the final delta review under this card
+**Status:** Closed — Approved in Round 3 (Claude Session 138 / Codex Session 138)
 **Opened:** 2026-08-14 (Claude Session 136)
 **Owner:** Claude
 **Reviewer:** Codex
-**Subject chat:** `chats/Claude-Codex/Slot-8 Step-4b-i Connection-Record Contract/Slot-8 Step-4b-i Connection-Record Contract - Active.md`
+**Subject chat:** `chats/Claude-Codex/Slot-8 Step-4b-i Connection-Record Contract/Slot-8 Step-4b-i Connection-Record Contract - Concluded.md`
 **Licensed by:** the closed Step-4a design review — `Review Card/Slot-8 Step-4a Connection-Record Design.md`, terminal outcome **Approved**, design blob `032db1666efbe00adec5696de70424d531ba33a2`.
 
 ## Why this card exists, and why it is not all of Step 4b
@@ -21,7 +21,7 @@ its own card and its own chat:
 
 | build half | read-order rows | state |
 |---|---|---|
-| **4b-i — the connection-record contract** *(this card)* | 1, 2, 3, plus the section-4.2 expected-open-set derivation | under review |
+| **4b-i — the connection-record contract** *(this card)* | 1, 2, 3, plus the section-4.2 expected-open-set derivation | approved |
 | **4b-ii — the adapter** | 4 through 21, the coherent geometry fixture, `X_GEOMETRY_UNSUPPORTED`, the audit-hook observer, B2/B3/B4/B5/B8, the roles CLI wiring and the additive `build_role_bundle` change | not started |
 
 **Sub-step 4b does not close when this card closes.** It closes when both halves are
@@ -416,7 +416,7 @@ gets against `schema.json`.
 
 Machine-checkable, against the Round-2 blobs named under *Superseded*:
 
-- `scripts/utils/connection_record.py` — **+138 / −13 lines**, in six regions:
+- `scripts/utils/connection_record.py` — **+128 / −10 lines**, in six regions:
   the module docstring's property list (three properties become four); the constants
   block after `_RESERVED_DEVICE_STEMS`; `_require_portable_segment`'s signature,
   docstring and one new leading branch; `_require_leaf_token`'s docstring and its one
@@ -425,13 +425,13 @@ Machine-checkable, against the Round-2 blobs named under *Superseded*:
   its one new loop. **Every other byte of the file is unchanged**, including all of
   step 1, all of `bind_root_domains`, all of `expected_open_set`, `_freeze`,
   `_frozen_mapping`, `_resolve_safely` and `_resolve_under`.
-- `scripts/render_verification_scene.py` — **+54 / −13 lines**, in two regions: one new
+- `scripts/render_verification_scene.py` — **+51 / −3 lines**, in two regions: one new
   module constant beside `BUNDLE_DIGEST_NAME`, and `_contained_output_paths`'s
   docstring plus two new leading branches inside its existing loop. **No other function
   in the file is touched**; `draw_scene`, `render_bundle`'s write sequence, the
   interactive surface and the CLI are byte-identical.
-- `tests/test_connection_record.py` — **+421 lines, and only 4 changed lines outside
-  the appended block**: four import names added in the existing
+- `tests/test_connection_record.py` — **+421 / −0 lines: 4 import-name additions
+  outside the appended block and 417 appended lines** in the existing
   `from utils.connection_record import (...)` list. Everything from line 1 to the end
   of the Round-2 finding-5 section is byte-identical; the new material is one appended
   section of 18 test functions and two helpers, collecting 30 further cases (311 → 341).
@@ -487,3 +487,36 @@ take, written down here so the round that takes them does not have to rediscover
 At most three owner-reviewer round-trips from this baseline. The limit never forces
 approval. The card must end as Approved, Approved with Follow-ups, Revisions Required,
 Split/Redesign Required, or Escalated.
+
+## Round-3 reviewer terminal outcome — Codex, Session 138
+
+**Terminal outcome: Approved.** Codex explicitly approves the exact three candidate
+states at blobs `312efd5ebf938a212c63de7a92ee2e8e4728ecf0`,
+`f854b894a76eb972f9b2e65903233909f05ef287` and
+`2e4b366ead7c47a3d6e71695f845471a2d9d52ef`. Claude's Session-138 approval names
+those same bytes, so acceptance test 12 is satisfied and this card is closed.
+
+The final delta review reproduced the 250/251-character record boundary, the 255/256
+general component boundary, fixed-bundle-name collisions and portable case-insensitive
+case collisions. The record layer refuses each invalid namespace before it becomes a
+path; the independent renderer layer refuses the same complete-write-set failures before
+the first byte, and the valid four-case bundle remains exactly ten files whose reported
+digest hashes the manifest it names. The Round-2 Findings-4/5 disposition is closed with
+no follow-up and no late blocker.
+
+Independent evidence on the exact approved bytes: 341 focused tests, 341 under
+`python -O` with the expected pytest warning, 2,608 packet-wide tests, a separate
+19-check boundary audit, `py_compile`, and `git diff --check` all passed. Regenerating
+the Step-3 fixture at seed 7 under `MPLBACKEND=Agg` reproduced all ten tracked files
+byte-for-byte and bundle digest
+`3bf51e9440ec32c7cb7484f70ecfc80c1d5c97d3fb53b8dc0e1f44add5459d70`.
+
+One non-blocking mechanical correction was applied to this card only: Git reports the
+Round-3 deltas as module `+128/−10`, renderer `+51/−3`, and tests `+421/−0`, rather
+than the owner response's quoted module/renderer totals. The declared changed regions
+and unchanged boundaries remain correct; no candidate code byte changed.
+
+This approval closes only Step 4b-i. It licenses Claude to begin one new Step-4b-ii
+build under a new Review Card and subject chat. Step 4b as a whole, production connection
+records, real-role or scientific reads, Steps 4c–4f, capacity and threshold choices,
+final configuration, adapter execution and C1-versus-S claims remain separately blocked.
