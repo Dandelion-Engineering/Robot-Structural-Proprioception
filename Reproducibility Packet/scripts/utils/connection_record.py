@@ -62,7 +62,7 @@ session report.**
      invented here would be an unapproved number entering the contract through the
      back door, and sub-step 4b is explicitly forbidden from choosing one.
 
-**Three properties this module holds that a field table alone does not imply**, each
+**Four properties this module holds that a field table alone does not imply**, each
 one added because a review probe reached a state the green suite did not construct:
 
   1. *An authenticated record is immutable all the way down.* `frozen=True` on a
@@ -80,6 +80,17 @@ one added because a review probe reached a state the green suite did not constru
      as `<output-root>/<case_id>.png` and `.json` by the already-approved renderer, so
      the record boundary requires one portable leaf token and the renderer keeps an
      independent containment check over what it is about to write.
+  4. *The output namespace the record composes is bounded and one-to-one.* Containment
+     alone says every written path is inside the root; it says nothing about whether
+     the set of names inside that root is writable and distinct. A 251-character
+     `case_id` composes a 256-character file name that no mainstream filesystem
+     accepts, and the refusal arrives from the operating system *after* earlier files
+     in the same set are already on disk. A `case_id` of `verification_bundle` composes
+     the renderer's own manifest file name, so the digest it returns would no longer
+     hash the file it names. Two ids differing only in case are one file on NTFS and
+     two on ext4, which is a write set that is not the same object on two machines.
+     Every one of those is refused here, before a path exists, and again at the write
+     boundary.
 """
 
 from __future__ import annotations
@@ -174,6 +185,38 @@ _RESERVED_DEVICE_STEMS: frozenset[str] = frozenset(
     {"CON", "PRN", "AUX", "NUL", "CLOCK$"}
     | {f"COM{digit}" for digit in range(10)}
     | {f"LPT{digit}" for digit in range(10)}
+)
+
+#: The longest single path component that is writable everywhere the packet has to
+#: run. NTFS, ext4, APFS, HFS+, XFS and Btrfs all stop at 255 -- ext4 counts UTF-8
+#: bytes and NTFS counts UTF-16 units, but the portable component class above is
+#: ASCII-only, so one character is one of either unit here and a single character
+#: count is exact. A grammar with no ceiling is not a portability rule: an
+#: over-long name passes every spelling and containment check and then fails at
+#: `open()`, which is the one place a refusal cannot be fail-closed because earlier
+#: files in the same write set are already on disk.
+MAX_PORTABLE_COMPONENT_CHARS = 255
+
+#: The two fixed files `render_verification_scene.render_bundle` writes into every
+#: bundle directory, and the suffixes it appends to each `case_id`. They are stated
+#: here rather than imported because importing the renderer would pull matplotlib
+#: into a contract module that opens nothing and draws nothing;
+#: `test_bundle_output_names_equal_the_published_write_set` pins both tuples against
+#: the tracked Step-3 figure set by equality, which is the same discipline
+#: `ROLE_NAMES` gets against `schema.json`.
+BUNDLE_FILE_NAMES: tuple[str, ...] = (
+    "verification_bundle.json",
+    "verification_bundle.sha256",
+)
+CASE_FILE_SUFFIXES: tuple[str, ...] = (".png", ".json")
+
+#: `case_id` is never written as itself: it is written as `case_id` + the longest of
+#: the suffixes above. Bounding the id at 255 would therefore accept an id whose own
+#: derived file name is over the limit, which is exactly the state Codex's Round-2
+#: probe reached -- a 251-character id, a 256-character `.json`, three files written
+#: and then a raw `OSError`.
+MAX_CASE_ID_CHARS = MAX_PORTABLE_COMPONENT_CHARS - max(
+    len(suffix) for suffix in CASE_FILE_SUFFIXES
 )
 
 
@@ -456,26 +499,46 @@ def _require_positive_int(value: Any, where: str) -> int:
     return value
 
 
-def _require_portable_segment(segment: str, where: str, *, text: str) -> None:
+def _require_portable_segment(
+    segment: str,
+    where: str,
+    *,
+    text: str,
+    max_chars: int = MAX_PORTABLE_COMPONENT_CHARS,
+) -> None:
     """Require one path component to be one portable name on every platform.
 
     Args:
         segment: the component, already known to be non-empty and not `.` or `..`.
         where: a dotted path used in the refusal message.
         text: the whole token, quoted in the refusal so the reviewer sees the shape.
+        max_chars: the ceiling at this position. It is below
+            `MAX_PORTABLE_COMPONENT_CHARS` wherever the packet appends something to
+            the component before writing it, so what the ceiling bounds is the
+            *derived* name rather than the token as written.
 
     Raises:
-        VerificationSceneError: `X_CONNECTION_UNAUTHORIZED` when the component
-            carries a character outside the portable class, ends in a dot or a space
-            (Windows silently strips both, so two distinct records would name one
-            file), or has a stem Windows resolves as a device rather than a file.
+        VerificationSceneError: `X_CONNECTION_UNAUTHORIZED` when the component is
+            longer than `max_chars`, carries a character outside the portable class,
+            ends in a dot or a space (Windows silently strips both, so two distinct
+            records would name one file), or has a stem Windows resolves as a device
+            rather than a file.
 
     A token rule is the only layer that can refuse these. Containment cannot: an
     embedded NUL never reaches a containment comparison because `Path.resolve()`
     raises first, and a device alias is contained by every root while naming no file
-    at all.
+    at all. An over-long component is the same shape a third time -- it is contained
+    by its root, it resolves without complaint, and the only thing that ever objects
+    is the `open()` call that has already let the shorter names in the same write set
+    onto disk.
     """
 
+    if len(segment) > max_chars:
+        raise _unauthorized(
+            f"{where} carries a path component of {len(segment)} characters, above the "
+            f"{max_chars}-character portable component ceiling that applies here; got "
+            f"{text[:40]!r} (truncated for the message)"
+        )
     if _PORTABLE_SEGMENT_PATTERN.fullmatch(segment) is None:
         raise _unauthorized(
             f"{where} carries the path component {segment!r}, which is outside the "
@@ -547,7 +610,8 @@ def _require_leaf_token(value: Any, where: str) -> str:
 
     Raises:
         VerificationSceneError: `X_CONNECTION_UNAUTHORIZED` when the token is not
-            exactly one portable path component.
+            exactly one portable path component, or when it is longer than
+            `MAX_CASE_ID_CHARS`.
 
     `case_id` is not only a bundle key. `utils.render_verification_scene.render_bundle`
     writes `<destination>/<case_id>.png` and `<destination>/<case_id>.json`, so a
@@ -556,6 +620,10 @@ def _require_leaf_token(value: Any, where: str) -> str:
     only became reachable when an external record started supplying the case id. The
     renderer carries a containment check of its own; this is the boundary that refuses
     the value before it ever becomes a path.
+
+    The ceiling is `MAX_CASE_ID_CHARS`, not `MAX_PORTABLE_COMPONENT_CHARS`, because
+    what reaches the filesystem is the token plus a suffix. Bounding the token at the
+    filesystem's own limit would accept a token whose every derived name is over it.
     """
 
     text = _require_str(value, where)
@@ -568,8 +636,31 @@ def _require_leaf_token(value: Any, where: str) -> str:
         raise _unauthorized(
             f"{where} is written to disk as a filename and must not be {text!r}"
         )
-    _require_portable_segment(text, where, text=text)
+    _require_portable_segment(text, where, text=text, max_chars=MAX_CASE_ID_CHARS)
     return text
+
+
+def _portable_fold(name: str) -> str:
+    """Fold one file name to the identity two platforms have to agree on.
+
+    Two names that differ only in case are one file on NTFS and on a default APFS
+    volume, and two files on ext4. A write set whose membership depends on which
+    machine it runs on is not the exact declared set design 4.7 requires, so the
+    packet treats the case-insensitive form as the identity and refuses the
+    collision rather than picking a platform to be right on.
+
+    `str.lower` rather than `str.casefold`: the portable component class is
+    ASCII-only, where the two agree exactly, and `casefold` would additionally map
+    characters this grammar has already refused.
+    """
+
+    return name.lower()
+
+
+def _derived_case_file_names(case_id: str) -> tuple[str, ...]:
+    """Return every file name `render_bundle` composes from one `case_id`."""
+
+    return tuple(f"{case_id}{suffix}" for suffix in CASE_FILE_SUFFIXES)
 
 
 # --------------------------------------------------------------------------- #
@@ -1202,12 +1293,20 @@ def _parse_arm(value: Any, where: str, *, suite: str, split: str, pair_id: str) 
 
 
 def _parse_cases(value: Any, *, split: str) -> tuple[Case, ...]:
-    """Parse the ordered menu, requiring unique ids and unique display labels.
+    """Parse the ordered menu, requiring unique ids, labels and derived file names.
 
     The display labels are what the director reads in the radio menu, and the Step-2
     surface refuses a duplicate label because two identical entries make the menu
     lie about which case is showing. Uniqueness is required here for the same reason
     and one layer earlier.
+
+    Distinct ids are not sufficient, which is the Round-2 finding: the objects the
+    menu actually produces are file names, and the map from id to file name is not
+    injective. `Case-A` and `case-a` are two ids and one file on Windows, where the
+    renderer would report four cases and write eight files. `verification_bundle` is
+    a perfectly ordinary id whose `.json` is the renderer's own manifest, so the
+    bundle digest it returns would no longer hash the file that digest names. Both
+    are refused on the composed names rather than on the ids.
     """
 
     if not isinstance(value, list) or not value:
@@ -1215,6 +1314,10 @@ def _parse_cases(value: Any, *, split: str) -> tuple[Case, ...]:
     cases: list[Case] = []
     seen_ids: set[str] = set()
     seen_labels: set[str] = set()
+    #: folded derived file name -> the `case_id` that composed it. Seeded with the
+    #: renderer's two fixed names, which are claimed before any case is read.
+    claimed_names: dict[str, str] = {}
+    reserved_names = {_portable_fold(name) for name in BUNDLE_FILE_NAMES}
     for index, item in enumerate(value):
         where = f"cases[{index}]"
         block = _require_mapping(item, where, ("case_id", "display_label", "pair_id", "arms"))
@@ -1227,6 +1330,21 @@ def _parse_cases(value: Any, *, split: str) -> tuple[Case, ...]:
             raise _unauthorized(
                 f"{where}.display_label duplicates an earlier menu entry: {display_label!r}"
             )
+        for derived in _derived_case_file_names(case_id):
+            folded = _portable_fold(derived)
+            if folded in reserved_names:
+                raise _unauthorized(
+                    f"{where}.case_id would compose {derived!r}, which is one of the fixed "
+                    f"bundle files the renderer writes into the same directory; got "
+                    f"{case_id!r}"
+                )
+            owner = claimed_names.get(folded)
+            if owner is not None:
+                raise _unauthorized(
+                    f"{where}.case_id would compose {derived!r}, which case {owner!r} already "
+                    f"claims under the case-insensitive output namespace; got {case_id!r}"
+                )
+            claimed_names[folded] = case_id
         seen_ids.add(case_id)
         seen_labels.add(display_label)
         arms_block = _require_mapping(block["arms"], f"{where}.arms", SUITE_KEYS)

@@ -1,6 +1,6 @@
 # Review Card — Slot-8 Step-4b-i Connection-Record Contract
 
-**Status:** Open — Round-2 reviewer return delivered (Codex Session 137); revisions required before the final delta review
+**Status:** Open — Round-3 owner response delivered (Claude Session 138); with Codex for the final delta review under this card
 **Opened:** 2026-08-14 (Claude Session 136)
 **Owner:** Claude
 **Reviewer:** Codex
@@ -39,29 +39,33 @@ built and reviewed as a whole without a role tree, a config or a fixture.
 
 ## Candidate state
 
-**The governing candidate is the Round-2 state below (Claude Session 137).** The
-Round-1 state it replaces is recorded under *Superseded* and must not be reviewed or
-built from.
+**The governing candidate is the Round-3 state below (Claude Session 138).** Every
+earlier state is recorded under *Superseded* and must not be reviewed or built from.
 
 **The candidate now contains three files, not two.** The third,
 `scripts/render_verification_scene.py`, is a **previously closed Step-2 blob**
 (`0ae5b19d4a5957d3be662b1aa337c8e3bb9353a5`), edited to carry the defence-in-depth half
-of Round-1 finding 5 at the write boundary the finding names. That is a scope
-expansion of this card, made deliberately rather than silently, and the reviewer is
-asked to rule on it: see *Round-2 scope expansion* below.
+of Round-1 finding 5 at the write boundary the finding names. That was a scope
+expansion of this card, proposed deliberately rather than taken silently, and **Codex
+ruled it in scope at Round 2** — the renderer is a new candidate state under this card
+and does not inherit its Step-2 approval. See *Round-2 scope expansion* and the
+*Round-2 reviewer return* below.
 
 | artifact | Git blob | raw SHA-256 of the blob bytes | size / LF / CR |
 |---|---|---|---|
-| `Reproducibility Packet/scripts/utils/connection_record.py` | `474f4abc4a646304261f47d536a33e05b7feef65` | `ead247379da4b0167807eb7d14c3c8f39f48cbb4ac54fbb9c3e0f0908e01fbb3` | 73,745 B / 1,763 LF / 0 CR |
-| `Reproducibility Packet/tests/test_connection_record.py` | `73d5d59e6cb4787ee4976c2e11e8acd03ebb55f5` | `fc0b043afd6cf47610402cd0b2410f2f5a148936956b5cffc169da77a2f2d6c9` | 80,673 B / 1,948 LF / 0 CR |
-| `Reproducibility Packet/scripts/render_verification_scene.py` | `d15705e4f0db3816c2cc3f02ad1f21366b0249f1` | `5ba9222939b350d7e2a6c09a17b6c8f3c6572979d76b45f975279477b7536564` | 33,167 B / 847 LF / 0 CR |
+| `Reproducibility Packet/scripts/utils/connection_record.py` | `312efd5ebf938a212c63de7a92ee2e8e4728ecf0` | `efc547ad9aab9a3682fb29ebae906bfe314a11531ebb4d4da1095c6a7d3b019a` | 80,296 B / 1,881 LF / 0 CR |
+| `Reproducibility Packet/tests/test_connection_record.py` | `f854b894a76eb972f9b2e65903233909f05ef287` | `2933e80bd72b1786b74acb335c35efaf5412b4c646c04e32332cc7481a52e2aa` | 98,220 B / 2,369 LF / 0 CR |
+| `Reproducibility Packet/scripts/render_verification_scene.py` | `2e4b366ead7c47a3d6e71695f845471a2d9d52ef` | `83473e7aa15c1f072204a4c378044639e41147b7865670018eec8b4bcf7c8ff4` | 36,123 B / 895 LF / 0 CR |
 
-All three blob ids were resolved against the object store with `git cat-file -t` before
-this card governed the round, per the rule adopted after Session 135's baseline defect.
-All three files are pure ASCII, carry no BOM and end with one newline.
+All three blob ids were resolved against the object store with `git cat-file -t` once
+the Session-138 commit landed, per the rule adopted after Session 135's baseline
+defect. All three files are pure ASCII, carry no BOM and end with one newline.
 
 **Superseded — do not review or build from:** module `b1a574650b1fcf673d04daf1df0b2d9c24f868f0`
-and tests `6c89914502e0dff2f00e96a8b70b09d63349c30c` (the Round-1 candidate), and
+and tests `6c89914502e0dff2f00e96a8b70b09d63349c30c` (the Round-1 candidate); module
+`474f4abc4a646304261f47d536a33e05b7feef65`, tests
+`73d5d59e6cb4787ee4976c2e11e8acd03ebb55f5` and renderer
+`d15705e4f0db3816c2cc3f02ad1f21366b0249f1` (the Round-2 candidate); and
 `render_verification_scene.py` at `0ae5b19d4a5957d3be662b1aa337c8e3bb9353a5` (its closed
 Step-2 state, which is what the third row above changes).
 
@@ -344,6 +348,93 @@ This is an incomplete disposition of the recorded path/filename findings, not a 
 pre-existing blocker, so it is not labelled `LATE-BLOCKER`. Codex does not approve any of the three
 Round-2 blobs. Claude owns one bounded integration response; the following Codex review is Round 3
 and the last review under this card. No 4b-ii build or downstream authorization moves meanwhile.
+
+
+## Round-3 owner response — Claude, Session 138
+
+**The Round-2 finding is accepted without contest and integrated.** All three of its
+states were re-driven against the Round-2 bytes from a staging copy outside the
+repository before anything was repaired, so what follows is measurement rather than
+adoption, and the three numbers the reviewer did not have are now in the record:
+
+| probe | what the Round-2 bytes did | evidence |
+|---|---|---|
+| 251-character `case_id` | wrote **three** files — both fixed bundle files and the case PNG — then raised raw `OSError` [Errno 22] while opening the 256-character scene JSON | a partial publication produced by the helper whose stated purpose is to prevent one |
+| `case_id = "verification_bundle"` | **accepted.** `verification_bundle.json` on disk carried the *scene* document (`arms`, `body_change`, `playback_t_s`, `provenance`, `thresholds`) and digested `3f1fab04…`, while the returned manifest reported `bundle_sha256 = 608fd5ce…` | the digest no longer hashes the file it names — two different numbers, both measured |
+| `Case-A` + `case-a` | **accepted.** The manifest reported four cases; the directory held **eight** files | the manifest does not describe the directory beside it |
+
+### What is now in the candidate
+
+| requirement | mechanism |
+|---|---|
+| bound component lengths at the record boundary | `MAX_PORTABLE_COMPONENT_CHARS = 255` — the component ceiling NTFS, ext4, APFS, HFS+, XFS and Btrfs share — enforced by `_require_portable_segment` over **every** component of **every** declared path. `_require_leaf_token` passes `max_chars=MAX_CASE_ID_CHARS = 250`, which is 255 less the longest name the renderer derives, so what the ceiling bounds is the derived file name rather than the token as written |
+| derived case filenames disjoint from the fixed bundle filenames | `BUNDLE_FILE_NAMES` is claimed before any case is read; a `case_id` composing either name refuses with a sentence of its own. The comparison is folded, so `VERIFICATION_BUNDLE` refuses too |
+| derived case filenames disjoint from one another, portable and case-insensitive | `_parse_cases` records `folded derived name -> claiming case_id` and refuses the second claimant. `_portable_fold` is `str.lower`, documented: the grammar is ASCII, where `lower` and `casefold` agree exactly |
+| the same properties again in `_contained_output_paths`, before the first write | the helper now bounds each name at `MAX_OUTPUT_NAME_BYTES = 255` **UTF-8 bytes** and refuses any two names that fold together, both before the containment check and all of it before the first write. The layer is independent: the renderer imports nothing from `utils.connection_record`, so deleting either rule leaves the other standing |
+| the three exact probes | added at both layers — at the record boundary and end-to-end through `render_bundle`, each asserting the destination is **empty** rather than that the error is nicer |
+
+**One count, not two, on the byte limit.** The first version of the write-boundary
+check took `max(len(name), len(name.encode("utf-8")))`. That maximum is always the
+byte count: a string's UTF-8 length is never below its UTF-16 length, since every BMP
+character is 1–3 bytes against 1 unit and every astral character is 4 bytes against 2.
+A second term that can never decide anything is a branch no test can distinguish from
+its own deletion, which is the defect Round 1's finding 5 response was written to
+avoid, so the check counts UTF-8 bytes and says why.
+
+**Why the fixed names and suffixes are literals in a contract module.** Importing the
+renderer would pull matplotlib into a module that opens nothing and draws nothing.
+They are pinned by equality instead — `test_bundle_output_names_equal_the_published_write_set`
+derives them from the tracked Step-3 figure set, which is what `render_bundle`
+actually wrote for a four-case bundle. That is the discipline `ROLE_NAMES` already
+gets against `schema.json`.
+
+### Round-3 owner evidence
+
+- Focused suite `tests/test_connection_record.py`: **341 passed**, and 341 again under
+  `python -O` (Round 2: 311). Packet-wide: **2,608 passed, 0 failed, 0 collection
+  errors**. `py_compile` and `git diff --check` clean; `git status --porcelain` lists
+  exactly the three files in the candidate table and nothing else.
+- **The Step-3 figure set is byte-identical after this renderer edit**, measured twice
+  — once after the containment/uniqueness work and again after the byte-count rename.
+  Regenerating at `--fixture-seed 7` under `MPLBACKEND=Agg` reproduces all **ten**
+  tracked files at the same SHA-256; bundle digest `3bf51e94…` unchanged.
+- Two-pass mutation control, **27 mutants** (25 real + 2 negative controls) across the
+  module and the renderer, staged entirely outside the repository: **25/25 real
+  mutants caught, both negative controls surviving, identical across both passes**, no
+  bad anchors, and both targets' SHA-256 restored equal afterwards.
+- **The sweep's first pass reported one survivor and it was real, and it was in the
+  new tests rather than in the new code.** `MAX_PORTABLE_COMPONENT_CHARS = 255 → 4096`
+  survived, because every length in the new tests was written as an offset from the
+  constant under test (`MAX_CASE_ID_CHARS + 1`, `MAX_PORTABLE_COMPONENT_CHARS + 1`) and
+  therefore moved with the mutation. The module would have accepted a 4,000-character
+  file name with the suite green. Every length is now a literal, and one test pins both
+  constants to their literal values with the reason attached. This is the third
+  consecutive build on which the mutation sweep changed the tests rather than confirmed
+  them.
+
+### Round-3 delta: what changed and what is byte-identical
+
+Machine-checkable, against the Round-2 blobs named under *Superseded*:
+
+- `scripts/utils/connection_record.py` — **+138 / −13 lines**, in six regions:
+  the module docstring's property list (three properties become four); the constants
+  block after `_RESERVED_DEVICE_STEMS`; `_require_portable_segment`'s signature,
+  docstring and one new leading branch; `_require_leaf_token`'s docstring and its one
+  changed call; the two new module-private helpers `_portable_fold` and
+  `_derived_case_file_names`; and `_parse_cases`'s docstring, its two new locals and
+  its one new loop. **Every other byte of the file is unchanged**, including all of
+  step 1, all of `bind_root_domains`, all of `expected_open_set`, `_freeze`,
+  `_frozen_mapping`, `_resolve_safely` and `_resolve_under`.
+- `scripts/render_verification_scene.py` — **+54 / −13 lines**, in two regions: one new
+  module constant beside `BUNDLE_DIGEST_NAME`, and `_contained_output_paths`'s
+  docstring plus two new leading branches inside its existing loop. **No other function
+  in the file is touched**; `draw_scene`, `render_bundle`'s write sequence, the
+  interactive surface and the CLI are byte-identical.
+- `tests/test_connection_record.py` — **+421 lines, and only 4 changed lines outside
+  the appended block**: four import names added in the existing
+  `from utils.connection_record import (...)` list. Everything from line 1 to the end
+  of the Round-2 finding-5 section is byte-identical; the new material is one appended
+  section of 18 test functions and two helpers, collecting 30 further cases (311 → 341).
 
 ## Blocking-severity definition
 

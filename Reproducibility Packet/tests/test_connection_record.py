@@ -36,12 +36,16 @@ sys.path.insert(0, str(SCRIPTS_DIR))
 
 from utils.connection_record import (  # noqa: E402
     AUTHORITIES,
+    BUNDLE_FILE_NAMES,
+    CASE_FILE_SUFFIXES,
     CONNECTION_RECORD_VERSION,
     DEVELOPMENT_OUTPUT_PARENT,
     FINAL_OUTPUT_PARENT,
     LINK_IDS,
     MANIFEST_ROW_FIELDS,
     MANIFEST_ROW_INT_FIELDS,
+    MAX_CASE_ID_CHARS,
+    MAX_PORTABLE_COMPONENT_CHARS,
     OUTPUT_PARENTS,
     RECORD_PARENT,
     ROLE_NAMES,
@@ -1946,3 +1950,420 @@ def test_the_renderer_writes_nothing_outside_its_root_for_an_escaping_case_id(
     # -- nothing was written at all, not even the two files whose names are constants.
     assert sorted(path.name for path in tmp_path.iterdir()) == ["bundle"]
     assert list(destination.iterdir()) == []
+
+
+# --------------------------------------------------------------------------- #
+# Round-2 finding 1 -- containment is necessary and is not sufficient.
+#
+# Every path in the previous section was refused for being somewhere else. These are
+# refused for being *unwritable* or for *not being one-to-one*, which containment
+# cannot see: an over-long name is contained by its root and fails at `open()`, and a
+# name that collides with another member of the same write set is contained twice.
+#
+# All three states were re-driven against the Round-2 bytes before this repair, from a
+# staging copy outside the repository:
+#   * a 251-character `case_id` wrote three files -- both fixed bundle files and the
+#     PNG -- and then raised `OSError` [Errno 22] while opening the 256-character
+#     scene JSON. A partial publication produced by the helper whose whole stated
+#     purpose is to prevent one;
+#   * `case_id = "verification_bundle"` was accepted. `verification_bundle.json` on
+#     disk carried the *scene* document (`arms`, `body_change`, `playback_t_s`,
+#     `provenance`, `thresholds`) and digested `3f1fab04...`, while the manifest
+#     returned `bundle_sha256 = 608fd5ce...`. The digest no longer hashed the file it
+#     named;
+#   * `Case-A` and `case-a` were both accepted. The manifest reported four cases and
+#     the directory held eight files.
+# --------------------------------------------------------------------------- #
+def _renamed_fixture_bundle(**renames: str) -> Any:
+    """Return the seed-7 fixture bundle with some case ids replaced.
+
+    Args:
+        renames: `position -> new id`, where position is `first` or `second`. The
+            keyword form keeps each call site readable at a glance about how many
+            ids it is moving.
+
+    Returns:
+        A bundle whose scene keys and `body_change.case_id` values agree, because a
+        bundle where they disagree refuses at `validate_bundle` for a different
+        reason and would prove nothing about the write set.
+    """
+
+    import dataclasses
+
+    from utils.verification_scene import build_fixture_bundle
+
+    bundle = build_fixture_bundle(seed=7)
+    positions = {"first": 0, "second": 1}
+    by_index = {positions[key]: value for key, value in renames.items()}
+    scenes: dict[str, Any] = {}
+    for index, (case_id, scene) in enumerate(bundle.scenes.items()):
+        new_id = by_index.get(index, case_id)
+        scenes[new_id] = dataclasses.replace(
+            scene,
+            body_change=dataclasses.replace(scene.body_change, case_id=new_id),
+        )
+    return dataclasses.replace(bundle, scenes=scenes)
+
+
+def _render_into(bundle: Any, destination: Path) -> VerificationSceneError:
+    """Require `render_bundle` to refuse, and return the refusal it raised."""
+
+    import matplotlib
+
+    matplotlib.use("Agg")
+    from render_verification_scene import render_bundle
+
+    with pytest.raises(VerificationSceneError) as excinfo:
+        render_bundle(bundle, destination)
+    return excinfo.value
+
+
+def test_the_two_ceilings_are_the_filesystem_numbers_stated_as_literals() -> None:
+    """The one place a length appears that is not a function of the constants.
+
+    Every other length in this file is now a literal for the same reason, but this
+    test is what makes the pair of constants themselves auditable: 255 is the
+    component limit NTFS, ext4, APFS, HFS+, XFS and Btrfs share, and 250 is what is
+    left of it after the longest name the renderer derives from a `case_id`. If a
+    later session has a reason to move either number, this is the assertion that
+    makes it say so out loud.
+    """
+
+    assert MAX_PORTABLE_COMPONENT_CHARS == 255
+    assert MAX_CASE_ID_CHARS == 250
+
+
+def test_max_case_id_chars_reserves_the_longest_derived_suffix() -> None:
+    """The ceiling on the token is the ceiling on the name the token composes.
+
+    Stated as arithmetic against the two constants rather than as the literal 250,
+    so that adding a third derived suffix moves the ceiling instead of leaving a
+    number that used to be right.
+    """
+
+    assert MAX_CASE_ID_CHARS == MAX_PORTABLE_COMPONENT_CHARS - max(
+        len(suffix) for suffix in CASE_FILE_SUFFIXES
+    )
+    for suffix in CASE_FILE_SUFFIXES:
+        assert len("x" * MAX_CASE_ID_CHARS + suffix) <= MAX_PORTABLE_COMPONENT_CHARS
+
+
+def test_bundle_output_names_equal_the_published_write_set() -> None:
+    """Equality against the renderer's own tracked output, not against a memory.
+
+    The module states the two fixed bundle names and the two derived suffixes as
+    literals because importing the renderer would pull matplotlib into a contract
+    module that opens nothing and draws nothing. This is the check that keeps the
+    literals honest: the Step-3 figure set in `results/verification_fixture/` is what
+    `render_bundle` actually wrote for a four-case bundle, so its listing is exactly
+    the two fixed names plus one name per case per suffix. A rename over there goes
+    red here.
+    """
+
+    published = sorted(
+        path.name for path in (PACKET_ROOT / "results" / "verification_fixture").iterdir()
+    )
+    assert set(BUNDLE_FILE_NAMES) <= set(published)
+    case_names = [name for name in published if name not in set(BUNDLE_FILE_NAMES)]
+    assert case_names, "the tracked figure set must hold at least one case"
+    stems = sorted({Path(name).stem for name in case_names})
+    assert sorted(case_names) == sorted(
+        f"{stem}{suffix}" for stem in stems for suffix in CASE_FILE_SUFFIXES
+    )
+    assert sorted(published) == sorted(list(BUNDLE_FILE_NAMES) + case_names)
+
+
+@pytest.mark.parametrize("length", [251, 255, 4096])
+def test_step2_refuses_a_case_id_whose_derived_file_name_is_over_length(
+    length: int,
+) -> None:
+    """The reviewer's first probe, at the record boundary.
+
+    The lengths are literals, not offsets from the constants under test. That is the
+    mutation sweep's correction to the first version of this test: every length here
+    was written as `MAX_CASE_ID_CHARS + 1`, so raising the ceiling to 4096 moved the
+    inputs with it and the suite stayed green on a module that accepted a
+    4,000-character file name. A test whose input is a function of the constant it is
+    testing holds nothing about that constant.
+
+    255 is in the list because an id of exactly 255 characters is a legal *component*
+    and an illegal *case id* -- which is the whole reason the two ceilings are not one
+    ceiling.
+    """
+
+    error = refuse(mutate(valid_document(), "cases.0.case_id", "x" * length))
+    assert error.code == X_CONNECTION_UNAUTHORIZED
+    assert "portable component ceiling that applies here" in str(error)
+    assert f"{length} characters" in str(error)
+
+
+def test_step2_accepts_a_case_id_at_the_derived_name_boundary() -> None:
+    """The accept side, at the exact boundary, so the ceiling is not off by one."""
+
+    case_id = "x" * 250
+    record = parse_connection_record(
+        record_bytes(mutate(valid_document(), "cases.0.case_id", case_id))
+    )
+    assert record.cases[0].case_id == case_id
+    derived = [len(f"{case_id}{suffix}") for suffix in CASE_FILE_SUFFIXES]
+    # Every derived name fits, and the longest one sits exactly on the ceiling --
+    # which is what makes this the boundary rather than merely a value under it.
+    assert max(derived) == MAX_PORTABLE_COMPONENT_CHARS
+    assert all(length <= MAX_PORTABLE_COMPONENT_CHARS for length in derived)
+
+
+@pytest.mark.parametrize(
+    "dotted",
+    [
+        "schema.relative_path",
+        "config.relative_path",
+        "established_result.artifact_relative_path",
+    ],
+)
+def test_step2_refuses_an_over_length_component_in_any_declared_path(dotted: str) -> None:
+    """The ceiling is a property of the path grammar, not of `case_id` alone."""
+
+    long_component = "x" * 256
+    error = refuse(mutate(valid_document(), dotted, f"results/{long_component}.json"))
+    assert error.code == X_CONNECTION_UNAUTHORIZED
+    assert "portable component ceiling that applies here" in str(error)
+
+
+def test_step2_accepts_a_path_component_at_the_portable_ceiling() -> None:
+    """The accept side of the general ceiling, again at the exact boundary."""
+
+    component = "x" * 255
+    document = mutate(valid_document(), "schema.relative_path", f"schema/{component}")
+    record = parse_connection_record(record_bytes(document))
+    assert record.schema.relative_path == PurePosixPath(f"schema/{component}")
+
+
+@pytest.mark.parametrize(
+    "case_id",
+    ["verification_bundle", "VERIFICATION_BUNDLE", "Verification_Bundle"],
+)
+def test_step2_refuses_a_case_id_that_composes_a_fixed_bundle_file_name(
+    case_id: str,
+) -> None:
+    """The reviewer's second probe, at the record boundary.
+
+    The upper-case spellings are in the list because the collision is not a string
+    equality: on Windows and on a default APFS volume `VERIFICATION_BUNDLE.json` and
+    `verification_bundle.json` are one file, and a rule that only refused the exact
+    spelling would be green here and destructive there.
+    """
+
+    error = refuse(mutate(valid_document(), "cases.0.case_id", case_id))
+    assert error.code == X_CONNECTION_UNAUTHORIZED
+    assert "one of the fixed bundle files the renderer writes" in str(error)
+
+
+@pytest.mark.parametrize(
+    "case_id", ["verification_bundles", "verification_bundle-1", "bundle"]
+)
+def test_step2_accepts_a_case_id_that_merely_resembles_a_bundle_file_name(
+    case_id: str,
+) -> None:
+    """The accept side: the rule refuses a collision, not a resemblance."""
+
+    document = mutate(valid_document(), "cases.0.case_id", case_id)
+    assert parse_connection_record(record_bytes(document)).cases[0].case_id == case_id
+
+
+@pytest.mark.parametrize(
+    ("first", "second"),
+    [("Case-A", "case-a"), ("case-a", "CASE-A"), ("Soften.Link", "soften.link")],
+)
+def test_step2_refuses_two_case_ids_that_are_one_file_case_insensitively(
+    first: str, second: str
+) -> None:
+    """The reviewer's third probe, at the record boundary.
+
+    Both ids are individually valid and the pair is individually distinct, so every
+    check that existed before this one accepts the menu. What the pair is not is one
+    write set on two machines.
+    """
+
+    document = mutate(valid_document(), "cases.0.case_id", first)
+    document = mutate(document, "cases.1.case_id", second)
+    error = refuse(document)
+    assert error.code == X_CONNECTION_UNAUTHORIZED
+    assert "already claims under the case-insensitive output namespace" in str(error)
+    assert repr(first) in str(error)
+
+
+def test_step2_accepts_two_case_ids_that_differ_by_more_than_case() -> None:
+    """The accept side: a menu whose ids differ outside the fold still parses."""
+
+    document = mutate(valid_document(), "cases.0.case_id", "Case-A")
+    document = mutate(document, "cases.1.case_id", "case-b")
+    record = parse_connection_record(record_bytes(document))
+    assert [case.case_id for case in record.cases] == ["Case-A", "case-b"]
+
+
+def test_the_renderer_refuses_an_output_name_no_filesystem_will_accept(
+    tmp_path: Path,
+) -> None:
+    """The same property at the write boundary, held independently of the record."""
+
+    import matplotlib
+
+    matplotlib.use("Agg")
+    from render_verification_scene import MAX_OUTPUT_NAME_BYTES, _contained_output_paths
+
+    destination = tmp_path / "bundle"
+    destination.mkdir()
+    over = "x" * (MAX_OUTPUT_NAME_BYTES + 1)
+    with pytest.raises(VerificationSceneError) as excinfo:
+        _contained_output_paths(destination, ["bundle.json", over])
+    assert excinfo.value.code == X_IDENTITY_MISMATCH
+    assert "above the 255-byte limit" in str(excinfo.value)
+
+    at_limit = "x" * MAX_OUTPUT_NAME_BYTES
+    accepted = _contained_output_paths(destination, ["bundle.json", at_limit])
+    assert set(accepted) == {"bundle.json", at_limit}
+
+
+def test_the_renderer_refuses_an_output_name_whose_utf8_length_is_over_the_limit(
+    tmp_path: Path,
+) -> None:
+    """The count is bytes *or* characters, because the two filesystems disagree.
+
+    ext4 bounds a component at 255 UTF-8 bytes and NTFS at 255 UTF-16 units. A name
+    of 200 three-byte characters is 200 units and 600 bytes: legal on one, refused
+    on the other. Counting UTF-8 bytes bounds both, because a string's UTF-8 length
+    is never below its UTF-16 length -- so this asserts the count that is actually
+    taken, not a second guard that could never fire. The record boundary never
+    produces such a name, its grammar being ASCII, and this layer does not get to
+    assume the record boundary ran.
+    """
+
+    import matplotlib
+
+    matplotlib.use("Agg")
+    from render_verification_scene import _contained_output_paths
+
+    destination = tmp_path / "bundle"
+    destination.mkdir()
+    # Escaped rather than literal: every file in this candidate is pure ASCII, which
+    # is a property a reviewer checks with `git diff --check` and a byte census.
+    name = "\u4e2d" * 200
+    assert len(name) == 200 and len(name.encode("utf-8")) == 600
+    with pytest.raises(VerificationSceneError) as excinfo:
+        _contained_output_paths(destination, [name])
+    assert excinfo.value.code == X_IDENTITY_MISMATCH
+    assert "600 UTF-8 bytes" in str(excinfo.value)
+
+
+@pytest.mark.parametrize(
+    "names",
+    [
+        ["verification_bundle.json", "verification_bundle.json"],
+        ["Case-A.png", "case-a.png"],
+        ["bundle.json", "BUNDLE.JSON"],
+    ],
+)
+def test_the_renderer_refuses_an_output_set_that_is_not_one_to_one(
+    names: list[str], tmp_path: Path
+) -> None:
+    """A dictionary accepts two keys that name one file; this is what refuses them."""
+
+    import matplotlib
+
+    matplotlib.use("Agg")
+    from render_verification_scene import _contained_output_paths
+
+    destination = tmp_path / "bundle"
+    destination.mkdir()
+    with pytest.raises(VerificationSceneError) as excinfo:
+        _contained_output_paths(destination, names)
+    assert excinfo.value.code == X_IDENTITY_MISMATCH
+    assert "already claims under a case-insensitive comparison" in str(excinfo.value)
+
+
+def test_the_renderer_writes_nothing_for_an_over_length_case_id(tmp_path: Path) -> None:
+    """The reviewer's first probe, end to end, where it produced the partial write.
+
+    Against the Round-2 bytes this left `verification_bundle.json`,
+    `verification_bundle.sha256` and one PNG on disk and then raised a raw `OSError`.
+    The assertion is that the directory is empty, not that the error is nicer.
+    """
+
+    destination = tmp_path / "bundle"
+    destination.mkdir()
+    error = _render_into(_renamed_fixture_bundle(first="x" * 251), destination)
+    assert error.code == X_IDENTITY_MISMATCH
+    assert "above the 255-byte limit" in str(error)
+    assert list(destination.iterdir()) == []
+
+
+def test_the_renderer_writes_nothing_for_a_case_id_that_takes_the_manifest_name(
+    tmp_path: Path,
+) -> None:
+    """The reviewer's second probe, end to end.
+
+    Against the Round-2 bytes this returned a manifest whose `bundle_sha256` was
+    `608fd5ce...` while the `verification_bundle.json` it named held a scene document
+    digesting `3f1fab04...`. A verification artifact whose own digest does not hash
+    its own manifest is the failure mode design section 4.7 exists to make
+    impossible.
+    """
+
+    destination = tmp_path / "bundle"
+    destination.mkdir()
+    error = _render_into(_renamed_fixture_bundle(first="verification_bundle"), destination)
+    assert error.code == X_IDENTITY_MISMATCH
+    assert "already claims under a case-insensitive comparison" in str(error)
+    assert list(destination.iterdir()) == []
+
+
+def test_the_renderer_writes_nothing_for_two_case_ids_that_collide_in_case(
+    tmp_path: Path,
+) -> None:
+    """The reviewer's third probe, end to end.
+
+    Against the Round-2 bytes this reported four cases and wrote eight files on this
+    Windows host -- a manifest that does not describe the directory beside it.
+    """
+
+    destination = tmp_path / "bundle"
+    destination.mkdir()
+    bundle = _renamed_fixture_bundle(first="Case-A", second="case-a")
+    error = _render_into(bundle, destination)
+    assert error.code == X_IDENTITY_MISMATCH
+    assert "already claims under a case-insensitive comparison" in str(error)
+    assert list(destination.iterdir()) == []
+
+
+def test_the_renderer_still_writes_the_whole_declared_set_for_a_valid_bundle(
+    tmp_path: Path,
+) -> None:
+    """The accept side at the write boundary: none of the above narrowed it.
+
+    Ten files for four cases -- two fixed plus two per case -- and the manifest's own
+    digest hashes the manifest file. This is the property the three refusals above
+    exist to protect, so it is asserted rather than assumed.
+    """
+
+    import matplotlib
+
+    matplotlib.use("Agg")
+    from render_verification_scene import render_bundle
+    from utils.verification_scene import build_fixture_bundle
+
+    destination = tmp_path / "bundle"
+    bundle = build_fixture_bundle(seed=7)
+    manifest = render_bundle(bundle, destination)
+    written = sorted(path.name for path in destination.iterdir())
+    expected = sorted(
+        list(BUNDLE_FILE_NAMES)
+        + [
+            f"{case_id}{suffix}"
+            for case_id in bundle.scenes
+            for suffix in CASE_FILE_SUFFIXES
+        ]
+    )
+    assert written == expected
+    assert len(written) == 10
+    bundle_bytes = (destination / BUNDLE_FILE_NAMES[0]).read_bytes()
+    assert manifest["bundle_sha256"] == hashlib.sha256(bundle_bytes).hexdigest()

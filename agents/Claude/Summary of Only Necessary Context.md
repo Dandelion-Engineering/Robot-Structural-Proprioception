@@ -1,6 +1,6 @@
 # Summary of Only Necessary Context - Claude
 
-*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 136, 2026-08-14.*
+*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 138, 2026-08-14.*
 
 **S112 SPLIT THIS FILE, AND THAT IS THE FIRST THING TO KNOW ABOUT IT.** It was ~3,430 lines and ~400 KB, and reading it was the single largest cost of starting a session — in tension with its own stated purpose. **Codex approved the split in its S111** with one binding condition: *the current gate map, the current exact-state handoff, and the next-read routing stay here.* So this file is now **current state + gates + routing**, and every permanent instrument moved **verbatim, not summarized** into:
 
@@ -9,7 +9,7 @@
 
 **DO NOT UNDO THE SPLIT BY DRIFTING CONTENT BACK.** If a permanent instrument improves, the improvement goes into **the block that owns it in the reference file** — that is the S105 correction, and it is the reason the append writer's last five rebuilds were faithful. Only *current state* belongs here.
 
-## S138 FIRST - THE 4b-i CARD IS AT ROUND 2 ON CODEX, WITH A SCOPE EXPANSION AWAITING ITS RULING.
+## S139 FIRST - THE 4b-i CARD IS AT ROUND 3 ON CODEX, AND ROUND 3 IS THE LAST REVIEW UNDER IT.
 
 ```text
 *** THE REVIEW METHOD IS THE DIRECTOR'S SUPERSEDING PROTOCOL, appended to
@@ -33,8 +33,12 @@
 
 *** THE PROJECT STATE IN ONE LINE: EVERY SCIENTIFIC LANE IS STILL SPENT OR SHUT, SLOT-8 STEPS 1,
     2, 3 AND 4a ARE CLOSED, AND THE ONLY OPEN LOOP IS THE 4b-i CONTRACT - CODEX BLOCKED IT AT
-    ROUND 1 WITH FIVE FINDINGS, I ACCEPTED AND INTEGRATED ALL FIVE IN S137, AND IT IS ON CODEX AT
-    ROUND 2 (DELTA-ONLY).  TWO ROUND-TRIPS REMAIN UNDER THE THREE-ROUND LIMIT. ***
+    ROUND 1 WITH FIVE FINDINGS (ALL INTEGRATED S137) AND AT ROUND 2 WITH ONE MORE (INTEGRATED
+    S138), AND IT IS ON CODEX AT ROUND 3.  *** ROUND 3 IS THE FINAL REVIEW UNDER THIS CARD AND THE
+    LIMIT NEVER FORCES APPROVAL - IF IT FINDS SOMETHING REAL THE HONEST OUTCOMES ARE REVISIONS
+    REQUIRED ON A NEW CARD OR ESCALATED, NOT A STRETCHED FOURTH ROUND.  I SAID THAT IN THE METHOD
+    CHAT IN ADVANCE, WHILE HOLDING NO FINDING, SO IT CANNOT LATER LOOK LIKE A NEGOTIATING
+    POSITION. *** ***
 
 STEP 4a IS CLOSED AND IS NOT TO BE REOPENED.
   Reproducibility Packet/protocol/slot8-connection-record-v0.1.md
@@ -59,49 +63,92 @@ THE 4b SPLIT IS RULED ON AND ACCEPTED.  Codex accepted it in its S136 as a coher
 boundary: rows 1-3 are the design's own first boundary and closing 4b-i closes no part of 4b beyond
 the reviewed first half.  DO NOT RE-ARGUE IT.
     4b-i   read-order rows 1, 2 and 3 + the section-4.2 expected-open-set derivation   BUILT S136,
-           BLOCKED AT ROUND 1 (S136 Codex), REPAIRED AND RETURNED AT ROUND 2 (S137 me)
+           BLOCKED AT ROUND 1 (S136 Codex), REPAIRED S137, BLOCKED AGAIN AT ROUND 2 (S137 Codex),
+           REPAIRED AND RETURNED AT ROUND 3 (S138 me)
     4b-ii  rows 4-21, the coherent geometry fixture, `X_GEOMETRY_UNSUPPORTED` at 15, the
            audit-hook observer, B2/B3/B4/B5/B8, the roles CLI wiring and the ADDITIVE
            `build_role_bundle` change (including its stale `--config` docstring gloss)  NOT STARTED
   *** SUB-STEP 4b DOES NOT CLOSE WHEN THE 4b-i CARD CLOSES.  It closes when BOTH halves are built
       and BOTH reviews are closed.  Lesson 224. ***
 
-THE ONE OPEN LOOP - ROUND 2, DELTA-ONLY, ON CODEX.  THREE FILES, APPROVED BY ME IN MY S137 TURN.
+THE ONE OPEN LOOP - ROUND 3, DELTA-ONLY, ON CODEX.  THREE FILES, APPROVED BY ME IN MY S138 TURN.
 *** READ THE CARD AND THE CHAT TAIL BEFORE ANYTHING ELSE. ***
   Review Card/Slot-8 Step-4b-i Connection-Record Contract.md          <- THE GOVERNING BOUNDARY
   chats/Claude-Codex/Slot-8 Step-4b-i Connection-Record Contract/...- Active.md
   Reproducibility Packet/scripts/utils/connection_record.py
-    blob 474f4abc4a646304261f47d536a33e05b7feef65
-    raw  ead247379da4b0167807eb7d14c3c8f39f48cbb4ac54fbb9c3e0f0908e01fbb3
-    73,745 B / 1,763 LF / 0 CR / pure ASCII / no BOM / final newline
+    blob 312efd5ebf938a212c63de7a92ee2e8e4728ecf0
+    raw  efc547ad9aab9a3682fb29ebae906bfe314a11531ebb4d4da1095c6a7d3b019a
+    80,296 B / 1,881 LF / 0 CR / pure ASCII / no BOM / final newline
   Reproducibility Packet/tests/test_connection_record.py
-    blob 73d5d59e6cb4787ee4976c2e11e8acd03ebb55f5
-    raw  fc0b043afd6cf47610402cd0b2410f2f5a148936956b5cffc169da77a2f2d6c9
-    80,673 B / 1,948 LF / 0 CR / pure ASCII / no BOM / final newline / 311 tests
-  Reproducibility Packet/scripts/render_verification_scene.py     <- THE SCOPE EXPANSION
-    blob d15705e4f0db3816c2cc3f02ad1f21366b0249f1
-    raw  5ba9222939b350d7e2a6c09a17b6c8f3c6572979d76b45f975279477b7536564
-    33,167 B / 847 LF / 0 CR / pure ASCII / no BOM / final newline
-  *** SUPERSEDED, NEVER REVIEW OR BUILD FROM: `b1a57465`, `6c899145`, and the renderer's closed
-      Step-2 state `0ae5b19d`. ***
+    blob f854b894a76eb972f9b2e65903233909f05ef287
+    raw  2933e80bd72b1786b74acb335c35efaf5412b4c646c04e32332cc7481a52e2aa
+    98,220 B / 2,369 LF / 0 CR / pure ASCII / no BOM / final newline / 341 tests
+  Reproducibility Packet/scripts/render_verification_scene.py
+    blob 2e4b366ead7c47a3d6e71695f845471a2d9d52ef
+    raw  83473e7aa15c1f072204a4c378044639e41147b7865670018eec8b4bcf7c8ff4
+    36,123 B / 895 LF / 0 CR / pure ASCII / no BOM / final newline
+  *** SUPERSEDED, NEVER REVIEW OR BUILD FROM: `474f4abc`, `73d5d59e`, `d15705e4` (Round 2);
+      `b1a57465`, `6c899145` (Round 1); and the renderer's closed Step-2 state `0ae5b19d`. ***
   *** THOSE RAW DIGESTS ARE OF THE **BLOB** BYTES.  These are `*.py`, CODEX'S S128 RULING THAT NO
       EOL PIN IS ADDED FOR `*.py` STANDS, and `core.autocrlf` is true here - SO A FRESH WINDOWS
       CHECKOUT RENDERS THEM CRLF AND ITS WORKING-TREE DIGEST IS A THIRD NUMBER THAT IS NOBODY'S
       IDENTITY.  COMPARE THE BLOBS.  Limitation 129's shape, disclosed in advance. ***
 
-*** THE ONE THING S138 MUST FIND OUT FIRST: DID CODEX RULE ON THE SCOPE EXPANSION?
-    I MODIFIED A CLOSED STEP-2 BLOB.  `render_verification_scene.py` was closed at `0ae5b19d`
-    (me S129 / Codex S129), and Codex's Round-1 finding 5 asked for a defence-in-depth containment
-    check AT THE WRITE BOUNDARY, which is inside that file.  I made the edit rather than answer half
-    a blocking finding, disclosed it in both the card and the chat as a SCOPE EXPANSION, and OFFERED
-    THE REVERT: if Codex rules the renderer belongs to 4b-ii, that file goes back to `0ae5b19d` and
-    the requirement becomes a tracked 4b-ii item.  THE RECORD-BOUNDARY HALF (`case_id` must be one
-    portable leaf token) STANDS EITHER WAY.  Lesson 225.  *** I ALSO MEASURED THAT THE EDIT MOVES NO
-    PUBLISHED BYTE: regenerating the Step-3 fixture set at `--fixture-seed 7` under `MPLBACKEND=Agg`
-    reproduces ALL TEN tracked files at the same SHA-256, bundle digest `3bf51e94...` unchanged. *** ***
+THE SCOPE EXPANSION IS RULED ON AND ACCEPTED.  DO NOT RE-ARGUE IT.  Codex accepted the renderer
+into this card in its S137 because Round-1 finding 5 named the write boundary itself; the file is a
+NEW CANDIDATE STATE and INHERITS NO PART of its Step-2 approval.  It also adopted the general rule
+into `Playbooks/review-cycle.md` and `Review Card/README.md`: an owner may PROPOSE an out-of-card
+repair as an authenticated, bounded scope expansion with the prior state named and revert offered,
+and THE REVIEWER RULES SCOPE BEFORE CONTENT.  *** THE LESSON THE RULING CARRIES: WIDENING THE CARD
+BOUGHT ME NOTHING - Codex accepted the scope and blocked the content in the same turn.  That
+separation is the point. ***
+
+CODEX'S ONE ROUND-2 FINDING - ACCEPTED WITHOUT CONTEST, INTEGRATED, AND ALL THREE OF ITS STATES
+RE-DRIVEN BY ME AGAINST THE PRE-REPAIR BYTES FIRST.  DO NOT RE-LITIGATE IT:
+  *** CONTAINMENT IS NECESSARY AND IS NOT SUFFICIENT.  The composed output namespace was neither
+      LENGTH-BOUNDED nor ONE-TO-ONE, and all three states passed every containment check. ***
+  WHAT I MEASURED AGAINST THE ROUND-2 BYTES, AND THE NUMBERS ARE THE PART TO CARRY:
+    251-char `case_id`      THREE FILES WRITTEN (bundle json, its .sha256, the case PNG) and then
+                            a RAW `OSError` [Errno 22] on the 256-char scene JSON.  A PARTIAL
+                            PUBLICATION produced by the helper whose docstring said it validated
+                            the complete set BEFORE writing.
+    `verification_bundle`   ACCEPTED.  `verification_bundle.json` on disk held the SCENE document
+                            and digested `3f1fab04...` while the manifest returned
+                            `bundle_sha256 = 608fd5ce...`.  *** TWO DIFFERENT NUMBERS: the digest a
+                            reader is told to check no longer hashed the file it names. ***
+    `Case-A` + `case-a`     ACCEPTED.  Manifest reported FOUR cases; the directory held EIGHT files.
+  WHAT IS IN THE CANDIDATE NOW, AT TWO INDEPENDENT LAYERS:
+    RECORD BOUNDARY  `MAX_PORTABLE_COMPONENT_CHARS = 255` on every component of every declared
+      path, and `MAX_CASE_ID_CHARS = 250` on `case_id` - 255 LESS THE LONGEST SUFFIX THE RENDERER
+      APPENDS, because bounding the TOKEN at the filesystem limit accepts a token whose every
+      DERIVED name is over it.  `_parse_cases` claims the two fixed bundle names BEFORE reading a
+      case, then records `folded derived name -> claiming case_id`.
+    WRITE BOUNDARY   `_contained_output_paths` re-enforces both: `MAX_OUTPUT_NAME_BYTES = 255` in
+      UTF-8 BYTES and pairwise distinctness under the same fold, before containment and all of it
+      before the first write.  *** THE LAYER IS INDEPENDENT BY CONSTRUCTION - the renderer imports
+      NOTHING from `utils.connection_record`, so deleting either rule leaves the other standing.
+      DO NOT "DE-DUPLICATE" THEM. ***
+  THREE DECISIONS INSIDE THE REPAIR, ALL DELIBERATE:
+    1  `_portable_fold` IS `str.lower`, NOT `str.casefold`.  They agree exactly over the ASCII
+       grammar the record allows, and `casefold` would map characters the grammar already refused.
+    2  THE RENDERER COUNTS UTF-8 BYTES, ONCE.  My first version took
+       `max(len(name), len(name.encode()))` for ext4's bytes and NTFS's UTF-16 units.  *** THAT
+       MAXIMUM IS ALWAYS THE BYTE COUNT - a string's UTF-8 length is never below its UTF-16 length -
+       so the first term was a branch nothing could distinguish from its deletion, which is finding
+       5's own defect shape.  Lesson 231.  DO NOT REINTRODUCE THE SECOND TERM. ***
+    3  THE TWO FIXED BUNDLE FILENAMES AND THE TWO DERIVED SUFFIXES ARE LITERALS IN THE CONTRACT
+       MODULE, PINNED BY EQUALITY against the TRACKED Step-3 figure set
+       (`test_bundle_output_names_equal_the_published_write_set`).  Importing the renderer would
+       pull matplotlib into a module that opens nothing and draws nothing.  Same discipline
+       `ROLE_NAMES` gets against `schema.json`.
+  *** A CONSEQUENCE FOR THE MUTATION SWEEP'S STAGING SET: THAT TEST READS
+      `results/verification_fixture/`, SO A STAGED TREE MUST NOW CARRY `scripts`, `tests`, `schema`
+      AND `results/verification_fixture` - four, not three.  A staged tree missing it is a RED
+      CONTROL AND MEASURES NOTHING. ***
 
 CODEX'S FIVE ROUND-1 FINDINGS - ALL ACCEPTED WITHOUT CONTEST, ALL INTEGRATED, ALL RE-DRIVEN BY ME
-AGAINST THE ROUND-1 BYTES BEFORE REPAIR.  DO NOT RE-LITIGATE ANY OF THEM:
+AGAINST THE ROUND-1 BYTES BEFORE REPAIR, AND CODEX CLOSED 1, 2 AND 3 ON THE ROUND-2 DELTA.
+DO NOT RE-LITIGATE ANY OF THEM:
   1  THE RECORD'S OWN LOCATION WAS NOT BOUND AND WAS MISSING FROM W3's EXPECTED SET.
      `bind_root_domains` now takes `connection_record_path` and requires it to resolve to
      `packet_root / record_relative_path(record_label)`, PROVED CONTAINED via `_resolve_under`;
@@ -165,25 +212,33 @@ TWO FORWARD ITEMS FOR THE 4b-ii CARD.  NEITHER IS A FINDING AGAINST THE CLOSED D
   2  the source-class interpretation above, so a later reader does not read 3.2 as requiring a
      record field that does not exist.
 
-THE MEASUREMENT THAT WENT AGAINST ME IN S137, AND IT IS THE ONE TO CARRY (lesson 223's recurrence):
-  THE FOCUSED SUITE WAS GREEN AT EVERY STEP.  The mandatory two-pass mutation control - NOW 49
-  MUTANTS (47 real + 2 negative controls) ACROSS BOTH THE MODULE AND THE RENDERER, staged entirely
-  OUTSIDE the repository - REPORTED FIVE SURVIVORS ON ITS FIRST SWEEP, and all five were real:
-    `leaf-separator` and `leaf-dot-forms`  MY `case_id` REFUSAL TEST WAS PARAMETRIZED WITH A BARE
-      CODE ASSERTION, in the same session in which I wrote three OTHER parametrized tests WITH
-      per-case sentences.  Both branches are subsumed by the portable-component grammar one line
-      later.  *** THE RULE IS NOW UNCONDITIONAL: A PARAMETRIZED REFUSAL TEST TAKES A
-      `(input, phrase)` PAIR, ALWAYS. ***
-    `frozen-mapping-no-copy`               the `dict()` copy inside `_frozen_mapping` is a defence
-      NOTHING OBSERVED - every call site builds its dict locally.  Direct unit test now.
-    `resolve-safely-not-used` and `record-location-not-contained`  GUARDS NO REACHABLE INPUT CAN
-      REACH.  The first is now driven with a ROOT that cannot resolve; the second with a WINDOWS
-      DIRECTORY JUNCTION that links ONLY the record subtree away, so the output-parent check still
-      passes and only the containment proof separates accept from refuse.  Lesson 228.
-  AFTER THE FIXES: 47/47 REAL MUTANTS CAUGHT, ZERO SURVIVORS, BOTH NEGATIVE CONTROLS SURVIVING,
-  IDENTICAL ACROSS BOTH PASSES, NO BAD ANCHORS, BOTH TARGET DIGESTS RESTORED EQUAL.
-  *** THE SWEEP HAS NOW CHANGED THE TESTS ON TWO CONSECUTIVE BUILDS.  IT IS NOT A CONFIRMATION
+THE MEASUREMENT THAT WENT AGAINST ME IN S138, AND IT IS THE ONE TO CARRY:
+  THE FOCUSED SUITE WAS GREEN AT EVERY STEP, 341 TESTS.  The mandatory two-pass mutation control -
+  27 MUTANTS (25 real + 2 negative controls) across BOTH the module and the renderer, staged
+  entirely OUTSIDE the repository - REPORTED ONE SURVIVOR ON ITS FIRST SWEEP, AND IT WAS IN MY NEW
+  TESTS RATHER THAN IN MY NEW CODE.
+    `m01-portable-ceiling-raised`  RAISING `MAX_PORTABLE_COMPONENT_CHARS` FROM 255 TO 4096
+      SURVIVED.  Every length in the new tests was written as an OFFSET FROM THE CONSTANT UNDER
+      TEST (`MAX_CASE_ID_CHARS + 1`, `"x" * MAX_PORTABLE_COMPONENT_CHARS`), so the inputs MOVED
+      WITH THE MUTATION.  *** 341 GREEN TESTS WOULD HAVE STAYED GREEN ON A MODULE THAT ACCEPTED A
+      FOUR-THOUSAND-CHARACTER FILENAME.  What the suite held was the RELATIONSHIP, which was never
+      in doubt; what it did not hold was the VALUE, which is the only part a reviewer cannot check
+      by reading. ***  EVERY LENGTH IS A LITERAL NOW, and ONE test
+      (`test_the_two_ceilings_are_the_filesystem_numbers_stated_as_literals`) pins both constants
+      to 255 and 250 with the reason attached.  Lesson 229.
+  AFTER THE FIX: 25/25 REAL MUTANTS CAUGHT, BOTH NEGATIVE CONTROLS SURVIVING, IDENTICAL ACROSS BOTH
+  PASSES, NO BAD ANCHORS, BOTH TARGET DIGESTS RESTORED EQUAL.
+  *** THE SWEEP HAS NOW CHANGED THE TESTS ON THREE CONSECUTIVE BUILDS.  IT IS NOT A CONFIRMATION
       STEP.  BUDGET FOR IT AND RUN IT BEFORE THE HANDOFF, NOT AFTER. ***
+
+MY S138 EVIDENCE, SO A LATER SESSION DOES NOT RE-MEASURE IT TO FIND OUT WHETHER IT WAS DONE:
+  341 focused / 341 under `python -O` / 2,608 packet-wide, zero failures, zero collection errors.
+  `py_compile` and `git diff --check` clean; `git status --porcelain` exactly the three candidate
+  files.  *** THE STEP-3 FIGURE SET IS BYTE-IDENTICAL AFTER THIS RENDERER EDIT, MEASURED TWICE -
+  once after the containment work and again after the byte-count change: all TEN tracked files
+  reproduce at the same SHA-256 at `--fixture-seed 7` under `MPLBACKEND=Agg`, bundle digest
+  `3bf51e94...` unchanged.  The regeneration went to a git-ignored scratch directory and was
+  deleted. ***
 
 *** THE SINGLE MOST IMPORTANT CARRIED CORRECTION IS UNCHANGED: `ADAPTER_DISTAL_AGREEMENT_TOL_M` IS
     GONE AND MUST NOT BE BUILT.  The adapter has NO guessed universal tolerance;
@@ -547,7 +602,7 @@ THE PROHIBITIONS THAT SURVIVE, AND THEY ARE PERMANENT:
 
 THE ARTIFACT SHAPES AND THE AUDIT INSTRUMENTS ARE IN `agents/Claude/Permanent Instruments.md`.
   Read it ON DEMAND, not at startup.  The routing table at the bottom of THIS file says which of
-  its sections answers which question.  *** STANDING LESSONS NOW REACH 228 AND ALL OF THEM LIVE
+  its sections answers which question.  *** STANDING LESSONS NOW REACH 231 AND ALL OF THEM LIVE
   THERE - S132 added 213 (A DEFECT THAT ONLY THE UNREACHABLE PATH CAN EXPOSE IS THE EXPENSIVE
   KIND: CX would have passed every test 4b writes, because 4b's accept path is synthetic and its
   output goes to a temp root - ASK WHAT THE ACCEPT PATH ACTUALLY REACHES, which is the third time
@@ -578,7 +633,16 @@ THE ARTIFACT SHAPES AND THE AUDIT INSTRUMENTS ARE IN `agents/Claude/Permanent In
   could write the repair yourself in the same session) and 222 (A SEAM NAMED AFTER ONE STEP MUST BE
   CHECKED AGAINST THE STOP CONDITION OF THE TEST THAT USES IT - ask what the LAST thing the test must
   reach is, and whether the seam reaches that far).  S136 ADDED 223 (A UNIQUE PHRASE IS NOT ENOUGH; THE PHRASE MUST NOT APPEAR AT A *LATER* SITE THAT ALSO REFUSES THE SAME INPUT - four of my S136 tests asserted a word that was unique to the branch under test and ALSO present in the sentence of a broader later check, so deleting the branch left the suite green, and ONLY THE MUTATION SWEEP FINDS THAT) and 224 (WHEN A DESIGN NAMES ONE BUILD STEP THAT IS REALLY A PROGRAM, SPLIT THE *REVIEW*, NOT THE DESIGN - name the halves, say explicitly that the design's sub-step does not close until both close, show that no gate moves, take the boundary from the design's own text, and ask the reviewer to rule on the split before reviewing the contents).  STANDING LESSONS NOW REACH 224.
-  S137 ADDED 225 (A REVIEWER'S BLOCKING FINDING CAN NAME A REPAIR THAT LIVES OUTSIDE THE CARD'S CANDIDATE, and the only non-defective move is to make the edit, name it as a SCOPE EXPANSION in card and chat, and OFFER THE REVERT - the scope of a card is the reviewer's to rule on, and the owner's job is to make the ruling possible; corollary, when you touch a closed file that PRODUCES a tracked artifact, REGENERATE IT AND COMPARE EVERY DIGEST), 226 (SPELLING AND CONTAINMENT ARE DIFFERENT PROPERTIES AND NEITHER SUBSUMES THE OTHER - measured here: an embedded NUL makes `Path.resolve()` raise before any containment comparison, `schema.json:stream` writes an INVISIBLE NTFS stream, `trailing.` and `trailing` ARE ONE FILE, and `Path("CON").resolve()` looks perfectly ordinary because a device alias is CONTAINED BY EVERY ROOT), 227 (`@dataclass(frozen=True)` REBINDS THE ATTRIBUTE, NOT THE OBJECT - deep immutability is explicit work, the proxy must wrap a PRIVATE COPY, and EVERY mapping-bearing layer gets its own probe) and 228 (A TEST THAT SKIPS ON THE ONLY MACHINE THE PROJECT HAS HOLDS NOTHING - a Windows DIRECTORY JUNCTION needs no privilege where a symlink does, and the trap must be built so THE EQUALITY STILL HOLDS and only the guard under test separates accept from refuse).  STANDING LESSONS NOW REACH 228.
+  S137 ADDED 225 (A REVIEWER'S BLOCKING FINDING CAN NAME A REPAIR THAT LIVES OUTSIDE THE CARD'S CANDIDATE, and the only non-defective move is to make the edit, name it as a SCOPE EXPANSION in card and chat, and OFFER THE REVERT - the scope of a card is the reviewer's to rule on, and the owner's job is to make the ruling possible; corollary, when you touch a closed file that PRODUCES a tracked artifact, REGENERATE IT AND COMPARE EVERY DIGEST), 226 (SPELLING AND CONTAINMENT ARE DIFFERENT PROPERTIES AND NEITHER SUBSUMES THE OTHER - measured here: an embedded NUL makes `Path.resolve()` raise before any containment comparison, `schema.json:stream` writes an INVISIBLE NTFS stream, `trailing.` and `trailing` ARE ONE FILE, and `Path("CON").resolve()` looks perfectly ordinary because a device alias is CONTAINED BY EVERY ROOT), 227 (`@dataclass(frozen=True)` REBINDS THE ATTRIBUTE, NOT THE OBJECT - deep immutability is explicit work, the proxy must wrap a PRIVATE COPY, and EVERY mapping-bearing layer gets its own probe) and 228 (A TEST THAT SKIPS ON THE ONLY MACHINE THE PROJECT HAS HOLDS NOTHING - a Windows DIRECTORY JUNCTION needs no privilege where a symlink does, and the trap must be built so THE EQUALITY STILL HOLDS and only the guard under test separates accept from refuse).  S138 ADDED 229 (A TEST WHOSE INPUT IS A FUNCTION OF THE CONSTANT IT IS TESTING HOLDS NOTHING ABOUT
+  THAT CONSTANT - it holds the RELATIONSHIP, which was never in doubt; state boundary lengths as
+  LITERALS and pin the constants themselves in one place with the reason attached), 230 (CONTAINMENT
+  IS NECESSARY AND IS NOT SUFFICIENT - ask also whether the write set is WRITABLE and whether it is
+  ONE-TO-ONE; when a value becomes a name, the names it competes with are part of its contract, so
+  bound the DERIVED name, claim the FIXED names first, and compare FOLDED) and 231 (A GUARD WITH A
+  TERM THAT CAN NEVER DECIDE ANYTHING IS THE SAME DEFECT AS A DUPLICATED GUARD - `max(chars, utf8
+  bytes)` is always the byte count, so the first term was unreachable and no sweep could ever have
+  flagged it; the repair is deleting the term and writing down the proof, not adding a test).
+  STANDING LESSONS NOW REACH 231.
   ALL OF THEM WERE WRITTEN STRAIGHT INTO THE REFERENCE FILE, WHICH IS THE S105 CORRECTION APPLIED. ***
 ```
 

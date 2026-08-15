@@ -3462,6 +3462,47 @@ correction applied.)*
   passes for the right reason and one that passes at all are different tests, and only asking "what
   would this catch if I reverted the fix?" tells them apart.
 
+229. **[S138] A TEST WHOSE INPUT IS A FUNCTION OF THE CONSTANT IT IS TESTING HOLDS NOTHING
+  ABOUT THAT CONSTANT.**  I added `MAX_PORTABLE_COMPONENT_CHARS = 255` and
+  `MAX_CASE_ID_CHARS = 250` and then wrote every length in the new tests as an offset from
+  them - `MAX_CASE_ID_CHARS + 1`, `MAX_PORTABLE_COMPONENT_CHARS + 1`, `"x" * MAX_CASE_ID_CHARS`.
+  *** 341 GREEN TESTS AND THE CEILING COULD HAVE BEEN RAISED TO 4,096 WITHOUT ONE OF THEM
+  NOTICING: the inputs move with the constant, so what the suite holds is the RELATIONSHIP, which
+  was never in doubt, and not the VALUE, which is the only thing a reviewer cannot check by
+  reading. ***  ONLY THE MUTATION SWEEP FOUND IT (mutant `m01-portable-ceiling-raised`, first
+  pass, and every other length-related mutant was caught - the survivor was the one that moved the
+  goalposts rather than the code).  THE RULE: a boundary test states its length as a LITERAL, and
+  ONE test pins the constants to their literal values with the reason attached, so a later session
+  that has cause to move a number has to say so out loud.  This is lesson 208's shape at the level
+  of a constant rather than a measurement - numbers are measured, not remembered, and a number
+  expressed in terms of itself is neither.
+
+230. **[S138] CONTAINMENT IS NECESSARY AND IS NOT SUFFICIENT: ASK ALSO WHETHER THE WRITE SET IS
+  WRITABLE AND WHETHER IT IS ONE-TO-ONE.**  Codex's Round-2 finding, and it is the third distinct
+  property a path can fail while resolving perfectly (traversal, spelling, and now namespace).
+  MEASURED AGAINST THE PRE-REPAIR BYTES, ALL THREE REPRODUCED: a 251-character `case_id` composed
+  a 256-character `.json`, passed every containment check, and raised a RAW `OSError` [Errno 22]
+  AFTER THREE FILES WERE ALREADY ON DISK - a partial publication produced by the very helper whose
+  docstring said it validated the complete set before writing.  `case_id = "verification_bundle"`
+  was ACCEPTED and its scene document overwrote the bundle manifest: the returned
+  `bundle_sha256 = 608fd5ce...` while the file it named digested `3f1fab04...`.  `Case-A` and
+  `case-a` were both accepted, four cases reported, EIGHT files written.  *** THE GENERALISABLE
+  QUESTION: WHEN A VALUE BECOMES A NAME, THE NAMES IT COMPETES WITH ARE PART OF ITS CONTRACT.  A
+  `dict` keyed by name accepts two keys that are one file; a ceiling on a token is not a ceiling on
+  what the token composes; and a fold that differs between NTFS and ext4 makes the write set a
+  property of the machine.  Bound the DERIVED name, claim the FIXED names first, and compare
+  FOLDED. ***
+
+231. **[S138] A GUARD WITH A TERM THAT CAN NEVER DECIDE ANYTHING IS THE SAME DEFECT AS A
+  DUPLICATED GUARD.**  My first write-boundary length check was
+  `max(len(name), len(name.encode("utf-8")))`, written to cover ext4's byte count and NTFS's
+  UTF-16 unit count at once.  *** THAT MAXIMUM IS ALWAYS THE BYTE COUNT.  A string's UTF-8 length
+  is never below its UTF-16 length - every BMP character is 1-3 bytes against 1 unit, every astral
+  character is 4 bytes against 2 - so the first term is unreachable and deleting it changes no
+  observable behaviour. ***  It would have survived any mutation sweep, which is the tell.  The
+  repair is not a test; it is deleting the term and writing down the proof that one count bounds
+  both.  Same family as finding 5's "one call, not a guard per write".
+
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 
 ```text

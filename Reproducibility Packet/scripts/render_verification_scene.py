@@ -85,6 +85,16 @@ SAVE_DPI = 300
 BUNDLE_JSON_NAME = "verification_bundle.json"
 BUNDLE_DIGEST_NAME = "verification_bundle.sha256"
 
+#: The longest file name this surface will write, counted in UTF-8 bytes. NTFS, ext4,
+#: APFS, HFS+, XFS and Btrfs all stop at 255, but they do not all count the same unit:
+#: ext4 counts UTF-8 bytes and NTFS counts UTF-16 units. One count bounds both,
+#: because a string's UTF-8 length is never below its UTF-16 length -- every BMP
+#: character is 1-3 bytes against 1 unit and every astral character is 4 bytes against
+#: 2 units. So the byte count is the conservative one and there is no second check to
+#: write, which matters: a second check that can never fire is a branch no test can
+#: distinguish from its own deletion.
+MAX_OUTPUT_NAME_BYTES = 255
+
 # Suite styling. Two visually distinguishable bodies, labelled by suite (A2).
 SUITE_STYLE: dict[str, dict[str, Any]] = {
     "C1": {"color": "#1f4e79", "linestyle": "-", "marker": "o"},
@@ -487,12 +497,15 @@ def _contained_output_paths(destination: Path, names: Sequence[str]) -> dict[str
 
     Raises:
         VerificationSceneError: `X_IDENTITY_MISMATCH` when any composed path is not a
-            direct child of `destination`. **This build adds no refusal code**, per
+            direct child of `destination`, when any name is longer than one portable
+            path component may be, or when two names in the set are one file under a
+            case-insensitive comparison. **This build adds no refusal code**, per
             the standing ruling that a code is not invented for a branch nobody has
             built. The existing code is the right one on its own terms: the read
             order gives `X_IDENTITY_MISMATCH` to every claim that some named object
-            is at some named place, and a write that lands outside its declared root
-            is exactly that claim failing.
+            is at some named place, and a write that lands outside its declared root,
+            over a name the filesystem will not accept, or on top of a file another
+            member of the same set already claims, is exactly that claim failing.
 
     Design 4.7 says the adapter writes exactly the declared output set under
     `<output-dir>/<record_label>/` and nothing outside that root, and W10 makes the
@@ -506,6 +519,22 @@ def _contained_output_paths(destination: Path, names: Sequence[str]) -> dict[str
     actually happens, so the guarantee does not depend on every future producer of a
     bundle having applied the first one.
 
+    Containment is necessary and is not sufficient, which is what the Round-2 review
+    of the connection-record contract established. Two further properties have to hold
+    before this function may claim it has validated the complete set:
+
+      * **the set is writable.** A name longer than one path component may be is
+        contained by its root and resolves without complaint; the only object that
+        ever objects is the `open()` call, and by then the shorter names in the same
+        set are on disk. That is a partial publication produced by a helper whose
+        whole purpose is to prevent one.
+      * **the set is one-to-one.** These names go into a dictionary, and a dictionary
+        silently accepts two keys that name one file. `verification_bundle` is an
+        ordinary case id whose `.json` is this module's own manifest file, so the
+        digest returned would no longer hash the file it names; `Case-A` and `case-a`
+        are two entries and one file on Windows, where four cases produce eight files
+        instead of ten. Both are refused on the composed name.
+
     The whole write set is resolved *before* the first byte is written, and there is
     exactly one call site. Both properties are deliberate: a per-write guard would
     leave earlier files already on disk when a later name refused, and a guard
@@ -516,7 +545,26 @@ def _contained_output_paths(destination: Path, names: Sequence[str]) -> dict[str
 
     resolved_destination = destination.resolve()
     outputs: dict[str, Path] = {}
+    claimed: dict[str, str] = {}
     for name in names:
+        length = len(name.encode("utf-8"))
+        if length > MAX_OUTPUT_NAME_BYTES:
+            raise VerificationSceneError(
+                X_IDENTITY_MISMATCH,
+                f"the scripted figure set would write a file name of {length} UTF-8 bytes "
+                f"into {destination}, above the {MAX_OUTPUT_NAME_BYTES}-byte limit a path "
+                "component has on every filesystem this packet runs on",
+            )
+        folded = name.lower()
+        earlier = claimed.get(folded)
+        if earlier is not None:
+            raise VerificationSceneError(
+                X_IDENTITY_MISMATCH,
+                f"the scripted figure set would write {name!r}, which the earlier name "
+                f"{earlier!r} already claims under a case-insensitive comparison, into "
+                f"{destination}",
+            )
+        claimed[folded] = name
         candidate = (destination / name).resolve()
         if candidate.parent != resolved_destination:
             raise VerificationSceneError(
