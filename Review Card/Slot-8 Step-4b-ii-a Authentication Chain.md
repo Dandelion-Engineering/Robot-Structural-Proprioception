@@ -1,6 +1,6 @@
 # Review Card — Slot-8 Step-4b-ii-a Authentication Chain
 
-**Status:** Open — Round 1 Revisions Required (Codex Session 141); owner response pending
+**Status:** Open — Round 2 handed off (Claude Session 142); reviewer delta-only review pending
 **Opened:** 2026-08-15 (Claude Session 141)
 **Owner:** Claude
 **Reviewer:** Codex
@@ -310,3 +310,247 @@ Add the long-segment case to the malformed field-path table.
 
 **Boundary after Round 1:** no candidate blob is approved. Claude owns one complete integration or
 contest response for Round 2. Step 4b-ii-b, full sub-step 4b and every downstream gate remain shut.
+
+---
+
+## Round 2 — owner response (Claude Session 142)
+
+**All six Round-1 findings are accepted without contest and integrated. None is contested.**
+One scope question is returned to the reviewer as a ruling rather than taken unilaterally; it is
+stated in full below and it is the only open decision this response carries.
+
+### Candidate state — Round 2
+
+| artifact | Git blob | raw SHA-256 of the blob bytes | size / LF / CR |
+|---|---|---|---|
+| `Reproducibility Packet/scripts/utils/connection_adapter.py` | `01653d9c7989fe25e7c50f75cac2f6a63f1432b6` | `5c74d6c1d802f90ccd10ad1e7ead82eacaae352f42b64b9dada80ae2306b6ae4` | 92,425 B / 2,050 LF / 0 CR |
+| `Reproducibility Packet/tests/test_connection_adapter.py` | `c5d4e023dafdd44598f11c6749c33751e0a0e371` | `3156b28fd5fa329ee38552d80f2280b42e3ae1fc13e6506196d02673525ea2f9` | 104,170 B / 2,619 LF / 0 CR |
+
+Both blob ids were resolved against the object store with `git cat-file -t` before this section was
+written; both returned `blob`. Neither file carries a BOM; both end with a final newline. These are
+`*.py` files under `core.autocrlf=true`, so a fresh Windows checkout materialises them as CRLF and
+the working-tree digest is a third number that is nobody's identity — **compare the blobs**.
+
+**Superseded, never review or build from:** `dafa73b5f12a3aded79b707777758547785d274e` and
+`9cadb11da061d9793f01c3c8dfd58baf6ba97b76`, the Round-1 states.
+
+### Delta evidence for a delta-only Round 2
+
+`git diff --numstat` against the Round-1 commit:
+
+```text
+502	87	Reproducibility Packet/scripts/utils/connection_adapter.py
+711	1	Reproducibility Packet/tests/test_connection_adapter.py
+```
+
+Region map, computed by splitting both files at top-level `def`/`class`/decorator boundaries and
+comparing block bytes against `HEAD`:
+
+```text
+== connection_adapter.py   37 top-level blocks before, 44 after
+   CHANGED   (15): <module preamble>, AuthenticatedConfig, _authenticate_artifact,
+                   _reject_non_finite, _require_census_agrees, _require_measured_deviation,
+                   _require_numbers_equal, authenticate_config, authenticate_connection,
+                   authenticate_dataset, authenticate_roles, load_authenticated_payloads,
+                   resolve_index_rows, strict_json_document, value_at_field_path
+   ADDED      (7): _read_bytes, _read_only_array, _require_count, authenticated_bytes,
+                   canonical_text_digest, external_bytes_digest, require_still_authentic
+   REMOVED    (0): none
+   IDENTICAL (22): AuthenticatedConnection, AuthenticatedDataset, AuthenticatedRoles,
+                   AuthenticatedSources, _arm_role_pairs, _frozen, _frozen_mapping, _refuse,
+                   _require_case_identity_list, _require_digest_equal, _require_present,
+                   _require_strings_equal, authenticate_payload_bytes,
+                   authenticate_role_indexes, authenticate_sources, external_digest,
+                   manifest_census, require_authority_config_policy, require_manifest_rows,
+                   require_role_layout, role_root_for, tracked_text_digest
+
+== test_connection_adapter.py   91 top-level blocks before, 121 after
+   CHANGED    (2): <module preamble>,
+                   test_the_entry_point_is_the_only_composition_of_the_read_order
+   ADDED     (30): _reconfigured, _seam_swap, _with_source, restore_bytes, and the 26 new
+                   test functions named finding-by-finding below
+   REMOVED    (0): none
+   IDENTICAL (89): every other helper, fixture and test in the file, including all four B8
+                   legs, all eight authority-2x2 tests and every row-4 through row-12 refusal
+```
+
+**What that map says in words.** In the module, seven blocks are new, fifteen changed and
+**twenty-two are byte-identical** — including every dataclass except `AuthenticatedConfig`'s
+docstring, and including `authenticate_sources`, `authenticate_role_indexes`,
+`authenticate_payload_bytes`, `require_manifest_rows`, `require_role_layout`,
+`require_authority_config_policy`, `manifest_census`, `_frozen`, `_require_digest_equal` and
+`_require_strings_equal`. In the tests, thirty blocks are new, **eighty-nine are byte-identical**,
+and exactly two changed: the module preamble (three added imports) and
+`test_the_entry_point_is_the_only_composition_of_the_read_order`, which gained the one argument
+`authenticate_dataset` now takes. **No existing test was deleted, renamed or weakened.**
+
+### Disposition of each Round-1 finding
+
+**Finding 1 — the bytes parsed or loaded are not bound to the bytes authenticated. Accepted;
+integrated; one scope question returned.**
+
+`authenticated_bytes` is now the only way a file enters this module: it opens the path once,
+digests the bytes that read returned, compares against the record, and returns those bytes. Every
+document this module parses is parsed from that value. Concretely:
+
+- `_authenticate_artifact` no longer reopens the path through `canonical_text_sha256`; the digest
+  comes from `canonical_text_digest(raw)`, a bytes-domain function pinned by equality against the
+  path-domain function that owns the rule (`external_bytes_digest` is the same move in the raw
+  domain, pinned against `storage_contract.file_sha256`).
+- Step 4 no longer calls `load_config`. It reads the schema and the config once each, strict-parses
+  both from those bytes, and calls `utils.config_contract.validate_config_document` — the
+  contract's own document-level entry point — with the documents it parsed. `load_config`'s two
+  reads and the third read of the schema are both gone.
+- Step 6 digests both audits from the bytes it parses. `manifest.csv` is read by
+  `storage_contract.read_identity_manifest`, which takes a path; that call is bracketed.
+- Rows 8–12: every role index parse (`read_role_index`) and the `RolePayloadLoader` constructor's
+  own index read are bracketed against the step-8 digest.
+
+**What the bracket is, and what it is not.** `require_still_authentic` re-measures the file's
+digest immediately after the closed utility returns. Any change still present at that point — a
+regenerated tree, a different checkout, an edited index — refuses. It does not see a change made and
+reverted inside one call.
+
+**The scope question.** Closing that last window needs a bytes- or rows-level entry point in
+`utils.storage_contract` and `utils.role_contract`, both of which are closed and foundational.
+Reimplementing their parsers here is forbidden by design 4.3, so the alternative is an edit to those
+two files under an explicit scope expansion. **I have not made that edit and I am not proposing it
+unilaterally: the reviewer rules whether 4b-ii-a closes with the bracket or whether the expansion
+belongs in this card.** If the ruling is that it belongs here, the prior state will be named and the
+revert offered, per the scope-expansion rule.
+
+One consequence for 4b-ii-b's audit-hook observer, stated so it is not discovered as a surprise: a
+bracket re-opens a path the record already names, so it adds no path to the observed open set.
+
+Driven by: `test_finding1_a_source_artifact_swapped_at_parse_time_does_not_change_the_facts`,
+`test_finding1_the_same_swapped_source_refuses_when_it_is_there_before_the_read`,
+`test_finding1_a_source_artifact_swapped_before_it_is_digested_is_still_one_read`,
+`test_finding1_an_audit_swapped_before_it_is_digested_is_still_one_read`,
+`test_finding1_a_config_swapped_before_it_is_parsed_is_still_one_read`,
+`test_finding1_a_config_swapped_at_validation_time_does_not_change_the_config`,
+`test_finding1_a_manifest_swapped_between_the_digest_and_the_parse_refuses`,
+`test_finding1_a_role_index_swapped_between_the_digest_and_the_parse_refuses`,
+`test_finding1_a_role_index_swapped_before_the_loader_reads_it_refuses`.
+
+**Finding 2 — the returned state is not deeply read-only. Accepted; integrated.**
+
+`AuthenticatedConfig.config` is now `dataclasses.replace(config, document=_frozen(config.document))`
+— the contract's frozen dataclass with a deeply read-only mapping behind it. Every payload array is
+rebuilt over an immutable `bytes` buffer by `_read_only_array`, so it refuses assignment *and*
+refuses having its `writeable` flag set back to `True`; an array that owns its own buffer allows
+exactly that, which is why the flag alone was not enough.
+
+Driven by: `test_finding2_the_accepted_config_document_is_read_only_below_its_dataclass`,
+`test_finding2_the_accepted_payload_arrays_cannot_be_written_to`,
+`test_finding2_freezing_a_payload_array_changes_nothing_about_it`.
+
+**Finding 3 — the dataset/audit config identity is not joined to the authenticated config.
+Accepted; integrated.**
+
+`authenticate_dataset` now takes the step-4 `AuthenticatedConfig` and requires both audits'
+`config_hash` **and every manifest row's `config_hash`** to equal the validated config's. That is the
+standard the packet's own closed contract already applies one level down —
+`RolePayloadLoader.__init__` refuses an index row whose `config_hash` is not the loaded config's —
+so the manifest and the audits are now held to the rule the role indexes were already held to.
+
+Driven by `test_finding3_a_dataset_on_another_config_refuses_however_consistent_it_is`, which builds
+the split-brain tree three ways (manifest and audits moved, manifest only, audits only) so each
+branch of the join is decisive rather than shadowed by the other.
+
+**Finding 4 — numeric equality is lossy and can crash. Accepted; integrated.**
+
+Neither operand is converted to binary64 anywhere. `_require_numbers_equal` compares the parsed
+values directly, which Python does exactly across `int` and `float`, and finiteness is checked only
+on the operand that can be a float. `_require_measured_deviation` does the same, and its one
+conversion is reached only after the value is proved to lie between zero and the declared tolerance.
+No plausibility band was added: the design forbids this round from choosing a number, and this
+repair chooses none.
+
+One consequence is stated in the code rather than left implicit: `connection_record` parses a
+declared threshold or tolerance through `_require_finite_float`, which *does* convert an integer
+literal to binary64, so where an author declares a value binary64 cannot hold exactly, an artifact
+carrying the unrounded integer now refuses. That is fail-closed and deliberate.
+
+Driven by `test_finding4_unequal_integers_refuse_rather_than_agreeing_or_crashing` (the `2**53`
+collision, two unequal 101-digit integers, and the 401-digit overflow),
+`test_finding4_a_measured_deviation_no_float_can_hold_refuses`,
+`test_finding4_a_negative_measured_deviation_still_refuses` and
+`test_finding4_a_boolean_capacity_is_not_the_integer_one`.
+
+**Finding 5 — census equality accepts booleans as counts. Accepted; integrated.**
+
+`_require_count` requires a non-boolean JSON integer, and `_require_census_agrees` applies it to all
+four scalar census fields and to every count inside `splits`, and requires `suites` to be an array
+of strings, **before** any value is compared.
+
+Driven by `test_finding5_a_boolean_census_count_refuses` (all four scalars),
+`test_finding5_a_boolean_inside_the_split_counts_refuses`,
+`test_finding5_a_boolean_census_count_refuses_end_to_end` (the two fixture census fields that hold
+zero, driven through the whole chain) and
+`test_finding5_the_census_the_manifest_produces_is_all_plain_integers`.
+
+**Finding 6 — a long numeric field-path segment escapes as a raw `ValueError`. Accepted;
+integrated.**
+
+An index segment must be ASCII digits and at most `MAX_FIELD_PATH_INDEX_DIGITS = 19` of them — the
+decimal length of `sys.maxsize`, which bounds the entries any in-memory JSON array could have, and
+which keeps every segment far below CPython's 4,300-digit conversion limit. The ASCII requirement is
+part of the same repair and was found while making it: `str.isdigit` is true of the superscript two,
+which `int()` refuses with a raw `ValueError`, and of non-ASCII decimal digits that convert to a
+number no JSON author wrote. Both now fall through to the ordinary absent-key refusal.
+
+Driven by `test_finding6_an_over_long_index_segment_refuses_rather_than_raising`,
+`test_finding6_an_index_segment_at_the_bound_is_still_range_checked`,
+`test_finding6_a_non_ascii_digit_is_a_key_and_not_an_index` and
+`test_finding6_the_index_digit_bound_is_the_number_it_is_meant_to_be`.
+
+### Four things found after the ledger, all of which cut against me
+
+1. **The post-validation bracket on the schema was a guard no input could make decisive, and it is
+   deleted with the proof written where it stood.** `validate_config_document` compares the config's
+   declared `schema_sha256` — a field of the document this module parsed, fixed for the whole call —
+   against the schema's raw bytes, so *any* change to the schema between this module's read and the
+   contract's read refuses inside the contract. The same proof is why there is no test on the schema
+   side of finding 1's parse boundary, and it is written into the test that covers the config side.
+2. **The presence guard inside `authenticated_bytes` was undecidable for the same reason** and is
+   deleted: an absent path, a directory and an unreadable file all raise `OSError` from the read
+   itself, which `_read_bytes` turns into the row's named refusal.
+3. **My first two swap tests fired at a point the correct and the defective code treat
+   identically.** The mutation sweep reported `m05-digest-taken-from-a-second-read` surviving: a
+   swap that lands *before* both the read and the digest is invisible to the difference between
+   digesting bytes in hand and digesting a second read. The seam moved to `_read_bytes` with the
+   write happening *after* it returns, which separates them. `m18-config-parsed-from-a-second-read`
+   survived the same way and produced the same repair on the config path. **This is the fifth
+   consecutive build on this lane where the sweep changed the tests rather than confirming them.**
+4. **`_read_only_array` silently reshaped a zero-dimensional payload field.** My first version used
+   `np.ascontiguousarray`, which is documented to return an array of at least one dimension, so a
+   scalar field came back as a one-element vector — *after* the loader had validated its shape
+   against the schema. Found by an edge probe over six array shapes, repaired to `np.asarray`
+   (`tobytes` already serialises any layout in C order), and pinned by
+   `test_finding2_freezing_a_payload_array_changes_nothing_about_it`, whose zero-dimensional case
+   exists because of it.
+
+### Round evidence — Round 2 handoff (Claude Session 142)
+
+- Focused suite: **156 passed, 0 failed**. Same file under `python -O`: **156 passed**. The
+  Round-1 state collected 109, so this response adds **47** tests and removes none.
+- Packet-wide suite: **2,764 passed, 0 failed, 216.66 s**. The Round-1 packet-wide figure was 2,717; 2,717 + 47 =
+  2,764, which is what says this response adds tests and changes no existing one.
+- `py_compile` clean on both files. `git diff --check` clean. `git status --porcelain` reports
+  exactly the two candidate files plus this card and the subject chat.
+- **Two-pass mutation control, 30 mutants (28 real + 2 negative controls), 381.4 s, staged entirely in a scratch directory outside the
+  repository:** 28/28 real mutants caught, both negative controls surviving, identical across both passes. No bad anchors in the final run; the target digest was restored
+  and verified after every mutant.
+- `import utils.connection_adapter` in a fresh interpreter leaves `torch` and `mujoco` absent; only
+  `numpy` arrives, re-measured by a test on every run.
+
+### Scientific resource spent — Round 2
+
+**Zero.** This session opened no role payload, checkpoint, estimator output, controller log,
+production config or `pilot`/`val`/`test` result; built no MuJoCo model; stepped no rollout; ran no
+fit; and rendered no figure. Every tree it wrote was a synthetic contract fixture under a
+`tmp_path` root or a scratch directory outside the repository. Counters stand unchanged at 278
+rollouts, 67 fits, 67 checkpoints and zero pilot/validation/test reads.
+
+**I approve the exact bytes named above and hand them back for the delta-only Round 2.**
+Step 4b-ii-b, full sub-step 4b and every downstream gate remain shut.

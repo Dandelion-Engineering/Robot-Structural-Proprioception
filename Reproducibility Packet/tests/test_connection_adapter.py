@@ -39,6 +39,7 @@ import copy
 import json
 import shutil
 import sys
+from contextlib import contextmanager
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Callable, Mapping
@@ -49,11 +50,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from build_data_contract_fixture import build_fixture  # noqa: E402
 from utils.config_contract import load_config  # noqa: E402
+from utils import connection_adapter  # noqa: E402
 from utils.connection_adapter import (  # noqa: E402
     AUDIT_NAMES,
     MANIFEST_AUDIT_KEY,
     MANIFEST_CENSUS_FIELDS,
     MANIFEST_NAME,
+    MAX_FIELD_PATH_INDEX_DIGITS,
     ROLE_INDEX_NAME,
     SUITE_QUALIFIED_ROLES,
     AuthenticatedConnection,
@@ -62,6 +65,8 @@ from utils.connection_adapter import (  # noqa: E402
     authenticate_dataset,
     authenticate_roles,
     authenticate_sources,
+    canonical_text_digest,
+    external_bytes_digest,
     external_digest,
     manifest_census,
     require_authority_config_policy,
@@ -1900,10 +1905,715 @@ def test_the_entry_point_is_the_only_composition_of_the_read_order(
     )
     config = authenticate_config(record_value, bound)
     sources = authenticate_sources(record_value, bound)
-    dataset = authenticate_dataset(record_value, bound, sources)
+    dataset = authenticate_dataset(record_value, bound, sources, config)
     roles = authenticate_roles(record_value, bound, config, dataset)
     whole = harness.authenticate()
     assert whole.config.config_sha256 == config.config_sha256
     assert whole.sources.established_cases == sources.established_cases
     assert _plain(whole.dataset.census) == _plain(dataset.census)
     assert set(whole.roles.payloads) == set(roles.payloads)
+
+
+# --------------------------------------------------------------------------- #
+# The Round-1 findings, each driven at the state it named.
+#
+# Every test below builds the input the finding described and drives the chain
+# against it. Where a repair makes a previously accepted state refuse, the test
+# drives the refusal; where a repair makes the chain *ignore* something it used to
+# be steered by -- a file that changes after it was authenticated -- the test drives
+# the acceptance and pins the interpreted value, with a counterfactual beside it
+# showing the same bytes are detected when they are present before the read. An
+# acceptance test with no counterfactual would pass on a module that stopped
+# checking.
+# --------------------------------------------------------------------------- #
+def _seam_swap(
+    monkeypatch: pytest.MonkeyPatch,
+    attribute: str,
+    path: Path,
+    replacement: bytes,
+    *,
+    when: Callable[[tuple[Any, ...]], bool] | None = None,
+    after: bool = False,
+) -> dict[str, Any]:
+    """Make one adapter seam overwrite `path` the first time it is called.
+
+    This is how a swap between authenticating a file and interpreting it is driven
+    deterministically: the seam is the module's own reference to whatever reopens the
+    path, so the write lands at one exact point in the chain with no timing involved.
+    `after=True` puts the write *after* the seam returns, which is the only way to
+    separate a digest taken over bytes already in hand from a digest taken over a
+    second read of the same path -- a swap that fires before both is invisible to the
+    difference. The original bytes are restored by the fixture that requests this
+    helper, because the harness tree is session-scoped and a leaked mutation would
+    silently retarget every later test.
+    """
+
+    real = getattr(connection_adapter, attribute)
+    state: dict[str, Any] = {"fired": False, "original": path.read_bytes()}
+
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        if state["fired"] or (when is not None and not when(args)):
+            return real(*args, **kwargs)
+        state["fired"] = True
+        if after:
+            result = real(*args, **kwargs)
+            path.write_bytes(replacement)
+            return result
+        path.write_bytes(replacement)
+        return real(*args, **kwargs)
+
+    monkeypatch.setattr(connection_adapter, attribute, wrapper)
+    return state
+
+
+@pytest.fixture()
+def restore_bytes():
+    """Put back every file a swap test edited, whatever the test did."""
+
+    saved: list[tuple[Path, bytes]] = []
+
+    def remember(path: Path) -> Path:
+        saved.append((Path(path), Path(path).read_bytes()))
+        return Path(path)
+
+    yield remember
+    for path, original in reversed(saved):
+        path.write_bytes(original)
+
+
+# -- finding 1: the bytes interpreted are the bytes authenticated ------------- #
+def test_finding1_a_source_artifact_swapped_at_parse_time_does_not_change_the_facts(
+    harness: Harness, monkeypatch: pytest.MonkeyPatch, restore_bytes
+) -> None:
+    """Step 5 parses the bytes it digested, not what the path names afterwards."""
+
+    path = restore_bytes(harness.packet_root / RESULT_RELATIVE)
+    replacement = json.dumps(
+        {
+            "read": {"cases": ["some-other-case"], "config_hash": "dev-" + "e" * 64,
+                     "split": "val"},
+            "status": "a document nobody authenticated",
+        },
+        indent=2,
+        sort_keys=True,
+    ).encode("utf-8") + b"\n"
+    state = _seam_swap(
+        monkeypatch,
+        "strict_json_document",
+        path,
+        replacement,
+        when=lambda args: len(args) > 1 and args[1] == "established_result",
+    )
+
+    result = harness.authenticate()
+
+    assert state["fired"]
+    assert path.read_bytes() == replacement
+    assert result.sources.established_cases == (CASE_ID,)
+    assert _plain(result.sources.documents["established_result"])["read"]["split"] == SPLIT
+
+
+def test_finding1_the_same_swapped_source_refuses_when_it_is_there_before_the_read(
+    harness: Harness, restore_bytes
+) -> None:
+    """The counterfactual: those bytes are detected, so the acceptance above means something."""
+
+    path = restore_bytes(harness.packet_root / RESULT_RELATIVE)
+    path.write_bytes(
+        json.dumps({"read": {"cases": ["x"], "config_hash": "dev-" + "e" * 64,
+                             "split": "val"}}, indent=2, sort_keys=True).encode("utf-8")
+    )
+    error = _refusal(harness.authenticate)
+    assert error.code == X_IDENTITY_MISMATCH
+    assert "established_result.sha256" in str(error)
+
+
+def test_finding1_a_source_artifact_swapped_before_it_is_digested_is_still_one_read(
+    harness: Harness, monkeypatch: pytest.MonkeyPatch, restore_bytes
+) -> None:
+    """The digest is taken over the bytes in hand, not over a second open.
+
+    This is the other half of the boundary from the parse-time swap below it. There
+    the file changed after it was digested; here it changes the instant the read
+    returns, so a chain that reopened the path to hash it would refuse a file it had
+    already read correctly. The acceptance is the assertion: one read served both.
+    """
+
+    path = restore_bytes(harness.packet_root / RESULT_RELATIVE)
+    replacement = json.dumps(
+        {"read": {"cases": ["x"], "config_hash": "dev-" + "e" * 64, "split": "val"}},
+        indent=2,
+        sort_keys=True,
+    ).encode("utf-8")
+    state = _seam_swap(
+        monkeypatch,
+        "_read_bytes",
+        path,
+        replacement,
+        when=lambda args: bool(args) and Path(args[0]) == path,
+        after=True,
+    )
+
+    result = harness.authenticate()
+
+    assert state["fired"]
+    assert path.read_bytes() == replacement
+    assert result.sources.established_cases == (CASE_ID,)
+
+
+def test_finding1_an_audit_swapped_before_it_is_digested_is_still_one_read(
+    harness: Harness, monkeypatch: pytest.MonkeyPatch, restore_bytes
+) -> None:
+    """The same property in the raw domain, where the audits are digested."""
+
+    path = restore_bytes(harness.role_root / "generation_audit.json")
+    original = path.read_bytes()
+    replacement = original.replace(b"manifest_matches", b"manifest_mismatched", 1)
+    assert replacement != original
+    state = _seam_swap(
+        monkeypatch,
+        "_read_bytes",
+        path,
+        replacement,
+        when=lambda args: bool(args) and Path(args[0]) == path,
+        after=True,
+    )
+
+    result = harness.authenticate()
+
+    assert state["fired"]
+    assert path.read_bytes() == replacement
+    assert set(result.dataset.audits) == set(AUDIT_NAMES)
+
+
+def test_finding4_a_boolean_capacity_is_not_the_integer_one(harness: Harness) -> None:
+    """`True == 1`, so the rung a record declares as 1 is not satisfied by `true`."""
+
+    document = {"selected": {"rung": True, "width": SELECTED_WIDTH}}
+    with _with_source(harness, SELECTION_RELATIVE, document) as digest:
+        edited = copy.deepcopy(harness.document)
+        edited["model_selection"]["source"]["sha256"] = digest
+        edited["model_selection"]["rung"] = 1
+        error = _drive(harness, edited)
+    assert error.code == X_IDENTITY_MISMATCH
+    assert "which is not a number" in str(error)
+
+
+def test_finding1_a_config_swapped_before_it_is_parsed_is_still_one_read(
+    harness: Harness, monkeypatch: pytest.MonkeyPatch, restore_bytes
+) -> None:
+    """Step 4 parses the config bytes it read, not a second read of the same path.
+
+    The replacement is a different valid JSON object whose `config_hash` no longer
+    describes its own values, so a chain that reparsed the path would refuse. The
+    acceptance, with the authenticated hash carried out, is the assertion.
+
+    There is deliberately no companion test on the *schema* side, and the reason is
+    the same proof that removed the post-validation bracket: any schema change between
+    this module's read and the contract's own read changes the schema's raw digest and
+    refuses inside `validate_config_document`, so no input can distinguish a schema
+    parsed from bytes in hand from one parsed from a second read.
+    """
+
+    path = restore_bytes(harness.packet_root / CONFIG_RELATIVE)
+    document = json.loads(path.read_text(encoding="utf-8"))
+    document["values"] = {**document["values"], "an_unapproved_key": 1}
+    state = _seam_swap(
+        monkeypatch,
+        "_read_bytes",
+        path,
+        json.dumps(document, indent=2, sort_keys=True).encode("utf-8"),
+        when=lambda args: bool(args) and Path(args[0]) == path,
+        after=True,
+    )
+
+    result = harness.authenticate()
+
+    assert state["fired"]
+    assert result.config.config.config_hash == harness.config_hash
+    assert "an_unapproved_key" not in _plain(result.config.config.document)["values"]
+
+
+def test_finding1_a_config_swapped_at_validation_time_does_not_change_the_config(
+    harness: Harness, monkeypatch: pytest.MonkeyPatch, restore_bytes
+) -> None:
+    """Step 4 validates the document it digested, not the file the contract reopens.
+
+    The replacement is a config whose `config_hash` no longer matches its own values,
+    so a chain that validated whatever the path named on the second read would refuse.
+    """
+
+    path = restore_bytes(harness.packet_root / CONFIG_RELATIVE)
+    document = json.loads(path.read_text(encoding="utf-8"))
+    document["values"] = {**document["values"], "an_unapproved_key": 1}
+    state = _seam_swap(
+        monkeypatch,
+        "validate_config_document",
+        path,
+        json.dumps(document, indent=2, sort_keys=True).encode("utf-8"),
+    )
+
+    result = harness.authenticate()
+
+    assert state["fired"]
+    assert result.config.config.config_hash == harness.config_hash
+    assert "an_unapproved_key" not in _plain(result.config.config.document)["values"]
+
+
+def test_finding1_a_manifest_swapped_between_the_digest_and_the_parse_refuses(
+    harness: Harness, monkeypatch: pytest.MonkeyPatch, restore_bytes
+) -> None:
+    """Row 6 re-measures `manifest.csv` after the closed reader reopened it."""
+
+    path = restore_bytes(harness.role_root / MANIFEST_NAME)
+    text = path.read_text(encoding="utf-8")
+    replacement = text.replace("fixture_dev_C1", "fixture_dev_C9", 1).encode("utf-8")
+    assert replacement != path.read_bytes()
+    state = _seam_swap(monkeypatch, "read_identity_manifest", path, replacement)
+
+    error = _refusal(harness.authenticate)
+
+    assert state["fired"]
+    assert error.code == X_IDENTITY_MISMATCH
+    assert "re-measured after the parse" in str(error)
+
+
+def test_finding1_a_role_index_swapped_between_the_digest_and_the_parse_refuses(
+    harness: Harness, monkeypatch: pytest.MonkeyPatch, restore_bytes
+) -> None:
+    """Row 9 re-measures each index after the closed reader reopened it."""
+
+    path = restore_bytes(harness.role_root / "plant" / ROLE_INDEX_NAME)
+    text = path.read_text(encoding="utf-8")
+    original_sha = external_digest(harness.role_root / "plant" / "fixture_dev_C1.npz")
+    replacement = text.replace(original_sha, "0" + original_sha[1:], 1).encode("utf-8")
+    assert replacement != path.read_bytes()
+    state = _seam_swap(
+        monkeypatch,
+        "read_role_index",
+        path,
+        replacement,
+        when=lambda args: Path(args[0]) == path,
+    )
+
+    error = _refusal(harness.authenticate)
+
+    assert state["fired"]
+    assert error.code == X_IDENTITY_MISMATCH
+    assert "re-measured after the parse" in str(error)
+
+
+def test_finding1_a_role_index_swapped_before_the_loader_reads_it_refuses(
+    harness: Harness, monkeypatch: pytest.MonkeyPatch, restore_bytes
+) -> None:
+    """Row 12 binds the loader's own index read to the index row 8 authenticated.
+
+    The swap lands after rows 8 through 11 have all completed, so the step-9 bracket
+    cannot be what refuses here: the only guard that can see this state is the one
+    taken immediately after `RolePayloadLoader` parses the index for itself.
+    """
+
+    path = restore_bytes(harness.role_root / "plant" / ROLE_INDEX_NAME)
+    text = path.read_text(encoding="utf-8")
+    original_sha = external_digest(harness.role_root / "plant" / "fixture_dev_C1.npz")
+    replacement = text.replace(original_sha, "0" + original_sha[1:], 1).encode("utf-8")
+    state = _seam_swap(
+        monkeypatch,
+        "RolePayloadLoader",
+        path,
+        replacement,
+        when=lambda args: Path(args[0]) == path.parent,
+    )
+
+    error = _refusal(harness.authenticate)
+
+    assert state["fired"]
+    assert error.code == X_IDENTITY_MISMATCH
+    assert "re-measured after the parse" in str(error)
+
+
+# -- finding 2: nothing the chain returns can be edited ---------------------- #
+def test_finding2_the_accepted_config_document_is_read_only_below_its_dataclass(
+    harness: Harness,
+) -> None:
+    """`@dataclass(frozen=True)` rebinds the attribute; the mapping is frozen here."""
+
+    result = harness.authenticate()
+    with pytest.raises(TypeError):
+        result.config.config.document["status"] = "frozen"  # type: ignore[index]
+    with pytest.raises(TypeError):
+        result.config.config.document["values"]["plant"]["n_def"] = 0  # type: ignore[index]
+
+
+def test_finding2_the_accepted_payload_arrays_cannot_be_written_to(
+    harness: Harness,
+) -> None:
+    """A payload array is a fact, and a fact that can be edited is not one.
+
+    Both halves matter: the assignment refuses, and the flag cannot be set back --
+    an array that owns its buffer would allow exactly that, which is why the payload
+    is rebuilt over an immutable one.
+    """
+
+    import numpy as np
+
+    result = harness.authenticate()
+    array = result.roles.payloads[(CASE_ID, "C1", "plant")]["q_true"]
+    with pytest.raises(ValueError):
+        array[...] = 0
+    with pytest.raises(ValueError):
+        array.flags.writeable = True
+    with np.load(
+        harness.role_root / "plant" / "fixture_dev_C1.npz", allow_pickle=False
+    ) as archive:
+        assert np.array_equal(array, archive["q_true"])
+        assert array.dtype == archive["q_true"].dtype
+        assert array.shape == archive["q_true"].shape
+
+
+@pytest.mark.parametrize(
+    "builder",
+    [
+        lambda np_: np_.zeros(0),
+        lambda np_: np_.array(3.5),
+        lambda np_: np_.array(["ab", "cde"]),
+        lambda np_: np_.zeros((2, 3)),
+        lambda np_: np_.arange(6).reshape(3, 2)[::2],
+        lambda np_: np_.array([], dtype="<U3"),
+    ],
+    ids=["empty", "zero-dimensional", "text", "matrix", "non-contiguous-view", "empty-text"],
+)
+def test_finding2_freezing_a_payload_array_changes_nothing_about_it(builder) -> None:
+    """A freeze that alters dtype, shape or values has replaced the fact it protects.
+
+    The zero-dimensional case is here because it is the one this repair got wrong
+    first: `np.ascontiguousarray` is documented to return at least one dimension, so a
+    scalar payload field came back as a one-element vector -- after the loader had
+    validated its shape against the schema.
+    """
+
+    import numpy as np
+
+    original = builder(np)
+    frozen = connection_adapter._read_only_array(original)
+    assert frozen.dtype == original.dtype
+    assert frozen.shape == original.shape
+    assert np.array_equal(frozen, original)
+    assert not frozen.flags.writeable
+    with pytest.raises(ValueError):
+        frozen.flags.writeable = True
+
+
+# -- finding 3: the dataset's configuration is joined to the authenticated one - #
+def _reconfigured(
+    harness: Harness,
+    tmp_path: Path,
+    *,
+    move_manifest: bool,
+    move_audits: bool,
+) -> dict[str, Any]:
+    """Copy the role tree onto a second, internally consistent config hash.
+
+    Every digest and every record echo is updated, so the tree and the record agree
+    with each other about a configuration that is not the one step 4 validated. This
+    is the state finding 3 named: each file authenticates, and the two halves of the
+    sentence are about different experiments.
+    """
+
+    other_hash = "dev-" + "b" * 64
+    role_root = tmp_path / DATASET_LABEL
+    shutil.copytree(harness.role_root, role_root)
+    manifest_path = role_root / MANIFEST_NAME
+    if move_manifest:
+        manifest_path.write_text(
+            manifest_path.read_text(encoding="utf-8").replace(
+                harness.config_hash, other_hash
+            ),
+            encoding="utf-8",
+            newline="",
+        )
+    if move_audits:
+        for name in AUDIT_NAMES:
+            _write_json(
+                role_root / f"{name}.json",
+                _audit_document(
+                    status=harness.audit_status[name],
+                    assignment_hash=harness.assignment_hash,
+                    config_hash=other_hash,
+                    census=harness.census,
+                ),
+            )
+
+    edited = copy.deepcopy(harness.document)
+    edited["data_root"]["manifest_sha256"] = external_digest(manifest_path)
+    for name in AUDIT_NAMES:
+        echo = edited["data_root"][name]
+        echo["sha256"] = external_digest(role_root / f"{name}.json")
+        if move_audits:
+            echo["config_hash"] = other_hash
+    if move_manifest:
+        for suite in ("C1", "S"):
+            arm = edited["cases"][0]["arms"][suite]
+            arm["manifest_row"] = {**arm["manifest_row"], "config_hash": other_hash}
+
+    arguments = harness.rewrite_record(edited)
+    arguments["role_root"] = role_root
+    return arguments
+
+
+@pytest.mark.parametrize(
+    "move_manifest,move_audits",
+    [(True, True), (True, False), (False, True)],
+)
+def test_finding3_a_dataset_on_another_config_refuses_however_consistent_it_is(
+    harness: Harness, tmp_path: Path, move_manifest: bool, move_audits: bool
+) -> None:
+    """Row 6 joins both audit echoes and the manifest rows to the validated config."""
+
+    arguments = _reconfigured(
+        harness, tmp_path, move_manifest=move_manifest, move_audits=move_audits
+    )
+    error = _refusal(lambda: authenticate_connection(**arguments))
+    assert error.code == X_IDENTITY_MISMATCH
+    assert harness.config_hash in str(error)
+
+
+# -- finding 4: exact, non-lossy numeric equality ---------------------------- #
+@contextmanager
+def _with_source(harness: Harness, relative: str, document: Mapping[str, Any]):
+    """Write one source artifact, yield its canonical digest, and restore it after."""
+
+    path = harness.packet_root / relative
+    original = path.read_bytes()
+    try:
+        _write_json(path, document)
+        yield tracked_text_digest(path)
+    finally:
+        path.write_bytes(original)
+
+
+@pytest.mark.parametrize(
+    "field,artifact_value,declared",
+    [
+        ("rung", 2 ** 53, 2 ** 53 + 1),
+        ("width", 10 ** 100, 10 ** 100 + 1),
+        ("rung", 10 ** 401, 2),
+    ],
+    ids=["binary64-collision", "unequal-101-digit-integers", "401-digit-overflow"],
+)
+def test_finding4_unequal_integers_refuse_rather_than_agreeing_or_crashing(
+    harness: Harness, field: str, artifact_value: int, declared: int
+) -> None:
+    """Two integers binary64 cannot tell apart are two numbers, and the row says so.
+
+    The third case is the one that used to leave the row with a raw `OverflowError`
+    instead of the exit code section 4.1 assigns it.
+    """
+
+    selected = {"rung": SELECTED_RUNG, "width": SELECTED_WIDTH}
+    selected[field] = artifact_value
+    with _with_source(harness, SELECTION_RELATIVE, {"selected": selected}) as digest:
+        edited = copy.deepcopy(harness.document)
+        edited["model_selection"]["source"]["sha256"] = digest
+        edited["model_selection"][field] = declared
+        error = _drive(harness, edited)
+    assert error.code == X_IDENTITY_MISMATCH
+    assert f"model_selection.{field}" in str(error)
+
+
+def test_finding4_a_measured_deviation_no_float_can_hold_refuses(
+    harness: Harness,
+) -> None:
+    """The maximum-deviation path carried the same raw overflow and now refuses."""
+
+    document = {
+        "agreement": {
+            "maximum_deviation_m": 10 ** 401,
+            "tolerance_m": DISTAL_TOLERANCE_M,
+        }
+    }
+    with _with_source(harness, GEOMETRY_RELATIVE, document) as digest:
+        edited = copy.deepcopy(harness.document)
+        edited["render_geometry"]["tolerance_source"]["sha256"] = digest
+        error = _drive(harness, edited)
+    assert error.code == X_IDENTITY_MISMATCH
+    assert "exceeds the declared tolerance" in str(error)
+
+
+def test_finding4_a_negative_measured_deviation_still_refuses(harness: Harness) -> None:
+    """The magnitude rule survives the move off binary64 conversion."""
+
+    document = {
+        "agreement": {"maximum_deviation_m": -1, "tolerance_m": DISTAL_TOLERANCE_M}
+    }
+    with _with_source(harness, GEOMETRY_RELATIVE, document) as digest:
+        edited = copy.deepcopy(harness.document)
+        edited["render_geometry"]["tolerance_source"]["sha256"] = digest
+        error = _drive(harness, edited)
+    assert error.code == X_IDENTITY_MISMATCH
+    assert "non-negative magnitude" in str(error)
+
+
+# -- finding 5: a boolean is not a count ------------------------------------- #
+_ONE_ROW_CENSUS: dict[str, Any] = {
+    "manifest_rows": 1,
+    "reservations": 1,
+    "splits": {"dev": 1},
+    "suites": ["C1"],
+    "test_rows": 0,
+    "train_seed": 1,
+}
+
+
+@pytest.mark.parametrize(
+    "field,substitute",
+    [
+        ("manifest_rows", True),
+        ("reservations", True),
+        ("test_rows", False),
+        ("train_seed", True),
+    ],
+)
+def test_finding5_a_boolean_census_count_refuses(field: str, substitute: bool) -> None:
+    """`True == 1` and `False == 0`, so the type is checked before the value is."""
+
+    block = {**_ONE_ROW_CENSUS, field: substitute}
+    error = _refusal(
+        lambda: connection_adapter._require_census_agrees(
+            "generation_audit", block, _ONE_ROW_CENSUS
+        )
+    )
+    assert error.code == X_IDENTITY_MISMATCH
+    assert "not a JSON integer count" in str(error)
+
+
+def test_finding5_a_boolean_inside_the_split_counts_refuses() -> None:
+    """The nested counts are checked too; one dict of them is still six numbers."""
+
+    block = {**_ONE_ROW_CENSUS, "splits": {"dev": True}}
+    error = _refusal(
+        lambda: connection_adapter._require_census_agrees(
+            "independent_audit", block, _ONE_ROW_CENSUS
+        )
+    )
+    assert error.code == X_IDENTITY_MISMATCH
+    assert "splits.dev" in str(error)
+
+
+@pytest.mark.parametrize("field", ["test_rows", "train_seed"])
+def test_finding5_a_boolean_census_count_refuses_end_to_end(
+    harness: Harness, record: dict[str, Any], restore_bytes, field: str
+) -> None:
+    """Both fixture census fields that hold zero are driven through the whole chain."""
+
+    assert harness.census[field] == 0
+    path = restore_bytes(harness.role_root / "generation_audit.json")
+    document = json.loads(path.read_text(encoding="utf-8"))
+    document[MANIFEST_AUDIT_KEY][field] = False
+    _write_json(path, document)
+    record["data_root"]["generation_audit"]["sha256"] = external_digest(path)
+    error = _drive(harness, record)
+    assert error.code == X_IDENTITY_MISMATCH
+    assert "not a JSON integer count" in str(error)
+
+
+def test_finding5_the_census_the_manifest_produces_is_all_plain_integers(
+    harness: Harness,
+) -> None:
+    """The recomputed side is what the type rule is stated against."""
+
+    for field in ("manifest_rows", "reservations", "test_rows", "train_seed"):
+        assert type(harness.census[field]) is int
+    for count in harness.census["splits"].values():
+        assert type(count) is int
+
+
+# -- finding 6: an index segment is bounded and ASCII ------------------------ #
+_INDEXABLE = {"a": [{"b": 1}]}
+
+
+@pytest.mark.parametrize(
+    "segment", ["0" * 5000, "0" * (MAX_FIELD_PATH_INDEX_DIGITS + 1)]
+)
+def test_finding6_an_over_long_index_segment_refuses_rather_than_raising(
+    segment: str,
+) -> None:
+    """CPython refuses to convert a long integer string; this row refuses first."""
+
+    error = _refusal(
+        lambda: value_at_field_path(_INDEXABLE, f"a.{segment}", where="probe")
+    )
+    assert error.code == X_IDENTITY_MISMATCH
+    assert "digits" in str(error)
+
+
+def test_finding6_an_index_segment_at_the_bound_is_still_range_checked() -> None:
+    """The length rule is not the range rule, and the longest legal one still refuses."""
+
+    segment = "9" * MAX_FIELD_PATH_INDEX_DIGITS
+    error = _refusal(
+        lambda: value_at_field_path(_INDEXABLE, f"a.{segment}", where="probe")
+    )
+    assert error.code == X_IDENTITY_MISMATCH
+    assert "that array holds 1 entries" in str(error)
+
+
+@pytest.mark.parametrize(
+    "segment",
+    ["\u00b2", "\u0663"],
+    ids=["superscript-two", "arabic-indic-three"],
+)
+def test_finding6_a_non_ascii_digit_is_a_key_and_not_an_index(segment: str) -> None:
+    """`str.isdigit` is true of characters `int()` cannot convert, and of digits no
+    JSON author wrote; both fall through to the ordinary absent-key refusal."""
+
+    error = _refusal(
+        lambda: value_at_field_path(_INDEXABLE, f"a.{segment}", where="probe")
+    )
+    assert error.code == X_IDENTITY_MISMATCH
+    assert "is absent" in str(error)
+
+
+def test_finding6_the_index_digit_bound_is_the_number_it_is_meant_to_be() -> None:
+    """One place states the value, with the reason attached to it.
+
+    The bound is the decimal length of `sys.maxsize`, which is the most entries any
+    in-memory JSON array could have. It is pinned as a literal here because a test
+    whose input is a function of the constant it exercises holds the relationship and
+    not the value.
+    """
+
+    assert MAX_FIELD_PATH_INDEX_DIGITS == 19
+    assert len(str(sys.maxsize)) == MAX_FIELD_PATH_INDEX_DIGITS
+
+
+# -- the bytes-domain digests answer to the functions that own the rules ----- #
+@pytest.mark.parametrize(
+    "raw",
+    [
+        b'{"a": 1}\n',
+        b'{"a": 1}\r\n',
+        b'\xef\xbb\xbf{"a": 1}\n',
+        b'\xef\xbb\xbf{"a": 1}\r\n',
+        b"",
+        b"\r\n\r\n",
+        b"binary\x00\xff\xfe bytes",
+    ],
+)
+def test_the_two_digest_domains_agree_with_the_functions_that_own_them(
+    tmp_path: Path, raw: bytes
+) -> None:
+    """A bytes-domain digest is a copy of a rule unless something holds it to the rule.
+
+    The path-domain functions are the owners; these two exist only so that one read
+    can serve both the digest and the parse. Equality against the owner is measured
+    on every run rather than assumed from the two bodies looking alike.
+    """
+
+    from utils.protocol_p import canonical_text_sha256
+    from utils.storage_contract import file_sha256
+
+    path = tmp_path / "probe.bin"
+    path.write_bytes(raw)
+    assert canonical_text_digest(raw) == canonical_text_sha256(path)
+    assert external_bytes_digest(raw) == file_sha256(path)

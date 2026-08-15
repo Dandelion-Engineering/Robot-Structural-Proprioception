@@ -3637,6 +3637,45 @@ correction applied.)*
   realistic case does nothing - realism is what made the two guards agree. ***  And the diagnostic
   that generalises: FOR EVERY REFUSAL TEST, ASK WHICH *OTHER* CHECK WOULD ALSO HAVE REFUSED THIS
   INPUT.  If the answer is not "none", the test is measuring the pair and not the part.
+242. **[S142] A GUARD WHOSE COMPARAND IS FIXED FOR THE WHOLE CALL CANNOT SEE A CHANGE TO THE THING
+  IT GUARDS.**  My own finding-1 repair added a re-measurement of the schema after
+  `validate_config_document` returns.  *** IT CAN NEVER BE THE CHECK THAT REFUSES: the contract
+  compares the config's declared `schema_sha256` - a field of a document this module had already
+  parsed, so fixed for the whole call - against the schema's RAW bytes, so ANY schema change between
+  my read and the contract's read refuses INSIDE the contract. ***  Deleted, with the proof written
+  where it stood, and the same proof is why there is no schema-side test on the parse boundary.
+  THE DIAGNOSTIC: ask what else in the same call is already a function of the same bytes; if a later
+  comparison is, the earlier one is decoration.  This is lesson 239 at a different scale - a guard is
+  undecidable not only when a CHILD guard subsumes it but when a LATER comparison inside a closed
+  utility does.
+
+243. **[S142] A SWAP TEST THAT FIRES BEFORE BOTH OPERATIONS CANNOT SEPARATE THEM.**  To show that a
+  digest is taken over bytes already in hand rather than over a second read of the path, the change
+  must land BETWEEN the read and the digest.  My first two swap tests wrote the replacement before
+  the seam delegated, which both designs treat identically, and the sweep reported
+  `m05-digest-taken-from-a-second-read` and `m18-config-parsed-from-a-second-read` SURVIVING.
+  *** THE REPAIR: make the seam the FIRST of the two operations and write AFTER it returns. ***  The
+  general form is worth more than the instance: when a test exists to separate two adjacent
+  operations, the intervention must be SEQUENCED BETWEEN THEM, and an intervention before the pair
+  measures neither.  FIFTH CONSECUTIVE BUILD ON THIS LANE WHERE THE SWEEP CHANGED THE TESTS RATHER
+  THAN CONFIRMING THEM.
+
+244. **[S142] A FREEZE THAT CHANGES A SHAPE HAS REPLACED THE FACT IT PROTECTS.**
+  `np.ascontiguousarray` is documented to return an array of AT LEAST ONE DIMENSION, so freezing
+  payloads through it turned a zero-dimensional field into a one-element vector - *** AFTER the
+  loader had validated that shape against the schema. ***  `tobytes` already serialises any layout in
+  C order, so the contiguous call bought nothing to offset it.  Found by an edge probe over six
+  shapes, NOT by any test I had written.  THE DIAGNOSTIC: when a defensive transform sits AFTER a
+  validation, drive it with the degenerate shapes the validation permits - empty, scalar,
+  non-contiguous - and assert dtype, shape AND values, not only the property the transform was added
+  for.
+
+245. **[S142] BEFORE PROPOSING A SCOPE EXPANSION INTO A CLOSED UTILITY, LOOK FOR THE ENTRY POINT IT
+  ALREADY EXPOSES.**  `load_config` reads two paths; `validate_config_document` - public, in the same
+  closed module - takes the two DOCUMENTS.  Using it removed three file reads and the whole
+  finding-1 defect class on the config path WITH NO EDIT TO A CLOSED FILE.  The scope question that
+  remained was real and belonged to the reviewer, but it shrank from three utilities to two by
+  reading the contract's own surface first.
 
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 

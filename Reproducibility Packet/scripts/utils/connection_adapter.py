@@ -59,8 +59,11 @@ points at the object that already owns a fact rather than copying it:
 
   * file digests in the *external* domain -- `utils.storage_contract.file_sha256`;
   * file digests in the *tracked-text* domain -- `utils.protocol_p.canonical_text_sha256`;
-  * config loading, the schema/config binding and the draft/frozen lifecycle --
-    `utils.config_contract.load_config`;
+  * config validation, the schema/config binding and the draft/frozen lifecycle --
+    `utils.config_contract.validate_config_document`, the contract's document-level
+    entry point. `load_config` is the same contract with a file read in front of it,
+    and a chain whose whole subject is *which bytes* were validated cannot delegate
+    that read;
   * the 20 schema-A manifest fields and their parser -- `utils.storage_contract`;
   * role index parsing and its strict header -- `utils.storage_contract.read_role_index`;
   * role payload hashing, path containment and schema/semantic validation --
@@ -101,8 +104,8 @@ mechanism it deliberately left to the build round.
 
   1. *The authority rule is the adapter's own, and `require_frozen` is not it.*
      Finding CY's branch B scopes the config lifecycle to the record's authenticated
-     `authority`: `DEVELOPMENT_ONLY` validates with `load_config(require_frozen=False)`
-     and `FINAL` with `require_frozen=True`. Measured against the live contract,
+     `authority`: `DEVELOPMENT_ONLY` validates with `require_frozen=False` and
+     `FINAL` with `require_frozen=True`. Measured against the live contract,
      `require_frozen=False` **accepts a frozen document** -- it is permissive, not
      draft-only -- so relying on that flag alone would leave one of the four
      authority/lifecycle combinations unchecked. `require_authority_config_policy` is
@@ -129,24 +132,44 @@ mechanism it deliberately left to the build round.
 
 **One property this module holds that the read-order table alone does not imply.**
 Nothing it returns is mutable. An authenticated artifact is a value: the parsed source
-documents, the census, the index rows and the loaded payload map are all handed out as
-read-only views over private copies, for the same reason `utils.connection_record`
-deep-freezes the record. An allowlist -- or a set of authenticated facts derived from
-one -- that a later caller can edit is not an allowlist.
+documents, the validated configuration's own document, the census, the index rows and
+every loaded payload array are all handed out as read-only views over private copies,
+for the same reason `utils.connection_record` deep-freezes the record. An allowlist --
+or a set of authenticated facts derived from one -- that a later caller can edit is not
+an allowlist, and rows 13 to 21 must not be able to consume facts different from the
+facts rows 4 to 12 authenticated.
+
+**And one property the read order states but a path-based implementation cannot
+keep.** Section 4.1's second boundary says a file is hashed *before* it is parsed or
+loaded; it is only worth anything if the thing that is parsed is the thing that was
+hashed. Every file this module interprets itself is therefore opened exactly once, and
+the digest is taken over the bytes that read returned -- `authenticated_bytes` is the
+one way in. Three closed utilities take a path and open it themselves
+(`config_contract`, `storage_contract` and `role_contract`), and this module does not
+reimplement their parsers; for those, the call is bracketed by a re-measurement, so a
+file that is still changed when the utility returns refuses. What that bracket does not
+see is a change made and reverted inside one call, which would need a bytes-domain
+entry point in those three utilities -- named as a scope question rather than assumed
+away here.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any, Mapping, Sequence
 
 import numpy as np
 
-from utils.config_contract import ConfigContractError, ValidatedConfig, load_config
+from utils.config_contract import (
+    ConfigContractError,
+    ValidatedConfig,
+    validate_config_document,
+)
 from utils.connection_record import (
     Arm,
     BoundPaths,
@@ -212,6 +235,16 @@ MANIFEST_CENSUS_FIELDS: tuple[str, ...] = (
 #: The key inside each audit document that carries the census.
 MANIFEST_AUDIT_KEY = "manifest_audit"
 
+#: The most decimal digits one array-index segment of a declared field path may
+#: carry. A JSON array held in memory cannot hold more than `sys.maxsize` entries,
+#: and that number is 19 digits long, so a longer run of digits cannot address an
+#: entry that exists -- it is out of range whatever its value. The bound is stated as
+#: a literal rather than derived from `sys.maxsize`, because a test whose input is a
+#: function of the constant it exercises holds the relationship and not the value.
+#: It also keeps the segment far below CPython's 4,300-digit integer-conversion
+#: limit, which raises a raw `ValueError` instead of this module's named refusal.
+MAX_FIELD_PATH_INDEX_DIGITS = 19
+
 
 # --------------------------------------------------------------------------- #
 # Refusals, digests and strict parsing.
@@ -230,6 +263,155 @@ def _refuse(code: str, message: str) -> VerificationSceneError:
     """
 
     return VerificationSceneError(code, message)
+
+
+def canonical_text_digest(raw: bytes) -> str:
+    """Return the canonical-domain digest of bytes the caller already holds.
+
+    Args:
+        raw: the exact bytes read from a tracked packet text file.
+
+    Returns:
+        The SHA-256 of those bytes after a UTF-8 BOM is stripped and CRLF is folded to
+        LF -- the same rule `utils.protocol_p.canonical_text_sha256` applies, in the
+        one domain that makes a tracked text file's digest a property of the document
+        rather than of the checkout's copy of it.
+
+    **Why this exists beside the path-domain function that owns the rule.** The rule
+    has one owner and this module does not restate it lightly (design 4.3). But
+    `canonical_text_sha256` takes a *path* and opens it, so a chain that digests
+    through it and then parses bytes it read separately has authenticated one read and
+    interpreted another: the two are the same file only if nothing moved in between,
+    which is exactly the assumption the second boundary of section 4.1 exists to
+    remove. A bytes-domain digest lets one read serve both. The two are held together
+    by `test_the_two_digest_domains_agree_with_the_functions_that_own_them`, which
+    requires this function to equal `canonical_text_sha256` over BOM, CRLF, LF and
+    mixed inputs on every run -- equality against the owner, not a copy trusted
+    because it looks the same.
+    """
+
+    body = raw[3:] if raw.startswith(b"\xef\xbb\xbf") else raw
+    return hashlib.sha256(body.replace(b"\r\n", b"\n")).hexdigest()
+
+
+def external_bytes_digest(raw: bytes) -> str:
+    """Return the raw-domain digest of bytes the caller already holds.
+
+    This is `utils.storage_contract.file_sha256`'s rule over bytes rather than over a
+    path, and it exists for the same reason `canonical_text_digest` does: so that the
+    bytes that are authenticated are the bytes that are parsed. The same equality test
+    pins it against the function that owns the rule.
+    """
+
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _read_bytes(path: Path, *, where: str, code: str) -> bytes:
+    """Read one named file once, translating any read failure into a named refusal.
+
+    A raw `OSError` out of an authentication layer is a silent failure by another
+    name: the caller sees a crash instead of the refusal the design assigned to that
+    row, and the exit code never happens. An absent file, a directory and an
+    unreadable file all arrive here, which is why this is the only presence guard the
+    authenticated read needs.
+    """
+
+    try:
+        return Path(path).read_bytes()
+    except OSError as exc:
+        raise _refuse(code, f"{where} at {path} could not be read: {exc}") from exc
+
+
+def authenticated_bytes(
+    path: Path,
+    expected: str,
+    *,
+    where: str,
+    code: str,
+    digest_of_bytes,
+    named_by: str | None = None,
+) -> bytes:
+    """Read one named file **once** and return its bytes only if they authenticate.
+
+    Args:
+        path: the file the record names.
+        expected: the digest the authenticated record declares for it.
+        where: the dotted record path that declared the digest, for the refusal
+            message.
+        code: the refusal code this read-order row assigns.
+        digest_of_bytes: `canonical_text_digest` for a tracked packet text file,
+            `external_bytes_digest` for a file under a machine-selected root.
+        named_by: the dotted record path that declared the *location*, when it differs
+            from the one that declared the digest. An absent file is a complaint about
+            where the record pointed and a disagreeing digest is a complaint about
+            what it found there, and a reader sent to the wrong field by a message has
+            been sent to look for a corrupted file that does not exist.
+
+    Returns:
+        The exact bytes that were digested. Every parse in this module is taken from
+        the value this function returns, so the object that is interpreted is provably
+        the object that was authenticated rather than whatever the same pathname
+        happens to name on a later open.
+
+    Raises:
+        VerificationSceneError: `code` when the file is absent, is not a file, or
+            cannot be read, and `X_IDENTITY_MISMATCH` when its digest disagrees with
+            the record.
+
+    There is deliberately no separate `is_file` guard in front of the read. An absent
+    path, a directory and an unreadable file all raise `OSError` from the read itself,
+    which `_read_bytes` turns into this row's named refusal, so a presence guard above
+    it could never be the only check to refuse -- it could only change the wording of a
+    refusal that was already certain, which is the defect the Session-141 sweep found
+    in `require_role_layout`.
+    """
+
+    located = named_by if named_by is not None else where
+    raw = _read_bytes(Path(path), where=located, code=code)
+    _require_digest_equal(
+        Path(path), expected, where=where, digest=digest_of_bytes(raw)
+    )
+    return raw
+
+
+def require_still_authentic(
+    path: Path,
+    expected: str,
+    *,
+    where: str,
+    digest_of_path,
+) -> None:
+    """Require a file a closed utility just reopened to still be the authenticated one.
+
+    Args:
+        path: the file the utility was pointed at.
+        expected: the digest the record declares for it.
+        where: the dotted record path that declared it.
+        digest_of_path: `tracked_text_digest` or `external_digest`.
+
+    Raises:
+        VerificationSceneError: `X_IDENTITY_MISMATCH` when the file no longer digests
+            to the value the chain authenticated.
+
+    **What this closes and what it does not.** `utils.storage_contract`,
+    `utils.config_contract` and `utils.role_contract` take *paths* and open them
+    themselves, and this module does not reimplement their parsers -- the whole point
+    of design 4.3 is that the object that owns a rule applies it. So for those three
+    the chain brackets the call: the digest is measured from the bytes this module
+    read, the utility runs, and the digest is measured again. Any change that is still
+    present when the utility returns -- a regenerated tree, a different checkout, an
+    edited index -- refuses here. A change made and reverted *inside* one call is not
+    detectable from outside it and would need a bytes-domain entry point in those
+    closed utilities; that is named in the Round-2 handoff as a scope question rather
+    than assumed away here.
+    """
+
+    _require_digest_equal(
+        Path(path),
+        expected,
+        where=f"{where} (re-measured after the parse)",
+        digest=digest_of_path(Path(path)),
+    )
 
 
 def tracked_text_digest(path: Path) -> str:
@@ -302,7 +484,7 @@ def _require_digest_equal(
         )
 
 
-def _reject_non_finite(value: Any, where: str) -> None:
+def _reject_non_finite(value: Any, where: str, code: str = X_IDENTITY_MISMATCH) -> None:
     """Refuse any `inf`/`NaN` reachable inside one parsed source document.
 
     A record forbids non-finite floats outright (design 3.1) and the artifacts a
@@ -316,25 +498,33 @@ def _reject_non_finite(value: Any, where: str) -> None:
         return
     if isinstance(value, float) and not math.isfinite(value):
         raise _refuse(
-            X_IDENTITY_MISMATCH,
+            code,
             f"{where} contains the non-finite value {value!r}; a source artifact the "
             "record is checked against may not carry one",
         )
     if isinstance(value, Mapping):
         for key, item in value.items():
-            _reject_non_finite(item, f"{where}.{key}")
+            _reject_non_finite(item, f"{where}.{key}", code)
         return
     if isinstance(value, (list, tuple)):
         for index, item in enumerate(value):
-            _reject_non_finite(item, f"{where}[{index}]")
+            _reject_non_finite(item, f"{where}[{index}]", code)
 
 
-def strict_json_document(raw: bytes, where: str) -> dict[str, Any]:
+def strict_json_document(
+    raw: bytes, where: str, code: str = X_IDENTITY_MISMATCH
+) -> dict[str, Any]:
     """Strict-parse one source artifact's bytes into a JSON object.
 
     Args:
-        raw: the exact bytes already digested by the caller.
+        raw: the exact bytes already digested by the caller. This function never
+            opens a file: the bytes it parses are the bytes the caller authenticated.
         where: what the artifact is, for the refusal message.
+        code: the refusal code the calling read-order row assigns to a document that
+            digests correctly and then does not parse. It is `X_IDENTITY_MISMATCH`
+            for a source artifact and `X_PROVENANCE_UNRESOLVED` at step 4, where an
+            unreadable schema or config is a configuration that did not validate
+            under the record's authority rather than a disagreeing identity.
 
     Returns:
         The parsed top-level object.
@@ -353,7 +543,7 @@ def strict_json_document(raw: bytes, where: str) -> dict[str, Any]:
 
     def reject_constant(value: str) -> float:
         raise _refuse(
-            X_IDENTITY_MISMATCH,
+            code,
             f"{where} carries the bare JSON constant {value!r}, which is not a number",
         )
 
@@ -362,7 +552,7 @@ def strict_json_document(raw: bytes, where: str) -> dict[str, Any]:
         for key, _ in pairs:
             if key in seen:
                 raise _refuse(
-                    X_IDENTITY_MISMATCH,
+                    code,
                     f"{where} repeats the object key {key!r}; a duplicate key makes the "
                     "document a reviewer read and the document a parser sees two "
                     "different objects over identical bytes",
@@ -373,19 +563,19 @@ def strict_json_document(raw: bytes, where: str) -> dict[str, Any]:
     try:
         text = raw.decode("utf-8")
     except UnicodeDecodeError as exc:
-        raise _refuse(X_IDENTITY_MISMATCH, f"{where} is not valid UTF-8: {exc}") from exc
+        raise _refuse(code, f"{where} is not valid UTF-8: {exc}") from exc
     try:
         document = json.loads(
             text, parse_constant=reject_constant, object_pairs_hook=unique_object
         )
     except json.JSONDecodeError as exc:
-        raise _refuse(X_IDENTITY_MISMATCH, f"{where} is not valid JSON: {exc}") from exc
+        raise _refuse(code, f"{where} is not valid JSON: {exc}") from exc
     if not isinstance(document, dict):
         raise _refuse(
-            X_IDENTITY_MISMATCH,
+            code,
             f"{where} must be a JSON object, not {type(document).__name__}",
         )
-    _reject_non_finite(document, where)
+    _reject_non_finite(document, where, code)
     return document
 
 
@@ -394,8 +584,9 @@ def value_at_field_path(document: Mapping[str, Any], field_path: str, *, where: 
 
     Args:
         document: the strict-parsed artifact.
-        field_path: a dotted path. A segment that is a run of digits indexes a JSON
-            array; every other segment names an object key. Segments are never empty.
+        field_path: a dotted path. A segment that is a run of **ASCII** digits, at
+            most `MAX_FIELD_PATH_INDEX_DIGITS` of them, indexes a JSON array; every
+            other segment names an object key. Segments are never empty.
         where: the dotted *record* path that declared this field path.
 
     Returns:
@@ -406,6 +597,17 @@ def value_at_field_path(document: Mapping[str, Any], field_path: str, *, where: 
             any segment is absent, out of range, or applied to a value of the wrong
             kind. An absent field is a refusal and never a `None`: a record that names
             a field the artifact does not carry has not been checked against anything.
+
+    **Two properties of the index segment that are the refusal rather than a crash.**
+    `str.isdigit` is true of characters `int()` cannot convert -- the superscript two
+    is a digit to Python and a `ValueError` to `int` -- and it is true of non-ASCII
+    decimal digits that convert to a number no JSON author wrote. So an index segment
+    is required to be ASCII, and anything else falls through to the object-key branch,
+    where a key the artifact does not carry is the ordinary absent-field refusal.
+    Length is bounded for the same reason: CPython refuses to convert an integer
+    string beyond 4,300 digits and raises a raw `ValueError`, which would leave this
+    row with a crash instead of the exit code section 4.1 assigns it. A record is a
+    small document and both inputs fit inside one.
     """
 
     if not field_path:
@@ -421,7 +623,15 @@ def value_at_field_path(document: Mapping[str, Any], field_path: str, *, where: 
     for segment in segments:
         walked.append(segment)
         trail = ".".join(walked)
-        if segment.isdigit():
+        if segment.isascii() and segment.isdigit():
+            if len(segment) > MAX_FIELD_PATH_INDEX_DIGITS:
+                raise _refuse(
+                    X_IDENTITY_MISMATCH,
+                    f"{where} declares an array index of {len(segment)} digits at "
+                    f"segment {len(walked)}; no JSON array holds enough entries for an "
+                    f"index longer than {MAX_FIELD_PATH_INDEX_DIGITS} digits, so it is "
+                    "out of range whatever its value",
+                )
             if not isinstance(current, list):
                 raise _refuse(
                     X_IDENTITY_MISMATCH,
@@ -453,9 +663,26 @@ def _require_numbers_equal(
 ) -> None:
     """Require one authenticated artifact field to equal the record's declared number.
 
-    Equality is exact. A tolerance here would be a plausibility band nobody approved,
-    and design section 3.4's whole point is that a threshold is the one scientific
-    input small enough for an author to transcribe from memory.
+    Equality is exact **and non-lossy**. A tolerance here would be a plausibility band
+    nobody approved, and design section 3.4's whole point is that a threshold is the
+    one scientific input small enough for an author to transcribe from memory.
+
+    **Neither operand is converted to binary64**, and that is the whole content of this
+    repair. `json` parses an integer literal exactly, so a source artifact may carry an
+    integer no float can represent: `float(2**53 + 1) == float(2**53)` is true while
+    the two literals are different numbers, and at around four hundred digits the
+    conversion stops returning a wrong answer and starts raising a raw `OverflowError`
+    instead. Python compares `int` against `float` exactly in both directions, so
+    comparing the parsed values themselves is both correct and total -- no shape the
+    record permits reaches a conversion here.
+
+    **One consequence, stated rather than papered over.** `utils.connection_record`
+    parses a declared threshold or tolerance through `_require_finite_float`, which
+    *does* convert an integer literal to binary64. Where an author declares a value
+    binary64 cannot hold exactly, the record's own parsed value is already the rounded
+    one and an artifact carrying the unrounded integer refuses here. That is
+    fail-closed and it is the correct direction: this function does not re-introduce
+    the loss in order to make two different numbers agree.
     """
 
     if isinstance(observed, bool) or not isinstance(observed, (int, float)):
@@ -463,11 +690,16 @@ def _require_numbers_equal(
             X_IDENTITY_MISMATCH,
             f"{source} is {observed!r}, which is not a number; {where} declares {declared!r}",
         )
-    if not math.isfinite(float(observed)):
+    if isinstance(observed, float) and not math.isfinite(observed):
         raise _refuse(
             X_IDENTITY_MISMATCH, f"{source} is the non-finite value {observed!r}"
         )
-    if float(observed) != float(declared):
+    if isinstance(declared, float) and not math.isfinite(declared):
+        raise _refuse(
+            X_IDENTITY_MISMATCH,
+            f"{where} declares the non-finite value {declared!r}",
+        )
+    if observed != declared:
         raise _refuse(
             X_IDENTITY_MISMATCH,
             f"{where} declares {declared!r} but its named source {source} carries {observed!r}",
@@ -524,8 +756,12 @@ class AuthenticatedConfig:
         schema: the parsed machine schema, deeply frozen. It is kept because step 12
             hands it to `RolePayloadLoader` and a second read would be a second
             document.
-        config: the `ValidatedConfig` `utils.config_contract.load_config` returned
-            under the authority-appropriate `require_frozen` setting.
+        config: the `ValidatedConfig` `utils.config_contract.validate_config_document`
+            returned under the authority-appropriate `require_frozen` setting, with its
+            `document` replaced by a deeply read-only view of the same mapping. The
+            contract's own dataclass is frozen, but `@dataclass(frozen=True)` rebinds
+            the attribute rather than the object, so the mapping behind it is editable
+            unless something makes it not be.
         schema_sha256: the canonical-domain digest this module measured.
         config_sha256: the canonical-domain digest this module measured.
     """
@@ -609,36 +845,64 @@ def authenticate_config(record: ConnectionRecord, bound: BoundPaths) -> Authenti
             authority-appropriate lifecycle, or when it validates but names the wrong
             lifecycle for the record's authority.
 
-    Both digests are measured **before** either file is parsed, which is the second
-    boundary of section 4.1 and invariant W1. `load_config` then reads both again;
-    that is a second read of two already-authenticated paths, not a second identity.
+    Both files are read **once**, and both documents are parsed from the bytes those
+    reads returned -- the second boundary of section 4.1 and invariant W1. This module
+    calls `utils.config_contract.validate_config_document`, the contract's own
+    document-level entry point, rather than `load_config`, which would reopen both
+    paths and validate whatever they named on that later read.
+
+    **The one remaining re-open needs no bracket, and that is a proof rather than an
+    omission.** `validate_config_document` compares the config's declared
+    `schema_sha256` against the schema's raw bytes, so it opens the schema again to
+    hash it. A re-measurement here would be a guard no input could make decisive: the
+    value it is compared against is a field of the config document this module parsed
+    from its own authenticated bytes, so it is fixed for the whole call, and *any*
+    change to the schema between this module's read and the contract's read changes
+    the schema's raw digest and refuses inside `validate_config_document` itself. A
+    guard with no input it alone decides is the same defect as a duplicated guard, so
+    the argument is written here instead of a second comparison being made.
     """
 
-    schema_path = _require_present(
-        bound.schema_path, where="schema.relative_path", code=X_IDENTITY_MISMATCH
+    schema_path = Path(bound.schema_path)
+    config_path = Path(bound.config_path)
+    schema_raw = authenticated_bytes(
+        schema_path,
+        record.schema.sha256,
+        where="schema.sha256",
+        named_by="schema.relative_path",
+        code=X_IDENTITY_MISMATCH,
+        digest_of_bytes=canonical_text_digest,
     )
-    config_path = _require_present(
-        bound.config_path, where="config.relative_path", code=X_IDENTITY_MISMATCH
+    config_raw = authenticated_bytes(
+        config_path,
+        record.config.sha256,
+        where="config.sha256",
+        named_by="config.relative_path",
+        code=X_IDENTITY_MISMATCH,
+        digest_of_bytes=canonical_text_digest,
     )
-    schema_sha256 = tracked_text_digest(schema_path)
-    config_sha256 = tracked_text_digest(config_path)
-    _require_digest_equal(
-        schema_path, record.schema.sha256, where="schema.sha256", digest=schema_sha256
+    schema_document = strict_json_document(
+        schema_raw, "the machine schema", X_PROVENANCE_UNRESOLVED
     )
-    _require_digest_equal(
-        config_path, record.config.sha256, where="config.sha256", digest=config_sha256
+    config_document = strict_json_document(
+        config_raw, "the configuration", X_PROVENANCE_UNRESOLVED
     )
 
     require_frozen = record.authority == FINAL
     try:
-        config = load_config(config_path, schema_path, require_frozen=require_frozen)
+        config = validate_config_document(
+            config_document,
+            source_path=config_path,
+            schema=schema_document,
+            schema_path=schema_path,
+            require_frozen=require_frozen,
+        )
     except (ConfigContractError, ValueError, OSError) as exc:
         raise _refuse(
             X_PROVENANCE_UNRESOLVED,
             f"the config at {config_path} did not validate under authority "
             f"{record.authority} (require_frozen={require_frozen}): {exc}",
         ) from exc
-
     if config.config_hash != record.config.config_hash:
         raise _refuse(
             X_IDENTITY_MISMATCH,
@@ -647,12 +911,11 @@ def authenticate_config(record: ConnectionRecord, bound: BoundPaths) -> Authenti
         )
     require_authority_config_policy(record.authority, config)
 
-    schema_document = json.loads(schema_path.read_text(encoding="utf-8"))
     return AuthenticatedConfig(
         schema=_frozen(schema_document),
-        config=config,
-        schema_sha256=schema_sha256,
-        config_sha256=config_sha256,
+        config=replace(config, document=_frozen(config.document)),
+        schema_sha256=canonical_text_digest(schema_raw),
+        config_sha256=canonical_text_digest(config_raw),
     )
 
 
@@ -687,20 +950,21 @@ def _authenticate_artifact(
 ) -> dict[str, Any]:
     """Digest one packet source artifact, then strict-parse the same bytes.
 
-    The bytes are read once and used for both, so the document that is parsed is
-    provably the document that was digested rather than whatever the path names on a
-    second read.
+    The file is opened exactly once and the digest is taken over the bytes that read
+    returned, so the document that is parsed is provably the document that was
+    digested rather than whatever the path names on a second read. The earlier state
+    of this function read the bytes, reopened the path to hash it, and then parsed the
+    first read: two objects, one name, and a digest that spoke for neither of them if
+    they differed.
     """
 
-    path = _require_present(
-        bound.packet_artifacts[key], where=f"{key}.artifact", code=X_IDENTITY_MISMATCH
-    )
-    raw = path.read_bytes()
-    _require_digest_equal(
-        path,
+    raw = authenticated_bytes(
+        bound.packet_artifacts[key],
         expected_sha256,
         where=f"{key}.sha256",
-        digest=canonical_text_sha256(path),
+        named_by=f"{key}.artifact",
+        code=X_IDENTITY_MISMATCH,
+        digest_of_bytes=canonical_text_digest,
     )
     return strict_json_document(raw, key)
 
@@ -892,6 +1156,13 @@ def _require_measured_deviation(value: Any, tolerance: float) -> float:
     under the approved bytes. A negative deviation is refused because a maximum
     absolute deviation is a magnitude, and a document that reports one as negative is
     not the document the tolerance was justified against.
+
+    Both comparisons are taken on the parsed value and never on a binary64 conversion
+    of it, for the reason `_require_numbers_equal` records: `float()` on a 401-digit
+    integer literal raises a raw `OverflowError` instead of this row's named refusal,
+    and Python compares an `int` against a `float` exactly. The conversion in the
+    return is reached only after the value has been proved to lie between zero and the
+    declared tolerance, which is itself a float, so it cannot overflow.
     """
 
     if isinstance(value, bool) or not isinstance(value, (int, float)):
@@ -900,20 +1171,19 @@ def _require_measured_deviation(value: Any, tolerance: float) -> float:
             f"the geometry validation artifact's maximum deviation is {value!r}, "
             "which is not a number",
         )
-    deviation = float(value)
-    if not math.isfinite(deviation) or deviation < 0.0:
+    if (isinstance(value, float) and not math.isfinite(value)) or value < 0:
         raise _refuse(
             X_IDENTITY_MISMATCH,
             f"the geometry validation artifact's maximum deviation is {value!r}; a "
             "maximum absolute deviation is a finite non-negative magnitude",
         )
-    if deviation > float(tolerance):
+    if value > tolerance:
         raise _refuse(
             X_IDENTITY_MISMATCH,
             f"the geometry validation artifact records a maximum deviation of "
-            f"{deviation!r} m, which exceeds the declared tolerance {tolerance!r} m",
+            f"{value!r} m, which exceeds the declared tolerance {tolerance!r} m",
         )
-    return deviation
+    return float(value)
 
 
 # --------------------------------------------------------------------------- #
@@ -981,8 +1251,32 @@ def manifest_census(rows: Sequence[IdentityManifestRow]) -> dict[str, Any]:
     }
 
 
+def _require_count(value: Any, *, where: str) -> int:
+    """Require one JSON integer that is not a boolean.
+
+    Python's `bool` is a subclass of `int` and `True == 1`, so an equality taken
+    without this guard accepts `true` wherever a count of one belongs. A census is
+    six numbers and a document that reports one of them as a boolean is not the
+    document the digest was taken over -- it is a differently shaped document that
+    happens to compare equal.
+    """
+
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise _refuse(
+            X_IDENTITY_MISMATCH,
+            f"{where} is {value!r}, which is not a JSON integer count",
+        )
+    return value
+
+
 def _require_census_agrees(audit_name: str, block: Any, census: Mapping[str, Any]) -> None:
-    """Require one audit's `manifest_audit` block to echo the recomputed census."""
+    """Require one audit's `manifest_audit` block to echo the recomputed census.
+
+    Every field is required to carry the JSON type the recomputed census carries
+    **before** its value is compared, because Python equality across types is wider
+    than agreement: `True == 1`, `False == 0`, and a census whose row count is `true`
+    passes a bare `!=` against a manifest holding exactly one row.
+    """
 
     if not isinstance(block, Mapping):
         raise _refuse(
@@ -997,11 +1291,31 @@ def _require_census_agrees(audit_name: str, block: Any, census: Mapping[str, Any
             )
         observed = block[field]
         expected = census[field]
+        trail = f"{audit_name}.{MANIFEST_AUDIT_KEY}.{field}"
         if field == "splits":
-            observed = dict(observed) if isinstance(observed, Mapping) else observed
+            if not isinstance(observed, Mapping):
+                raise _refuse(
+                    X_IDENTITY_MISMATCH, f"{trail} is {observed!r}, not an object"
+                )
+            observed = {
+                key: _require_count(value, where=f"{trail}.{key}")
+                for key, value in observed.items()
+            }
         elif field == "suites":
-            observed = list(observed) if isinstance(observed, (list, tuple)) else observed
+            if not isinstance(observed, (list, tuple)):
+                raise _refuse(
+                    X_IDENTITY_MISMATCH, f"{trail} is {observed!r}, not an array"
+                )
+            for index, entry in enumerate(observed):
+                if not isinstance(entry, str):
+                    raise _refuse(
+                        X_IDENTITY_MISMATCH,
+                        f"{trail}[{index}] is {entry!r}, which is not a suite name",
+                    )
+            observed = list(observed)
             expected = list(expected)
+        else:
+            observed = _require_count(observed, where=trail)
         if observed != expected:
             raise _refuse(
                 X_IDENTITY_MISMATCH,
@@ -1014,6 +1328,7 @@ def authenticate_dataset(
     record: ConnectionRecord,
     bound: BoundPaths,
     sources: AuthenticatedSources,
+    authenticated: AuthenticatedConfig,
 ) -> AuthenticatedDataset:
     """Run read-order step 6: authenticate the manifest and both dataset audits.
 
@@ -1021,6 +1336,9 @@ def authenticate_dataset(
         record: the authenticated record.
         bound: the result of `bind_root_domains`.
         sources: the result of step 5, for the established result's case identities.
+        authenticated: the result of step 4. The dataset's own account of which
+            configuration produced it is joined to the configuration this chain
+            authenticated, rather than only to the record's echo of it.
 
     Returns:
         The parsed manifest rows, the recomputed census and both audit documents.
@@ -1037,17 +1355,27 @@ def authenticate_dataset(
     to equal a census this module recomputes from the manifest's own rows. That
     combination is finding CW's first mechanism: a schema-conformant fixture tree
     cannot acquire research provenance by having a digest computed over it.
+
+    **The config identity is joined here, not merely echoed.** Both audits and every
+    manifest row carry a `config_hash`, and requiring those to agree with each other
+    while never comparing their common value against the configuration step 4
+    validated leaves one state accepted that W6 forbids: a dataset internally
+    consistent on one configuration, described by a record whose validated config,
+    established result and payloads are on another. Every one of those files digests
+    correctly, every echo agrees, and the two halves of the sentence are about
+    different experiments. The join is also what the packet's own closed contract
+    already requires one level down -- `utils.role_contract.RolePayloadLoader` refuses
+    an index row whose `config_hash` is not the loaded config's -- so the manifest and
+    the audits are held to the standard the role indexes were already held to.
     """
 
     manifest_path = _require_present(
         bound.role_root / MANIFEST_NAME, where=MANIFEST_NAME, code=X_ROLE_ABSENT
     )
-    audit_paths = {
-        name: _require_present(
-            bound.role_root / f"{name}.json", where=f"{name}.json", code=X_ROLE_ABSENT
-        )
-        for name in AUDIT_NAMES
-    }
+    # `authenticated_bytes` carries the presence guard for these two, so there is no
+    # second one here: a guard that no input can make decisive is the same defect as a
+    # duplicated guard.
+    audit_paths = {name: bound.role_root / f"{name}.json" for name in AUDIT_NAMES}
     declared_audits = {
         "generation_audit": record.data_root.generation_audit,
         "independent_audit": record.data_root.independent_audit,
@@ -1059,16 +1387,17 @@ def authenticate_dataset(
         where="data_root.manifest_sha256",
         digest=external_digest(manifest_path),
     )
-    audit_bytes: dict[str, bytes] = {}
-    for name, path in audit_paths.items():
-        raw = path.read_bytes()
-        _require_digest_equal(
+    audit_bytes: dict[str, bytes] = {
+        name: authenticated_bytes(
             path,
             declared_audits[name].sha256,
             where=f"data_root.{name}.sha256",
-            digest=external_digest(path),
+            named_by=f"{name}.json",
+            code=X_ROLE_ABSENT,
+            digest_of_bytes=external_bytes_digest,
         )
-        audit_bytes[name] = raw
+        for name, path in audit_paths.items()
+    }
 
     try:
         manifest_rows = read_identity_manifest(manifest_path)
@@ -1076,6 +1405,12 @@ def authenticate_dataset(
         raise _refuse(
             X_IDENTITY_MISMATCH, f"{MANIFEST_NAME} did not parse: {exc}"
         ) from exc
+    require_still_authentic(
+        manifest_path,
+        record.data_root.manifest_sha256,
+        where="data_root.manifest_sha256",
+        digest_of_path=external_digest,
+    )
     census = manifest_census(manifest_rows)
 
     audits: dict[str, Mapping[str, Any]] = {}
@@ -1107,6 +1442,25 @@ def authenticate_dataset(
             )
         _require_census_agrees(name, document[MANIFEST_AUDIT_KEY], census)
         audits[name] = document
+
+    rows_by_run = {row.run_id: row for row in manifest_rows}
+
+    config_hash = authenticated.config.config_hash
+    for name in AUDIT_NAMES:
+        _require_strings_equal(
+            audits[name].get("config_hash"),
+            config_hash,
+            where="the authenticated configuration",
+            source=f"{name}.config_hash",
+        )
+    for run_id, row in rows_by_run.items():
+        if row.config_hash != config_hash:
+            raise _refuse(
+                X_IDENTITY_MISMATCH,
+                f"{MANIFEST_NAME} row {run_id!r} was generated under config_hash "
+                f"{row.config_hash!r} but the authenticated configuration is "
+                f"{config_hash!r}",
+            )
 
     generation = record.data_root.generation_audit
     independent = record.data_root.independent_audit
@@ -1140,7 +1494,6 @@ def authenticate_dataset(
             "presents exactly the cases the prior read established",
         )
 
-    rows_by_run = {row.run_id: row for row in manifest_rows}
     for case in record.cases:
         for suite, arm in case.arms.items():
             row = rows_by_run.get(arm.run_id)
@@ -1309,6 +1662,7 @@ def resolve_index_rows(
     record: ConnectionRecord,
     bound: BoundPaths,
     roots: Mapping[tuple[str, str, str], Path],
+    index_digests: Mapping[Path, str],
 ) -> Mapping[tuple[str, str, str], RoleIndexRow]:
     """Run read-order step 9: parse the authenticated indexes and plan no other open.
 
@@ -1323,6 +1677,11 @@ def resolve_index_rows(
     resolved and contained under `--role-root`. Comparing the resolved paths rather
     than the two strings is what makes a differently-spelled but identical path agree
     and a same-looking but different path refuse.
+
+    `utils.storage_contract.read_role_index` opens the file itself, so each index is
+    re-measured against its step-8 digest immediately after it is parsed: an index
+    that changed between the two rows is the state in which the rows this function
+    plans from are not the rows step 8 authenticated.
     """
 
     parsed: dict[Path, dict[str, RoleIndexRow]] = {}
@@ -1340,6 +1699,12 @@ def resolve_index_rows(
                             X_IDENTITY_MISMATCH,
                             f"the {role} index at {index_path} did not parse: {exc}",
                         ) from exc
+                    require_still_authentic(
+                        index_path,
+                        index_digests[index_path],
+                        where=f"the {role} index at {index_path}",
+                        digest_of_path=external_digest,
+                    )
                     parsed[index_path] = {row.run_id: row for row in index_rows}
                 row = parsed[index_path].get(arm.run_id)
                 if row is None:
@@ -1461,10 +1826,35 @@ def authenticate_payload_bytes(
     return _frozen_mapping(checkpoints)
 
 
+def _read_only_array(array: np.ndarray) -> np.ndarray:
+    """Return one authenticated payload array that cannot be written to.
+
+    `ndarray.flags.writeable = False` alone is not enough, and the reason is worth
+    stating where the code is: an array that owns its own buffer may have the flag set
+    back to `True` by anyone holding it, so a "frozen" payload straight out of
+    `np.load` is frozen only against accident. An array built over an immutable
+    `bytes` object cannot be made writeable at all -- NumPy refuses, because the base
+    it would have to write through is itself read-only. The copy costs one pass over
+    the payload and buys the property the chain actually claims.
+
+    `np.asarray` and not `np.ascontiguousarray`: the contiguous form is documented to
+    return an array of at least one dimension, so it turns a zero-dimensional payload
+    field into a one-element vector, and a freeze that changes a shape has changed the
+    fact it was supposed to preserve -- after the loader validated that shape against
+    the schema. `tobytes` already serialises any layout in C order, so the contiguous
+    call bought nothing to offset it.
+    """
+
+    source = np.asarray(array)
+    view = np.frombuffer(source.tobytes(), dtype=source.dtype)
+    return view.reshape(source.shape)
+
+
 def load_authenticated_payloads(
     record: ConnectionRecord,
     roots: Mapping[tuple[str, str, str], Path],
     authenticated: AuthenticatedConfig,
+    index_digests: Mapping[Path, str],
 ) -> Mapping[tuple[str, str, str], Mapping[str, np.ndarray]]:
     """Run read-order step 12: load exactly the authenticated payload set.
 
@@ -1476,6 +1866,22 @@ def load_authenticated_payloads(
     payload's digest, requires the path to stay under its own role root, and applies the
     schema's dtype and shape declarations plus the role's semantic checks. The adapter
     re-derives none of the three.
+
+    **The loader reads its own index, and that read is bound to step 8's.**
+    `RolePayloadLoader` parses `index.csv` once, in its constructor, and every later
+    `load` resolves its path and digest from those cached rows. So the index is
+    re-measured against its step-8 digest immediately after the constructor returns.
+    That is what makes the loader's own hash check load-bearing rather than
+    circular: its rows are then provably the authenticated rows, its
+    `row.sha256` is the digest step 11 already required the record and the index to
+    agree on, and the bytes it hands back are therefore the bytes this chain
+    authenticated. Without that bracket, an index changed after step 9 could point the
+    loader at a different file in the same tree and the loader would check that file
+    against the changed index's own digest, agreeing with itself about a payload the
+    record never named.
+
+    **What the payload map holds.** Each array is rebuilt over an immutable buffer, so
+    the facts rows 13 to 21 consume cannot be edited after they were authenticated.
 
     **A scope statement rather than a defect**, recorded here so a later session does
     not rediscover it as one: a payload whose digest is exactly right but whose dtype or
@@ -1506,6 +1912,13 @@ def load_authenticated_payloads(
                             X_IDENTITY_MISMATCH,
                             f"the {role} role root at {directory} did not open: {exc}",
                         ) from exc
+                    index_path = directory / ROLE_INDEX_NAME
+                    require_still_authentic(
+                        index_path,
+                        index_digests[index_path],
+                        where=f"the {role} index at {index_path}",
+                        digest_of_path=external_digest,
+                    )
                 try:
                     payload = loaders[directory].load(arm.run_id)
                 except (StorageContractError, KeyError, ValueError, OSError) as exc:
@@ -1513,7 +1926,9 @@ def load_authenticated_payloads(
                         X_IDENTITY_MISMATCH,
                         f"the {role} payload for run {arm.run_id!r} did not load: {exc}",
                     ) from exc
-                payloads[key] = _frozen_mapping(payload)
+                payloads[key] = _frozen_mapping(
+                    {name: _read_only_array(array) for name, array in payload.items()}
+                )
     return _frozen_mapping(payloads)
 
 
@@ -1526,11 +1941,11 @@ def authenticate_roles(
     """Run read-order steps 7 through 12 in their normative order."""
 
     roots = require_role_layout(record, bound)
-    authenticate_role_indexes(record, roots)
-    index_rows = resolve_index_rows(record, bound, roots)
+    index_digests = authenticate_role_indexes(record, roots)
+    index_rows = resolve_index_rows(record, bound, roots, index_digests)
     require_manifest_rows(record, dataset)
     checkpoints = authenticate_payload_bytes(record, bound, index_rows)
-    payloads = load_authenticated_payloads(record, roots, authenticated)
+    payloads = load_authenticated_payloads(record, roots, authenticated, index_digests)
     return AuthenticatedRoles(
         payloads=payloads,
         index_rows=index_rows,
@@ -1622,7 +2037,7 @@ def authenticate_connection(
     )
     authenticated = authenticate_config(record, bound)
     sources = authenticate_sources(record, bound)
-    dataset = authenticate_dataset(record, bound, sources)
+    dataset = authenticate_dataset(record, bound, sources, authenticated)
     roles = authenticate_roles(record, bound, authenticated, dataset)
     return AuthenticatedConnection(
         record=record,
