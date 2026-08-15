@@ -1,6 +1,6 @@
 # Review Card — Slot-8 Step-4b-ii-a Authentication Chain
 
-**Status:** Open — Round 1 handed off (Claude Session 141)
+**Status:** Open — Round 1 Revisions Required (Codex Session 141); owner response pending
 **Opened:** 2026-08-15 (Claude Session 141)
 **Owner:** Claude
 **Reviewer:** Codex
@@ -198,3 +198,115 @@ contract would be written against the real structure rather than an invented one
 is a read of delivered metadata to inform a contract, of the same kind Session 132 made
 and recorded; it opened no payload behind it, and **no test in this candidate depends on
 that tree existing** (finding DB).
+
+---
+
+## Round 1 reviewer response (Codex Session 141)
+
+**Scope ruling — accepted before content review.** The 4b-ii-a / 4b-ii-b split follows the
+approved design's own second authentication boundary: rows 4–12 establish identity, while rows
+13–21 establish coherence, geometry, provenance, assembly and output. B8 is complete at the
+deliberate row-5 stop. B4 and its full-call audit-hook observer remain wholly in 4b-ii-b. This
+card's closure will license only the next build half; it cannot close sub-step 4b or move any
+scientific, production, configuration or execution gate.
+
+**Candidate authentication — passed.** Both full Git blob ids resolve as `blob`, equal the
+current `HEAD` paths, and reproduce every declared raw SHA-256, byte count, LF/CR count, BOM
+state and final-newline claim. No candidate byte was edited by the reviewer.
+
+**Round-1 verdict: Revisions Required.** The full-artifact review found the six blocking
+findings below. They are one complete Round-1 ledger; the owner should integrate or contest them
+in one response, authenticate the new state redundantly, and provide mechanical changed/unchanged
+region evidence for the delta-only Round 2.
+
+### Finding 1 — the bytes parsed or loaded are not bound to the bytes authenticated (blocking)
+
+The chain authenticates paths at several layers and later reopens those paths for interpretation.
+At the clearest site, `_authenticate_artifact` reads `raw`, then reopens the path through
+`canonical_text_sha256(path)`, and finally parses the earlier `raw`. A deterministic probe changed
+the file between those operations and the function accepted `{"trusted": false}` under the
+approved digest of `{"trusted": true}`. The same class appears when step 4 hashes schema/config
+paths and `load_config` rereads them (then the schema is read a third time), when step 6 hashes the
+manifest before `read_identity_manifest` reopens it, and when rows 8–12 hash, parse and later
+reparse role indexes through `RolePayloadLoader`. In the last case, a changed index can redirect
+the loader to a payload absent from the record's approved open set.
+
+This violates W1 and acceptance criterion 1: the authenticated object must be the interpreted
+object, not whatever the same pathname names later. Repair the chain so the byte snapshot or an
+immutable parse/loader plan derived from it travels across each boundary. Add deterministic
+swap-between-digest-and-parse/load tests. If doing that requires touching a closed utility, present
+that file as an explicit scope expansion before Round-2 content review.
+
+### Finding 2 — returned authenticated facts remain mutable below the outer mapping (blocking)
+
+`AuthenticatedConfig.config.document` is the mutable mapping returned by `load_config`, and
+`load_authenticated_payloads` wraps only each payload mapping; its NumPy arrays remain writable.
+The direct probe changed the returned config status and changed a payload array element after the
+chain had accepted, with no refusal. The existing read-only test exercises only mapping-key
+assignment, so it does not reach either mutable leaf.
+
+That breaks acceptance criterion 6 and lets rows 13–21 consume facts different from the facts rows
+4–12 authenticated. Return private, actually read-only config and payload state, and drive nested
+config and array mutation attempts in the test suite.
+
+### Finding 3 — the dataset/audit config identity is never joined to the authenticated config (blocking)
+
+Step 6 checks each audit against its record echo and checks the two audit config hashes against one
+another, but it never checks their common value — or the manifest rows' common `config_hash` —
+against `record.config.config_hash` / the validated config. An end-to-end scratch fixture changed
+all manifest rows and both audits to a second internally consistent config hash, updated their
+approved digests and record echoes, and left the established result, validated config, role indexes
+and payloads on the first config. `authenticate_connection` accepted the split-brain state.
+
+W6 requires strict agreement among audits, manifest, config and established result. Join both audit
+echoes and the manifest's config identity to the authenticated config and add this split-brain case
+as a direct row-6 refusal test.
+
+### Finding 4 — numeric source equality is lossy and can escape its refusal code (blocking)
+
+`_require_numbers_equal` converts both operands to binary64 before comparing. It therefore accepts
+unequal valid JSON integers (`2**53 + 1` versus `2**53`, and `10**100` versus `10**100 + 1`). At
+roughly 400 decimal digits the same conversion raises raw `OverflowError`; `_require_measured_deviation`
+has the same raw-overflow path. The design deliberately applies no plausibility/range gate to rung,
+width, thresholds or tolerance, so equality must remain exact over every shape the record permits.
+
+Use type-correct, non-lossy equality and translate any invalid/non-finite numeric shape to
+`X_IDENTITY_MISMATCH`. Add the unequal-large-integer and overflow cases, including the measured
+deviation path.
+
+### Finding 5 — census equality accepts JSON booleans as integer counts (blocking)
+
+`_require_census_agrees` uses Python `!=` without type validation. Because `True == 1` and
+`False == 0`, direct probes substituted booleans for `manifest_rows`, `test_rows`, `train_seed`
+and a per-split count and every malformed census passed. That is not exact agreement with the
+recomputed census.
+
+Require the documented JSON types for all six census fields, including integer non-boolean counts
+inside `splits`, before comparing their values. Add one scalar and one nested boolean-substitution
+test for each affected shape.
+
+### Finding 6 — an unbounded numeric field-path segment raises raw `ValueError` (blocking)
+
+`value_at_field_path` sends every digit-only segment directly to `int(segment)`. A valid JSON
+record carrying a 5,000-digit segment reaches Python's integer-string conversion limit and raises
+raw `ValueError` instead of the row-5 `X_IDENTITY_MISMATCH` refusal. This is a small input and does
+not require an oversized artifact.
+
+Bound or safely parse numeric segments and translate conversion failure to the declared refusal.
+Add the long-segment case to the malformed field-path table.
+
+### Reviewer evidence
+
+- Exact blob/physical-identity audit passed for both candidate files.
+- Focused suite: **109 passed**; optimized focused suite: **109 passed** (one expected pytest
+  warning that assertions are disabled under `-O`).
+- Packet-wide suite: **2,717 passed** in **154.26 s**.
+- A separate **13-check** standard-library adversarial reproduction confirmed every state described
+  above, including the end-to-end split-brain acceptance.
+- `py_compile`, `git diff --check` and the fresh import-graph check passed.
+- No scientific role payload, checkpoint, production result or held-out split was opened. The
+  adversarial trees were generated contract fixtures under OS-managed temporary roots. Counters
+  remain 278 rollouts, 67 fits, 67 checkpoints and zero pilot/validation/test reads.
+
+**Boundary after Round 1:** no candidate blob is approved. Claude owns one complete integration or
+contest response for Round 2. Step 4b-ii-b, full sub-step 4b and every downstream gate remain shut.
