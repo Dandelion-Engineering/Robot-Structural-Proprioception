@@ -1,115 +1,132 @@
 # Summary of Only Necessary Context — Codex
 
-Last completely rewritten after Codex Session 136 on 2026-08-14.
+Last completely rewritten after Codex Session 137 on 2026-08-14.
 
 ## Resume here
 
 - Branch: `main`.
 - Slot-8 Steps 1–3 and Step 4a are closed / both approved. Step-4a exact design blob is
   `032db1666efbe00adec5696de70424d531ba33a2`, raw SHA-256
-  `f761a673ff8fcca6c58fe530a3faaed57630315a87a5e241d8ca9675a13c4ffc`, 83,181 bytes /
-  1,062 LF / 0 CR.
-- Step 4b-i is **OPEN — Round 1 reviewer ledger complete; awaiting Claude's owner response**. Codex
-  does not approve either candidate. Claude owns the response unless labor is explicitly reassigned.
+  `f761a673ff8fcca6c58fe530a3faaed57630315a87a5e241d8ca9675a13c4ffc`.
+- Step 4b-i is **OPEN — Round-2 revisions required; awaiting Claude's one bounded owner response**.
+  Codex does not approve any current candidate blob. The next Codex review is Round 3 and the last
+  review under this card; the round limit never forces approval.
 - Governing card: `Review Card/Slot-8 Step-4b-i Connection-Record Contract.md`.
-- Active narrow chat: `chats/Claude-Codex/Slot-8 Step-4b-i Connection-Record Contract/Slot-8 Step-4b-i
-  Connection-Record Contract - Active.md`.
-- Step 4b-ii has not started and is not authorized while 4b-i is open. Even 4b-i closure would approve
-  only record parsing/binding, not source reads, bundle construction, persistence or full Step 4b.
+- Active subject chat: `chats/Claude-Codex/Slot-8 Step-4b-i Connection-Record Contract/Slot-8
+  Step-4b-i Connection-Record Contract - Active.md`.
+- The proposed renderer scope expansion is accepted. It is part of this card because Finding 5
+  explicitly required a write-boundary guard, but it inherits no approval from its former closed
+  Step-2 state.
+- Step 4b-ii has not started and is not authorized while 4b-i is open. Even 4b-i closure would
+  authorize only a new, separately reviewed 4b-ii build; it would not close full Step 4b.
 - No production connection record, real role/index/payload/checkpoint/result read, Step 4c–4f work,
   capacity or threshold choice, final configuration, adapter run, or C1-versus-S claim is authorized.
 - The next regular Codex progress report is Session 144.
 
-## Exact Step-4b-i candidate and evidence
+## Exact Round-2 candidate — all three unapproved
 
-- Module: `Reproducibility Packet/scripts/utils/connection_record.py`, Git blob
-  `b1a574650b1fcf673d04daf1df0b2d9c24f868f0`, raw SHA-256
-  `12bf71e5626f817f2ccc271882906af13afacc24cc7120a55aa96cffa3713046`, 59,076 bytes /
-  1,468 LF / 0 CR.
-- Tests: `Reproducibility Packet/tests/test_connection_record.py`, Git blob
-  `6c89914502e0dff2f00e96a8b70b09d63349c30c`, raw SHA-256
-  `5b24716dd541d2f2ea7b6aa7585ad68b6470f9497818cbe7c2c5cec9238e5d25`, 50,022 bytes /
-  1,245 LF / 0 CR.
-- Verification passed 212 focused tests, the same 212 under `python -O`, `py_compile`, and 2,479
-  packet-wide tests with zero failures or collection errors. `git diff --check` was clean.
-- The green suite does not construct the five blocking states below. No candidate source or test was
-  edited by Codex.
+- `Reproducibility Packet/scripts/utils/connection_record.py`: Git blob
+  `474f4abc4a646304261f47d536a33e05b7feef65`, raw SHA-256
+  `ead247379da4b0167807eb7d14c3c8f39f48cbb4ac54fbb9c3e0f0908e01fbb3`, 73,745 bytes /
+  1,763 LF / 0 CR.
+- `Reproducibility Packet/tests/test_connection_record.py`: Git blob
+  `73d5d59e6cb4787ee4976c2e11e8acd03ebb55f5`, raw SHA-256
+  `fc0b043afd6cf47610402cd0b2410f2f5a148936956b5cffc169da77a2f2d6c9`, 80,673 bytes /
+  1,948 LF / 0 CR.
+- `Reproducibility Packet/scripts/render_verification_scene.py`: Git blob
+  `d15705e4f0db3816c2cc3f02ad1f21366b0249f1`, raw SHA-256
+  `5ba9222939b350d7e2a6c09a17b6c8f3c6572979d76b45f975279477b7536564`, 33,167 bytes /
+  847 LF / 0 CR. Its earlier approved Step-2 base was
+  `0ae5b19d4a5957d3be662b1aa337c8e3bb9353a5`.
+- Independent verification passed 311 focused, 311 under `python -O`, 2,578 packet-wide,
+  `py_compile` and `git diff --check`.
 
-## Complete Round-1 blocker ledger
+## Round-2 disposition
 
-1. **Record path/open set:** valid bytes load from an arbitrary path; `bind_root_domains` has no actual
-   record path to bind against `packet_root / record_relative_path(record_label)`; and
-   `expected_open_set` omits the record. Bind the real path, carry it in `BoundPaths`, include it in W3's
-   exact set, and test arbitrary/output-tree copies.
-2. **Deep immutability:** frozen dataclasses contain mutable `document`, `arms`, `roles`, `manifest_row`,
-   `links` and `sources` mappings. Exact probes mutated both a role reference and the retained record
-   label. Deep-freeze every parsed mapping and test mutation refusal at every typed layer.
-3. **Huge integer:** `analysis_window_s = 10**400` raises raw `OverflowError` during `float()` instead of
-   `X_CONNECTION_UNAUTHORIZED`. Translate overflow/conversion failures and cover the large-integer form
-   across numeric helper classes.
-4. **Portable paths/containment:** embedded NUL reaches raw `ValueError`; Windows ADS, device names and
-   trailing-dot/space components pass; the output parent bypasses `_resolve_under`, permitting a
-   junction/symlink escape. Define a total portable component grammar, translate resolution failures and
-   prove every packet-relative source and destination remains under one injected root.
-5. **`case_id` output traversal:** arbitrary non-empty strings reach renderer filenames. The integration
-   probe wrote `../escaped-case` PNG/JSON beside the requested bundle directory. Require a portable leaf
-   token at the record boundary and writer-side containment; test traversal, separators, drive/ADS/device
-   aliases and the observed write set.
+- Finding 1 closes: the authenticated record is bound to its one tracked packet-relative location,
+  carried by `BoundPaths.record_path`, and included in the exact expected open set.
+- Finding 2 closes: the parsed document and every typed/bound mapping are immutable views over
+  private copies; arrays are tuples.
+- Finding 3 closes: huge JSON integers at float-shaped positions translate to the named refusal.
+- Finding 4's Windows alias/device/trailing-dot grammar, named resolution failures and containment
+  checks reproduce. Its portable-component claim remains incomplete because length is unbounded.
+- Finding 5's traversal refusal and writer containment reproduce, but the output namespace remains
+  non-injective and can partially publish before a raw failure.
 
-Claude must integrate or contest the whole ledger in one owner response and name both changed and
-mechanically byte-identical regions. Round 2 is delta-only: review each disposition, the named acceptance
-tests and regressions introduced by the delta. Do not restart a whole-file audit absent contrary evidence.
+## The one remaining blocking disposition
 
-## Review and chat protocol
+Findings 4 and 5 are not fully closed because the accepted output namespace is neither
+length-bounded nor injective. This is not a new unrelated `LATE-BLOCKER`; it is a direct gap in the
+recorded path/filename repair.
 
-- The director's Review Card and convergence method governs formal review and supersedes the remainder
-  of `Playbooks/review-cycle.md` where they conflict.
-- Authenticate every candidate with its full Git blob, raw digest, byte count and EOL figures; verify the
-  Git object resolves before relying on it.
-- A reviewer records the complete numbered ledger in Round 1. The owner answers every item and identifies
-  changed plus unchanged regions. Round 2 is a bounded delta review.
-- Same-state explicit approval by both agents is required. Green tests, reviewer edits, downstream use,
-  a handoff or silence are not approval.
-- Use the active Step-4b-i chat only for this first-half contract. Do not append to concluded Step-4a or
-  other concluded subject chats.
-- The director-visible Review Boundary and Convergence chat is only for method feedback/problems, not the
-  subject decision. No method triage is currently open.
-- Use Transcript Order Monitoring only if the same writer's message appears after a verified opposite-agent
-  EOF tail. No recurrence occurred in Session 136.
+Three exact current-state probes:
 
-## Session-136 public and continuity state
+1. `case_id = "verification_bundle"` is accepted. `render_bundle` overwrites
+   `verification_bundle.json` with the scene JSON. The file no longer equals the canonical bundle
+   document and the returned bundle digest does not hash it.
+2. `Case-A` and `case-a` are accepted as distinct ids. On Windows the renderer reports four cases
+   but writes only eight files instead of ten because the two JSON/PNG pairs collapse
+   case-insensitively.
+3. A 251-character ASCII case id is accepted. Its `.json` filename is 256 characters on Windows.
+   The complete-path helper accepts it; the renderer writes the two fixed bundle files plus the PNG,
+   then raises raw `OSError` while opening the scene JSON, leaving a partial publication.
 
-- `agents/Codex/Progress Reports/Progress Report Session 136.md` covers Sessions 129–136: closure of the
-  synthetic fixture, Step-4a convergence, the Review Card rollout and the current blocked implementation.
-- Root `README.md` was intentionally not changed. A rejected first-half candidate is not a finished public
-  milestone, and the Session-135 heartbeat already states the active boundary.
-- `agents/Codex/Session Summaries/HumanReport136.md` records the exact probes, evidence, decision and
-  preserved authority limits.
-- Non-blocking general recent-work note: Claude's HumanReport136 files-updated list omits
-  `agents/Claude/Permanent Instruments.md`, although the Claude Session-136 commit changed it by 25 lines.
-  Claude should reconcile that record; it does not affect the formal Step-4b-i verdict.
+Claude's bounded response must:
 
-## Existing durable boundaries
+- impose portable component lengths at the record boundary;
+- require derived case filenames to be disjoint from fixed bundle filenames and from one another
+  under an explicit portable case-insensitive comparison;
+- enforce the same length/uniqueness properties in `_contained_output_paths` before the first write;
+  and
+- add all three exact probes.
 
-- Stage 1 remains complete only as a development screen: no readable paired shape at five points/five
-  seeds, no licensed trend statement, and no capacity or threshold selected.
-- Rung 2 remains complete only as scoped. Its fit/analyzer invocations are spent; all ten arms have zero
-  healthy and structure F1, which is an observed development fact rather than a causal claim.
-- The verified synthetic Slot-8 fixture is four deterministic 300-DPI case figures under
-  `Reproducibility Packet/results/verification_fixture/`. It proves the display mechanism, not a scientific
-  result, and its real-role path refuses before a scientific file opens.
+Do not introduce a new item serially in Round 3 unless the superseding late-blocker/triage rule is
+actually satisfied. Review only this disposition, its tests and regressions caused by the delta.
+
+## Review method and chat state
+
+- The director's Review Card and convergence method supersedes the historical review-cycle text.
+- An out-of-card repair is proposed explicitly, redundantly authenticated, bounded, tied to its
+  prior state and offered with revert/deferral. The reviewer rules scope before content. If accepted,
+  the artifact joins the candidate without inheriting prior approval; if rejected, it returns to its
+  prior state and moves to a new card. Round and late-blocker counters do not reset.
+- Authenticate every candidate with full Git blob, raw SHA-256, byte count and EOL figures, and
+  verify the Git object resolves.
+- Same-state explicit approval by both agents is required. Green tests, edits, downstream use,
+  handoff and silence are not approval.
+- Use only the active Step-4b-i subject chat for this contract. The Step-4a and broad Phase-2 chats
+  are concluded.
+- The director-visible Review Boundary and Convergence chat carries method feedback only. The scope
+  rule is adopted and no human triage is currently open.
+- Use Transcript Order Monitoring only for an actual append-order/integrity recurrence. Both Session-
+  137 appends preserved their exact byte prefixes, placed unique headers after the boundaries and
+  remained additions-only.
+
+## Public, reporting and scientific boundaries
+
+- `agents/Codex/Session Summaries/HumanReport137.md` is the detailed record. The next regular progress
+  report is Session 144.
+- Root `README.md` was intentionally unchanged: no bounded artifact or phase closed.
+- Stage 1 remains complete only as a development screen: no readable paired shape at five points /
+  five seeds, no licensed trend statement, no capacity or threshold selected.
+- Rung 2 remains complete only as scoped. Its fit/analyzer invocations are spent; all ten arms have
+  zero healthy and structure F1, which is a development observation rather than a causal claim.
+- The verified synthetic Slot-8 fixture proves the display mechanism, not a scientific result. Its
+  real-role path still refuses before a scientific file opens.
 - Project counters remain 278 rollouts, 67 fits, 67 checkpoints, and zero pilot/validation/test reads.
-- Amendment A2, role separation, no-exploratory-recompute rules, the 67-checkpoint distribution/recovery
-  issue, the non-blocking Claim Sheet director request, and all unspent scientific gates remain in force.
+- Amendment A2, role separation, no-exploratory-recompute rules, the 67-checkpoint distribution /
+  recovery issue, the non-blocking Claim Sheet director request and all unspent scientific gates
+  remain in force.
 
 ## Append-only transcript discipline
 
 Before any transcript append:
 
 1. read the UTF-8 physical tail and record byte and line counts;
-2. patch only against a programmatically verified unique multiline EOF anchor;
-3. verify the entire pre-write byte sequence is the new file prefix;
-4. verify the new session header occurs exactly once after the old byte boundary; and
-5. reread the physical tail and confirm the new message is last.
+2. authenticate the complete prior bytes and programmatically verify a unique multi-line EOF anchor;
+3. apply only against that exact verified tail;
+4. verify the whole pre-write byte sequence is the new file prefix;
+5. verify the new session header occurs exactly once after the old byte boundary; and
+6. reread the physical tail and confirm the new message is last and the Git diff is additions-only.
 
 If any assertion fails, stop and repair with a dated append-only correction before commit.

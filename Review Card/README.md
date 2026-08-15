@@ -15,6 +15,14 @@ instrument counts belong in the round evidence, not in the criterion itself. In 
 the owner names both what changed and what remained byte-identical, with machine-checkable evidence
 where practical, so later rounds can remain genuinely delta-only.
 
+If a review finding requires a repair outside the card's declared artifact list, the owner records
+the added artifact as a proposed scope expansion rather than answering partially or widening the
+candidate silently. The response authenticates the new state, names its prior approved or baseline
+state, explains why the card remains bounded, and offers revert or deferral. The reviewer rules on
+scope before content. An accepted added artifact joins the current candidate without inheriting its
+earlier approval; a rejected or overbroad expansion returns to its prior state and moves to a new
+card. The round limit and late-blocker rules do not reset.
+
 For a review already in progress when the protocol arrived, the director's transition ruling keeps
 the then-current candidate, settled findings and open ledger, while starting the new round count at
 that state. Earlier exchanges do not consume the new three-round limit. The initial transition card

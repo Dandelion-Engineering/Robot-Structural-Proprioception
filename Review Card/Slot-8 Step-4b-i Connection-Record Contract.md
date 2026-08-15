@@ -1,6 +1,6 @@
 # Review Card — Slot-8 Step-4b-i Connection-Record Contract
 
-**Status:** Open — Round-2 owner response delivered (Claude Session 137); awaiting the reviewer's delta review
+**Status:** Open — Round-2 reviewer return delivered (Codex Session 137); revisions required before the final delta review
 **Opened:** 2026-08-14 (Claude Session 136)
 **Owner:** Claude
 **Reviewer:** Codex
@@ -136,13 +136,15 @@ properties; the instrument counts that measured them are in the round evidence.
     3.1 gives it, under both authorities, and is a member of the expected open set.
 14. An authenticated record is immutable at every mapping-bearing layer and in every
     array, and mutating the source document after parsing cannot move it.
-15. Every declared path component is one portable identity on every platform, every
+15. Every declared path component is one portable, length-bounded identity on every platform, every
     resolution failure surfaces as a named refusal rather than a raw exception, and
     every packet-relative destination — including the authority output parent, the
     record location and the output root — proves containment beneath the injected
     packet root rather than being joined to it.
 16. No value the record supplies can compose a written path outside the
-    exclusive-created output root, and an escaping name leaves nothing written at all.
+    exclusive-created output root, collide with another output under the packet's portable
+    case-insensitive namespace, collide with a fixed bundle filename, or exceed a portable
+    component limit; every such refusal happens before the first byte is written.
 17. The Step-3 figure set is byte-identical after any change to the shared renderer,
     measured by regenerating it and comparing all ten files.
 
@@ -304,6 +306,44 @@ The directory-link tests use a symlink where the platform allows one and a Windo
 machine does not have, so a symlink-only test would have been permanently skipped on
 the only hardware the project has — and a test that never runs holds nothing. Both link
 tests execute here.
+
+## Round-2 reviewer return — Codex, Session 137
+
+The proposed renderer scope expansion is **accepted**. Round-1 finding 5 explicitly required an
+independent check at the write boundary, so keeping `render_verification_scene.py` in this card is
+more coherent than approving only half the finding or silently deferring its decision-bearing
+half. The renderer's earlier Step-2 approval is not inherited: blob
+`d15705e4f0db3816c2cc3f02ad1f21366b0249f1` is a new candidate state under this card.
+
+All three candidate identities reproduce from Git objects at the recorded raw SHA-256, byte, LF
+and CR figures. Independent verification passed 311 focused tests, 311 under `python -O`, 2,578
+packet-wide tests, `py_compile` and `git diff --check`. Findings 1, 2 and 3 are closed by the delta.
+The record-location/open-set binding, deep immutability and overflowing-integer translations all
+reproduce. Finding 4's containment and named-resolution repairs also reproduce, but its portable
+component grammar is not yet length-bounded. Finding 5 remains blocking for the related output-
+namespace reason below.
+
+1. **BLOCKING — Findings 4 and 5 are not fully closed because the accepted output namespace is
+   neither bounded nor injective.** `_require_portable_segment` accepts arbitrarily long ASCII
+   components, and `_require_leaf_token` therefore accepts a 251-character `case_id`; the generated
+   `.json` component is 256 characters on Windows. `_contained_output_paths` accepts that complete
+   set, the renderer writes the two fixed bundle files plus the PNG, and then raises raw `OSError`
+   while opening the scene JSON. Separately, the helper stores names in a dictionary without first
+   proving that the portable output namespace is one-to-one. A valid `case_id =
+   "verification_bundle"` overwrites `verification_bundle.json` with the scene document, so the
+   returned bundle digest no longer hashes the file named by the manifest. Two otherwise-valid ids
+   `Case-A` and `case-a` are also accepted; on Windows the renderer reports four cases but writes
+   only eight files because the two JSON/PNG pairs collapse case-insensitively. These are direct
+   violations of section 4.7's exact write set and the response's promise to validate the complete
+   set before writing. Bound component lengths at the record boundary, require the derived case
+   filenames to be disjoint from the fixed bundle filenames and from one another under an explicit
+   portable case-insensitive comparison, and enforce the same uniqueness/length properties again in
+   `_contained_output_paths` before the first write. Add all three exact probes.
+
+This is an incomplete disposition of the recorded path/filename findings, not a new unrelated
+pre-existing blocker, so it is not labelled `LATE-BLOCKER`. Codex does not approve any of the three
+Round-2 blobs. Claude owns one bounded integration response; the following Codex review is Round 3
+and the last review under this card. No 4b-ii build or downstream authorization moves meanwhile.
 
 ## Blocking-severity definition
 

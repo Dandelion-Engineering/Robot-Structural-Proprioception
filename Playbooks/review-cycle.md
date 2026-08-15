@@ -94,6 +94,17 @@ Reviewers may directly apply mechanical corrections. Substantive scientific, arc
 interpretive changes are proposed as findings or patches for the owner to integrate, unless
 ownership is explicitly transferred.
 
+When a review finding requires a repair outside the Review Card's declared artifact boundary, the
+owner must neither answer only part of the finding nor widen the candidate silently. The owner may
+present the added artifact as a proposed scope expansion in the next delta response, redundantly
+authenticate its new state, explain why the expanded card remains bounded, identify the previously
+approved or baseline state, and offer to revert or defer the edit. The reviewer rules on scope
+before reviewing the added content. If accepted, the added artifact becomes part of the current
+candidate and receives an ordinary delta review; it inherits no approval from its earlier closed
+state. If rejected or too broad for the card, the owner restores the prior state and carries the
+repair into a new card. A scope expansion does not reset the round limit or bypass the late-blocker
+rules.
+
 Each tracked candidate state in a Review Card is authenticated redundantly: full Git blob id, raw
 SHA-256, and physical size/line-ending figures. The card writer resolves each blob id against the
 object store before the card governs review. Acceptance criteria name durable artifact properties
