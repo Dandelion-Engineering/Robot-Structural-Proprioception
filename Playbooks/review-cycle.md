@@ -84,7 +84,9 @@ follow-ups.
 
 A review has at most three owner-reviewer round-trips. The limit never forces approval. At the limit
 the outcome must be Approved, Approved with Follow-ups, Revisions Required, Split/Redesign Required,
-or Escalated.
+or — when the limit is reached in unresolved disagreement — one of the two terminal outcomes of the
+convergence ladder below. **`Escalated` is no longer a terminal outcome; see "Convergence at the
+round limit".**
 
 Once both agents approve the scoped candidate, that review closes. Later amendments,
 implementation work, data gates, new sections, or new versions receive new Review Cards and new
@@ -112,3 +114,100 @@ or outcomes rather than one agent's private audit count; round evidence records 
 instrument and count used. An owner responding after Round 1 names both the changed regions and the
 regions shown unchanged, with machine-checkable equality evidence where practical, so delta-only
 review is an auditable boundary rather than an assumption.
+
+## Convergence at the round limit — implemented 2026-08-15
+
+**Effective immediately. This section supersedes the `Escalated` terminal outcome and the earlier
+"Escalate rather than loop" step, and it is the mechanism the round limit hands the work to when a
+review reaches its limit still in disagreement. It was directed by Randy, proposed by Claude
+(Claude Session 139) and reconciled and agreed by Codex (Codex Session 139); Claude wrote it in
+after accepting those reconciliations (Claude Session 140).**
+
+### Why the old outcome was replaced
+
+The director is asynchronous. An `Escalated` outcome parked a review on a human turn that might not
+arrive for days, and sessions that opened onto a parked review had nothing to do on it — the cost of
+waiting was paid by the project, repeatedly, and the disagreement was no closer to settled when the
+answer came. `Escalated` also covered two disagreements with nothing in common and resolved neither.
+A **factual** disagreement (does the code do X or Y; does this file have that property) is decidable
+by measurement, and a human decides it no better than a probe does. A **judgment** disagreement
+(severity, scope, whether a sentence overclaims) admits no measurement, and with exactly two agents
+no vote breaks the tie.
+
+The replacement keeps the director informed without making the project wait on them, and it settles
+each kind of disagreement with the instrument that kind actually answers to.
+
+### Step 1 — Classify, in the turn that first hits the limit
+
+The agent whose turn first finds the review at its round limit in disagreement records, **in that
+same turn**: the residual issue, its classification as **factual** or **judgment**, that agent's own
+position, and — for a claimed factual issue — the proposed decisive probe together with the outcome
+map it will treat as binding. The other agent responds on the next turn. **If the two
+classifications differ, the issue is judgment.** Classification is bundled into the limit turn; it
+is never a separate prelude of its own.
+
+### Step 2 — Factual: one precommitted probe
+
+Both agents write the exact probe **and the outcome each will accept** into the card **before
+anything runs**. Writing down what would change your mind, before you look, is what makes the result
+binding — and it is the honest test of whether the disagreement was ever factual at all.
+
+- The second agent either records acceptance before the probe runs, or proposes **one** replacement.
+  The first agent may accept and run that replacement; otherwise the issue becomes judgment.
+- **The probe creates no authority.** It may not spend a gated fit, rollout, role read, production
+  action, external action, or any other resource the card did not already authorize. If a decisive
+  measurement would require one, the fail-closed judgment lane is the available route — a
+  disagreement is never a reason to spend something a gate is holding.
+- An inconclusive result becomes judgment. If neither agent can name a decisive probe, the issue was
+  judgment; reclassify it.
+
+### Step 3 — Judgment: exactly one narrowing split, one focused round-trip
+
+Approve everything uncontested and move the contested question to a new card whose entire scope is
+that question, carrying **both positions verbatim**.
+
+- **Separation must be exact-state, not prose.** Uncontested material closes only if it can be
+  separated into an exact candidate state both agents approve. A sentence saying "everything else is
+  approved" is not a separation.
+- The narrowed card permits **one owner handoff, one reviewer response, and one genuine owner
+  re-review**. It **cannot be split again** and it **does not inherit a fresh three-round
+  allowance**.
+
+### Step 4 — The fail-closed default, constructed lawfully
+
+If the focused round-trip does not reach same-state approval, **the contested element does not
+ship**:
+
+- a contested capability is left refusing; a contested permission is left denied; contested prose is
+  withheld rather than softened;
+- **on an append-only artifact, withholding happens by a forward correction or by omission from the
+  next state — never by rewriting history**;
+- if the element cannot be separated without incoherence, the whole candidate is withheld.
+
+The two terminal outcomes are **`Approved — Contested Element Withheld`** and **`Withheld —
+Contested Candidate Not Adopted`**.
+
+**Why fail-closed: the two errors are not symmetric.** A reviewer who wrongly withholds costs the
+project a feature — recoverable, visible, with both arguments attached to it. An owner who wrongly
+ships costs a correctness guarantee, and the record says it was approved. The recoverable error is
+the one to prefer.
+
+**The objection, stated rather than hidden:** a stubborn reviewer can veto by declining to converge.
+That is true. It is bounded by the record — both positions sit in the card and in
+`director_requests.md`, where a pattern of one agent withholding is legible to the director — and by
+the three steps above, which resolve anything measurable before this point is reached.
+
+### Step 5 — The director notice is non-blocking and non-self-executing
+
+The card and `director_requests.md` preserve both positions and the withheld state as a standing
+tracked item. Randy may request reconsideration at any time, but **reinstatement is a new candidate
+under a new Review Card**: the notice does not retroactively approve the withheld bytes and does not
+bypass any scientific or resource gate. Work on every other card continues throughout.
+
+### The cost ceiling, stated so it is mechanical
+
+Measured from the max-round turn that first records the classification: a **factual** issue costs at
+most **two** further agent sessions, and a **judgment** issue at most **three** — the response and
+narrowed owner state, the reviewer response, and the final owner re-review — after which the
+fail-closed default fires on its own. No review may consume more than that in disagreement, and no
+review waits on the director to move.

@@ -3559,6 +3559,47 @@ correction applied.)*
   S139, NOT YET CONSENSUS - nothing enters `Playbooks/review-cycle.md` until Codex agrees, because a
   convergence rule written unilaterally is the failure it exists to prevent.
 
+236. **[S140] A CEILING AND A SPLIT MUST BE WRITTEN AS ONE BOUND, OR THE DOCUMENT PROMISES A LIMIT
+  IT DOES NOT ENFORCE.**  My S139 convergence proposal said the whole thing costs "at most three
+  further agent sessions" and, in a different paragraph written for a different purpose, sent the
+  contested question "to a new card".  IT NEVER SAID WHAT ROUND ALLOWANCE THAT CARD CARRIED - and if
+  the card inherited the ordinary three round-trips, the two clauses described DIFFERENT BOUNDS.
+  Codex found it and declined consensus over it; I did not find it, because each clause is correct
+  read alone and I never read them against each other.  *** ASK OF EVERY BOUND YOU WRITE: WHAT OTHER
+  RULE IN THE SAME DOCUMENT ALSO GRANTS BUDGET TO THE THING I JUST BOUNDED?  A ceiling stated in one
+  unit (sessions) and a mechanism stated in another (cards, rounds) do not compose by themselves. ***
+  Same shape as lesson 214 - two statements written in different sessions for different purposes,
+  invisible to whoever wrote either half - except this time BOTH HALVES WERE MINE AND IN ONE TURN.
+
+237. **[S140] ON AN APPEND-ONLY ARTIFACT THE "MINIMAL" REPAIR IS A REWRITE OF HISTORY, AND THE
+  OWNER'S MORE EXPENSIVE ONE IS THE RIGHT INSTRUMENT.**  My blocking finding asked Codex to delete
+  three words from a PUBLISHED public running-log entry.  It refused the deletion, preserved the
+  entry byte-for-byte, and appended a dated correction - which the Live-Run README playbook requires
+  (it names "rewriting the running log" as a failure mode), which the file already had two
+  precedents for (2026-08-10 cost, 2026-08-11 scope), and which is the project's own
+  corrections-propagate-forward discipline applied to a public artifact.  *** MY REPAIR WOULD HAVE
+  EDITED PUBLIC HISTORY SO THE LOG READ AS THOUGH THE ERROR HAD NEVER BEEN PUBLISHED. ***  BEFORE
+  PROPOSING A DELETION, ASK TWO QUESTIONS: IS THIS ARTIFACT APPEND-ONLY, AND ARE THESE BYTES ALREADY
+  PUBLISHED?  A reviewer's repair is "minimal" in EDIT SIZE, which is not the axis that matters.
+  I withdrew it in favour of what the owner did.
+
+238. **[S140] THE CLAUSE A FINDING *CONCEDES* IS THE CLAUSE NOBODY MEASURES.**  My Round-1 finding
+  said two of the entry's three hazards reproduce on this host and that "only the 255-character
+  portable component ceiling is genuinely aimed at a filesystem we do not run on."  I had measured
+  the two I was ACCUSING the entry of mislocating and had NOT measured the one I was CONCEDING.  ***
+  ROUND-2 BISECT IN A SCRATCH TREE: 250, 254 AND 255 WRITE; 256, 257, 258, 259 AND 260 ALL RAISE
+  `OSError` ERRNO 22.  255 IS EXACTLY THIS HOST'S OWN CEILING, SO ALL THREE HAZARDS BIND HERE, NOT
+  TWO OF THREE.  MY OWN FINDING'S PREMISE WAS THE UNMEASURED PART OF IT. ***  The structural reason
+  is worth carrying: THE REVIEWER HAS NO MOTIVE TO PROBE THE PART OF THE SENTENCE THEY ARE AGREEING
+  WITH, AND THE OWNER HAS NO MOTIVE TO PROBE THE PART THAT FAVOURS THEM - so a conceded clause is
+  the one place two adversarial readers are aligned, and alignment is where nothing gets checked.
+  *** I RECORDED IT NON-BLOCKING AND DID NOT RAISE IT AGAINST THE CANDIDATE: the owner's sentence
+  stays TRUE (255 IS the portable ceiling; this filesystem's limit coinciding with it makes the
+  description INCOMPLETE, not false), and a correction appended to a correction in a lean public log
+  costs a stranger more clarity than it buys.  THE OBLIGATION TRAVELS INSTEAD: any future statement
+  about that constant, in a log entry or in the Technical Report, must say 255 is THIS MACHINE'S
+  ceiling as well as the portable one. ***
+
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 
 ```text
