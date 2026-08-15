@@ -3600,6 +3600,44 @@ correction applied.)*
   about that constant, in a log entry or in the Technical Report, must say 255 is THIS MACHINE'S
   ceiling as well as the portable one. ***
 
+239. **[S141] A GUARD ON A CONTAINER CAN NEVER DECIDE ANYTHING WHEN THE NEXT GUARD IS ON SOMETHING
+  INSIDE IT.**  `require_role_layout` checked that each role directory existed and then checked that
+  `<role root>/index.csv` was a regular file.  *** THE MUTATION SWEEP DELETED THE DIRECTORY GUARD AND
+  NOTHING WENT RED - CORRECTLY.  An absent role root, or one that exists as a FILE rather than a
+  directory, makes the CHILD path fail `is_file()` in every case, so the parent guard could never be
+  the only check to refuse; it could only change the WORDING of a refusal that was already
+  certain. ***  This is lesson 231's shape one level up: 231 was a TERM inside one expression that
+  could not decide, this is a whole GUARD that cannot.  *** THE QUESTION TO ASK OF EVERY
+  "does the container exist" CHECK: IS THE NEXT THING I CHECK *INSIDE* IT?  If it is, the container
+  check is message quality, not a check - and the honest repair is to DELETE IT, WRITE THE PROOF
+  WHERE IT STOOD, AND CARRY THE CONTAINER'S NAME IN THE SURVIVING MESSAGE.  A deletion plus a proof,
+  never an added test. ***
+
+240. **[S141] A SCRIPTED MULTI-EDIT THAT DOES NOT ASSERT EVERY ANCHOR REPORTS SUCCESS FOR THE EDITS
+  IT DID NOT MAKE.**  I applied four sweep repairs in one scripted pass and asserted the anchor on
+  only some of them.  One replacement matched NOTHING - an escaping difference in a byte literal -
+  the script printed its success line, and *** THE SUITE STAYED GREEN AT THE OLD TEST COUNT, WHICH IS
+  EXACTLY WHAT A SILENT NO-OP LOOKS LIKE. ***  What found it was RE-RUNNING THE SWEEP, which reported
+  the same survivor a second time; what would have found it a minute earlier was reading the TEST
+  COUNT, which had not moved.  *** TWO RULES: ASSERT EVERY ANCHOR IN A SCRIPTED EDIT, AND AFTER
+  ADDING TESTS, CHECK THAT THE COUNT MOVED BY THE NUMBER YOU ADDED.  A green suite is not evidence
+  that an edit landed; it is equally consistent with the edit never happening. ***
+
+241. **[S141] WHEN TWO CHECKS IN SEQUENCE BOTH REFUSE A REALISTIC INPUT, A CODE-ONLY ASSERTION IS
+  BLIND TO DELETING THE FIRST.**  Three of the four survivors in this build's first sweep were one
+  shape, and it is lesson 223 generalised from a PHRASE to a GUARD.  *** MEASURED: deleting the
+  `FINAL`-requires-frozen check survived, because a realistic draft ALSO carries a `dev-` hash and
+  the dev-trace check one line below refuses the same stub; deleting the row-4 `config_hash`
+  comparison survived, because the established result at row 5 echoes the record's DECLARED hash and
+  refuses the same record one layer later; deleting the recursive finiteness walk survived, because
+  I had tested only bare `NaN`/`Infinity` literals, which `parse_constant` catches - THE REACHABLE
+  PATH IS `1e9999`, WHICH `json` TURNS INTO `inf` INSIDE ITS OWN NUMBER PARSER AND WHICH ONLY THE
+  WALK CAN REFUSE. ***  *** THE REPAIR IS ONE OF TWO THINGS, NEVER A THIRD: ASSERT THE PHRASE UNIQUE
+  TO THE GUARD UNDER TEST, OR CONSTRUCT AN INPUT ONLY THAT GUARD CAN REFUSE.  Adding another
+  realistic case does nothing - realism is what made the two guards agree. ***  And the diagnostic
+  that generalises: FOR EVERY REFUSAL TEST, ASK WHICH *OTHER* CHECK WOULD ALSO HAVE REFUSED THIS
+  INPUT.  If the answer is not "none", the test is measuring the pair and not the part.
+
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 
 ```text
