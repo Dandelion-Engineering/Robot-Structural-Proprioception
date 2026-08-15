@@ -3503,6 +3503,62 @@ correction applied.)*
   repair is not a test; it is deleting the term and writing down the proof that one count bounds
   both.  Same family as finding 5's "one call, not a guard per write".
 
+232. **[S139] A DEFECT WHOSE TWO CANDIDATE FIXES RECORD THE SAME NUMBER TODAY CANNOT BE CAUGHT BY
+  COMPARING RECORDED NUMBERS.**  Read-order step 5 hashes the geometry producer
+  `scripts/utils/cable_mechanics.py` at runtime.  Its tracked blob and this development working
+  tree are both LF, so its RAW digest and its CANONICAL digest are the SAME hex string
+  (`1acaf60c...`) here.  *** A CONNECTION RECORD AUTHORED ON THIS MACHINE LOOKS IDENTICAL UNDER
+  EITHER RULE.  `git checkout-index` into a scratch directory materialises the file the way a fresh
+  Windows clone does - 21,514 B with 527 CRLF pairs - and its RAW digest is `58adb3fb...` while its
+  CANONICAL digest is still `1acaf60c...`.  So a raw rule is GREEN HERE AND RED ON A CORRECT FRESH
+  CHECKOUT, and no comparison of recorded values on this machine could ever have shown it. ***  The
+  instrument that sees this class is a fresh checkout, not a test and not a review of the number.
+  Same family as 229 (a test whose input moves with the constant holds the relationship, not the
+  value) and 231 (a term nothing can distinguish from its deletion).
+
+233. **[S139] FIX THE CLASS AT THE DIGEST DOMAIN, NOT THE INSTANCE AT THE EOL PIN.**  Two repairs
+  were available for 232: pin `scripts/utils/cable_mechanics.py` to LF in both `.gitattributes`, or
+  take the digest with `canonical_text_sha256`.  *** THE CANONICAL DOMAIN IS THE RIGHT ONE AND THE
+  PIN IS NOT AN ALTERNATIVE TO IT. ***  Requirement X11/(cc) already says every digest a result
+  artifact records is taken in the domain of the file's kind - canonical for tracked text, raw only
+  for binary.  The root `.gitattributes` says the same thing about itself in its own comment: the
+  pins "are not what makes a digest portable", they only make the raw bytes agree with the canonical
+  bytes.  `dev_fit_contract.code_identity` is the direct precedent - it hashes `.py` files in the
+  text domain, with the reason written into its docstring - and every runtime digest of a tracked
+  text file in the packet already uses `canonical_text_sha256`.  A pin protects the ONE file it
+  names; the domain rule protects every file the adapter will ever hash, including the ones nobody
+  has pinned yet.  *** AND IT LEAVES CODEX'S S128 RULING STANDING.  That ruling declined a `*.py`
+  EOL pin on the premise that no packet runtime hashes those files; step 5 ends the PREMISE, but
+  choosing the canonical domain preserves the CONCLUSION for a better reason.  A forward correction
+  to a premise, not a reversal of a ruling. ***
+
+234. **[S139] WHEN A PUBLIC ENTRY LOCATES A DEFECT SOMEWHERE ELSE, MEASURE WHETHER IT IS SOMEWHERE
+  ELSE.**  Codex's Live-Run heartbeat said the contract refuses identities that could "escape,
+  collide, or leave a partial figure set on another filesystem."  Two of those three reproduce on
+  THIS host, measured in a scratch directory: writing `Case-A.png` then `case-a.png` leaves ONE
+  file here holding the second write's bytes, and a 260-character component raises `OSError` errno
+  22 while 255 writes - which is the same wall the 251-character `case_id` hit when it published
+  three files and then failed on the fourth.  *** ONLY THE 255-CHARACTER PORTABLE CEILING IS
+  ACTUALLY AIMED AT A MACHINE WE DO NOT RUN ON. ***  The clause moved real defects found on our own
+  hardware into a hypothetical elsewhere, which reads as precaution rather than repair.  A
+  three-word qualifier is substantive when the three words are about where the evidence came from,
+  and the reviewer's move is to PROPOSE it, not to apply it as mechanical - judged by effect, not by
+  edit size.
+
+235. **[S139] `Escalated` IS NOT A RESOLUTION, IT IS A NOTIFICATION WITH A BLOCK ATTACHED - AND THE
+  TWO THINGS IT COVERS HAVE NOTHING IN COMMON.**  Randy's direction to replace it forced the
+  distinction: a FACTUAL disagreement (does the code do X or Y) is decidable by a measurement and a
+  human decides it no better than the measurement does; a JUDGMENT disagreement (severity, scope,
+  whether a sentence overclaims) admits no measurement, and with exactly two agents no vote breaks
+  the tie either.  *** THE ANSWER TO THE SECOND IS A DEFAULT, AND THE ONLY SAFE DEFAULT IS
+  FAIL-CLOSED: THE CONTESTED ELEMENT DOES NOT SHIP. ***  The two errors are not symmetric - a
+  reviewer wrongly withholding costs a FEATURE, recoverable and recorded with both positions in
+  `director_requests.md`; an owner wrongly shipping costs a CORRECTNESS GUARANTEE and the record
+  says it was approved.  Rigor is preserved by the RECORD of the disagreement, not by winning it.
+  The bound that makes it terminate is one narrowing split that cannot itself be split.  PROPOSED
+  S139, NOT YET CONSENSUS - nothing enters `Playbooks/review-cycle.md` until Codex agrees, because a
+  convergence rule written unilaterally is the failure it exists to prevent.
+
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 
 ```text
