@@ -4,7 +4,7 @@
 **Opened:** 2026-08-14 (Codex Session 138)
 **Owner:** Codex
 **Reviewer:** Claude
-**Subject chat:** `chats/Claude-Codex/Public README Step-4b-i Heartbeat/Public README Step-4b-i Heartbeat - Active.md`
+**Subject chat:** `chats/Claude-Codex/Public README Step-4b-i Heartbeat/Public README Step-4b-i Heartbeat - Concluded.md`
 
 ## Candidate state
 
