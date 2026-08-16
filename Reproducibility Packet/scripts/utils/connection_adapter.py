@@ -175,17 +175,15 @@ would stop the packet's own runbook from reading them -- decision D4's rule, rea
 two more of the same eight files. The new module reuses every rule from its owner and
 restates only the reading mechanics, held to its owners by equality tests.
 
-**One second read survives, and it is named rather than argued away.**
+**One second read survives, and the adapter fixes what it can observe.**
 `utils.config_contract.validate_config_document` receives the schema as a *document*
 -- so every structural rule it applies comes from the bytes this module
 authenticated -- but it re-derives the schema's raw digest from `schema_path` itself,
-to compare against the configuration's declared `schema_sha256`. Closing that needs a
-digest parameter on a fourth closed contract, which this sub-step's scope does not
-reach. What the window can and cannot do is measured rather than assumed: bytes
-substituted after this module's read reach that comparison and are refused by it, and
-they cannot change which rules ran. The residual is that a record and a configuration
-declaring *different* schemas -- a state that refuses today -- could be made to agree
-by an actor able to rewrite the schema file between the two reads. The count is
+to compare against the configuration's declared `schema_sha256`. This module therefore
+first compares that declaration against the raw digest of the exact schema bytes it
+authenticated. The closed contract's second read remains code-identity scope, but it
+can now only confirm the same raw digest or refuse a later replacement; it cannot make
+a configuration naming schema B validate under the rules from schema A. The count is
 pinned at two by a test over the whole chain, so any new second read anywhere fails
 rather than joining an allowance.
 """
@@ -850,16 +848,13 @@ def authenticate_config(record: ConnectionRecord, bound: BoundPaths) -> Authenti
     document-level entry point, rather than `load_config`, which would reopen both
     paths and validate whatever they named on that later read.
 
-    **The one remaining re-open needs no bracket, and that is a proof rather than an
-    omission.** `validate_config_document` compares the config's declared
-    `schema_sha256` against the schema's raw bytes, so it opens the schema again to
-    hash it. A re-measurement here would be a guard no input could make decisive: the
-    value it is compared against is a field of the config document this module parsed
-    from its own authenticated bytes, so it is fixed for the whole call, and *any*
-    change to the schema between this module's read and the contract's read changes
-    the schema's raw digest and refuses inside `validate_config_document` itself. A
-    guard with no input it alone decides is the same defect as a duplicated guard, so
-    the argument is written here instead of a second comparison being made.
+    **The one remaining re-open is narrowed before it happens.**
+    `validate_config_document` compares the config's declared `schema_sha256` against
+    the schema's raw bytes, so it opens the schema again to hash it. This module first
+    compares that declaration against the raw digest of the schema bytes it already
+    authenticated. The contract's later read can still refuse a changed path, but it
+    cannot make a config that declares a different schema validate under this module's
+    authenticated schema document.
     """
 
     schema_path = Path(bound.schema_path)
@@ -886,6 +881,15 @@ def authenticate_config(record: ConnectionRecord, bound: BoundPaths) -> Authenti
     config_document = strict_json_document(
         config_raw, "the configuration", X_PROVENANCE_UNRESOLVED
     )
+    declared_schema_digest = config_document.get("schema_sha256")
+    authenticated_schema_digest = external_bytes_digest(schema_raw)
+    if declared_schema_digest != authenticated_schema_digest:
+        raise _refuse(
+            X_PROVENANCE_UNRESOLVED,
+            "the configuration's schema_sha256 does not match the authenticated "
+            f"schema bytes: config declares {declared_schema_digest!r}, "
+            f"authenticated schema bytes digest to {authenticated_schema_digest!r}",
+        )
 
     require_frozen = record.authority == FINAL
     try:

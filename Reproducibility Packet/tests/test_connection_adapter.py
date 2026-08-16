@@ -50,7 +50,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from build_data_contract_fixture import build_fixture  # noqa: E402
-from utils.config_contract import load_config  # noqa: E402
+from utils.config_contract import expected_config_hash, load_config  # noqa: E402
 from utils import connection_adapter  # noqa: E402
 from utils.connection_adapter import (  # noqa: E402
     AUDIT_NAMES,
@@ -2490,10 +2490,11 @@ def test_finding1_the_adapter_interprets_its_own_schema_read(
     Every structural rule applied to the configuration comes from the document the
     adapter parsed out of the bytes it authenticated -- `validate_config_document`
     receives that document and re-opens the path only to hash it. So a schema swapped
-    after the adapter's read cannot change which rules ran; the residual is confined to
-    which file the configuration's own `schema_sha256` is compared against. This test
-    fixes that boundary so a later reader does not have to re-derive it, and so a change
-    that widened the window would fail here rather than pass quietly.
+    after the adapter's read cannot change which rules ran, and the adapter-side
+    `schema_sha256` comparison prevents the second read from making a different schema
+    declaration agree with those already-selected rules. This test fixes that boundary
+    so a later reader does not have to re-derive it, and so a change that widened the
+    window would fail here rather than pass quietly.
     """
 
     path = restore_bytes(harness.packet_root / SCHEMA_RELATIVE)
@@ -2508,6 +2509,65 @@ def test_finding1_the_adapter_interprets_its_own_schema_read(
     error = _refusal(harness.authenticate)
 
     assert state["fired"]
+    assert error.code == X_PROVENANCE_UNRESOLVED
+    assert "schema_sha256" in str(error)
+
+
+def test_finding1_the_config_schema_digest_is_checked_against_the_authenticated_schema(
+    harness: Harness, monkeypatch: pytest.MonkeyPatch, restore_bytes
+) -> None:
+    """A schema split cannot be hidden inside the contract's second schema read.
+
+    The record authenticates schema A and the adapter interprets schema A. The config
+    declares schema B, and the schema path is swapped from A to B after the adapter's
+    read but before `validate_config_document` reopens the path for its raw digest
+    comparison. Without an adapter-side comparison between the config declaration and
+    the authenticated schema bytes, the closed contract can accept a config whose
+    declared schema is not the schema whose rules ran.
+    """
+
+    schema_path = restore_bytes(harness.packet_root / SCHEMA_RELATIVE)
+    config_path = restore_bytes(harness.packet_root / CONFIG_RELATIVE)
+    schema_a = json.loads(schema_path.read_text(encoding="utf-8"))
+    schema_b = copy.deepcopy(schema_a)
+    schema_b["config_contract"] = {
+        **schema_b["config_contract"],
+        "required_top_level": [
+            *schema_b["config_contract"]["required_top_level"],
+            "codex_session_143_missing_key",
+        ],
+    }
+    schema_b_raw = (
+        json.dumps(schema_b, indent=2, sort_keys=True, allow_nan=False) + "\n"
+    ).encode("utf-8")
+
+    config_document = json.loads(config_path.read_text(encoding="utf-8"))
+    config_document["schema_sha256"] = external_bytes_digest(schema_b_raw)
+    config_document["config_hash"] = expected_config_hash(config_document)
+    _write_json(config_path, config_document)
+
+    record_document = copy.deepcopy(dict(harness.document))
+    record_document["config"]["sha256"] = tracked_text_digest(config_path)
+    record_document["config"]["config_hash"] = config_document["config_hash"]
+    arguments = harness.rewrite_record(record_document)
+    record = load_connection_record(
+        arguments["connection_record_path"], arguments["connection_record_sha256"]
+    )
+    bound = bind_root_domains(
+        record,
+        packet_root=arguments["packet_root"],
+        connection_record_path=arguments["connection_record_path"],
+        config_path=arguments["config_path"],
+        role_root=arguments["role_root"],
+        checkpoint_root=arguments["checkpoint_root"],
+        output_dir=arguments["output_dir"],
+    )
+    state = _read_once_seam(monkeypatch, schema_path, schema_b_raw)
+
+    error = _refusal(lambda: authenticate_config(record, bound))
+
+    assert state["fired"]
+    assert schema_path.read_bytes() == schema_b_raw
     assert error.code == X_PROVENANCE_UNRESOLVED
     assert "schema_sha256" in str(error)
 

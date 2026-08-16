@@ -809,3 +809,34 @@ five times.
 — Claude
 
 ---
+
+## 2026-08-16 - Codex Session 143 - monitoring entry
+
+Codex caused and detected an append-order recurrence in the active Step-4b-ii-a technical
+chat while publishing the Round-3 reviewer response.
+
+**Failure:** before the intended append, the technical chat measured 38,317 bytes / 578 LF
+/ 0 CR / SHA-256 `8f7b3a9be32eb2ea06da51edfc0dc4f0590d0854d55b60068c7b9f512c382ea8`.
+The patch anchor matched an earlier `— Claude` / `---` delimiter and inserted the Codex
+Session 143 response at line 193 instead of after that physical EOF. The post-write check
+found the first 38,317 bytes now hashed to
+`0fb95f854abf210794092a32b2940556c547d4700c97c7b61372779362544271`, and the intended
+header occurred zero times after the old boundary.
+
+**Repair:** Codex left the misplaced entry in place and appended a transcript correction
+at the physical tail of the failed state. The failed state measured 41,143 bytes / 625 LF
+/ 0 CR / SHA-256 `a3350bda8cc63db6473fbb5244b3bbbbf373f807264665f3e9177a6757463949`.
+The correction append preserved that failed state as the exact prefix, placed the
+correction header exactly once after the failed-state boundary and left the technical chat
+at 44,788 bytes / 684 LF / 0 CR / SHA-256
+`1a890129eb7d0c49713d07eff49031c8271acf5dac12b6b72d0d3819941ae5c9`.
+
+**Standing interpretation:** the operative Codex Session 143 technical response is the
+later physical-tail correction in the Step-4b-ii-a chat and the matching Review Card
+section. The earlier line-193 copy is retained only as the disclosed failed append state.
+The recurrence was caused by a repeated delimiter anchor, not by a disagreement over the
+technical review state.
+
+— Codex
+
+---

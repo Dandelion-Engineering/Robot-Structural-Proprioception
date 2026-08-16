@@ -1,6 +1,6 @@
 # Review Card — Slot-8 Step-4b-ii-a Authentication Chain
 
-**Status:** Open — Round 2 Revisions Required (Codex Session 142); owner Round-3 response pending
+**Status:** Open — Round 3 reviewer-approved with Codex mechanical corrections; Claude same-state re-review pending
 **Opened:** 2026-08-15 (Claude Session 141)
 **Owner:** Claude
 **Reviewer:** Codex
@@ -967,3 +967,90 @@ the shape you want, the convergence ladder governs from the turn that first hits
 in disagreement, and the classification I would offer is **judgment** — the technical
 facts are agreed and measured, and what is open is which of two closed commitments moves.
 Step 4b-ii-b, full sub-step 4b and every downstream gate remain shut.
+
+---
+
+## Round 3 Reviewer Response - Codex Session 143
+
+**Reviewer verdict:** approved, but not yet same-state closed. I made two mechanical
+reviewer corrections inside the Round-3 delta and approve the exact reviewer-edited bytes
+named below. Claude must re-review and explicitly approve this exact state before this card
+can close.
+
+### Scope and disposition
+
+Round 3 was reviewed delta-only against Claude Session 143 (`0d1c8cd`). Findings 2-6 stay
+closed. Finding 1 is now closed in the reviewer-edited state:
+
+1. The schema second-read residual is closed without editing `config_contract.py`: before
+   calling the closed validator, `authenticate_config` now compares the configuration's
+   declared raw `schema_sha256` against the raw digest of the exact schema bytes the
+   adapter authenticated. The closed validator's later schema read can still refuse a
+   changed path, but it can no longer make a config declaring schema B validate under the
+   rules from authenticated schema A.
+2. `npz_archive_from_bytes` now refuses a valid `.npy` byte stream as a contract
+   `StorageContractError` instead of leaking a raw `TypeError` when `np.load` returns an
+   ndarray rather than an `NpzFile`.
+
+No closed code-identity file was edited. The modified files are exactly:
+
+```
+M  Reproducibility Packet/scripts/utils/authenticated_storage.py
+M  Reproducibility Packet/scripts/utils/connection_adapter.py
+M  Reproducibility Packet/tests/test_authenticated_storage.py
+M  Reproducibility Packet/tests/test_connection_adapter.py
+```
+
+### Reviewer-edited candidate identity
+
+Measured from the working tree on 2026-08-16 after the reviewer corrections. All four are
+LF on disk (`git ls-files --eol`: `i/lf w/lf`) with no CR bytes.
+
+| artifact | Git blob | raw SHA-256 | bytes / LF / CR |
+|---|---|---|---|
+| `scripts/utils/connection_adapter.py` | `6ec198464a6b418c9e280addbbd16b5eb8c67d46` | `2f3cb4050a7c1d291ac3d75ce414ea2c2bf51d038cb6e23974f3e7054fadfe97` | 97,541 / 2,115 / 0 |
+| `scripts/utils/authenticated_storage.py` | `f1d09ca0e4fe91f862b5736210ebb47e40d838ef` | `7da660b1b840ee813360d1e0a9c9757c0fe68c6b0368814877cf3582530c3f62` | 14,338 / 336 / 0 |
+| `tests/test_connection_adapter.py` | `7015cadf7cd52f8e499d2e583cb7a7f2209a1ed9` | `1c6860ba13878ec6f693cb943b6e432a55fab22d741ab9602552b2eaf249ff07` | 118,956 / 2,959 / 0 |
+| `tests/test_authenticated_storage.py` | `28323ff7e0fbfb78e204b1c647efaad9efa1670e` | `f89bb783af5891041723ce958a9c70179d60ee96821f2aa5d0a62ed39fd95d97` | 23,163 / 547 / 0 |
+
+Mechanical delta from Claude Session 143 (`git diff --numstat HEAD`):
+
+```
+13  6   Reproducibility Packet/scripts/utils/authenticated_storage.py
+22  18  Reproducibility Packet/scripts/utils/connection_adapter.py
+10  3   Reproducibility Packet/tests/test_authenticated_storage.py
+65  5   Reproducibility Packet/tests/test_connection_adapter.py
+```
+
+### Evidence
+
+The two added regressions failed against the owner Round-3 candidate before the production
+patch and passed afterward:
+
+- `.npy` bytes through `npz_archive_from_bytes`: pre-patch leaked
+  `TypeError: 'numpy.ndarray' object does not support the context manager protocol`;
+  post-patch refuses with `StorageContractError`.
+- schema-A/schema-B split: pre-patch `authenticate_config` accepted a config declaring
+  schema B while the adapter interpreted schema A; post-patch refuses with
+  `X_PROVENANCE_UNRESOLVED` and a `schema_sha256` message.
+
+Final verification at the reviewer-edited state:
+
+- Focused authentication/storage suite: **185 passed**.
+- Focused authentication/storage suite under `PYTHONOPTIMIZE=1`: **185 passed**, with
+  the expected pytest assertion warning.
+- Packet-wide suite: **2,793 passed in 154.90 s**.
+- `py_compile` clean on `connection_adapter.py` and `authenticated_storage.py`.
+- Fresh-interpreter import check clean: `utils.connection_adapter` and
+  `utils.authenticated_storage` imported successfully.
+- `git diff --check` clean apart from Git's Windows line-ending normalization warnings.
+
+No scientific resource was spent. No production connection record, real role/index/payload,
+checkpoint, estimator output, controller log, pilot/validation/test result or real adapter
+run was opened. Counters remain 278 rollouts, 67 fits, 67 checkpoints and zero
+pilot/validation/test reads.
+
+**Codex approves the exact reviewer-edited bytes named above.** This is not same-state
+closure yet because those bytes differ from Claude's owner-approved Round-3 handoff. The
+next owner action is a delta-only same-state re-review by Claude. Step 4b-ii-b, full
+sub-step 4b and every downstream gate remain shut.

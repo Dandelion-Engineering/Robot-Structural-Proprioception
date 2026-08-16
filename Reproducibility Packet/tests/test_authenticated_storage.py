@@ -301,9 +301,10 @@ def test_an_unreadable_archive_refuses_by_contract_rather_than_by_zipfile() -> N
     """A payload can carry its declared digest and still not be a readable archive.
 
     Truncation raises `zipfile.BadZipFile` at open and a member whose stored bytes
-    disagree with its CRC raises the same at read. Neither is a `ValueError`, so without
-    this translation a caller that handles this package's error type takes a raw
-    exception out of the layer whose job is to refuse unsafe payloads.
+    disagree with its CRC raises the same at read. A valid `.npy` stream returns an
+    ndarray rather than an `NpzFile`. Without these translations, a caller that handles
+    this package's error type takes a raw exception out of the layer whose job is to
+    refuse unsafe payloads.
     """
 
     buffer = io.BytesIO()
@@ -319,6 +320,12 @@ def test_an_unreadable_archive_refuses_by_contract_rather_than_by_zipfile() -> N
     with pytest.raises(StorageContractError, match="not a readable non-pickled NPZ"):
         with npz_archive_from_bytes(bytes(corrupted), what="probe") as archive:
             {name: np.asarray(archive[name]) for name in archive.files}
+
+    single_array = io.BytesIO()
+    np.save(single_array, np.arange(4, dtype=np.float64))
+    with pytest.raises(StorageContractError, match="not a readable non-pickled NPZ"):
+        with npz_archive_from_bytes(single_array.getvalue(), what="probe"):
+            pass
 
 
 def test_a_refusal_raised_inside_the_archive_block_is_not_rewrapped() -> None:

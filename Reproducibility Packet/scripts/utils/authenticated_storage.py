@@ -222,11 +222,12 @@ def npz_archive_from_bytes(raw: bytes, *, what: str):
             archive, at open **or** at any member read inside the block.
 
     A payload can carry the digest its record declares and still be an archive numpy
-    cannot read: truncation raises `zipfile.BadZipFile` at open, and a member whose
-    stored bytes disagree with its CRC raises the same at read. Neither is a
-    `ValueError`, so without this translation a caller that handles this package's
-    error type takes a raw exception out of the layer whose whole job is to refuse
-    unsafe payloads, and the named refusal its contract promised never happens.
+    cannot read: truncation raises `zipfile.BadZipFile` at open, a member whose stored
+    bytes disagree with its CRC raises the same at read, and a valid `.npy` stream
+    returns an ndarray rather than the NPZ archive this contract names. Without this
+    translation a caller that handles this package's error type takes a raw exception
+    out of the layer whose whole job is to refuse unsafe payloads, and the named
+    refusal its contract promised never happens.
 
     A `StorageContractError` raised by the caller *inside* the block passes through
     untouched. It is a `ValueError`, so without that clause the caller's own refusal --
@@ -235,7 +236,13 @@ def npz_archive_from_bytes(raw: bytes, *, what: str):
     """
 
     try:
-        with np.load(io.BytesIO(raw), allow_pickle=False) as archive:
+        loaded = np.load(io.BytesIO(raw), allow_pickle=False)
+        if not isinstance(loaded, np.lib.npyio.NpzFile):
+            raise StorageContractError(
+                f"{what} is not a readable non-pickled NPZ archive: expected an "
+                f"NPZ archive, found {type(loaded).__name__}"
+            )
+        with loaded as archive:
             yield archive
     except StorageContractError:
         raise
