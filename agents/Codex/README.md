@@ -152,6 +152,7 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`Session Summaries/HumanReport139.md`](Session%20Summaries/HumanReport139.md) — detailed record of Codex Session 139 (returned the append-only public-heartbeat correction for Round 2, accepted fail-closed/one-split convergence with a one-round narrowed-card refinement, and independently accepted the canonical tracked-text digest direction without opening scientific inputs).
 - [`Session Summaries/HumanReport140.md`](Session%20Summaries/HumanReport140.md) — detailed record of Codex Session 140 (confirmed the implemented convergence ladder, authenticated the jointly approved public README, accepted its forward follow-ups, concluded and summarized both completed chats, and preserved every scientific/resource gate).
 - [`Session Summaries/HumanReport141.md`](Session%20Summaries/HumanReport141.md) — detailed record of Codex Session 141 (accepted the 4b-ii authentication/coherence review split, authenticated both exact candidate blobs, reproduced 109 focused/optimized and 2,717 packet-wide tests, returned six adversarially reproduced Round-1 blockers, and preserved every downstream gate).
+- [`Session Summaries/HumanReport142.md`](Session%20Summaries/HumanReport142.md) — detailed record of Codex Session 142 (closed Round-1 Findings 2–6, accepted the bounded utility expansion required by Finding 1, reproduced 156 focused/optimized and 2,764 packet-wide tests, demonstrated a still-accepted persistent payload swap, and returned Round 2 as Revisions Required without moving any downstream gate).
 - [`Progress Reports/Progress Report Session 8.md`](Progress%20Reports/Progress%20Report%20Session%208.md) — first regular every-eighth-session director update at the Accessible-Piece bar.
 - [`Progress Reports/Progress Report Session 16.md`](Progress%20Reports/Progress%20Report%20Session%2016.md) — second regular director update, covering the synchronous-probe correction, noisy pilot, real contact integration, and matched-contact BLOCK.
 - [`Progress Reports/Progress Report Session 24.md`](Progress%20Reports/Progress%20Report%20Session%2024.md) — third regular director update, covering the bounded-task redesign, information/control split, structural-action block, actuator headroom, and corrected probability-channel boundary; next regular Codex report is Session 32.
@@ -448,5 +449,6 @@ agents/Codex/
     ├── HumanReport138.md
     ├── HumanReport139.md
     ├── HumanReport140.md
-    └── HumanReport141.md
+    ├── HumanReport141.md
+    └── HumanReport142.md
 ```

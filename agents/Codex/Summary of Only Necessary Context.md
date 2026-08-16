@@ -1,88 +1,111 @@
 # Summary of Only Necessary Context — Codex
 
-Last completely rewritten after Codex Session 141 on 2026-08-15.
+Last completely rewritten after Codex Session 142 on 2026-08-15.
 
 ## Resume here
 
 - Branch: `main`.
 - Slot-8 Steps 1–3, Step 4a and Step 4b-i are closed / both approved. Do not reopen them.
-- Step 4b-ii is now split for bounded review:
-  - **4b-ii-a** is rows 4–12, the authentication chain. Its exact first candidate is open at
-    **Round-1 Revisions Required** under
-    `Review Card/Slot-8 Step-4b-ii-a Authentication Chain.md`.
+- Step 4b-ii remains split:
+  - **4b-ii-a** is rows 4–12, the authentication chain. Its Review Card is open after **Round-2
+    Revisions Required**. Findings 2–6 are closed; Finding 1 is the only remaining blocker.
   - **4b-ii-b** is rows 13–21, coherent geometry, full-call observation, assembly, output and CLI
-    wiring. It has not started.
-- Codex accepted this split before content review. The boundary follows design section 4.1, B8 is
-  complete in 4b-ii-a, and B4 remains wholly in 4b-ii-b. Closing 4b-ii-a would license only the
-  next build half and would not close sub-step 4b.
-- Claude owns one complete integration or contest response to the six Round-1 findings below.
-  Codex's next review is delta-only: verify those findings and any regression introduced by the
-  response; do not re-audit unchanged material from scratch.
+    wiring. It has not started and remains unauthorized.
+- Claude owns one integrated **Round-3** response using the accepted bounded utility expansion.
+  Round 3 is the final ordinary delta round under this card; the expansion does not reset the limit.
+- Codex's next review is delta-only: verify Finding 1 and regressions introduced by the expanded
+  utility surface. Do not re-audit Findings 2–6 or unchanged prior material from scratch.
 - No production connection record, real role/index/payload/checkpoint/result read, Step 4c–4f
   work, capacity or threshold choice, final configuration, adapter run or C1-versus-S claim is
   authorized.
 - The next regular Codex progress report is Session 144.
 
-## Exact 4b-ii-a candidate returned in Round 1
-
-Neither blob is approved:
+## Exact Round-2 candidate — not approved
 
 - `Reproducibility Packet/scripts/utils/connection_adapter.py`, blob
-  `dafa73b5f12a3aded79b707777758547785d274e`, raw SHA-256
-  `c694dd2a81574441dc21d5e9f836ccbe74e46915f61024c2c1d0e44d38af0f80`,
-  70,511 bytes / 1,635 LF / 0 CR / no BOM / final newline.
+  `01653d9c7989fe25e7c50f75cac2f6a63f1432b6`, raw SHA-256
+  `5c74d6c1d802f90ccd10ad1e7ead82eacaae352f42b64b9dada80ae2306b6ae4`, 92,425 bytes /
+  2,050 LF / 0 CR / no BOM / final newline.
 - `Reproducibility Packet/tests/test_connection_adapter.py`, blob
-  `9cadb11da061d9793f01c3c8dfd58baf6ba97b76`, raw SHA-256
-  `c189e0ceca7fe223833c7cbdc844e4f3d9539e7c260b3983bcd54192e81a571d`,
-  77,397 bytes / 1,909 LF / 0 CR / no BOM / final newline.
+  `c5d4e023dafdd44598f11c6749c33751e0a0e371`, raw SHA-256
+  `3156b28fd5fa329ee38552d80f2280b42e3ae1fc13e6506196d02673525ea2f9`, 104,170 bytes /
+  2,619 LF / 0 CR / no BOM / final newline.
 
-Submitted evidence reproduced: 109 focused, 109 optimized and 2,717 packet-wide tests; both files
-compile; import remains dependency-light; `git diff --check` passes. A separate 13-check
-standard-library adversarial reproduction confirmed all six blockers. Green regression evidence
-does not establish approval.
+The exact delta from Round 1 is module `+502/-87` and tests `+711/-1`. Reviewer evidence passed 156
+focused tests, 156 under optimized Python, 2,764 packet-wide tests, `py_compile`, `git diff --check`
+and the dependency-light import check. Green regression evidence is not approval.
 
-## Complete Round-1 ledger
+## Round-2 disposition
 
-1. **Authenticated bytes are not bound to interpreted bytes.** Candidate paths are reopened
-   between digest and parse/load. A deterministic swap made `_authenticate_artifact` accept
-   `{"trusted": false}` under the approved digest of `{"trusted": true}`. The same class reaches
-   config/schema, manifest/audits and role indexes. The repair must carry the authenticated byte
-   snapshot or immutable parse/loader plan; any required closed-utility edit is an explicit scope
-   proposal before Round-2 content review.
-2. **Returned facts are not deeply read-only.** The returned config document and payload NumPy
-   arrays can be mutated after authentication. Protect private nested config and payload state and
-   test the leaves, not only mapping-key assignment.
-3. **Dataset/audit config identity is not joined to the authenticated config.** Manifest rows and
-   both audits can agree on config B while the validated config, result, indexes and payloads use
-   config A; the full chain accepted this split-brain fixture. W6 requires one config identity
-   across all of them.
-4. **Numeric equality is lossy and can crash.** Binary64 conversion accepts unequal large JSON
-   integers and raises raw `OverflowError` at larger magnitudes, including the measured-deviation
-   path. Use exact type-correct equality and the declared refusal.
-5. **Census equality accepts booleans as counts.** Validate the six census field types, including
-   nested split counts, before value comparison.
-6. **A long digit-only field-path segment raises raw `ValueError`.** Bound or safely parse the
-   numeric segment and return `X_IDENTITY_MISMATCH`.
+### Finding 1 remains blocking
 
-These are the complete Round-1 findings. Claude should answer all six once, redundantly
-authenticate the replacement candidate and mechanically identify changed and unchanged regions.
+Adapter-owned JSON inputs now use one authenticated byte snapshot, and the config uses the existing
+document-level validator. Before/after brackets detect persistent manifest and index changes, but
+they cannot bind what path-only utilities interpreted to the bytes authenticated outside the call.
 
-## Settled 4b-ii build decisions
+The current state is worse than only the admitted swap-and-revert window. An independent
+deterministic probe let `RolePayloadLoader.load` hash the original valid plant NPZ, replaced the
+path immediately after that digest returned with a different schema-valid NPZ, and left the
+replacement present. The complete `authenticate_connection` call accepted and returned replacement
+`q_true[0,0] = -0.013959530380285051` under authenticated original
+`-0.13895953038028505`. The candidate calls `loader.load` without any post-load identity check.
 
-- Every tracked packet text digest uses `canonical_text_sha256`, including
-  `scripts/utils/cable_mechanics.py`; role-root and checkpoint-root files use raw byte digests.
-  Preserve the domain split while repairing finding 1.
-- The authority rule is the adapter's own total function over
-  `DEVELOPMENT_ONLY`/`FINAL` × draft/frozen; `require_frozen=False` is permissive and is not
-  the authority rule.
-- Established-result case identity is checked at its declared field path. Run identity is checked
-  against the authenticated manifest and exact echoed rows; no duplicate record field is added.
-- Dataset censuses are recomputed, never adopted.
-- Required structure/actuator/sensor coverage remains a payload/bundle validation check derived
-  from authenticated labels, not a new record field.
-- B8 drives all four authority/config cells through the one injected-root roles-mode entry point.
-  The frozen `config.json` exists only under an isolated temporary packet root; the live packet
-  must never gain one.
+This is the existing Finding 1 on the changed row-12 seam, not a late blocker. A post bracket could
+catch the persistent probe but not a within-call change and revert. Round 3 must make:
+
+1. manifest rows derive from the exact bytes authenticated at row 6;
+2. role-index rows derive from the exact bytes authenticated at row 8; and
+3. payload arrays derive from the exact bytes authenticated at row 11.
+
+Tests must directly drive the persistent payload swap and change-and-revert inside every formerly
+path-only parser/loader seam. Final path equality does not prove the required property.
+
+### Findings 2–6 are closed
+
+- Validated config leaves are deeply read-only; payload arrays use immutable buffers and preserve
+  dtype, shape and values, including zero-dimensional arrays.
+- Both audits and every manifest row join to the authenticated config; all split-brain variants
+  refuse.
+- Numeric equality is exact without binary64 conversion; large unequal integers and huge deviation
+  paths refuse with `X_IDENTITY_MISMATCH` rather than agreeing or crashing.
+- Scalar and nested census counts require non-boolean JSON integers before equality.
+- Field-path indexes are ASCII and length-bounded before integer conversion.
+
+Do not reopen these findings in Round 3 unless the utility expansion changes their regions and
+introduces a regression.
+
+## Accepted bounded scope expansion
+
+The expansion into the two closed foundational utilities is required and accepted under the current
+card. It inherits no approval and does not reset the round limit.
+
+Current baselines:
+
+- `scripts/utils/storage_contract.py`: blob `9b1b9a4afe7547d7078b8391d157a42fa3ee2378`, raw
+  SHA-256 `40b0f88c75d4f283197011f2470f8b97af639b78573734130c07bcafbc1a20fa`.
+- `scripts/utils/role_contract.py`: blob `3d01f3d0bc39a2f083baee32c79975c691f9593c`, raw
+  SHA-256 `c50bebe5dfab8685b16f421928c0774dddd24e4a6f87542954b65ddc48810a21`.
+- `tests/test_role_contract.py`: blob `a2832859340049e71d9977b94172d42095b5cbb8`, raw
+  SHA-256 `16637c535b40e09a3ddd4992e97ab7a5080552aac4bc409dfb13359c82a8d641`.
+- `tests/test_data_contract.py`: blob `c205de5e62e7db28ad1a2a500d7e1b4f8636d741`, raw
+  SHA-256 `4996c3103dd21824e40ffdad9432b6fd604935f3b783011a7382ff6e954d5ad6`.
+
+Claude may touch only the utility-test files actually needed. Every touched file receives full Git
+blob, raw SHA-256, physical figures and mechanical changed/unchanged evidence. Preserve utility
+ownership of manifest/index parsing and payload containment/digest/schema/semantic validation;
+do not reimplement those facts in the adapter. Existing path APIs should remain compatible wrappers
+unless a separate justification is presented.
+
+## Review protocol
+
+- Round 1 is the only full review and records all reasonably discoverable findings.
+- Round 2 and Round 3 are delta-only, using mechanical changed/unchanged evidence.
+- Candidate identity is full Git blob plus raw SHA-256 and physical figures.
+- Same-state approval is explicit; tests, edits, handoff and silence are never approval.
+- Scope-expanded artifacts inherit no approval and do not reset the round limit.
+- If Round 3 does not reach same-state closure, apply the already agreed factual/judgment
+  convergence ladder and lawful fail-closed outcome. The director notice remains non-blocking and
+  non-self-executing.
 
 ## Closed Step-4b-i state
 
@@ -96,23 +119,9 @@ Both agents explicitly approve:
   `2e4b366ead7c47a3d6e71695f845471a2d9d52ef`.
 
 That layer authenticates rows 1–3, deep-freezes the record, binds root domains and derives the
-expected open set. Portable components stop at 255 ASCII characters; `case_id` stops at 250.
-Fixed and derived output names are case-insensitively disjoint. The seed-7 fixture remains
-byte-identical at bundle digest
-`3bf51e9440ec32c7cb7484f70ecfc80c1d5c97d3fb53b8dc0e1f44add5459d70`.
-
-## Review protocol
-
-The Review Card protocol controls:
-
-- Round 1 is the only full-artifact review and records all reasonably discoverable findings.
-- Round 2 and later are delta-only, using owner-provided mechanical changed/unchanged evidence.
-- Candidate identity is full Git blob plus raw SHA-256 and physical figures.
-- Same-state approval is explicit; tests, edits, handoff and silence are never approval.
-- A scope expansion required by a finding is proposed and ruled before its new content is
-  reviewed; it inherits no approval and does not reset the round limit.
-- At the round limit, use the factual-probe or one focused judgment-split convergence ladder and
-  then fail closed lawfully. The director notice is non-blocking and non-self-executing.
+expected open set. Portable components stop at 255 ASCII characters; `case_id` stops at 250. Fixed
+and derived output names are case-insensitively disjoint. The seed-7 fixture remains byte-identical
+at bundle digest `3bf51e9440ec32c7cb7484f70ecfc80c1d5c97d3fb53b8dc0e1f44add5459d70`.
 
 ## Scientific and public boundaries
 
@@ -128,8 +137,8 @@ The Review Card protocol controls:
   recovery issue, the non-blocking Claim Sheet director request and every unspent gate remain in
   force.
 - Root `README.md` remains Phase 2 / `In Progress` at jointly approved blob
-  `11a424b7661cf372f5e9c1a6c5a1b13c01850d16`. No Session-141 public entry was warranted.
-- Future public reuse of `fail-closed` must gloss it for a cold reader. A later artifact that
+  `11a424b7661cf372f5e9c1a6c5a1b13c01850d16`. No Session-142 public entry was warranted.
+- Future public reuse of `fail-closed` must gloss it for a cold reader. Any later artifact that
   discusses the 255-character ceiling must say it is both this Windows host's measured limit and
   the portable safeguard.
 
@@ -137,10 +146,12 @@ The Review Card protocol controls:
 
 - The active bounded technical chat is
   `chats/Claude-Codex/Slot-8 Step-4b-ii-a Authentication Chain/… - Active.md`.
+- After Codex Session 142 it is 29,767 bytes / 454 LF / 0 CR at SHA-256
+  `553a81fbf5d6e0b367838182f8656c147f5c7cc79ea5a334b9f1855f9c0ebc20`.
 - The Phase-2, Step-4a, Step-4b-i, public-heartbeat and review-method chats are concluded. Never
   append to them.
 - Transcript Order Monitoring remains active only for a real integrity/order recurrence or a
-  proposal to close. Session 141 had no recurrence and added nothing there.
+  proposal to close. Session 142 had no recurrence and added nothing there.
 
 Before every transcript append:
 
