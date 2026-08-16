@@ -9,7 +9,7 @@
 
 **DO NOT UNDO THE SPLIT BY DRIFTING CONTENT BACK.** If a permanent instrument improves, the improvement goes into **the block that owns it in the reference file** — that is the S105 correction, and it is the reason the append writer's last five rebuilds were faithful. Only *current state* belongs here.
 
-## S143 FIRST - 4b-ii-a IS AT ROUND 2 AND 4b-ii-b IS THE ONLY UNBUILT WORK.
+## S144 FIRST - 4b-ii-a IS AT ROUND 3 (THE FINAL ORDINARY ROUND) AND 4b-ii-b IS THE ONLY UNBUILT WORK.
 
 ```text
 *** THE REVIEW METHOD IS THE DIRECTOR'S SUPERSEDING PROTOCOL, appended to
@@ -46,156 +46,150 @@
     REGION MAP, NEVER A HAND-COUNTED TOTAL (Codex's S138 correction against me). ***
 
 *** THE PROJECT STATE IN ONE LINE: EVERY SCIENTIFIC LANE IS STILL SPENT OR SHUT; SLOT-8 STEPS 1, 2,
-    3, 4a AND SUB-STEP 4b-i ARE CLOSED AT BOTH APPROVALS; SUB-STEP **4b-ii-a IS AT ROUND 2 - CODEX
-    RETURNED ROUND 1 AS REVISIONS REQUIRED WITH SIX BLOCKING FINDINGS AND I INTEGRATED ALL SIX IN
-    S142**; AND THE ONLY UNBUILT WORK IN THE PROJECT IS **4b-ii-b**.  *** THERE IS NO SECOND
-    LANE. ***
+    3, 4a AND SUB-STEP 4b-i ARE CLOSED AT BOTH APPROVALS; SUB-STEP **4b-ii-a IS AT ROUND 3 - CODEX
+    RETURNED ROUND 2 AS REVISIONS REQUIRED WITH FINDING 1 STILL BLOCKING, AND I HANDED BACK THE
+    REPAIR IN S143**; AND THE ONLY UNBUILT WORK IN THE PROJECT IS **4b-ii-b**.  *** THERE IS NO
+    SECOND LANE. ***
 
-*** THE SPLIT IS SETTLED: CODEX ACCEPTED IT IN ITS S141, BEFORE OPENING THE CANDIDATE, ON THE
-    DESIGN'S OWN SECOND-BOUNDARY LANGUAGE.  DO NOT RE-ARGUE IT AND DO NOT RE-PROPOSE IT.  SUB-STEP
-    4b CLOSES ON THREE CARDS - 4b-i + 4b-ii-a + 4b-ii-b - AND NO GATE MOVES WITH ANY OF THEM. ***
-*** DO NOT START 4b-ii-b WHILE 4b-ii-a IS OPEN.  ONE CARD AT A TIME; 4b-ii-b NEEDS ITS OWN NEW CARD
-    AND ITS OWN NEW SUBJECT CHAT, WRITTEN BEFORE THE HANDOFF. ***
+*** THE ONE THING S144 MUST NOT UNDO, AND IT IS THE BIGGEST FACT THIS SESSION FOUND:
+    `scripts/utils/storage_contract.py` AND `scripts/utils/role_contract.py` ARE TWO OF THE EIGHT
+    FILES IN `dev_fit_trainer.training_code_identity`.  THE APPROVED DEV-FIT LEDGER, THE APPROVED
+    STAGE-1 SWEEP PLAN AND THE APPROVED RUNG-2 PLAN EACH RECORD
+      role_contract.py     c50bebe5dfab8685b16f421928c0774dddd24e4a6f87542954b65ddc48810a21
+      storage_contract.py  40b0f88c75d4f283197011f2470f8b97af639b78573734130c07bcafbc1a20fa
+    EDITING EITHER FILE TAKES THE PACKET-WIDE SUITE TO **52 FAILED / 25 ERRORS** on
+    `capacity_sweep.require_anchor_comparability`, AND MAKES `analyze_capacity_sweep.py` AND
+    `analyze_rung2_escalation.py` REFUSE TO READ THREE COMPLETED, UNREPEATABLE RUNS - a
+    REPRODUCIBILITY-STANDARD failure, not a test-count one.  I MEASURED THIS BY BUILDING CODEX'S
+    ACCEPTED EXPANSION AND THEN REVERTING IT WHOLE.  *** THIS IS DECISION D4's RULE REACHING TWO MORE
+    OF THE SAME EIGHT FILES.  DO NOT EDIT EITHER FILE.  IF A LATER ROUND NEEDS THEM CHANGED, THAT IS
+    AN AMENDMENT AGAINST THREE APPROVED ARTIFACTS AND IT NEEDS ITS OWN CARD. ***  Lesson 246.
 
-=== WHAT S142 DID, SO S143 DOES NOT REDO IT ===================================================
-  1  ANSWERED CODEX'S SIX-FINDING ROUND-1 LEDGER IN ONE INTEGRATED RESPONSE.  ALL SIX ACCEPTED
-     WITHOUT CONTEST, ALL SIX INTEGRATED.  NOTHING CONTESTED.
-  2  ADDED 47 TESTS (109 -> 156) AND DELETED, RENAMED OR WEAKENED NONE.
-  3  RAISED EXACTLY ONE SCOPE QUESTION AND LEFT IT TO CODEX RATHER THAN TAKING IT (see below).
-  4  RAN THE TWO-PASS MUTATION SWEEP BEFORE THE HANDOFF.  IT FOUND TWO OF MY NEW TESTS MEASURING
-     NOTHING, AND A SEPARATE EDGE PROBE FOUND A DEFECT IN MY OWN REPAIR.  See below.
-  *** S142 SPENT ZERO SCIENTIFIC RESOURCE.  It opened no role payload, checkpoint, estimator
-      output, controller log, production config or pilot/val/test result; built no MuJoCo model;
-      stepped no rollout; ran no fit; rendered no figure.  Counters unchanged: 278 rollouts, 67
-      fits, 67 checkpoints, zero pilot/val/test reads.  Every tree it wrote was a synthetic
-      contract fixture under a `tmp_path` root or a scratch directory outside the repository.
-      *** THE PACKET-WIDE SUITE IS NOW **2,764** (0 failed, 216.66 s).  2,717 + 47 = 2,764
-      EXACTLY, WHICH IS WHAT SAYS THE RESPONSE ADDS TESTS AND CHANGES NO EXISTING ONE. *** ***
+=== WHAT S143 DID, SO S144 DOES NOT REDO IT ===================================================
+  1  BUILT CODEX'S ACCEPTED SCOPE EXPANSION INTO THE TWO CLOSED UTILITIES, MEASURED THAT IT BREAKS
+     THREE COMPLETED LANES, AND REVERTED IT WHOLE.  All four files Codex's ruling named are
+     BYTE-IDENTICAL to its own baseline table - `9b1b9a4a`, `3d01f3d0`, `a2832859`, `c205de5e`.
+  2  BUILT THE SAME REPAIR IN A NEW MODULE THAT NO RECORDED IDENTITY CONTAINS:
+     `Reproducibility Packet/scripts/utils/authenticated_storage.py`.
+  3  REPLACED EVERY BRACKET WITH A SINGLE READ.  `require_still_authentic` IS DELETED.
+  4  FOUND AND FIXED A SECOND-READ OF `calibration.json` AND PINNED THE ONE REMAINING SECOND-READ
+     (`schema.json`, inside `config_contract`) AT EXACTLY TWO.
+  5  RAN THE TWO-PASS 28-MUTANT SWEEP BEFORE THE HANDOFF.  It found TWO of my new tests measuring
+     nothing.  SIXTH CONSECUTIVE BUILD WHERE THE SWEEP CHANGED THE TESTS.
+  *** S143 SPENT ZERO SCIENTIFIC RESOURCE.  Counters unchanged: 278 rollouts, 67 fits, 67
+      checkpoints, zero pilot/val/test reads.  *** THE PACKET-WIDE SUITE IS NOW **2,792** (0 failed,
+      153.24 s).  2,764 + 8 + 20 = 2,792 EXACTLY, which is what says the response adds tests and
+      changes no existing one. ***  THE ONE DISCLOSED READ: the three approved artifacts above, as
+      TRACKED JSON, for their `code_identity` field only, to establish the blocker. ***
 
-=== THE OPEN REVIEW - 4b-ii-a.  MINE, ROUND 2 HANDED OFF, AWAITING CODEX'S DELTA-ONLY REVIEW =====
-  Review Card/Slot-8 Step-4b-ii-a Authentication Chain.md            <- OPEN, Round 2 handed off
+=== THE OPEN REVIEW - 4b-ii-a.  MINE, ROUND 3 HANDED OFF, AWAITING CODEX'S DELTA-ONLY REVIEW =====
+  Review Card/Slot-8 Step-4b-ii-a Authentication Chain.md            <- OPEN, Round 3 handed off
   chats/Claude-Codex/Slot-8 Step-4b-ii-a Authentication Chain/...- Active.md
   Reproducibility Packet/scripts/utils/connection_adapter.py
-    blob 01653d9c7989fe25e7c50f75cac2f6a63f1432b6
-    raw  5c74d6c1d802f90ccd10ad1e7ead82eacaae352f42b64b9dada80ae2306b6ae4  92,425 B / 2,050 LF
+    blob c24cb0cff73019d8ed6f6f3afc322f47a5934a4a
+    raw  03d3466252708c12abe82b78a947f8af92e73d59fb8b4292f78554994000ae28   97,490 B / 2,111 LF
+  Reproducibility Packet/scripts/utils/authenticated_storage.py        <- NEW FILE
+    blob 00b258204353e3850029d3e89736c17f0eff13c6
+    raw  a6b182679c96f5b39452dc204f03090107b90301dad4b0291233557560254e23   13,995 B /   329 LF
   Reproducibility Packet/tests/test_connection_adapter.py
-    blob c5d4e023dafdd44598f11c6749c33751e0a0e371
-    raw  3156b28fd5fa329ee38552d80f2280b42e3ae1fc13e6506196d02673525ea2f9 104,170 B / 2,619 LF
-                                                                          156 tests
-  *** SUPERSEDED, NEVER REVIEW OR BUILD FROM: `dafa73b5` / `9cadb11d`, the Round-1 states. ***
-  *** BOTH ARE `*.py`, CODEX'S S128 NO-EOL-PIN RULING STANDS, `core.autocrlf` IS TRUE HERE, SO A
+    blob 07c48cc87eb41a1f180017ee2f5bac43fdc9f16b
+    raw  8915b0dd91b2e6978402edfa6739be1f576f1d5c8f29069f29a1245a6e7f505d  116,208 B / 2,899 LF
+                                                                          164 tests
+  Reproducibility Packet/tests/test_authenticated_storage.py           <- NEW FILE
+    blob 213367e8cb23c191ffd6dc3b9d98566fcd015ac4
+    raw  ea52073f40f5ea2511e9b5f57e0e755c8b9f22f87882b41ba66a541ed7a15453   22,849 B /   540 LF
+                                                                           20 tests
+  *** SUPERSEDED, NEVER REVIEW OR BUILD FROM: `dafa73b5` / `9cadb11d` (Round 1) and
+      `01653d9c` / `c5d4e023` (Round 2). ***
+  *** ALL FOUR ARE `*.py`, CODEX'S S128 NO-EOL-PIN RULING STANDS, `core.autocrlf` IS TRUE HERE, SO A
       FRESH WINDOWS CHECKOUT RENDERS THEM CRLF AND ITS WORKING-TREE DIGEST IS A THIRD NUMBER THAT IS
-      NOBODY'S IDENTITY.  COMPARE THE BLOBS.  Nothing in the packet hashes either file at runtime. ***
-  *** THREE ROUNDS IS THE LIMIT AND ROUND 2 IS SPENT.  If Codex's Round-2 delta blocks again, ROUND
-      3 IS THE LAST ONE, and the convergence ladder (in `Playbooks/review-cycle.md`) governs from
-      the turn that first hits the limit in disagreement.  THE LIMIT NEVER FORCES APPROVAL. ***
+      NOBODY'S IDENTITY.  COMPARE THE BLOBS. ***
+  *** THREE ROUNDS IS THE LIMIT AND ROUND 3 IS SPENT.  IF CODEX'S ROUND-3 DELTA BLOCKS AGAIN, THE
+      CONVERGENCE LADDER GOVERNS FROM THE TURN THAT FIRST HITS THE LIMIT IN DISAGREEMENT (in
+      `Playbooks/review-cycle.md`).  I ALREADY OFFERED THE CLASSIFICATION IN MY HANDOFF:
+      **JUDGMENT** - the technical facts are agreed and measured, and what is open is WHICH OF TWO
+      CLOSED COMMITMENTS MOVES.  THE LIMIT NEVER FORCES APPROVAL. ***
 
-  CODEX'S SIX ROUND-1 FINDINGS - ALL ACCEPTED WITHOUT CONTEST, ALL INTEGRATED IN S142.
-  DO NOT RE-LITIGATE ANY OF THEM, AND DO NOT UNDO ANY OF THE REPAIRS:
-    1  THE AUTHENTICATED BYTES WERE NOT THE INTERPRETED BYTES.  A path was digested by REOPENING it
-       and then the FIRST read was parsed.  *** `authenticated_bytes` IS NOW THE ONLY WAY A FILE
-       ENTERS THE MODULE: one open, digest over the bytes that read returned, compare, return those
-       bytes - and every document the module parses is parsed from that value. ***  Step 4 no longer
-       calls `load_config` at all; it calls `utils.config_contract.validate_config_document` with
-       the DOCUMENTS it parsed, which removed three file reads.  `canonical_text_digest` and
-       `external_bytes_digest` are the bytes-domain forms, PINNED BY EQUALITY against
-       `canonical_text_sha256` and `file_sha256` on every run - do not let that test be deleted.
-    2  THE RETURNED STATE WAS MUTABLE BELOW THE OUTER MAPPING.  `AuthenticatedConfig.config` is now
-       `replace(config, document=_frozen(config.document))`, and every payload array is rebuilt over
-       an IMMUTABLE `bytes` BUFFER by `_read_only_array`.  *** THE FLAG ALONE IS NOT ENOUGH: an
-       array that owns its buffer can have `writeable` set back to True by whoever holds it. ***
-    3  THE DATASET'S CONFIG IDENTITY WAS NEVER JOINED TO THE VALIDATED CONFIG.  `authenticate_dataset`
-       now TAKES the step-4 result and requires both audits' `config_hash` AND every manifest row's
-       `config_hash` to equal it.  *** THAT IS THE RULE `RolePayloadLoader.__init__` ALREADY APPLIES
-       TO ROLE INDEX ROWS - the manifest and audits are now held to the packet's own standard. ***
-    4  NUMERIC EQUALITY WAS LOSSY AND COULD CRASH.  NOTHING is converted to binary64 now; Python
-       compares int against float exactly, and finiteness is checked only on an operand that can be
-       a float.  *** ONE CONSEQUENCE, WRITTEN IN THE CODE: `connection_record._require_finite_float`
-       coerces a declared integer literal to binary64, so a declared value binary64 cannot hold
-       exactly will REFUSE against a source carrying the exact integer.  Fail-closed, deliberate,
-       and NOT to be "fixed" by re-introducing the loss. ***
-    5  A BOOLEAN PASSED AS A CENSUS COUNT (`True == 1`).  `_require_count` requires a non-boolean
-       JSON integer on all four scalar fields and on every count inside `splits`; `suites` must be an
-       array of strings; types are checked BEFORE values.
-    6  A LONG NUMERIC FIELD-PATH SEGMENT RAISED A RAW `ValueError`.  An index segment must be ASCII
-       digits and at most `MAX_FIELD_PATH_INDEX_DIGITS = 19`.  *** THE ASCII HALF IS MINE, FOUND
-       WHILE MAKING THE REPAIR: `str.isdigit` is TRUE of the superscript two, which `int()` refuses
-       with a raw ValueError, and of non-ASCII decimal digits that convert to a number no JSON author
-       wrote.  Both now fall through to the ordinary absent-key refusal. ***
+  WHAT ROUND 3 ACTUALLY BUILT, SO S144 DOES NOT RE-DERIVE IT:
+    THE NEW MODULE `utils/authenticated_storage.py` exposes `parse_identity_manifest`,
+    `parse_role_index`, `validate_role_index_rows`, `npz_archive_from_bytes` and
+    `AuthenticatedRolePayloadLoader(RolePayloadLoader)` entered at `load_bytes(run_id, raw)`.
+    *** EVERY RULE IS REUSED FROM ITS OWNER - `audit_identity_manifest`,
+    `_validate_role_index_rows`, `validate_role_payload`, `_expected_root`, and `RolePayloadLoader`
+    ITSELF AS THE BASE CLASS.  WHAT IS RESTATED IS ONLY THE READING MECHANICS (strict header +
+    `csv.DictReader` typing loop), AND IT IS HELD SHUT BY EQUALITY TESTS AGAINST THE CLOSED
+    PATH-BASED FUNCTIONS.  DO NOT "DE-DUPLICATE" BY FOLDING IT BACK INTO THE CLOSED FILES - that is
+    exactly the edit that breaks three lanes, and
+    `test_the_closed_utilities_keep_the_identity_three_approved_artifacts_record` is there to make a
+    later session find out here instead. ***
+    THE CHAIN: row 6 reads `manifest.csv` once via `authenticated_bytes` and parses that value;
+    row 8 reads each distinct index ONCE into `raw_by_index` and compares every reference's declared
+    digest against that ONE measurement; row 9 parses those bytes and carries the per-file rows
+    forward; row 11 reads each payload once, digests once, compares TWICE (record and index row) and
+    carries the bytes forward; row 12 constructs the loader from row 9's rows and enters it with
+    row 11's bytes, opening nothing.
+    *** CHECKPOINTS STAY PATH-DIGESTED AND THAT IS DELIBERATE - nothing in this lane interprets a
+    checkpoint, so there is no second reading for a first to have to match, and holding an unbounded
+    `.pt` in memory would be cost with no claim attached. ***
 
-  *** THE ONE OPEN DECISION IS A SCOPE QUESTION AND IT IS CODEX'S TO RULE, NOT MINE TO TAKE.
-      `storage_contract.read_identity_manifest`, `storage_contract.read_role_index` and
-      `RolePayloadLoader` take PATHS and open them themselves, and design 4.3 forbids
-      reimplementing their parsers here.  So those three calls are BRACKETED: digest from the bytes
-      this module read, call, re-measure (`require_still_authentic`).  ANY CHANGE STILL PRESENT WHEN
-      THE UTILITY RETURNS REFUSES; a change made and reverted INSIDE one call is not visible from
-      outside it.  Closing that needs bytes- or rows-level entry points in two closed foundational
-      utilities.  I DID NOT MAKE THAT EDIT AND DID NOT PROPOSE IT UNILATERALLY.  *** IF CODEX RULES
-      IT BELONGS IN THIS CARD, DO IT AS A SCOPE EXPANSION WITH THE PRIOR STATE NAMED AND THE REVERT
-      OFFERED.  IF IT RULES IT DOES NOT, DO NOT RE-RAISE IT. ***
-      A NOTE THAT CARRIES INTO 4b-ii-b: a bracket RE-OPENS a path the record already names, so it
-      adds NO path to W3's observed open set. ***
+  THE OPEN-COUNT INSTRUMENT IS THE MOST REUSABLE THING S143 BUILT.  `_open_counts` patches
+  `Path.read_bytes` and counts per RESOLVED PATH across the WHOLE chain - every access, including
+  inside the closed utilities, bottoms out there.  It found two second-reads no per-row test had
+  caught.  *** THE PINNED FACT: `schema.json` IS READ TWICE AND THE COUNT IS PINNED AT TWO, NOT
+  EXCUSED.  `config_contract.validate_config_document` takes the schema as a DOCUMENT but re-derives
+  its RAW digest from `schema_path`.  CLOSING IT NEEDS A `schema_sha256` PARAMETER ON A FOURTH
+  CLOSED CONTRACT, OUTSIDE THIS CARD'S SCOPE.  MEASURED REACHABILITY: substituted bytes reach that
+  comparison and are REFUSED by it, and CANNOT change which rules ran; the residual is that a record
+  and a config declaring DIFFERENT schemas - a state that refuses today - could be made to agree by
+  an actor able to rewrite the file between the two reads.  I DELIBERATELY DID NOT ADD AN
+  ADAPTER-SIDE GUARD: making it decisive needs a two-schema fixture, and a second config's
+  `config_hash` cascades into the manifest, both audits and every index row.  Lessons 247, 248. ***
 
-  *** FOUR THINGS S142 FOUND AFTER THE LEDGER, ALL AGAINST ME, AND A LATER SESSION MUST NOT QUIETLY
-      UNDO ANY OF THEM:
-      1  MY FIRST REPAIR ADDED A POST-VALIDATION BRACKET ON THE SCHEMA THAT NO INPUT COULD MAKE
-         DECISIVE - `validate_config_document` compares the config's declared `schema_sha256`, a
-         field of an already-parsed document, against the schema's RAW bytes, so ANY schema change
-         refuses inside the contract first.  DELETED WITH THE PROOF WHERE IT STOOD.  *** DO NOT
-         "RESTORE" IT, AND THE SAME PROOF IS WHY THERE IS NO SCHEMA-SIDE SWAP TEST. ***  Lesson 242.
-      2  THE `_require_present` INSIDE `authenticated_bytes` WAS UNDECIDABLE FOR THE SAME REASON -
-         absent, directory and unreadable all raise OSError from the read - so `_read_bytes` is the
-         single guard.  Same shape as S141's `require_role_layout` deletion.
-      3  THE SWEEP FOUND TWO OF MY NEW TESTS MEASURING NOTHING.  A swap that fires BEFORE both the
-         read and the digest cannot separate "digest bytes in hand" from "digest a second read".
-         *** THE SEAM MUST BE THE FIRST OF THE TWO OPERATIONS WITH THE WRITE HAPPENING AFTER IT
-         RETURNS - that is what `_seam_swap(..., after=True)` is for.  DO NOT SIMPLIFY IT AWAY. ***
-         Lesson 243.  FIFTH CONSECUTIVE BUILD WHERE THE SWEEP CHANGED THE TESTS.
-      4  `_read_only_array` SILENTLY RESHAPED A ZERO-DIMENSIONAL PAYLOAD FIELD.  `np.ascontiguousarray`
-         returns AT LEAST ONE DIMENSION, so a scalar came back as a one-element vector AFTER the
-         loader had validated its shape.  `np.asarray` + `tobytes` (which already serialises any
-         layout in C order) is the fix.  *** DO NOT REINTRODUCE `ascontiguousarray`. ***  Lesson 244.
+  THREE TESTS WERE REMOVED AND I FLAGGED IT AGAINST MY OWN ROUND-2 STATEMENT.  Each asserted
+  "re-measured after the parse", a message ONLY A BRACKET CAN PRODUCE, so their subject no longer
+  exists.  Net on `test_connection_adapter.py`: 11 added, 3 removed, 156 -> 164.  Lesson 250.
+  *** THE REPLACEMENTS ASSERT **ACCEPTANCE**, NOT REFUSAL: the file is replaced AFTER its one read,
+  the replacement is LEFT PRESENT, the chain ACCEPTS, and the value returned is the AUTHENTICATED
+  ORIGINAL.  Three mirror tests replace BEFORE the read and require the digest to refuse.  BOTH
+  DIRECTIONS ARE NEEDED or the claim reads as "the check was dropped". ***
 
-  THE THREE BUILD DECISIONS FROM S141 STAND, UNCONTESTED BY CODEX'S ROUND-1 LEDGER, AND ARE RECORDED
-  IN THE MODULE DOCSTRING RATHER THAN ONLY IN A REPORT:
-    1  *** THE AUTHORITY RULE IS THE ADAPTER'S OWN AND `require_frozen` IS NOT IT. ***
-       `require_authority_config_policy` is TOTAL over the 2x2 and is driven directly over all four
-       cells.  B8's two opposite-authority legs FIRE AT DIFFERENT LAYERS - leg 2 (draft under FINAL)
-       refuses INSIDE the config contract, leg 4 (frozen under DEVELOPMENT_ONLY) refuses in the
-       adapter's own rule, because `require_frozen=False` ACCEPTS A FROZEN DOCUMENT.
-    2  "CASE AND RUN IDENTITIES" ARE CHECKED WHERE THEIR EVIDENCE IS.  Case identity = exact set
-       equality against `cases_field_path`, duplicates refused.  RUN identity is NOT a field of the
-       result artifact, so it is checked against the AUTHENTICATED MANIFEST at row 6 and by the
-       20-field equality at row 10.  *** FLAGGED TO CODEX AS THE INTERPRETATION MOST LIKELY TO BE
-       READ DIFFERENTLY; ITS ROUND-1 LEDGER DID NOT CONTEST IT. ***
-    3  THE CENSUS IS RECOMPUTED, NEVER ADOPTED - all six fields from `manifest.csv` itself, plus the
-       two audits' `manifest_audit` blocks required EQUAL TO EACH OTHER.
+  ONE DEFECT THE REPAIR EXPOSED, CLOSED IN THE UTILITY THAT OWNS THE RULE: a payload can carry its
+  declared digest and still not be a readable archive.  Truncation raises `zipfile.BadZipFile` at
+  OPEN and a CRC-mismatched member raises the same at READ; neither is a `ValueError`, so both
+  escaped the adapter's translation as raw exceptions.  `npz_archive_from_bytes` translates them and
+  PASSES A CALLER'S OWN `StorageContractError` THROUGH UNTOUCHED.  *** DO NOT DELETE THE
+  `except StorageContractError: raise` CLAUSE - and note that a `match=` test CANNOT hold it, because
+  the wrapper interpolates the original exception into its own message.  THE ASSERTION IS OBJECT
+  IDENTITY.  Lesson 249. ***
 
-  THE DIGEST DOMAINS, WHICH CONSUME FORWARD ITEM 1 AND DO NOT REOPEN IT:
-    CANONICAL (`canonical_text_sha256` / `canonical_text_digest`)  every TRACKED PACKET TEXT file -
-                                        schema, config, established result, model-selection source,
-                                        both threshold sources, the geometry PRODUCER and the
-                                        geometry-validation artifact
-    RAW (`file_sha256` / `external_bytes_digest`)  every file under `--role-root` and
-                                        `--checkpoint-root`
-  *** THE RAW HALF IS FORCED, NOT PREFERRED: the role index rows carry RAW digests and row 11 must
-      compare the record AGAINST THE AUTHENTICATED INDEX ROW, so a different domain there would
-      compare two numbers that were never meant to be equal. ***
-  *** ONE INTERACTION, NAMED SO NOBODY REDISCOVERS IT AS A DEFECT: `validate_config_document`
-      compares the config's declared `schema_sha256` against the schema's RAW bytes while the record
-      declares the schema's CANONICAL digest.  TWO DIFFERENT FIELDS WITH TWO DIFFERENT OWNERS; they
-      need not be equal, AND ON `schema/schema.json` THEY ARE EQUAL ANYWAY because that one file is
-      LF-pinned as load-bearing in BOTH `.gitattributes`.  The closed config contract is undisturbed. ***
+  THE S143 MUTATION SWEEP, FINAL STATE: 28 MUTANTS (25 REAL + 3 CONTROLS), 25/25 REAL CAUGHT,
+  2 OF 3 CONTROLS SURVIVING, IDENTICAL ACROSS BOTH PASSES, NO BAD ANCHORS, target digest restored
+  and verified after every mutant, run ENTIRELY IN A SCRATCH DIRECTORY OUTSIDE THE REPOSITORY,
+  380.1 s.  *** THE THIRD CONTROL, `n03`, WAS CAUGHT AND I EXPECTED IT TO SURVIVE: replacing step
+  8's `_read_bytes` with a bare `Path.read_bytes` goes red because EVERY SEAM TEST BINDS
+  `connection_adapter._read_bytes`.  That is a real property, but it is NOT evidence that the
+  OSError-translation branch is reachable, and I did not claim it is. ***
+  *** BUDGET THE SWEEP BEFORE THE HANDOFF FOR 4b-ii-b TOO - IT HAS NOW CHANGED THE TESTS RATHER THAN
+  CONFIRMING THEM ON SIX CONSECUTIVE BUILDS. ***
+  *** THE STAGED TREE FOR THIS SWEEP NEEDS `scripts`, `tests`, `schema`, `config` AND `results`
+      (the three approved plan/ledger JSONs the new test file reads for their `code_identity`).
+      A staged tree missing any of them is a RED CONTROL AND MEASURES NOTHING. ***
 
-  THE S142 MUTATION SWEEP, FINAL STATE: 30 MUTANTS (28 REAL + 2 NEGATIVE CONTROLS), 28/28 REAL
-  CAUGHT, BOTH CONTROLS SURVIVING, IDENTICAL ACROSS BOTH PASSES, NO BAD ANCHORS, target digest
-  restored and verified after every mutant, run ENTIRELY IN A SCRATCH DIRECTORY OUTSIDE THE
-  REPOSITORY, 381.4 s.  *** BUDGET THE SWEEP BEFORE THE HANDOFF FOR 4b-ii-b TOO - IT HAS NOW CHANGED
-  THE TESTS RATHER THAN CONFIRMING THEM ON FIVE CONSECUTIVE BUILDS. ***
-  *** ONE HARNESS FACT WORTH KEEPING: THE STAGED TREE FOR THIS FILE NEEDS FOUR DIRECTORIES -
-      `scripts`, `tests`, `schema` AND `config` - because the harness copies the live schema, the
-      live draft config and the live geometry producer byte for byte.  A staged tree missing any of
-      them is a RED CONTROL AND MEASURES NOTHING. ***
+  CODEX'S SIX ROUND-1 FINDINGS ARE ALL INTEGRATED AND FIVE ARE CLOSED BY ITS ROUND-2 REVIEW
+  (2 deep immutability, 3 the dataset/config join, 4 exact unbounded numeric comparison, 5 typed
+  census counts, 6 bounded ASCII field indexes).  DO NOT RE-LITIGATE ANY OF THEM AND DO NOT UNDO ANY
+  REPAIR.  FINDING 1 - the authenticated bytes were not the interpreted bytes - IS WHAT ROUND 3
+  ANSWERS.  The S142 repairs that still stand and must not be reverted:
+    *** `authenticated_bytes` IS THE ONLY WAY A FILE ENTERS THE MODULE: one open, digest over the
+        bytes that read returned, compare, return those bytes. ***
+    *** `AuthenticatedConfig.config` is `replace(config, document=_frozen(config.document))`, and
+        every payload array is rebuilt over an IMMUTABLE `bytes` buffer by `_read_only_array`, which
+        uses `np.asarray` and NOT `ascontiguousarray` (lesson 244). ***
+    *** `authenticate_dataset` requires both audits' `config_hash` AND every manifest row's
+        `config_hash` to equal the validated config's. ***
+    *** NOTHING is converted to binary64 in numeric equality; `_require_count` requires a
+        non-boolean JSON integer; an index segment must be ASCII digits and at most
+        `MAX_FIELD_PATH_INDEX_DIGITS = 19`. ***
 
 === THE NEXT BUILD - 4b-ii-b, NOT STARTED =========================================================
   ROWS 13-21 + the coherent geometry fixture + `X_GEOMETRY_UNSUPPORTED` at exit 15 + the audit-hook
@@ -204,6 +198,9 @@
   HANDOFF, AND ITS MUTATION SWEEP BUDGETED **BEFORE** THE HANDOFF.
   *** `build_role_bundle` STILL REFUSES UNCONDITIONALLY WITH `X_CONNECTION_UNAUTHORIZED` AND THAT IS
       THE CORRECT STATE UNTIL THE WHOLE OF 4b CLOSES.  4b-ii-a CHANGED NO PUBLIC SURFACE. ***
+  *** DO NOT START 4b-ii-b WHILE 4b-ii-a IS OPEN.  ONE CARD AT A TIME. ***
+  *** 4b-ii-b WILL WANT THE SAME BYTES-DOMAIN DISCIPLINE.  USE `utils.authenticated_storage`; DO NOT
+      ADD ENTRY POINTS TO THE TWO CLOSED FILES. ***
 
 FORWARD ITEM 1 WAS SETTLED BY MEASUREMENT (S139) AND **THE 4b-ii-a BUILD HAS NOW CONSUMED IT**
 (S141: every tracked packet text file is hashed with `canonical_text_sha256`, every role-root and
@@ -819,7 +816,7 @@ THE ARTIFACT SHAPES AND THE AUDIT INSTRUMENTS ARE IN `agents/Claude/Permanent In
   NOBODY MEASURES - the reviewer has no motive to probe the part they are agreeing with and the owner
   has no motive to probe the part that favours them, so a conceded clause is the one place two
   adversarial readers are ALIGNED, and alignment is where nothing gets checked).
-  STANDING LESSONS NOW REACH 245.
+  STANDING LESSONS NOW REACH 250.
   S142 ADDED FOUR, ALL FOUR AGAINST ME: 242 (A GUARD WHOSE COMPARAND IS FIXED FOR THE WHOLE CALL
   CANNOT SEE A CHANGE TO THE THING IT GUARDS - my own schema bracket, deleted with the proof), 243 (A
   SWAP TEST THAT FIRES BEFORE BOTH OPERATIONS CANNOT SEPARATE THEM - the intervention must be
@@ -933,7 +930,7 @@ TWO NUMBERS THAT ARE IN THE DESIGN BECAUSE THEY ARE THE INCONVENIENT ONES.  KEEP
 ## Where the project is
 
 - **Phase 2 (Execution) is OPEN.** All Phase-1 gates in force. **Schema v1.0 + Amendment A1 in force.** Contract changes run through the **amendment protocol**.
-- I am **Claude**; last session was **Session 142**; next session I run is **Session 143**. **SESSION 142 ANSWERED CODEX'S SIX-FINDING ROUND-1 LEDGER ON SUB-STEP 4b-ii-a IN ONE INTEGRATED RESPONSE AND HANDED ROUND 2 BACK.** All six findings accepted without contest and integrated; 47 tests added (109 -> 156) and none deleted, renamed or weakened; candidate now `01653d9c` (module, 92,425 B / 2,050 LF) and `c5d4e023` (tests, 104,170 B / 2,619 LF), superseding `dafa73b5` / `9cadb11d`. **THE FIRST WORK OF S143 IS WHATEVER CODEX'S DELTA-ONLY ROUND 2 SAYS**, including its ruling on the one scope question about bytes-level entry points in `storage_contract` and `role_contract`. **DO NOT START 4b-ii-b WHILE 4b-ii-a IS OPEN**, and when it does start it needs its own new card and chat and its mutation sweep budgeted BEFORE the handoff. **SESSION 136 WAS A REGULAR PROGRESS-REPORT SESSION** - `agents/Claude/Progress Reports/Progress Report Session 136.md` covers S129-S136. **MY NEXT REGULAR PROGRESS REPORT IS SESSION 144
+- I am **Claude**; last session was **Session 143**; next session I run is **Session 144**. **SESSION 143 HANDED OFF ROUND 3 ON SUB-STEP 4b-ii-a - THE ORDINARY FINAL ROUND.** Codex's Round-2 return closed findings 2-6 and held **Finding 1** open, having demonstrated that `RolePayloadLoader.load` hashes a path and then reopens it, so a payload replaced between the two opens is accepted and its values returned. **I built Codex's accepted scope expansion into `storage_contract.py` and `role_contract.py`, measured that it takes the packet-wide suite to 52 failed / 25 errors and makes both read-only analyzers refuse three completed unrepeatable runs, and reverted it whole** - see the head block, which is the authority. The repair lives in the new `utils/authenticated_storage.py`; every bracket is replaced by a single read and `require_still_authentic` is deleted. Candidate: `c24cb0cf` (adapter), `00b25820` (new module), `07c48cc8` (adapter tests, 164), `213367e8` (new tests, 20), superseding `01653d9c` / `c5d4e023`. **THE FIRST WORK OF S144 IS WHATEVER CODEX'S DELTA-ONLY ROUND 3 SAYS**, and if it blocks again the convergence ladder governs - I already offered the classification **judgment**. **DO NOT START 4b-ii-b WHILE 4b-ii-a IS OPEN**, and when it does start it needs its own new card and chat and its mutation sweep budgeted BEFORE the handoff. **SESSION 136 WAS A REGULAR PROGRESS-REPORT SESSION** - `agents/Claude/Progress Reports/Progress Report Session 136.md` covers S129-S136. **MY NEXT REGULAR PROGRESS REPORT IS SESSION 144 - IT IS DUE THE NEXT SESSION I RUN, IN ADDITION TO THE NORMAL SESSION WORK.**
 - **`config.json` is deliberately NOT frozen** and does not exist. All hashes are `dev-`; no `dev-` trace may enter confirmatory analysis.
 - Real data exists: `data/gate3-base-dev-pilot-val-c1-s` (3.86 GB, git-ignored, local only). 472 reservations / 944 manifest rows / C1+S / dev 152, pilot 152, val 168. **Test untouched: 0 identities, 0 payloads.** **THE "SLATED FOR FULL REGENERATION FROM ZERO AFTER A2" EXPECTATION IS RETIRED AS OF MY S75 — see A2.3.** Option C inserts no severity, so no seed ordinal shifts and A2 by itself invalidates none of this. If the set is ever superseded it is for some other reason, under its own authorization. **Still: read them, do not build on them** — nothing downstream of them is authorized either way.
 - **THE PAYLOAD-BOUNDARY EXTENSION HAS RUN — Codex's S73, 127 physical rollouts, `X_CASE_EMPTY`, and the result artifact is JOINTLY APPROVED (Codex S73 / me S74).** The measurement is spent and no further payload-extension execution is authorized. **A2 IS IN FORCE at `baa8fd53…` / `203aab77…` — both agents approved those exact bytes (me S76, Codex S76). The two-file loop is CLOSED and the amendment is not to be reopened or status-edited.**
@@ -956,6 +953,29 @@ TWO NUMBERS THAT ARE IN THE DESIGN BECAUSE THEY ARE THE INCONVENIENT ONES.  KEEP
       A COUNTER'S SCOPE IS PART OF THE COUNTER; two counters under one heading are read as
       sharing one scope, and if they do not, nothing in the file will say so. ***
   PILOT / VAL / TEST reads   0, every session, without exception
+  *** S143 SPENT ZERO SCIENTIFIC RESOURCE - it is the 4b-ii-a ROUND-3 OWNER-RESPONSE SESSION.  It
+      read `AgentPrompt.md`, `Project Details/Project Details.md`, this file, the governing Review
+      Card including Codex's full Round-2 ledger, the subject chat, the monitoring chat tail and
+      Codex's HumanReport142; read `utils/storage_contract.py`, `utils/role_contract.py`,
+      `utils/connection_adapter.py`, `utils/config_contract.py`, `utils/dev_fit_trainer.py` and
+      `utils/capacity_sweep.py` AT SOURCE; BUILT Codex's accepted expansion into the two closed
+      utilities, MEASURED that it breaks three completed lanes, and REVERTED IT WHOLE; WROTE TWO NEW
+      PACKET FILES (`utils/authenticated_storage.py`, `tests/test_authenticated_storage.py`) and
+      edited the two Round-2 candidates; ran the focused suite (184), the focused suite under `-O`
+      (184) and THE PACKET-WIDE SUITE (**2,792 passed, 0 failed, 153.24 s**); ran a TWO-PASS
+      28-MUTANT CONTROL (25 real + 3 controls, 25/25 real caught, identical both passes, 380.1 s)
+      ENTIRELY IN A SCRATCH DIRECTORY OUTSIDE THE REPOSITORY; appended one chat turn and one Review
+      Card section; and edited its own report, README, Permanent Instruments (lessons 246-250) and
+      continuity file.
+      *** IT OPENED NO ROLE INDEX, ROLE PAYLOAD, CHECKPOINT, ESTIMATOR OUTPUT, CONTROLLER LOG,
+      PRODUCTION CONFIG OR PILOT/VAL/TEST RESULT, BUILT NO MuJoCo MODEL, STEPPED NO ROLLOUT, RAN NO
+      FIT AND RENDERED NO FIGURE.  Every tree its tests bind is under `tmp_path` or outside the
+      repository.  Checkpoint count NOT RE-READ - no fit ran; it stands at 67. ***
+      *** THE ONE DISCLOSED READ: `results/dev_fit/dev_fit_result.json`,
+      `results/capacity_sweep/plans/stage1-run-2/capacity_sweep_plan.json` and
+      `results/rung2_escalation/plans/rung2-run-1/rung2_escalation_plan.json`, as TRACKED JSON, for
+      their recorded `code_identity` field ONLY.  That is a read of a tracked development artifact to
+      establish a blocker, it opened no payload behind it, and it regenerated nothing. ***
   *** S142 SPENT ZERO SCIENTIFIC RESOURCE - it is the 4b-ii-a ROUND-2 OWNER-RESPONSE SESSION.  It
       read `AgentPrompt.md`, `Project Details/Project Details.md`, this file, the governing Review
       Card including Codex's full Round-1 ledger, the subject chat, the monitoring chat and Codex's
@@ -1289,7 +1309,7 @@ Not freeze blockers (still required before completion): **Slot-8 verification ar
 
 - **Simulation-only, one desktop:** Windows 11, Ryzen 7 8700F (8C/16T), RTX 5060 Ti **16 GB VRAM** (sm_120), 32 GB RAM, Python **3.12.10** in `./venv`. Free/OSS, commercial-use-friendly only.
 - **venv has:** numpy 2.5.1, scipy 1.18.0, scikit-learn 1.9.0, matplotlib 3.11.0, mujoco 3.10.0, pandas 3.0.3, control 0.10.2, gymnasium 1.3.0, pytest 9.1.1, **torch 2.11.0+cu128**. **S77 added the FIRST new PACKET dependency since the packet was created: `torch==2.11.0` in `Reproducibility Packet/requirements.txt`, pinned as the BASE version (not `+cu128`) so a reader without a CUDA machine can still run the whole suite.** The venv itself gained nothing — torch was already installed.
-- **Running packet tests:** from the REPO ROOT, `./venv/Scripts/python.exe -m pytest -q "Reproducibility Packet/tests"`. **Scope pytest to that path** - a root-wide invocation collides on duplicate test module names in the ignored `tmp/session6_packet_copy/`. *** THE FULL-SUITE FIGURE IS **2,608** (Codex S138, 203.27 s, 0 failed, 0 collection errors) - it was 2,267, the S136 4b-i build added 212, the S137 Round-2 repairs added 99 and the S138 Round-3 repairs added 30. S139 DID NOT RE-RUN IT - no executable file changed.  It is CLEAN: the Smart App Control block that made S128 and S129 unmeasurable is OVER - see the head block and `director_requests.md` entry 2. **DO NOT QUOTE 1,328 OR 1,344; THEY ARE ARTIFACTS OF A BROKEN ENVIRONMENT.** *** The two Slot-8 files run **159 passed in 31.70 s**, and 159 again under `python -O`. Earlier clean history: 2,479 (S136, 192.86 s), 2,267 (S130, 221.38 s; S131, 204.35 s), 2,108 (S118, 126.88 s), 2,005 (S115-S117), 1,863 (S114), 1,861 (S113), 1,792 (S102), 1,753 (S93), 1,551 (S85-S90), 1,370 (S77), 1,306 (S72), 595 (pre-S51 baseline). *** MY S115 REPORT SAID 2,004 AND THAT WAS A TYPO IN MY OWN ARITHMETIC: 1,863 + 142 = 2,005; Codex corrected it forward and I MEASURED the correction in S116 rather than conceding it. *** `test_payload_boundary_extension.py` collects **170**; the two closed Step-2 seam files together collect 124; `test_dev_fit_analysis.py` collects 35; **`test_connection_record.py` collects 341** at the approved Round-3 state (S138, 7.42 s, and 341 again under `python -O`; it was 212 at the S136 Round-1 state and 311 at the S137 Round-2 state). **Set `PYTHONIOENCODING=utf-8` for anything that prints non-ASCII** - the console is cp1252. **Use ASCII in probe scripts and in anything a gate prints.** **Set `MPLBACKEND=Agg` for anything that renders a figure outside pytest** - the Slot-8 test files call `matplotlib.use('Agg')` at import, but a bare probe script or the fixture CLI will pick up the interactive backend, and the CLI's fixture mode ends by opening the menu.
+- **Running packet tests:** from the REPO ROOT, `./venv/Scripts/python.exe -m pytest -q "Reproducibility Packet/tests"`. **Scope pytest to that path** - a root-wide invocation collides on duplicate test module names in the ignored `tmp/session6_packet_copy/`. *** THE FULL-SUITE FIGURE IS **2,792** (Codex S138, 203.27 s, 0 failed, 0 collection errors) - it was 2,267, the S136 4b-i build added 212, the S137 Round-2 repairs added 99 and the S138 Round-3 repairs added 30. S139 DID NOT RE-RUN IT - no executable file changed.  It is CLEAN: the Smart App Control block that made S128 and S129 unmeasurable is OVER - see the head block and `director_requests.md` entry 2. **DO NOT QUOTE 1,328 OR 1,344; THEY ARE ARTIFACTS OF A BROKEN ENVIRONMENT.** *** The two Slot-8 files run **159 passed in 31.70 s**, and 159 again under `python -O`. Earlier clean history: 2,479 (S136, 192.86 s), 2,267 (S130, 221.38 s; S131, 204.35 s), 2,108 (S118, 126.88 s), 2,005 (S115-S117), 1,863 (S114), 1,861 (S113), 1,792 (S102), 1,753 (S93), 1,551 (S85-S90), 1,370 (S77), 1,306 (S72), 595 (pre-S51 baseline). *** MY S115 REPORT SAID 2,004 AND THAT WAS A TYPO IN MY OWN ARITHMETIC: 1,863 + 142 = 2,005; Codex corrected it forward and I MEASURED the correction in S116 rather than conceding it. *** `test_payload_boundary_extension.py` collects **170**; the two closed Step-2 seam files together collect 124; `test_dev_fit_analysis.py` collects 35; **`test_connection_record.py` collects 341** at the approved Round-3 state (S138, 7.42 s, and 341 again under `python -O`; it was 212 at the S136 Round-1 state and 311 at the S137 Round-2 state). **Set `PYTHONIOENCODING=utf-8` for anything that prints non-ASCII** - the console is cp1252. **Use ASCII in probe scripts and in anything a gate prints.** **Set `MPLBACKEND=Agg` for anything that renders a figure outside pytest** - the Slot-8 test files call `matplotlib.use('Agg')` at import, but a bare probe script or the fixture CLI will pick up the interactive backend, and the CLI's fixture mode ends by opening the menu.
 - **MUTATION SWEEPS — MANDATORY HARNESS SHAPE AFTER S60:** clear `__pycache__` before every run **and** set `PYTHONDONTWRITEBYTECODE=1` in the subprocess env; drop `-x`; translate anchors to the target file's own newline; report bad anchors separately from survivors; restore exact bytes in a `finally` and verify the blob afterwards. **Run the whole sweep twice and require identical results** — that is the cheapest detector for a harness fault.
 - **Packet scripts are invoked FROM the packet directory** (`scripts\<name>.py`, `--output-dir results\<name>`), per its README. From the packet dir the project venv is `..\venv\Scripts\python.exe`. **BUT A MODULE UNDER `scripts/utils/` IS NOT A PACKET SCRIPT AND THIS DOES NOT APPLY TO IT — MEASURED S95.** There is no `utils` package at the packet root and no `scripts/__init__.py`, so from the packet dir `-m utils.<mod>` and `-m scripts.utils.<mod>` both raise `ModuleNotFoundError` and running the file by path fails on its relative import. **Run it from `Reproducibility Packet/scripts/`: `..\..\venv\Scripts\python.exe -B -m utils.<mod> … --output-dir ..\results\<name>`.** **In my PowerShell tool the working directory is not the repo root — use `Set-Location` or absolute paths. My Bash tool's cwd PERSISTS between calls — prefer absolute paths or re-`cd` every time.**
 - **Timings (measured S35–S60):** full packet suite ~150 s; one MuJoCo rollout (3000 steps) **25.6–27.5 s**; a PARTIAL rollout is proportionally cheap — 480 steps ≈ 3.0 s; at reduced fidelity (`point_count=9`, `simulation_timestep_s=2e-4`) 501 control steps ≈ 0.37 s; a 200-realization sensor-only null at W=768 ~40 s; an offline re-observation ≈ instantaneous; the driver's `--mode plan` 0.30–0.33 s; **the payload-extension executable's `--mode plan` 0.36–0.38 s (eight MuJoCo model compilations, zero steps)**; **one driver-file mutation case ≈ 100 s** (a 17-case sweep is ~28 min and belongs in the background); **a small-analyzer mutation case ≈ 0.5–0.7 s with the fixed harness, so a 44-case sweep is under a minute.** **NO figure exists for the pinned `pairs=100` Stage-0 run — see limitation 45; do not invent one.**

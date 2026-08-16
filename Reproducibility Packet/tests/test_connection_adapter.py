@@ -36,6 +36,7 @@ Every path it binds is inside a `tmp_path` tree.
 from __future__ import annotations
 
 import copy
+import io
 import json
 import shutil
 import sys
@@ -2160,76 +2161,355 @@ def test_finding1_a_config_swapped_at_validation_time_does_not_change_the_config
     assert "an_unapproved_key" not in _plain(result.config.config.document)["values"]
 
 
-def test_finding1_a_manifest_swapped_between_the_digest_and_the_parse_refuses(
+def _read_once_seam(
+    monkeypatch: pytest.MonkeyPatch,
+    path: Path,
+    replacement: bytes,
+    *,
+    after: bool = True,
+) -> dict[str, Any]:
+    """Overwrite `path` around the one read the chain makes of it.
+
+    `_read_bytes` is the module's single named read, so patching it puts the write at
+    the exact instant the chain has the bytes of that file in hand and will never open
+    it again. With `after=True` the replacement lands *after* that read returns and is
+    **left in place**, which is the state a bracket around a path-based parser could
+    detect and the state a re-open would silently interpret. The chain must accept and
+    must hand back the value it authenticated; the swap must change nothing.
+
+    With `after=False` the write lands before the read, so the read returns the
+    replacement -- and the digest must refuse it. The two directions together are what
+    say the read moved rather than that the check was dropped.
+    """
+
+    real = connection_adapter._read_bytes
+    state: dict[str, Any] = {"fired": False, "original": path.read_bytes()}
+
+    def wrapper(target: Path, **kwargs: Any) -> bytes:
+        if state["fired"] or Path(target) != path:
+            return real(target, **kwargs)
+        state["fired"] = True
+        if after:
+            raw = real(target, **kwargs)
+            path.write_bytes(replacement)
+            return raw
+        path.write_bytes(replacement)
+        return real(target, **kwargs)
+
+    monkeypatch.setattr(connection_adapter, "_read_bytes", wrapper)
+    return state
+
+
+def _alternate_plant_payload(path: Path) -> bytes:
+    """Return a different, schema-valid plant payload for the same run.
+
+    Only `q_true` moves, and it moves by a value no rounding could produce, so a chain
+    that interpreted these bytes rather than the authenticated ones is caught by an
+    exact comparison rather than by a tolerance.
+    """
+
+    import numpy as np
+
+    with np.load(path, allow_pickle=False) as archive:
+        arrays = {name: np.array(archive[name]) for name in archive.files}
+    arrays["q_true"] = arrays["q_true"] + 1.0
+    buffer = io.BytesIO()
+    np.savez(buffer, **arrays)
+    return buffer.getvalue()
+
+
+def test_finding1_a_manifest_replaced_after_its_one_read_changes_nothing(
     harness: Harness, monkeypatch: pytest.MonkeyPatch, restore_bytes
 ) -> None:
-    """Row 6 re-measures `manifest.csv` after the closed reader reopened it."""
+    """Row 6 parses the bytes it digested, so a later replacement is not read at all.
+
+    The replacement renames a run the record names, so a chain that re-opened
+    `manifest.csv` would either refuse or plan from a row the record never approved.
+    The replacement is still on disk when the chain accepts -- this is the persistent
+    state, not a swap-and-revert -- and the census and rows are the authenticated ones.
+    """
 
     path = restore_bytes(harness.role_root / MANIFEST_NAME)
     text = path.read_text(encoding="utf-8")
     replacement = text.replace("fixture_dev_C1", "fixture_dev_C9", 1).encode("utf-8")
     assert replacement != path.read_bytes()
-    state = _seam_swap(monkeypatch, "read_identity_manifest", path, replacement)
+    state = _read_once_seam(monkeypatch, path, replacement)
 
-    error = _refusal(harness.authenticate)
+    result = harness.authenticate()
 
     assert state["fired"]
-    assert error.code == X_IDENTITY_MISMATCH
-    assert "re-measured after the parse" in str(error)
+    assert path.read_bytes() == replacement
+    assert "fixture_dev_C1" in result.dataset.rows
+    assert "fixture_dev_C9" not in result.dataset.rows
 
 
-def test_finding1_a_role_index_swapped_between_the_digest_and_the_parse_refuses(
+def test_finding1_a_manifest_replaced_before_its_one_read_refuses(
     harness: Harness, monkeypatch: pytest.MonkeyPatch, restore_bytes
 ) -> None:
-    """Row 9 re-measures each index after the closed reader reopened it."""
+    """The digest still guards row 6: bytes that reach the parse must authenticate."""
 
-    path = restore_bytes(harness.role_root / "plant" / ROLE_INDEX_NAME)
+    path = restore_bytes(harness.role_root / MANIFEST_NAME)
     text = path.read_text(encoding="utf-8")
-    original_sha = external_digest(harness.role_root / "plant" / "fixture_dev_C1.npz")
-    replacement = text.replace(original_sha, "0" + original_sha[1:], 1).encode("utf-8")
-    assert replacement != path.read_bytes()
-    state = _seam_swap(
-        monkeypatch,
-        "read_role_index",
-        path,
-        replacement,
-        when=lambda args: Path(args[0]) == path,
-    )
+    replacement = text.replace("fixture_dev_C1", "fixture_dev_C9", 1).encode("utf-8")
+    state = _read_once_seam(monkeypatch, path, replacement, after=False)
 
     error = _refusal(harness.authenticate)
 
     assert state["fired"]
     assert error.code == X_IDENTITY_MISMATCH
-    assert "re-measured after the parse" in str(error)
+    assert "data_root.manifest_sha256" in str(error)
 
 
-def test_finding1_a_role_index_swapped_before_the_loader_reads_it_refuses(
+def test_finding1_a_role_index_replaced_after_its_one_read_changes_nothing(
     harness: Harness, monkeypatch: pytest.MonkeyPatch, restore_bytes
 ) -> None:
-    """Row 12 binds the loader's own index read to the index row 8 authenticated.
+    """Rows 9 and 12 both plan from the index bytes row 8 digested.
 
-    The swap lands after rows 8 through 11 have all completed, so the step-9 bracket
-    cannot be what refuses here: the only guard that can see this state is the one
-    taken immediately after `RolePayloadLoader` parses the index for itself.
+    The replacement changes the payload digest an index row records. A chain that
+    re-opened the index anywhere -- at the parse, or inside `RolePayloadLoader` --
+    would compare a payload against a digest the record never approved.
     """
 
     path = restore_bytes(harness.role_root / "plant" / ROLE_INDEX_NAME)
     text = path.read_text(encoding="utf-8")
     original_sha = external_digest(harness.role_root / "plant" / "fixture_dev_C1.npz")
     replacement = text.replace(original_sha, "0" + original_sha[1:], 1).encode("utf-8")
-    state = _seam_swap(
-        monkeypatch,
-        "RolePayloadLoader",
-        path,
-        replacement,
-        when=lambda args: Path(args[0]) == path.parent,
-    )
+    assert replacement != path.read_bytes()
+    state = _read_once_seam(monkeypatch, path, replacement)
+
+    result = harness.authenticate()
+
+    assert state["fired"]
+    assert path.read_bytes() == replacement
+    assert result.roles.index_rows[(CASE_ID, "C1", "plant")].sha256 == original_sha
+
+
+def test_finding1_a_role_index_replaced_before_its_one_read_refuses(
+    harness: Harness, monkeypatch: pytest.MonkeyPatch, restore_bytes
+) -> None:
+    """The digest still guards row 8."""
+
+    path = restore_bytes(harness.role_root / "plant" / ROLE_INDEX_NAME)
+    text = path.read_text(encoding="utf-8")
+    original_sha = external_digest(harness.role_root / "plant" / "fixture_dev_C1.npz")
+    replacement = text.replace(original_sha, "0" + original_sha[1:], 1).encode("utf-8")
+    state = _read_once_seam(monkeypatch, path, replacement, after=False)
 
     error = _refusal(harness.authenticate)
 
     assert state["fired"]
     assert error.code == X_IDENTITY_MISMATCH
-    assert "re-measured after the parse" in str(error)
+    assert "index_sha256" in str(error)
+
+
+def test_finding1_a_payload_replaced_after_its_one_read_changes_nothing(
+    harness: Harness, monkeypatch: pytest.MonkeyPatch, restore_bytes
+) -> None:
+    """Row 12 interprets the payload bytes row 11 digested, not a second open.
+
+    This is the exact state the Round-2 candidate accepted: the payload file is
+    replaced with a different schema-valid archive immediately after its digest is
+    taken, and the replacement is **left present**. The chain must accept -- nothing
+    it authenticated has changed -- and every array it returns must be the original's.
+    """
+
+    import numpy as np
+
+    path = restore_bytes(harness.role_root / "plant" / "fixture_dev_C1.npz")
+    with np.load(path, allow_pickle=False) as archive:
+        original_q_true = np.array(archive["q_true"])
+    replacement = _alternate_plant_payload(path)
+    assert replacement != path.read_bytes()
+    state = _read_once_seam(monkeypatch, path, replacement)
+
+    result = harness.authenticate()
+
+    assert state["fired"]
+    assert path.read_bytes() == replacement
+    returned = result.roles.payloads[(CASE_ID, "C1", "plant")]["q_true"]
+    assert np.array_equal(returned, original_q_true)
+    assert not np.array_equal(returned, original_q_true + 1.0)
+
+
+def test_finding1_a_payload_replaced_before_its_one_read_refuses(
+    harness: Harness, monkeypatch: pytest.MonkeyPatch, restore_bytes
+) -> None:
+    """The digest still guards row 11."""
+
+    path = restore_bytes(harness.role_root / "plant" / "fixture_dev_C1.npz")
+    replacement = _alternate_plant_payload(path)
+    state = _read_once_seam(monkeypatch, path, replacement, after=False)
+
+    error = _refusal(harness.authenticate)
+
+    assert state["fired"]
+    assert error.code == X_IDENTITY_MISMATCH
+    assert "payload_sha256" in str(error)
+
+
+def _open_counts(harness: Harness) -> dict[Path, int]:
+    """Return how many times the chain reads each file, keyed by resolved path.
+
+    Every file access anywhere in this chain -- `_read_bytes`, `canonical_text_sha256`,
+    `storage_contract.file_sha256`, `config_contract.file_sha256` and the record's own
+    load -- goes through `Path.read_bytes`, so counting calls per resolved path measures
+    the whole chain rather than one row at a time.
+    """
+
+    counts: dict[Path, int] = {}
+    real = Path.read_bytes
+
+    def counting(self: Path) -> bytes:
+        resolved = self.resolve()
+        counts[resolved] = counts.get(resolved, 0) + 1
+        return real(self)
+
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(Path, "read_bytes", counting)
+        result = harness.authenticate()
+    assert result.record.record_label == RECORD_LABEL
+    return counts
+
+
+def test_finding1_the_chain_reads_every_file_it_interprets_exactly_once(
+    harness: Harness,
+) -> None:
+    """The whole property, stated once: nothing the chain interprets is opened twice.
+
+    A swap-and-revert hides in the interval between two reads of one name. A bracket
+    around the second read narrows that interval; only *removing* the second read closes
+    it. This is the measurement no per-row test can make -- each row can only say that
+    it read once -- and it is the one that fails if any future row reintroduces a
+    hash-then-reopen anywhere in rows 1 through 12.
+
+    **One file is read twice and the count is pinned at two rather than excused.**
+    `config_contract.validate_config_document` takes the schema as a *document* but
+    re-derives the schema's raw digest from `schema_path` itself, to compare against the
+    configuration's declared `schema_sha256`. That read belongs to a closed utility this
+    card's accepted scope does not reach, and closing it needs a `schema_sha256`
+    parameter on that contract rather than anything the adapter can do. What the window
+    can and cannot do is measured rather than assumed, in the two tests below. Pinning
+    the number here is what makes a *new* second read anywhere else fail this test
+    instead of hiding inside an allowance.
+    """
+
+    counts = _open_counts(harness)
+    schema = (harness.packet_root / SCHEMA_RELATIVE).resolve()
+
+    assert counts[schema] == 2
+    twice = {str(path) for path, count in counts.items() if count != 1}
+    assert twice == {str(schema)}
+    for expected in (
+        harness.record_path,
+        harness.packet_root / CONFIG_RELATIVE,
+        harness.packet_root / RESULT_RELATIVE,
+        harness.packet_root / CALIBRATION_RELATIVE,
+        harness.packet_root / GEOMETRY_RELATIVE,
+        harness.packet_root / PRODUCER_RELATIVE,
+        harness.role_root / MANIFEST_NAME,
+        harness.role_root / "generation_audit.json",
+        harness.role_root / "plant" / ROLE_INDEX_NAME,
+        harness.role_root / "plant" / "fixture_dev_C1.npz",
+        harness.checkpoint_root / PAIR_ID / "C1.pt",
+    ):
+        assert counts[expected.resolve()] == 1
+
+
+def test_finding1_one_file_named_by_two_threshold_references_is_read_once(
+    harness: Harness,
+) -> None:
+    """Both thresholds name one artifact, and one artifact is one read.
+
+    This is the second-read the open count found: each reference authenticated the file
+    for itself, so two declarations were checked against two objects that happened to
+    carry one name. That is not a statement that the two declarations agree with each
+    other, which is the whole point of declaring both.
+    """
+
+    sources = harness.document["thresholds"]["sources"]
+    assert (
+        sources["abstain_threshold"]["artifact_relative_path"]
+        == sources["unknown_threshold"]["artifact_relative_path"]
+    )
+    counts = _open_counts(harness)
+    assert counts[(harness.packet_root / CALIBRATION_RELATIVE).resolve()] == 1
+
+
+def test_finding1_two_disagreeing_digests_for_one_artifact_still_refuse(
+    harness: Harness,
+) -> None:
+    """Reading once must not become believing the first declaration.
+
+    The single read is only safe if every declaration is compared against that one
+    measurement. A record that declares one digest for the abstain source and a
+    different one for the unknown source names the same file twice and contradicts
+    itself, and the second comparison is what catches it.
+    """
+
+    document = copy.deepcopy(dict(harness.document))
+    sources = document["thresholds"]["sources"]
+    truthful = sources["abstain_threshold"]["sha256"]
+    sources["unknown_threshold"]["sha256"] = "0" + truthful[1:]
+
+    error = _refusal(lambda: authenticate_connection(**harness.rewrite_record(document)))
+
+    assert error.code == X_IDENTITY_MISMATCH
+    assert "thresholds.sources.unknown_threshold.sha256" in str(error)
+
+
+def test_finding1_a_schema_replaced_after_the_adapter_read_refuses(
+    harness: Harness, monkeypatch: pytest.MonkeyPatch, restore_bytes
+) -> None:
+    """The schema's second read is guarded, and this measures by what.
+
+    The adapter reads the schema once and interprets *those* bytes; the config contract
+    then re-derives the schema's raw digest from the path. A replacement left in place
+    after the adapter's read therefore reaches the contract, whose comparison against
+    the configuration's declared `schema_sha256` refuses it. So the window cannot admit
+    arbitrary bytes -- which is the half that is closed, and the half the disclosure in
+    the module docstring rests on.
+    """
+
+    path = restore_bytes(harness.packet_root / SCHEMA_RELATIVE)
+    replacement = path.read_bytes() + b"\n"
+    state = _read_once_seam(monkeypatch, path, replacement)
+
+    error = _refusal(harness.authenticate)
+
+    assert state["fired"]
+    assert path.read_bytes() == replacement
+    assert error.code == X_PROVENANCE_UNRESOLVED
+    assert "schema_sha256" in str(error)
+
+
+def test_finding1_the_adapter_interprets_its_own_schema_read(
+    harness: Harness, monkeypatch: pytest.MonkeyPatch, restore_bytes
+) -> None:
+    """What the schema window can reach: the contract's digest, never the adapter's rules.
+
+    Every structural rule applied to the configuration comes from the document the
+    adapter parsed out of the bytes it authenticated -- `validate_config_document`
+    receives that document and re-opens the path only to hash it. So a schema swapped
+    after the adapter's read cannot change which rules ran; the residual is confined to
+    which file the configuration's own `schema_sha256` is compared against. This test
+    fixes that boundary so a later reader does not have to re-derive it, and so a change
+    that widened the window would fail here rather than pass quietly.
+    """
+
+    path = restore_bytes(harness.packet_root / SCHEMA_RELATIVE)
+    permissive = json.loads(path.read_text(encoding="utf-8"))
+    permissive["config_contract"] = {
+        **permissive["config_contract"],
+        "required_top_level": ["status"],
+    }
+    replacement = json.dumps(permissive, indent=2, sort_keys=True).encode("utf-8")
+    state = _read_once_seam(monkeypatch, path, replacement)
+
+    error = _refusal(harness.authenticate)
+
+    assert state["fired"]
+    assert error.code == X_PROVENANCE_UNRESOLVED
+    assert "schema_sha256" in str(error)
 
 
 # -- finding 2: nothing the chain returns can be edited ---------------------- #

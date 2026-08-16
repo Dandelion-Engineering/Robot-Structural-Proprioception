@@ -3677,6 +3677,53 @@ correction applied.)*
   remained was real and belonged to the reviewer, but it shrank from three utilities to two by
   reading the contract's own surface first.
 
+246. **[S143] A SCOPE RULING CAN ACCEPT AN EDIT THE PROJECT'S OWN RECORDED IDENTITIES FORBID.**
+  Codex ruled bytes/rows entry points into `storage_contract.py` and `role_contract.py` required and
+  accepted them into the card.  Both files are two of the EIGHT in
+  `dev_fit_trainer.training_code_identity`, and the approved dev-fit ledger, the approved stage-1
+  sweep plan and the approved rung-2 plan each record `c50bebe5...` and `40b0f88c...` for them.
+  Editing either makes `capacity_sweep.require_anchor_comparability` refuse AND makes both read-only
+  analyzers refuse to read three COMPLETED, UNREPEATABLE runs - a reproducibility-standard failure,
+  not a test-count one.  *** THE DIAGNOSTIC: before performing an accepted expansion into a closed
+  file, ask WHAT RECORDS THAT FILE'S DIGEST, not only what imports it. ***  BUILD THE ACCEPTED STATE
+  FIRST when that is what surfaces the fact - the 52 failures and 25 errors were the evidence - then
+  REVERT IT WHOLE, so the untouched baselines can be proved by blob identity rather than asserted.
+  This is decision D4's rule reaching two more of the same eight files.
+
+247. **[S143] AN OPEN-COUNT INSTRUMENT SEES WHAT NO PER-ROW TEST CAN.**  Every per-row test can only
+  say that *its* row read once.  Counting `Path.read_bytes` per RESOLVED PATH across the whole chain
+  - which catches the closed utilities too, because they all bottom out there - immediately found two
+  second-reads that every row-level test had passed: one artifact named by two threshold references
+  and authenticated once per reference, and a schema re-digested inside a closed contract.  *** WHEN
+  THE PROPERTY IS ABOUT THE WHOLE CHAIN, MEASURE THE WHOLE CHAIN.  A property stated per row is a
+  different, weaker property. ***
+
+248. **[S143] WHEN A GUARD CANNOT BE MADE DECISIVE, PIN THE FACT INSTEAD OF ADDING THE GUARD.**
+  `config_contract.validate_config_document` re-derives the schema's raw digest from its path, and
+  closing that needs a parameter on a FOURTH closed contract.  The adapter-side comparison I could
+  have added was undecidable without a two-schema fixture, which cascades into a second config, the
+  manifest, both audits and every index row - and a guard no input can decide is lessons 231/242.
+  SO THE OPEN-COUNT TEST PINS THE COUNT AT EXACTLY TWO WITH THE REASON ATTACHED.  *** A PINNED
+  NUMBER MAKES A *NEW* SECOND READ FAIL; AN ALLOWANCE MAKES IT DISAPPEAR. ***  Measure what the
+  residual window can and cannot reach and write that down beside the pin.
+
+249. **[S143] A WRAPPER THAT INTERPOLATES THE ORIGINAL EXCEPTION DEFEATS A MESSAGE-MATCHING TEST.**
+  `npz_archive_from_bytes` re-raises as `f"{what} ...: {exc}"`, so deleting its
+  `except StorageContractError: raise` pass-through left `pytest.raises(..., match="the caller's own
+  refusal")` GREEN - the caller's wording is inside the wrapped message too.  The sweep found it.
+  *** THE ASSERTION MUST BE OBJECT IDENTITY (`excinfo.value is sentinel`) PLUS THE ABSENCE OF THE
+  WRAPPER'S OWN TEXT. ***  Lesson 223's shape at one more remove: the later site does not merely
+  contain the phrase, it QUOTES it.
+
+250. **[S143] REPLACING A BRACKET WITH A SINGLE READ INVERTS THE EXPECTED VERDICT, AND THAT MUST BE
+  NAMED AS A CHANGED TEST.**  The three tests that proved the bracket asserted a REFUSAL carrying
+  "re-measured after the parse".  The tests that prove the replacement assert ACCEPTANCE, with the
+  authenticated value returned and the replacement LEFT ON DISK.  Both directions are needed - a
+  mirror test that writes BEFORE the read and requires the digest to refuse - or the claim reads as
+  "the check was dropped" rather than "the read moved".  *** I HAD SAID IN ROUND 2 THAT NO TEST WAS
+  DELETED OR WEAKENED; THREE NOW WERE, AND A NET COUNT WOULD HAVE HIDDEN IT.  Name the removals in a
+  table beside the replacements. ***
+
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 
 ```text

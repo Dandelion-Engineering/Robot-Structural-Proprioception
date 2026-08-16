@@ -64,10 +64,16 @@ points at the object that already owns a fact rather than copying it:
     entry point. `load_config` is the same contract with a file read in front of it,
     and a chain whose whole subject is *which bytes* were validated cannot delegate
     that read;
-  * the 20 schema-A manifest fields and their parser -- `utils.storage_contract`;
-  * role index parsing and its strict header -- `utils.storage_contract.read_role_index`;
-  * role payload hashing, path containment and schema/semantic validation --
-    `utils.role_contract.RolePayloadLoader`;
+  * the 20 schema-A manifest fields and their audit -- `utils.storage_contract`,
+    reached over authenticated bytes through
+    `utils.authenticated_storage.parse_identity_manifest`;
+  * role index row rules -- `utils.storage_contract`, reached over authenticated
+    bytes through `utils.authenticated_storage.parse_role_index` and, for rows this
+    module already parsed, `validate_role_index_rows`;
+  * role payload hashing, the key allowlist and schema/semantic validation --
+    `utils.role_contract.RolePayloadLoader`, entered as
+    `utils.authenticated_storage.AuthenticatedRolePayloadLoader`: the same class,
+    bound to the rows this module authenticated and handed the payload bytes it read;
   * the refusal codes and the error type -- `utils.verification_scene`;
   * the record contract itself -- `utils.connection_record`.
 
@@ -139,18 +145,49 @@ or a set of authenticated facts derived from one -- that a later caller can edit
 an allowlist, and rows 13 to 21 must not be able to consume facts different from the
 facts rows 4 to 12 authenticated.
 
-**And one property the read order states but a path-based implementation cannot
-keep.** Section 4.1's second boundary says a file is hashed *before* it is parsed or
-loaded; it is only worth anything if the thing that is parsed is the thing that was
-hashed. Every file this module interprets itself is therefore opened exactly once, and
-the digest is taken over the bytes that read returned -- `authenticated_bytes` is the
-one way in. Three closed utilities take a path and open it themselves
-(`config_contract`, `storage_contract` and `role_contract`), and this module does not
-reimplement their parsers; for those, the call is bracketed by a re-measurement, so a
-file that is still changed when the utility returns refuses. What that bracket does not
-see is a change made and reverted inside one call, which would need a bytes-domain
-entry point in those three utilities -- named as a scope question rather than assumed
-away here.
+**And one property the read order states that only a single read can keep.**
+Section 4.1's second boundary says a file is hashed *before* it is parsed or loaded.
+That is worth something only if the thing that is parsed is the thing that was
+hashed, and a pathname is not an object: two reads of one name are two objects that
+may differ, and every check made across them is a statement about neither. So every
+file this chain interprets is read **exactly once**, `authenticated_bytes` is the one
+way in, and the value that read returned is what is digested, parsed, loaded and
+compared.
+
+Keeping that through the closed utilities took entry points rather than brackets.
+`utils.storage_contract` and `utils.role_contract` take paths and open them
+themselves, and this module may not reimplement their parsers (design 4.3), so an
+earlier state of this file bracketed each call with a re-measurement. A bracket
+detects a change that is *still present* when the utility returns and is blind to one
+made and reverted inside the call -- and, as the Round-2 review measured, it does not
+even close the persistent case for a loader that hashes a path and then reopens it,
+because the second open happens inside the bracket.
+
+`utils.authenticated_storage` supplies those entry points **without editing either
+closed file**, and that separation is forced rather than stylistic:
+`utils.dev_fit_trainer.training_code_identity` pins the canonical text digest of
+`role_contract.py` and `storage_contract.py` as part of bound 4's training-protocol
+identity, three approved artifacts record those exact digests, and
+`capacity_sweep.require_anchor_comparability` and both read-only analyzers refuse when
+the current tree disagrees. Editing either file would make the approved development
+fit, the approved stage-1 sweep and the approved rung-2 escalation non-comparable and
+would stop the packet's own runbook from reading them -- decision D4's rule, reaching
+two more of the same eight files. The new module reuses every rule from its owner and
+restates only the reading mechanics, held to its owners by equality tests.
+
+**One second read survives, and it is named rather than argued away.**
+`utils.config_contract.validate_config_document` receives the schema as a *document*
+-- so every structural rule it applies comes from the bytes this module
+authenticated -- but it re-derives the schema's raw digest from `schema_path` itself,
+to compare against the configuration's declared `schema_sha256`. Closing that needs a
+digest parameter on a fourth closed contract, which this sub-step's scope does not
+reach. What the window can and cannot do is measured rather than assumed: bytes
+substituted after this module's read reach that comparison and are refused by it, and
+they cannot change which rules ran. The residual is that a record and a configuration
+declaring *different* schemas -- a state that refuses today -- could be made to agree
+by an actor able to rewrite the schema file between the two reads. The count is
+pinned at two by a test over the whole chain, so any new second read anywhere fails
+rather than joining an allowance.
 """
 
 from __future__ import annotations
@@ -182,14 +219,16 @@ from utils.connection_record import (
     load_connection_record,
 )
 from utils.protocol_p import canonical_text_sha256
-from utils.role_contract import RolePayloadLoader
+from utils.authenticated_storage import (
+    AuthenticatedRolePayloadLoader,
+    parse_identity_manifest,
+    parse_role_index,
+)
 from utils.storage_contract import (
     IdentityManifestRow,
     RoleIndexRow,
     StorageContractError,
     file_sha256,
-    read_identity_manifest,
-    read_role_index,
 )
 from utils.verification_scene import (
     DEVELOPMENT_ONLY,
@@ -372,46 +411,6 @@ def authenticated_bytes(
         Path(path), expected, where=where, digest=digest_of_bytes(raw)
     )
     return raw
-
-
-def require_still_authentic(
-    path: Path,
-    expected: str,
-    *,
-    where: str,
-    digest_of_path,
-) -> None:
-    """Require a file a closed utility just reopened to still be the authenticated one.
-
-    Args:
-        path: the file the utility was pointed at.
-        expected: the digest the record declares for it.
-        where: the dotted record path that declared it.
-        digest_of_path: `tracked_text_digest` or `external_digest`.
-
-    Raises:
-        VerificationSceneError: `X_IDENTITY_MISMATCH` when the file no longer digests
-            to the value the chain authenticated.
-
-    **What this closes and what it does not.** `utils.storage_contract`,
-    `utils.config_contract` and `utils.role_contract` take *paths* and open them
-    themselves, and this module does not reimplement their parsers -- the whole point
-    of design 4.3 is that the object that owns a rule applies it. So for those three
-    the chain brackets the call: the digest is measured from the bytes this module
-    read, the utility runs, and the digest is measured again. Any change that is still
-    present when the utility returns -- a regenerated tree, a different checkout, an
-    edited index -- refuses here. A change made and reverted *inside* one call is not
-    detectable from outside it and would need a bytes-domain entry point in those
-    closed utilities; that is named in the Round-2 handoff as a scope question rather
-    than assumed away here.
-    """
-
-    _require_digest_equal(
-        Path(path),
-        expected,
-        where=f"{where} (re-measured after the parse)",
-        digest=digest_of_path(Path(path)),
-    )
 
 
 def tracked_text_digest(path: Path) -> str:
@@ -946,9 +945,29 @@ class AuthenticatedSources:
 
 
 def _authenticate_artifact(
-    bound: BoundPaths, key: str, expected_sha256: str
-) -> dict[str, Any]:
+    bound: BoundPaths,
+    key: str,
+    expected_sha256: str,
+    opened: dict[Path, tuple[str, Mapping[str, Any]]],
+) -> Mapping[str, Any]:
     """Digest one packet source artifact, then strict-parse the same bytes.
+
+    Args:
+        bound: the result of step 3.
+        key: the dotted record path of the reference being authenticated.
+        expected_sha256: the digest that reference declares.
+        opened: `resolved path -> (its digest, its parsed document)` for every
+            artifact this step has already read. Several references may name **one**
+            file -- both threshold sources routinely do -- and a second reference is
+            not an occasion to open it again: two reads of one name are two objects,
+            and two declarations checked against two different objects are not a
+            statement that they agree with each other. The file is read once and
+            every declaration is compared against that one measurement, which is
+            also what makes a record declaring two different digests for one file
+            refuse rather than silently pass on the first.
+
+    Returns:
+        The parsed document, deep-frozen by the caller.
 
     The file is opened exactly once and the digest is taken over the bytes that read
     returned, so the document that is parsed is provably the document that was
@@ -958,15 +977,15 @@ def _authenticate_artifact(
     they differed.
     """
 
-    raw = authenticated_bytes(
-        bound.packet_artifacts[key],
-        expected_sha256,
-        where=f"{key}.sha256",
-        named_by=f"{key}.artifact",
-        code=X_IDENTITY_MISMATCH,
-        digest_of_bytes=canonical_text_digest,
+    path = Path(bound.packet_artifacts[key])
+    if path not in opened:
+        raw = _read_bytes(path, where=f"{key}.artifact", code=X_IDENTITY_MISMATCH)
+        opened[path] = (canonical_text_digest(raw), strict_json_document(raw, key))
+    digest, document = opened[path]
+    _require_digest_equal(
+        path, expected_sha256, where=f"{key}.sha256", digest=digest
     )
-    return strict_json_document(raw, key)
+    return document
 
 
 def authenticate_sources(
@@ -994,9 +1013,10 @@ def authenticate_sources(
     """
 
     documents: dict[str, Mapping[str, Any]] = {}
+    opened: dict[Path, tuple[str, Mapping[str, Any]]] = {}
 
     result = _authenticate_artifact(
-        bound, "established_result", record.established_result.sha256
+        bound, "established_result", record.established_result.sha256, opened
     )
     documents["established_result"] = result
     _require_strings_equal(
@@ -1033,7 +1053,7 @@ def authenticate_sources(
     )
 
     selection = _authenticate_artifact(
-        bound, "model_selection.source", record.model_selection.source.sha256
+        bound, "model_selection.source", record.model_selection.source.sha256, opened
     )
     documents["model_selection.source"] = selection
     _require_numbers_equal(
@@ -1063,7 +1083,7 @@ def authenticate_sources(
     }
     for name, source in record.thresholds.sources.items():
         key = f"thresholds.sources.{name}"
-        document = _authenticate_artifact(bound, key, source.sha256)
+        document = _authenticate_artifact(bound, key, source.sha256, opened)
         documents[key] = document
         _require_numbers_equal(
             value_at_field_path(
@@ -1089,7 +1109,7 @@ def authenticate_sources(
 
     tolerance_source = record.render_geometry.tolerance_source
     geometry = _authenticate_artifact(
-        bound, "render_geometry.tolerance_source", tolerance_source.sha256
+        bound, "render_geometry.tolerance_source", tolerance_source.sha256, opened
     )
     documents["render_geometry.tolerance_source"] = geometry
     _require_numbers_equal(
@@ -1195,7 +1215,7 @@ class AuthenticatedDataset:
 
     Attributes:
         rows: every manifest row, keyed by `run_id`, as read by
-            `utils.storage_contract.read_identity_manifest`.
+            `utils.storage_contract.parse_identity_manifest`.
         census: the census recomputed from those rows, which both audits echoed.
         audits: both parsed audit documents, deeply frozen.
     """
@@ -1369,23 +1389,23 @@ def authenticate_dataset(
     the audits are held to the standard the role indexes were already held to.
     """
 
-    manifest_path = _require_present(
-        bound.role_root / MANIFEST_NAME, where=MANIFEST_NAME, code=X_ROLE_ABSENT
-    )
-    # `authenticated_bytes` carries the presence guard for these two, so there is no
-    # second one here: a guard that no input can make decisive is the same defect as a
-    # duplicated guard.
+    # `authenticated_bytes` carries the presence guard for all three files, so there
+    # is no second one here: a guard that no input can make decisive is the same
+    # defect as a duplicated guard.
+    manifest_path = bound.role_root / MANIFEST_NAME
     audit_paths = {name: bound.role_root / f"{name}.json" for name in AUDIT_NAMES}
     declared_audits = {
         "generation_audit": record.data_root.generation_audit,
         "independent_audit": record.data_root.independent_audit,
     }
 
-    _require_digest_equal(
+    manifest_raw = authenticated_bytes(
         manifest_path,
         record.data_root.manifest_sha256,
         where="data_root.manifest_sha256",
-        digest=external_digest(manifest_path),
+        named_by=MANIFEST_NAME,
+        code=X_ROLE_ABSENT,
+        digest_of_bytes=external_bytes_digest,
     )
     audit_bytes: dict[str, bytes] = {
         name: authenticated_bytes(
@@ -1400,17 +1420,11 @@ def authenticate_dataset(
     }
 
     try:
-        manifest_rows = read_identity_manifest(manifest_path)
-    except (StorageContractError, ValueError, OSError) as exc:
+        manifest_rows = parse_identity_manifest(manifest_raw, source=MANIFEST_NAME)
+    except (StorageContractError, ValueError) as exc:
         raise _refuse(
             X_IDENTITY_MISMATCH, f"{MANIFEST_NAME} did not parse: {exc}"
         ) from exc
-    require_still_authentic(
-        manifest_path,
-        record.data_root.manifest_sha256,
-        where="data_root.manifest_sha256",
-        digest_of_path=external_digest,
-    )
     census = manifest_census(manifest_rows)
 
     audits: dict[str, Mapping[str, Any]] = {}
@@ -1526,8 +1540,11 @@ class AuthenticatedRoles:
 
     Attributes:
         payloads: `(case_id, suite, role) -> the loaded payload`, each one already
-            hash-checked, path-contained and schema/semantically validated by
-            `utils.role_contract.RolePayloadLoader`.
+            hash-checked against its authenticated index row and schema/semantically
+            validated by `utils.role_contract.RolePayloadLoader`, from the exact bytes
+            step 11 digested. Containment is step 3's and step 9's: the payload path
+            was resolved under `--role-root` and then required to be exactly the path
+            the authenticated index row names.
         index_rows: `(case_id, suite, role) -> the authenticated index row` the
             payload's identity was taken from.
         checkpoint_sha256: `(case_id, suite) -> the raw digest of the checkpoint`.
@@ -1619,34 +1636,45 @@ def require_role_layout(record: ConnectionRecord, bound: BoundPaths) -> Mapping[
 def authenticate_role_indexes(
     record: ConnectionRecord,
     roots: Mapping[tuple[str, str, str], Path],
-) -> Mapping[Path, str]:
-    """Run read-order step 8: digest **every** named index before parsing any of them.
+) -> Mapping[Path, bytes]:
+    """Run read-order step 8: read and digest **every** named index before any parse.
 
     Args:
         record: the authenticated record.
         roots: the result of step 7.
 
     Returns:
-        `index path -> its raw digest`, one entry per distinct index.
+        `index path -> the exact bytes that were digested`, one entry per distinct
+        index. Step 9 parses *these* values, so the rows the chain plans from are the
+        rows whose bytes this row authenticated.
 
     Raises:
-        VerificationSceneError: `X_IDENTITY_MISMATCH` when any index digests
-            differently from the `index_sha256` the record declares for it.
+        VerificationSceneError: `X_ROLE_ABSENT` when a named index cannot be read;
+            `X_IDENTITY_MISMATCH` when any index digests differently from the
+            `index_sha256` the record declares for it.
 
-    Every index is digested before any is parsed, and that ordering is the row's whole
-    content. Two arms of one case share a role root when the role is flat, so a
-    distinct index may be named by several references; each reference's declared digest
-    is compared, so a record that declared two different digests for one file refuses
-    rather than silently taking the first.
+    Every index is read and digested before any is parsed, and that ordering is the
+    row's whole content. Two arms of one case share a role root when the role is flat,
+    so a distinct index may be named by several references; the file is read **once**
+    and each reference's declared digest is compared against that one measurement, so
+    a record that declared two different digests for one file refuses rather than
+    silently taking the first -- and a second reference cannot occasion a second open
+    of a file whose bytes are already the chain's.
     """
 
+    raw_by_index: dict[Path, bytes] = {}
     digests: dict[Path, str] = {}
     for case in record.cases:
         for suite, arm in case.arms.items():
             for role, reference in arm.roles.items():
                 index_path = roots[(case.case_id, suite, role)] / ROLE_INDEX_NAME
-                if index_path not in digests:
-                    digests[index_path] = external_digest(index_path)
+                if index_path not in raw_by_index:
+                    raw_by_index[index_path] = _read_bytes(
+                        index_path,
+                        where=f"the {role} index at {index_path}",
+                        code=X_ROLE_ABSENT,
+                    )
+                    digests[index_path] = external_bytes_digest(raw_by_index[index_path])
                 _require_digest_equal(
                     index_path,
                     reference.index_sha256,
@@ -1655,16 +1683,25 @@ def authenticate_role_indexes(
                     ),
                     digest=digests[index_path],
                 )
-    return _frozen_mapping(digests)
+    return _frozen_mapping(raw_by_index)
 
 
 def resolve_index_rows(
     record: ConnectionRecord,
     bound: BoundPaths,
     roots: Mapping[tuple[str, str, str], Path],
-    index_digests: Mapping[Path, str],
-) -> Mapping[tuple[str, str, str], RoleIndexRow]:
+    index_bytes: Mapping[Path, bytes],
+) -> tuple[
+    Mapping[tuple[str, str, str], RoleIndexRow],
+    Mapping[Path, tuple[RoleIndexRow, ...]],
+]:
     """Run read-order step 9: parse the authenticated indexes and plan no other open.
+
+    Returns:
+        `(case_id, suite, role) -> the row that authorises that payload`, and
+        `index path -> every row that index carries`. The second map exists because
+        step 12 must hand `RolePayloadLoader` the rows parsed from the authenticated
+        bytes rather than let it re-open the same pathname.
 
     Raises:
         VerificationSceneError: `X_ROLE_UNAUTHORIZED` when a named run is absent from
@@ -1678,13 +1715,17 @@ def resolve_index_rows(
     than the two strings is what makes a differently-spelled but identical path agree
     and a same-looking but different path refuse.
 
-    `utils.storage_contract.read_role_index` opens the file itself, so each index is
-    re-measured against its step-8 digest immediately after it is parsed: an index
-    that changed between the two rows is the state in which the rows this function
-    plans from are not the rows step 8 authenticated.
+    **Nothing here re-opens an index.** `utils.storage_contract.parse_role_index` is
+    the same parser and the same strict header as `read_role_index`, applied to the
+    exact byte string step 8 digested, so the rows this function plans from are the
+    rows step 8 authenticated -- not the rows a second open of the same pathname
+    would have produced. A bracket around a path-based parser cannot state that: it
+    detects a change that is still present when the parser returns and is blind to
+    one made and reverted inside the call.
     """
 
     parsed: dict[Path, dict[str, RoleIndexRow]] = {}
+    rows_by_index: dict[Path, tuple[RoleIndexRow, ...]] = {}
     rows: dict[tuple[str, str, str], RoleIndexRow] = {}
     for case in record.cases:
         for suite, arm in case.arms.items():
@@ -1693,19 +1734,18 @@ def resolve_index_rows(
                 index_path = roots[key] / ROLE_INDEX_NAME
                 if index_path not in parsed:
                     try:
-                        index_rows = read_role_index(index_path, observation=False)
-                    except (StorageContractError, ValueError, OSError) as exc:
+                        index_rows = parse_role_index(
+                            index_bytes[index_path],
+                            observation=False,
+                            source=f"the {role} index at {index_path}",
+                        )
+                    except (StorageContractError, ValueError) as exc:
                         raise _refuse(
                             X_IDENTITY_MISMATCH,
                             f"the {role} index at {index_path} did not parse: {exc}",
                         ) from exc
-                    require_still_authentic(
-                        index_path,
-                        index_digests[index_path],
-                        where=f"the {role} index at {index_path}",
-                        digest_of_path=external_digest,
-                    )
                     parsed[index_path] = {row.run_id: row for row in index_rows}
+                    rows_by_index[index_path] = tuple(index_rows)
                 row = parsed[index_path].get(arm.run_id)
                 if row is None:
                     raise _refuse(
@@ -1723,7 +1763,7 @@ def resolve_index_rows(
                         f"{declared} but the authenticated index row names {indexed}",
                     )
                 rows[key] = row
-    return _frozen_mapping(rows)
+    return _frozen_mapping(rows), _frozen_mapping(rows_by_index)
 
 
 def require_manifest_rows(record: ConnectionRecord, dataset: AuthenticatedDataset) -> None:
@@ -1766,11 +1806,17 @@ def authenticate_payload_bytes(
     record: ConnectionRecord,
     bound: BoundPaths,
     index_rows: Mapping[tuple[str, str, str], RoleIndexRow],
-) -> Mapping[tuple[str, str], str]:
-    """Run read-order step 11: digest every payload and checkpoint before any load.
+) -> tuple[
+    Mapping[tuple[str, str, str], bytes],
+    Mapping[tuple[str, str], str],
+]:
+    """Run read-order step 11: read and digest every payload, digest every checkpoint.
 
     Returns:
-        `(case_id, suite) -> the checkpoint's raw digest`.
+        `(case_id, suite, role) -> the exact authenticated payload bytes`, and
+        `(case_id, suite) -> the checkpoint's raw digest`. Step 12 interprets the
+        first map, so the arrays rows 13 to 21 consume come from the byte string this
+        row digested rather than from a later open of the same pathname.
 
     Raises:
         VerificationSceneError: `X_ROLE_ABSENT` when a named payload or checkpoint is
@@ -1781,20 +1827,31 @@ def authenticate_payload_bytes(
     redundant. The record's declaration is what a reviewer approved; the index row is
     what the dataset itself asserts. A payload that matches one and not the other is
     exactly the state where the tree moved underneath an approved record, and a single
-    comparison would leave whichever side it omitted unchecked.
+    comparison would leave whichever side it omitted unchecked. Both comparisons are
+    made against **one** measurement over **one** read, so they are two statements
+    about the same object rather than about two opens that happened to agree.
+
+    **The checkpoint is digested from its path and that is deliberate.** Nothing in
+    this lane interprets a checkpoint -- a `.pt` file is arbitrary code until something
+    decides to deserialise it, and rows 13 to 21 never do -- so there is no second
+    reading of it for a first reading to have to match, and holding an unbounded model
+    file in memory to state a property nothing consumes would be cost with no claim
+    attached.
     """
 
+    payload_bytes: dict[tuple[str, str, str], bytes] = {}
     checkpoints: dict[tuple[str, str], str] = {}
     for case in record.cases:
         for suite, arm in case.arms.items():
             for role, reference in arm.roles.items():
                 key = (case.case_id, suite, role)
-                payload_path = _require_present(
-                    bound.role_payloads[key],
+                payload_path = bound.role_payloads[key]
+                raw = _read_bytes(
+                    payload_path,
                     where=f"cases.{case.case_id}.arms.{suite}.roles.{role} payload",
                     code=X_ROLE_ABSENT,
                 )
-                digest = external_digest(payload_path)
+                digest = external_bytes_digest(raw)
                 _require_digest_equal(
                     payload_path,
                     reference.payload_sha256,
@@ -1803,6 +1860,7 @@ def authenticate_payload_bytes(
                     ),
                     digest=digest,
                 )
+                payload_bytes[key] = raw
                 if digest != index_rows[key].sha256:
                     raise _refuse(
                         X_IDENTITY_MISMATCH,
@@ -1823,7 +1881,7 @@ def authenticate_payload_bytes(
                 digest=checkpoint_digest,
             )
             checkpoints[(case.case_id, suite)] = checkpoint_digest
-    return _frozen_mapping(checkpoints)
+    return _frozen_mapping(payload_bytes), _frozen_mapping(checkpoints)
 
 
 def _read_only_array(array: np.ndarray) -> np.ndarray:
@@ -1854,7 +1912,8 @@ def load_authenticated_payloads(
     record: ConnectionRecord,
     roots: Mapping[tuple[str, str, str], Path],
     authenticated: AuthenticatedConfig,
-    index_digests: Mapping[Path, str],
+    rows_by_index: Mapping[Path, tuple[RoleIndexRow, ...]],
+    payload_bytes: Mapping[tuple[str, str, str], bytes],
 ) -> Mapping[tuple[str, str, str], Mapping[str, np.ndarray]]:
     """Run read-order step 12: load exactly the authenticated payload set.
 
@@ -1863,22 +1922,26 @@ def load_authenticated_payloads(
             a payload's identity, path containment, schema or semantics.
 
     The loader is called rather than reimplemented (design 4.3): it re-derives the
-    payload's digest, requires the path to stay under its own role root, and applies the
-    schema's dtype and shape declarations plus the role's semantic checks. The adapter
-    re-derives none of the three.
+    payload's digest and applies the key allowlist, the schema's dtype and shape
+    declarations and the role's semantic checks. The adapter re-derives none of them.
 
-    **The loader reads its own index, and that read is bound to step 8's.**
-    `RolePayloadLoader` parses `index.csv` once, in its constructor, and every later
-    `load` resolves its path and digest from those cached rows. So the index is
-    re-measured against its step-8 digest immediately after the constructor returns.
-    That is what makes the loader's own hash check load-bearing rather than
-    circular: its rows are then provably the authenticated rows, its
-    `row.sha256` is the digest step 11 already required the record and the index to
-    agree on, and the bytes it hands back are therefore the bytes this chain
-    authenticated. Without that bracket, an index changed after step 9 could point the
-    loader at a different file in the same tree and the loader would check that file
-    against the changed index's own digest, agreeing with itself about a payload the
-    record never named.
+    **The loader opens nothing here, and that is what closes the chain.** It is
+    constructed from the index rows step 9 parsed out of the bytes step 8 digested,
+    and it is handed the payload bytes step 11 read and digested. So its own hash
+    check is a comparison between the byte string this chain authenticated and the
+    `row.sha256` this chain authenticated -- not a comparison between two later opens
+    of two pathnames, which is a statement about whatever those names resolved to at
+    the moment each open happened. The rules stay the loader's: it validates the rows
+    it is given exactly as it validates the rows it would have read, and it refuses a
+    payload whose bytes do not digest to its row.
+
+    **Path containment stays with the entry point that opens a path.** The row-grammar
+    half -- one relative single-component `.npz` name, no traversal, no drive letter --
+    is applied to the given rows at construction; the resolution half belongs to
+    `RolePayloadLoader.load`, which is the entry point that resolves and opens. Step 9
+    has separately required each row's `npz_path` to resolve to exactly the payload
+    path step 3 contained under `--role-root`, so the file whose bytes step 11 read is
+    the file the record declared and the index authorises.
 
     **What the payload map holds.** Each array is rebuilt over an immutable buffer, so
     the facts rows 13 to 21 consume cannot be edited after they were authenticated.
@@ -1891,7 +1954,7 @@ def load_authenticated_payloads(
     that builds the branch is the round entitled to propose splitting it.
     """
 
-    loaders: dict[Path, RolePayloadLoader] = {}
+    loaders: dict[Path, AuthenticatedRolePayloadLoader] = {}
     payloads: dict[tuple[str, str, str], Mapping[str, np.ndarray]] = {}
     for case in record.cases:
         for suite, arm in case.arms.items():
@@ -1900,28 +1963,24 @@ def load_authenticated_payloads(
                 directory = roots[key]
                 if directory not in loaders:
                     try:
-                        loaders[directory] = RolePayloadLoader(
+                        loaders[directory] = AuthenticatedRolePayloadLoader(
                             directory,
                             role,
                             authenticated.schema,
                             authenticated.config,
+                            rows_by_index[directory / ROLE_INDEX_NAME],
                             suite=suite if role in SUITE_QUALIFIED_ROLES else None,
                         )
-                    except (StorageContractError, ValueError, OSError) as exc:
+                    except (StorageContractError, ValueError) as exc:
                         raise _refuse(
                             X_IDENTITY_MISMATCH,
                             f"the {role} role root at {directory} did not open: {exc}",
                         ) from exc
-                    index_path = directory / ROLE_INDEX_NAME
-                    require_still_authentic(
-                        index_path,
-                        index_digests[index_path],
-                        where=f"the {role} index at {index_path}",
-                        digest_of_path=external_digest,
-                    )
                 try:
-                    payload = loaders[directory].load(arm.run_id)
-                except (StorageContractError, KeyError, ValueError, OSError) as exc:
+                    payload = loaders[directory].load_bytes(
+                        arm.run_id, payload_bytes[key]
+                    )
+                except (StorageContractError, KeyError, ValueError) as exc:
                     raise _refuse(
                         X_IDENTITY_MISMATCH,
                         f"the {role} payload for run {arm.run_id!r} did not load: {exc}",
@@ -1941,11 +2000,13 @@ def authenticate_roles(
     """Run read-order steps 7 through 12 in their normative order."""
 
     roots = require_role_layout(record, bound)
-    index_digests = authenticate_role_indexes(record, roots)
-    index_rows = resolve_index_rows(record, bound, roots, index_digests)
+    index_bytes = authenticate_role_indexes(record, roots)
+    index_rows, rows_by_index = resolve_index_rows(record, bound, roots, index_bytes)
     require_manifest_rows(record, dataset)
-    checkpoints = authenticate_payload_bytes(record, bound, index_rows)
-    payloads = load_authenticated_payloads(record, roots, authenticated, index_digests)
+    payload_bytes, checkpoints = authenticate_payload_bytes(record, bound, index_rows)
+    payloads = load_authenticated_payloads(
+        record, roots, authenticated, rows_by_index, payload_bytes
+    )
     return AuthenticatedRoles(
         payloads=payloads,
         index_rows=index_rows,

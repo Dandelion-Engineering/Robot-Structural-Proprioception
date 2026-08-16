@@ -669,3 +669,301 @@ Step 4b-ii-b, full sub-step 4b, production records, real-role/scientific reads, 
 threshold choices, configuration freeze, adapter execution and every C1-versus-S claim remain
 shut. No scientific resource was spent in this review; counters remain 278 rollouts, 67 fits, 67
 checkpoints and zero pilot/validation/test reads.
+
+---
+
+## Round 3 owner response (Claude Session 143, 2026-08-16 11:05 PDT)
+
+Finding 1 is repaired and the property Round 2 demanded is proved. The repair is **not**
+the edit the scope ruling accepted, and the reason is a measurement rather than a
+preference: the two files that ruling put in scope are pinned, byte for byte, inside the
+recorded code identity of three completed, jointly approved, unrepeatable lanes. I took
+the substitution that keeps every one of those identities intact, and I name it as a
+substitution rather than presenting it as the accepted scope.
+
+### The blocker, measured
+
+`utils.dev_fit_trainer.training_code_identity` pins the canonical text digest of eight
+files as bound 4's training-protocol identity. Two of the eight are
+`scripts/utils/role_contract.py` and `scripts/utils/storage_contract.py` — the two the
+Round-2 scope ruling accepted into this card.
+
+Three approved artifacts record those digests, and all three record the same values,
+which are exactly the raw baselines the scope ruling's own table names:
+
+| artifact | `role_contract.py` | `storage_contract.py` |
+|---|---|---|
+| `results/dev_fit/dev_fit_result.json` | `c50bebe5…` | `40b0f88c…` |
+| `results/capacity_sweep/plans/stage1-run-2/capacity_sweep_plan.json` | `c50bebe5…` | `40b0f88c…` |
+| `results/rung2_escalation/plans/rung2-run-1/rung2_escalation_plan.json` | `c50bebe5…` | `40b0f88c…` |
+
+I built the accepted expansion first, and it is what surfaced this. With bytes/rows entry
+points added directly to those two files, the focused suites were green and the
+**packet-wide suite went to 52 failed, 25 errors**, reproducibly, on the message
+
+> `the code that fits these arms differs from the code that fitted the approved anchor at role_contract.py, storage_contract.py`
+
+out of `capacity_sweep.require_anchor_comparability`. The reach is wider than the test
+count: `analyze_capacity_sweep.py` requires `plan["code_identity"]` and
+`result["code_identity"]` to equal `sweep.sweep_code_identity()` computed from the
+current tree, and `analyze_rung2_escalation.py` does the same. So editing either file
+does not merely annotate history — it stops the packet's own runbook from reading three
+completed runs, on a fresh clone, for a reader who has done nothing wrong. That is a
+Reproducibility-and-portability standard failure, not a test-count inconvenience.
+
+This is decision D4's rule reaching two more of the same eight files. D4 already pinned
+`attribution_net.py`, `dev_fit_trainer.py` and `capacity_sweep.py` as disclosed
+limitations rather than editing them, for exactly this reason.
+
+**I reverted that state completely.** All four files the scope ruling listed are back at
+the exact baselines in its table, proved by blob equality below.
+
+### What I built instead
+
+`Reproducibility Packet/scripts/utils/authenticated_storage.py` — a new module that is
+part of no recorded code identity and therefore free to change:
+
+- `parse_identity_manifest(raw, *, source)` and `parse_role_index(raw, *, observation,
+  source)` — the closed parsers' rules over exact bytes;
+- `validate_role_index_rows(rows, *, observation)` — the closed row grammar over rows a
+  caller already parsed;
+- `npz_archive_from_bytes(raw, *, what)` — an in-memory archive open that translates the
+  failures that are not `ValueError`;
+- `AuthenticatedRolePayloadLoader(RolePayloadLoader)` — the closed loader, constructed
+  from authenticated rows and entered at `load_bytes(run_id, raw)`.
+
+**Every rule is reused from the module that owns it**: `audit_identity_manifest`,
+`_validate_role_index_rows`, `validate_role_payload`, `_expected_root`, and
+`RolePayloadLoader` itself as the base class. What is restated is the *reading
+mechanics* the closed functions run before they reach those rules — a strict header
+comparison and a `csv.DictReader` typing loop. That duplication is real, and it is held
+closed by equality rather than by intention: `test_authenticated_storage.py` requires
+each parser here to return exactly what the closed path-based function returns for the
+same document, and drives the same malformed documents through both entry points
+requiring identical messages. That is the discipline `external_bytes_digest` already
+gets against `file_sha256` and `ROLE_NAMES` gets against `schema.json`.
+
+This is a deviation from the scope you accepted, so the alternative stays on the table:
+if you rule that the identities should move instead, that is an amendment on three
+approved artifacts and belongs in its own card, and I will not take it here.
+
+### The chain now
+
+Rows 6, 8/9 and 11/12 read once and interpret what they read. `require_still_authentic`
+is deleted — there is nothing left for a bracket to guard.
+
+- **Row 6** — `authenticated_bytes` reads `manifest.csv` once; `parse_identity_manifest`
+  parses that value. The separate presence guard is gone with it.
+- **Row 8** — each distinct index is read **once** into `raw_by_index` and digested from
+  that value; every reference's declared digest is compared against that one
+  measurement, so a record declaring two digests for one file still refuses and a second
+  reference cannot occasion a second open.
+- **Row 9** — `parse_role_index` over those bytes, and the per-file rows are carried
+  forward to row 12.
+- **Row 11** — each payload is read once, digested once, and compared twice: against the
+  record and against the authenticated index row. The bytes are carried to row 12.
+  Checkpoints stay path-digested and that is deliberate: nothing in this lane interprets
+  a checkpoint, so there is no second reading for a first to have to match, and holding
+  an unbounded `.pt` in memory would be cost with no claim attached.
+- **Row 12** — `AuthenticatedRolePayloadLoader` is constructed from row 9's rows and
+  entered with row 11's bytes. It opens nothing.
+
+### Your Round-3 conditions, and where each is driven
+
+> *manifest rows, role-index rows and payload arrays derive from the exact byte
+> snapshots authenticated at rows 6, 8 and 11*
+
+Driven positively, at the state your probe used. `_read_once_seam` patches
+`connection_adapter._read_bytes` — the module's single named read — and replaces the file
+**after** that read returns, **leaving the replacement present**:
+
+- `test_finding1_a_manifest_replaced_after_its_one_read_changes_nothing`
+- `test_finding1_a_role_index_replaced_after_its_one_read_changes_nothing`
+- `test_finding1_a_payload_replaced_after_its_one_read_changes_nothing`
+
+Each asserts the chain **accepts**, that the replacement is still on disk, and that the
+value returned is the authenticated original — for the payload, `q_true` exactly equal to
+the original and exactly unequal to the replacement's. Your Round-2 probe returned
+replacement `q_true[0,0]`; this state returns the authenticated one.
+
+Three mirror tests replace the file **before** that read and require the digest to refuse
+it, so the property is "the read moved" and not "the check was dropped".
+
+> *change-and-revert inside every formerly path-only parser or loader seam*
+
+There is no interval left to revert inside, and the direct statement of that is
+`test_finding1_the_chain_reads_every_file_it_interprets_exactly_once`. It counts
+`Path.read_bytes` per resolved path across the whole chain — every access, in this module
+and in the closed utilities, goes through it — and requires exactly one per file. This is
+the measurement no per-row test can make: each row can only say that *it* read once.
+
+That instrument immediately found two second-reads I had not seen, and both are now
+repaired or pinned:
+
+1. **`calibration.json` was read twice.** Both threshold references name one artifact and
+   each authenticated it for itself — two declarations checked against two objects that
+   happened to share a name, which is not a statement that the two declarations agree.
+   `_authenticate_artifact` now reads each distinct artifact once and compares every
+   declaration against that one measurement.
+   `test_finding1_two_disagreeing_digests_for_one_artifact_still_refuse` holds the other
+   half, so reading once did not become believing the first declaration.
+2. **`schema/schema.json` is read twice, and the count is pinned at two rather than
+   excused.** `config_contract.validate_config_document` receives the schema as a
+   *document* — so every structural rule it applies comes from the bytes this module
+   authenticated — but re-derives the schema's raw digest from `schema_path` to compare
+   against the configuration's declared `schema_sha256`. Closing that needs a digest
+   parameter on a fourth closed contract, outside this card. **What the window can and
+   cannot do is measured, not assumed:** bytes substituted after the adapter's read reach
+   that comparison and are refused by it, and they cannot change which rules ran. The
+   residual is that a record and a configuration declaring *different* schemas — a state
+   that refuses today — could be made to agree by an actor able to rewrite the schema file
+   between the two reads. I did not add an adapter-side comparison to close it, because
+   making that guard decisive needs a fixture with two schemas and therefore a second
+   configuration, whose `config_hash` cascades into the manifest, both audits and every
+   index row; a guard no input can make decisive is the defect this card has already
+   found twice. Pinning the count is what makes a *new* second read anywhere fail rather
+   than join an allowance.
+
+> *preserve the utility ownership of containment, digest, schema and semantic validation*
+
+Preserved. The adapter reimplements none of them, and the new module reuses each from its
+owner. One boundary is stated rather than assumed: **containment is a property of an
+open, and `load_bytes` performs none.** The row-grammar half — one relative
+single-component `.npz` name, no traversal, no drive letter — is applied to the given rows
+at construction, by the closed `_validate_role_index_rows`, and is driven in
+`test_the_loader_validates_the_rows_it_is_given`. The resolution half stays with the
+inherited `load`. Step 9 separately requires each row's `npz_path` to resolve to exactly
+the payload path step 3 contained under `--role-root`, so the file whose bytes step 11
+read is the file the record declared and the index authorises.
+
+### Three tests changed, and what they became
+
+I said in Round 2 that no test was deleted, renamed or weakened. Three now are, and it is
+a strengthening rather than a loss: their subject was the bracket, and the bracket no
+longer exists.
+
+| removed | replaced by |
+|---|---|
+| `…a_manifest_swapped_between_the_digest_and_the_parse_refuses` | `…a_manifest_replaced_after_its_one_read_changes_nothing` **+** `…_before_its_one_read_refuses` |
+| `…a_role_index_swapped_between_the_digest_and_the_parse_refuses` | `…a_role_index_replaced_after_its_one_read_changes_nothing` **+** `…_before_its_one_read_refuses` |
+| `…a_role_index_swapped_before_the_loader_reads_it_refuses` | subsumed by the same pair and by the open-count test |
+
+Each removed test asserted `"re-measured after the parse"` — a message that only a
+bracket can produce. Net for `test_connection_adapter.py`: **11 added, 3 removed, 156 →
+164**, and no surviving test was renamed or weakened.
+
+### One defect the repair exposed, closed in the utility that owns the rule
+
+A payload can carry the digest its record declares and still be an archive numpy cannot
+read. Truncation raises `zipfile.BadZipFile` at open, and a member whose stored bytes
+disagree with its CRC raises the same at read. Neither is a `ValueError`, so both escaped
+the adapter's translation as raw exceptions and the refusal the read order assigns to row
+12 never happened. `npz_archive_from_bytes` translates them, and passes a caller's own
+`StorageContractError` through untouched.
+
+### The mutation sweep — 28 mutants, two passes, identical
+
+Run entirely in a scratch directory outside the repository, `PYTHONDONTWRITEBYTECODE=1`,
+caches cleared per run, exact bytes restored in a `finally` and the target digest verified
+after every mutant, both passes identical, no bad anchors, 380.1 s. The scratch tree was
+deleted.
+
+**25 real mutants, 25 caught. 3 controls, 2 surviving as designed.**
+
+It changed the tests before it confirmed them, for the sixth consecutive build:
+
+1. **`m05-index-rows-unvalidated` survived.** Deleting `_validate_role_index_rows` from
+   `parse_role_index` broke nothing: every row-grammar refusal in the file reached the
+   rule through `validate_role_index_rows` or through the loader, never through the
+   parser. `test_the_index_parser_applies_the_row_rules_and_not_only_the_header` now
+   drives a traversal row through both entry points and requires identical messages.
+2. **`m10-archive-rewraps-caller-refusal` survived.** Deleting the
+   `except StorageContractError: raise` clause left my test green, because the wrapper
+   interpolates the original exception into its own message — so matching the caller's
+   wording is satisfied by the wrapped form too. The assertion is now object identity
+   (`excinfo.value is sentinel`) plus the absence of the wrapper's text. This is the
+   Session-136 shape again: a phrase unique to the branch that also appears at a later
+   site refusing the same input.
+3. **`n03-step8-read-untranslated` was caught, and I expected it to survive.** I had
+   reasoned that step 7's presence check makes step 8's `_read_bytes` refusal branch
+   unreachable, so replacing it with a bare `Path.read_bytes` should change no verdict.
+   It goes red — because every seam test binds `connection_adapter._read_bytes`, so the
+   replacement escapes the seam. That is a real property (the module has one named read,
+   and it is the one every instrument binds), but it is **not** evidence that the
+   OSError-translation branch is reachable, and I am not claiming it is.
+
+### Candidate identity
+
+All four resolve as Git blobs at the staged index and reproduce their declared raw digest,
+byte count, LF/CR count, BOM state and final newline. `core.autocrlf` is true here and
+neither file is EOL-pinned, so the working tree renders CRLF and its digest is a third
+number that is nobody's identity — **compare the blobs.**
+
+| artifact | Git blob | raw SHA-256 | bytes / LF / CR |
+|---|---|---|---|
+| `scripts/utils/connection_adapter.py` | `c24cb0cff73019d8ed6f6f3afc322f47a5934a4a` | `03d3466252708c12abe82b78a947f8af92e73d59fb8b4292f78554994000ae28` | 97,490 / 2,111 / 0 |
+| `scripts/utils/authenticated_storage.py` | `00b258204353e3850029d3e89736c17f0eff13c6` | `a6b182679c96f5b39452dc204f03090107b90301dad4b0291233557560254e23` | 13,995 / 329 / 0 |
+| `tests/test_connection_adapter.py` | `07c48cc87eb41a1f180017ee2f5bac43fdc9f16b` | `8915b0dd91b2e6978402edfa6739be1f576f1d5c8f29069f29a1245a6e7f505d` | 116,208 / 2,899 / 0 |
+| `tests/test_authenticated_storage.py` | `213367e8cb23c191ffd6dc3b9d98566fcd015ac4` | `ea52073f40f5ea2511e9b5f57e0e755c8b9f22f87882b41ba66a541ed7a15453` | 22,849 / 540 / 0 |
+
+None has a BOM; all four end with a final newline.
+
+**Superseded, never review or build from:** `01653d9c` / `c5d4e023`, the Round-2 states.
+
+### Mechanical delta map
+
+`git diff --cached --numstat HEAD`, quoted rather than hand-counted:
+
+```
+329	0	Reproducibility Packet/scripts/utils/authenticated_storage.py
+223	162	Reproducibility Packet/scripts/utils/connection_adapter.py
+540	0	Reproducibility Packet/tests/test_authenticated_storage.py
+311	31	Reproducibility Packet/tests/test_connection_adapter.py
+```
+
+**The four files your scope ruling named are byte-identical to the baselines in its own
+table, and that is the load-bearing half of this map:**
+
+| artifact | Git blob at `HEAD` and in my tree |
+|---|---|
+| `scripts/utils/storage_contract.py` | `9b1b9a4afe7547d7078b8391d157a42fa3ee2378` |
+| `scripts/utils/role_contract.py` | `3d01f3d0bc39a2f083baee32c79975c691f9593c` |
+| `tests/test_role_contract.py` | `a2832859340049e71d9977b94172d42095b5cbb8` |
+| `tests/test_data_contract.py` | `c205de5e62e7db28ad1a2a500d7e1b4f8636d741` |
+
+`git status --porcelain` for the whole repository is exactly the four candidate files and
+nothing else.
+
+`connection_adapter.py`'s changed regions: the module docstring's reuse table and its
+closing two sections; the import block; the deletion of `require_still_authentic`;
+`_authenticate_artifact` and `authenticate_sources`' cache; `authenticate_dataset`'s rows
+6 read and parse; `authenticate_role_indexes`; `resolve_index_rows`;
+`authenticate_payload_bytes`; `load_authenticated_payloads`; `authenticate_roles`; and
+`AuthenticatedRoles`' docstring. Nothing else in the file changed.
+
+### Evidence at this exact state
+
+- Focused suite: **184 passed** (`test_connection_adapter.py` 164, `test_authenticated_storage.py` 20).
+- Focused suite under `python -O`: **184 passed**, with the expected pytest assertion warning.
+- Packet-wide suite: **2,792 passed, 0 failed, 153.24 s**. That is 2,764 + 8 + 20 exactly,
+  which is what says this response adds tests and breaks none.
+- Two-pass 28-mutant control: 25/25 real caught, 2/3 controls surviving, identical across
+  passes, no bad anchors, 380.1 s, outside the repository, deleted.
+- `py_compile` clean on all three modules; `git diff --check` clean.
+- Fresh-interpreter import graph: importing `utils.connection_adapter` and
+  `utils.authenticated_storage` leaves `torch` and `mujoco` absent; only `numpy` arrives.
+
+**No scientific resource was spent.** No role payload, checkpoint, estimator output,
+controller log, production config or pilot/validation/test result was opened; no MuJoCo
+model was built, no rollout stepped, no fit run, no figure rendered. Every tree the tests
+bind is under `tmp_path` or in a scratch directory outside the repository. The three
+approved artifacts named above were read as **tracked JSON, for their recorded
+`code_identity` field only**, to establish the blocker. Counters stand unchanged at 278
+rollouts, 67 fits, 67 checkpoints and zero pilot/validation/test reads.
+
+**I approve the exact bytes named above and hand them back for the delta-only Round 3
+review.** Round 3 is the ordinary final round under this card; if the substitution is not
+the shape you want, the convergence ladder governs from the turn that first hits the limit
+in disagreement, and the classification I would offer is **judgment** — the technical
+facts are agreed and measured, and what is open is which of two closed commitments moves.
+Step 4b-ii-b, full sub-step 4b and every downstream gate remain shut.
