@@ -1,6 +1,6 @@
 # Review Card — Slot-8 Step-4b-ii-a Authentication Chain
 
-**Status:** Open — Round 3 reviewer-approved with Codex mechanical corrections; Claude same-state re-review pending
+**Status:** CLOSED — terminal outcome **Approved with Follow-ups** (Codex Session 143 reviewer approval, Claude Session 144 owner re-review, same exact bytes). One tracked follow-up carried into the Step-4b-ii-b card.
 **Opened:** 2026-08-15 (Claude Session 141)
 **Owner:** Claude
 **Reviewer:** Codex
@@ -1054,3 +1054,140 @@ pilot/validation/test reads.
 closure yet because those bytes differ from Claude's owner-approved Round-3 handoff. The
 next owner action is a delta-only same-state re-review by Claude. Step 4b-ii-b, full
 sub-step 4b and every downstream gate remain shut.
+
+---
+
+## Round 3 owner re-review and closure (Claude Session 144, 2026-08-16 16:16 PDT)
+
+**Terminal outcome: `Approved with Follow-ups`. Both agents have now approved the same
+exact bytes and this review is closed.** The subject chat is concluded with a `Summary.md`.
+Step 4b-ii-b, full sub-step 4b and every downstream gate remain shut, and 4b-ii-b receives
+a new Review Card and a new subject chat.
+
+### Approved state — authenticated three ways, every blob id resolved before the card governs
+
+| artifact | Git blob | raw SHA-256 | bytes / LF / CR |
+|---|---|---|---|
+| `Reproducibility Packet/scripts/utils/connection_adapter.py` | `6ec198464a6b418c9e280addbbd16b5eb8c67d46` | `2f3cb4050a7c1d291ac3d75ce414ea2c2bf51d038cb6e23974f3e7054fadfe97` | 97,541 / 2,115 / 0 |
+| `Reproducibility Packet/scripts/utils/authenticated_storage.py` | `f1d09ca0e4fe91f862b5736210ebb47e40d838ef` | `7da660b1b840ee813360d1e0a9c9757c0fe68c6b0368814877cf3582530c3f62` | 14,338 / 336 / 0 |
+| `Reproducibility Packet/tests/test_connection_adapter.py` | `7015cadf7cd52f8e499d2e583cb7a7f2209a1ed9` | `1c6860ba13878ec6f693cb943b6e432a55fab22d741ab9602552b2eaf249ff07` | 118,956 / 2,959 / 0 |
+| `Reproducibility Packet/tests/test_authenticated_storage.py` | `28323ff7e0fbfb78e204b1c647efaad9efa1670e` | `f89bb783af5891041723ce958a9c70179d60ee96821f2aa5d0a62ed39fd95d97` | 23,163 / 547 / 0 |
+
+Each blob id was resolved with `git cat-file -t` and each raw digest and size/line-ending
+figure re-measured from the object store. `git status --porcelain` is empty, so the working
+tree **is** this state — there is no third working-tree number in play. These are Codex's
+reviewer-edited bytes, unchanged by this session; the owner re-review added no edit.
+
+**Superseded, never review or build from:** `dafa73b5` / `9cadb11d` (Round 1),
+`01653d9c` / `c5d4e023` (Round 2), and `c24cb0cf` / `00b25820` / `07c48cc8` / `213367e8`
+(the Round-3 owner handoff).
+
+### Disposition of the two reviewer corrections
+
+**1. The schema-digest guard in `authenticate_config` — accepted, and it corrects a claim
+this owner made.** The Round-3 docstring argued that an adapter-side comparison "would be a
+guard no input could make decisive." That reasoning was on the wrong axis: what matters is
+not that the config's `schema_sha256` is fixed for the call, but which object it is compared
+against — the closed contract compares it against a *second read of the path*, the reviewer's
+guard compares it against *the bytes this module authenticated*. Those separate on exactly
+the residual state this owner had already written down and then argued around (a config
+declaring schema B while the record authenticates schema A, with the file swapped between
+the two reads). Lesson 238's shape, landing on the agent who wrote lesson 238.
+
+The domain is correct for a stated reason: `config_contract.validate_config_document`
+compares against `file_sha256(schema_path)` — raw bytes, no folding — so `external_bytes_digest`
+is the only comparand that agrees with the rule the guard anticipates.
+
+The new regression separates the guard for the claimed reason rather than by message text.
+It asserts that the refusal names `schema_sha256`, a phrase the closed contract's own refusal
+also contains (the lesson-223 trap), but with the guard deleted the contract *accepts* — the
+swapped file and the config agree — so no refusal is raised at all.
+
+**2. The `.npy` kind check in `npz_archive_from_bytes` — accepted without contest.** `np.load`
+on a single-array stream returns an ndarray, which has no context-manager protocol, so the raw
+`TypeError` escaped the layer whose contract is to refuse unsafe payloads. Same defect shape as
+the `BadZipFile` pair closed in Round 3; this owner missed the third member of the set.
+`np.lib.npyio.NpzFile` resolves under the pinned `numpy==2.5.1` and is the packet's only use
+of that path.
+
+### Owner mutation control on the reviewer delta — 8 real + 3 controls, two passes
+
+Budgeted before the response, staged **entirely in a scratch directory outside the
+repository**, identical across both passes, target digests restored and re-verified after
+every mutant, green anchor confirmed at 185 before any mutant ran.
+
+| mutant | kind | result |
+|---|---|---|
+| `m01` schema guard branch made unreachable | real | caught |
+| `m02` guard comparand changed to `canonical_text_digest` | real | **survived — equivalent** |
+| `m03` guard reads `config_hash` instead of `schema_sha256` | real | caught |
+| `m04` guard refuses with `X_IDENTITY_MISMATCH` | real | caught |
+| `m05` guard comparand changed to `record.schema.sha256` | real | **survived — equivalent** |
+| `m06` NPZ kind check made unreachable | real | caught |
+| `m07` NPZ kind check inverted | real | caught |
+| `m08` NPZ refusal raised as `RuntimeError` | real | caught |
+| `n01` inert comment in `authenticate_config` | control | survived |
+| `n02` complete local rename in `npz_archive_from_bytes` | control | survived |
+| `n03` new refusal message reworded | control | survived |
+
+**The two survivors are equivalent mutants, and that is measured rather than argued.**
+`schema/schema.json` carries no BOM and no CR byte, so its canonical and raw digests are the
+same number; and `authenticated_bytes` has already proved `record.schema.sha256` equals the
+canonical digest of those bytes, so `m05` collapses into `m02`. Driven at source, all three
+of `canonical_text_digest(raw)`, `external_bytes_digest(raw)` and
+`config_contract.file_sha256(path)` return
+`0dae0dd0fec4269180139efc9a4c9ce38e7f8f23d890d182dc8eb063803e942f`. A fixture that separated
+the domains would have to be a CRLF `schema.json`, which the packet forbids by pin.
+
+**The instrument that sees this class is a fresh checkout, not a test** (lesson 232).
+`git checkout-index` into a scratch path outside the repository under `core.autocrlf=true`:
+`schema.json` materialises at 15,212 B / 670 LF / **0 CR** with a raw digest identical to the
+tracked blob — the pin holds. The same probe renders `connection_adapter.py` with 2,115 CR,
+which is what says the probe was exercising CRLF conversion and that the schema result is the
+pin working rather than the measurement failing.
+
+**One control was malformed on the first run and is reported rather than quietly rebuilt.**
+The `n02` rename missed one reference to the local inside an f-string, so the "control" was a
+`NameError` and was caught. A control that fails to compile measures nothing, the same way a
+red anchor measures nothing. It was rebuilt as a complete rename and a third control added;
+all three then survive in both passes.
+
+### Independent verification of the reviewer's evidence
+
+Every figure Codex published reproduces here: focused suite **185 passed**, focused suite
+under `PYTHONOPTIMIZE=1` **185 passed** with the expected assertion warning, packet-wide suite
+**2,793 passed in 151.61 s** (Codex measured 154.90 s), `py_compile` clean, `git diff --check`
+clean, `git status --porcelain` empty, and a fresh-interpreter import of
+`utils.connection_adapter` and `utils.authenticated_storage` leaving both `torch` and `mujoco`
+absent. The arithmetic holds: 2,792 + 1 = 2,793, which is what says the delta adds one test
+and changes no existing one.
+
+### Tracked follow-up — one item, non-blocking, carried into the 4b-ii-b card
+
+**The adapter's raw-domain schema comparison is silently dependent on the
+`schema/schema.json text eol=lf` pin.** Both `.gitattributes` files already call that pin
+load-bearing and give `config_contract`'s raw comparison as the reason; this guard makes it
+load-bearing for a **second** consumer, and nothing in the candidate says so. Today the
+dependency is undetectable from inside the packet precisely because the pin makes the two
+domains the same number.
+
+The follow-up is documentation, not repair: in 4b-ii-b, name `config_contract.file_sha256`
+as the owner of the domain this guard matches, and name the pin as the reason the raw domain
+is safe here while the record's own authentication stays canonical. The code is correct as
+approved and no edit to the approved bytes is proposed.
+
+It is registered as a follow-up rather than a Round-4 finding under this card's own
+blocking-severity definition: it cannot invalidate the scoped purpose, and the behaviour is
+correct on every conforming checkout. The round limit never forces approval — and it equally
+does not license converting a documentation item into a fourth round-trip.
+
+### Scientific resource spent — Round 3 owner re-review
+
+**Zero.** No production connection record, real role index, real role payload, checkpoint,
+estimator output, controller log, production config or pilot/validation/test result was
+opened; no MuJoCo model built, no rollout stepped, no fit run, no figure rendered. Counters
+unchanged: **278 rollouts, 67 fits, 67 checkpoints, zero pilot/validation/test reads.** Every
+tree the mutation control touched is a staged copy outside the repository, and it was deleted
+after the sweep. The one non-test read is `Reproducibility Packet/schema/schema.json`, a
+tracked packet text file, read for its digest and EOL shape to settle the equivalence claim
+above.

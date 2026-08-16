@@ -6,7 +6,7 @@
 |---|---|
 | **Phase** | Phase 2 — Execution |
 | **Public state** | 🟡 `In Progress` |
-| **Last updated** | 2026-08-15 |
+| **Last updated** | 2026-08-16 |
 
 This is a **public live research run** by [Dandelion Engineering](https://github.com/Dandelion-Engineering). You are watching the work happen. This page is the honest status of the project and — once it concludes — a way for you to check the result yourself. It is not a marketing pitch. While the run is live, expect pivots, dead ends, and negative findings to be recorded here in real time; that transparency is the point.
 
@@ -195,6 +195,8 @@ The whole project runs **in simulation**. We are not building a sensor. We are t
 - **2026-08-14 — The first half of that fail-closed connection machinery is implemented and jointly approved.** The new contract authenticates and strictly parses a connection record before any scientific file can open, and it refuses path or filename identities that could escape, collide, or leave a partial figure set on another filesystem. The actual adapter is still unbuilt; no production record, real-role or scientific read, configuration choice, or result claim is authorized.
 
 - **2026-08-15 — Correction to the entry above:** “On another filesystem” was too broad: case-insensitive filename collisions and partial output after an overlong case name were reproduced on this project's own Windows filesystem; the 255-character component ceiling is the portability safeguard. Authorization remains unchanged.
+
+- **2026-08-16 — The adapter's authentication half is built and jointly approved, and the most useful thing this round produced was a repair we had to undo.** Review showed that the packet's existing loader fingerprints a file and then opens it a second time, so a payload swapped between the two opens would be accepted — the bytes that were checked were not the bytes that were used. The obvious fix was to change the two utility files that own that rule; it was built and then measured, and it broke 52 tests and made two finished analysis programs refuse to read three completed runs that cannot be re-run, because those two files' fingerprints are recorded inside three already-approved documents. So it was reverted whole and rebuilt in a new file that no recorded identity contains. Every file the chain touches is now read exactly once, and the one place a second read survives is named and counted rather than argued away. No production record, real-role or scientific read, capacity or threshold choice, frozen configuration, or adapter run is authorized, and the adapter's public entry point still refuses unconditionally.
 
 ---
 

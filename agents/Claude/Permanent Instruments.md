@@ -3724,6 +3724,73 @@ correction applied.)*
   DELETED OR WEAKENED; THREE NOW WERE, AND A NET COUNT WOULD HAVE HIDDEN IT.  Name the removals in a
   table beside the replacements. ***
 
+251. **[S144] A NEGATIVE CONTROL THAT FAILS TO COMPILE MEASURES NOTHING, THE SAME WAY A RED ANCHOR
+  MEASURES NOTHING - AND IT REPORTS AS A RESULT.**  My "inert rename" control renamed a local in
+  three places and missed `type(loaded).__name__` inside an f-string, so the control was a
+  `NameError` and came back CAUGHT.  A caught control reads as evidence about the SUITE
+  ("the tests are sensitive") when it is evidence about the INSTRUMENT ("my mutant was broken").
+  *** A CONTROL MUST BE VERIFIED TO RUN BEFORE ITS VERDICT IS BELIEVED, and a control you got wrong
+  is reported rather than quietly rebuilt - the sweep is the instrument BOTH agents rely on, so a
+  silent repair to it is a silent repair to the shared evidence base. ***
+
+252. **[S144] A SURVIVING MUTANT IS NOT AUTOMATICALLY A TEST GAP.  ASK WHETHER IT IS AN EQUIVALENT
+  MUTANT, AND SETTLE THAT BY MEASUREMENT RATHER THAN BY ARGUMENT.**  Two real mutants survived
+  Codex's reviewer delta: the schema comparand changed to `canonical_text_digest`, and changed to
+  `record.schema.sha256`.  Neither is reachable-and-untested.  `schema/schema.json` carries no BOM
+  and no CR byte, so its canonical and raw digests are THE SAME NUMBER; and `authenticated_bytes`
+  has already proved `record.schema.sha256` equals the canonical digest of those bytes, so the
+  second mutant COLLAPSES INTO the first.  *** DRIVE ALL THREE VALUES AT SOURCE AND SHOW THEM EQUAL
+  (`0dae0dd0...` here) - "equivalent mutant" asserted is an excuse, measured is a result.  AND THE
+  INSTRUMENT THAT DECIDES IT IS A FRESH CHECKOUT, NOT ANOTHER TEST (lesson 232): `git checkout-index`
+  rendered `schema.json` at 0 CR while rendering `connection_adapter.py` at 2,115 CR in the same
+  probe, which is what says the probe was exercising CRLF conversion rather than failing. ***
+
+253. **[S144] WHEN A PIN MAKES TWO RULES INDISTINGUISHABLE, THE PIN BECOMES LOAD-BEARING FOR EVERY
+  NEW CONSUMER OF EITHER RULE - AND NOTHING INSIDE THE ARTIFACT CAN DETECT ITS REMOVAL.**  Both
+  `.gitattributes` files already call `schema/schema.json text eol=lf` load-bearing, naming
+  `config_contract`'s raw comparison as the reason.  Codex's new adapter guard is a SECOND consumer
+  of that same raw domain, and the candidate says nothing about it.  *** THE TEST THAT WOULD CATCH
+  THE PIN'S REMOVAL CANNOT EXIST WHILE THE PIN HOLDS - a separating fixture would have to be a CRLF
+  `schema.json`, a state the packet forbids.  SO THE DEPENDENCY IS WRITTEN DOWN WHERE THE CONSUMER
+  LIVES, and "add a test" is not available as an answer. ***  Lesson 232's shape, one level up: there
+  the instrument was a fresh checkout, here there is no instrument at all and documentation is the
+  whole repair.
+
+254. **[S144] "A GUARD NO INPUT CAN MAKE DECISIVE" IS ABOUT *WHICH OBJECT IS COMPARED*, NOT ABOUT
+  *WHEN THE VALUE IS FIXED* - AND I INVOKED LESSON 242 WHERE IT DID NOT REACH.**  My S143 docstring
+  dismissed an adapter-side `schema_sha256` comparison because the config's declared value is fixed
+  for the whole call.  True and irrelevant.  The closed contract compares that declaration against a
+  SECOND READ OF THE PATH; the guard compares it against THE BYTES THIS MODULE AUTHENTICATED.  Those
+  two comparands can differ - on exactly the swapped-file residual I had already written down and
+  then argued around.  *** BEFORE INVOKING 242, ASK WHETHER THE TWO COMPARANDS CAN EVER DISAGREE.
+  IF THEY CAN, IT IS NOT A DUPLICATED GUARD, IT IS A DIFFERENT ONE. ***  And note whose lesson this
+  is: 238 says the clause a finding CONCEDES is the clause nobody measures, and I wrote 238.
+
+255. **[S144] A MIS-ANCHORED APPEND IS EXACTLY RECOVERABLE IF AND ONLY IF IT IS PURELY ADDITIVE, SO
+  THE MONITOR READS THE DELETION COUNT FIRST.**  Codex's S143 append matched a repeated
+  `- Claude` / `---` delimiter and landed at line 193 instead of the physical EOF (lesson 206 again).
+  `git diff --numstat` read **`106 0`** - and because the deletion count was ZERO, deleting the two
+  inserted line ranges reproduced the predecessor BYTE FOR BYTE and the whole confirmation cost three
+  commands.  Codex's S119 recurrence normalised fifteen CRLF endings on the way through and had no
+  such property.  *** ORDER THE MONITOR'S CHECKS: DELETIONS, then placement, then header counts, then
+  who is physically last.  A `0` in the deletion column means the transcript is intact and the fault
+  is placement; anything else means published bytes moved, which is a different and worse thing. ***
+  And record the half that is not a failure: three consecutive recurrences have now been caught
+  IN-TURN by the causing agent's own post-write prefix check, and the append-only repair (leave the
+  bad entry, append a dated correction, name which copy is operative) is what preserved the evidence
+  that the fault was additive at all.
+
+256. **[S144] THE ROUND LIMIT NEVER FORCES APPROVAL - AND IT EQUALLY DOES NOT LICENSE TURNING A
+  DOCUMENTATION ITEM INTO A FOURTH ROUND-TRIP.**  At the spent limit I held a correct candidate, a
+  measured equivalence for both mutation survivors, and one real forward item (lesson 253's
+  dependency).  `Approved with Follow-ups` is the outcome that exists for exactly that shape.
+  *** THE TEST IS THE CARD'S OWN BLOCKING-SEVERITY DEFINITION, NOT MY APPETITE TO KEEP EDITING:
+  can it invalidate the scoped purpose?  If no, it is a tracked follow-up carried into the next
+  card.  Spending a fourth round to add a docstring sentence buys nothing and costs the reviewer a
+  session. ***  The mirror of lesson 221: when you own the artifact, integrating costs a round less
+  than naming a finding; when you are re-reviewing the reviewer, CARRYING costs a round less than
+  reopening.
+
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 
 ```text
