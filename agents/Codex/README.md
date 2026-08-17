@@ -6,7 +6,7 @@ This folder contains Codex-owned research, source records, and continuity for th
 
 - [`Literature Foundation.md`](Literature%20Foundation.md) — Codex's independent Phase-0 field survey. It is a concluded research input; corrections discovered later propagate into current artifacts rather than rewriting the foundation.
 - [`references.md`](references.md) — living source ledger for Codex's project work, including Phase-1 review sources. Reconcile it with Claude's independent ledger when the project bibliography is assembled.
-- [`Config Freeze Readiness Review.md`](Config%20Freeze%20Readiness%20Review.md) — authoritative gate audit for final-config readiness and the surviving design and authorization boundaries. Stage 1 and rung 2 remain complete only as scoped development screens. Slot-8 Steps 1–3, Step 4a, Step 4b-i and Step 4b-ii-a are closed / both approved; Step 4b-ii-b is in progress under Claude but has no stable candidate or approval. Every production record, real-role read, capacity or threshold choice, final configuration, and later gate remains blocked.
+- [`Config Freeze Readiness Review.md`](Config%20Freeze%20Readiness%20Review.md) — authoritative gate audit for final-config readiness and the surviving design and authorization boundaries. Stage 1 and rung 2 remain complete only as scoped development screens. Slot-8 Steps 1–3, Step 4a, Step 4b-i and Step 4b-ii-a are closed / both approved; Step 4b-ii-b is in progress under Claude through row 18 but has no stable candidate or approval. The unfinished build must still join the geometry source's `model_id` to the authenticated config and repair row 16's live decision chronology before handoff. Every production record, real-role read, capacity or threshold choice, final configuration, and later gate remains blocked.
 
 ## Continuity and session record
 
@@ -159,6 +159,7 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`Session Summaries/HumanReport146.md`](Session%20Summaries/HumanReport146.md) — detailed record of Codex Session 146 (authenticated the Round-3 README as a pure `+2/-0` successor to the published state, reproduced both reverse constructions and corrected facts, explicitly approved blob `7342bc8c...`, concluded the public-heartbeat review/chat, and preserved every downstream gate).
 - [`Session Summaries/HumanReport147.md`](Session%20Summaries/HumanReport147.md) — detailed record of Codex Session 147 (general recent-work review of Claude's deliberately partial Step-4b-ii-b geometry/fixture build, producer-to-map audit, 144 focused passing tests, no premature Review Card or approval, and preservation of every downstream gate).
 - [`Session Summaries/HumanReport148.md`](Session%20Summaries/HumanReport148.md) — detailed record of Codex Session 148 (general review of Claude's rows-13–17 partial build, exact two-file authentication, 231 focused and 2,889 packet-wide passing tests, a reproduced false “largest fixture window” claim, one decision-axis interpretation question, no code takeover or formal approval, and preservation of every downstream gate).
+- [`Session Summaries/HumanReport149.md`](Session%20Summaries/HumanReport149.md) — detailed record of Codex Session 149 (general review of Claude's row-18 partial build, exact two-file authentication, 243 focused and 2,901 packet-wide passing tests, an end-to-end unbound geometry `model_id` proof, a live producer/row-16 chronology contradiction, no code takeover or formal approval, and preservation of every downstream gate).
 - [`Progress Reports/Progress Report Session 8.md`](Progress%20Reports/Progress%20Report%20Session%208.md) — first regular every-eighth-session director update at the Accessible-Piece bar.
 - [`Progress Reports/Progress Report Session 16.md`](Progress%20Reports/Progress%20Report%20Session%2016.md) — second regular director update, covering the synchronous-probe correction, noisy pilot, real contact integration, and matched-contact BLOCK.
 - [`Progress Reports/Progress Report Session 24.md`](Progress%20Reports/Progress%20Report%20Session%2024.md) — third regular director update, covering the bounded-task redesign, information/control split, structural-action block, actuator headroom, and corrected probability-channel boundary; next regular Codex report is Session 32.
@@ -465,5 +466,6 @@ agents/Codex/
     ├── HumanReport145.md
     ├── HumanReport146.md
     ├── HumanReport147.md
-    └── HumanReport148.md
+    ├── HumanReport148.md
+    └── HumanReport149.md
 ```

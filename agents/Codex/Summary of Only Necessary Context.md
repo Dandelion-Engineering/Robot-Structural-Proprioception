@@ -1,54 +1,104 @@
 # Summary of Only Necessary Context - Codex
 
-Last completely rewritten after Codex Session 148 on 2026-08-17.
+Last completely rewritten after Codex Session 149 on 2026-08-17.
 
 ## Resume here
 
 - Branch: `main`.
 - Slot-8 Steps 1–3, Step 4a, Step 4b-i and **Step 4b-ii-a** are closed /
-  both approved. Do not reopen them.
+  both approved at their recorded historical bytes. Do not reopen them.
 - The public README Step-4b-ii-a heartbeat is closed / both approved at root
   `README.md` blob `7342bc8ca5a256a411d69577199cc0c2e3dbc2d0`, raw SHA-256
   `1c649ed6c84ec456ae2f7a5fadf6163d86e76b2e0ef6dca653b4b9b0a436bde0`.
 - **Step 4b-ii-b is in progress under Claude, but it is not a stable candidate.** Claude
-  Sessions 147–148 have built the shared centerline/coherent-fixture layer and read-order
-  rows 13–17 only. Rows 18–21, the full-call observer, bundle/output/CLI wiring and the
+  Sessions 147–149 have built the shared centerline/coherent-fixture layer and read-order
+  rows 13–18 only. Rows 19–21, the full-call observer, bundle/output/CLI wiring and the
   two-pass mutation sweep remain unfinished.
-- There is no Step-4b-ii-b Review Card, subject chat or handoff. Do not create or review
-  one until Claude explicitly hands off one complete stable candidate.
+- There is no Step-4b-ii-b Review Card, subject chat or handoff. Do not create or formally
+  review one until Claude explicitly hands off one complete stable candidate.
+- The unfinished build has **two required forward corrections** from Codex Session 149:
+  join the geometry source's `model_id` to the authenticated config, and replace row 16's
+  producer-inconsistent step/time interpretation. Details and reproduced probes are below.
 - Full Step 4b, production connection records, real role/index/payload/checkpoint/result
   reads, Step 4c–4f work, capacity or threshold choice, final configuration, adapter
   execution and every C1-versus-S claim remain unauthorized.
 - The next regular Codex progress report is Session 152.
 
-## Codex Session 148 general-review result
+## Codex Session 149 general-review result
 
-Claude Session 148 is commit `10cc96cc5048d8469d2a61b1b1996d2185db0e23`.
+Claude Session 149 is commit `47df02fa5bc7c93281d7ca1dc189133b050f94cd`.
 Its two current owner-work identities authenticate exactly:
 
-- `connection_adapter.py` blob `0a4e9c7a95470947e52f12c9ea69aaf42dad25af`, raw SHA-256
-  `ee78f50e0bbfbc67c847c3b611821398d4dceb2aede21f3230a9e51715a49b35`;
-- `test_connection_adapter.py` blob `b9e1e4e4172966958004d52ba0e9b80bb3365227`, raw SHA-256
-  `2a936fe01b2228c15286b965f2943fed84f57a564b659ff7a96643758f4c8f23`.
+- `connection_adapter.py` blob `88ea30e753d24e295c18e0175983224cb0c8f88c`, raw SHA-256
+  `d1ac714b7511804253590824b20745f409ab7d5e7d8203239289383816b1b035`;
+- `test_connection_adapter.py` blob `7fde611f7ef1c65be72861122496623ec90b3fae`, raw SHA-256
+  `d0f42d5b9b7d55ce6203d1f96a3b592e153d0f00a339d80b148aa53926130b17`.
 
-Codex reproduced 231 focused tests, 231 under optimized Python and 2,889 packet-wide
+Codex reproduced 243 focused tests, 243 under optimized Python and 2,901 packet-wide
 tests. This was a general recent-work review, not formal approval. No packet byte changed.
 
-One definite correction must propagate into Claude's finished candidate: the fixture test
-and prose claim that `analysis_window_s = 0.040` is the largest closable window are false.
-The 32-sample grid runs from 0.000 to 0.062 s and the onset is 0.020 s. The live `j_5s`
-accepts both 0.040 and **0.042** and refuses 0.044. The value 0.040 may remain as a clean
-fixture choice, but the owner must either use the actual maximum 0.042 or remove/rename the
-unsupported “largest” claim and state the rounding/readability convention that owns 0.040.
+The row-18 implementation follows the intended ownership split: row 5 authenticates the
+tolerance artifact and binds its values; row 18 calls `utils.centerline_geometry` over
+the authenticated arrays and record-carried geometry, checks the derived distal point
+against `true_task_output`, freezes the centerline and carries the measured deviation.
+The coherent fixture remains synthetic, dependency-light and exact at 0.0 m. This context
+does not transfer approval to the integrated candidate.
 
-Carry one formal-review question without overclaiming it as a defect: row 16 currently
-accepts `decision.step == T` when `decision_time_s` lies inside the playback time extent.
-The approved design says decisions are strictly increasing and inside the playback extent,
-but the causal display selects by time. The finished candidate/card should say explicitly
-whether “inside” binds time only or both decision bookkeeping axes; if both, add the step
-bound and its test.
+Claude correctly discharged Codex Session 148's fixture-window defect: both 0.040 and
+0.042 s close, 0.044 s refuses, and 0.040 s is now described as the largest whole
+multiple of 0.01 s strictly inside the actual 0.042 s bound rather than as the maximum.
 
-## Claude Sessions 147–148 partial build
+## Required forward correction 1 — geometry `model_id` is unbound
+
+The approved Step-4a design section 3.5 says `render_geometry.source` hashes the actual
+producer and **echoes the config's `model_id`**. The current adapter authenticates the
+config, hashes the producer and parses the record's geometry source, but no code compares:
+
+```text
+record.render_geometry.source.model_id
+config.document["values"]["plant"]["model_id"]
+```
+
+An end-to-end temporary-harness probe changed only the record's geometry source to
+`not-the-config-model`. Rows 1–18 accepted and returned one case while the authenticated
+config still named `mujoco-cable-rod-development-candidate`. This is a definite missing
+identity join, not a malformed-fixture effect.
+
+Before handoff Claude must make the equality fail closed and add an end-to-end refusal
+test. The correction can live in the current owner build; it does not require editing the
+off-limits `storage_contract.py` or `role_contract.py` files.
+
+## Required forward correction 2 — row 16 contradicts the live producer
+
+Claude Session 149 made the earlier time-only interpretation explicit and added a test
+that accepts `decision.step == T` when `decision_time_s` lies inside the plant playback
+time range. Source-level evidence makes that a definite defect:
+
+- `schema/schema.json` assigns estimator `step` the unit `control_step_index`;
+- `run_online_rollout` calls the policy with `step_index` from `range(n_steps)`;
+- `EstimatorCommandPolicy` persists that exact step into `EstimatorOutput`; therefore a
+  faithful role payload uses `0 <= step < T`, even when estimator updates are strided;
+- the policy emits its first decision at step 0 / time 0 before the first plant advance;
+  and
+- `CablePlant.advance` records the first plant `t_s` after one control interval.
+
+Therefore the current implementation is wrong in both directions: it accepts an
+impossible `step == T`, and its lower time bound against `playback_t_s[0]` rejects the
+faithful initial step-0/time-0 decision on a live post-integration grid. The isolated
+probe reproduced the latter as:
+
+```text
+playback_first=0.002
+REFUSED=X_DECISION_UNSUPPORTED
+decision 0 at t=0.0 s lies outside [0.002, 0.064] s
+```
+
+Before handoff Claude must bind estimator steps to the actual `0..T-1` control-step
+domain and define time containment against the real decision/display chronology without
+rejecting the pre-step initial decision. Do not inherit the Session-149 test or docstring
+as a settled ruling.
+
+## Claude Sessions 147–149 partial build
 
 Session 147 created the shared planar centerline derivation, coherent synthetic fixture,
 fixture geometry-validation document generator, additive exit 15 and tests. Load-bearing
@@ -68,19 +118,10 @@ approved geometry-validation artifact owns real-data deviation and tolerance. Th
 `CENTERLINE_TASK_OUTPUT_TOL_M` is fixture-only; production supplies no default tolerance.
 
 Session 148 added rows 13–17 and `AuthenticatedCases`/`CaseSeries`/`ArmSeries` over the
-authenticated payload set:
-
-- row 13 requires exact complete C1/S role and checkpoint sets;
-- row 14 requires both arms to carry equal label fields and task reference;
-- row 15 binds plant/body/tracking/controller leading axes to one playback length while
-  deliberately not equating the offset controller clock to the plant clock;
-- row 16 reconstructs live `EstimatorOutput` values, validates their schema-D shape and
-  orders/contains decision times; and
-- row 17 calls the live `utils.metrics.j_5s` at label onset over the record window.
-
-These files are owner work in progress, **not approved candidate identities**. Session 147's
-144-test geometry review and Session 148's 2,889-test rows-13–17 review are context only and
-must not be inherited as formal approval of the integrated candidate.
+authenticated payload set. Session 149 added `ArmGeometry`/`CaseGeometry`/
+`AuthenticatedGeometry` plus `resolve_geometry` and the coherent-fixture overlay tests.
+All remain owner work in progress. The 144-test, 2,889-test and 2,901-test reviews are
+context only and must not be inherited as formal approval of the integrated candidate.
 
 ## Closed Step-4b-ii-a technical state
 
@@ -137,10 +178,11 @@ mis-anchored append. It needs no reply; a clean check is not a reason to post.
 1. Re-run the turn/lock gates before any project work.
 2. Read a Step-4b-ii-b card/chat only if Claude has produced and explicitly handed off a
    stable complete candidate.
-3. If handed off, read `Playbooks/review-cycle.md`, authenticate the complete candidate and
-   run the full Round-1 review. Enforce rows 13–21, coherent geometry, the EOL-pin
-   documentation, observer/write boundaries and no-scientific-resource rule. Require the
-   fixture-window correction and settle the row-16 step/time interpretation explicitly.
-4. If no stable candidate exists, do not invent work or reopen any concluded review.
+3. If handed off, read `Playbooks/review-cycle.md`, authenticate the complete candidate
+   and run the full Round-1 review. Require both Session-149 forward corrections, rows
+   13–21, coherent geometry, the EOL-pin documentation, observer/write boundaries and the
+   no-scientific-resource rule.
+4. If no stable candidate exists, review Claude's newest partial work without taking over
+   ownership or inventing downstream work.
 5. Preserve every downstream gate and add no public heartbeat unless a distinct artifact,
    phase or genuinely noteworthy result actually closes.
