@@ -1,6 +1,6 @@
-"""The Slot-8 connection adapter: the authentication chain, read-order rows 4-12.
+"""The Slot-8 connection adapter: the authentication chain, read-order rows 4-17.
 
-**What this module is.** It implements rows 4 through 12 of the read order in section
+**What this module is.** It implements rows 4 through 17 of the read order in section
 4.1 of `protocol/slot8-connection-record-v0.1.md` (Git blob `032db166`, jointly
 approved Claude Session 135 / Codex Session 135) -- the *second boundary* that
 document names:
@@ -33,7 +33,15 @@ Concretely:
     every named run and payload path against the authenticated index, requires each
     named manifest row to equal the record's 20-field echo, digests every payload
     and checkpoint before loading any payload, and finally loads exactly the
-    authenticated payload set through `utils.role_contract.RolePayloadLoader`.
+    authenticated payload set through `utils.role_contract.RolePayloadLoader`;
+  * **steps 13-17** -- `resolve_cases` establishes the facts no single payload can
+    carry, because each is a relation *between* payloads: that the loaded set covers
+    both arms of every case and nothing else, that the two arms describe one body
+    change and replay one commanded trajectory, that both arms bind to one playback
+    grid, that the decisions the adapter carries forward are ordered and inside that
+    grid's extent, and that the tracking block is a valid `utils.metrics.j_5s` call
+    at the agreed onset over the record's declared window. It opens nothing: every
+    fact it reads was authenticated by the rows above it.
 
 `authenticate_connection` is the single roles-mode entry point invariant W8 names. It
 takes the packet root as an explicit parameter, and that one root governs every
@@ -42,13 +50,11 @@ and config resolution, and the step-5 source artifacts. A test binds an isolated
 temporary packet tree and thereby exercises this exact production branch rather than a
 parallel one.
 
-**What this module is not.** It is not the whole adapter. Read-order rows 13 through
-21 -- arm completeness, the C1/S pair check, the timebase binding, the decision
-checks, the tracking window, the geometry derivation, the computed provenance state,
-the bundle assembly and the exclusive-create write -- are the separately reviewed
-second half of sub-step 4b-ii, together with the coherent geometry fixture, the
-audit-hook observer of invariant W3, the `roles` CLI wiring and the additive
-`build_role_bundle` change. **Nothing here licenses authoring a connection record,
+**What this module is not.** It is not the whole adapter. Read-order rows 18 through
+21 -- the geometry derivation, the computed provenance state, the bundle assembly and
+the exclusive-create write -- are still unbuilt, together with the audit-hook observer
+of invariant W3, the `roles` CLI wiring and the additive `build_role_bundle` change.
+**Nothing here licenses authoring a connection record,
 running the adapter, opening `dev`, `pilot`, `val` or `test`, selecting a capacity or
 a threshold, freezing a config, or making any C1-versus-S statement.** The public
 `roles` subcommand still refuses unconditionally, and that remains the correct state
@@ -193,7 +199,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, fields as dataclass_fields, replace
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any, Mapping, Sequence
@@ -228,15 +234,24 @@ from utils.storage_contract import (
     StorageContractError,
     file_sha256,
 )
+from utils.estimator import EstimatorOutput
+from utils.metrics import j_5s
 from utils.verification_scene import (
     DEVELOPMENT_ONLY,
     FINAL,
+    LabelFields,
+    SUITE_KEYS,
     VerificationSceneError,
+    X_ARMS_INCOMPLETE,
+    X_DECISION_UNSUPPORTED,
     X_IDENTITY_MISMATCH,
+    X_PAIR_MISMATCH,
     X_PROVENANCE_UNRESOLVED,
     X_ROLE_ABSENT,
     X_ROLE_UNAUTHORIZED,
     X_SPLIT_FORBIDDEN,
+    X_TIMEBASE_MISMATCH,
+    X_WINDOW_UNSUPPORTED,
 )
 
 # --------------------------------------------------------------------------- #
@@ -281,6 +296,28 @@ MANIFEST_AUDIT_KEY = "manifest_audit"
 #: It also keeps the segment far below CPython's 4,300-digit integer-conversion
 #: limit, which raises a raw `ValueError` instead of this module's named refusal.
 MAX_FIELD_PATH_INDEX_DIGITS = 19
+
+#: The eight schema-D `labels` fields the two arms of one case must agree on. The
+#: names are read out of `utils.verification_scene.LabelFields`'s own field list
+#: rather than restated here, and that struct's names are themselves pinned by
+#: equality against `schema/schema.json`. So this tuple inherits that pin instead of
+#: adding a second copy of the same eight names that could drift away from it.
+LABEL_FIELDS: tuple[str, ...] = tuple(
+    field.name for field in dataclass_fields(LabelFields)
+)
+
+#: The frame-bearing `plant` arrays read-order rows 17 through 21 consume. `q_true`
+#: and `deform_coords` are the body axes row 18 derives a centerline from;
+#: `task_reference` and `true_task_output` are the tracking block row 17 hands to
+#: `utils.metrics.j_5s`. Their dtypes, and their shapes *within one payload*, are the
+#: schema's and were established at step 12; what step 15 adds is that their leading
+#: axis is the same number in both arms and in the controller role.
+PLANT_FRAME_ARRAYS: tuple[str, ...] = (
+    "q_true",
+    "deform_coords",
+    "task_reference",
+    "true_task_output",
+)
 
 
 # --------------------------------------------------------------------------- #
@@ -2113,3 +2150,566 @@ def authenticate_connection(
         dataset=dataset,
         roles=roles,
     )
+
+
+# --------------------------------------------------------------------------- #
+# Steps 13-17 -- the cross-arm and cross-role facts, over the authenticated set.
+#
+# **What these five rows add, and what they deliberately do not restate.** Step 12
+# ran every payload through `utils.role_contract`, whose `_semantic_role_checks`
+# already establishes, *within one payload*: that a `labels` struct names a known
+# source class with a non-empty subtype and a finite, non-negative onset; that an
+# `estimator_outputs` payload carries at least one decision, that every row of it
+# satisfies `utils.estimator.EstimatorOutput.validate`, and that its two decision
+# axes are strictly increasing; and that a `controller_logs` payload's `step` is a
+# non-empty contiguous 0-based grid whose `t_s` is strictly increasing and finite.
+# None of that is repeated here. Rows 13 to 17 are exactly the facts a single
+# payload cannot carry, because each one is a relation *between* two payloads:
+#
+#   * 13 -- the loaded set covers both arms of every case and nothing else;
+#   * 14 -- the two arms describe **one** body change and replay **one** commanded
+#     trajectory;
+#   * 15 -- both arms' plant grids are the same grid, and every frame-bearing array
+#     in both arms and in the controller role has that grid's length;
+#   * 16 -- the decisions the adapter *carries forward* are ordered and lie inside
+#     that grid's extent;
+#   * 17 -- the tracking block is a valid `utils.metrics.j_5s` call at the agreed
+#     onset over the record's declared window.
+#
+# Row 16's per-decision `validate()` call is not a second copy of step 12's: it is
+# applied to the `EstimatorOutput` values *this module constructs*, so what it holds
+# is the adapter's own column-by-column construction, which step 12 cannot see.
+# --------------------------------------------------------------------------- #
+@dataclass(frozen=True)
+class ArmSeries:
+    """One suite's authenticated series, on the case's one playback grid.
+
+    Attributes:
+        suite: `C1` or `S`, the key this arm is filed under.
+        run_id: the record's run identifier for this arm, carried so a later row
+            can name the run a refusal is about without re-deriving it.
+        q_true: `[T,2]` joint angles, one of row 18's two body inputs.
+        deform_coords: `[T,n_def]` internal deformation coordinates, the other.
+        task_reference: `[T,2]` commanded planar endpoint.
+        true_task_output: `[T,2]` true deformed tip.
+        decisions: the schema-D decisions in payload order, as live
+            `utils.estimator.EstimatorOutput` values rather than a local mirror of
+            their nine fields.
+        controller_step: `[T]` the contiguous 0-based control-step grid.
+        controller_t_s: `[T]` the controller's own clock. It is **never** compared
+            to the playback grid: the one-control-interval offset a live loop
+            produces is faithful real data, and two closed tests hold both
+            conventions open (finding CI).
+        controller_mode: `T` non-empty mode strings, bound to `controller_step`.
+
+    Every array here is a reference to the read-only array step 12 built over an
+    immutable buffer. Nothing is copied, and nothing downstream can edit a fact that
+    was authenticated.
+    """
+
+    suite: str
+    run_id: str
+    q_true: np.ndarray
+    deform_coords: np.ndarray
+    task_reference: np.ndarray
+    true_task_output: np.ndarray
+    decisions: tuple[EstimatorOutput, ...]
+    controller_step: np.ndarray
+    controller_t_s: np.ndarray
+    controller_mode: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class CaseSeries:
+    """One menu entry's two arms, after rows 13 through 17 agreed about them.
+
+    Attributes:
+        case_id: the record's case identity.
+        display_label: the record's menu label for it.
+        pair_id: the pair both arms belong to. The record already required each
+            arm's echoed manifest row to carry this same value at step 2, so this
+            field carries it rather than re-establishing it.
+        playback_t_s: the one grid both arms' `plant.t_s` agreed on.
+        truth: the schema-D label struct both arms agreed on, as the live
+            `utils.verification_scene.LabelFields`.
+        window_s: the record's declared `analysis_window_s`, carried because it is
+            the window row 17 established the tracking block over.
+        arms: exactly `C1` and `S`.
+
+    **The label struct's own value contract is step 12's, not this row's.** Whether a
+    `subtype` is non-empty or an `onset_time_s` non-negative was settled by
+    `utils.role_contract` before these bytes arrived, and whether the struct can be
+    *drawn* honestly is `utils.verification_scene.validate_scene`'s, at the row that
+    assembles a scene. Row 14 establishes only that the two arms agree, which is the
+    one thing neither of those layers can see.
+    """
+
+    case_id: str
+    display_label: str
+    pair_id: str
+    playback_t_s: np.ndarray
+    truth: LabelFields
+    window_s: float
+    arms: Mapping[str, ArmSeries]
+
+
+@dataclass(frozen=True)
+class AuthenticatedCases:
+    """Every case rows 13 through 17 agreed about, in record order.
+
+    This value authorises nothing. It is the state row 18 -- the geometry
+    derivation -- begins from, and it carries no cross-arm scalar of any kind
+    (invariant W13): the adapter presents two arms side by side and computes no
+    comparison between them.
+    """
+
+    cases: tuple[CaseSeries, ...]
+
+
+def require_complete_arms(record: ConnectionRecord, roles: AuthenticatedRoles) -> None:
+    """Run read-order step 13: the loaded set is exactly both arms of every case.
+
+    Args:
+        record: the authenticated record.
+        roles: the payload set step 12 loaded.
+
+    Raises:
+        VerificationSceneError: `X_ARMS_INCOMPLETE` when a case does not carry
+            exactly the two suites, when a named `(case, suite, role)` payload or a
+            `(case, suite)` checkpoint is missing from the loaded set, or when the
+            loaded set carries a key the record did not name.
+
+    **This is a post-condition across a module boundary, and that is the whole
+    reason it exists.** On the production path it cannot fail: `connection_record`
+    parses `cases[*].arms` as a mapping whose keys are exactly `SUITE_KEYS` and
+    `cases[*].arms[*].roles` as one whose keys are exactly `ROLE_NAMES`, so step 12
+    can only ever have loaded the complete set. That guarantee lives in a *different
+    module*, and a row that inherits it silently is a row that turns into a wrong
+    picture rather than a refusal if that module's parse rule is ever relaxed. So the
+    dependency is written down as a named refusal instead, and its test drives this
+    function directly with a deficient set -- the same in-memory validator seam
+    finding DD's repair used, and for the same reason: the state the guard refuses is
+    one the production path is designed never to produce.
+
+    The comparison is two-directional. A one-directional check would be satisfied by
+    a loaded set that carried extra keys, and "the adapter loaded something the
+    record did not name" is exactly the failure the section-4.2 allowlist exists to
+    make impossible.
+    """
+
+    expected_payloads = {
+        (case.case_id, suite, role)
+        for case in record.cases
+        for suite in SUITE_KEYS
+        for role in ROLE_NAMES
+    }
+    expected_checkpoints = {
+        (case.case_id, suite) for case in record.cases for suite in SUITE_KEYS
+    }
+    for case in record.cases:
+        present = tuple(sorted(case.arms))
+        if present != tuple(sorted(SUITE_KEYS)):
+            raise _refuse(
+                X_ARMS_INCOMPLETE,
+                f"case {case.case_id!r} names the arms {present} rather than "
+                f"exactly {tuple(sorted(SUITE_KEYS))}",
+            )
+    missing_payloads = sorted(expected_payloads - set(roles.payloads))
+    if missing_payloads:
+        raise _refuse(
+            X_ARMS_INCOMPLETE,
+            f"the loaded payload set is missing {missing_payloads}",
+        )
+    unnamed_payloads = sorted(set(roles.payloads) - expected_payloads)
+    if unnamed_payloads:
+        raise _refuse(
+            X_ARMS_INCOMPLETE,
+            f"the loaded payload set carries {unnamed_payloads}, which the record "
+            f"did not name",
+        )
+    missing_checkpoints = sorted(expected_checkpoints - set(roles.checkpoint_sha256))
+    if missing_checkpoints:
+        raise _refuse(
+            X_ARMS_INCOMPLETE,
+            f"the authenticated checkpoint set is missing {missing_checkpoints}",
+        )
+    unnamed_checkpoints = sorted(set(roles.checkpoint_sha256) - expected_checkpoints)
+    if unnamed_checkpoints:
+        raise _refuse(
+            X_ARMS_INCOMPLETE,
+            f"the authenticated checkpoint set carries {unnamed_checkpoints}, which "
+            f"the record did not name",
+        )
+
+
+def _label_scalars(payload: Mapping[str, np.ndarray]) -> dict[str, Any]:
+    """Return one `labels` payload's eight fields as Python scalars.
+
+    `numpy.ndarray.item()` is what converts each 0-d array to the Python type the
+    schema declares -- `str` for the two unicode fields, `int`, `float` and `bool`
+    for the rest -- so no per-field type table is written here and none can fall out
+    of step with `LabelFields`.
+    """
+
+    return {name: np.asarray(payload[name]).item() for name in LABEL_FIELDS}
+
+
+def require_pair_agreement(
+    record: ConnectionRecord, roles: AuthenticatedRoles
+) -> Mapping[str, LabelFields]:
+    """Run read-order step 14: the two arms are one pair.
+
+    Args:
+        record: the authenticated record.
+        roles: the payload set step 12 loaded.
+
+    Returns:
+        `case_id -> the agreed label struct`, built from the payloads rather than
+        from the record: the record names *which* runs a case is made of, and the
+        `labels` payload is where the body change itself is written.
+
+    Raises:
+        VerificationSceneError: `X_PAIR_MISMATCH` when any of the eight schema-D
+            label fields differs between the arms, or when the two arms do not
+            replay the same `task_reference`.
+
+    **What this row does not check, because an earlier one already did.** The pair
+    identity itself -- each arm's echoed `manifest_row.pair_id` equalling the case's
+    `pair_id`, and each arm's `suite` and `split` equalling the ones it is filed
+    under -- is settled at step 2 by `connection_record._parse_arm`, before any file
+    is opened. Restating it here would be a branch no input can reach.
+
+    **A deliberate consequence of the normative order.** Two arms whose plant
+    payloads carry different frame counts have unequal `task_reference` arrays, so
+    they refuse here as a pair mismatch rather than one row later as a timebase
+    mismatch. That is the right code for it: the two arms are not replaying one
+    commanded trajectory, which is what makes them a pair at all. Step 15 then binds
+    the agreed grid to everything else.
+    """
+
+    truths: dict[str, LabelFields] = {}
+    first_suite, second_suite = SUITE_KEYS
+    for case in record.cases:
+        scalars = {
+            suite: _label_scalars(roles.payloads[(case.case_id, suite, "labels")])
+            for suite in SUITE_KEYS
+        }
+        for name in LABEL_FIELDS:
+            first = scalars[first_suite][name]
+            second = scalars[second_suite][name]
+            if first != second:
+                raise _refuse(
+                    X_PAIR_MISMATCH,
+                    f"case {case.case_id!r} arms disagree about the body change: "
+                    f"labels.{name} is {first!r} in {first_suite} and {second!r} "
+                    f"in {second_suite}",
+                )
+        references = {
+            suite: np.asarray(
+                roles.payloads[(case.case_id, suite, "plant")]["task_reference"]
+            )
+            for suite in SUITE_KEYS
+        }
+        if not np.array_equal(references[first_suite], references[second_suite]):
+            raise _refuse(
+                X_PAIR_MISMATCH,
+                f"case {case.case_id!r} arms do not replay one commanded "
+                f"task_reference",
+            )
+        truths[case.case_id] = LabelFields(**scalars[first_suite])
+    return _frozen_mapping(truths)
+
+
+def bind_playback_timebase(
+    record: ConnectionRecord, roles: AuthenticatedRoles
+) -> Mapping[str, np.ndarray]:
+    """Run read-order step 15: one playback grid, and everything bound to it.
+
+    Args:
+        record: the authenticated record.
+        roles: the payload set step 12 loaded.
+
+    Returns:
+        `case_id -> the one playback grid` both arms agreed on.
+
+    Raises:
+        VerificationSceneError: `X_TIMEBASE_MISMATCH` when the two arms' `plant.t_s`
+            are not the same array, when a frame-bearing plant array's leading axis
+            is not the grid's length, or when a `controller_logs` axis is not.
+
+    **Only the grid's rank is checked here, and that is deliberate** (finding CN).
+    Whether it is uniform, monotonic, finite and long enough belongs to
+    `utils.metrics.j_5s`, which step 17 calls; a copy of those rules here would
+    pre-empt the delegation for exactly the shapes the delegation exists to cover,
+    and would go stale the moment that function's preconditions changed.
+
+    **`controller_t_s` is bound by shape and by nothing else.** It is never compared
+    to the playback grid: `assignment_generator._step_index` makes a label's onset
+    `onset_s / dt` while `cable_plant` stamps `t_s` *after* advancing, so a live
+    controller clock sits one control interval later than the plant's and a
+    comparison here would refuse faithful real data (finding CI).
+    """
+
+    playback: dict[str, np.ndarray] = {}
+    first_suite, second_suite = SUITE_KEYS
+    for case in record.cases:
+        grids = {
+            suite: np.asarray(roles.payloads[(case.case_id, suite, "plant")]["t_s"])
+            for suite in SUITE_KEYS
+        }
+        grid = grids[first_suite]
+        if grid.ndim != 1 or grid.shape[0] < 1:
+            raise _refuse(
+                X_TIMEBASE_MISMATCH,
+                f"case {case.case_id!r} plant.t_s must be a non-empty "
+                f"one-dimensional grid, got shape {grid.shape}",
+            )
+        if not np.array_equal(grid, grids[second_suite]):
+            raise _refuse(
+                X_TIMEBASE_MISMATCH,
+                f"case {case.case_id!r} arms do not share one playback grid",
+            )
+        frames = int(grid.shape[0])
+        for suite in SUITE_KEYS:
+            plant = roles.payloads[(case.case_id, suite, "plant")]
+            for name in PLANT_FRAME_ARRAYS:
+                array = np.asarray(plant[name])
+                if array.shape[0] != frames:
+                    raise _refuse(
+                        X_TIMEBASE_MISMATCH,
+                        f"case {case.case_id!r} arm {suite} plant.{name} carries "
+                        f"{array.shape[0]} frames against the playback grid's "
+                        f"{frames}",
+                    )
+            controller = roles.payloads[(case.case_id, suite, "controller_logs")]
+            step = np.asarray(controller["step"])
+            if not np.array_equal(step, np.arange(frames)):
+                raise _refuse(
+                    X_TIMEBASE_MISMATCH,
+                    f"case {case.case_id!r} arm {suite} controller_logs.step is not "
+                    f"the contiguous 0-based grid of length {frames}",
+                )
+            for name in ("t_s", "controller_mode"):
+                array = np.asarray(controller[name])
+                if array.shape != (frames,):
+                    raise _refuse(
+                        X_TIMEBASE_MISMATCH,
+                        f"case {case.case_id!r} arm {suite} controller_logs.{name} "
+                        f"has shape {array.shape} against the playback grid's "
+                        f"({frames},)",
+                    )
+        playback[case.case_id] = grid
+    return _frozen_mapping(playback)
+
+
+def resolve_decisions(
+    record: ConnectionRecord,
+    roles: AuthenticatedRoles,
+    playback: Mapping[str, np.ndarray],
+) -> Mapping[tuple[str, str], tuple[EstimatorOutput, ...]]:
+    """Run read-order step 16: carry the decisions, ordered and inside the extent.
+
+    Args:
+        record: the authenticated record.
+        roles: the payload set step 12 loaded.
+        playback: step 15's `case_id -> playback grid`.
+
+    Returns:
+        `(case_id, suite) -> the decisions in payload order`, as live
+        `utils.estimator.EstimatorOutput` values.
+
+    Raises:
+        VerificationSceneError: `X_DECISION_UNSUPPORTED` when a constructed decision
+            does not satisfy the live schema-D contract, when the carried axes stop
+            increasing, or when a decision falls outside the playback extent.
+
+    **The `validate()` call holds this module's construction, not the payload.**
+    Step 12 already drove every row of the payload through the same struct's
+    `validate` inside `utils.role_contract`, so a bad *payload* cannot reach here.
+    What can reach here is a bad *transcription* -- a column read at the wrong index,
+    a whole array passed where one row belongs -- and that is a defect in this
+    function that no earlier row can see.
+
+    **Containment is compared against the extent with no tolerance.** The rule is
+    that a decision happened while the replay was running, not that it landed on a
+    control sample: an estimator writes its own clock and is not obliged to agree
+    with the plant's grid to the last bit. A decision after the last playback sample
+    has nothing to be drawn against, and refusing it is the fail-closed reading.
+    """
+
+    resolved: dict[tuple[str, str], tuple[EstimatorOutput, ...]] = {}
+    for case in record.cases:
+        grid = playback[case.case_id]
+        first_time = float(grid[0])
+        last_time = float(grid[-1])
+        for suite in SUITE_KEYS:
+            payload = roles.payloads[(case.case_id, suite, "estimator_outputs")]
+            count = int(np.asarray(payload["step"]).shape[0])
+            decisions: list[EstimatorOutput] = []
+            previous_step = -1
+            previous_time = -math.inf
+            for index in range(count):
+                decision = EstimatorOutput(
+                    step=int(payload["step"][index]),
+                    decision_time_s=float(payload["decision_time_s"][index]),
+                    p_class=np.asarray(payload["p_class"][index]),
+                    unknown_score=float(payload["unknown_score"][index]),
+                    abstain_decision=bool(payload["abstain_decision"][index]),
+                    location_out=int(payload["location_out"][index]),
+                    severity_out=float(payload["severity_out"][index]),
+                    severity_uncertainty=float(payload["severity_uncertainty"][index]),
+                    detection_time_s=float(payload["detection_time_s"][index]),
+                )
+                try:
+                    decision.validate()
+                except ValueError as exc:
+                    raise _refuse(
+                        X_DECISION_UNSUPPORTED,
+                        f"case {case.case_id!r} arm {suite} decision {index} as "
+                        f"this adapter carried it violates the schema-D contract: "
+                        f"{exc}",
+                    ) from exc
+                if (
+                    decision.step <= previous_step
+                    or decision.decision_time_s <= previous_time
+                ):
+                    raise _refuse(
+                        X_DECISION_UNSUPPORTED,
+                        f"case {case.case_id!r} arm {suite} carried decision axes "
+                        f"that stopped increasing at index {index}",
+                    )
+                if not first_time <= decision.decision_time_s <= last_time:
+                    raise _refuse(
+                        X_DECISION_UNSUPPORTED,
+                        f"case {case.case_id!r} arm {suite} decision {index} at "
+                        f"t={decision.decision_time_s} s lies outside the playback "
+                        f"extent [{first_time}, {last_time}] s",
+                    )
+                previous_step = decision.step
+                previous_time = decision.decision_time_s
+                decisions.append(decision)
+            resolved[(case.case_id, suite)] = tuple(decisions)
+    return _frozen_mapping(resolved)
+
+
+def require_tracking_window(
+    record: ConnectionRecord,
+    roles: AuthenticatedRoles,
+    playback: Mapping[str, np.ndarray],
+    truths: Mapping[str, LabelFields],
+) -> None:
+    """Run read-order step 17: establish the window by **calling** `j_5s`.
+
+    Args:
+        record: the authenticated record, whose `analysis_window_s` is the window.
+        roles: the payload set step 12 loaded.
+        playback: step 15's `case_id -> playback grid`.
+        truths: step 14's `case_id -> agreed label struct`, whose `onset_time_s` is
+            the onset the window opens at.
+
+    Raises:
+        VerificationSceneError: `X_WINDOW_UNSUPPORTED` carrying whatever
+            `utils.metrics.j_5s` refused.
+
+    The metric is called and its refusal re-raised; its rules are not copied. That is
+    the same shape `verification_scene._validate_tracking_window` already has, and it
+    is what finding CN bought: a later change to that function's preconditions cannot
+    leave a stale duplicate of them behind in this module.
+
+    **The returned integral is deliberately discarded.** Invariant W13 says the
+    adapter carries no cross-arm scalar; computing `J` for both arms and keeping it
+    would be the beginning of one. What this row establishes is that the window
+    *exists* over this grid at this onset -- that the onset sample is present and the
+    window is not truncated -- so the surface can draw the tracking block honestly.
+
+    The onset is taken from the agreed label struct and never from `onset_index`.
+    `assignment_generator._step_index` makes the label's onset `onset_s / dt` while
+    `cable_plant` stamps `t_s` after advancing, so in real data
+    `plant.t_s[onset_index]` is one control interval later than `onset_time_s`, and
+    indexing the grid by it would move the window (finding CI).
+    """
+
+    window_s = float(record.analysis_window_s)
+    for case in record.cases:
+        grid = playback[case.case_id]
+        onset_time_s = float(truths[case.case_id].onset_time_s)
+        for suite in SUITE_KEYS:
+            plant = roles.payloads[(case.case_id, suite, "plant")]
+            try:
+                j_5s(
+                    grid,
+                    plant["task_reference"],
+                    plant["true_task_output"],
+                    onset_time_s,
+                    window_s=window_s,
+                )
+            except ValueError as exc:
+                raise _refuse(
+                    X_WINDOW_UNSUPPORTED,
+                    f"case {case.case_id!r} arm {suite} is not a valid "
+                    f"utils.metrics.j_5s call at onset {onset_time_s} s over a "
+                    f"{window_s} s window: {exc}",
+                ) from exc
+
+
+def resolve_cases(connection: AuthenticatedConnection) -> AuthenticatedCases:
+    """Run read-order rows 13 through 17 in their normative order.
+
+    Args:
+        connection: everything rows 1 through 12 established.
+
+    Returns:
+        The `AuthenticatedCases` row 18 begins from.
+
+    Raises:
+        VerificationSceneError: carrying the code the failing row of section 4.1
+            names -- `X_ARMS_INCOMPLETE`, `X_PAIR_MISMATCH`, `X_TIMEBASE_MISMATCH`,
+            `X_DECISION_UNSUPPORTED` or `X_WINDOW_UNSUPPORTED`.
+
+    The order is the contract, exactly as it is for rows 1 through 12, and for the
+    same reason: an order a caller can reassemble is not an order. Nothing here opens
+    a file. Every fact it reads was authenticated before it arrived, which is why
+    these five rows can be pure functions over the loaded set.
+    """
+
+    record = connection.record
+    roles = connection.roles
+    require_complete_arms(record, roles)
+    truths = require_pair_agreement(record, roles)
+    playback = bind_playback_timebase(record, roles)
+    decisions = resolve_decisions(record, roles, playback)
+    require_tracking_window(record, roles, playback, truths)
+
+    window_s = float(record.analysis_window_s)
+    cases: list[CaseSeries] = []
+    for case in record.cases:
+        arms: dict[str, ArmSeries] = {}
+        for suite in SUITE_KEYS:
+            plant = roles.payloads[(case.case_id, suite, "plant")]
+            controller = roles.payloads[(case.case_id, suite, "controller_logs")]
+            arms[suite] = ArmSeries(
+                suite=suite,
+                run_id=case.arms[suite].run_id,
+                q_true=plant["q_true"],
+                deform_coords=plant["deform_coords"],
+                task_reference=plant["task_reference"],
+                true_task_output=plant["true_task_output"],
+                decisions=decisions[(case.case_id, suite)],
+                controller_step=controller["step"],
+                controller_t_s=controller["t_s"],
+                controller_mode=tuple(
+                    str(mode) for mode in controller["controller_mode"]
+                ),
+            )
+        cases.append(
+            CaseSeries(
+                case_id=case.case_id,
+                display_label=case.display_label,
+                pair_id=case.pair_id,
+                playback_t_s=playback[case.case_id],
+                truth=truths[case.case_id],
+                window_s=window_s,
+                arms=_frozen_mapping(arms),
+            )
+        )
+    return AuthenticatedCases(cases=tuple(cases))

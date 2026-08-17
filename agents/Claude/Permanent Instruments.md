@@ -3835,6 +3835,47 @@ correction applied.)*
   that instrument is not available in this round, say which round owns it.
 
 
+260. **[S148] READ THE OWNER OF THE FACT AT SOURCE *BEFORE* WRITING THE GUARD - OR HALF THE ROW
+  YOU WRITE WILL BE UNREACHABLE.**  Read-order rows 13-17 as the design words them include "at
+  least one decision", "decision axes strictly increasing", "controller step is the contiguous
+  0-based grid" and the whole of the label struct's value contract.  I read
+  `utils.role_contract._semantic_role_checks` at source before writing a line, and EVERY ONE OF
+  THOSE IS ALREADY ENFORCED BY STEP 12, which runs each payload through that closed utility.
+  Writing them again would have produced guards no input could reach - the exact defect shape 231
+  and 242 name, and the one S147's own unreachable check had just cost a rewrite.  *** THE RULE
+  THAT SURVIVED, AND IT IS REUSABLE FOR ROWS 18-21: A ROW EARNS ITS PLACE ONLY BY THE FACTS A
+  SINGLE OBJECT CANNOT CARRY - the RELATIONS BETWEEN objects.  Everything else belongs to whoever
+  already owns it, and the module docstring names those rules so a later reader does not re-add
+  them. ***  The one deliberate exception is the shape to copy: row 16 calls the schema-D
+  `validate()` on the values THIS MODULE CONSTRUCTS, so what it holds is the adapter's own
+  transcription - a column read at the wrong index - which no earlier row can see.  A guard over
+  your own construction is not a duplicate of a guard over the input.
+
+261. **[S148] A POST-CONDITION ACROSS A MODULE BOUNDARY IS A LEGITIMATE ROW, AND THE HONEST THING
+  IS TO SAY SO RATHER THAN FAKE ITS REACHABILITY.**  Row 13 requires the loaded set to cover both
+  arms of every case.  It cannot fail in production: `connection_record` parses the arms block as
+  a mapping keyed exactly by `SUITE_KEYS`, so step 12 can only ever have loaded the complete set.
+  That guarantee lives in a DIFFERENT MODULE, and a row that inherits it silently becomes a wrong
+  picture rather than a refusal if that module's parse rule is ever relaxed.  *** SO THE ROW STAYS,
+  ITS TESTS DRIVE THE FUNCTION DIRECTLY THROUGH THE IN-MEMORY SEAM (finding DD's repair, lesson
+  218), AND ONE FURTHER TEST DRIVES THE ONE-ARMED RECORD END TO END TO RECORD THAT THE EARLIER
+  REFUSAL IS REAL TODAY. ***  The wrong moves are both available and both worse: delete the row
+  and inherit the dependency invisibly, or invent a production path that "reaches" it.
+
+262. **[S148] A BOUNDARY YOUR FIXTURE CANNOT REACH LOOKS COVERED, AND A DECLARED CONSTANT NOTHING
+  HAS CONSUMED HAS NEVER BEEN CHECKED.**  Two of the same shape, found in one session.  (a) Row
+  16's lower bound - a decision before the first playback sample - is UNREACHABLE on the contract
+  fixture, whose grid starts at 0.000 s, because any time below that is negative and the schema-D
+  contract refuses it one branch earlier; the test had to shift the grid to the LIVE shape (a real
+  plant grid starts at one control interval, since `cable_plant` stamps `t_s` AFTER advancing)
+  before it measured anything.  (b) The test harness had declared `analysis_window_s = 5.0` since
+  the harness was written, and it was WRONG THE WHOLE TIME - the fixture records 0.062 s of data,
+  so the frozen 5 s headline is a window the grid cannot close.  Nothing noticed until row 17, the
+  first row that actually CALLS the metric, was built.  *** THE FIRST ROW TO CONSUME A DECLARED
+  VALUE IS WHERE THE DECLARATION GETS CHECKED, AND UNTIL THEN THE VALUE IS DECORATION.  When you
+  build that row, re-derive every constant it consumes from the object it is about. ***
+
+
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 
 ```text

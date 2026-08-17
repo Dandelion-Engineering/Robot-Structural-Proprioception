@@ -41,10 +41,11 @@ import json
 import shutil
 import sys
 from contextlib import contextmanager
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from pathlib import Path
-from typing import Any, Callable, Mapping
+from typing import Any, Callable, Mapping, Sequence
 
+import numpy as np
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
@@ -54,23 +55,33 @@ from utils.config_contract import expected_config_hash, load_config  # noqa: E40
 from utils import connection_adapter  # noqa: E402
 from utils.connection_adapter import (  # noqa: E402
     AUDIT_NAMES,
+    LABEL_FIELDS,
     MANIFEST_AUDIT_KEY,
     MANIFEST_CENSUS_FIELDS,
     MANIFEST_NAME,
     MAX_FIELD_PATH_INDEX_DIGITS,
+    PLANT_FRAME_ARRAYS,
     ROLE_INDEX_NAME,
     SUITE_QUALIFIED_ROLES,
+    ArmSeries,
+    AuthenticatedCases,
     AuthenticatedConnection,
     authenticate_config,
     authenticate_connection,
     authenticate_dataset,
     authenticate_roles,
     authenticate_sources,
+    bind_playback_timebase,
     canonical_text_digest,
     external_bytes_digest,
     external_digest,
     manifest_census,
     require_authority_config_policy,
+    require_complete_arms,
+    require_pair_agreement,
+    require_tracking_window,
+    resolve_cases,
+    resolve_decisions,
     role_root_for,
     strict_json_document,
     tracked_text_digest,
@@ -88,13 +99,20 @@ from utils.storage_contract import read_identity_manifest  # noqa: E402
 from utils.verification_scene import (  # noqa: E402
     DEVELOPMENT_ONLY,
     FINAL,
+    SUITE_KEYS,
+    LabelFields,
     VerificationSceneError,
+    X_ARMS_INCOMPLETE,
     X_CONNECTION_UNAUTHORIZED,
+    X_DECISION_UNSUPPORTED,
     X_IDENTITY_MISMATCH,
+    X_PAIR_MISMATCH,
     X_PROVENANCE_UNRESOLVED,
     X_ROLE_ABSENT,
     X_ROLE_UNAUTHORIZED,
     X_SPLIT_FORBIDDEN,
+    X_TIMEBASE_MISMATCH,
+    X_WINDOW_UNSUPPORTED,
 )
 
 PACKET_ROOT = Path(__file__).resolve().parents[1]
@@ -128,6 +146,18 @@ MAXIMUM_DEVIATION_M = 0.0011
 #: than derived from the builder's own guard, because a test whose input is a function
 #: of the constant it exercises holds the relationship and not the value.
 FIXTURE_N_STEPS = 32
+
+#: The record's declared `analysis_window_s` for this fixture, in seconds. The
+#: contract fixture runs 32 control steps at the draft config's 500 Hz, so its
+#: playback grid spans 0.000 s to 0.062 s and its label onset is at 0.020 s. A window
+#: has to close on a control sample at or before the last one, which bounds it at
+#: 0.042 s; 0.040 s is the largest round value under that bound and it closes exactly
+#: on the sample at 0.060 s. It is a *fixture* window and it manufactures no approved
+#: number: `analysis_window_s` is shape-gated by the record contract and nothing in
+#: this lane selects an analysis window. The frozen 5 s headline is what
+#: `test_row17_refuses_a_window_this_grid_cannot_close` drives, because this grid
+#: cannot close it.
+ANALYSIS_WINDOW_S = 0.04
 
 
 # --------------------------------------------------------------------------- #
@@ -331,7 +361,7 @@ class Harness:
         """Return the complete section-3.2 record for this harness."""
 
         return {
-            "analysis_window_s": 5.0,
+            "analysis_window_s": ANALYSIS_WINDOW_S,
             "authority": DEVELOPMENT_ONLY,
             "cases": [
                 {
@@ -2957,3 +2987,769 @@ def test_the_two_digest_domains_agree_with_the_functions_that_own_them(
     path.write_bytes(raw)
     assert canonical_text_digest(raw) == canonical_text_sha256(path)
     assert external_bytes_digest(raw) == file_sha256(path)
+
+
+# --------------------------------------------------------------------------- #
+# Read-order rows 13-17 -- the cross-arm and cross-role facts.
+#
+# Two kinds of test live below and the difference between them is deliberate.
+#
+# *Production-path* tests drive `authenticate_connection` over real bytes and then
+# `resolve_cases`, so what they exercise is the whole chain. They are the ones that
+# prove a row is reachable from the outside.
+#
+# *Seam* tests call one row's function directly with a value the production path is
+# designed never to produce -- a loaded set with a payload missing, an arm whose
+# labels disagree. That is the in-memory validator seam finding DD's repair
+# introduced, and it is the only instrument that can drive a post-condition. A file
+# holding only seam tests would prove nothing about the adapter, which is why every
+# row that *can* be reached end to end has at least one test that reaches it that
+# way: row 14 through a rewritten labels payload, row 15 through a rewritten
+# controller payload, row 17 through the record's own declared window.
+# --------------------------------------------------------------------------- #
+def _resolve(arguments: Mapping[str, Any]) -> AuthenticatedCases:
+    """Drive rows 1 through 17 end to end."""
+
+    return resolve_cases(authenticate_connection(**arguments))
+
+
+def _payload_key(case_id: str, suite: str, role: str) -> tuple[str, str, str]:
+    """Return one loaded-payload key."""
+
+    return (case_id, suite, role)
+
+
+def _edited(payload: Mapping[str, np.ndarray], **changes: np.ndarray) -> dict:
+    """Return a mutable copy of one loaded payload with some arrays replaced."""
+
+    edited = dict(payload)
+    edited.update(changes)
+    return edited
+
+
+def _with_payload(
+    connection: AuthenticatedConnection,
+    key: tuple[str, str, str],
+    payload: Mapping[str, np.ndarray],
+) -> AuthenticatedConnection:
+    """Return the same connection with exactly one loaded payload replaced."""
+
+    payloads = dict(connection.roles.payloads)
+    payloads[key] = payload
+    return replace(connection, roles=replace(connection.roles, payloads=payloads))
+
+
+def _reindex(index_path: Path, run_id: str, digest: str) -> None:
+    """Rewrite one role index row's `sha256` in place, preserving every other byte."""
+
+    text = index_path.read_text(encoding="utf-8")
+    lines = text.splitlines(keepends=True)
+    columns = lines[0].rstrip("\r\n").split(",")
+    digest_column = columns.index("sha256")
+    rewritten = [lines[0]]
+    for line in lines[1:]:
+        body = line.rstrip("\r\n")
+        terminator = line[len(body):]
+        fields = body.split(",")
+        if fields[0] == run_id:
+            fields[digest_column] = digest
+            line = ",".join(fields) + terminator
+        rewritten.append(line)
+    index_path.write_text("".join(rewritten), encoding="utf-8", newline="")
+
+
+@contextmanager
+def _rewritten_payload(
+    harness: Harness,
+    role: str,
+    suite: str,
+    run_id: str,
+    payload: Mapping[str, np.ndarray],
+):
+    """Rewrite one payload on disk, re-index it, reinstall the record, then restore.
+
+    This is what makes a row-14 or row-15 refusal a statement about the *production*
+    path rather than about a value handed straight to one function. Rewriting a
+    payload moves three identities -- the payload digest, its index row and the
+    record's echo of both -- and all three are regenerated here from the files
+    themselves, so the chain still authenticates and the refusal comes from the row
+    under test rather than from step 8 or step 11.
+    """
+
+    directory = role_root_for(harness.role_root, role, suite)
+    payload_path = directory / f"{run_id}.npz"
+    index_path = directory / ROLE_INDEX_NAME
+    saved_payload = payload_path.read_bytes()
+    saved_index = index_path.read_bytes()
+    try:
+        buffer = io.BytesIO()
+        np.savez(buffer, **{name: np.asarray(value) for name, value in payload.items()})
+        payload_path.write_bytes(buffer.getvalue())
+        _reindex(index_path, run_id, external_digest(payload_path))
+        yield harness.rewrite_record(harness._record_document())
+    finally:
+        payload_path.write_bytes(saved_payload)
+        index_path.write_bytes(saved_index)
+
+
+# -- the accept side, which is what makes every refusal below mean something --- #
+def test_rows13_to_17_accept_the_complete_fixture(harness: Harness) -> None:
+    """The whole chain, rows 1 through 17, over the contract fixture."""
+
+    cases = _resolve(harness.arguments())
+    assert isinstance(cases, AuthenticatedCases)
+    assert len(cases.cases) == 1
+    case = cases.cases[0]
+    assert case.case_id == CASE_ID
+    assert case.pair_id == PAIR_ID
+    assert case.display_label == "Fixture development pair"
+    assert tuple(sorted(case.arms)) == tuple(sorted(SUITE_KEYS))
+    assert case.window_s == ANALYSIS_WINDOW_S
+    for suite in SUITE_KEYS:
+        arm = case.arms[suite]
+        assert isinstance(arm, ArmSeries)
+        assert arm.suite == suite
+        assert arm.run_id == f"{PAIR_ID}_{suite}"
+
+
+def test_the_resolved_series_are_the_authenticated_arrays_themselves(
+    harness: Harness,
+) -> None:
+    """No copy is taken, so nothing downstream can edit an authenticated fact."""
+
+    connection = harness.authenticate()
+    cases = resolve_cases(connection)
+    case = cases.cases[0]
+    for suite in SUITE_KEYS:
+        plant = connection.roles.payloads[_payload_key(CASE_ID, suite, "plant")]
+        controller = connection.roles.payloads[
+            _payload_key(CASE_ID, suite, "controller_logs")
+        ]
+        arm = case.arms[suite]
+        assert arm.q_true is plant["q_true"]
+        assert arm.deform_coords is plant["deform_coords"]
+        assert arm.task_reference is plant["task_reference"]
+        assert arm.true_task_output is plant["true_task_output"]
+        assert arm.controller_step is controller["step"]
+        assert arm.controller_t_s is controller["t_s"]
+        for array in (arm.q_true, arm.deform_coords, arm.controller_step):
+            assert array.flags.writeable is False
+
+
+def test_the_resolved_playback_grid_is_the_plants_own_grid(harness: Harness) -> None:
+    """The scene's one clock is `plant.t_s`, not a grid this module reconstructed."""
+
+    connection = harness.authenticate()
+    case = resolve_cases(connection).cases[0]
+    for suite in SUITE_KEYS:
+        plant = connection.roles.payloads[_payload_key(CASE_ID, suite, "plant")]
+        assert np.array_equal(case.playback_t_s, plant["t_s"])
+    assert case.playback_t_s.shape == (FIXTURE_N_STEPS,)
+
+
+def test_the_resolved_truth_is_the_labels_payload_field_by_field(
+    harness: Harness,
+) -> None:
+    """The agreed body change is read out of the payload, not out of the record."""
+
+    connection = harness.authenticate()
+    case = resolve_cases(connection).cases[0]
+    labels = connection.roles.payloads[_payload_key(CASE_ID, "C1", "labels")]
+    assert isinstance(case.truth, LabelFields)
+    for name in LABEL_FIELDS:
+        assert getattr(case.truth, name) == np.asarray(labels[name]).item()
+
+
+def test_the_resolved_decisions_are_live_schema_d_values(harness: Harness) -> None:
+    """Decisions are `utils.estimator.EstimatorOutput`s, not a local mirror."""
+
+    from utils.estimator import EstimatorOutput
+
+    connection = harness.authenticate()
+    case = resolve_cases(connection).cases[0]
+    for suite in SUITE_KEYS:
+        payload = connection.roles.payloads[
+            _payload_key(CASE_ID, suite, "estimator_outputs")
+        ]
+        decisions = case.arms[suite].decisions
+        assert len(decisions) == int(np.asarray(payload["step"]).shape[0])
+        for index, decision in enumerate(decisions):
+            assert isinstance(decision, EstimatorOutput)
+            assert decision.step == int(payload["step"][index])
+            assert decision.decision_time_s == float(payload["decision_time_s"][index])
+            assert np.array_equal(decision.p_class, payload["p_class"][index])
+
+
+def test_the_resolved_controller_mode_is_bound_to_the_step_grid(
+    harness: Harness,
+) -> None:
+    """Every frame carries a non-empty mode string, as the surface will draw it."""
+
+    case = _resolve(harness.arguments()).cases[0]
+    for suite in SUITE_KEYS:
+        arm = case.arms[suite]
+        assert len(arm.controller_mode) == FIXTURE_N_STEPS
+        assert all(isinstance(mode, str) and mode for mode in arm.controller_mode)
+
+
+# -- row 13 ------------------------------------------------------------------ #
+def test_row13_refuses_a_loaded_set_missing_one_payload(harness: Harness) -> None:
+    """A named arm role that never arrived is an incomplete arm, not a silent gap."""
+
+    connection = harness.authenticate()
+    payloads = dict(connection.roles.payloads)
+    del payloads[_payload_key(CASE_ID, "S", "plant")]
+    deficient = replace(connection.roles, payloads=payloads)
+    error = _refusal(lambda: require_complete_arms(connection.record, deficient))
+    assert error.code == X_ARMS_INCOMPLETE
+    assert "is missing" in str(error)
+    assert "'S', 'plant'" in str(error)
+
+
+def test_row13_refuses_a_loaded_set_carrying_a_payload_no_case_named(
+    harness: Harness,
+) -> None:
+    """The comparison is two-directional; an unnamed extra is the allowlist failure."""
+
+    connection = harness.authenticate()
+    payloads = dict(connection.roles.payloads)
+    payloads[("other-case", "C1", "plant")] = payloads[
+        _payload_key(CASE_ID, "C1", "plant")
+    ]
+    widened = replace(connection.roles, payloads=payloads)
+    error = _refusal(lambda: require_complete_arms(connection.record, widened))
+    assert error.code == X_ARMS_INCOMPLETE
+    assert "which the record did not name" in str(error)
+
+
+def test_row13_refuses_a_missing_checkpoint(harness: Harness) -> None:
+    """Both arms' checkpoints are part of what makes a case complete."""
+
+    connection = harness.authenticate()
+    checkpoints = dict(connection.roles.checkpoint_sha256)
+    del checkpoints[(CASE_ID, "C1")]
+    deficient = replace(connection.roles, checkpoint_sha256=checkpoints)
+    error = _refusal(lambda: require_complete_arms(connection.record, deficient))
+    assert error.code == X_ARMS_INCOMPLETE
+    assert "checkpoint set is missing" in str(error)
+
+
+def test_row13_refuses_a_checkpoint_no_case_named(harness: Harness) -> None:
+    """The checkpoint comparison is two-directional for the same reason."""
+
+    connection = harness.authenticate()
+    checkpoints = dict(connection.roles.checkpoint_sha256)
+    checkpoints[("other-case", "S")] = checkpoints[(CASE_ID, "S")]
+    widened = replace(connection.roles, checkpoint_sha256=checkpoints)
+    error = _refusal(lambda: require_complete_arms(connection.record, widened))
+    assert error.code == X_ARMS_INCOMPLETE
+    assert "checkpoint set carries" in str(error)
+
+
+def test_row13_refuses_a_case_that_names_one_arm(harness: Harness) -> None:
+    """A one-armed case is refused before any payload key is compared."""
+
+    connection = harness.authenticate()
+    case = connection.record.cases[0]
+    lone = replace(case, arms={"C1": case.arms["C1"]})
+    record = replace(connection.record, cases=(lone,))
+    error = _refusal(lambda: require_complete_arms(record, connection.roles))
+    assert error.code == X_ARMS_INCOMPLETE
+    assert "names the arms ('C1',)" in str(error)
+
+
+def test_row13_is_a_post_condition_the_production_path_cannot_reach(
+    harness: Harness, record: dict[str, Any]
+) -> None:
+    """The reason row 13 has only seam tests, measured rather than asserted.
+
+    A record naming one arm never reaches step 12 at all: `connection_record` parses
+    `cases[*].arms` as a mapping whose keys are exactly the two suites, so the record
+    is refused at step 2. Row 13 exists to make that other module's guarantee a named
+    refusal here instead of an inherited assumption -- and this test is what records
+    that the guarantee is real today.
+    """
+
+    del record["cases"][0]["arms"]["S"]
+    error = _drive(harness, record)
+    assert error.code == X_CONNECTION_UNAUTHORIZED
+
+
+# -- row 14 ------------------------------------------------------------------ #
+@pytest.mark.parametrize("field_name", LABEL_FIELDS)
+def test_row14_refuses_arms_that_disagree_about_any_label_field(
+    harness: Harness, field_name: str
+) -> None:
+    """All eight schema-D fields are compared, one case per field."""
+
+    connection = harness.authenticate()
+    key = _payload_key(CASE_ID, "S", "labels")
+    original = np.asarray(connection.roles.payloads[key][field_name])
+    if original.dtype.kind == "U":
+        changed = np.array("disagreeing-fixture-value", dtype=original.dtype.kind)
+    elif original.dtype.kind == "b":
+        changed = np.array(not bool(original.item()))
+    else:
+        changed = np.asarray(original.item() + 1, dtype=original.dtype)
+    edited = _with_payload(
+        connection, key, _edited(connection.roles.payloads[key], **{field_name: changed})
+    )
+    error = _refusal(
+        lambda: require_pair_agreement(edited.record, edited.roles)
+    )
+    assert error.code == X_PAIR_MISMATCH
+    assert f"labels.{field_name} is " in str(error)
+
+
+def test_row14_refuses_arms_that_do_not_replay_one_task_reference(
+    harness: Harness,
+) -> None:
+    """Two arms replaying different commanded trajectories are not one pair."""
+
+    connection = harness.authenticate()
+    key = _payload_key(CASE_ID, "S", "plant")
+    reference = np.array(connection.roles.payloads[key]["task_reference"], copy=True)
+    reference[0, 0] += 1.0
+    edited = _with_payload(
+        connection, key, _edited(connection.roles.payloads[key], task_reference=reference)
+    )
+    error = _refusal(lambda: require_pair_agreement(edited.record, edited.roles))
+    assert error.code == X_PAIR_MISMATCH
+    assert "one commanded task_reference" in str(error)
+
+
+def test_row14_refuses_a_rewritten_labels_payload_on_the_production_path(
+    harness: Harness,
+) -> None:
+    """The same refusal, driven from bytes through the whole authenticated chain."""
+
+    connection = harness.authenticate()
+    key = _payload_key(CASE_ID, "S", "labels")
+    payload = dict(connection.roles.payloads[key])
+    payload["severity"] = np.asarray(0.25, dtype=np.float64)
+    run_id = f"{PAIR_ID}_S"
+    with _rewritten_payload(harness, "labels", "S", run_id, payload) as arguments:
+        error = _refusal(lambda: _resolve(arguments))
+    assert error.code == X_PAIR_MISMATCH
+    assert "labels.severity is " in str(error)
+
+
+# -- row 15 ------------------------------------------------------------------ #
+def test_row15_refuses_arms_that_do_not_share_one_playback_grid(
+    harness: Harness,
+) -> None:
+    """One case has one clock, and both arms have to be on it."""
+
+    connection = harness.authenticate()
+    key = _payload_key(CASE_ID, "S", "plant")
+    grid = np.array(connection.roles.payloads[key]["t_s"], copy=True) + 1.0
+    edited = _with_payload(connection, key, _edited(connection.roles.payloads[key], t_s=grid))
+    error = _refusal(lambda: bind_playback_timebase(edited.record, edited.roles))
+    assert error.code == X_TIMEBASE_MISMATCH
+    assert "do not share one playback grid" in str(error)
+
+
+def test_row15_refuses_a_plant_grid_that_is_not_one_dimensional(
+    harness: Harness,
+) -> None:
+    """Only the grid's rank is checked here; every property *of* it is `j_5s`'s."""
+
+    connection = harness.authenticate()
+    key = _payload_key(CASE_ID, "C1", "plant")
+    grid = np.asarray(connection.roles.payloads[key]["t_s"]).reshape(-1, 1)
+    edited = _with_payload(connection, key, _edited(connection.roles.payloads[key], t_s=grid))
+    error = _refusal(lambda: bind_playback_timebase(edited.record, edited.roles))
+    assert error.code == X_TIMEBASE_MISMATCH
+    assert "non-empty one-dimensional grid" in str(error)
+
+
+@pytest.mark.parametrize("array_name", PLANT_FRAME_ARRAYS)
+def test_row15_binds_every_frame_bearing_plant_array_to_the_grid(
+    harness: Harness, array_name: str
+) -> None:
+    """One case per frame-bearing array rows 17 to 21 consume."""
+
+    connection = harness.authenticate()
+    key = _payload_key(CASE_ID, "C1", "plant")
+    payload = connection.roles.payloads[key]
+    shortened = np.asarray(payload[array_name])[:-1]
+    edited = _with_payload(connection, key, _edited(payload, **{array_name: shortened}))
+    error = _refusal(lambda: bind_playback_timebase(edited.record, edited.roles))
+    assert error.code == X_TIMEBASE_MISMATCH
+    assert f"plant.{array_name} carries {FIXTURE_N_STEPS - 1} frames" in str(error)
+
+
+def test_row15_refuses_a_controller_step_grid_of_the_wrong_length(
+    harness: Harness,
+) -> None:
+    """The contiguity rule is `role_contract`'s; the *length* is this row's."""
+
+    connection = harness.authenticate()
+    key = _payload_key(CASE_ID, "S", "controller_logs")
+    payload = connection.roles.payloads[key]
+    edited_arrays = {
+        name: np.asarray(value)[:-1] for name, value in payload.items()
+    }
+    edited_arrays["step"] = np.arange(FIXTURE_N_STEPS - 1, dtype=np.int64)
+    edited = _with_payload(connection, key, edited_arrays)
+    error = _refusal(lambda: bind_playback_timebase(edited.record, edited.roles))
+    assert error.code == X_TIMEBASE_MISMATCH
+    assert "controller_logs.step is not the contiguous 0-based grid" in str(error)
+
+
+@pytest.mark.parametrize("array_name", ["t_s", "controller_mode"])
+def test_row15_binds_the_controller_axes_to_the_grid(
+    harness: Harness, array_name: str
+) -> None:
+    """A controller axis of the wrong length cannot be drawn against the playback."""
+
+    connection = harness.authenticate()
+    key = _payload_key(CASE_ID, "S", "controller_logs")
+    payload = connection.roles.payloads[key]
+    shortened = np.asarray(payload[array_name])[:-1]
+    edited = _with_payload(connection, key, _edited(payload, **{array_name: shortened}))
+    error = _refusal(lambda: bind_playback_timebase(edited.record, edited.roles))
+    assert error.code == X_TIMEBASE_MISMATCH
+    assert f"controller_logs.{array_name} has shape" in str(error)
+
+
+def test_row15_refuses_a_rewritten_controller_payload_on_the_production_path(
+    harness: Harness,
+) -> None:
+    """The timebase refusal, driven from bytes.
+
+    `controller_logs` is the role a shortened payload can be written to without also
+    tripping row 14: nothing in the controller role is compared between arms one row
+    earlier, so this refusal is unambiguously step 15's.
+    """
+
+    connection = harness.authenticate()
+    key = _payload_key(CASE_ID, "S", "controller_logs")
+    payload = {
+        name: np.asarray(value)[:-1]
+        for name, value in connection.roles.payloads[key].items()
+    }
+    payload["step"] = np.arange(FIXTURE_N_STEPS - 1, dtype=np.int64)
+    run_id = f"{PAIR_ID}_S"
+    with _rewritten_payload(
+        harness, "controller_logs", "S", run_id, payload
+    ) as arguments:
+        error = _refusal(lambda: _resolve(arguments))
+    assert error.code == X_TIMEBASE_MISMATCH
+    assert "controller_logs.step is not the contiguous 0-based grid" in str(error)
+
+
+def test_row15_never_compares_the_controller_clock_to_the_playback_grid(
+    harness: Harness,
+) -> None:
+    """Finding CI's accept side: a shifted controller clock is faithful real data.
+
+    `assignment_generator._step_index` makes a label's onset `onset_s / dt` while
+    `cable_plant` stamps `t_s` after advancing, so a live controller clock runs one
+    control interval ahead of the plant's. Binding the two would refuse exactly that
+    data, so this test requires the offset grid to be **accepted**.
+    """
+
+    connection = harness.authenticate()
+    key = _payload_key(CASE_ID, "S", "controller_logs")
+    payload = connection.roles.payloads[key]
+    offset = np.asarray(payload["t_s"]) + 0.002
+    edited = _with_payload(connection, key, _edited(payload, t_s=offset))
+    playback = bind_playback_timebase(edited.record, edited.roles)
+    assert np.array_equal(
+        playback[CASE_ID],
+        np.asarray(connection.roles.payloads[_payload_key(CASE_ID, "C1", "plant")]["t_s"]),
+    )
+
+
+# -- row 16 ------------------------------------------------------------------ #
+def _decision_payload(
+    payload: Mapping[str, np.ndarray], steps: Sequence[int], times: Sequence[float]
+) -> dict:
+    """Return an `estimator_outputs` payload carrying the given decision axes."""
+
+    count = len(steps)
+    built = {
+        name: np.repeat(np.asarray(value)[:1], count, axis=0)
+        for name, value in payload.items()
+    }
+    built["step"] = np.asarray(steps, dtype=np.int64)
+    built["decision_time_s"] = np.asarray(times, dtype=np.float64)
+    return built
+
+
+def test_row16_refuses_a_decision_after_the_last_playback_sample(
+    harness: Harness,
+) -> None:
+    """A decision with no frame to be drawn against is refused, not clipped."""
+
+    connection = harness.authenticate()
+    key = _payload_key(CASE_ID, "C1", "estimator_outputs")
+    payload = _decision_payload(connection.roles.payloads[key], [31], [0.5])
+    edited = _with_payload(connection, key, payload)
+    playback = bind_playback_timebase(edited.record, edited.roles)
+    error = _refusal(
+        lambda: resolve_decisions(edited.record, edited.roles, playback)
+    )
+    assert error.code == X_DECISION_UNSUPPORTED
+    assert "lies outside the playback extent" in str(error)
+
+
+def test_row16_refuses_a_decision_before_the_first_playback_sample(
+    harness: Harness,
+) -> None:
+    """The extent has two ends and both are compared.
+
+    **This case needs a live-shaped grid, and finding that out is the point.** The
+    contract fixture's `plant.t_s` starts at 0.000 s, so on that grid every time
+    below the first sample is negative and `EstimatorOutput.validate` refuses it one
+    branch earlier -- the lower bound would look covered while nothing had reached
+    it. A real plant grid starts at one control interval, because `cable_plant`
+    stamps `t_s` *after* advancing, so the grid is shifted here to the live shape and
+    the decision placed inside the first interval.
+    """
+
+    connection = harness.authenticate()
+    payloads = dict(connection.roles.payloads)
+    for suite in SUITE_KEYS:
+        plant_key = _payload_key(CASE_ID, suite, "plant")
+        payloads[plant_key] = _edited(
+            payloads[plant_key],
+            t_s=np.asarray(payloads[plant_key]["t_s"]) + 0.002,
+        )
+    key = _payload_key(CASE_ID, "S", "estimator_outputs")
+    payloads[key] = _decision_payload(payloads[key], [0], [0.001])
+    edited = replace(connection, roles=replace(connection.roles, payloads=payloads))
+    playback = bind_playback_timebase(edited.record, edited.roles)
+    assert float(playback[CASE_ID][0]) == 0.002
+    error = _refusal(
+        lambda: resolve_decisions(edited.record, edited.roles, playback)
+    )
+    assert error.code == X_DECISION_UNSUPPORTED
+    assert "lies outside the playback extent" in str(error)
+
+
+def test_row16_refuses_carried_axes_that_stop_increasing(harness: Harness) -> None:
+    """Order is a property of what this module carried, not only of the payload."""
+
+    connection = harness.authenticate()
+    key = _payload_key(CASE_ID, "C1", "estimator_outputs")
+    payload = _decision_payload(
+        connection.roles.payloads[key], [5, 5], [0.010, 0.020]
+    )
+    edited = _with_payload(connection, key, payload)
+    playback = bind_playback_timebase(edited.record, edited.roles)
+    error = _refusal(
+        lambda: resolve_decisions(edited.record, edited.roles, playback)
+    )
+    assert error.code == X_DECISION_UNSUPPORTED
+    assert "stopped increasing at index 1" in str(error)
+
+
+def test_row16_refuses_a_decision_this_module_transcribed_wrongly(
+    harness: Harness,
+) -> None:
+    """`validate()` here guards the adapter's own construction, not the payload.
+
+    A `p_class` row that is not a simplex could never have passed step 12, so the
+    only way this branch is reachable in production is a transcription defect in
+    `resolve_decisions` itself -- which is exactly what it is there to catch.
+    """
+
+    connection = harness.authenticate()
+    key = _payload_key(CASE_ID, "C1", "estimator_outputs")
+    payload = dict(connection.roles.payloads[key])
+    payload["p_class"] = np.zeros_like(np.asarray(payload["p_class"]))
+    edited = _with_payload(connection, key, payload)
+    playback = bind_playback_timebase(edited.record, edited.roles)
+    error = _refusal(
+        lambda: resolve_decisions(edited.record, edited.roles, playback)
+    )
+    assert error.code == X_DECISION_UNSUPPORTED
+    assert "violates the schema-D contract" in str(error)
+
+
+def test_row16_carries_every_decision_in_payload_order(harness: Harness) -> None:
+    """More than one decision, and the accept side of the ordering rule."""
+
+    connection = harness.authenticate()
+    key = _payload_key(CASE_ID, "C1", "estimator_outputs")
+    payload = _decision_payload(
+        connection.roles.payloads[key], [3, 11, 29], [0.006, 0.022, 0.058]
+    )
+    edited = _with_payload(connection, key, payload)
+    playback = bind_playback_timebase(edited.record, edited.roles)
+    resolved = resolve_decisions(edited.record, edited.roles, playback)
+    carried = resolved[(CASE_ID, "C1")]
+    assert [decision.step for decision in carried] == [3, 11, 29]
+    assert [decision.decision_time_s for decision in carried] == [0.006, 0.022, 0.058]
+
+
+# -- row 17 ------------------------------------------------------------------ #
+def test_row17_refuses_a_window_this_grid_cannot_close(
+    harness: Harness, record: dict[str, Any]
+) -> None:
+    """The frozen 5 s headline over a 0.062 s fixture grid, driven end to end."""
+
+    record["analysis_window_s"] = 5.0
+    arguments = harness.rewrite_record(record)
+    error = _refusal(lambda: _resolve(arguments))
+    assert error.code == X_WINDOW_UNSUPPORTED
+    assert "utils.metrics.j_5s" in str(error)
+    assert "truncated before onset" in str(error)
+
+
+def test_row17_re_raises_whatever_the_live_metric_refused(
+    harness: Harness, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Only a monkeypatch can hold a delegation (lesson 201).
+
+    An AST test that asserts the call exists is satisfied by a function that calls
+    and ignores. This one replaces the metric with one that raises a sentence no
+    design document contains, and requires that sentence to be carried out of the
+    row -- which is false unless the refusal really comes from the metric.
+    """
+
+    sentinel = "sentinel-refusal-no-design-document-contains-this"
+
+    def _refusing_metric(*args: Any, **kwargs: Any) -> float:
+        raise ValueError(sentinel)
+
+    monkeypatch.setattr(connection_adapter, "j_5s", _refusing_metric)
+    connection = harness.authenticate()
+    truths = require_pair_agreement(connection.record, connection.roles)
+    playback = bind_playback_timebase(connection.record, connection.roles)
+    error = _refusal(
+        lambda: require_tracking_window(
+            connection.record, connection.roles, playback, truths
+        )
+    )
+    assert error.code == X_WINDOW_UNSUPPORTED
+    assert sentinel in str(error)
+
+
+def test_row17_opens_the_window_at_onset_time_and_never_at_onset_index(
+    harness: Harness,
+) -> None:
+    """Finding CI again, on the axis that would move the window.
+
+    `onset_index` and `onset_time_s` do not agree in real data, so a row that indexed
+    the grid by `onset_index` would open the window at the wrong sample. Here the two
+    are driven apart deliberately: the onset *time* still lands on a sample and the
+    window still closes, so the row must accept -- and it must accept for the reason
+    that it never read the index.
+    """
+
+    connection = harness.authenticate()
+    playback = bind_playback_timebase(connection.record, connection.roles)
+    payloads = dict(connection.roles.payloads)
+    for suite in SUITE_KEYS:
+        key = _payload_key(CASE_ID, suite, "labels")
+        payloads[key] = _edited(
+            payloads[key], onset_index=np.asarray(0, dtype=np.int64)
+        )
+    edited = replace(
+        connection, roles=replace(connection.roles, payloads=payloads)
+    )
+    truths = require_pair_agreement(edited.record, edited.roles)
+    assert truths[CASE_ID].onset_index == 0
+    assert truths[CASE_ID].onset_time_s == 0.02
+    require_tracking_window(edited.record, edited.roles, playback, truths)
+
+
+# -- the order is the contract ------------------------------------------------ #
+def test_the_rows_run_in_their_normative_order(harness: Harness) -> None:
+    """A state that breaks two rows refuses with the earlier row's code."""
+
+    connection = harness.authenticate()
+    labels_key = _payload_key(CASE_ID, "S", "labels")
+    plant_key = _payload_key(CASE_ID, "S", "plant")
+    payloads = dict(connection.roles.payloads)
+    payloads[labels_key] = _edited(
+        payloads[labels_key], severity=np.asarray(0.5, dtype=np.float64)
+    )
+    grid = np.asarray(payloads[plant_key]["t_s"]) + 1.0
+    payloads[plant_key] = _edited(payloads[plant_key], t_s=grid)
+    edited = replace(connection, roles=replace(connection.roles, payloads=payloads))
+    error = _refusal(lambda: resolve_cases(edited))
+    assert error.code == X_PAIR_MISMATCH
+
+
+def test_rows13_to_17_open_no_file_at_all(harness: Harness) -> None:
+    """Every fact these five rows read was authenticated before they ran."""
+
+    connection = harness.authenticate()
+    opened: list[str] = []
+    real_read_bytes = Path.read_bytes
+
+    def _counting_read_bytes(self: Path) -> bytes:
+        opened.append(str(self))
+        return real_read_bytes(self)
+
+    original = Path.read_bytes
+    Path.read_bytes = _counting_read_bytes  # type: ignore[method-assign]
+    try:
+        resolve_cases(connection)
+    finally:
+        Path.read_bytes = original  # type: ignore[method-assign]
+    assert opened == []
+
+
+# -- the constants answer to the objects that own them ------------------------ #
+def test_the_label_field_names_are_the_live_structs_own_field_list() -> None:
+    """`LABEL_FIELDS` inherits `LabelFields`'s pin instead of adding a second copy."""
+
+    from dataclasses import fields as dataclass_fields
+
+    assert LABEL_FIELDS == tuple(field.name for field in dataclass_fields(LabelFields))
+    schema = json.loads(LIVE_SCHEMA.read_text(encoding="utf-8"))
+    assert set(LABEL_FIELDS) == set(schema["roles"]["labels"]["fields"])
+    assert len(LABEL_FIELDS) == 8
+
+
+def test_the_frame_bearing_plant_arrays_are_declared_over_the_playback_axis() -> None:
+    """Every array row 15 binds is one the schema declares with a leading `T`."""
+
+    schema = json.loads(LIVE_SCHEMA.read_text(encoding="utf-8"))
+    declared = schema["roles"]["plant"]["fields"]
+    for name in PLANT_FRAME_ARRAYS:
+        assert declared[name]["shape"][0] == "T"
+    assert PLANT_FRAME_ARRAYS == (
+        "q_true",
+        "deform_coords",
+        "task_reference",
+        "true_task_output",
+    )
+
+
+def test_the_fixture_window_is_the_largest_this_grid_can_close(
+    harness: Harness,
+) -> None:
+    """The fixture window is pinned as a literal, with its bound measured beside it.
+
+    The value is stated rather than derived so a change to the grid cannot silently
+    carry the constant with it; the measurement beside it is what says the literal is
+    the right one for this grid.
+    """
+
+    from utils.metrics import j_5s
+
+    assert ANALYSIS_WINDOW_S == 0.04
+    connection = harness.authenticate()
+    plant = connection.roles.payloads[_payload_key(CASE_ID, "C1", "plant")]
+    grid = np.asarray(plant["t_s"])
+    j_5s(
+        grid,
+        plant["task_reference"],
+        plant["true_task_output"],
+        0.02,
+        window_s=ANALYSIS_WINDOW_S,
+    )
+    with pytest.raises(ValueError):
+        j_5s(
+            grid,
+            plant["task_reference"],
+            plant["true_task_output"],
+            0.02,
+            window_s=0.044,
+        )

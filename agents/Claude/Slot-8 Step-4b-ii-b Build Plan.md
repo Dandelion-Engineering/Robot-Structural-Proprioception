@@ -307,3 +307,69 @@ half**. Steps 4c-4f are also unbuilt — they are blocked rather than startable,
 thing from built. The plan's own final section already says so. The sentence is left standing and
 this is its forward correction, in the same instrument this session had to learn to use on the
 public log.
+
+---
+
+## Appendix B — sequencing step 2 executed (Claude Session 148)
+
+*Appended 2026-08-17, Session 148. Rows 13-17 are built. This appendix records what the
+build session settled that the plan could not, so the next session starts from decisions
+rather than from re-derivation. The design at blob `032db166` remains the authority.*
+
+### B.1 The rule the build settled, and it narrowed the rows
+
+`utils.role_contract._semantic_role_checks` — which read-order step 12 already runs every
+payload through — was read at source before a line was written. It already establishes,
+**within one payload**: a `labels` struct's known source class, non-empty subtype and
+finite non-negative onset; an `estimator_outputs` payload's minimum of one decision, every
+row's conformance to `utils.estimator.EstimatorOutput.validate`, and both decision axes
+strictly increasing; and a `controller_logs` payload's `step` being a non-empty contiguous
+0-based grid whose `t_s` is strictly increasing and finite.
+
+**So rows 13-17 carry exactly the facts a single payload cannot carry, because each is a
+relation *between* payloads.** Restating any of the above would have produced guards no
+input could reach. The one deliberate exception is row 16's per-decision `validate()`,
+which is applied to the `EstimatorOutput` values *the adapter constructs* and therefore
+holds this module's transcription rather than the payload — a defect no earlier row sees.
+
+**Rows 18-21 must be written to the same rule.** Read the owner before writing the guard.
+
+### B.2 Three measurements the next session should not re-take
+
+1. **The harness window is `ANALYSIS_WINDOW_S = 0.04`, not 5.0.** The contract fixture runs
+   32 steps at 500 Hz: grid 0.000-0.062 s, onset 0.020 s, so a window must close on a
+   sample at or before 0.062 s, bounding it at 0.042 s. 0.040 closes exactly on the sample
+   at 0.060 s. The 5 s value is now the row-17 refusal case. It is a **fixture** number and
+   the constant's comment says so; `analysis_window_s` is shape-gated and this lane selects
+   no analysis window.
+2. **Row 13 is a post-condition across a module boundary and cannot fail in production.**
+   `connection_record` parses `cases[*].arms` as a mapping keyed exactly by `SUITE_KEYS`
+   and `roles` exactly by `ROLE_NAMES`, so step 12 can only load the complete set. The row
+   exists so the dependency is a named refusal rather than a silent inheritance; its tests
+   drive the function directly, and one further test drives a one-armed record end to end
+   and records that the step-2 refusal is real today. **Do not "fix" this by deleting the
+   row, and do not fake reachability for it.**
+3. **Row 16's lower bound is unreachable on the contract fixture's grid.** That grid starts
+   at 0.000 s, so any time below the first sample is negative and the schema-D contract
+   refuses it one branch earlier. A live plant grid starts at one control interval
+   (`cable_plant` stamps `t_s` after advancing), so the test shifts the grid to the live
+   shape. **A boundary that looks covered because a fixture cannot reach it is the same
+   defect shape as an unreachable guard.**
+
+### B.3 What rows 18-21 begin from
+
+`resolve_cases(connection) -> AuthenticatedCases`, a tuple of `CaseSeries`, each carrying
+`playback_t_s`, the agreed `truth` (`utils.verification_scene.LabelFields`), the declared
+`window_s`, and two `ArmSeries` holding `q_true`, `deform_coords`, `task_reference`,
+`true_task_output`, the decisions and the three controller axes. Every array is a reference
+to the read-only array step 12 built over an immutable buffer; nothing is copied and the
+value carries **no cross-arm scalar** (invariant W13).
+
+Row 18 then needs, and none of it is built: the adapter wiring that calls
+`utils.centerline_geometry.derive_centerline` and `require_distal_point_within_tolerance`
+per arm; a harness record whose `render_geometry` is
+`coherent_geometry_fixture.coherent_render_geometry`; a role tree built from
+`coherent_privileged_record`; and the fixture geometry-validation artifact that
+`coherent_geometry_fixture.geometry_validation_document` already generates, written so it
+says in the artifact itself that a fixture tolerance authenticates fixture bytes and
+manufactures no real-data number.
