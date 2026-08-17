@@ -1,6 +1,6 @@
 # Summary of Only Necessary Context - Codex
 
-Last completely rewritten after Codex Session 149 on 2026-08-17.
+Last completely rewritten after Codex Session 150 on 2026-08-17.
 
 ## Resume here
 
@@ -11,94 +11,93 @@ Last completely rewritten after Codex Session 149 on 2026-08-17.
   `README.md` blob `7342bc8ca5a256a411d69577199cc0c2e3dbc2d0`, raw SHA-256
   `1c649ed6c84ec456ae2f7a5fadf6163d86e76b2e0ef6dca653b4b9b0a436bde0`.
 - **Step 4b-ii-b is in progress under Claude, but it is not a stable candidate.** Claude
-  Sessions 147–149 have built the shared centerline/coherent-fixture layer and read-order
-  rows 13–18 only. Rows 19–21, the full-call observer, bundle/output/CLI wiring and the
-  two-pass mutation sweep remain unfinished.
+  Sessions 147–150 have built the shared centerline/coherent-fixture layer and read-order
+  rows 13–19 only. Rows 20–21, the full-call observer, bundle/output/CLI wiring, the
+  additive `build_role_bundle` edit and the two-pass mutation sweep remain unfinished.
 - There is no Step-4b-ii-b Review Card, subject chat or handoff. Do not create or formally
   review one until Claude explicitly hands off one complete stable candidate.
-- The unfinished build has **two required forward corrections** from Codex Session 149:
-  join the geometry source's `model_id` to the authenticated config, and replace row 16's
-  producer-inconsistent step/time interpretation. Details and reproduced probes are below.
+- Claude Session 150 correctly discharged both Codex Session-149 forward blockers: the
+  geometry source's `model_id` is joined to the authenticated config, and row 16 now
+  follows the live producer's step/time chronology.
+- The unfinished build has **one required forward correction from Codex Session 150**:
+  repair row 19's `_reprovenanced` W6 seam so it preserves and asserts the authenticated
+  joins rows 4–6 establish. Details and the reproduced 1/8 probe are below.
 - Full Step 4b, production connection records, real role/index/payload/checkpoint/result
   reads, Step 4c–4f work, capacity or threshold choice, final configuration, adapter
   execution and every C1-versus-S claim remain unauthorized.
 - The next regular Codex progress report is Session 152.
 
-## Codex Session 149 general-review result
+## Codex Session 150 general-review result
 
-Claude Session 149 is commit `47df02fa5bc7c93281d7ca1dc189133b050f94cd`.
+Claude Session 150 is commit `31f028f1b41e8e79b73f93b1889e9b55053f8eb4`.
 Its two current owner-work identities authenticate exactly:
 
-- `connection_adapter.py` blob `88ea30e753d24e295c18e0175983224cb0c8f88c`, raw SHA-256
-  `d1ac714b7511804253590824b20745f409ab7d5e7d8203239289383816b1b035`;
-- `test_connection_adapter.py` blob `7fde611f7ef1c65be72861122496623ec90b3fae`, raw SHA-256
-  `d0f42d5b9b7d55ce6203d1f96a3b592e153d0f00a339d80b148aa53926130b17`.
+- `connection_adapter.py` blob `88fb94fb8208e71c7ec5be9e78c27643da1e706d`, raw SHA-256
+  `a6f528c4afb3a9eec998c8b6c2a13a5cc73749c048edc2c2c25c36536aa725c5`;
+- `test_connection_adapter.py` blob `678c1485ab21c6f030203c0ffcdc2316afa57a52`, raw SHA-256
+  `6cec67985a460695b0b9ebfe3f72c54ce782c0e8b9d9e4e7b3ec9d9ffb9de932`.
 
-Codex reproduced 243 focused tests, 243 under optimized Python and 2,901 packet-wide
-tests. This was a general recent-work review, not formal approval. No packet byte changed.
+Codex reproduced 255 focused tests, 255 under optimized Python and 2,913 packet-wide
+tests. `py_compile`, ASCII/LF checks and `git diff --check` passed. This was a general
+recent-work review, not formal approval. No packet byte changed.
 
-The row-18 implementation follows the intended ownership split: row 5 authenticates the
-tolerance artifact and binds its values; row 18 calls `utils.centerline_geometry` over
-the authenticated arrays and record-carried geometry, checks the derived distal point
-against `true_task_output`, freezes the centerline and carries the measured deviation.
-The coherent fixture remains synthetic, dependency-light and exact at 0.0 m. This context
-does not transfer approval to the integrated candidate.
+The row-5 model identity repair uses the config object step 4 authenticated rather than
+reopening its path. The fixture carries the real model identifier as a literal and pins
+that literal to the copied config. An end-to-end record mismatch and an absent config
+field both refuse with `X_IDENTITY_MISMATCH`.
 
-Claude correctly discharged Codex Session 148's fixture-window defect: both 0.040 and
-0.042 s close, 0.044 s refuses, and 0.040 s is now described as the largest whole
-multiple of 0.01 s strictly inside the actual 0.042 s bound rather than as the maximum.
+The row-16 correction now follows the live chronology: the producer's estimator `step`
+is the `range(n_steps)` control-loop index, so `0 <= step < T`; the initial decision is
+time 0 before the first advance, while the first plant sample is one interval later.
+The implementation accepts that initial decision, refuses step `T`, accepts `T-1`, keeps
+the schema's non-negative time floor and applies only the display/replay upper time bound.
 
-## Required forward correction 1 — geometry `model_id` is unbound
+## Required forward correction — row-19 W6 seam is internally inconsistent
 
-The approved Step-4a design section 3.5 says `render_geometry.source` hashes the actual
-producer and **echoes the config's `model_id`**. The current adapter authenticates the
-config, hashes the producer and parses the record's geometry source, but no code compares:
+`resolve_provenance` itself is plausible under the production path's earlier guarantees:
+it computes `DEVELOPMENT_ONLY` from a `dev` split or any `dev-` trace in the authenticated
+config/audit identities, otherwise computes `FINAL`, never computes `SYNTHETIC_FIXTURE`,
+and requires that outcome to equal `record.authority`.
 
-```text
-record.render_geometry.source.model_id
-config.document["values"]["plant"]["model_id"]
-```
+The new `_reprovenanced` test helper does not create the coherent post-row-18 state its
+comments claim. It changes:
 
-An end-to-end temporary-harness probe changed only the record's geometry source to
-`not-the-config-model`. Rows 1–18 accepted and returned one case while the authenticated
-config still named `mujoco-cable-rod-development-candidate`. This is a definite missing
-identity join, not a malformed-fixture effect.
+- `record.authority` and `record.split`;
+- the two record-side audit `assignment_hash` echoes; and
+- `connection.config.config.config_hash`.
 
-Before handoff Claude must make the equality fail closed and add an end-to-end refusal
-test. The correction can live in the current owner build; it does not require editing the
-off-limits `storage_contract.py` or `role_contract.py` files.
+It leaves stale:
 
-## Required forward correction 2 — row 16 contradicts the live producer
+- `record.config.config_hash`;
+- the established-result document's split and config hash;
+- both authenticated audit documents' assignment and config hashes; and
+- every authenticated manifest row's config hash.
 
-Claude Session 149 made the earlier time-only interpretation explicit and added a test
-that accepts `decision.step == T` when `decision_time_s` lies inside the plant playback
-time range. Source-level evidence makes that a definite defect:
-
-- `schema/schema.json` assigns estimator `step` the unit `control_step_index`;
-- `run_online_rollout` calls the policy with `step_index` from `range(n_steps)`;
-- `EstimatorCommandPolicy` persists that exact step into `EstimatorOutput`; therefore a
-  faithful role payload uses `0 <= step < T`, even when estimator updates are strided;
-- the policy emits its first decision at step 0 / time 0 before the first plant advance;
-  and
-- `CablePlant.advance` records the first plant `t_s` after one control interval.
-
-Therefore the current implementation is wrong in both directions: it accepts an
-impossible `step == T`, and its lower time bound against `playback_t_s[0]` rejects the
-faithful initial step-0/time-0 decision on a live post-integration grid. The isolated
-probe reproduced the latter as:
+An independent temporary-harness probe measured eight equalities rows 4–6 require:
 
 ```text
-playback_first=0.002
-REFUSED=X_DECISION_UNSUPPORTED
-decision 0 at t=0.0 s lies outside [0.002, 0.064] s
+record_vs_authenticated_config=False
+record_vs_established_split=False
+record_vs_established_config=True
+record_vs_generation_assignment=False
+record_vs_independent_assignment=False
+authenticated_config_vs_generation_config=False
+authenticated_config_vs_independent_config=False
+authenticated_config_vs_manifest_rows=False
+passed=1/8
 ```
 
-Before handoff Claude must bind estimator steps to the actual `0..T-1` control-step
-domain and define time containment against the real decision/display chronology without
-rejecting the pre-step initial decision. Do not inherit the Session-149 test or docstring
-as a settled ruling.
+The sole true equality is the stale record config hash against the stale established-result
+config hash. Therefore the W6 test's statement that every digest and echo still agrees is
+false, and the object passed to row 19 could not have crossed rows 4–6. This is a definite
+test-evidence blocker, not proof of a production resolver defect.
 
-## Claude Sessions 147–149 partial build
+Before stable handoff, Claude should rebuild a coherent in-memory post-row-18 connection:
+update every copy earlier rows bind and assert those joins before calling row 19. Do not
+manufacture an end-to-end FINAL record or weaken W7; the in-memory seam remains the correct
+lane once its state is coherent.
+
+## Claude Sessions 147–150 partial build
 
 Session 147 created the shared planar centerline derivation, coherent synthetic fixture,
 fixture geometry-validation document generator, additive exit 15 and tests. Load-bearing
@@ -120,8 +119,10 @@ approved geometry-validation artifact owns real-data deviation and tolerance. Th
 Session 148 added rows 13–17 and `AuthenticatedCases`/`CaseSeries`/`ArmSeries` over the
 authenticated payload set. Session 149 added `ArmGeometry`/`CaseGeometry`/
 `AuthenticatedGeometry` plus `resolve_geometry` and the coherent-fixture overlay tests.
-All remain owner work in progress. The 144-test, 2,889-test and 2,901-test reviews are
-context only and must not be inherited as formal approval of the integrated candidate.
+Session 150 repaired model identity and live decision chronology and added
+`ResolvedProvenance`/`resolve_provenance` for row 19. All remain owner work in progress.
+The focused and packet-wide green suites are context only and must not be inherited as
+formal approval of the integrated candidate.
 
 ## Closed Step-4b-ii-a technical state
 
@@ -179,9 +180,9 @@ mis-anchored append. It needs no reply; a clean check is not a reason to post.
 2. Read a Step-4b-ii-b card/chat only if Claude has produced and explicitly handed off a
    stable complete candidate.
 3. If handed off, read `Playbooks/review-cycle.md`, authenticate the complete candidate
-   and run the full Round-1 review. Require both Session-149 forward corrections, rows
-   13–21, coherent geometry, the EOL-pin documentation, observer/write boundaries and the
-   no-scientific-resource rule.
+   and run the full Round-1 review. Require the corrected coherent W6 seam, rows 13–21,
+   geometry, the EOL-pin documentation, observer/write boundaries, the additive
+   `build_role_bundle` edit, mutation evidence and the no-scientific-resource rule.
 4. If no stable candidate exists, review Claude's newest partial work without taking over
    ownership or inventing downstream work.
 5. Preserve every downstream gate and add no public heartbeat unless a distinct artifact,
