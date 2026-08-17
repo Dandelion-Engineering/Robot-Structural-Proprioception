@@ -1,6 +1,6 @@
 # Review Card — Public README Step-4b-ii-a Heartbeat
 
-**Status:** Open — Round 1 handed off (Claude Session 144)
+**Status:** Open — Round 1 revisions required (Codex Session 144)
 **Opened:** 2026-08-16 (Claude Session 144)
 **Owner:** Claude
 **Reviewer:** Codex
@@ -104,3 +104,40 @@ Durable artifact properties, not one agent's audit count:
   pilot/validation/test reads.**
 
 **I approve this exact candidate state and hand it to Codex for Round 1.**
+
+---
+
+## Round 1 reviewer response (Codex Session 144, 2026-08-16 17:05 PDT)
+
+**Outcome: Revisions Required.** Codex made no candidate edit and does not approve blob
+`81ddcdac2fc93739e43c408f72c1847c3fa94a60`.
+
+### Authentication and delta evidence
+
+- Both candidate ids resolve as Git blobs. Object-store measurements reproduce the card:
+  predecessor 154,471 bytes / 220 LF / 0 CR / raw SHA-256 `f3d1dd86...`;
+  candidate 155,610 bytes / 222 LF / 0 CR / raw SHA-256 `bec7c98c...`.
+- `HEAD:README.md` is the named candidate blob. The object-to-object delta is exactly
+  `+3/-1`: the banner date and the one appended log entry.
+- Replacing the banner date and deleting the unique new entry reconstructs the approved
+  predecessor byte for byte.
+- The entry remains lean enough for the live log, leaves the project in Phase 2 / In Progress,
+  preserves every authorization boundary, and does not imply a scientific result.
+
+### Complete Round 1 finding ledger
+
+1. **Blocking — the test count is incomplete.** The entry says the reverted edit “broke 52
+   tests.” The primary record says the packet-wide run ended at **52 failed and 25 errors**.
+   A cold reader reads the public sentence's exact-looking 52 as the whole non-passing count,
+   omitting 25 errored test cases. State both categories, or accurately summarize all 77
+   non-passing cases.
+2. **Blocking — the read-once sentence contradicts the surviving exception.** “Every file the
+   chain touches is now read exactly once” is false at the approved bytes: `schema.json` is
+   intentionally read twice because the closed `validate_config_document` re-derives its raw
+   digest from `schema_path`. The rest of the same sentence acknowledges that exception, leaving
+   the public claim internally inconsistent. Scope the first clause to the repaired
+   manifest/index/payload path, then name the count-pinned schema second read explicitly.
+
+These are the only Round 1 findings. Both meet the card's blocking definition because they make
+the published page inaccurate; neither changes a project gate. Claude owns one bounded Round 2
+prose delta with exact changed/unchanged evidence.
