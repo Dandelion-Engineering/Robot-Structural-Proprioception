@@ -3904,6 +3904,11 @@ correction applied.)*
   argument is in the docstring, and a test named for the ruling pins it so a later session that
   tightens it reads the reason instead of rediscovering it.  A quiet tightening is an unrecorded
   amendment.
+  *** [S150 FORWARD CORRECTION] THE METHOD IN THIS LESSON IS RIGHT AND THE RULING IT PRODUCED
+  WAS WRONG.  READ 267 BEFORE ACTING ON ANY PART OF THIS ENTRY.  The written ruling, its
+  four-point argument and its named test were all real; what was missing is that I argued from
+  what the SCHEMA SAYS THE FIELD IS FOR instead of from what the CODE THAT WRITES IT DOES.
+  Row 16 now binds `step` to the control-step domain and bounds the time axis above only. ***
 
 265. **[S149] THE CHEAPEST WAY TO GET A SECOND FIXTURE IS TO INSTALL IT OVER THE FIRST.**  Row
   18's accept path needs data whose `q_true`, `deform_coords` and `true_task_output` come from
@@ -3936,6 +3941,49 @@ correction applied.)*
   which already takes `where` and names the arm itself. ***  So the owner's refusal is passed
   through UNTOUCHED - neither code nor message rewritten - and the docstring says why.  Lesson
   260's rule applied to diagnostics rather than to guards: reachability decides.
+
+267. **[S150] A RULING ABOUT A FIELD IS A CLAIM ABOUT ITS PRODUCER, SO READ THE PRODUCER.**  My
+  S149 row-16 ruling (lesson 264) said the estimator's `step` is tied to no grid, and cited the
+  schema's own docstring calling it bookkeeping.  Codex read `utils.online_loop` instead:
+  `run_online_rollout` iterates `step_index` over `range(n_steps)` and `EstimatorCommandPolicy`
+  persists THAT EXACT INTEGER in every `EstimatorOutput`, while `schema/schema.json` gives the
+  field the unit `control_step_index`.  *** SO THE RULING ACCEPTED A STEP NO PRODUCER CAN EMIT.
+  AND ITS OTHER HALF DID THE MIRROR-IMAGE DAMAGE: the policy is called BEFORE `plant.advance`
+  while `cable_plant` stamps `t_s` AFTER it, so the first decision lands at 0.0 s, strictly below
+  `playback_t_s[0]`, and my lower bound REFUSED THE ONE DECISION EVERY FAITHFUL RUN EMITS. ***
+  Both halves were invisible to 2,901 green tests because the contract fixture's grid starts at
+  0.000 s, where the two conventions coincide.  **The transferable rule is one rung to the side of
+  lesson 260.**  260 says read the OWNER of the fact before writing the guard, and I did - I read
+  the schema.  267 says the owner of a field's VALUE is the code that assigns it, and a docstring
+  describing the field's PURPOSE is not that code.  *** WHEN A DECISION TURNS ON WHAT VALUES A
+  FIELD CAN TAKE, THE EVIDENCE IS THE ASSIGNMENT SITE AND THE LOOP AROUND IT, NOT THE DECLARATION.
+  ***  Note what did NOT change: 264's *method* still stands - write the ruling, put the argument
+  in the docstring, name a test after it - which is why the reversal cost one reading and one edit
+  instead of an archaeology session.  A wrong ruling that is written down is cheap to correct; an
+  unwritten one is not correctable at all.
+
+268. **[S150] TWO COPIES OF A WRONG STRING AGREE WITH EACH OTHER FOREVER.**  Design 3.5 requires
+  `render_geometry.source` to ECHO the config's `model_id`, and the adapter never compared them.
+  Codex found it by changing one record field to `not-the-config-model` and watching rows 1-18
+  accept.  *** THE PART WORTH CARRYING IS WHAT THE MISSING JOIN CONCEALED: THE TEST FIXTURE HAD
+  DECLARED `"cable-two-link"` SINCE IT WAS WRITTEN, AND THE CONFIGURATION HAS NEVER CARRIED THAT
+  STRING.  Nothing noticed because nothing compared them - the defect and the thing that would
+  have revealed it were the same missing line. ***  Two rules come out of it.  (1) A DIGEST OVER A
+  PRODUCER PROVES WHICH PROGRAM RAN, NOT WHAT IT WAS ASKED TO PRODUCE; when a record names both a
+  producer and a parameter, hashing the first says nothing about the second.  (2) The repair is
+  NOT "read the value out of the source at fixture-build time" - that makes the fixture agree with
+  the source however the source moves, which is the S144 sweep lesson (an input that is a function
+  of the constant under test holds the relationship and not the value).  *** THE FIXTURE'S VALUE
+  IS A LITERAL, AND A SEPARATE TEST PINS THAT LITERAL AGAINST THE REAL SOURCE.  Two comparisons,
+  one of which can fail. ***
+
+269. **[S150] THE BYTE CHECK IS THE ONLY INSTRUMENT THAT SEES A NON-ASCII CHARACTER.**  My first
+  write of the row-16 docstring contained a U+2026 ellipsis.  `py_compile` passed, the import
+  passed, the focused pair passed, and the packet-wide suite passed 2,913/2,913.  Only
+  `bytes.isascii()` on the file found it.  It costs one command beside the LF/CR/BOM/final-newline
+  check I already run on every edited file, and this is the first time on this lane that it has
+  been the ONLY thing to fire.  Run it on every file you write, not only on candidates you are
+  about to name in a card.
 
 
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable

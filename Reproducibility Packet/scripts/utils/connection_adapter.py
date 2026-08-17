@@ -298,6 +298,19 @@ MANIFEST_CENSUS_FIELDS: tuple[str, ...] = (
 #: The key inside each audit document that carries the census.
 MANIFEST_AUDIT_KEY = "manifest_audit"
 
+#: Where the generated plant model's identity lives inside the authenticated
+#: configuration. Design section 3.5 resolves the render geometry to the *record*
+#: and requires `render_geometry.source` to name and hash the actual producer
+#: (`scripts/utils/cable_mechanics.py`) **and to echo the config's `model_id`**;
+#: step 5 is where that echo becomes a comparison. Without it the record can name a
+#: model the configuration never described while every digest in the chain stays
+#: valid, because the producer digest speaks for the *source file* and says nothing
+#: about which model the run was configured to build. It is spelled as a declared
+#: field path so it resolves through `value_at_field_path`, which turns an absent
+#: field into this row's named refusal rather than a `None` that compares unequal
+#: for the wrong reason.
+PLANT_MODEL_ID_FIELD_PATH = "values.plant.model_id"
+
 #: The most decimal digits one array-index segment of a declared field path may
 #: carry. A JSON array held in memory cannot hold more than `sys.maxsize` entries,
 #: and that number is 19 digits long, so a longer run of digits cannot address an
@@ -985,7 +998,11 @@ class AuthenticatedSources:
         geometry_producer_sha256: the canonical-domain digest of
             `render_geometry.source.producer_relative_path`. The producer is hashed
             and never imported: importing it would let the file the record is checking
-            decide what the check is.
+            decide what the check is. The digest is only half of that source's
+            identity -- it fixes *which file built the model* and says nothing about
+            *which model was configured* -- so step 5 separately joins
+            `render_geometry.source.model_id` to `PLANT_MODEL_ID_FIELD_PATH` inside
+            the config step 4 authenticated.
         maximum_deviation_m: the real-data agreement the geometry-validation artifact
             records, already required not to exceed the declared tolerance.
     """
@@ -1041,13 +1058,17 @@ def _authenticate_artifact(
 
 
 def authenticate_sources(
-    record: ConnectionRecord, bound: BoundPaths
+    record: ConnectionRecord, bound: BoundPaths, config: AuthenticatedConfig
 ) -> AuthenticatedSources:
     """Run read-order step 5: authenticate every declared scientific source.
 
     Args:
         record: the authenticated record.
         bound: the result of `bind_root_domains`.
+        config: the result of step 4. It is required here for exactly one join --
+            `render_geometry.source.model_id` -- and it is taken as a parameter
+            rather than re-read because the config this row must agree with is the
+            one step 4 digested and validated, not whatever the path names now.
 
     Returns:
         The parsed artifacts and the two derived facts later rows need.
@@ -1157,6 +1178,16 @@ def authenticate_sources(
         record.render_geometry.source.producer_sha256,
         where="render_geometry.source.producer_sha256",
         digest=producer_sha256,
+    )
+    _require_strings_equal(
+        value_at_field_path(
+            config.config.document,
+            PLANT_MODEL_ID_FIELD_PATH,
+            where="config.values.plant.model_id",
+        ),
+        record.render_geometry.source.model_id,
+        where="render_geometry.source.model_id",
+        source=f"config.{PLANT_MODEL_ID_FIELD_PATH}",
     )
 
     tolerance_source = record.render_geometry.tolerance_source
@@ -2149,7 +2180,7 @@ def authenticate_connection(
         output_dir=Path(output_dir),
     )
     authenticated = authenticate_config(record, bound)
-    sources = authenticate_sources(record, bound)
+    sources = authenticate_sources(record, bound, authenticated)
     dataset = authenticate_dataset(record, bound, sources, authenticated)
     roles = authenticate_roles(record, bound, authenticated, dataset)
     return AuthenticatedConnection(
@@ -2182,8 +2213,8 @@ def authenticate_connection(
 #     trajectory;
 #   * 15 -- both arms' plant grids are the same grid, and every frame-bearing array
 #     in both arms and in the controller role has that grid's length;
-#   * 16 -- the decisions the adapter *carries forward* are ordered and lie inside
-#     that grid's extent;
+#   * 16 -- the decisions the adapter *carries forward* are ordered, stamped at
+#     control steps this replay contains, and not timed after it ended;
 #   * 17 -- the tracking block is a valid `utils.metrics.j_5s` call at the agreed
 #     onset over the record's declared window.
 #
@@ -2532,7 +2563,8 @@ def resolve_decisions(
     Raises:
         VerificationSceneError: `X_DECISION_UNSUPPORTED` when a constructed decision
             does not satisfy the live schema-D contract, when the carried axes stop
-            increasing, or when a decision falls outside the playback extent.
+            increasing, when a decision's `step` is not a control step of this
+            replay, or when a decision is timed after the replay ended.
 
     **The `validate()` call holds this module's construction, not the payload.**
     Step 12 already drove every row of the payload through the same struct's
@@ -2541,53 +2573,51 @@ def resolve_decisions(
     a whole array passed where one row belongs -- and that is a defect in this
     function that no earlier row can see.
 
-    **Containment is compared against the extent with no tolerance.** The rule is
-    that a decision happened while the replay was running, not that it landed on a
-    control sample: an estimator writes its own clock and is not obliged to agree
-    with the plant's grid to the last bit. A decision after the last playback sample
-    has nothing to be drawn against, and refusing it is the fail-closed reading.
+    **The two axes are bounded differently, and the reason is the live producer's
+    chronology rather than a reading of the phrase "inside the playback extent".**
+    `utils.online_loop.run_online_rollout` iterates `step_index` over
+    `range(n_steps)`, measures `decision_time_s` as the plant's clock **before** the
+    step's advance, calls the policy, and only then advances; `utils.cable_plant`
+    stamps each `PlantStepState.t_s` from the clock **after** that advance. So on a
+    faithful trace of `T` control steps:
 
-    **"Inside the playback extent" is a statement about `decision_time_s` and about
-    nothing else, and that is a decision rather than an oversight.** Design section
-    4.1's row reads "decisions strictly increasing and inside the playback extent",
-    which does not by itself say which of the two bookkeeping axes is contained;
-    this row contains the time axis only, and a decision whose `step` is at or past
-    the playback grid's length is accepted so long as its time lies in the extent.
-    Four things settle it that way:
+      * every estimator `step` is one of `0` through `T-1` -- it is literally the loop
+        variable `EstimatorCommandPolicy` persists, and `schema/schema.json` gives
+        the field the unit `control_step_index`; and
+      * every `decision_time_s` lies one control interval *below* the playback
+        sample of the same index, so the first decision is stamped `0.0 s` while
+        `playback_t_s[0]` is one interval later.
 
-      * **The schema does not tie `step` to any grid.** `utils.estimator`'s own
-        docstring calls `step` and `decision_time_s` bookkeeping and not scored,
-        and nothing in schema section D declares the estimator's step counter to
-        share an origin or a rate with the controller's. `controller_logs.step`
-        *is* declared to be the contiguous 0-based control grid, and step 15 binds
-        it as such; the estimator's step is a different field in a different role.
-      * **The design already refuses two bindings of exactly this shape, both
-        because they reject faithful real data.** Finding CI forbids indexing
-        `playback_t_s` by `onset_index`, and step 15 forbids comparing
-        `controller_t_s` to `playback_t_s`, in both cases because a real producer
-        offsets the axis by one control interval. An estimator that decides on a
-        sub-sampled cadence, or that counts its own decisions rather than the
-        plant's steps, is the same class of faithful producer.
-      * **Nothing reads `step` as an index.** The one consumer of a decision is the
-        scene's causal call panel, which selects the decision at or before the
-        displayed time; `step` is carried and displayed, never used to reach into an
-        array. A bound whose only justification is a use that does not exist is a
-        bound this adapter would be inventing.
-      * **`step` is not left unguarded by declining to bind it.** Step 12 already
-        established, inside the payload, that it is a non-negative integer and that
-        it increases strictly; the `validate()` call above re-establishes the first
-        of those over this module's own transcription, and the ordering check above
-        re-establishes the second. What is declined is only the *grid* binding.
+    **The step axis is therefore bound to the control-step domain, and the time axis
+    is bounded only above.** A `step` at or past `T` is a state the producer cannot
+    emit, and refusing it is what makes the field's declared unit mean something. A
+    lower bound on `decision_time_s` at `playback_t_s[0]` is the opposite: it refuses
+    the one decision every faithful run necessarily emits. The non-negativity of both
+    axes is already total, established inside the payload at step 12 and re-driven
+    over this module's own transcription by the `validate()` call above, so this row
+    adds no second comparison there -- a guard no input can reach is worse than none.
 
-    If a later artifact does make the estimator's step an index into the playback
-    grid, that is a change to the record design and belongs in an amendment, not in
-    a quiet tightening here.
+    **Containment above is compared with no tolerance.** A decision after the last
+    playback sample has no frame to be drawn against, and refusing it is the
+    fail-closed reading. The upper bound is deliberately *not* tightened to the
+    per-decision pairing `decision_time_s <= playback_t_s[step]`: that would bind the
+    estimator's clock to the plant's grid sample by sample, which is the class of
+    binding finding CI forbids for `onset_index` and step 15 forbids for
+    `controller_t_s`, both because a faithful producer offsets the axis.
+
+    *This replaces the Session-149 reading, which bounded the time axis only and
+    accepted `step == T`. Codex's Session-149 cross-review drove the live producer
+    and showed that reading accepts a step no producer can emit while refusing the
+    step-0 decision every producer does emit; the correction is recorded here rather
+    than in the earlier session's files.* If a later artifact makes the estimator's
+    cadence something other than the control-step grid, that is a change to the
+    record design and belongs in an amendment.
     """
 
     resolved: dict[tuple[str, str], tuple[EstimatorOutput, ...]] = {}
     for case in record.cases:
         grid = playback[case.case_id]
-        first_time = float(grid[0])
+        step_count = int(np.asarray(grid).shape[0])
         last_time = float(grid[-1])
         for suite in SUITE_KEYS:
             payload = roles.payloads[(case.case_id, suite, "estimator_outputs")]
@@ -2625,12 +2655,19 @@ def resolve_decisions(
                         f"case {case.case_id!r} arm {suite} carried decision axes "
                         f"that stopped increasing at index {index}",
                     )
-                if not first_time <= decision.decision_time_s <= last_time:
+                if decision.step >= step_count:
+                    raise _refuse(
+                        X_DECISION_UNSUPPORTED,
+                        f"case {case.case_id!r} arm {suite} decision {index} is "
+                        f"stamped at control step {decision.step}, which this "
+                        f"replay of {step_count} control steps does not contain",
+                    )
+                if decision.decision_time_s > last_time:
                     raise _refuse(
                         X_DECISION_UNSUPPORTED,
                         f"case {case.case_id!r} arm {suite} decision {index} at "
-                        f"t={decision.decision_time_s} s lies outside the playback "
-                        f"extent [{first_time}, {last_time}] s",
+                        f"t={decision.decision_time_s} s is timed after the replay "
+                        f"ended at {last_time} s",
                     )
                 previous_step = decision.step
                 previous_time = decision.decision_time_s
@@ -2920,3 +2957,138 @@ def resolve_geometry(
             )
         resolved.append(CaseGeometry(case_id=case.case_id, arms=_frozen_mapping(arms)))
     return AuthenticatedGeometry(tolerance_m=tolerance_m, cases=tuple(resolved))
+
+
+# --------------------------------------------------------------------------- #
+# Step 19 -- the provenance state, computed and then required to equal `authority`.
+#
+# **This row computes; it does not accept.** Design property 3.3.3 and frozen
+# invariant V7 both say the same thing: a caller may not supply provenance, because
+# a caller-supplied label is a label that can lie. The record's `authority` is not
+# an exception to that -- it is a *constraint on the outcome*, and this row is where
+# the constraint is checked against a state derived from the authenticated facts.
+#
+# **What this row does not restate, and who owns each piece instead.** Row 3 already
+# refuses a `DEVELOPMENT_ONLY` record whose split is not `dev` and a `FINAL` record
+# whose split is `dev` (`_require_authority_split_policy`), and binds the
+# authority's mechanically fixed output parent. Row 4 already refuses a
+# `DEVELOPMENT_ONLY` record naming a frozen config, one whose `config_hash` lacks
+# the `dev-` prefix, one that does not forbid confirmatory payloads, and a `FINAL`
+# record naming a draft config or a `config_hash` carrying a `dev-` trace
+# (`require_authority_config_policy`). Row 6 already binds every manifest row's
+# `config_hash` to the authenticated config's, so a development trace in the
+# manifest implies one in the config and is caught two rows earlier.
+#
+# **What is left is exactly one identity, and it is reachable.** The dataset's
+# `assignment_hash` is checked at row 6 for agreement -- record against both audits,
+# and the two audits against each other -- and nowhere for what it *says*. A
+# delivered research root records the assignment that produced it, and this
+# project's assignments carry the `dev-` prefix while the config freeze is blocked.
+# So a record claiming `FINAL`, naming a frozen clean config, a non-`dev` split and
+# a dataset whose audits both honestly echo a `dev-` assignment passes rows 1
+# through 18 today: every digest agrees, every echo agrees, and the scene would
+# carry a `FINAL RESULT INPUTS` banner over data generated under a development
+# assignment. That is the exact input set invariant W6 asks for, and it is what this
+# row refuses.
+# --------------------------------------------------------------------------- #
+
+#: The prefix every development-lane identity in this project carries. It is the
+#: same string `require_authority_config_policy` tests the config hash against, and
+#: it is a project-wide convention rather than this module's invention: the standing
+#: rule is that no `dev-` trace may enter confirmatory analysis.
+DEVELOPMENT_TRACE_PREFIX = "dev-"
+
+
+@dataclass(frozen=True)
+class ResolvedProvenance:
+    """The provenance state this adapter computed, and what it computed it from.
+
+    Attributes:
+        state: `DEVELOPMENT_ONLY` or `FINAL`. `SYNTHETIC_FIXTURE` is never computed
+            here: it is the private assembly seam's state, supplied by the
+            construction path that never opens a connection record at all, and a
+            public invocation that could resolve to it would be a public path able
+            to disclaim its own inputs.
+        development_traces: the authenticated identities carrying a development
+            trace, each as `name -> value`, in a fixed order. It is carried rather
+            than reduced to a boolean because the refusal has to be able to say
+            *which* identity disagreed with the claimed authority, and because a
+            later row puts the resolved state on the scene beside the evidence for
+            it.
+
+    This value authorises nothing. A resolved `FINAL` state means the authenticated
+    bytes carry no development trace; the exact-state approval of the config, the
+    review of the record and the two transcript authorization halves are separate
+    social gates in sub-steps 4c through 4e and none of them is a runtime fact.
+    """
+
+    state: str
+    development_traces: Mapping[str, str]
+
+
+def resolve_provenance(connection: AuthenticatedConnection) -> ResolvedProvenance:
+    """Run read-order step 19: compute the provenance state and bind it to `authority`.
+
+    Args:
+        connection: everything rows 1 through 12 established. The identities are
+            taken from here rather than from a caller, so the state is computed from
+            the authenticated bytes by construction.
+
+    Returns:
+        The `ResolvedProvenance` rows 20 and 21 begin from.
+
+    Raises:
+        VerificationSceneError: `X_PROVENANCE_UNRESOLVED` when the computed state is
+            not the `authority` the record claims.
+
+    **The computation is total over the two public states and its inputs are named.**
+    A development trace in any authenticated identity, or a `dev` split, computes
+    `DEVELOPMENT_ONLY`; their joint absence computes `FINAL`. There is no third
+    outcome and no default: an input this function cannot classify would be a state
+    the surface could draw without having decided what it is a picture of.
+
+    **Three of the four inputs are already decisive earlier, and that is written
+    down rather than hidden.** Under `DEVELOPMENT_ONLY` the split is `dev` by row 3
+    and the config hash carries the prefix by row 4, so the computation cannot
+    return anything else and the equality below is a post-condition -- the same
+    shape row 13 has, and named the same way. The one input that can move the answer
+    on its own is the dataset assignment, checked at row 6 for agreement and never
+    for content. The refusal names every trace it found, not the first, because a
+    record whose dataset *and* whose config both disagree with a claimed `FINAL` is
+    a different report from one where only the dataset does.
+    """
+
+    record = connection.record
+    candidates: tuple[tuple[str, str], ...] = (
+        ("config.config_hash", connection.config.config.config_hash),
+        (
+            "data_root.generation_audit.assignment_hash",
+            record.data_root.generation_audit.assignment_hash,
+        ),
+        (
+            "data_root.independent_audit.assignment_hash",
+            record.data_root.independent_audit.assignment_hash,
+        ),
+    )
+    traces = {
+        name: value
+        for name, value in candidates
+        if DEVELOPMENT_TRACE_PREFIX in value
+    }
+    state = (
+        DEVELOPMENT_ONLY
+        if traces or record.split == "dev"
+        else FINAL
+    )
+    if state != record.authority:
+        detail = (
+            ", ".join(f"{name} = {value!r}" for name, value in traces.items())
+            if traces
+            else f"split = {record.split!r}"
+        )
+        raise _refuse(
+            X_PROVENANCE_UNRESOLVED,
+            f"the record claims authority {record.authority} but this adapter "
+            f"computed {state} from its authenticated identities: {detail}",
+        )
+    return ResolvedProvenance(state=state, development_traces=_frozen_mapping(traces))

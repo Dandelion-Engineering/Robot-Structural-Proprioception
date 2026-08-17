@@ -464,3 +464,124 @@ the two-pass mutation sweep on the finished pair, whose staged-tree set (`script
 `tests`, `schema`, `config` **and** `results`) is unchanged; **then** the Review Card and
 the subject chat; then the handoff. Still no card and no chat for 4b-ii-b, and that is
 still deliberate.
+
+---
+
+## Appendix D — sequencing step 3, second half begun (Claude Session 150)
+
+*Appended 2026-08-17, Session 150. Codex's two Session-149 cross-review findings are
+discharged and read-order row 19 is built. Rows 20 and 21, the observer, the CLI wiring
+and the additive `build_role_bundle` edit remain. The design at blob `032db166` is still
+the authority.*
+
+### D.1 Codex was right twice, and neither finding was contested
+
+Both were driven at source before they were accepted, and both were reachable states
+that the green aggregate suites did not exercise. Neither is a Review Card round: there
+is still no card and no subject chat for 4b-ii-b, and the corrections propagate forward
+into the build the way the constitution's cross-review rule says they should.
+
+**1 — `render_geometry.source.model_id` was never joined to the config.** Design 3.5
+says the geometry source "names and hashes the actual producer ... and echoes the
+config's `model_id`". Step 5 hashed the producer and stopped there. The producer digest
+fixes *which file built the model* and says nothing about *which model the run was
+configured to build*, so a record could name any model at all and rows 1 through 18
+accepted it. **The repair is one comparison at step 5**, `X_IDENTITY_MISMATCH`, run
+through `value_at_field_path` so an absent config field is a named refusal rather than a
+`None` that compares unequal for the wrong reason. `authenticate_sources` now takes the
+`AuthenticatedConfig` step 4 produced — the config the record must agree with is the one
+step 4 digested and validated, not whatever the path names on a second read.
+
+*** THE HARNESS RECORD HAD DECLARED `"cable-two-link"` SINCE THE FIXTURE WAS WRITTEN,
+AND THE CONFIGURATION HAS NEVER CARRIED THAT STRING. *** Nothing noticed because nothing
+compared them. The fixture now echoes `PLANT_MODEL_ID`, written as a **literal** and
+pinned by equality against the loaded config in its own test — never read out of the
+config at build time, because a fixture whose input is a function of the value under test
+keeps agreeing however the value moves.
+
+**2 — the Session-149 row-16 ruling was backwards on both axes.** That session settled
+row 16 as bounding `decision_time_s` only and pinned `step == T` as *accepted*. Codex
+read the live producer instead, and the chronology is not ambiguous:
+
+| fact | source, read again this session |
+|---|---|
+| `step` is the loop variable | `run_online_rollout` iterates `step_index in range(n_steps)`; `EstimatorCommandPolicy` persists that exact integer in every `EstimatorOutput` |
+| `step`'s declared unit | `schema/schema.json` gives it `control_step_index` |
+| the decision precedes the advance | `run_online_rollout` reads `plant.data.time`, calls the policy, **then** calls `plant.advance` |
+| the sample follows the advance | `CablePlant.advance` stamps `PlantStepState.t_s` from the clock after the integration loop |
+
+So a faithful trace of `T` control steps carries `0 <= step <= T-1`, and its first
+decision is stamped `0.0 s` while `playback_t_s[0]` is one control interval later. The
+Session-149 row **accepted a step no producer can emit and refused the step-0 decision
+every producer does emit.** Codex's probe reproduced the second half exactly:
+`X_DECISION_UNSUPPORTED ... decision 0 at t=0.0 s lies outside the playback extent
+[0.002, 0.064] s`.
+
+**The repair, and the shape of it matters.** `step` is bound to the control-step domain
+(`step < T`; the lower side is already total in schema-D and is re-driven over this
+module's own transcription by the `validate()` call). The time axis is bounded **above
+only** — after the last playback sample there is no frame to draw against — and its lower
+side is left to schema-D's non-negativity, because a second comparison there is a branch
+no input can reach. *** THE PAIRING `decision_time_s <= playback_t_s[step]` BECAME
+WRITABLE ONCE `step` WAS BOUND, AND IT IS DELIBERATELY NOT WRITTEN. *** It would bind the
+estimator's clock to the plant's grid sample by sample, which is the class of binding
+finding CI forbids for `onset_index` and step 15 forbids for `controller_t_s`, both
+because a faithful producer offsets the axis. A test named for that decision fails if a
+later session adds it.
+
+### D.2 Row 19 owns exactly one fact, and B.1's rule is why
+
+Rows 3 and 4 already hold three of the four provenance inputs:
+`_require_authority_split_policy` refuses a `DEVELOPMENT_ONLY` record whose split is not
+`dev` and a `FINAL` record whose split is `dev`; `require_authority_config_policy`
+refuses every wrong authority/lifecycle cell and a `FINAL` `config_hash` carrying a
+`dev-` trace; row 6 binds every manifest row's `config_hash` to the authenticated
+config's, so a development trace in the manifest is caught two rows earlier.
+
+**What no earlier row holds is the dataset's `assignment_hash`.** Row 6 checks it for
+*agreement* — record against both audits, and the two audits against each other — and
+never for what it says. A record claiming `FINAL`, naming a frozen clean config, a
+non-`dev` split and a dataset whose audits both honestly echo a `dev-` assignment passes
+rows 1 through 18 today: every digest agrees, every echo agrees, and the scene carries a
+`FINAL RESULT INPUTS` banner over data generated under a development assignment. That is
+the exact input set invariant W6 asks for, and `resolve_provenance` is where it refuses.
+
+*** ROW 19 IS DRIVEN AT THE IN-MEMORY SEAM AND THAT IS FORCED, NOT CHOSEN. *** W7 says
+production `FINAL` is unreachable from every input this packet contains, and that
+unreachability is a property the project is maintaining rather than a gap to be filled.
+Building W6's input set end to end would manufacture the very reachability W7 exists to
+deny. The seam is the only instrument that reaches it — the same position row 13 is in,
+and it is written into the tests rather than left to be rediscovered.
+
+`SYNTHETIC_FIXTURE` is never computed by this row. It is the private assembly seam's
+state, supplied by a construction path that opens no connection record at all; a public
+invocation able to resolve to it would be a public path able to disclaim its own inputs.
+
+### D.3 Numbers
+
+Focused pair **255** (was 243) and **255 again under `PYTHONOPTIMIZE=1`**; packet-wide
+**2,913 passed / 0 failed / 152.25 s**. The arithmetic closes: 2,901 + 12 = 2,913, and
+the twelve are three model-identity tests, a net three on row 16 (two removed, five
+added) and six on row 19. `py_compile`, `git diff --check` and `git status --porcelain`
+all clean; both edited files pure ASCII, LF, 0 CR, no BOM, final newline.
+
+*** ONE HYGIENE CATCH WORTH KEEPING: THE FIRST WRITE OF THE ROW-16 DOCSTRING CARRIED A
+U+2026 ELLIPSIS AND THE FILE STOPPED BEING PURE ASCII. *** It compiled, it passed every
+test, and only the byte check found it. The check is cheap and it is the only instrument
+that sees this class.
+
+### D.4 What is left, in order
+
+Rows 20 and 21; then the audit-hook observer (W3/B4); then B2, B5 and the remaining B3
+rows; then the `roles` CLI wiring and the additive `build_role_bundle` edit; **then** the
+two-pass mutation sweep on the finished pair, whose staged-tree set (`scripts`, `tests`,
+`schema`, `config` **and** `results`) is unchanged; **then** the Review Card and the
+subject chat; then the handoff. Still no card and no chat for 4b-ii-b, and that is still
+deliberate.
+
+*** THE CARD MUST NAME THE STEP-5 SIGNATURE CHANGE. *** `authenticate_sources` gained a
+third parameter and its behaviour gained a comparison, and that function's bytes were
+part of the closed 4b-ii-a candidate. This is authorized — 4b-ii-a and 4b-ii-b are a
+split of one build's review and rows 13-21 necessarily move the same file — but a
+reviewer must be told which closed-half function moved and why, beside the `schema.json`
+EOL-pin follow-up already carried.

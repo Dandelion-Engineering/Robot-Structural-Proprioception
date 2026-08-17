@@ -58,12 +58,14 @@ from utils.config_contract import expected_config_hash, load_config  # noqa: E40
 from utils import connection_adapter  # noqa: E402
 from utils.connection_adapter import (  # noqa: E402
     AUDIT_NAMES,
+    DEVELOPMENT_TRACE_PREFIX,
     LABEL_FIELDS,
     MANIFEST_AUDIT_KEY,
     MANIFEST_CENSUS_FIELDS,
     MANIFEST_NAME,
     MAX_FIELD_PATH_INDEX_DIGITS,
     PLANT_FRAME_ARRAYS,
+    PLANT_MODEL_ID_FIELD_PATH,
     ROLE_INDEX_NAME,
     SUITE_QUALIFIED_ROLES,
     ArmGeometry,
@@ -89,6 +91,7 @@ from utils.connection_adapter import (  # noqa: E402
     resolve_cases,
     resolve_decisions,
     resolve_geometry,
+    resolve_provenance,
     role_root_for,
     strict_json_document,
     tracked_text_digest,
@@ -114,7 +117,9 @@ from utils.verification_scene import (  # noqa: E402
     CENTERLINE_TASK_OUTPUT_TOL_M,
     DEVELOPMENT_ONLY,
     FINAL,
+    PROVENANCE_STATES,
     SUITE_KEYS,
+    SYNTHETIC_FIXTURE,
     LabelFields,
     VerificationSceneError,
     X_ARMS_INCOMPLETE,
@@ -157,6 +162,17 @@ SELECTED_RUNG = 2
 SELECTED_WIDTH = 32
 DISTAL_TOLERANCE_M = 0.002
 MAXIMUM_DEVIATION_M = 0.0011
+
+#: The generated plant model's identity, as the draft config declares it at
+#: `PLANT_MODEL_ID_FIELD_PATH`. It is written here as a **literal** and pinned by
+#: equality against the loaded config in
+#: `test_the_fixture_model_id_is_the_configuration_s_own`, rather than being read out
+#: of the config at fixture-build time: a fixture whose input is a function of the
+#: value under test would keep agreeing with the config however the config moved,
+#: which is the defect shape the mutation sweep has already caught twice on this
+#: lane. Until Session 150 the record below declared `"cable-two-link"`, which the
+#: configuration has never carried; nothing noticed because nothing compared them.
+PLANT_MODEL_ID = "mujoco-cable-rod-development-candidate"
 
 #: The contract fixture's minimum trajectory length. It is stated as a literal rather
 #: than derived from the builder's own guard, because a test whose input is a function
@@ -458,7 +474,7 @@ class Harness:
                     "rotation_vector_component": 1,
                 },
                 "source": {
-                    "model_id": "cable-two-link",
+                    "model_id": PLANT_MODEL_ID,
                     "producer_relative_path": PRODUCER_RELATIVE,
                     "producer_sha256": tracked_text_digest(
                         self.packet_root / PRODUCER_RELATIVE
@@ -995,6 +1011,97 @@ def test_row5_refuses_a_geometry_producer_digest_that_does_not_agree(
     error = _drive(harness, record)
     assert error.code == X_IDENTITY_MISMATCH
     assert "producer_sha256" in str(error)
+
+
+def test_the_fixture_model_id_is_the_configuration_s_own(harness: Harness) -> None:
+    """`PLANT_MODEL_ID` is the value the draft config actually declares.
+
+    The literal above is what the harness record echoes, so if it drifted away from
+    the configuration every model-identity test in this file would be exercising a
+    private agreement between two copies of the same wrong string. This reads the
+    config the harness loaded and compares the two directly.
+    """
+
+    document = json.loads(
+        (harness.packet_root / CONFIG_RELATIVE).read_text(encoding="utf-8")
+    )
+    assert document["values"]["plant"]["model_id"] == PLANT_MODEL_ID
+    assert PLANT_MODEL_ID_FIELD_PATH == "values.plant.model_id"
+
+
+def test_row5_refuses_a_geometry_model_the_configuration_never_described(
+    harness: Harness, record: dict[str, Any]
+) -> None:
+    """Design 3.5: the geometry source **echoes** the config's `model_id`.
+
+    **This is Codex's Session-149 cross-review finding, driven end to end.** The
+    producer digest fixes which *file* built the model and says nothing about which
+    *model* the run was configured to build, so before this join a record could name
+    any model at all and rows 1 through 18 would accept it: Codex's probe changed
+    only this field, and the chain returned one case while reporting the record's
+    `model_id` and the config's side by side. The whole point of the echo is that a
+    scene cannot claim to be a picture of a body the configuration never described.
+    """
+
+    record["render_geometry"]["source"]["model_id"] = "not-the-config-model"
+    error = _drive(harness, record)
+    assert error.code == X_IDENTITY_MISMATCH
+    assert "render_geometry.source.model_id" in str(error)
+    assert PLANT_MODEL_ID in str(error)
+
+
+def test_row5_refuses_a_configuration_that_carries_no_plant_model_id(
+    harness: Harness, tmp_path: Path
+) -> None:
+    """An absent config field is this row's refusal, never a `None` that compares.
+
+    The comparison runs through `value_at_field_path` precisely so a configuration
+    missing the field refuses by name instead of silently comparing a record string
+    against nothing. Driven by deleting `values.plant.model_id` from a copy of the
+    draft config, with the record's declared `config_hash` regenerated so the chain
+    reaches step 5 rather than refusing at step 4 for an unrelated reason.
+    """
+
+    packet = tmp_path / "packet"
+    shutil.copytree(harness.packet_root, packet)
+    config_path = packet / CONFIG_RELATIVE
+    document = json.loads(config_path.read_text(encoding="utf-8"))
+    del document["values"]["plant"]["model_id"]
+    document["config_hash"] = expected_config_hash(document)
+    _write_json(config_path, document)
+    reloaded = load_config(config_path, packet / SCHEMA_RELATIVE)
+    edited = copy.deepcopy(harness.document)
+    edited["config"]["config_hash"] = reloaded.config_hash
+    edited["config"]["sha256"] = tracked_text_digest(config_path)
+    _write_json(
+        packet / RESULT_RELATIVE,
+        {
+            "read": {
+                "cases": [CASE_ID],
+                "config_hash": reloaded.config_hash,
+                "split": SPLIT,
+            },
+            "status": "synthetic_fixture_established_result",
+        },
+    )
+    edited["established_result"]["sha256"] = tracked_text_digest(
+        packet / RESULT_RELATIVE
+    )
+    record_path = packet / record_relative_path(RECORD_LABEL)
+    digest = _write_record(record_path, edited)
+    error = _refusal(
+        lambda: authenticate_connection(
+            packet_root=packet,
+            connection_record_path=record_path,
+            connection_record_sha256=digest,
+            config_path=config_path,
+            role_root=harness.role_root,
+            checkpoint_root=harness.checkpoint_root,
+            output_dir=packet / "results" / "verification_connection_development",
+        )
+    )
+    assert error.code == X_IDENTITY_MISMATCH
+    assert PLANT_MODEL_ID_FIELD_PATH in str(error)
 
 
 def test_row5_refuses_a_threshold_its_named_source_does_not_carry(
@@ -1958,7 +2065,7 @@ def test_the_entry_point_is_the_only_composition_of_the_read_order(
         output_dir=arguments["output_dir"],
     )
     config = authenticate_config(record_value, bound)
-    sources = authenticate_sources(record_value, bound)
+    sources = authenticate_sources(record_value, bound, config)
     dataset = authenticate_dataset(record_value, bound, sources, config)
     roles = authenticate_roles(record_value, bound, config, dataset)
     whole = harness.authenticate()
@@ -3515,21 +3622,26 @@ def test_row16_refuses_a_decision_after_the_last_playback_sample(
         lambda: resolve_decisions(edited.record, edited.roles, playback)
     )
     assert error.code == X_DECISION_UNSUPPORTED
-    assert "lies outside the playback extent" in str(error)
+    assert "is timed after the replay ended" in str(error)
 
 
-def test_row16_refuses_a_decision_before_the_first_playback_sample(
+def test_row16_accepts_the_step_zero_decision_the_live_producer_always_emits(
     harness: Harness,
 ) -> None:
-    """The extent has two ends and both are compared.
+    """The first decision is stamped *before* the first plant advance, and it stands.
 
-    **This case needs a live-shaped grid, and finding that out is the point.** The
-    contract fixture's `plant.t_s` starts at 0.000 s, so on that grid every time
-    below the first sample is negative and `EstimatorOutput.validate` refuses it one
-    branch earlier -- the lower bound would look covered while nothing had reached
-    it. A real plant grid starts at one control interval, because `cable_plant`
-    stamps `t_s` *after* advancing, so the grid is shifted here to the live shape and
-    the decision placed inside the first interval.
+    **This is Codex's Session-149 cross-review finding, driven on a live-shaped
+    grid.** `utils.online_loop.run_online_rollout` reads `plant.data.time` and calls
+    the policy *before* `plant.advance`, while `utils.cable_plant` stamps each
+    `PlantStepState.t_s` from the clock *after* the advance. So on real data the
+    first decision is at 0.0 s and `playback_t_s[0]` is one control interval later,
+    and the Session-149 lower bound at `playback_t_s[0]` refused the one decision
+    every faithful run necessarily emits.
+
+    The contract fixture's own `plant.t_s` starts at 0.000 s and therefore cannot
+    show this -- on that grid the two conventions coincide -- so the grid is shifted
+    here to the live shape, exactly as the superseded refusal test had to. What
+    changed is the expected outcome, not the construction.
     """
 
     connection = harness.authenticate()
@@ -3541,15 +3653,39 @@ def test_row16_refuses_a_decision_before_the_first_playback_sample(
             t_s=np.asarray(payloads[plant_key]["t_s"]) + 0.002,
         )
     key = _payload_key(CASE_ID, "S", "estimator_outputs")
-    payloads[key] = _decision_payload(payloads[key], [0], [0.001])
+    payloads[key] = _decision_payload(payloads[key], [0], [0.0])
     edited = replace(connection, roles=replace(connection.roles, payloads=payloads))
     playback = bind_playback_timebase(edited.record, edited.roles)
     assert float(playback[CASE_ID][0]) == 0.002
+    carried = resolve_decisions(edited.record, edited.roles, playback)[(CASE_ID, "S")]
+    assert len(carried) == 1
+    assert carried[0].step == 0
+    assert carried[0].decision_time_s == 0.0
+
+
+def test_row16_leaves_the_lower_time_bound_to_the_schema_contract(
+    harness: Harness,
+) -> None:
+    """A negative decision time refuses, and it refuses one branch earlier.
+
+    Declining a lower bound of this row's own is not the same as leaving the low
+    side open, and this drives which layer holds it: `EstimatorOutput.validate`
+    requires `decision_time_s` to be finite and non-negative, so the refusal message
+    is the schema-D one rather than an extent message this row would have had to
+    invent. Adding a second comparison here would be a branch no input can reach.
+    """
+
+    connection = harness.authenticate()
+    key = _payload_key(CASE_ID, "C1", "estimator_outputs")
+    payload = _decision_payload(connection.roles.payloads[key], [0], [-0.001])
+    edited = _with_payload(connection, key, payload)
+    playback = bind_playback_timebase(edited.record, edited.roles)
     error = _refusal(
         lambda: resolve_decisions(edited.record, edited.roles, playback)
     )
     assert error.code == X_DECISION_UNSUPPORTED
-    assert "lies outside the playback extent" in str(error)
+    assert "violates the schema-D contract" in str(error)
+    assert "decision_time_s must be finite and non-negative" in str(error)
 
 
 def test_row16_refuses_carried_axes_that_stop_increasing(harness: Harness) -> None:
@@ -3608,38 +3744,89 @@ def test_row16_carries_every_decision_in_payload_order(harness: Harness) -> None
     assert [decision.decision_time_s for decision in carried] == [0.006, 0.022, 0.058]
 
 
-def test_row16_bounds_the_time_axis_only_and_that_is_the_settled_reading(
+def test_row16_refuses_a_step_this_replay_does_not_contain(
     harness: Harness,
 ) -> None:
-    """A step at or past the grid's length is accepted when its time is in the extent.
+    """`step` is a control-step index, and a replay of `T` steps contains `0 .. T-1`.
 
-    **This pins an interpretation, and it exists because the interpretation was
-    inferred before it was stated.** Codex's Session-148 cross-review observed that
-    row 16 binds `decision_time_s` to the playback extent while accepting
-    `step == T`, and asked which reading of design 4.1's "inside the playback
-    extent" the adapter means. The settled answer is *time only*, and the argument
-    is in `resolve_decisions`' docstring: schema section D calls `step` bookkeeping
-    and ties it to no grid, the design already refuses two bindings of exactly this
-    shape because a faithful producer offsets the axis, nothing downstream uses
-    `step` as an index, and step 12 plus the checks above still hold everything
-    about `step` except the grid binding.
+    **This reverses the Session-149 reading, and the reason is a measurement rather
+    than a preference.** That session settled row 16 as bounding the time axis only
+    and pinned `step == T` as *accepted*, on the argument that the schema ties the
+    estimator's counter to no grid. Codex's Session-149 cross-review read the live
+    producer instead: `run_online_rollout` iterates `step_index` over
+    `range(n_steps)` and `EstimatorCommandPolicy` persists that exact integer in
+    every `EstimatorOutput`, and `schema/schema.json` gives the field the unit
+    `control_step_index`. So `step == T` is a state no faithful producer can emit,
+    and accepting it was the error.
 
-    So the acceptance below is a decision rather than an accident, and a later
-    session that tightens it will fail this test and read the reason rather than
-    discovering it. The grid here carries 32 samples numbered 0 to 31; the decision
-    is stamped at step 32 -- one past the last control step -- at a time inside the
-    extent.
+    The grid here carries 32 samples numbered 0 to 31; the decision is stamped at
+    step 32, one past the last control step, at a time well inside the extent -- so
+    the refusal is about the step axis and cannot be the time bound firing.
     """
 
     connection = harness.authenticate()
     key = _payload_key(CASE_ID, "S", "estimator_outputs")
-    payload = _decision_payload(connection.roles.payloads[key], [32], [0.020])
+    payload = _decision_payload(connection.roles.payloads[key], [FIXTURE_N_STEPS], [0.020])
     edited = _with_payload(connection, key, payload)
     playback = bind_playback_timebase(edited.record, edited.roles)
     assert int(np.asarray(playback[CASE_ID]).shape[0]) == FIXTURE_N_STEPS
+    error = _refusal(
+        lambda: resolve_decisions(edited.record, edited.roles, playback)
+    )
+    assert error.code == X_DECISION_UNSUPPORTED
+    assert "does not contain" in str(error)
+    assert "control step 32" in str(error)
+
+
+def test_row16_accepts_the_last_control_step_the_replay_does_contain(
+    harness: Harness,
+) -> None:
+    """The bound is `T`, not `T - 1`, and the accept side is driven beside it.
+
+    A refusal test alone cannot separate "refuses step 32" from "refuses every step
+    near the end", and the boundary is exactly where an off-by-one lives. `31` is
+    the last step a 32-step replay contains and it is carried.
+    """
+
+    connection = harness.authenticate()
+    key = _payload_key(CASE_ID, "S", "estimator_outputs")
+    payload = _decision_payload(
+        connection.roles.payloads[key], [FIXTURE_N_STEPS - 1], [0.020]
+    )
+    edited = _with_payload(connection, key, payload)
+    playback = bind_playback_timebase(edited.record, edited.roles)
     carried = resolve_decisions(edited.record, edited.roles, playback)[(CASE_ID, "S")]
     assert len(carried) == 1
-    assert carried[0].step == FIXTURE_N_STEPS
+    assert carried[0].step == FIXTURE_N_STEPS - 1
+
+
+def test_row16_does_not_pair_each_decision_to_the_sample_of_its_own_index(
+    harness: Harness,
+) -> None:
+    """The upper time bound is the replay's end, not `playback_t_s[step]`.
+
+    **This pins a bound that was deliberately not tightened.** With `step` now bound
+    to the control-step domain, the per-decision pairing
+    `decision_time_s <= playback_t_s[step]` becomes writable -- and it would bind the
+    estimator's clock to the plant's grid sample by sample, which is the class of
+    binding finding CI forbids for `onset_index` and step 15 forbids for
+    `controller_t_s`, in both cases because a faithful producer offsets the axis.
+
+    The decision below is stamped at step 0 with a time of 0.020 s, far past
+    `playback_t_s[0] = 0.000 s` and far inside the replay. It is carried. A later
+    session that adds the pairing will fail this test and read the reason rather
+    than rediscovering it.
+    """
+
+    connection = harness.authenticate()
+    key = _payload_key(CASE_ID, "S", "estimator_outputs")
+    payload = _decision_payload(connection.roles.payloads[key], [0], [0.020])
+    edited = _with_payload(connection, key, payload)
+    playback = bind_playback_timebase(edited.record, edited.roles)
+    assert float(playback[CASE_ID][0]) == 0.0
+    carried = resolve_decisions(edited.record, edited.roles, playback)[(CASE_ID, "S")]
+    assert len(carried) == 1
+    assert carried[0].step == 0
     assert carried[0].decision_time_s == 0.020
 
 
@@ -4178,3 +4365,176 @@ def test_row18_refuses_a_triplet_column_the_payload_does_not_carry(
     )
     assert error.code == X_GEOMETRY_UNSUPPORTED
     assert "columns" in str(error)
+
+
+# -- row 19 ------------------------------------------------------------------ #
+#
+# **Row 19 is driven at the in-memory seam, and that is forced rather than chosen.**
+# Invariant W7 says production `FINAL` is unreachable from every input this packet
+# contains -- no frozen config satisfies final P1, no established final result
+# exists, and the downstream roles are absent -- and that unreachability is a
+# property the project is deliberately maintaining, not a gap to be filled by a
+# fixture. So the one input set invariant W6 asks for, a state that computes
+# `DEVELOPMENT_ONLY` under a record claiming `FINAL`, cannot be built end to end
+# today without manufacturing the very reachability W7 exists to deny. The seam is
+# the only instrument that reaches it, exactly as it is for row 13.
+def _reprovenanced(
+    connection: AuthenticatedConnection,
+    *,
+    authority: str,
+    split: str,
+    config_hash: str,
+    assignment_hash: str,
+) -> AuthenticatedConnection:
+    """Return the same connection with only its four provenance identities changed."""
+
+    data_root = connection.record.data_root
+    record = replace(
+        connection.record,
+        authority=authority,
+        split=split,
+        data_root=replace(
+            data_root,
+            generation_audit=replace(
+                data_root.generation_audit, assignment_hash=assignment_hash
+            ),
+            independent_audit=replace(
+                data_root.independent_audit, assignment_hash=assignment_hash
+            ),
+        ),
+    )
+    config = replace(
+        connection.config,
+        config=replace(connection.config.config, config_hash=config_hash),
+    )
+    return replace(connection, record=record, config=config)
+
+
+def test_row19_resolves_the_harness_record_to_development_only(
+    harness: Harness,
+) -> None:
+    """The accept path, and the traces it computed the state from are carried."""
+
+    connection = harness.authenticate()
+    resolved = resolve_provenance(connection)
+    assert resolved.state == DEVELOPMENT_ONLY
+    assert set(resolved.development_traces) == {
+        "config.config_hash",
+        "data_root.generation_audit.assignment_hash",
+        "data_root.independent_audit.assignment_hash",
+    }
+    for value in resolved.development_traces.values():
+        assert value.startswith(DEVELOPMENT_TRACE_PREFIX)
+
+
+def test_row19_refuses_a_final_claim_over_a_development_assignment(
+    harness: Harness,
+) -> None:
+    """Invariant W6's input set: computes `DEVELOPMENT_ONLY`, claims `FINAL`.
+
+    **This is the one provenance fact no earlier row holds.** The config is frozen
+    and clean, so row 4 is satisfied; the split is `val`, so row 3 is satisfied;
+    every digest and every echo in the chain still agrees, because row 6 checks the
+    dataset assignment for *agreement* -- record against both audits, and the two
+    audits against each other -- and never for what it says. What is left is a
+    `FINAL RESULT INPUTS` banner over data generated under a development
+    assignment, and this row is where that refuses.
+    """
+
+    connection = harness.authenticate()
+    edited = _reprovenanced(
+        connection,
+        authority=FINAL,
+        split="val",
+        config_hash="f" * 64,
+        assignment_hash=f"{DEVELOPMENT_TRACE_PREFIX}{'a' * 64}",
+    )
+    error = _refusal(lambda: resolve_provenance(edited))
+    assert error.code == X_PROVENANCE_UNRESOLVED
+    assert "claims authority FINAL" in str(error)
+    assert f"computed {DEVELOPMENT_ONLY}" in str(error)
+    assert "data_root.generation_audit.assignment_hash" in str(error)
+    assert "data_root.independent_audit.assignment_hash" in str(error)
+    assert "config.config_hash" not in str(error)
+
+
+def test_row19_resolves_final_when_no_authenticated_identity_carries_a_trace(
+    harness: Harness,
+) -> None:
+    """The accept side of the same construction, so the refusal above separates.
+
+    Without this the refusal test would pass on an implementation that refused every
+    `FINAL` claim, which is branch A -- the branch finding CY's ruling rejected.
+    """
+
+    connection = harness.authenticate()
+    edited = _reprovenanced(
+        connection,
+        authority=FINAL,
+        split="val",
+        config_hash="f" * 64,
+        assignment_hash="c" * 64,
+    )
+    resolved = resolve_provenance(edited)
+    assert resolved.state == FINAL
+    assert dict(resolved.development_traces) == {}
+
+
+def test_row19_names_the_split_when_no_identity_carries_a_trace(
+    harness: Harness,
+) -> None:
+    """A `dev` split alone computes `DEVELOPMENT_ONLY`, and the message says so.
+
+    Row 3 forbids this pairing in production (`_require_authority_split_policy`), so
+    like row 13 this branch is a post-condition across a module boundary; the seam is
+    what reaches it. It is kept because the split is one of the four named inputs to
+    the computation and a computation with an unreachable input is a computation
+    whose inputs nobody has checked.
+    """
+
+    connection = harness.authenticate()
+    edited = _reprovenanced(
+        connection,
+        authority=FINAL,
+        split="dev",
+        config_hash="f" * 64,
+        assignment_hash="c" * 64,
+    )
+    error = _refusal(lambda: resolve_provenance(edited))
+    assert error.code == X_PROVENANCE_UNRESOLVED
+    assert "split = 'dev'" in str(error)
+
+
+def test_row19_never_computes_the_synthetic_state(harness: Harness) -> None:
+    """`SYNTHETIC_FIXTURE` belongs to the private seam and no public input reaches it.
+
+    The private assembly seam supplies that state and never opens a connection
+    record; a public invocation able to resolve to it would be a public path able to
+    disclaim its own inputs. This drives both public outcomes and asserts the third
+    state is not among them.
+    """
+
+    connection = harness.authenticate()
+    states = {
+        resolve_provenance(connection).state,
+        resolve_provenance(
+            _reprovenanced(
+                connection,
+                authority=FINAL,
+                split="val",
+                config_hash="f" * 64,
+                assignment_hash="c" * 64,
+            )
+        ).state,
+    }
+    assert states == {DEVELOPMENT_ONLY, FINAL}
+    assert SYNTHETIC_FIXTURE not in states
+    assert SYNTHETIC_FIXTURE in PROVENANCE_STATES
+
+
+def test_row19_carries_a_read_only_trace_mapping(harness: Harness) -> None:
+    """Nothing downstream can edit the evidence this row computed the state from."""
+
+    resolved = resolve_provenance(harness.authenticate())
+    with pytest.raises(TypeError):
+        resolved.development_traces["config.config_hash"] = "x"  # type: ignore[index]
