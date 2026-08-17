@@ -248,12 +248,23 @@ from utils.centerline_geometry import (
     require_distal_point_within_tolerance,
 )
 from utils.verification_scene import (
+    BUNDLE_VERSION,
     DEVELOPMENT_ONLY,
     FINAL,
     LabelFields,
     SUITE_KEYS,
+    Arm as SceneArm,
+    ArmIdentity,
+    BodyChange,
+    Provenance,
+    Thresholds,
+    Tracking,
+    VerificationBundle,
+    VerificationScene,
     VerificationSceneError,
+    validate_bundle,
     X_ARMS_INCOMPLETE,
+    X_BUNDLE_INCOMPLETE,
     X_DECISION_UNSUPPORTED,
     X_IDENTITY_MISMATCH,
     X_PAIR_MISMATCH,
@@ -2106,6 +2117,11 @@ class AuthenticatedConnection:
 
     Attributes:
         record: the authenticated, deeply frozen record.
+        record_sha256: the record identity this chain authenticated, carried because
+            row 20 puts it on every scene's provenance block and a provenance
+            identity a caller supplies at assembly time is an identity that can lie
+            (invariant V7). It is the digest `load_connection_record` checked, not a
+            second measurement of the path.
         bound: every declared path, resolved under its own root.
         expected_opens: the section-4.2 allowlist derived from the bound record. It is
             carried here because the second half of sub-step 4b-ii compares it against
@@ -2121,6 +2137,7 @@ class AuthenticatedConnection:
     """
 
     record: ConnectionRecord
+    record_sha256: str
     bound: BoundPaths
     expected_opens: frozenset[Path]
     config: AuthenticatedConfig
@@ -2185,6 +2202,7 @@ def authenticate_connection(
     roles = authenticate_roles(record, bound, authenticated, dataset)
     return AuthenticatedConnection(
         record=record,
+        record_sha256=connection_record_sha256,
         bound=bound,
         expected_opens=expected_open_set(record, bound),
         config=authenticated,
@@ -3092,3 +3110,202 @@ def resolve_provenance(connection: AuthenticatedConnection) -> ResolvedProvenanc
             f"computed {state} from its authenticated identities: {detail}",
         )
     return ResolvedProvenance(state=state, development_traces=_frozen_mapping(traces))
+
+
+# --------------------------------------------------------------------------- #
+# Step 20 -- the bundle assembly, and the one comparison it exists to make.
+#
+# **What this row adds, and what it deliberately delegates.** Rows 13 through 19
+# established the facts; this row is where they become the object the two surfaces
+# draw. Three of its four checks are relations between *separately produced* tuples
+# -- the record's menu, `resolve_cases`' output, `resolve_geometry`'s output and the
+# established result's declared case list -- and that is exactly the class of fault
+# no earlier row can see, because each earlier row saw only its own output. The
+# fourth is `validate_bundle`, the surface gate both surfaces run as the first
+# statement of their own entry points, called here so a bundle that no surface would
+# draw never leaves this module.
+#
+# **One check is deliberately absent and the reason is written down rather than
+# left to be rediscovered.** The interactive surface exposes cases through a
+# `display label -> case_id` mapping, and it would be natural to require that
+# mapping to be a bijection over the menu. It always is: `validate_bundle` already
+# refuses duplicate labels, and a duplicate label is the only way `dict(zip(...))`
+# can lose a case. A guard no input can make decisive is the same defect as no guard
+# at all (lesson 242), so the exposure property is held where it is decidable --
+# label uniqueness, in the surface gate -- and not restated here.
+# --------------------------------------------------------------------------- #
+def _arm_identity(case: Case, suite: str) -> ArmIdentity:
+    """Return one arm's provenance identities, taken from the authenticated record.
+
+    Every value is the record's own declaration, which rows 2, 6, 8, 10 and 11
+    already bound to the bytes on disk. Nothing is re-measured here: a second
+    measurement at assembly time would be a second document, and the identities a
+    reader is shown must be the ones the chain authenticated.
+    """
+
+    arm = case.arms[suite]
+    return ArmIdentity(
+        run_id=arm.run_id,
+        pair_id=case.pair_id,
+        checkpoint_relative_path=str(arm.checkpoint.relative_path),
+        checkpoint_sha256=arm.checkpoint.sha256,
+        role_index_sha256=tuple(
+            (role, arm.roles[role].index_sha256) for role in ROLE_NAMES
+        ),
+        role_payload_sha256=tuple(
+            (role, arm.roles[role].payload_sha256) for role in ROLE_NAMES
+        ),
+    )
+
+
+def _scene_for(
+    connection: AuthenticatedConnection,
+    case: Case,
+    series: CaseSeries,
+    geometry: CaseGeometry,
+    state: str,
+) -> VerificationScene:
+    """Assemble exactly one scene from what rows 13 through 19 established.
+
+    The centerline comes from row 18, every series array from rows 13 through 17,
+    every identity from the authenticated record, and the provenance state from row
+    19. This function takes no value from a caller that is not one of those, which
+    is invariant V7 at the assembly seam: there is no keyword through which a caller
+    can relabel what it returns.
+    """
+
+    arms = {
+        suite: SceneArm(
+            suite=suite,
+            centerline_xy=geometry.arms[suite].centerline,
+            decisions=series.arms[suite].decisions,
+            tracking=Tracking(
+                task_reference=series.arms[suite].task_reference,
+                true_task_output=series.arms[suite].true_task_output,
+                window_s=series.window_s,
+            ),
+            controller_step=series.arms[suite].controller_step,
+            controller_t_s=series.arms[suite].controller_t_s,
+            controller_mode=series.arms[suite].controller_mode,
+        )
+        for suite in SUITE_KEYS
+    }
+    return VerificationScene(
+        bundle_version=BUNDLE_VERSION,
+        provenance=Provenance(
+            state=state,
+            connection_record_id=connection.record.record_label,
+            connection_record_sha256=connection.record_sha256,
+            config_identity=connection.config.config.config_hash,
+            config_sha256=connection.config.config_sha256,
+            split=connection.record.split,
+            roles_read=tuple(ROLE_NAMES),
+            arms=_frozen_mapping(
+                {suite: _arm_identity(case, suite) for suite in SUITE_KEYS}
+            ),
+        ),
+        body_change=BodyChange(
+            case_id=series.case_id,
+            label=series.display_label,
+            change=series.truth,
+        ),
+        playback_t_s=series.playback_t_s,
+        arms=_frozen_mapping(arms),
+        truth=series.truth,
+        thresholds=Thresholds(
+            abstain_threshold=connection.record.thresholds.abstain_threshold,
+            unknown_threshold=connection.record.thresholds.unknown_threshold,
+        ),
+    )
+
+
+def resolve_bundle(
+    connection: AuthenticatedConnection,
+    cases: AuthenticatedCases,
+    geometry: AuthenticatedGeometry,
+    provenance: ResolvedProvenance,
+) -> VerificationBundle:
+    """Run read-order step 20: assemble the menu and bind it to the established result.
+
+    Args:
+        connection: everything rows 1 through 12 established.
+        cases: the result of rows 13 through 17.
+        geometry: the result of row 18.
+        provenance: the result of row 19.
+
+    Returns:
+        The validated `VerificationBundle` row 21 writes.
+
+    Raises:
+        VerificationSceneError: `X_BUNDLE_INCOMPLETE` when the three case sequences
+            are not one sequence, when the assembled menu is not the case list the
+            established result declares, or when a scene's arm identities are not
+            the record's own; and whatever code `validate_bundle` names for a menu
+            no surface may draw.
+
+    **The four inputs are produced by four separate calls, and that is what makes
+    this row's first check decidable.** `resolve_cases`, `resolve_geometry` and
+    `resolve_provenance` each take the connection and return their own value; a
+    caller assembling them is a caller who can pair the geometry of one record with
+    the series of another. So the case identities and their order are required to
+    agree across the record's menu, the series and the geometry before a single
+    scene is built. That is the same post-condition-across-a-seam shape rows 13 and
+    19 carry, and it is stated here rather than trusted because the seam is real.
+
+    **The established result is the authority on which cases the surface presents,
+    and this is its second appearance rather than a repeat of its first.** Row 6
+    compared the established result's case list against the *record's menu*. This
+    row compares it against the *assembled bundle*, which is a different object: an
+    assembly that dropped, duplicated or reordered a case would pass row 6 and fail
+    here. The comparison is ordered, because menu order is bundle order and the
+    order a reader is shown is part of what the prior read established.
+    """
+
+    declared = tuple(case.case_id for case in connection.record.cases)
+    series_ids = tuple(series.case_id for series in cases.cases)
+    geometry_ids = tuple(entry.case_id for entry in geometry.cases)
+    if series_ids != declared or geometry_ids != declared:
+        raise _refuse(
+            X_BUNDLE_INCOMPLETE,
+            f"the record's menu names cases {list(declared)}, the resolved series "
+            f"names {list(series_ids)} and the derived geometry names "
+            f"{list(geometry_ids)}; one connection has one menu",
+        )
+    if declared != tuple(connection.sources.established_cases):
+        raise _refuse(
+            X_BUNDLE_INCOMPLETE,
+            f"the assembled menu is {list(declared)} but the established result "
+            f"declares {list(connection.sources.established_cases)}; the surface "
+            "presents exactly the cases the prior read established, in that order",
+        )
+
+    scenes: dict[str, VerificationScene] = {}
+    for case, series, entry in zip(connection.record.cases, cases.cases, geometry.cases):
+        scenes[case.case_id] = _scene_for(
+            connection, case, series, entry, provenance.state
+        )
+    bundle = VerificationBundle(
+        bundle_version=BUNDLE_VERSION,
+        provenance_state=provenance.state,
+        scenes=_frozen_mapping(scenes),
+    )
+    validate_bundle(bundle)
+
+    for case in connection.record.cases:
+        identities = bundle.scenes[case.case_id].provenance.arms
+        for suite in SUITE_KEYS:
+            if identities[suite].run_id != case.arms[suite].run_id:
+                raise _refuse(
+                    X_BUNDLE_INCOMPLETE,
+                    f"case {case.case_id!r} arm {suite} is presented as run "
+                    f"{identities[suite].run_id!r} but the record names "
+                    f"{case.arms[suite].run_id!r}",
+                )
+            if identities[suite].pair_id != case.pair_id:
+                raise _refuse(
+                    X_BUNDLE_INCOMPLETE,
+                    f"case {case.case_id!r} arm {suite} is presented under pair "
+                    f"{identities[suite].pair_id!r} but the record names "
+                    f"{case.pair_id!r}",
+                )
+    return bundle

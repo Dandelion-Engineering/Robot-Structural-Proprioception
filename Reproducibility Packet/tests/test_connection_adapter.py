@@ -46,6 +46,7 @@ import sys
 from contextlib import contextmanager
 from dataclasses import asdict, fields as dataclass_fields, replace
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any, Callable, Mapping, Sequence
 
 import numpy as np
@@ -88,6 +89,7 @@ from utils.connection_adapter import (  # noqa: E402
     require_complete_arms,
     require_pair_agreement,
     require_tracking_window,
+    resolve_bundle,
     resolve_cases,
     resolve_decisions,
     resolve_geometry,
@@ -122,7 +124,9 @@ from utils.verification_scene import (  # noqa: E402
     SYNTHETIC_FIXTURE,
     LabelFields,
     VerificationSceneError,
+    validate_scene,
     X_ARMS_INCOMPLETE,
+    X_BUNDLE_INCOMPLETE,
     X_CONNECTION_UNAUTHORIZED,
     X_DECISION_UNSUPPORTED,
     X_GEOMETRY_UNSUPPORTED,
@@ -4378,6 +4382,114 @@ def test_row18_refuses_a_triplet_column_the_payload_does_not_carry(
 # `DEVELOPMENT_ONLY` under a record claiming `FINAL`, cannot be built end to end
 # today without manufacturing the very reachability W7 exists to deny. The seam is
 # the only instrument that reaches it, exactly as it is for row 13.
+def _with_field_path_value(
+    document: Mapping[str, Any], field_path: str, value: Any
+) -> Mapping[str, Any]:
+    """Return one authenticated source document with a single object path replaced.
+
+    Only object-key segments are handled, and a segment that is not a key of a
+    mapping is a loud failure rather than a silent no-op: this seam exists to keep
+    a state coherent, and a setter that quietly writes nothing is the exact shape of
+    the defect it is here to repair. Each rebuilt level is a fresh read-only view, so
+    the edited document keeps the deeply frozen shape `authenticate_sources` returns.
+    """
+
+    segments = field_path.split(".")
+
+    def rebuilt(node: Any, depth: int) -> Any:
+        if depth == len(segments):
+            return value
+        segment = segments[depth]
+        if not isinstance(node, Mapping) or segment not in node:
+            trail = ".".join(segments[: depth + 1])
+            raise AssertionError(
+                f"the seam cannot set {field_path!r}: {trail} is not an object key "
+                "of this document"
+            )
+        return MappingProxyType({**node, segment: rebuilt(node[segment], depth + 1)})
+
+    return rebuilt(document, 0)
+
+
+def _provenance_joins(connection: AuthenticatedConnection) -> dict[str, bool]:
+    """Return every equality rows 4, 5 and 6 establish, as `name -> it holds`.
+
+    **This is the one statement of the post-row-12 coherence the seam has to
+    preserve**, and it is written once so the helper below and the tests that assert
+    it cannot drift apart. The eleven entries are exactly the joins the earlier rows
+    put in place: row 4 binds the record's `config.config_hash` echo to the config it
+    validated; row 5 binds the established result's split and config identity to the
+    record's; row 6 binds both audit documents to the record's echoes of them, both
+    audits' `config_hash` and every manifest row's to the validated config, and every
+    named run's split to the record's.
+    """
+
+    record = connection.record
+    validated = connection.config.config.config_hash
+    established = connection.sources.documents["established_result"]
+    result_split = value_at_field_path(
+        established,
+        record.established_result.split_field_path,
+        where="established_result.split_field_path",
+    )
+    result_config_hash = value_at_field_path(
+        established,
+        record.established_result.config_hash_field_path,
+        where="established_result.config_hash_field_path",
+    )
+    audits = connection.dataset.audits
+    joins = {
+        "record config.config_hash == the validated config": (
+            record.config.config_hash == validated
+        ),
+        "established_result split == the record's split": result_split == record.split,
+        "established_result config_hash == the record's config.config_hash": (
+            result_config_hash == record.config.config_hash
+        ),
+        "every manifest row config_hash == the validated config": all(
+            row.config_hash == validated for row in connection.dataset.rows.values()
+        ),
+        "every named run's split == the record's split": all(
+            connection.dataset.rows[arm.run_id].split == record.split
+            for case in record.cases
+            for arm in case.arms.values()
+        ),
+    }
+    for name in AUDIT_NAMES:
+        declared = getattr(record.data_root, name)
+        joins[f"record {name}.assignment_hash == {name}.json"] = (
+            declared.assignment_hash == audits[name]["assignment_hash"]
+        )
+        joins[f"record {name}.config_hash == {name}.json"] = (
+            declared.config_hash == audits[name]["config_hash"]
+        )
+        joins[f"{name}.json config_hash == the validated config"] = (
+            audits[name]["config_hash"] == validated
+        )
+    return joins
+
+
+def _require_provenance_joins(
+    connection: AuthenticatedConnection, *, where: str
+) -> AuthenticatedConnection:
+    """Return `connection` when every earlier-row join holds, or fail naming those that do not.
+
+    The failure is raised rather than asserted so it survives `python -O`, which this
+    file's suite is deliberately re-run under. A post-condition that disappears under
+    optimisation is a post-condition that is absent exactly when nobody is watching.
+    """
+
+    broken = sorted(
+        name for name, holds in _provenance_joins(connection).items() if not holds
+    )
+    if broken:
+        raise AssertionError(
+            f"{where} produced a state no post-row-12 connection can be in; these "
+            f"joins rows 4-6 establish are broken: {'; '.join(broken)}"
+        )
+    return connection
+
+
 def _reprovenanced(
     connection: AuthenticatedConnection,
     *,
@@ -4386,20 +4498,44 @@ def _reprovenanced(
     config_hash: str,
     assignment_hash: str,
 ) -> AuthenticatedConnection:
-    """Return the same connection with only its four provenance identities changed."""
+    """Return the same connection re-provenanced, with every earlier-row copy moved with it.
+
+    **The four provenance identities are not four fields, and that is the correction
+    this helper carries.** Session 150's version edited only the record's authority
+    and split, both audit `assignment_hash` echoes and the validated config's hash,
+    and Codex's Session-150 cross-review measured what that leaves behind: eight of
+    the eleven joins rows 4 through 6 establish were false in the object the row-19
+    tests then handed to `resolve_provenance`, while their comments said every digest
+    and echo still agreed. The row-19 verdicts were still the right verdicts -- the
+    production path establishes those equalities before row 19 is reached -- but the
+    evidence for invariant W6 was being taken over a state the read order refuses two
+    rows earlier, which is no evidence at all.
+
+    So every copy moves together here: the record's own `config.config_hash` echo,
+    both audit `config_hash` echoes, the established result's split and config
+    identity at their declared field paths, both audit documents' echoed hashes, and
+    every manifest row's `config_hash` and split. The result is required to satisfy
+    `_provenance_joins` before it is returned, so a later edit that reintroduces the
+    same partial shape fails here rather than passing quietly.
+    """
 
     data_root = connection.record.data_root
     record = replace(
         connection.record,
         authority=authority,
         split=split,
+        config=replace(connection.record.config, config_hash=config_hash),
         data_root=replace(
             data_root,
             generation_audit=replace(
-                data_root.generation_audit, assignment_hash=assignment_hash
+                data_root.generation_audit,
+                assignment_hash=assignment_hash,
+                config_hash=config_hash,
             ),
             independent_audit=replace(
-                data_root.independent_audit, assignment_hash=assignment_hash
+                data_root.independent_audit,
+                assignment_hash=assignment_hash,
+                config_hash=config_hash,
             ),
         ),
     )
@@ -4407,7 +4543,50 @@ def _reprovenanced(
         connection.config,
         config=replace(connection.config.config, config_hash=config_hash),
     )
-    return replace(connection, record=record, config=config)
+    established = connection.sources.documents["established_result"]
+    established = _with_field_path_value(
+        established, record.established_result.split_field_path, split
+    )
+    established = _with_field_path_value(
+        established, record.established_result.config_hash_field_path, config_hash
+    )
+    sources = replace(
+        connection.sources,
+        documents=MappingProxyType(
+            {**connection.sources.documents, "established_result": established}
+        ),
+    )
+    dataset = replace(
+        connection.dataset,
+        rows=MappingProxyType(
+            {
+                run_id: replace(row, config_hash=config_hash, split=split)
+                for run_id, row in connection.dataset.rows.items()
+            }
+        ),
+        audits=MappingProxyType(
+            {
+                name: _with_field_path_value(
+                    _with_field_path_value(
+                        document, "assignment_hash", assignment_hash
+                    ),
+                    "config_hash",
+                    config_hash,
+                )
+                for name, document in connection.dataset.audits.items()
+            }
+        ),
+    )
+    return _require_provenance_joins(
+        replace(
+            connection,
+            record=record,
+            config=config,
+            sources=sources,
+            dataset=dataset,
+        ),
+        where="_reprovenanced",
+    )
 
 
 def test_row19_resolves_the_harness_record_to_development_only(
@@ -4433,11 +4612,13 @@ def test_row19_refuses_a_final_claim_over_a_development_assignment(
     """Invariant W6's input set: computes `DEVELOPMENT_ONLY`, claims `FINAL`.
 
     **This is the one provenance fact no earlier row holds.** The config is frozen
-    and clean, so row 4 is satisfied; the split is `val`, so row 3 is satisfied;
-    every digest and every echo in the chain still agrees, because row 6 checks the
-    dataset assignment for *agreement* -- record against both audits, and the two
-    audits against each other -- and never for what it says. What is left is a
-    `FINAL RESULT INPUTS` banner over data generated under a development
+    and clean, so row 4 is satisfied; the split is `val`, so row 3 is satisfied; and
+    every digest and every echo in the chain still agrees, because `_reprovenanced`
+    moves every earlier-row copy with the four identities and refuses to return a
+    state in which any of the eleven joins rows 4 through 6 establish is broken. Row
+    6 checks the dataset assignment for *agreement* -- record against both audits,
+    and the two audits against each other -- and never for what it says. What is left
+    is a `FINAL RESULT INPUTS` banner over data generated under a development
     assignment, and this row is where that refuses.
     """
 
@@ -4538,3 +4719,277 @@ def test_row19_carries_a_read_only_trace_mapping(harness: Harness) -> None:
     resolved = resolve_provenance(harness.authenticate())
     with pytest.raises(TypeError):
         resolved.development_traces["config.config_hash"] = "x"  # type: ignore[index]
+
+
+def test_row19_the_authenticated_harness_satisfies_every_earlier_row_join(
+    harness: Harness,
+) -> None:
+    """The join set is measured against a real post-row-12 state before it is used.
+
+    `_provenance_joins` is only worth anything if it describes the state the read
+    order actually produces. This drives it against the connection rows 1 through 12
+    built, so a join written down wrongly fails here rather than silently weakening
+    the seam's post-condition into something the production path does not satisfy
+    either.
+    """
+
+    joins = _provenance_joins(harness.authenticate())
+    assert len(joins) == 11
+    assert [name for name, holds in joins.items() if not holds] == []
+
+
+def test_row19_the_seam_preserves_every_earlier_row_join(harness: Harness) -> None:
+    """A re-provenanced connection is still a state the earlier rows would accept."""
+
+    edited = _reprovenanced(
+        harness.authenticate(),
+        authority=FINAL,
+        split="val",
+        config_hash="f" * 64,
+        assignment_hash="c" * 64,
+    )
+    assert [name for name, holds in _provenance_joins(edited).items() if not holds] == []
+    assert edited.record.authority == FINAL
+    assert edited.record.split == "val"
+    assert edited.config.config.config_hash == "f" * 64
+
+
+def test_row19_the_seam_post_condition_refuses_a_partial_re_provenancing(
+    harness: Harness,
+) -> None:
+    """The negative control, and it is the Session-150 defect written as an input.
+
+    Session 150's seam moved the record's authority and split, both audit
+    `assignment_hash` echoes and the validated config hash, and nothing else. That is
+    reconstructed exactly here and required to be caught, because a post-condition no
+    input can make fail is the same defect as no post-condition at all -- lesson 242,
+    on the seam that carries invariant W6's only evidence. Eight of the eleven joins
+    break under that edit and the failure has to name them.
+    """
+
+    connection = harness.authenticate()
+    data_root = connection.record.data_root
+    partial = replace(
+        connection,
+        record=replace(
+            connection.record,
+            authority=FINAL,
+            split="val",
+            data_root=replace(
+                data_root,
+                generation_audit=replace(
+                    data_root.generation_audit, assignment_hash="c" * 64
+                ),
+                independent_audit=replace(
+                    data_root.independent_audit, assignment_hash="c" * 64
+                ),
+            ),
+        ),
+        config=replace(
+            connection.config,
+            config=replace(connection.config.config, config_hash="f" * 64),
+        ),
+    )
+    broken = [name for name, holds in _provenance_joins(partial).items() if not holds]
+    assert len(broken) == 8
+    with pytest.raises(AssertionError) as raised:
+        _require_provenance_joins(partial, where="the negative control")
+    message = str(raised.value)
+    assert "the negative control" in message
+    for name in broken:
+        assert name in message
+
+
+def test_row19_the_seam_field_path_setter_refuses_a_path_it_cannot_write(
+    harness: Harness,
+) -> None:
+    """A setter that quietly writes nothing would rebuild the defect it repairs."""
+
+    established = harness.authenticate().sources.documents["established_result"]
+    with pytest.raises(AssertionError) as raised:
+        _with_field_path_value(established, "read.absent.deeper", "x")
+    assert "read.absent" in str(raised.value)
+
+
+# -- row 20 ------------------------------------------------------------------ #
+#
+# **The reachability boundary of this row is stated here rather than discovered
+# later, and it is measured.** `utils.verification_scene.validate_bundle` requires a
+# menu to carry at least one `structure`, one `actuator` and one `sensor` case. The
+# contract fixture writes exactly two C1/S pairs -- one `dev` pair whose labels are
+# `healthy` and one `val` pair whose labels are `structure` -- and read-order row 6
+# refuses a run whose split is not the record's, so the `val` pair cannot enter a
+# `dev` record's menu at all. **No menu this packet can currently build satisfies
+# the surface gate**, which is why the tests below drive this row's three ordering
+# refusals and the surface gate's own refusal, and why the accept path, the run-id
+# refusal and the pair-id refusal have no test yet: they sit behind a gate no input
+# available today can pass.
+#
+# The repair is a dedicated three-case coherent harness -- three `dev` pairs whose
+# `labels` and `estimator_outputs` payloads carry `structure`, `actuator` and
+# `sensor` coherently -- and it is the next build's first work. It is **not** an
+# argument for relaxing the surface gate: a menu that cannot show a reader all three
+# source classes side by side is a menu that cannot support the comparison the whole
+# artifact exists to let a reader make.
+def _resolved(harness: Harness, arguments: Mapping[str, Any]):
+    """Drive rows 1 through 19 and return everything row 20 takes."""
+
+    connection = authenticate_connection(**arguments)
+    cases = resolve_cases(connection)
+    return (
+        connection,
+        cases,
+        resolve_geometry(connection, cases),
+        resolve_provenance(connection),
+    )
+
+
+def test_row20_refuses_a_series_sequence_that_is_not_the_record_s_menu(
+    harness: Harness,
+) -> None:
+    """`resolve_cases` and `resolve_geometry` are separate calls, so the pairing is an input.
+
+    A caller holding two connections can hand this row the series of one and the
+    geometry of the other, and no earlier row can see it: each of them saw only its
+    own output. That is why the agreement is a check here and not an assumption.
+    """
+
+    with _coherent_geometry(harness) as arguments:
+        connection, cases, geometry, provenance = _resolved(harness, arguments)
+    relabelled = AuthenticatedCases(
+        cases=(replace(cases.cases[0], case_id="not-the-menu"),)
+    )
+    error = _refusal(
+        lambda: resolve_bundle(connection, relabelled, geometry, provenance)
+    )
+    assert error.code == X_BUNDLE_INCOMPLETE
+    assert "not-the-menu" in str(error)
+    assert "one connection has one menu" in str(error)
+
+
+def test_row20_refuses_a_geometry_sequence_that_is_not_the_record_s_menu(
+    harness: Harness,
+) -> None:
+    """The same seam, on the other side of it."""
+
+    with _coherent_geometry(harness) as arguments:
+        connection, cases, geometry, provenance = _resolved(harness, arguments)
+    relabelled = AuthenticatedGeometry(
+        tolerance_m=geometry.tolerance_m,
+        cases=(replace(geometry.cases[0], case_id="not-the-menu"),),
+    )
+    error = _refusal(
+        lambda: resolve_bundle(connection, cases, relabelled, provenance)
+    )
+    assert error.code == X_BUNDLE_INCOMPLETE
+    assert "not-the-menu" in str(error)
+
+
+def test_row20_refuses_a_menu_the_established_result_does_not_declare(
+    harness: Harness,
+) -> None:
+    """Row 6 bound the established result to the record's menu; this binds it to the bundle.
+
+    The two comparisons are about different objects. An assembly that dropped,
+    duplicated or reordered a case would satisfy row 6 -- which never sees the
+    assembly -- and fail here.
+    """
+
+    with _coherent_geometry(harness) as arguments:
+        connection, cases, geometry, provenance = _resolved(harness, arguments)
+    reordered = replace(
+        connection,
+        sources=replace(
+            connection.sources, established_cases=(CASE_ID, "a-second-case")
+        ),
+    )
+    error = _refusal(
+        lambda: resolve_bundle(reordered, cases, geometry, provenance)
+    )
+    assert error.code == X_BUNDLE_INCOMPLETE
+    assert "a-second-case" in str(error)
+    assert "the prior read established" in str(error)
+
+
+def test_row20_refuses_a_menu_the_surface_gate_will_not_draw(harness: Harness) -> None:
+    """The surface gate is called here, and today it is what the harness's menu meets.
+
+    This is the end-to-end statement of the reachability boundary above: rows 1
+    through 19 all accept, the assembly builds a scene that
+    `utils.verification_scene.validate_scene` accepts, and the *menu* is refused
+    because one `healthy` case cannot show a reader a structure, an actuator and a
+    sensor change side by side. The refusal is the surface gate's own, re-raised
+    untouched: this row assigns no second code to a rule another module owns.
+    """
+
+    with _coherent_geometry(harness) as arguments:
+        connection, cases, geometry, provenance = _resolved(harness, arguments)
+    error = _refusal(
+        lambda: resolve_bundle(connection, cases, geometry, provenance)
+    )
+    assert error.code == X_BUNDLE_INCOMPLETE
+    assert "structure/actuator/sensor" in str(error)
+    for name in ("structure", "actuator", "sensor"):
+        assert name in str(error)
+
+
+def test_row20_assembles_a_scene_the_scene_gate_accepts(harness: Harness) -> None:
+    """The per-case assembly is exercised even though the menu gate refuses the set.
+
+    `_scene_for` is the whole of this row's construction work, and it is reachable
+    today: `validate_scene` is what a scene must pass and it is a different gate from
+    the menu-completeness rule that blocks the bundle. Driving it here means the
+    assembly's field-by-field mapping -- centerline from row 18, series from rows 13
+    to 17, identities from the record, state from row 19 -- is measured now rather
+    than only when the three-case harness lands.
+    """
+
+    with _coherent_geometry(harness) as arguments:
+        connection, cases, geometry, provenance = _resolved(harness, arguments)
+    scene = connection_adapter._scene_for(
+        connection,
+        connection.record.cases[0],
+        cases.cases[0],
+        geometry.cases[0],
+        provenance.state,
+    )
+    validate_scene(scene)
+    assert scene.provenance.state == provenance.state
+    assert scene.provenance.connection_record_sha256 == arguments[
+        "connection_record_sha256"
+    ]
+    assert scene.provenance.connection_record_id == connection.record.record_label
+    assert scene.provenance.config_identity == connection.record.config.config_hash
+    assert scene.provenance.split == connection.record.split
+    assert scene.body_change.case_id == CASE_ID
+    assert scene.truth is cases.cases[0].truth
+    assert scene.n_frames == cases.cases[0].playback_t_s.shape[0]
+    for suite in SUITE_KEYS:
+        declared = connection.record.cases[0].arms[suite]
+        identity = scene.provenance.arms[suite]
+        assert identity.run_id == declared.run_id
+        assert identity.pair_id == connection.record.cases[0].pair_id
+        assert identity.checkpoint_sha256 == declared.checkpoint.sha256
+        assert dict(identity.role_payload_sha256) == {
+            role: declared.roles[role].payload_sha256 for role in ROLE_NAMES
+        }
+        assert np.array_equal(
+            scene.arms[suite].centerline_xy, geometry.cases[0].arms[suite].centerline
+        )
+
+
+def test_row20_carries_the_authenticated_record_digest_rather_than_a_second_read(
+    harness: Harness,
+) -> None:
+    """The provenance identity is the digest the chain checked, not a later measurement.
+
+    A provenance block a caller supplies is a provenance block that can lie (V7), and
+    a digest re-taken at assembly time is a statement about the file as it is then,
+    not about the bytes rows 1 and 2 authenticated.
+    """
+
+    connection = harness.authenticate()
+    assert connection.record_sha256 == harness.record_sha256
+    assert "record_sha256" in {
+        field.name for field in dataclass_fields(AuthenticatedConnection)
+    }

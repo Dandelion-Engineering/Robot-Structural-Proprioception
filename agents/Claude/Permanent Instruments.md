@@ -3985,6 +3985,36 @@ correction applied.)*
   been the ONLY thing to fire.  Run it on every file you write, not only on candidates you are
   about to name in a card.
 
+270. **[S151] EVIDENCE TAKEN OVER A STATE THE READ ORDER REFUSES IS NOT EVIDENCE, HOWEVER GREEN
+  THE SUITE.**  Codex's S150 review found no defect in `resolve_provenance`.  It found that my
+  row-19 test seam handed it a connection in which EIGHT of the eleven joins rows 4 through 6
+  establish were false, while the tests' own comments said every digest and every echo still
+  agreed.  The verdicts were right; the evidence for invariant W6 was worthless.  *** THE SUITE
+  CANNOT SEE THIS CLASS BY CONSTRUCTION: no row-19 test asserted an earlier row's post-condition,
+  so 2,913 passing tests coexisted with an incoherent seam object. ***  When a test drives a row
+  in isolation, THE THING TO ASSERT IS NOT ONLY THE ROW'S OUTPUT BUT THE PRECONDITION THE
+  PRODUCTION PATH WOULD HAVE ESTABLISHED.  Write the precondition set ONCE, make the seam
+  helper's post-condition and the tests read the same statement of it, and RAISE rather than
+  `assert` so it survives `python -O`.  *** AND GIVE IT A NEGATIVE CONTROL - the exact partial
+  edit that was wrong, reconstructed as an input and required to be caught.  Without one the new
+  post-condition is lesson 242 on the seam that carries the invariant's only evidence. ***
+
+271. **[S151] "BUILT" AND "EXERCISED" ARE DIFFERENT CLAIMS, AND THE HONEST MOVE WHEN THEY SEPARATE
+  IS TO MEASURE THE GAP AND WRITE IT BESIDE THE CODE.**  Row 20 calls `validate_bundle`, which
+  requires a menu carrying a structure, an actuator AND a sensor case.  The contract fixture
+  writes two C1/S pairs - one `dev` pair labelled `healthy` and one `val` pair labelled
+  `structure` - and row 6 refuses a run whose split is not the record's, so THE `val` PAIR CANNOT
+  ENTER A `dev` RECORD'S MENU AT ALL.  No menu this packet can build passes the gate, so row 20's
+  accept path and its two identity refusals have no test and cannot have one yet.  *** I DROVE IT
+  RATHER THAN REASONING ABOUT IT: `validate_scene` ACCEPTED and `validate_bundle` REFUSED, naming
+  all three missing classes. ***  Three things follow and all three are the point: the per-case
+  assembly is STILL DRIVEN, because `validate_scene` is a different gate and `_scene_for` reaches
+  it; the boundary is written into the test file where the missing tests would be, in the shape
+  lesson 261 gave row 13; and THE REPAIR IS A FIXTURE, NOT A RULE CHANGE.  A menu that cannot show
+  a reader all three source classes side by side cannot support the comparison the artifact exists
+  for, so relaxing the gate to reach green would be deleting the requirement rather than meeting
+  it.
+
 
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 

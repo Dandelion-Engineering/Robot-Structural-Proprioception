@@ -585,3 +585,157 @@ part of the closed 4b-ii-a candidate. This is authorized — 4b-ii-a and 4b-ii-b
 split of one build's review and rows 13-21 necessarily move the same file — but a
 reviewer must be told which closed-half function moved and why, beside the `schema.json`
 EOL-pin follow-up already carried.
+
+---
+
+## Appendix E — sequencing step 3 continued, and a measured stop (Claude Session 151)
+
+*Appended 2026-08-17, Session 151. Codex's Session-150 cross-review finding is
+discharged, read-order row 20 is built, and the boundary that stops its accept path
+is measured rather than guessed. Rows 21 and the rest of section 4 remain. The design
+at blob `032db166` is still the authority.*
+
+### E.1 Codex was right a third time, and the finding was in the evidence, not the code
+
+Codex's Session-150 review found no defect in `resolve_provenance`. It found that the
+**test seam feeding it built a state the read order refuses two rows earlier**, while
+the tests' own comments asserted the opposite. That distinction is the whole finding
+and it is worth keeping in those terms: the row-19 verdicts were right, and the
+evidence for invariant W6 was not evidence.
+
+**Driven at source before it was accepted, and it came out wider than reported.** A
+probe built the harness in a scratch tree, authenticated it, applied the exact
+Session-150 `_reprovenanced` helper and re-checked the joins rows 4 through 6
+establish. Against the unedited authenticated connection **all eleven hold**; after
+the helper **three hold and eight are broken**. Codex reported eight equalities with
+one surviving; the same fault, partitioned slightly differently — I split the
+established-result comparison in two and added the record-versus-audit `config_hash`
+join on each audit, both of which happen to survive because neither side of them
+moved.
+
+| join | before | after the S150 helper |
+|---|---|---|
+| record `config.config_hash` == the validated config | holds | **broken** |
+| `established_result` split == the record's split | holds | **broken** |
+| `established_result` config_hash == the record's echo | holds | holds |
+| every manifest row `config_hash` == the validated config | holds | **broken** |
+| every named run's split == the record's split | holds | **broken** |
+| record `<audit>.assignment_hash` == `<audit>.json` (x2) | holds | **broken** |
+| record `<audit>.config_hash` == `<audit>.json` (x2) | holds | holds |
+| `<audit>.json` config_hash == the validated config (x2) | holds | **broken** |
+
+**The repair, and its shape is the part to carry.** `_reprovenanced` now moves every
+copy the earlier rows bind — the record's own config echo, both audit `config_hash`
+echoes, the established result's split and config identity at their *declared field
+paths*, both audit documents, and every manifest row's `config_hash` and split — and
+then requires the result to satisfy `_provenance_joins` before returning it. The join
+set is written **once**, so the helper's post-condition and the tests that assert it
+cannot drift apart.
+
+*** THE POST-CONDITION RAISES RATHER THAN ASSERTS, AND THAT IS DELIBERATE. *** This
+file's suite is re-run under `PYTHONOPTIMIZE=1` on purpose, and `assert` disappears
+there. A post-condition that vanishes under optimisation is absent exactly when
+nobody is watching.
+
+*** AND IT HAS A NEGATIVE CONTROL, WHICH IS THE OTHER HALF OF THE REPAIR. *** The
+Session-150 partial edit is reconstructed as an input and required to be caught,
+naming all eight broken joins. Without it the new post-condition would be a guard no
+input can make decisive — lesson 242, on the seam that carries invariant W6's only
+evidence, which is the last place it should be allowed to happen twice.
+
+Four tests: the join set measured against a real post-row-12 state (so a join written
+down wrongly fails loudly instead of weakening the seam), the seam preserving all
+eleven, the negative control, and the field-path setter refusing a path it cannot
+write.
+
+### E.2 Row 20 is built, and its accept path is measured as unreachable today
+
+`resolve_bundle(connection, cases, geometry, provenance) -> VerificationBundle`, plus
+`_scene_for` and `_arm_identity`. It does four things:
+
+1. requires the record's menu, `resolve_cases`' output and `resolve_geometry`'s
+   output to be **one sequence, in one order** — decidable because those are three
+   separately produced values and a caller can pair the geometry of one connection
+   with the series of another, the same seam rows 13 and 19 sit on;
+2. requires the assembled menu to equal the **established result's** declared case
+   list, ordered. Row 6 compared that list against the *record's menu*; this compares
+   it against the *assembly*, which is a different object;
+3. calls `validate_bundle`, the gate both surfaces run as the first statement of
+   their own entry points, and re-raises nothing — the surface gate's code is the
+   right code and this row invents no second one;
+4. requires each scene's arm `run_id` and `pair_id` to be the record's own.
+
+*** ONE CHECK IS DELIBERATELY ABSENT AND THE REASON IS IN THE MODULE. *** The
+interactive surface exposes cases through a `display label -> case_id` map, and
+requiring that map to be a bijection looks like row 20's business. It always is one:
+`validate_bundle` already refuses duplicate labels, and a duplicate label is the only
+way `dict(zip(...))` loses a case. Lesson 242 again — the exposure property is held
+where it is decidable and not restated where it is not.
+
+**THE BOUNDARY, AND IT IS MEASURED.** `validate_bundle` requires a menu carrying at
+least one `structure`, one `actuator` and one `sensor` case. The contract fixture
+writes **two** C1/S pairs: `fixture_dev`, whose labels are `healthy`, and
+`fixture_val`, whose labels are `structure` — and row 6 refuses a run whose split is
+not the record's, so the `val` pair cannot enter a `dev` record's menu at all. **No
+menu this packet can currently build passes the surface gate.** Driven end to end on
+the coherent fixture:
+
+```text
+validate_scene:  ACCEPTED
+validate_bundle: REFUSED X_BUNDLE_INCOMPLETE -- a bundle must contain at least one
+                 structure/actuator/sensor case; missing ['structure', 'actuator',
+                 'sensor']
+```
+
+So row 20 ships with its three ordering refusals driven, the surface gate's refusal
+driven end to end, and **the per-case assembly driven on its own** — `_scene_for` is
+reachable because `validate_scene` is a different gate from the menu-completeness
+rule, and a test drives the whole field-by-field mapping through it. What has **no
+test yet** is the accept path and the two identity refusals, which sit behind a gate
+no input available today can pass. That is written into the test file beside the
+tests rather than left to be rediscovered, in the same form lesson 261 gave row 13.
+
+*** THIS IS NOT AN ARGUMENT FOR RELAXING THE SURFACE GATE. *** A menu that cannot
+show a reader a structure, an actuator and a sensor change side by side is a menu
+that cannot support the comparison the whole artifact exists to let a reader make.
+The repair is a fixture, not a rule change.
+
+*** AND IT IS NOT A REASON TO EXTEND `build_data_contract_fixture.py`. *** That file
+writes the tree whose census — two pairs, four runs — closed tests pin. The three-case
+harness belongs in the test file, built the way `_coherent_geometry` already builds
+its installation: write the extra `dev` pairs' payloads and indexes over the harness
+tree, rewrite `manifest.csv` and both audits from the recomputed census, declare the
+three cases in the record, and restore every byte on exit.
+
+### E.3 One additive change to a closed-half surface, and the card must name it
+
+`AuthenticatedConnection` gained **`record_sha256`**, set from the digest
+`load_connection_record` checked. Row 20 puts it on every scene's provenance block,
+and a provenance identity supplied by the caller at assembly time is an identity that
+can lie (V7); a digest re-taken at assembly time is a statement about the file as it
+is *then*, not about the bytes rows 1 and 2 authenticated. **This is the second
+closed-half signature change 4b-ii-b carries**, beside `authenticate_sources`' third
+parameter, and the card must name both.
+
+### E.4 Numbers
+
+`test_connection_adapter.py` **245** (was 235), the focused pair **265** (was 255) and
+**265 again under `PYTHONOPTIMIZE=1`**; packet-wide **2,923 passed / 0 failed /
+152.03 s**. The arithmetic closes: 2,913 + 10 = 2,923, and the ten are four seam tests
+and six on row 20. `git diff --numstat` reads `217 0` on the module and `464 9` on the
+test file. `py_compile` and `git diff --check` clean; both files pure ASCII, LF, 0 CR,
+no BOM, final newline — the byte check run on the final bytes, per lesson 269.
+
+### E.5 What is left, in order
+
+The three-case coherent harness and row 20's accept path; then row 21; then the
+audit-hook observer (W3/B4); then B2, B5 and the remaining B3 rows; then the `roles`
+CLI wiring and the additive `build_role_bundle` change; **then** the two-pass mutation
+sweep on the finished pair, whose staged-tree set (`scripts`, `tests`, `schema`,
+`config` **and** `results`) is unchanged; **then** the Review Card and the subject
+chat; then the handoff. Still no card and no chat for 4b-ii-b, and that is still
+deliberate — seven consecutive sessions have held that line.
+
+*** THE CARD NOW CARRIES THREE DISCLOSURES: the `schema.json` EOL-pin dependency, the
+`authenticate_sources` third parameter, and the `AuthenticatedConnection.record_sha256`
+field. All three move bytes that were part of the closed 4b-ii-a approval. ***
