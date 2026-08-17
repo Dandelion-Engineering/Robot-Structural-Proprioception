@@ -1,6 +1,6 @@
 # Summary of Only Necessary Context - Claude
 
-*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 144, 2026-08-16.*
+*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 145, 2026-08-16.*
 
 **S112 SPLIT THIS FILE, AND THAT IS THE FIRST THING TO KNOW ABOUT IT.** It was ~3,430 lines and ~400 KB, and reading it was the single largest cost of starting a session — in tension with its own stated purpose. **Codex approved the split in its S111** with one binding condition: *the current gate map, the current exact-state handoff, and the next-read routing stay here.* So this file is now **current state + gates + routing**, and every permanent instrument moved **verbatim, not summarized** into:
 
@@ -9,7 +9,19 @@
 
 **DO NOT UNDO THE SPLIT BY DRIFTING CONTENT BACK.** If a permanent instrument improves, the improvement goes into **the block that owns it in the reference file** — that is the S105 correction, and it is the reason the append writer's last five rebuilds were faithful. Only *current state* belongs here.
 
-## S145 FIRST - 4b-ii-a IS CLOSED AT BOTH APPROVALS AND 4b-ii-b IS THE ONLY UNBUILT WORK IN THE PROJECT.
+## S146 FIRST - 4b-ii-b IS THE ONLY UNBUILT WORK AND **IT NOW HAS A WRITTEN PLAN**; THE README HEARTBEAT IS AT ROUND 2 AND WAITING ON CODEX.
+
+```text
+*** START HERE IF YOU DO NOTHING ELSE: `agents/Claude/Slot-8 Step-4b-ii-b Build Plan.md`, WRITTEN
+    S145.  It is the row-by-row plan for rows 13-21 + the coherent geometry fixture + the audit-hook
+    observer + B2/B3/B5 + the roles CLI wiring + the additive `build_role_bundle` edit, WITH THE
+    MUTATION SWEEP AND ITS STAGED-TREE SET BUDGETED, and with the row-18 geometry constraints and
+    the two off-limits files carried into it.  *** IT IS A PLAN, NOT A CANDIDATE, AND IT IS
+    DELIBERATELY NOT A REVIEW CARD - the card and the subject chat are written AT THE END OF THE
+    BUILD, when there is a stable candidate to name.  The design at blob `032db166` is the
+    authority and the plan loses to it wherever they differ. ***
+```
+
 
 ```text
 *** THE REVIEW METHOD IS THE DIRECTOR'S SUPERSEDING PROTOCOL, appended to
@@ -55,8 +67,8 @@
     UNBUILT WORK IN THE PROJECT IS **4b-ii-b**, WHICH IS NOW STARTABLE.  *** THERE IS NO SECOND
     LANE. ***
 
-*** THE ONE THING S145 MUST NOT UNDO, AND IT IS STILL THE BIGGEST STRUCTURAL FACT THIS REVIEW
-    FOUND: `scripts/utils/storage_contract.py` AND `scripts/utils/role_contract.py` ARE TWO OF THE
+*** THE ONE THING NO LATER SESSION MAY UNDO, AND IT IS STILL THE BIGGEST STRUCTURAL FACT THE
+    4b-ii-a REVIEW FOUND: `scripts/utils/storage_contract.py` AND `scripts/utils/role_contract.py` ARE TWO OF THE
     EIGHT FILES IN `dev_fit_trainer.training_code_identity`.  THE APPROVED DEV-FIT LEDGER, THE
     APPROVED STAGE-1 SWEEP PLAN AND THE APPROVED RUNG-2 PLAN EACH RECORD
       role_contract.py     c50bebe5dfab8685b16f421928c0774dddd24e4a6f87542954b65ddc48810a21
@@ -71,7 +83,51 @@
     `test_the_closed_utilities_keep_the_identity_three_approved_artifacts_record` exists so a later
     session finds this out cheaply. ***  Lesson 246.
 
-=== WHAT S144 DID, SO S145 DOES NOT REDO IT =====================================================
+=== WHAT S145 DID, SO S146 DOES NOT REDO IT =====================================================
+  1  RETURNED THE **ROUND-2 OWNER DELTA** ON THE PUBLIC README HEARTBEAT.  Codex's S144 Round 1 was
+     **Revisions Required** on TWO BLOCKING PUBLIC-ACCURACY FINDINGS, no candidate edit.  I ACCEPTED
+     BOTH WITHOUT CONTEST and RE-DERIVED EACH FROM A PRIMARY OBJECT BEFORE REPAIRING IT.
+       F1  "broke 52 tests" omitted the 25 ERRORS.  The closed 4b-ii-a card line 702 says the
+           packet-wide suite "went to 52 failed, 25 errors".  NOW: "77 non-passing cases - 52
+           failures and 25 errors".  THE TOTAL LEADS.
+       F2  "Every file the chain touches is now read exactly once" is a UNIVERSAL CLAIM whose
+           COUNTEREXAMPLE IS IN THE SAME SENTENCE.  Confirmed at source: the open-count test
+           asserts `counts[schema] == 2` AND `twice == {schema}`.  NOW: "...with one measured
+           exception: a closed utility re-reads the schema to compare it against the
+           configuration's declared fingerprint, so the schema is read twice and that count is
+           pinned at two by a test rather than argued away."
+     *** I IMPLEMENTED F2 DIFFERENTLY FROM HOW CODEX PROPOSED IT AND SAID SO.  Codex asked for the
+         first clause SCOPED TO THE REPAIRED manifest/index/payload PATH; I scoped it BY NAMING THE
+         EXCEPTION, because `twice == {schema}` is a claim about THE WHOLE CHAIN and a path-scoped
+         sentence leaves a reader unable to tell whether something OUTSIDE that path is read twice.
+         I OFFERED TO TAKE THE PATH-SCOPED FORM if Codex prefers it on legibility rather than
+         accuracy grounds.  DO NOT RE-ARGUE THIS - if Round 2 asks for the path form, TAKE IT. ***
+     CANDIDATE `9d29deb77494814d20ac60bc8f1ed258f1f2ad8d`, raw
+     `f6b6abd9aba4761ac414ea32eb5b2ff4980760a0aac5fcd75c71b54c83d60d27`, 155,818 B / 222 LF / 0 CR.
+     `--numstat` = **`1 1`**, ONE HUNK `@@ -199 +199 @@`, and a line-by-line comparison against the
+     Round-1 candidate differs at EXACTLY ONE of 223 indices.  THE APPEND-ONLY PROPERTY WAS
+     **RE-PROVED ON THE NEW BYTES** rather than inherited: restoring `2026-08-15` on line 9 and
+     deleting line 199 with its trailing blank line reproduces `11a424b7...` / `f3d1dd86...` BYTE FOR
+     BYTE.  The write was CONDITIONED on the reverse substitution reproducing the Round-1 candidate.
+  1b *** ONE PROCESS QUESTION IS OPEN AND CODEX OWES THE RULING - DO NOT ASSUME IT EITHER WAY.  I
+     repaired the entry **IN PLACE** rather than appending a dated correction, on the reading that
+     the FORWARD-ONLY DISCIPLINE (Codex's S130 note; the S85/S86 public-log precedent) ATTACHES TO
+     AN ENTRY WHOSE REVIEW HAS **CLOSED**, and this one never did.  I NAMED THE COST OF BEING WRONG:
+     the Round-1 bytes sat on a public remote ~2 h, and an in-place repair leaves no dated trace on
+     the page itself.  **IF CODEX RULES THE OTHER WAY IN ROUND 2, CONVERT IT TO A DATED SUCCESSOR
+     ENTRY - that is cheap and it is the whole remedy.** ***
+  1c WROTE `agents/Claude/Slot-8 Step-4b-ii-b Build Plan.md` (see the head block).  **NO REVIEW CARD
+     AND NO SUBJECT CHAT WERE OPENED FOR 4b-ii-b, DELIBERATELY** - a card names a candidate and
+     there is no candidate yet.  DO NOT "FIX" THIS BY OPENING ONE EARLY.
+  *** S145 SPENT ZERO SCIENTIFIC RESOURCE.  Counters unchanged: 278 rollouts, 67 fits, 67
+      checkpoints, zero pilot/val/test reads.  NO SUITE WAS RE-RUN AND NONE NEEDED TO BE - NO
+      EXECUTABLE FILE CHANGED.  The last measured figures stand: 185 focused, 2,793 packet-wide. ***
+  *** THE HEARTBEAT CHECK RAN AND ANSWERED **NO**.  S145 finished no artifact, closed no phase and
+      produced no result; its one page change is a repair to an entry ALREADY UNDER REVIEW, inside
+      that review.  A second entry about revising the first is the session-journal texture the
+      playbook forbids. ***
+
+=== WHAT S144 DID ================================================================================
   1  RE-REVIEWED CODEX'S ROUND-3 REVIEWER-EDITED BYTES AND **APPROVED THE SAME EXACT STATE**.  The
      card closed at terminal outcome **Approved with Follow-ups** and the chat is CONCLUDED with a
      `Summary.md`.  I ADDED NO EDIT TO THE CANDIDATE.
@@ -181,19 +237,32 @@
       for their `code_identity`).  A staged tree missing any of them is a RED CONTROL AND MEASURES
       NOTHING.  CONFIRM THE GREEN ANCHOR AT 185 BEFORE ANY MUTANT RUNS. ***
 
-=== THE ONE OPEN REVIEW - THE PUBLIC README HEARTBEAT.  MINE, ROUND 1 HANDED OFF. ================
-  Review Card/Public README Step-4b-ii-a Heartbeat.md                <- OPEN, Round 1 handed off
-  chats/Claude-Codex/Public README Step-4b-ii-a Heartbeat/...- Active.md   <- NEW CHAT, S144
-  README.md  candidate  blob 81ddcdac2fc93739e43c408f72c1847c3fa94a60
+=== THE ONE OPEN REVIEW - THE PUBLIC README HEARTBEAT.  MINE, **ROUND 2 HANDED OFF, CODEX'S TURN**.
+  Review Card/Public README Step-4b-ii-a Heartbeat.md      <- OPEN, Round 2 owner delta handed off
+  chats/Claude-Codex/Public README Step-4b-ii-a Heartbeat/...- Active.md   <- ACTIVE, my S145 turn
+                                                                              is physically last
+  *** THE NEXT THING THAT HAPPENS ON THIS CARD IS CODEX'S **DELTA-ONLY** ROUND 2.  DO NOT RE-HAND
+      IT OFF, DO NOT RE-AUDIT THE UNCHANGED 222 LINES, AND DO NOT REOPEN ROUND 1. ***
+  README.md  ROUND-2 candidate  blob 9d29deb77494814d20ac60bc8f1ed258f1f2ad8d
+                        raw  f6b6abd9aba4761ac414ea32eb5b2ff4980760a0aac5fcd75c71b54c83d60d27
+                        155,818 B / 222 LF / 0 CR   <- THIS IS HEAD AND THE WORKING TREE
+  README.md  Round-1 candidate, SUPERSEDED  blob 81ddcdac2fc93739e43c408f72c1847c3fa94a60
                         raw  bec7c98c289c27a21d84d571d10ad73b5435c169897f6ffafca00e7cedd7ce13
                         155,610 B / 222 LF / 0 CR
-  README.md  predecessor blob 11a424b7661cf372f5e9c1a6c5a1b13c01850d16
+  README.md  APPROVED predecessor blob 11a424b7661cf372f5e9c1a6c5a1b13c01850d16
                         raw  f3d1dd86de394bdf528e0cd99d0d93aca4fc0540819d106173ea2a211196851b
                         154,471 B / 220 LF / 0 CR
-  `git diff --numstat README.md` = **`3 1`** - the banner `Last updated` line (2026-08-15 ->
-  2026-08-16) and ONE appended dated entry.  *** THE APPEND-ONLY PROPERTY IS PROVED, NOT CLAIMED:
-  substituting the old banner line back and deleting the appended entry reproduces `f3d1dd86...`
-  BYTE FOR BYTE, AND THE WRITE WAS CONDITIONED ON THAT RECONSTRUCTION. ***
+  *** ROUND 1's `3 1` (banner + one appended entry) IS SETTLED - Codex authenticated it, reconstructed
+      the predecessor itself, and PASSED the banner, the append-only property, the lean shape, the
+      public-state boundary and every non-authorization.  BOTH ITS FINDINGS WERE ABOUT WHAT THE NEW
+      SENTENCE MEANT, WHICH IS THE HALF NO BYTE-LEVEL INSTRUMENT LOOKS AT.  Lesson: append-only
+      provenance and sentence accuracy are INDEPENDENT properties. ***
+  ROUND 2 IS `--numstat` **`1 1`**, hunk `@@ -199 +199 @@`, one of 223 lines differing.
+  *** ONE MEASUREMENT NOTE, RECORDED BECAUSE IT LOOKS LIKE A RULE VIOLATION AND IS NOT: on THIS state
+      the FILTERED and UNFILTERED ids are THE SAME OBJECT `9d29deb7`, because the working tree
+      currently holds README.md at 0 CR.  THAT IS A COINCIDENCE, NOT THE IDENTITY CLAIM.  THE RULE
+      STANDS - PUBLISH THE FILTERED BLOB.  Git already warns it will render the file CRLF next time
+      it touches it, at which point the unfiltered number is a third number again. ***
   *** PUBLISH THE FILTERED BLOB ON THIS FILE - `core.autocrlf=true`, no EOL pin, so the working tree
       is CRLF and `--no-filters` gives a third number that is nobody's identity.  EVERY TRACKED
       README BLOB HAS ZERO CR. ***
@@ -205,11 +274,17 @@
       half of a REVIEW split rather than a design sub-step (my own lesson 224) and the Step-4b-i
       precedent settled it the other way - that entry was ALSO published on a review-split closure. ***
 
-=== THE NEXT BUILD - 4b-ii-b, NOT STARTED, AND NOW STARTABLE =====================================
+=== THE NEXT BUILD - 4b-ii-b, NOT STARTED, STARTABLE, AND **PLANNED** =============================
+  *** READ `agents/Claude/Slot-8 Step-4b-ii-b Build Plan.md` FIRST.  S145 wrote it so this block
+      does not have to be re-derived, and it carries THE ROW-BY-ROW TABLE, THE ROW-18 GEOMETRY
+      CONSTRAINTS WITH THEIR MEASUREMENTS, THE OFF-LIMITS FILES, THE SWEEP BUDGET AND STAGED-TREE
+      SET, AND THE SEQUENCING.  The blocks below remain the short form. ***
   ROWS 13-21 + the coherent geometry fixture + `X_GEOMETRY_UNSUPPORTED` at exit 15 + the audit-hook
   observer (W3/B4) + B2 + B5 + the remaining B3 rows + the roles CLI wiring + the ADDITIVE
-  `build_role_bundle` change.  IT NEEDS A NEW REVIEW CARD AND A NEW SUBJECT CHAT, WRITTEN BEFORE THE
-  HANDOFF, AND ITS MUTATION SWEEP BUDGETED **BEFORE** THE HANDOFF.
+  `build_role_bundle` change.  IT NEEDS A NEW REVIEW CARD AND A NEW SUBJECT CHAT, AND ITS MUTATION
+  SWEEP BUDGETED **BEFORE** THE HANDOFF.  *** THE CARD AND CHAT ARE WRITTEN AT THE **END** OF THE
+  BUILD, NOT AT ITS START - a card names a candidate, and the protocol requires the candidate to be
+  stable before the card governs.  S145 deliberately opened neither. ***
   *** CARRY THE TRACKED FOLLOW-UP INTO THAT CARD - the `schema.json` EOL-pin dependency above. ***
   *** `build_role_bundle` STILL REFUSES UNCONDITIONALLY WITH `X_CONNECTION_UNAUTHORIZED` AND THAT IS
       THE CORRECT STATE UNTIL THE WHOLE OF 4b CLOSES.  4b-ii-a CHANGED NO PUBLIC SURFACE. ***
@@ -962,7 +1037,7 @@ TWO NUMBERS THAT ARE IN THE DESIGN BECAUSE THEY ARE THE INCONVENIENT ONES.  KEEP
 ## Where the project is
 
 - **Phase 2 (Execution) is OPEN.** All Phase-1 gates in force. **Schema v1.0 + Amendment A1 in force.** Contract changes run through the **amendment protocol**.
-- I am **Claude**; last session was **Session 144**; next session I run is **Session 145**. **SESSION 144 CLOSED SUB-STEP 4b-ii-a AT BOTH APPROVALS** - I re-reviewed Codex's Round-3 reviewer-edited bytes, re-drove every figure it published, ran my own two-pass mutation control on its delta, and **approved the same exact state with no edit of my own**. Terminal outcome **`Approved with Follow-ups`**; the chat is **Concluded** with a `Summary.md` that is the index to the whole review. Approved blobs `6ec19846` / `f1d09ca0` / `7015cadf` / `28323ff7`; superseding `c24cb0cf` / `00b25820` / `07c48cc8` / `213367e8`. **The head block is the authority on the two reviewer corrections, the equivalent-mutant proof and the one tracked follow-up.** **THE FIRST WORK OF S145 IS 4b-ii-b** - the only unbuilt work in the project - and it needs its own new Review Card and new subject chat written **before** the handoff, its mutation sweep budgeted **before** the handoff, and the `schema.json` EOL-pin follow-up carried into its card. **ONE OTHER REVIEW IS OPEN AND IT IS NOT A BLOCKER ON THAT WORK:** the public-README heartbeat card I opened this session (candidate `81ddcdac`), awaiting Codex's Round 1. **SESSION 144 WAS A REGULAR PROGRESS-REPORT SESSION** - `agents/Claude/Progress Reports/Progress Report Session 144.md` covers S137-S144. **MY NEXT REGULAR PROGRESS REPORT IS SESSION 152.**
+- I am **Claude**; last session was **Session 145**; next session I run is **Session 146**. **SESSION 145 RETURNED THE ROUND-2 OWNER DELTA ON THE PUBLIC-README HEARTBEAT** - Codex's S144 Round 1 was **Revisions Required** on two blocking public-accuracy findings (an incomplete test count, and a universal read-once claim whose counterexample sat in the same sentence); I accepted both without contest, re-derived each from a primary object before repairing it, repaired both in ONE line (`--numstat` `1 1`, hunk `@@ -199 +199 @@`), re-proved the append-only property on the new bytes, and handed candidate **`9d29deb7`** back for a delta-only Round 2. **CODEX'S TURN.** I also **wrote `agents/Claude/Slot-8 Step-4b-ii-b Build Plan.md`** and deliberately opened NO Review Card and NO subject chat for 4b-ii-b, because a card names a candidate and there is none yet. **THE FIRST WORK OF S146 IS 4b-ii-b** - the only unbuilt work in the project - starting from that plan; its card and chat are written at the END of the build, its mutation sweep is budgeted BEFORE the handoff, and the `schema.json` EOL-pin follow-up is carried into its card. **THE HEARTBEAT REVIEW IS OPEN BUT IS NOT A BLOCKER ON THAT WORK** - different artifact, different card. **ONE RULING IS OWED BY CODEX AND MUST NOT BE ASSUMED EITHER WAY:** whether repairing a candidate log entry IN PLACE is the right instrument when its review never closed, or whether it must convert to a dated successor entry. **SESSION 145 WAS NOT A PROGRESS-REPORT SESSION; MY NEXT REGULAR IS SESSION 152** - `agents/Claude/Progress Reports/Progress Report Session 144.md` is the most recent one and it covers S137-S144.
 - **`config.json` is deliberately NOT frozen** and does not exist. All hashes are `dev-`; no `dev-` trace may enter confirmatory analysis.
 - Real data exists: `data/gate3-base-dev-pilot-val-c1-s` (3.86 GB, git-ignored, local only). 472 reservations / 944 manifest rows / C1+S / dev 152, pilot 152, val 168. **Test untouched: 0 identities, 0 payloads.** **THE "SLATED FOR FULL REGENERATION FROM ZERO AFTER A2" EXPECTATION IS RETIRED AS OF MY S75 — see A2.3.** Option C inserts no severity, so no seed ordinal shifts and A2 by itself invalidates none of this. If the set is ever superseded it is for some other reason, under its own authorization. **Still: read them, do not build on them** — nothing downstream of them is authorized either way.
 - **THE PAYLOAD-BOUNDARY EXTENSION HAS RUN — Codex's S73, 127 physical rollouts, `X_CASE_EMPTY`, and the result artifact is JOINTLY APPROVED (Codex S73 / me S74).** The measurement is spent and no further payload-extension execution is authorized. **A2 IS IN FORCE at `baa8fd53…` / `203aab77…` — both agents approved those exact bytes (me S76, Codex S76). The two-file loop is CLOSED and the amendment is not to be reopened or status-edited.**
