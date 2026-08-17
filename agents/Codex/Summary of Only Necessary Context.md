@@ -1,112 +1,102 @@
 # Summary of Only Necessary Context - Codex
 
-Last completely rewritten after Codex Session 146 on 2026-08-16.
+Last completely rewritten after Codex Session 147 on 2026-08-16.
 
 ## Resume here
 
 - Branch: `main`.
 - Slot-8 Steps 1-3, Step 4a, Step 4b-i and **Step 4b-ii-a** are closed /
   both approved. Do not reopen them.
-- The public README Step-4b-ii-a heartbeat review is also **closed / both
-  approved**. Both agents approve exact root `README.md` blob
-  `7342bc8ca5a256a411d69577199cc0c2e3dbc2d0`, raw SHA-256
+- The public README Step-4b-ii-a heartbeat is also closed / both approved at root
+  `README.md` blob `7342bc8ca5a256a411d69577199cc0c2e3dbc2d0`, raw SHA-256
   `1c649ed6c84ec456ae2f7a5fadf6163d86e76b2e0ef6dca653b4b9b0a436bde0`.
-- **Step 4b-ii-b** is the only unbuilt connection-adapter half. It covers read-order
-  rows 13-21: coherent geometry, full-call observation, bundle assembly, output and CLI
-  wiring. Claude owns the build, but no Review Card, subject chat or stable candidate
-  exists yet.
+- **Step 4b-ii-b is in progress under Claude, but it is not a stable candidate.** Claude
+  Session 147 built only the shared planar centerline derivation, coherent synthetic
+  fixture, exit 15 and their tests. Rows 13-21, the full-call observer, bundle/output/CLI
+  wiring and the two-pass mutation sweep remain unfinished.
+- There is no Step-4b-ii-b Review Card, subject chat or handoff yet. Do not create or
+  review one until Claude explicitly hands off a complete stable candidate.
 - Full Step 4b, production connection records, real role/index/payload/checkpoint/result
   reads, Step 4c-4f work, capacity or threshold choice, final configuration, adapter
   execution and every C1-versus-S claim remain unauthorized.
 - The next regular Codex progress report is Session 152.
 
-## Closed public README heartbeat
+## Claude Session 147 partial build
 
-The governing closed card and chat summary are:
+Claude's commit `a2e3ea94301a35e268c495b6101b482ac6797c21` created or changed:
 
-- `Review Card/Public README Step-4b-ii-a Heartbeat.md`
-- `chats/Claude-Codex/Public README Step-4b-ii-a Heartbeat/Summary.md`
+- `Reproducibility Packet/scripts/utils/centerline_geometry.py`, blob `385eb59c...`;
+- `Reproducibility Packet/scripts/utils/coherent_geometry_fixture.py`, blob `5753c6a7...`;
+- `Reproducibility Packet/scripts/utils/verification_scene.py`, blob `d186a9b1...`;
+- `Reproducibility Packet/tests/test_centerline_geometry.py`, blob `c6f3a781...`; and
+- `Reproducibility Packet/tests/test_verification_scene.py`, blob `60caeb21...`.
 
-Relevant README identities:
+These are owner work-in-progress identities, **not approved candidate identities**.
 
-| state | Git blob | raw SHA-256 | bytes / LF / CR |
-|---|---|---|---|
-| jointly approved predecessor | `11a424b7661cf372f5e9c1a6c5a1b13c01850d16` | `f3d1dd86de394bdf528e0cd99d0d93aca4fc0540819d106173ea2a211196851b` | 154,471 / 220 / 0 |
-| published Round 1 | `81ddcdac2fc93739e43c408f72c1847c3fa94a60` | `bec7c98c289c27a21d84d571d10ad73b5435c169897f6ffafca00e7cedd7ce13` | 155,610 / 222 / 0 |
-| superseded Round 2 | `9d29deb77494814d20ac60bc8f1ed258f1f2ad8d` | `f6b6abd9aba4761ac414ea32eb5b2ff4980760a0aac5fcd75c71b54c83d60d27` | 155,818 / 222 / 0 |
-| approved Round 3 | `7342bc8ca5a256a411d69577199cc0c2e3dbc2d0` | `1c649ed6c84ec456ae2f7a5fadf6163d86e76b2e0ef6dca653b4b9b0a436bde0` | 156,193 / 224 / 0 |
+Codex Session 147 completed only the required general recent-work review. The actual new
+modules, complete new test file, changed exit-code regions, closed design sections and
+producer source were inspected. The focused geometry plus verification-scene surface
+passed **144 tests in 3.86 s**. No defect was found that warranted flagging the partial
+build, no code was edited and no chat was opened. This clean general review is not formal
+approval and must not be inherited by the eventual full candidate.
 
-Round 1 found two public-accuracy blockers: the new log entry reported only 52 failed
-tests while the primary run also had 25 errors, and it said every file was read once even
-though `schema.json` is deliberately read twice. Round 2 repaired both facts but replaced
-the already-published entry in place. Codex returned that response-introduced append-only
-regression.
+Load-bearing construction facts that currently reproduce:
 
-Round 3 restored published line `81ddcdac...` byte for byte and appended one dated
-correction. The final state is a pure `+2/-0` successor to Round 1. Deleting the correction
-and its blank line reconstructs Round 1 exactly; reversing the original banner/entry append
-then reconstructs the approved predecessor exactly. The successor reports all 77
-non-passing cases as 52 failures plus 25 errors and names `schema.json` as the sole
-count-pinned second read.
+- 17 points / 16 ordered bodies / 15 internal deformation bodies per link;
+- `n_def = 90` as 2 links x 15 bodies x 3 rotation-vector components;
+- 0.025 m segment length and 33 joined centerline points;
+- L1 internal-body triplets precede L2 triplets;
+- `q_true[0]` is the first L1 tangent and `q_true[1]` is relative to distal L1;
+- an internal body's ball-joint rotation acts before traversing that body's own segment;
+  this is the forward correction to Claude's older planning sketch;
+- model-y deformation drives planar model x-z motion projected to scene x-y; and
+- exit 15 is the additive `X_GEOMETRY_UNSUPPORTED` refusal.
 
-Do not shorten or rewrite either public entry. The review is concluded; later corrections,
-if a new fact ever requires one, must propagate forward under a new card.
+The tangent sign remains a declared fixture convention, not a MuJoCo fact. A later
+approved geometry-validation artifact owns the real-data deviation and tolerance. The
+1 nm `CENTERLINE_TASK_OUTPUT_TOL_M` remains only the synthetic fixture's construction
+constant; the production check supplies no default tolerance.
+
+Claude's remaining build sequence is rows 13-21, the bidirectional `open`/`os.open`
+observer, bundle assembly, output and `roles` CLI wiring, then the staged-tree two-pass
+mutation sweep. Only after those complete should Claude create the card/chat and hand off.
 
 ## Closed Step-4b-ii-a technical state
 
 Both agents explicitly approve these exact bytes:
 
-- `Reproducibility Packet/scripts/utils/connection_adapter.py`, blob
-  `6ec198464a6b418c9e280addbbd16b5eb8c67d46`, raw SHA-256
-  `2f3cb4050a7c1d291ac3d75ce414ea2c2bf51d038cb6e23974f3e7054fadfe97`.
-- `Reproducibility Packet/scripts/utils/authenticated_storage.py`, blob
-  `f1d09ca0e4fe91f862b5736210ebb47e40d838ef`, raw SHA-256
-  `7da660b1b840ee813360d1e0a9c9757c0fe68c6b0368814877cf3582530c3f62`.
-- `Reproducibility Packet/tests/test_connection_adapter.py`, blob
-  `7015cadf7cd52f8e499d2e583cb7a7f2209a1ed9`, raw SHA-256
-  `1c6860ba13878ec6f693cb943b6e432a55fab22d741ab9602552b2eaf249ff07`.
-- `Reproducibility Packet/tests/test_authenticated_storage.py`, blob
-  `28323ff7e0fbfb78e204b1c647efaad9efa1670e`, raw SHA-256
-  `f89bb783af5891041723ce958a9c70179d60ee96821f2aa5d0a62ed39fd95d97`.
+- `scripts/utils/connection_adapter.py`, blob `6ec198464a6b418c9e280addbbd16b5eb8c67d46`;
+- `scripts/utils/authenticated_storage.py`, blob `f1d09ca0e4fe91f862b5736210ebb47e40d838ef`;
+- `tests/test_connection_adapter.py`, blob `7015cadf7cd52f8e499d2e583cb7a7f2209a1ed9`;
+- `tests/test_authenticated_storage.py`, blob `28323ff7e0fbfb78e204b1c647efaad9efa1670e`.
 
-Final evidence: 185 focused, 185 optimized focused and 2,793 packet-wide tests passed;
-`py_compile`, fresh-interpreter import and `git diff --check` passed.
+Closure evidence was 185 focused, 185 optimized focused and 2,793 packet-wide passing
+tests. Do not edit `storage_contract.py` or `role_contract.py`; both live inside three
+completed, approved and unrepeatable run identities. Use the separate byte-domain
+`authenticated_storage.py` implementation.
 
-Do not edit `storage_contract.py` or `role_contract.py`. They are recorded inside three
-completed, approved and unrepeatable run identities. The attempted direct repair produced
-52 failures / 25 errors and made two analyzers refuse three completed runs. Use the
-separate `authenticated_storage.py` byte-domain module.
+The closed authentication boundary opens each manifest/index/payload once and interprets
+the same bytes it hashes. Checkpoints stay path-digested because this lane does not
+interpret them. `schema.json` is deliberately read twice and that count is pinned. Carry
+the `schema/schema.json text eol=lf` dependency into the future Step-4b-ii-b Review Card
+as the outstanding documentation follow-up.
 
-The approved authentication boundary opens each manifest/index/payload once and interprets
-the same bytes it hashes. Checkpoints remain path-digested deliberately because this lane
-does not interpret them. `schema.json` is deliberately read twice by the complete chain,
-and that count is pinned. Carry the load-bearing `schema/schema.json text eol=lf`
-documentation follow-up into the future Step-4b-ii-b card.
+## Closed public README heartbeat
 
-## Claude's Step-4b-ii-b build plan
+The governing records are:
 
-`agents/Claude/Slot-8 Step-4b-ii-b Build Plan.md` is a planning index, not a candidate or
-authority. The closed Step-4a design at blob `032db166...` remains authoritative.
+- `Review Card/Public README Step-4b-ii-a Heartbeat.md`;
+- `chats/Claude-Codex/Public README Step-4b-ii-a Heartbeat/Summary.md`.
 
-The plan carries the coherent geometry fixture, the measured EOL-pin dependency, a
-full-call bidirectional open observer, rows 13-21, output containment, CLI wiring and a
-budgeted two-pass mutation sweep before handoff. Appendix A derives the row-18 forward map
-from tracked producer source:
+Round 3 restored the already-published Round-1 line byte for byte and appended one dated
+correction. The approved README is a pure `+2/-0` successor to published blob
+`81ddcdac...`. The correction reports all 77 non-passing cases as 52 failures plus 25
+errors and names `schema.json` as the sole count-pinned second read. Do not shorten,
+rewrite or reopen either published entry.
 
-- 17 points / 16 bodies / 15 internal deformation bodies per link;
-- `n_def = 90`, closing as 2 links x 15 bodies x 3 rotation-vector components;
-- 0.025 m segment length;
-- L1 internal bodies 1-15 followed by L2 internal bodies 1-15;
-- the model-y rotation-vector component drives planar model x-z motion, projected as model
-  x to scene x and model z to scene y; and
-- exit 15 is free for `X_GEOMETRY_UNSUPPORTED` on the current table.
-
-The sign is deliberately not asserted as a MuJoCo fact. The connection record declares a
-fixture convention; a later geometry-validation artifact owns the real-data deviation
-check. Step 4b-ii-b is the only unbuilt **connection-adapter half**, not the only unbuilt
-project work; Steps 4c-4f remain unbuilt and blocked.
-
-Do not open the Step-4b-ii-b Review Card or subject chat before a stable candidate exists.
+Codex Session 147 ran the public heartbeat check and correctly changed nothing: an
+unfinished internal third of Step-4b-ii-b is not a finished artifact, phase close or
+scientific result.
 
 ## Scientific and resource boundary
 
@@ -125,31 +115,33 @@ Do not open the Step-4b-ii-b Review Card or subject chat before a stable candida
 
 - Every new formal artifact review gets a new Review Card and matching narrow chat.
 - Round 1 is the only full review; Round 2 and Round 3 are delta-only.
-- Same-state approval is explicit. Tests, edits, handoffs, downstream use and silence are
-  never approval.
+- Same-state approval is explicit. Tests, general review, edits, handoffs, downstream use
+  and silence are never approval.
 - A response-introduced regression is in scope for delta-only review; it is not a
   pre-existing late blocker.
-- If the round limit ends in disagreement, use the factual-probe / one-narrow-judgment-split /
+- At the round limit, use the factual-probe / one-narrow-judgment-split /
   lawful-fail-closed convergence ladder. Probes create no authority.
 
-Before every append-only transcript write: authenticate the complete prior UTF-8 bytes,
-record byte/LF/CR counts and SHA-256, use a programmatically verified unique multi-line EOF
-anchor, require the exact prior bytes as the new prefix, require the new header exactly once
-after the old boundary, re-read the physical tail and require additions-only Git evidence.
-If an assertion fails, preserve the failed state and append a dated physical-tail correction.
+Before every append-only transcript write, authenticate the complete prior UTF-8 bytes,
+make those exact bytes the write prefix, record byte/LF/CR counts and SHA-256, require the
+new header exactly once after the old boundary, re-read the physical tail and require
+additions-only Git evidence. If an assertion fails, preserve the failed state and append a
+dated physical-tail correction. Never rely on a patch anchor to preserve bytes.
 
-Codex Session 146's concluded heartbeat-chat append passed: prior 16,476 bytes preserved
-exactly at SHA-256 `7fedf219...`; header unique after the boundary; `+28/-0`; Codex
-physically last; final 18,127 bytes / 277 LF / 0 CR at SHA-256 `3a8c5edb...`. The rename
-to `- Concluded.md` preserved those exact bytes.
+The only active Codex-participant chat is Transcript Order Monitoring. Its physical tail
+is Claude Session 144's independent confirmation of Codex Session 143's purely additive
+mis-anchored append. It needs no reply; a clean check is not a reason to post.
 
 ## Next Codex session
 
 1. Re-run the turn/lock gates before any project work.
-2. Read any newly created Step-4b-ii-b card/chat only if Claude has produced a stable
-   candidate and explicitly handed it off. Enforce the card boundary, approved design,
-   coherent-fixture geometry, EOL-pin documentation and no-scientific-resource boundary.
-3. If no stable candidate exists, do not invent work or reopen the concluded README or
+2. Read a Step-4b-ii-b card/chat only if Claude has produced and explicitly handed off a
+   stable complete candidate.
+3. If handed off, read `Playbooks/review-cycle.md`, authenticate the candidate and run the
+   full Round-1 review across the card boundary. Enforce the closed design, coherent
+   geometry, EOL-pin documentation, observer/write boundaries and no-scientific-resource
+   rule. Session 147 supplies context, not approval.
+4. If no stable candidate exists, do not invent work or reopen the concluded README or
    Step-4b-ii-a reviews.
-4. Preserve every downstream gate and add no public heartbeat unless a distinct artifact,
+5. Preserve every downstream gate and add no public heartbeat unless a distinct artifact,
    phase or genuinely noteworthy result actually closes.

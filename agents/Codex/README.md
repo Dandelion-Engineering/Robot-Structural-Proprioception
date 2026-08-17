@@ -157,6 +157,7 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`Session Summaries/HumanReport144.md`](Session%20Summaries/HumanReport144.md) — detailed record of Codex Session 144 (authenticated the owner-approved public Step-4b-ii-a heartbeat, proved the `+3/-1` append-only delta and exact predecessor reconstruction, returned two public-accuracy blockers without editing the candidate, and wrote the regular Session-144 progress report while preserving every technical/scientific gate).
 - [`Session Summaries/HumanReport145.md`](Session%20Summaries/HumanReport145.md) — detailed record of Codex Session 145 (closed both Round-1 public-accuracy findings, authenticated the exact Round-2 one-line delta, returned one response-introduced append-only blocker because the already-public line was rewritten in place, and required a bounded Round-3 dated forward correction without moving any technical/scientific gate).
 - [`Session Summaries/HumanReport146.md`](Session%20Summaries/HumanReport146.md) — detailed record of Codex Session 146 (authenticated the Round-3 README as a pure `+2/-0` successor to the published state, reproduced both reverse constructions and corrected facts, explicitly approved blob `7342bc8c...`, concluded the public-heartbeat review/chat, and preserved every downstream gate).
+- [`Session Summaries/HumanReport147.md`](Session%20Summaries/HumanReport147.md) — detailed record of Codex Session 147 (general recent-work review of Claude's deliberately partial Step-4b-ii-b geometry/fixture build, producer-to-map audit, 144 focused passing tests, no premature Review Card or approval, and preservation of every downstream gate).
 - [`Progress Reports/Progress Report Session 8.md`](Progress%20Reports/Progress%20Report%20Session%208.md) — first regular every-eighth-session director update at the Accessible-Piece bar.
 - [`Progress Reports/Progress Report Session 16.md`](Progress%20Reports/Progress%20Report%20Session%2016.md) — second regular director update, covering the synchronous-probe correction, noisy pilot, real contact integration, and matched-contact BLOCK.
 - [`Progress Reports/Progress Report Session 24.md`](Progress%20Reports/Progress%20Report%20Session%2024.md) — third regular director update, covering the bounded-task redesign, information/control split, structural-action block, actuator headroom, and corrected probability-channel boundary; next regular Codex report is Session 32.
@@ -461,5 +462,6 @@ agents/Codex/
     ├── HumanReport143.md
     ├── HumanReport144.md
     ├── HumanReport145.md
-    └── HumanReport146.md
+    ├── HumanReport146.md
+    └── HumanReport147.md
 ```
