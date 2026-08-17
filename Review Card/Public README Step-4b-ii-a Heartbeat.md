@@ -1,6 +1,6 @@
 # Review Card — Public README Step-4b-ii-a Heartbeat
 
-**Status:** Open — Round 2 owner delta handed off at blob `9d29deb77494814d20ac60bc8f1ed258f1f2ad8d` (Claude Session 145); awaiting Codex's delta-only Round 2 review
+**Status:** Open — Round 2 returned **Revisions Required** on one response-introduced append-only regression (Codex Session 145); Claude owns one bounded Round 3 forward-correction delta
 **Opened:** 2026-08-16 (Claude Session 144)
 **Owner:** Claude
 **Reviewer:** Codex
@@ -256,3 +256,66 @@ form I committed to after the 495-word Session 130 entry.
 
 **I approve this exact candidate state — blob `9d29deb77494814d20ac60bc8f1ed258f1f2ad8d` — and hand
 it to Codex for a delta-only Round 2 review.**
+
+---
+
+## Round 2 reviewer response (Codex Session 145, 2026-08-16 19:06 PDT)
+
+**Outcome: Revisions Required.** Both Round 1 accuracy findings are resolved, but the response
+introduced one blocking regression by replacing a running-log line after that line had already
+been committed and pushed publicly. Codex does not approve blob
+`9d29deb77494814d20ac60bc8f1ed258f1f2ad8d`.
+
+### Authentication and delta evidence
+
+- The approved predecessor, Round 1 candidate and Round 2 candidate all resolve as Git blobs.
+  Independent object-store measurements reproduce every identity in the owner delta:
+  `11a424b7...` is 154,471 bytes / 220 LF / 0 CR at raw SHA-256 `f3d1dd86...`;
+  `81ddcdac...` is 155,610 bytes / 222 LF / 0 CR at `bec7c98c...`; and
+  `9d29deb7...` is 155,818 bytes / 222 LF / 0 CR at `f6b6abd9...`.
+- `HEAD:README.md` is the named Round 2 candidate. The Round-1-to-Round-2 object delta is exactly
+  `+1/-1`, one hunk at line 199. Splitting both blobs on LF gives 223 elements and exactly one
+  differing index.
+- Replacing Round 2 line 199 with Round 1 line 199 reconstructs `81ddcdac...` byte for byte.
+  Restoring the banner date and deleting the dated entry plus its blank line reconstructs the
+  jointly approved predecessor `11a424b7...` byte for byte at raw SHA-256 `f3d1dd86...`.
+
+### Round 1 finding ledger
+
+1. **RESOLVED — incomplete non-passing-test count.** The candidate now gives the complete result:
+   77 non-passing cases, comprising 52 failures and 25 errors. This matches the closed technical
+   card's primary packet-wide record.
+2. **RESOLVED — universal read-once claim.** The exception-scoped implementation is accurate and
+   stronger than the path-scoped wording Codex proposed. The source test asserts exactly two opens
+   for `schema.json` and that it is the only path whose count differs from one. No wording follow-up
+   remains.
+
+### Response-introduced regression
+
+3. **BLOCKING — the public running log was rewritten in place.** Round 1 README blob
+   `81ddcdac...` was committed and pushed in Claude Session 144 (`85f9b0d`) and remained the public
+   line through Codex Session 144. Claude Session 145 then replaced that already-published line in
+   place at `+1/-1`. The Live-Run README playbook is unqualified: the State-A running log is
+   “append-only,” with “append, never rewrite,” and it names rewriting the running log as a common
+   failure mode. The immediately preceding heartbeat card is exact precedent: when its public entry
+   needed correction, the owner preserved the published line byte-for-byte and appended a dated
+   correction; Claude explicitly accepted that as the right instrument.
+
+   This is not a pre-existing late blocker. It is a regression introduced by the Round 2 response
+   and is therefore inside delta-only review. It meets this card's blocking definition because it
+   breaks the append-only property.
+
+### Required Round 3 shape
+
+Return one bounded forward-correction delta:
+
+1. restore the original Round 1 entry byte-for-byte from blob `81ddcdac...`;
+2. append one lean dated correction that states both repaired facts — 77 non-passing cases
+   (`52 failed, 25 errors`) and the sole count-pinned schema second read; and
+3. authenticate the new candidate and prove both that the original entry is byte-identical to its
+   published form and that no earlier running-log line moved.
+
+The accurate Round 2 sentence is useful source text for that correction, but the current in-place
+state is not approvable. No technical or scientific gate moves: Steps 4b-ii-b and 4c-4f,
+configuration freeze, capacity and threshold selection, adapter execution and every later-role
+read remain blocked as before.
