@@ -1,6 +1,6 @@
 # Summary of Only Necessary Context - Claude
 
-*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 146, 2026-08-16.*
+*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 147, 2026-08-16.*
 
 **S112 SPLIT THIS FILE, AND THAT IS THE FIRST THING TO KNOW ABOUT IT.** It was ~3,430 lines and ~400 KB, and reading it was the single largest cost of starting a session — in tension with its own stated purpose. **Codex approved the split in its S111** with one binding condition: *the current gate map, the current exact-state handoff, and the next-read routing stay here.* So this file is now **current state + gates + routing**, and every permanent instrument moved **verbatim, not summarized** into:
 
@@ -9,27 +9,87 @@
 
 **DO NOT UNDO THE SPLIT BY DRIFTING CONTENT BACK.** If a permanent instrument improves, the improvement goes into **the block that owns it in the reference file** — that is the S105 correction, and it is the reason the append writer's last five rebuilds were faithful. Only *current state* belongs here.
 
-## S147 FIRST - 4b-ii-b IS THE ONLY UNBUILT ADAPTER HALF, ITS PLAN NOW CARRIES **MEASURED GEOMETRY NUMBERS**, AND THE README HEARTBEAT IS AT ROUND 3 WAITING ON CODEX.
+## S148 FIRST - SEQUENCING STEP 1 OF 4b-ii-b IS BUILT AND UNREVIEWED; ROWS 13-21 ARE NEXT; THE README HEARTBEAT IS CLOSED.
 
 ```text
-*** START HERE IF YOU DO NOTHING ELSE: `agents/Claude/Slot-8 Step-4b-ii-b Build Plan.md`, WRITTEN
-    S145 AND **EXTENDED S146 WITH APPENDIX A**.  Sections 1-6 are the row-by-row plan for rows 13-21
-    + the coherent geometry fixture + the audit-hook observer + B2/B3/B5 + the roles CLI wiring +
-    the additive `build_role_bundle` edit, WITH THE MUTATION SWEEP AND ITS STAGED-TREE SET
-    BUDGETED, and with the two off-limits files carried into it.  **APPENDIX A IS THE ROW-18
-    FORWARD MAP, MEASURED AT SOURCE IN S146 - DO NOT RE-DERIVE IT:** 16 bodies and 15 internal
-    deformation bodies per link, `n_def` 90 = 2 x 15 x 3, SEGMENT 0.025 m, the L1-THEN-L2 LOG-MAP
-    TRIPLET ORDER, THE **y COMPONENT (INDEX 1)** AS THE PLANAR ADVANCE, base point model (0,0,0.5),
-    projection model x -> scene x and model z -> scene y, and EXIT 15 RE-MEASURED FREE.  A.3 records
-    THE ONE THING THAT DERIVATION CANNOT SETTLE - THE SIGN - AND ASSIGNS IT TO THE
-    GEOMETRY-VALIDATION ARTIFACT, WHICH IS NOT 4b's TO BUILD.  A.6 carries Codex's correction: 4b-ii-b
-    is the only unbuilt **connection-adapter half**, NOT the only unbuilt work; 4c-4f are unbuilt and
-    blocked.  *** IT IS A PLAN, NOT A CANDIDATE, AND IT IS DELIBERATELY NOT A REVIEW CARD - the card
-    and the subject chat are written AT THE END OF THE BUILD, when there is a stable candidate to
-    name.  The design at blob `032db166` is the authority and the plan loses to it wherever they
-    differ. ***
+*** START HERE: `agents/Claude/Slot-8 Step-4b-ii-b Build Plan.md`.  **S147 EXECUTED ITS SEQUENCING
+    STEP 1** - the coherent geometry fixture and the shared forward map.  SEQUENCING STEPS 2-6 ARE
+    UNSTARTED: rows 13-17, then rows 19-21 + the audit-hook observer + the roles CLI wiring + the
+    additive `build_role_bundle` edit, THEN the two-pass mutation sweep, THEN the Review Card and
+    the subject chat, THEN the handoff.  *** STILL NO REVIEW CARD AND NO SUBJECT CHAT FOR 4b-ii-b,
+    AND THAT REMAINS DELIBERATE - a card names a candidate and rows 13-21 are not built.  DO NOT
+    "FIX" THIS BY OPENING ONE EARLY. ***  The design at blob `032db166` is the authority and the
+    plan loses to it wherever they differ.
 ```
 
+```text
+*** WHAT S147 BUILT - THREE NEW FILES AND TWO MOVED ONES.  NONE OF IT IS REVIEWED AND NONE OF IT
+    IS A CANDIDATE YET.
+      NEW  scripts/utils/centerline_geometry.py     `385eb59c`  18,251 B /   399 LF / 0 CR
+      NEW  scripts/utils/coherent_geometry_fixture.py `5753c6a7` 26,695 B /   601 LF / 0 CR
+      NEW  tests/test_centerline_geometry.py        `c6f3a781`  36,619 B /   885 LF / 0 CR, 48 tests
+      MOVED scripts/utils/verification_scene.py     `c12745ab` -> `d186a9b1`  (+9 / -2)
+      MOVED tests/test_verification_scene.py        `cf61e5aa` -> `60caeb21`  (+42 / -4)
+    *** THE TWO MOVED FILES ARE JOINTLY APPROVED STEP-2 ARTIFACTS AND THEY HAVE MOVED OFF THEIR
+    APPROVED BYTES.  THIS IS AUTHORIZED, NOT A REOPENING: design section 4.5 (blob `032db166`,
+    closed at both approvals S135) DECIDED the fourteenth exit code, and the exit table lives in
+    `verification_scene.py`.  BOTH FILES ARE NOW PART OF THE 4b-ii-b CANDIDATE SET AND MUST BE
+    NAMED IN ITS REVIEW CARD.  DO NOT READ `c12745ab` OR `cf61e5aa` AS THE LIVE STATE.  The other
+    two Step-2 files (`0ae5b19d`, `1833a472`) are untouched. ***
+    *** `X_GEOMETRY_UNSUPPORTED` IS AT EXIT 15.  RE-MEASURED ON THIS CHECKOUT BEFORE THE EDIT:
+    `X_SCENE_OK` 0 and the twelve refusals 3..14 contiguously, so 15 was free and NO EXISTING VALUE
+    MOVED.  The count assertion in the closed test moved 13 -> 14, and I ADDED A FULL VALUE MAP
+    BESIDE IT so a later change that MOVES a code fails even when the count still matches. ***
+```
+
+```text
+*** THREE BUILD DECISIONS A LATER SESSION MUST NOT SILENTLY UNDO.
+  1  **EACH INTERNAL BODY'S ROTATION APPLIES *BEFORE* THAT BODY'S OWN SEGMENT.**  The ball joint
+     sits at the body's proximal end and orients its own segment, not the next one.  *** MY OWN
+     APPENDIX A.4 PSEUDOCODE HAD IT AFTER THE ADVANCE, AND THAT IS OFF BY ONE: it would shift every
+     triplet onto the following segment and leave THE LAST INTERNAL BODY OF EACH LINK ACTING ON
+     NOTHING.  THE PLAN FILE IS LEFT STANDING AS THE RECORDED TURN; this block is its forward
+     correction. ***  BOTH VERSIONS DRAW A CONTINUOUS, SMOOTH, PLAUSIBLE CENTERLINE - nothing about
+     the output reveals the difference, which is why the test drives ALL THIRTY declared triplets
+     one at a time and requires each to move the tip.  MEASURED: smallest displacement of the
+     thirty is 1.25 mm.
+  2  **THE TANGENT SIGN RIDES IN THE DECLARED `projection` STRING, FROM A CLOSED TWO-VALUE
+     VOCABULARY.**  `PlanarConvention` HAS NO SIGN FIELD and adding one would reopen the closed
+     4b-i contract, so the two accepted values share one axis mapping and differ only in the sign
+     clause; anything else refuses and neither is a default.  *** THE FIXTURE CLOSES UNDER EITHER
+     SIGN, because the generator and the checker share the declaration.  IT PROVES THE DERIVATION
+     LOGIC AND NOT THE PHYSICS.  The sign stays ASSIGNED to the future geometry-validation
+     artifact, which is not 4b's to build - a flipped tangent misses by centimetres, not
+     nanometres. ***
+  3  **`q_true_convention` HAS EXACTLY ONE ACCEPTED VALUE** - `q_true[1]` is relative to the distal
+     L1 tangent.  The absolute reading also draws a plausible wrong centerline; the separating test
+     is a bent L1 with `q_true[1] = 0`.
+  *** ROW 5 ALREADY DOES THE TOLERANCE WORK.  It compares `distal_tolerance_m` against the
+      authenticated artifact's named field AND requires the maximum-deviation field not to exceed
+      it (`_require_measured_deviation`, connection_adapter.py:1175).  SO ROW 18'S REMAINING JOB IS
+      ONLY THE DERIVATION AND THE DISTAL COMPARISON, AND BOTH NOW EXIST.  Do not rebuild row 5. ***
+  *** `CENTERLINE_TASK_OUTPUT_TOL_M = 1.0e-9` STAYS THE FIXTURE'S AND DID NOT MOVE (finding CU).
+      `require_distal_point_within_tolerance` TAKES THE TOLERANCE WITH NO DEFAULT, and a test pins
+      that its signature has no default. ***
+```
+
+```text
+*** THE CHAIN, RE-DERIVED AT SOURCE IN S147 RATHER THAN CARRIED FROM APPENDIX A.  IT HOLDS:
+      point_count_per_link 17 -> 16 ordered bodies per link -> 15 internal -> n_def 90 = 2 x 15 x 3
+      segment 0.025 m = 0.4 / 16          centerline points 33 = 16 + 16 + 1 (PINNED AS A LITERAL)
+      base model (0,0,0.5) -> scene (0.0, 0.5)     model x -> scene x, model z -> scene y
+    An undeformed chain at zero angles runs straight from (0.0,0.5) to (0.8,0.5) with every segment
+    at exactly 0.025 m.  EXIT 15 RE-MEASURED FREE. ***
+*** THE MEASURED REASON THE COHERENT FIXTURE EXISTS, RE-DRIVEN IN S147 RATHER THAN QUOTED.  Bind
+    both chains to a COMMON BASE first or the comparison measures the half-metre offset between two
+    origins instead of the thing asked.  With that done, reconstructing the CONTRACT fixture's tip
+    from its own `deform_coords` misses by 3.6-6.8 mm at seeds 0-3.  *** THE SHARP FORM IS NOT THE
+    SIZE: ZEROING THE DEFORMATION ENTIRELY DOES NOT MAKE IT WORSE - the rigid reconstruction misses
+    by 4.513 mm at EVERY seed (curvature_true carries no RNG), and at some seeds it is the CLOSER
+    of the two.  If the two channels described one body, removing the deformation would have to
+    hurt at every seed.  That is the incoherence as a PROPERTY rather than a threshold, and it is
+    now a test. ***  THE COHERENT FIXTURE CLOSES AT EXACTLY 0.0 m.
+```
 
 ```text
 *** THE REVIEW METHOD IS THE DIRECTOR'S SUPERSEDING PROTOCOL, appended to
@@ -72,8 +132,10 @@
 
 *** THE PROJECT STATE IN ONE LINE: EVERY SCIENTIFIC LANE IS STILL SPENT OR SHUT; SLOT-8 STEPS 1, 2,
     3, 4a AND **BOTH** SUB-STEPS 4b-i AND **4b-ii-a** ARE CLOSED AT BOTH APPROVALS; AND THE ONLY
-    UNBUILT WORK IN THE PROJECT IS **4b-ii-b**, WHICH IS NOW STARTABLE.  *** THERE IS NO SECOND
-    LANE. ***
+    UNBUILT CONNECTION-ADAPTER HALF IS **4b-ii-b**, WHICH IS **PARTLY BUILT AS OF S147 AND WHOLLY
+    UNREVIEWED** - its sequencing step 1 (the coherent fixture + the shared forward map) exists,
+    rows 13-21 do not.  *** THERE IS NO SECOND LANE.  4c-4f ARE ALSO UNBUILT, AND BLOCKED RATHER
+    THAN STARTABLE - THAT IS A DIFFERENT THING FROM BUILT (Codex's S145 correction). ***
 
 *** THE ONE THING NO LATER SESSION MAY UNDO, AND IT IS STILL THE BIGGEST STRUCTURAL FACT THE
     4b-ii-a REVIEW FOUND: `scripts/utils/storage_contract.py` AND `scripts/utils/role_contract.py` ARE TWO OF THE
@@ -91,7 +153,47 @@
     `test_the_closed_utilities_keep_the_identity_three_approved_artifacts_record` exists so a later
     session finds this out cheaply. ***  Lesson 246.
 
-=== WHAT S146 DID, SO S147 DOES NOT REDO IT =====================================================
+
+=== WHAT S147 DID, SO S148 DOES NOT REDO IT =====================================================
+  1  BUILT SEQUENCING STEP 1 OF 4b-ii-b: the shared forward map and the coherent geometry fixture.
+     THE FILES AND THE THREE DECISIONS ARE IN THE HEAD BLOCK - do not re-derive them.  NO REVIEW
+     CARD AND NO SUBJECT CHAT WERE OPENED, DELIBERATELY.
+  2  ADDED `X_GEOMETRY_UNSUPPORTED` AT EXIT 15 to `verification_scene.py` (design 4.5), re-measuring
+     the table on this checkout FIRST.  Moved the closed test's count assertion 13 -> 14 and ADDED A
+     FULL VALUE MAP so a MOVED code still fails.
+  3  RE-DERIVED THE WHOLE CHAIN AT SOURCE rather than trusting my own Appendix A, AND FOUND MY OWN
+     PLAN OFF BY ONE (head block, decision 1).
+  4  REPLACED AN UNREACHABLE CHECK OF MY OWN.  My first `require_chain_arithmetic_closes` compared a
+     total column COUNT against 90; writing the test showed the branch cannot be reached once both
+     links are known to carry fifteen internal bodies.  IT IS NOW A COVERAGE CHECK - the declared
+     columns read in link order must be exactly 0..89 - which catches what a count never could:
+     fifteen triplets all naming the same three columns.  *** A TEST THAT CANNOT FAIL IS WORSE THAN
+     NO TEST, AND THE THING THAT REVEALED IT WAS TRYING TO WRITE THE TEST. ***
+  5  RE-DROVE THE MEASUREMENT THAT JUSTIFIES THE FIXTURE (head block) instead of quoting design 2.4.
+  *** SUITES, RE-RUN BECAUSE AN EXECUTABLE FILE CHANGED: focused new file 48; SLOT-8 FOCUSED SET
+      (5 files) 715; **PACKET-WIDE 2,843 passed / 0 failed / 163.24 s**; the two scene files under
+      `PYTHONOPTIMIZE=1` 144.  THE ARITHMETIC CLOSES EXACTLY: 2,793 + 48 + 2 = 2,843.  `py_compile`,
+      `git diff --check` and `git status --porcelain` all clean; all five files pure ASCII, LF, 0 CR,
+      final newline. ***
+  *** NO MUTATION SWEEP RAN, AND THAT IS ON PLAN RATHER THAN AN OMISSION - the plan sequences it at
+      step 4, on the FINISHED pair, immediately before the handoff.  Sweeping a third of a build
+      would have to be redone against the whole.  ITS STAGED-TREE SET (`scripts`, `tests`, `schema`,
+      `config` AND `results`) AND ITS TWO-PASS SHAPE ARE STILL BUDGETED. ***
+  *** S147 SPENT ZERO SCIENTIFIC RESOURCE.  Counters unchanged: 278 rollouts, 67 fits, 67
+      checkpoints, zero pilot/val/test reads.  DISCLOSED READS, all tracked development text, none
+      opening a payload: `config/draft-config-v0.1.json` (`values.plant`), `cable_mechanics.py`,
+      `synthetic_plant.py`, `verification_scene.py`, `connection_record.py`, `connection_adapter.py`,
+      `schema_types.py`, `dev_fit_trainer.py` (ONLY its `training_code_identity` list, to re-confirm
+      the eight off-limits files), `build_data_contract_fixture.py`, `tests/test_connection_adapter.py`,
+      and design sections 2.4, 3.5, 4.1, 4.5, 4.6.  IT BUILT NO MuJoCo MODEL, STEPPED NO ROLLOUT, RAN
+      NO FIT AND RENDERED NO FIGURE, and the V18 test proves the two new modules pull in neither
+      `mujoco` nor `torch` in a fresh interpreter.  THE TWO OFF-LIMITS IDENTITY FILES WERE NOT
+      TOUCHED. ***
+  *** THE HEARTBEAT CHECK RAN AND ANSWERED **NO** - no artifact finished, no phase closed, no result
+      produced.  An entry announcing that a build has started is the session-journal texture the
+      playbook forbids.  Root README unchanged. ***
+
+=== WHAT S146 DID ================================================================================
   1  RETURNED THE **ROUND-3 OWNER DELTA** ON THE PUBLIC README HEARTBEAT, ACCEPTING CODEX'S RULING
      AGAINST ME WITHOUT CONTEST.  Codex's S145 Round 2 RESOLVED both accuracy findings and returned
      **Revisions Required** on ONE BLOCKING RESPONSE-INTRODUCED REGRESSION: I had repaired the
@@ -1119,7 +1221,7 @@ TWO NUMBERS THAT ARE IN THE DESIGN BECAUSE THEY ARE THE INCONVENIENT ONES.  KEEP
 ## Where the project is
 
 - **Phase 2 (Execution) is OPEN.** All Phase-1 gates in force. **Schema v1.0 + Amendment A1 in force.** Contract changes run through the **amendment protocol**.
-- I am **Claude**; last session was **Session 146**; next session I run is **Session 147**. **SESSION 146 RETURNED THE ROUND-3 OWNER DELTA ON THE PUBLIC-README HEARTBEAT**, accepting Codex's Round-2 ruling against my in-place repair without contest: the published entry is restored byte for byte and one dated 99-word correction is appended beneath it, making the candidate **`7342bc8c`** a purely additive `2 0` successor to the published blob. **CODEX'S TURN, AND IT IS THE CARD'S ROUND LIMIT.** Session 146 also **extended the 4b-ii-b build plan with Appendix A** — the row-18 forward map measured at source — and added standing lessons **257, 258 and 259**. *(Historical, kept for one more rewrite: **SESSION 145 RETURNED THE ROUND-2 OWNER DELTA** - Codex's S144 Round 1 was **Revisions Required** on two blocking public-accuracy findings (an incomplete test count, and a universal read-once claim whose counterexample sat in the same sentence); I accepted both without contest, re-derived each from a primary object before repairing it, repaired both in ONE line (`--numstat` `1 1`, hunk `@@ -199 +199 @@`), re-proved the append-only property on the new bytes, and handed candidate **`9d29deb7`** back for a delta-only Round 2; it also wrote the 4b-ii-b build plan, and it asked the process question Codex then ruled against.)* **THE FIRST WORK OF S147 IS THE 4b-ii-b BUILD** - the only unbuilt connection-adapter half - starting from **Appendix A** of `agents/Claude/Slot-8 Step-4b-ii-b Build Plan.md`, whose sequencing puts the coherent geometry fixture and its fixture-scoped geometry-validation artifact first; its card and chat are written at the END of the build, its mutation sweep is budgeted BEFORE the handoff, and the `schema.json` EOL-pin follow-up is carried into its card. **THE HEARTBEAT REVIEW IS OPEN BUT IS NOT A BLOCKER ON THAT WORK** - different artifact, different card. **SESSION 146 WAS NOT A PROGRESS-REPORT SESSION; MY NEXT REGULAR IS SESSION 152** - `agents/Claude/Progress Reports/Progress Report Session 144.md` is the most recent one and it covers S137-S144.
+- I am **Claude**; last session was **Session 147**; next session I run is **Session 148**. **SESSION 147 BUILT SEQUENCING STEP 1 OF SLOT-8 SUB-STEP 4b-ii-b** - the shared planar centerline derivation and the dedicated coherent geometry fixture design 2.4 requires - plus the design's fourteenth exit code at status 15. Three new packet files (48 tests), two closed Step-2 files moved off their approved bytes under design 4.5's authorization, packet-wide suite **2,843 passed / 0 failed**. **NOTHING OF IT IS REVIEWED, NO REVIEW CARD AND NO SUBJECT CHAT EXIST FOR 4b-ii-b, AND THAT IS DELIBERATE** - the protocol needs a stable candidate before a card names one, and rows 13-21 are not built. **THE FIRST WORK OF S148 IS ROWS 13-17**, then rows 19-21 + the audit-hook observer + the roles CLI wiring + the additive `build_role_bundle` edit, THEN the two-pass mutation sweep on the finished pair, THEN the card and the chat. The `schema.json` EOL-pin follow-up from 4b-ii-a is still carried into that card, and **"add a test" is not available as its answer** - the test that would catch the pin's removal cannot exist while the pin holds. *(Historical, kept for one more rewrite: **SESSION 146 RETURNED THE ROUND-3 OWNER DELTA ON THE PUBLIC-README HEARTBEAT**, accepting Codex's Round-2 ruling against my in-place repair without contest; the published entry is restored byte for byte and one dated 99-word correction appended beneath it, making candidate **`7342bc8c`** a purely additive `2 0` successor to the published blob. **CODEX APPROVED THOSE EXACT BYTES IN ITS S146, THE CARD IS CLOSED AND THE CHAT IS CONCLUDED WITH A `Summary.md`. DO NOT REOPEN IT, AND DO NOT RE-PROPOSE THE IN-PLACE FORM FOR ANY PUBLISHED ARTIFACT.** S146 also extended the build plan with Appendix A and added standing lessons 257-259.)* **SESSION 147 WAS NOT A PROGRESS-REPORT SESSION; MY NEXT REGULAR IS SESSION 152** - `agents/Claude/Progress Reports/Progress Report Session 144.md` is the most recent one and it covers S137-S144.
 - **`config.json` is deliberately NOT frozen** and does not exist. All hashes are `dev-`; no `dev-` trace may enter confirmatory analysis.
 - Real data exists: `data/gate3-base-dev-pilot-val-c1-s` (3.86 GB, git-ignored, local only). 472 reservations / 944 manifest rows / C1+S / dev 152, pilot 152, val 168. **Test untouched: 0 identities, 0 payloads.** **THE "SLATED FOR FULL REGENERATION FROM ZERO AFTER A2" EXPECTATION IS RETIRED AS OF MY S75 — see A2.3.** Option C inserts no severity, so no seed ordinal shifts and A2 by itself invalidates none of this. If the set is ever superseded it is for some other reason, under its own authorization. **Still: read them, do not build on them** — nothing downstream of them is authorized either way.
 - **THE PAYLOAD-BOUNDARY EXTENSION HAS RUN — Codex's S73, 127 physical rollouts, `X_CASE_EMPTY`, and the result artifact is JOINTLY APPROVED (Codex S73 / me S74).** The measurement is spent and no further payload-extension execution is authorized. **A2 IS IN FORCE at `baa8fd53…` / `203aab77…` — both agents approved those exact bytes (me S76, Codex S76). The two-file loop is CLOSED and the amendment is not to be reopened or status-edited.**
@@ -1142,6 +1244,14 @@ TWO NUMBERS THAT ARE IN THE DESIGN BECAUSE THEY ARE THE INCONVENIENT ONES.  KEEP
       A COUNTER'S SCOPE IS PART OF THE COUNTER; two counters under one heading are read as
       sharing one scope, and if they do not, nothing in the file will say so. ***
   PILOT / VAL / TEST reads   0, every session, without exception
+  *** S147 SPENT ZERO SCIENTIFIC RESOURCE - it is the 4b-ii-b SEQUENCING-STEP-1 BUILD.  It wrote
+      three new packet files and moved two closed Step-2 ones; re-ran the focused file (48), the
+      Slot-8 focused set (715), THE PACKET-WIDE SUITE (**2,843 passed, 0 failed, 163.24 s**) and the
+      two scene files under `-O` (144).  IT OPENED NO ROLE INDEX, ROLE PAYLOAD, CHECKPOINT, ESTIMATOR
+      OUTPUT, CONTROLLER LOG, PRODUCTION CONFIG OR PILOT/VAL/TEST RESULT, **BUILT NO MuJoCo MODEL**,
+      STEPPED NO ROLLOUT, RAN NO FIT AND RENDERED NO FIGURE.  It imported `synthetic_plant` to build
+      analytic fixture records for one comparison - an in-memory generator, not a payload read, and
+      it pulls in no `mujoco`.  Checkpoint count NOT RE-READ; it stands at 67. ***
   *** S146 SPENT ZERO SCIENTIFIC RESOURCE - it is the README ROUND-3 OWNER DELTA plus the row-18
       DERIVATION.  It read `AgentPrompt.md`, `Project Details/Project Details.md`, this file, both
       active chats, the governing Review Card including Codex's full Round-2 section,
@@ -1504,7 +1614,7 @@ Not freeze blockers (still required before completion): **Slot-8 verification ar
 
 ## My lanes — current state
 
-- **SLOT 8 - THE DIRECTOR'S VERIFICATION ARTIFACT. OPENED S123. STEPS 1, 2 AND 3 ARE CLOSED AT BOTH APPROVALS, AND SO ARE SUB-STEP 4a AND SUB-STEP 4b-i (Round-3 **Approved**, me S138 / Codex S138, same bytes). SUB-STEP 4b-ii-a - ROWS 4-12 - IS UNDER REVIEW AT ROUND 2 (my S142 owner response to Codex's six-finding Round-1 ledger; candidate `01653d9c` / `c5d4e023`); THE NEXT WORK ON THIS LANE IS WHATEVER CODEX'S DELTA-ONLY ROUND 2 SAYS, AND THEN 4b-ii-b.  SUB-STEP 4b CLOSES ON THREE CARDS AND CODEX ACCEPTED THE SPLIT IN ITS S141.** Mine to write, Codex reviews. **The Step-1 design is `Reproducibility Packet/protocol/slot8-verification-artifact-v0.1.md`, blob `0753d4ed`, raw == canonical `98e20ae1...`, 59,495 B / 790 LF / 0 CR, LF-pinned by the packet `.gitattributes` `protocol/*.md` rule - jointly approved at those exact bytes (me S127, Codex S127); NEVER EDIT IT IN PLACE.** **READ THE FILE - this bullet is an index, not the document.** It is authoritative on: the `VerificationBundle`/`VerificationScene` field table and its **eight** load-bearing properties; the two mode-specific subcommand contracts; the section-4.1 non-finite float encoding and its `parse_constant` decode rule; the `draw_scene(scene, *, frame)` signature, the one scene-level `playback_t_s` clock, the causal at-or-before call-panel rule and the derived scripted frame; the three-state provenance machine and its **thirteen** exit-code rows; the fixture's required branches; the six acceptance tests A1-A6; **invariants V1-V19**; the four things the artifact must **say** it does not do; and the four-step sequencing. **IT AUTHORIZES NOTHING.** **Step 2 discharged it at `c12745ab`/`0ae5b19d`/`cf61e5aa`/`1833a472` (me S129, Codex S129) and step 3 closed at the ten fixture blobs + packet README `4bc07f18` + both `.gitattributes` + packet `.gitignore` + public README `3ab96e38` (me S130, Codex S130).** **STEP 4's OWN DESIGN IS `Reproducibility Packet/protocol/slot8-connection-record-v0.1.md` AT BLOB `032db166` - CLOSED AT BOTH APPROVALS (me S135, Codex S135), and it is the spec for everything the 4b build does. READ IT; the head block indexes it.** **The whole design review history - BR-BZ, CA/CB, CC/CD, CE/CF, CG/CH, CI-CL, CM, CN/CO on Step 1; CP/CQ/CR/CS + CT on the Step-2 build; and CU, CV, CW, CX, CY/CZ, DA, DB, DC, DD, DE on Step 4a - is SETTLED, and none of it is to be re-litigated.** Codex's D1-D4 rulings and Q1/Q2 are accepted without contest and are NOT to be reasked. **The current build state, the split, the three build decisions and the two forward items are in the head block.**
+- **SLOT 8 - THE DIRECTOR'S VERIFICATION ARTIFACT. OPENED S123. STEPS 1, 2 AND 3 ARE CLOSED AT BOTH APPROVALS, AND SO ARE SUB-STEP 4a, SUB-STEP 4b-i (Round-3 **Approved**, me S138 / Codex S138) AND SUB-STEP 4b-ii-a (**Approved with Follow-ups**, Codex S143 / me S144, same bytes). **SUB-STEP 4b-ii-b - ROWS 13-21 - IS THE ONE OPEN PIECE. ITS SEQUENCING STEP 1 IS BUILT AS OF S147 (the shared forward map + the coherent geometry fixture + exit 15) AND IS WHOLLY UNREVIEWED; ROWS 13-21 THEMSELVES ARE NOT BUILT. NO REVIEW CARD AND NO SUBJECT CHAT EXIST FOR IT AND THAT IS DELIBERATE.** THE NEXT WORK ON THIS LANE IS ROWS 13-17.  **TWO CLOSED STEP-2 FILES NOW SIT OFF THEIR APPROVED BYTES AND BELONG TO THE 4b-ii-b CANDIDATE SET: `verification_scene.py` `c12745ab` -> `d186a9b1` and `tests/test_verification_scene.py` `cf61e5aa` -> `60caeb21`, authorized by design 4.5 rather than a reopening.**  SUB-STEP 4b CLOSES ON THREE CARDS AND CODEX ACCEPTED THE SPLIT IN ITS S141.** Mine to write, Codex reviews. **The Step-1 design is `Reproducibility Packet/protocol/slot8-verification-artifact-v0.1.md`, blob `0753d4ed`, raw == canonical `98e20ae1...`, 59,495 B / 790 LF / 0 CR, LF-pinned by the packet `.gitattributes` `protocol/*.md` rule - jointly approved at those exact bytes (me S127, Codex S127); NEVER EDIT IT IN PLACE.** **READ THE FILE - this bullet is an index, not the document.** It is authoritative on: the `VerificationBundle`/`VerificationScene` field table and its **eight** load-bearing properties; the two mode-specific subcommand contracts; the section-4.1 non-finite float encoding and its `parse_constant` decode rule; the `draw_scene(scene, *, frame)` signature, the one scene-level `playback_t_s` clock, the causal at-or-before call-panel rule and the derived scripted frame; the three-state provenance machine and its **thirteen** exit-code rows; the fixture's required branches; the six acceptance tests A1-A6; **invariants V1-V19**; the four things the artifact must **say** it does not do; and the four-step sequencing. **IT AUTHORIZES NOTHING.** **Step 2 discharged it at `c12745ab`/`0ae5b19d`/`cf61e5aa`/`1833a472` (me S129, Codex S129) and step 3 closed at the ten fixture blobs + packet README `4bc07f18` + both `.gitattributes` + packet `.gitignore` + public README `3ab96e38` (me S130, Codex S130).** **STEP 4's OWN DESIGN IS `Reproducibility Packet/protocol/slot8-connection-record-v0.1.md` AT BLOB `032db166` - CLOSED AT BOTH APPROVALS (me S135, Codex S135), and it is the spec for everything the 4b build does. READ IT; the head block indexes it.** **The whole design review history - BR-BZ, CA/CB, CC/CD, CE/CF, CG/CH, CI-CL, CM, CN/CO on Step 1; CP/CQ/CR/CS + CT on the Step-2 build; and CU, CV, CW, CX, CY/CZ, DA, DB, DC, DD, DE on Step 4a - is SETTLED, and none of it is to be re-litigated.** Codex's D1-D4 rulings and Q1/Q2 are accepted without contest and are NOT to be reasked. **The current build state, the split, the three build decisions and the two forward items are in the head block.**
 
 - **GATE-4 RUNG 2 — ALL SEVEN STEPS ARE CLOSED AND SECTION 5.4 IS JOINTLY APPLIED AND SPENT. THE RUN HAPPENED (Codex S117, `X_RUNG2_OK`, 12 fits / 12 checkpoints / 0 rollouts, 1,274.6 s), THE DESCRIPTIVE READ HAPPENED (me S119, `X_ANALYSIS_OK`, 0 fits, 11.97 s), BOTH AGENTS APPROVED THE DERIVED ARTIFACT (me S119 / Codex S119), AND THE TWO PRE-REGISTERED SENTENCES WERE APPLIED BY CODEX IN ITS S119 AND BY ME IN MY S120. NOTHING FURTHER IS LICENSED AND NOTHING SCIENTIFIC ON THIS LANE IS OPEN — only the packet-runbook documentation loop.** Mine to write, Codex reviews. Design `Reproducibility Packet/protocol/rung2-escalation-v0.1.md` at blob `404c9f1f`; module `scripts/utils/attribution_net_rung2.py` at blob `ca192af0` + `tests/test_attribution_net_rung2.py` at blob `c43d33b0` (71 tests; **superseded, never build from: `52809287`**); executable `scripts/utils/rung2_escalation.py` at blob `735f8dee` + `tests/test_rung2_escalation.py` at blob `7cefcb63` (142 tests) — **JOINTLY APPROVED, DO NOT REOPEN**; plan `results/rung2_escalation/plans/rung2-run-1/rung2_escalation_plan.json` at blob `61a2bd22`, canonical == raw `b51b0009…` — **JOINTLY APPROVED, DO NOT RE-AUDIT AND DO NOT REGENERATE**. **THE TWO RAW RUN ARTIFACTS ARE TRACKED AND MUST NOT BE REGENERATED:** `results/rung2_escalation/rung2-run-1/rung2_escalation_result.json` (blob `0eb78d0f`, raw `9d94b03e…`, 33,038 B) and `…/_equivalence/rung2_escalation_equivalence.json` (blob `351f47f4`, raw `ddcb5fed…`), plus twelve git-ignored `.pt` files — fourteen files exactly. Codex audited that raw state with its own instrument, 261 checks, all passed. **MY STEP-6 BUILD IS JOINTLY APPROVED AND CLOSED (Codex S118, no edit):** `Reproducibility Packet/scripts/analyze_rung2_escalation.py` blob `7cf3cc6a`, canonical == raw `83234943…`, 48,308 B / 1,125 lines; and `Reproducibility Packet/tests/test_rung2_escalation_analysis.py` blob `a642b3d3`, canonical == raw `169a3cb2…`, 54,947 B / 1,398 lines, **103 tests** (packet suite **2,108**). **THE PROJECT'S ONE OPEN LOOP IS NOW THE DERIVED ARTIFACT IT PRODUCED:** `Reproducibility Packet/results/rung2_escalation_analysis/rung2-run-1/rung2_escalation_analysis.json`, blob `a2fa857b`, raw == canonical `604d7272…`, 40,270 B, one line, tracked. I approved those exact bytes in my S119 turn after 165 independent checks and **Codex approved the same bytes in its S119 after its own 853-check standalone audit — THAT LOOP IS CLOSED, DO NOT REOPEN OR RE-AUDIT IT.** **DO NOT REGENERATE IT — the destination is an exclusive create and it is consumed, and both authorization halves are spent.** **THE LANE HAS NO REMAINING ITEM. `Reproducibility Packet/README.md` CLOSED AT BLOB `f5e677c8` (Steps 30 and 31 written my S120; Codex's BM repair its S120; my BN/BO/BP repairs my S121; Codex approved those exact bytes UNEDITED in its S121) - DO NOT REOPEN IT. The lane's account is now PUBLIC as well: the root README's running log carries the heartbeat, published in my S122 at blob `964231a4` and CLOSED at blob `f00ea0d9` after Codex's Finding-BQ scope correction (Codex S122, me S123) — DO NOT REOPEN IT.** See the head block for the nine required arguments, the derived-field list, the three flagged decisions, invariant R7's positive reading, and the M21 mutation survivor and its closure. **THE EXECUTION ROOT NOW EXISTS AND IS CONSUMED — a retry at `rung2-run-1` is impossible by construction, which is what R2 is for; a retry needs a new label, a new plan and a fresh joint authorization.** **A closed review loop authorizes the next step only, and never a run.**
 

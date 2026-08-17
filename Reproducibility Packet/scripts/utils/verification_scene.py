@@ -64,9 +64,14 @@ from utils.metrics import SOURCE_CLASS_ORDER, j_5s
 from utils.protocol_p import canonical_json
 
 # --------------------------------------------------------------------------- #
-# Exit codes (design section 4.3). Twelve fail-closed refusals plus the one
+# Exit codes (design section 4.3). Thirteen fail-closed refusals plus the one
 # success code; the CLI in `render_verification_scene.py` imports this mapping
 # rather than restating it, so there is one definition of what each refusal means.
+#
+# The thirteenth, `X_GEOMETRY_UNSUPPORTED`, is the connection-record design's
+# section 4.5 decision, added here because that is where the table lives. It was
+# a purely additive change: `X_SCENE_OK` held 0 and the original twelve refusals
+# held 3 through 14 contiguously, so 15 was free and no existing value moved.
 # --------------------------------------------------------------------------- #
 X_CONNECTION_UNAUTHORIZED = "X_CONNECTION_UNAUTHORIZED"
 X_SPLIT_FORBIDDEN = "X_SPLIT_FORBIDDEN"
@@ -80,6 +85,7 @@ X_PROVENANCE_UNRESOLVED = "X_PROVENANCE_UNRESOLVED"
 X_BUNDLE_INCOMPLETE = "X_BUNDLE_INCOMPLETE"
 X_ARMS_INCOMPLETE = "X_ARMS_INCOMPLETE"
 X_WINDOW_UNSUPPORTED = "X_WINDOW_UNSUPPORTED"
+X_GEOMETRY_UNSUPPORTED = "X_GEOMETRY_UNSUPPORTED"
 X_SCENE_OK = "X_SCENE_OK"
 
 EXIT_CODES: dict[str, int] = {
@@ -96,6 +102,7 @@ EXIT_CODES: dict[str, int] = {
     X_BUNDLE_INCOMPLETE: 12,
     X_ARMS_INCOMPLETE: 13,
     X_WINDOW_UNSUPPORTED: 14,
+    X_GEOMETRY_UNSUPPORTED: 15,
 }
 
 # --------------------------------------------------------------------------- #
@@ -161,7 +168,7 @@ class VerificationSceneError(RuntimeError):
 
     def __init__(self, code: str, message: str) -> None:
         if code not in EXIT_CODES or code == X_SCENE_OK:
-            raise ValueError(f"{code!r} is not one of the twelve refusal codes")
+            raise ValueError(f"{code!r} is not one of the thirteen refusal codes")
         super().__init__(f"{code}: {message}")
         self.code = code
 

@@ -1077,13 +1077,51 @@ def test_frame_guard_accepts_every_in_range_index(bundle):
 # --------------------------------------------------------------------------- #
 # Exit-code table and V18.
 # --------------------------------------------------------------------------- #
-def test_exit_code_table_has_twelve_refusals_and_one_success():
-    """The section-4.3 table, pinned by count and by the one zero exit."""
+def test_exit_code_table_has_thirteen_refusals_and_one_success():
+    """The section-4.3 table, pinned by count and by the one zero exit.
 
-    assert len(vs.EXIT_CODES) == 13
+    The count moved from thirteen entries to fourteen when the connection-record
+    design's section 4.5 added `X_GEOMETRY_UNSUPPORTED` at exit 15. That addition
+    is the one thing a count assertion cannot absorb silently, which is why it is
+    written as literals here: every original value is pinned separately below, so
+    a later change that *moved* an existing code would still fail even though the
+    count matched.
+    """
+
+    assert len(vs.EXIT_CODES) == 14
     zero = [name for name, code in vs.EXIT_CODES.items() if code == 0]
     assert zero == [vs.X_SCENE_OK]
-    assert len(set(vs.EXIT_CODES.values())) == 13
+    assert len(set(vs.EXIT_CODES.values())) == 14
+    assert vs.EXIT_CODES[vs.X_GEOMETRY_UNSUPPORTED] == 15
+
+
+def test_the_geometry_refusal_was_added_without_moving_an_existing_exit():
+    """Design 4.5's additivity claim, pinned as values rather than as a count."""
+
+    assert vs.EXIT_CODES == {
+        vs.X_SCENE_OK: 0,
+        vs.X_CONNECTION_UNAUTHORIZED: 3,
+        vs.X_SPLIT_FORBIDDEN: 4,
+        vs.X_ROLE_ABSENT: 5,
+        vs.X_ROLE_UNAUTHORIZED: 6,
+        vs.X_IDENTITY_MISMATCH: 7,
+        vs.X_PAIR_MISMATCH: 8,
+        vs.X_TIMEBASE_MISMATCH: 9,
+        vs.X_DECISION_UNSUPPORTED: 10,
+        vs.X_PROVENANCE_UNRESOLVED: 11,
+        vs.X_BUNDLE_INCOMPLETE: 12,
+        vs.X_ARMS_INCOMPLETE: 13,
+        vs.X_WINDOW_UNSUPPORTED: 14,
+        vs.X_GEOMETRY_UNSUPPORTED: 15,
+    }
+
+
+def test_the_geometry_refusal_can_be_raised_as_a_refusal():
+    """A code in the table is a code `VerificationSceneError` accepts."""
+
+    error = vs.VerificationSceneError(vs.X_GEOMETRY_UNSUPPORTED, "derivation refused")
+    assert error.code == vs.X_GEOMETRY_UNSUPPORTED
+    assert "X_GEOMETRY_UNSUPPORTED: derivation refused" == str(error)
 
 
 def test_a_refusal_cannot_be_raised_under_the_success_code():
