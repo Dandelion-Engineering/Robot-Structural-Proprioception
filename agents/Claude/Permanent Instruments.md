@@ -3875,6 +3875,68 @@ correction applied.)*
   VALUE IS WHERE THE DECLARATION GETS CHECKED, AND UNTIL THEN THE VALUE IS DECORATION.  When you
   build that row, re-derive every constant it consumes from the object it is about. ***
 
+263. **[S149] A MAXIMALITY CLAIM IS A MEASUREMENT, AND I ASSERTED ONE INSTEAD OF TAKING IT.**
+  S148 named a test `test_the_fixture_window_is_the_largest_this_grid_can_close` and wrote the
+  claim into its docstring and my human report.  It was FALSE: the fixture's 0.040 s window is
+  not the largest the grid closes - `j_5s` accepts 0.042 s and refuses 0.044 s, so the bound is
+  0.042 s.  *** THE TEST HAD ALREADY DRIVEN 0.040 (accept) AND 0.044 (refuse) AND CALLED THAT
+  "the bound measured beside it" - TWO POINTS THAT BRACKET A MAXIMUM DO NOT LOCATE IT.  The one
+  call that would have settled it, 0.042, was the one nobody made. ***  Codex found it in its
+  S148 cross-review.  THE REPAIR IS THE SHAPE TO KEEP: the test now drives ALL THREE values, is
+  renamed to what it actually establishes, and the constant carries the CONVENTION that owns the
+  choice - *the largest whole multiple of 0.01 s inside the bound* - plus the reason the fixture
+  deliberately does NOT sit on the maximum: a boundary value turns a later `FIXTURE_N_STEPS`
+  change into a refusal for a reason unrelated to the row under test.  *** IF A NAME CONTAINS
+  "largest", "smallest", "only" or "first", THE TEST MUST DRIVE THE NEIGHBOUR THAT WOULD FALSIFY
+  IT.  A superlative is a claim about the values you did NOT try. ***
+
+264. **[S149] WHEN A REVIEWER ASKS WHICH READING YOU MEANT, THE ANSWER IS A WRITTEN RULING WITH
+  ITS ARGUMENT AND A TEST, NOT A TIGHTENING.**  Codex's S148 cross-review observed that row 16
+  bounds `decision_time_s` to the playback extent while ACCEPTING `step == T`, and asked which
+  half of design 4.1's "inside the playback extent" the adapter means.  The reflex is to bound
+  both axes and call it fail-closed.  *** THAT REFLEX IS WRONG HERE AND THE PROJECT HAS ALREADY
+  PAID FOR THE LESSON TWICE: finding CI forbids indexing `playback_t_s` by `onset_index`, and
+  step 15 forbids comparing `controller_t_s` to `playback_t_s`, BOTH because a faithful producer
+  offsets the axis by one control interval and the binding would REJECT REAL DATA. ***  Schema
+  section D calls `step` bookkeeping and ties it to no grid; the one consumer, the causal call
+  panel, selects by TIME and never uses `step` as an index; and step 12 plus row 16's own checks
+  already hold everything about `step` except the grid binding.  So the ruling is TIME ONLY, the
+  argument is in the docstring, and a test named for the ruling pins it so a later session that
+  tightens it reads the reason instead of rediscovering it.  A quiet tightening is an unrecorded
+  amendment.
+
+265. **[S149] THE CHEAPEST WAY TO GET A SECOND FIXTURE IS TO INSTALL IT OVER THE FIRST.**  Row
+  18's accept path needs data whose `q_true`, `deform_coords` and `true_task_output` come from
+  ONE forward map; the contract fixture's do not, by construction.  The obvious build is a second
+  harness with its own role tree - manifest, audits, indexes, checkpoints, observations, labels,
+  estimator outputs, controller logs - NONE of which row 18 is about.  *** WHAT WAS BUILT INSTEAD
+  IS A CONTEXT MANAGER THAT REWRITES THE THREE THINGS THE ROW *IS* ABOUT - both arms' `plant`
+  payloads, the geometry-validation artifact, and the record's `render_geometry` block - AND
+  REGENERATES EVERY IDENTITY THE REWRITE MOVES FROM THE FILES THEMSELVES, so the chain still
+  authenticates end to end and the refusal comes from the row under test. ***  It is the S148
+  `_rewritten_payload` idiom widened from one payload to a coherent set.  THREE THINGS IT HAD TO
+  FIND OUT, ALL BY BEING REFUSED FIRST: both arms need the SAME plant record (row 14 requires
+  `task_reference` agreement); the coherent grid must be the contract grid (32 steps at 500 Hz,
+  or step 15 refuses before row 18 is reached); and displacing the tip to drive the tolerance
+  refusal must carry `tracking_error` AND its norm, because `role_contract` requires
+  `tracking_error == task_reference - true_task_output` and moving the tip alone is refused at
+  step 12 as an inconsistent payload.  *** THE THIRD IS THE INTERESTING ONE: a payload that is
+  INTERNALLY IMPECCABLE and still describes a body the declared chain does not produce is exactly
+  the fault row 18 exists to see, and exactly the one no single-payload check can. ***
+
+266. **[S149] A MESSAGE PREFIX IS NOT WORTH THIRTY-NINE CALL SITES, AND THE WAY TO DECIDE IS TO
+  ASK WHICH REFUSALS ARE REACHABLE.**  Row 18 calls `derive_centerline`, which raises
+  `X_GEOMETRY_UNSUPPORTED` itself.  Prefixing each refusal with the arm it came from would have
+  needed a `where` argument threaded through the derivation - 39 call sites across the module,
+  its fixture and its 48 tests.  *** BEFORE PAYING THAT, I ENUMERATED WHAT `derive_centerline`
+  CAN REFUSE ON THIS PATH: rank, width, grid length and non-finite entries are ALL UNREACHABLE
+  through `resolve_geometry`, because step 12 ran both arrays through the role contract and step
+  15 bound every frame-bearing plant array's leading axis to the playback grid.  What remains is
+  record-level (the same for every arm, so there is no arm to name) plus the distal comparison,
+  which already takes `where` and names the arm itself. ***  So the owner's refusal is passed
+  through UNTOUCHED - neither code nor message rewritten - and the docstring says why.  Lesson
+  260's rule applied to diagnostics rather than to guards: reachability decides.
+
 
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 

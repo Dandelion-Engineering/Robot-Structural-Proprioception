@@ -1,4 +1,4 @@
-"""Tests for the Slot-8 connection adapter's authentication chain (rows 4-12).
+"""Tests for the Slot-8 connection adapter's authentication chain (rows 4-18).
 
 **What this file holds.** One complete, isolated packet tree and one complete role
 tree, and every read-order refusal from row 4 through row 12 driven against them.
@@ -24,8 +24,11 @@ already recorded:
   3. *The role tree is the existing contract fixture* (design 2.4). It drives storage,
      index, authentication and refusal plumbing and nothing else. It is explicitly
      **not** a geometry oracle -- its `deform_coords` and `true_task_output` come from
-     independent synthetic maps -- and nothing in this file uses it as one. Geometry is
-     read-order row 18 and belongs to the second half of sub-step 4b-ii.
+     independent synthetic maps -- and nothing in this file uses it as one. Row 18's
+     accept path is driven instead by the dedicated coherent fixture, installed over
+     this harness by `_coherent_geometry`; the contract fixture's own toy declaration
+     is what row 18's record-level refusals are driven against, which is the only role
+     design 2.4 leaves it.
 
 **What this file does not do.** It authors no production connection record, runs no
 adapter invocation against real data, opens no `dev`, `pilot`, `val` or `test` result,
@@ -41,7 +44,7 @@ import json
 import shutil
 import sys
 from contextlib import contextmanager
-from dataclasses import asdict, replace
+from dataclasses import asdict, fields as dataclass_fields, replace
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 
@@ -63,9 +66,12 @@ from utils.connection_adapter import (  # noqa: E402
     PLANT_FRAME_ARRAYS,
     ROLE_INDEX_NAME,
     SUITE_QUALIFIED_ROLES,
+    ArmGeometry,
     ArmSeries,
     AuthenticatedCases,
     AuthenticatedConnection,
+    AuthenticatedGeometry,
+    CaseGeometry,
     authenticate_config,
     authenticate_connection,
     authenticate_dataset,
@@ -82,10 +88,18 @@ from utils.connection_adapter import (  # noqa: E402
     require_tracking_window,
     resolve_cases,
     resolve_decisions,
+    resolve_geometry,
     role_root_for,
     strict_json_document,
     tracked_text_digest,
     value_at_field_path,
+)
+from utils.coherent_geometry_fixture import (  # noqa: E402
+    coherent_privileged_record,
+    coherent_render_geometry,
+    fixture_maximum_deviation_m,
+    geometry_validation_document,
+    render_geometry_document,
 )
 from utils.connection_record import (  # noqa: E402
     MANIFEST_ROW_FIELDS,
@@ -97,6 +111,7 @@ from utils.connection_record import (  # noqa: E402
 from utils.protocol_p import canonical_json  # noqa: E402
 from utils.storage_contract import read_identity_manifest  # noqa: E402
 from utils.verification_scene import (  # noqa: E402
+    CENTERLINE_TASK_OUTPUT_TOL_M,
     DEVELOPMENT_ONLY,
     FINAL,
     SUITE_KEYS,
@@ -105,6 +120,7 @@ from utils.verification_scene import (  # noqa: E402
     X_ARMS_INCOMPLETE,
     X_CONNECTION_UNAUTHORIZED,
     X_DECISION_UNSUPPORTED,
+    X_GEOMETRY_UNSUPPORTED,
     X_IDENTITY_MISMATCH,
     X_PAIR_MISMATCH,
     X_PROVENANCE_UNRESOLVED,
@@ -149,12 +165,19 @@ FIXTURE_N_STEPS = 32
 
 #: The record's declared `analysis_window_s` for this fixture, in seconds. The
 #: contract fixture runs 32 control steps at the draft config's 500 Hz, so its
-#: playback grid spans 0.000 s to 0.062 s and its label onset is at 0.020 s. A window
-#: has to close on a control sample at or before the last one, which bounds it at
-#: 0.042 s; 0.040 s is the largest round value under that bound and it closes exactly
-#: on the sample at 0.060 s. It is a *fixture* window and it manufactures no approved
-#: number: `analysis_window_s` is shape-gated by the record contract and nothing in
-#: this lane selects an analysis window. The frozen 5 s headline is what
+#: playback grid spans 0.000 s to 0.062 s in 0.002 s samples and its label onset is
+#: at 0.020 s. A window has to close on a control sample at or before the last one,
+#: so the largest window this grid can close is **0.042 s**, which closes on the
+#: last sample; 0.040 s is chosen instead, and the convention that owns the choice
+#: is *the largest whole multiple of 0.01 s inside that bound*. Two reasons, both
+#: about the fixture rather than about the metric: a window at exactly the grid's
+#: maximum sits on a boundary, so any later change to `FIXTURE_N_STEPS` would turn
+#: a passing fixture into a refusal for a reason that has nothing to do with the row
+#: under test; and a round constant is one a reader can check against the grid in
+#: their head. It closes on the sample at 0.060 s, one sample inside the end. It is
+#: a *fixture* window and it manufactures no approved number: `analysis_window_s` is
+#: shape-gated by the record contract and nothing in this lane selects an analysis
+#: window. The frozen 5 s headline is what
 #: `test_row17_refuses_a_window_this_grid_cannot_close` drives, because this grid
 #: cannot close it.
 ANALYSIS_WINDOW_S = 0.04
@@ -3585,6 +3608,41 @@ def test_row16_carries_every_decision_in_payload_order(harness: Harness) -> None
     assert [decision.decision_time_s for decision in carried] == [0.006, 0.022, 0.058]
 
 
+def test_row16_bounds_the_time_axis_only_and_that_is_the_settled_reading(
+    harness: Harness,
+) -> None:
+    """A step at or past the grid's length is accepted when its time is in the extent.
+
+    **This pins an interpretation, and it exists because the interpretation was
+    inferred before it was stated.** Codex's Session-148 cross-review observed that
+    row 16 binds `decision_time_s` to the playback extent while accepting
+    `step == T`, and asked which reading of design 4.1's "inside the playback
+    extent" the adapter means. The settled answer is *time only*, and the argument
+    is in `resolve_decisions`' docstring: schema section D calls `step` bookkeeping
+    and ties it to no grid, the design already refuses two bindings of exactly this
+    shape because a faithful producer offsets the axis, nothing downstream uses
+    `step` as an index, and step 12 plus the checks above still hold everything
+    about `step` except the grid binding.
+
+    So the acceptance below is a decision rather than an accident, and a later
+    session that tightens it will fail this test and read the reason rather than
+    discovering it. The grid here carries 32 samples numbered 0 to 31; the decision
+    is stamped at step 32 -- one past the last control step -- at a time inside the
+    extent.
+    """
+
+    connection = harness.authenticate()
+    key = _payload_key(CASE_ID, "S", "estimator_outputs")
+    payload = _decision_payload(connection.roles.payloads[key], [32], [0.020])
+    edited = _with_payload(connection, key, payload)
+    playback = bind_playback_timebase(edited.record, edited.roles)
+    assert int(np.asarray(playback[CASE_ID]).shape[0]) == FIXTURE_N_STEPS
+    carried = resolve_decisions(edited.record, edited.roles, playback)[(CASE_ID, "S")]
+    assert len(carried) == 1
+    assert carried[0].step == FIXTURE_N_STEPS
+    assert carried[0].decision_time_s == 0.020
+
+
 # -- row 17 ------------------------------------------------------------------ #
 def test_row17_refuses_a_window_this_grid_cannot_close(
     harness: Harness, record: dict[str, Any]
@@ -3722,14 +3780,20 @@ def test_the_frame_bearing_plant_arrays_are_declared_over_the_playback_axis() ->
     )
 
 
-def test_the_fixture_window_is_the_largest_this_grid_can_close(
+def test_the_fixture_window_is_a_literal_and_its_bound_is_measured_not_claimed(
     harness: Harness,
 ) -> None:
-    """The fixture window is pinned as a literal, with its bound measured beside it.
+    """Pin the constant, and measure the bound it sits under rather than asserting it.
 
-    The value is stated rather than derived so a change to the grid cannot silently
-    carry the constant with it; the measurement beside it is what says the literal is
-    the right one for this grid.
+    The value is stated as a literal so a change to the grid cannot silently carry
+    the constant with it. The three calls beside it are the measurement: 0.040 s and
+    0.042 s both close on this grid and 0.044 s does not, so the largest window this
+    grid can close is 0.042 s and **the fixture's 0.040 s is deliberately not the
+    maximum**. Codex's Session-148 cross-review found an earlier version of this test
+    claiming maximality in its name and docstring, and that claim was false; this is
+    its forward correction, and the reason 0.040 s is kept is the convention recorded
+    beside `ANALYSIS_WINDOW_S` -- the largest whole multiple of 0.01 s inside the
+    bound, chosen so the fixture window does not sit on a boundary.
     """
 
     from utils.metrics import j_5s
@@ -3738,13 +3802,14 @@ def test_the_fixture_window_is_the_largest_this_grid_can_close(
     connection = harness.authenticate()
     plant = connection.roles.payloads[_payload_key(CASE_ID, "C1", "plant")]
     grid = np.asarray(plant["t_s"])
-    j_5s(
-        grid,
-        plant["task_reference"],
-        plant["true_task_output"],
-        0.02,
-        window_s=ANALYSIS_WINDOW_S,
-    )
+    for window_s in (0.040, 0.042):
+        j_5s(
+            grid,
+            plant["task_reference"],
+            plant["true_task_output"],
+            0.02,
+            window_s=window_s,
+        )
     with pytest.raises(ValueError):
         j_5s(
             grid,
@@ -3753,3 +3818,363 @@ def test_the_fixture_window_is_the_largest_this_grid_can_close(
             0.02,
             window_s=0.044,
         )
+
+
+# --------------------------------------------------------------------------- #
+# Row 18 -- the centerline derivation.
+#
+# **The contract fixture cannot be the accept path here, and that is measured
+# rather than assumed** (design 2.4). Its `deform_coords` and its
+# `true_task_output` come from two independent synthetic maps -- the deformation
+# from an `rng.uniform` phase set, the tip from `_deformed_tip(q_true,
+# curvature_true)` with `deform_coords` entering nowhere -- so a derivation that
+# walked its declared chain would miss its recorded tip by millimetres for reasons
+# that say nothing about the derivation. Its declared `render_geometry` is a toy
+# three-segment chain under an unimplemented derivation version, which is exactly
+# what row 18 must refuse, so the fixture stays the *refusal* instrument it always
+# was.
+#
+# The accept path is the dedicated coherent fixture: one forward map generates
+# `q_true`, `deform_coords`, the centerline and `true_task_output` together, and
+# `_coherent_geometry` installs that data and its declaration over the contract
+# harness -- both arms' `plant` payloads on disk, the geometry-validation artifact
+# the record's `tolerance_source` names, and the record's whole `render_geometry`
+# block. Every identity the rewrite moves is regenerated from the files themselves,
+# so the chain still authenticates end to end and a refusal comes from row 18 and
+# not from step 8 or step 11.
+# --------------------------------------------------------------------------- #
+#: The draft config's `values.timing.f_ctrl_hz`, as a literal. The coherent record's
+#: grid has to be the grid the contract fixture already wrote, or step 15 refuses the
+#: rewrite before row 18 is reached.
+#: `test_the_coherent_fixture_grid_is_the_config_grid` pins the literal against the
+#: config the harness actually loaded, so a config change fails loudly here instead of
+#: quietly moving the fixture.
+FIXTURE_F_CTRL_HZ = 500.0
+
+#: The number of points one derived centerline carries on this chain, as a literal:
+#: sixteen ordered bodies in each of two links, plus the distal point. Written out
+#: rather than re-derived because `utils.verification_scene`'s `[T,N,2]` gate requires
+#: only `N >= 2`, so a wrong `N` is invisible to every shape check downstream, and a
+#: test written as a function of the chain would move with the mutation (lesson 229).
+COHERENT_CENTERLINE_POINTS = 33
+
+
+def _coherent_geometry_and_record(harness: Harness, seed: int, tolerance_m: float):
+    """Return the coherent `RenderGeometry`, its record, and its validation document.
+
+    The geometry is built twice on purpose. The first build cannot carry the
+    validation artifact's digest, because that artifact reports the agreement the
+    generator achieves and the generator has not run yet; the second is
+    `dataclasses.replace` of exactly that one field, which is what says the chain the
+    record declares is the chain the data was generated under rather than a second
+    chain that happens to look the same.
+    """
+
+    provisional = coherent_render_geometry(
+        producer_relative_path=PRODUCER_RELATIVE,
+        producer_sha256=tracked_text_digest(harness.packet_root / PRODUCER_RELATIVE),
+        tolerance_artifact_relative_path=GEOMETRY_RELATIVE,
+        tolerance_sha256="0" * 64,
+        distal_tolerance_m=tolerance_m,
+    )
+    record = coherent_privileged_record(
+        geometry=provisional,
+        n_steps=FIXTURE_N_STEPS,
+        f_ctrl=FIXTURE_F_CTRL_HZ,
+        seed=seed,
+    )
+    validation = geometry_validation_document(
+        fixture_maximum_deviation_m(record, provisional), tolerance_m=tolerance_m
+    )
+    return provisional, record, validation
+
+
+@contextmanager
+def _coherent_geometry(
+    harness: Harness,
+    *,
+    seed: int = 0,
+    tolerance_m: float = CENTERLINE_TASK_OUTPUT_TOL_M,
+    edit_plant: Callable[[dict], dict] | None = None,
+    edit_geometry: Callable[[dict], dict] | None = None,
+):
+    """Install the coherent fixture over the harness, then restore every byte.
+
+    Args:
+        harness: the built contract harness.
+        seed: selects the coherent generator's deterministic analytic phase family.
+        tolerance_m: the tolerance the record declares *and* the one the validation
+            artifact states, kept as one parameter so the two cannot drift apart and
+            refuse each other at step 5 for a reason row 18 is not about.
+        edit_plant: given `{suite: payload dict}`, returns the payloads to write. Used
+            to drive row 18's one arm-specific refusal.
+        edit_geometry: given the serialised `render_geometry` block, returns the block
+            to declare. Used to drive the record-level refusals.
+
+    **Both arms get the same plant record.** Read-order row 14 requires the two arms
+    to agree about `task_reference`, so two independently generated trajectories would
+    be refused a row before the one under test -- and the contract fixture already
+    writes one record per pair for the same reason.
+    """
+
+    geometry, coherent, validation = _coherent_geometry_and_record(
+        harness, seed, tolerance_m
+    )
+    payloads = {suite: dict(coherent.__dict__) for suite in SUITE_KEYS}
+    if edit_plant is not None:
+        payloads = edit_plant(payloads)
+
+    validation_path = harness.packet_root / GEOMETRY_RELATIVE
+    saved: list[tuple[Path, bytes]] = [(validation_path, validation_path.read_bytes())]
+    for suite in SUITE_KEYS:
+        directory = role_root_for(harness.role_root, "plant", suite)
+        run_id = f"{PAIR_ID}_{suite}"
+        saved.append((directory / f"{run_id}.npz", (directory / f"{run_id}.npz").read_bytes()))
+        saved.append((directory / ROLE_INDEX_NAME, (directory / ROLE_INDEX_NAME).read_bytes()))
+    try:
+        _write_json(validation_path, validation)
+        geometry = replace(
+            geometry,
+            tolerance_source=replace(
+                geometry.tolerance_source,
+                sha256=tracked_text_digest(validation_path),
+            ),
+        )
+        for suite in SUITE_KEYS:
+            directory = role_root_for(harness.role_root, "plant", suite)
+            run_id = f"{PAIR_ID}_{suite}"
+            payload_path = directory / f"{run_id}.npz"
+            buffer = io.BytesIO()
+            np.savez(
+                buffer,
+                **{
+                    name: np.asarray(value)
+                    for name, value in payloads[suite].items()
+                },
+            )
+            payload_path.write_bytes(buffer.getvalue())
+            _reindex(directory / ROLE_INDEX_NAME, run_id, external_digest(payload_path))
+        document = harness._record_document()
+        block = render_geometry_document(geometry)
+        document["render_geometry"] = block if edit_geometry is None else edit_geometry(block)
+        yield harness.rewrite_record(document)
+    finally:
+        for path, raw in saved:
+            path.write_bytes(raw)
+
+
+def _geometry(arguments: Mapping[str, Any]):
+    """Drive rows 1 through 18 end to end."""
+
+    connection = authenticate_connection(**arguments)
+    return connection, resolve_geometry(connection, resolve_cases(connection))
+
+
+# -- the accept side, which is what makes every refusal below mean something --- #
+def test_the_coherent_fixture_grid_is_the_config_grid(harness: Harness) -> None:
+    """The literal control rate is the one the harness's own config declares."""
+
+    config = load_config(
+        harness.packet_root / CONFIG_RELATIVE, harness.packet_root / SCHEMA_RELATIVE
+    )
+    assert float(config.document["values"]["timing"]["f_ctrl_hz"]) == FIXTURE_F_CTRL_HZ
+
+
+def test_row18_accepts_the_coherent_fixture_end_to_end(harness: Harness) -> None:
+    """Rows 1 through 18 over data and a declaration that describe one body."""
+
+    with _coherent_geometry(harness) as arguments:
+        connection, geometry = _geometry(arguments)
+    assert isinstance(geometry, AuthenticatedGeometry)
+    assert geometry.tolerance_m == connection.record.render_geometry.distal_tolerance_m
+    assert len(geometry.cases) == 1
+    case = geometry.cases[0]
+    assert case.case_id == CASE_ID
+    assert tuple(sorted(case.arms)) == tuple(sorted(SUITE_KEYS))
+    for suite in SUITE_KEYS:
+        arm = case.arms[suite]
+        assert isinstance(arm, ArmGeometry)
+        assert arm.suite == suite
+        assert arm.centerline.shape == (
+            FIXTURE_N_STEPS,
+            COHERENT_CENTERLINE_POINTS,
+            2,
+        )
+        assert arm.distal_deviation_m == 0.0
+
+
+def test_row18_reproduces_the_recorded_tip_exactly_on_the_coherent_fixture(
+    harness: Harness,
+) -> None:
+    """The measured agreement is exactly zero, and that is a property not a threshold.
+
+    The generator sets `true_task_output` to the derived distal point itself, so the
+    adapter recomputing the same map has to land on the same bytes. A non-zero value
+    here would mean the two copies of the map had diverged -- which is the failure the
+    shared `utils.centerline_geometry` module exists to make impossible.
+    """
+
+    with _coherent_geometry(harness) as arguments:
+        connection, geometry = _geometry(arguments)
+        for suite in SUITE_KEYS:
+            plant = connection.roles.payloads[_payload_key(CASE_ID, suite, "plant")]
+            distal = geometry.cases[0].arms[suite].centerline[:, -1, :]
+            assert np.array_equal(distal, np.asarray(plant["true_task_output"]))
+
+
+def test_row18_carries_read_only_centerlines(harness: Harness) -> None:
+    """Nothing downstream can edit a geometry this row established."""
+
+    with _coherent_geometry(harness) as arguments:
+        _, geometry = _geometry(arguments)
+    for suite in SUITE_KEYS:
+        centerline = geometry.cases[0].arms[suite].centerline
+        assert centerline.flags.writeable is False
+        with pytest.raises(ValueError):
+            centerline[0, 0, 0] = 0.0
+
+
+def test_row18_carries_no_cross_arm_scalar(harness: Harness) -> None:
+    """Invariant W13, read off the value's own field set rather than asserted."""
+
+    fields = {field.name for field in dataclass_fields(CaseGeometry)}
+    assert fields == {"case_id", "arms"}
+    fields = {field.name for field in dataclass_fields(AuthenticatedGeometry)}
+    assert fields == {"tolerance_m", "cases"}
+
+
+def test_row18_uses_the_declared_tolerance_and_not_the_fixture_constant(
+    harness: Harness,
+) -> None:
+    """The tolerance the row applies is the record's, and the two are different numbers.
+
+    Design finding CU: `CENTERLINE_TASK_OUTPUT_TOL_M` measures the fixture generator's
+    construction exactness and is never the adapter's comparand. Here the record
+    declares a tolerance three orders of magnitude looser, and it is that number the
+    result carries -- so a later edit that reached for the module constant instead
+    would fail this test rather than pass silently on a fixture where both happen to
+    hold.
+    """
+
+    with _coherent_geometry(harness, tolerance_m=1.0e-6) as arguments:
+        _, geometry = _geometry(arguments)
+    assert geometry.tolerance_m == 1.0e-6
+    assert geometry.tolerance_m != CENTERLINE_TASK_OUTPUT_TOL_M
+    assert CENTERLINE_TASK_OUTPUT_TOL_M == 1.0e-9
+
+
+# -- the refusals ------------------------------------------------------------- #
+def test_row18_refuses_the_contract_fixtures_own_declared_geometry(
+    harness: Harness,
+) -> None:
+    """The contract fixture is a refusal instrument here, and this drives it.
+
+    Its record declares `derivation_version: "v0.1"`, a toy three-segment chain and an
+    `absolute` joint convention -- none of which this adapter implements. The refusal
+    arrives before any arithmetic, which is the point: an adapter that derived a
+    plausible centerline under a version whose map it does not carry would produce a
+    picture rather than an error.
+    """
+
+    connection = authenticate_connection(**harness.arguments())
+    cases = resolve_cases(connection)
+    error = _refusal(lambda: resolve_geometry(connection, cases))
+    assert error.code == X_GEOMETRY_UNSUPPORTED
+    assert "derivation_version" in str(error)
+
+
+def test_row18_refuses_a_projection_this_derivation_does_not_implement(
+    harness: Harness,
+) -> None:
+    """The projection carries the tangent sign, so an unknown one has no default."""
+
+    def unknown(block: dict) -> dict:
+        block["planar_convention"]["projection"] = "model_x_to_scene_x;model_z_to_scene_y"
+        return block
+
+    with _coherent_geometry(harness, edit_geometry=unknown) as arguments:
+        error = _refusal(lambda: _geometry(arguments))
+    assert error.code == X_GEOMETRY_UNSUPPORTED
+    assert "projection" in str(error)
+
+
+def test_row18_refuses_a_q_true_convention_this_derivation_does_not_implement(
+    harness: Harness,
+) -> None:
+    """The absolute reading draws a continuous, plausible, wrong centerline.
+
+    It is refused by name rather than defaulted, because nothing about the output
+    reveals which reading produced it.
+    """
+
+    def absolute(block: dict) -> dict:
+        block["planar_convention"]["q_true_convention"] = "absolute"
+        return block
+
+    with _coherent_geometry(harness, edit_geometry=absolute) as arguments:
+        error = _refusal(lambda: _geometry(arguments))
+    assert error.code == X_GEOMETRY_UNSUPPORTED
+    assert "q_true_convention" in str(error)
+
+
+def test_row18_refuses_a_distal_point_outside_the_declared_tolerance(
+    harness: Harness,
+) -> None:
+    """The one refusal that is about a particular arm, and it names that arm.
+
+    One arm's recorded tip is displaced by a millimetre. **The displacement has to
+    carry `tracking_error` and its norm with it, and finding that out is worth
+    recording:** `utils.role_contract` requires `tracking_error` to equal
+    `task_reference - true_task_output`, so moving the tip alone is refused at step
+    12 as an inconsistent payload rather than at row 18 as a geometry disagreement.
+    Carried consistently, the payload is internally impeccable and still describes a
+    body the declared chain does not produce -- which is exactly the fault this row
+    exists to see, and exactly the fault no single-payload check can. The pair still
+    agrees about `task_reference` at row 14 and still shares one grid at row 15.
+    """
+
+    def displace(payloads: dict) -> dict:
+        payload = dict(payloads["S"])
+        tip = np.asarray(payload["true_task_output"]) + 1.0e-3
+        tracking_error = np.asarray(payload["task_reference"]) - tip
+        payload["true_task_output"] = tip
+        payload["tracking_error"] = tracking_error
+        payload["tracking_error_norm"] = np.linalg.norm(tracking_error, axis=1)
+        payloads["S"] = payload
+        return payloads
+
+    with _coherent_geometry(harness, edit_plant=displace) as arguments:
+        error = _refusal(lambda: _geometry(arguments))
+    assert error.code == X_GEOMETRY_UNSUPPORTED
+    assert "arm S" in str(error)
+    assert "above the declared tolerance" in str(error)
+
+
+def test_row18_refuses_a_triplet_column_the_payload_does_not_carry(
+    harness: Harness,
+) -> None:
+    """The declared chain and the payload's width must describe one body.
+
+    This one is driven through the in-memory seam rather than end to end, and the
+    reason is the same one row 13's test records: `utils.role_contract` fixes
+    `deform_coords` at the configuration's `n_def`, so a payload narrower than the
+    declaration cannot reach step 12 on the production path. The guard is a
+    post-condition across a module boundary, and its test drives the boundary.
+    """
+
+    with _coherent_geometry(harness) as arguments:
+        connection = authenticate_connection(**arguments)
+        cases = resolve_cases(connection)
+    narrowed = replace(
+        cases.cases[0].arms["C1"],
+        deform_coords=np.asarray(cases.cases[0].arms["C1"].deform_coords)[:, :3],
+    )
+    case = replace(
+        cases.cases[0],
+        arms={"C1": narrowed, "S": cases.cases[0].arms["S"]},
+    )
+    error = _refusal(
+        lambda: resolve_geometry(connection, AuthenticatedCases(cases=(case,)))
+    )
+    assert error.code == X_GEOMETRY_UNSUPPORTED
+    assert "columns" in str(error)

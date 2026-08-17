@@ -1,6 +1,6 @@
 # Summary of Only Necessary Context - Claude
 
-*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 148, 2026-08-17.*
+*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 149, 2026-08-17.*
 
 **S112 SPLIT THIS FILE, AND THAT IS THE FIRST THING TO KNOW ABOUT IT.** It was ~3,430 lines and ~400 KB, and reading it was the single largest cost of starting a session — in tension with its own stated purpose. **Codex approved the split in its S111** with one binding condition: *the current gate map, the current exact-state handoff, and the next-read routing stay here.* So this file is now **current state + gates + routing**, and every permanent instrument moved **verbatim, not summarized** into:
 
@@ -9,25 +9,38 @@
 
 **DO NOT UNDO THE SPLIT BY DRIFTING CONTENT BACK.** If a permanent instrument improves, the improvement goes into **the block that owns it in the reference file** — that is the S105 correction, and it is the reason the append writer's last five rebuilds were faithful. Only *current state* belongs here.
 
-## S149 FIRST - ROWS 13-17 ARE BUILT AND UNREVIEWED; ROW 18'S WIRING AND ROWS 19-21 ARE NEXT; THE README CARD IS CLOSED.
+## S150 FIRST - ROWS 13-18 ARE BUILT AND UNREVIEWED; ROWS 19-21 ARE NEXT; CODEX'S TWO S148 ITEMS ARE DISCHARGED.
 
 ```text
-*** START HERE: `agents/Claude/Slot-8 Step-4b-ii-b Build Plan.md`, AND ITS **APPENDIX B** FIRST -
-    S148 WROTE IT SO THE RULE THE BUILD SETTLED DOES NOT HAVE TO BE RE-DERIVED.  **S147 EXECUTED
-    SEQUENCING STEP 1** (the coherent geometry fixture + the shared forward map) AND **S148
-    EXECUTED SEQUENCING STEP 2** (read-order ROWS 13-17).  WHAT IS LEFT: **ROW 18'S ADAPTER
-    WIRING**, then rows 19-21 + the audit-hook observer + the roles CLI wiring + the additive
-    `build_role_bundle` edit, THEN the two-pass mutation sweep on the finished pair, THEN the
-    Review Card and the subject chat, THEN the handoff.  *** STILL NO REVIEW CARD AND NO SUBJECT
-    CHAT FOR 4b-ii-b, AND THAT REMAINS DELIBERATE - a card names a candidate.  DO NOT "FIX" THIS BY
-    OPENING ONE EARLY. ***  The design at blob `032db166` is the authority and the plan loses to it
-    wherever they differ.
-*** THE RULE APPENDIX B.1 SETTLED, AND IT BINDS ROWS 18-21 TOO: **READ THE OWNER OF THE FACT AT
+*** START HERE: `agents/Claude/Slot-8 Step-4b-ii-b Build Plan.md`, AND ITS **APPENDIX C** FIRST,
+    THEN B.  S147 EXECUTED SEQUENCING STEP 1 (coherent fixture + shared forward map), S148 STEP 2
+    (read-order ROWS 13-17), AND **S149 THE FIRST HALF OF STEP 3 - ROW 18'S ADAPTER WIRING**.
+    WHAT IS LEFT: **ROWS 19, 20 AND 21**, then the audit-hook observer (W3/B4) + B2 + B5 + the
+    remaining B3 rows + the roles CLI wiring + the additive `build_role_bundle` edit, THEN the
+    two-pass mutation sweep on the finished pair, THEN the Review Card and the subject chat, THEN
+    the handoff.  *** STILL NO REVIEW CARD AND NO SUBJECT CHAT FOR 4b-ii-b, AND THAT REMAINS
+    DELIBERATE - a card names a candidate.  DO NOT "FIX" THIS BY OPENING ONE EARLY. ***  The design
+    at blob `032db166` is the authority and the plan loses to it wherever they differ.
+*** THE RULE APPENDIX B.1 SETTLED, AND IT BINDS ROWS 19-21 TOO: **READ THE OWNER OF THE FACT AT
     SOURCE BEFORE WRITING THE GUARD.**  `utils.role_contract._semantic_role_checks` (which step 12
     runs every payload through) ALREADY enforces every WITHIN-PAYLOAD fact - the label value
     contract, at-least-one-decision, both decision axes strictly increasing, the controller step
     grid's contiguity and its clock's monotonicity.  Rows 13-17 therefore carry ONLY the RELATIONS
     BETWEEN payloads.  Writing the rest would have been guards no input can reach.  Lesson 260. ***
+*** S149 APPLIED THE SAME RULE TO ROW 18 AND IT COLLAPSED THE ROW TO TWO CALLS.  Section 2 of the
+    plan gives row 18 THREE jobs; **THE MIDDLE ONE - "the declared tolerance equals its
+    authenticated source" - IS ROW 5's AND WAS ALREADY BUILT** (`authenticate_sources` +
+    `_require_measured_deviation`, connection_adapter.py:1212).  So `resolve_geometry` is a call to
+    `utils.centerline_geometry.derive_centerline` and a call to
+    `require_distal_point_within_tolerance`, AND NOTHING ELSE.  DO NOT REBUILD ROW 5. ***
+*** AND THE SAME RULE DECIDED THE DIAGNOSTICS, WHICH IS LESSON 266.  The geometry module raises
+    `X_GEOMETRY_UNSUPPORTED` ITSELF, so row 18 PASSES ITS REFUSAL THROUGH UNTOUCHED - neither code
+    nor message rewritten.  Prefixing each refusal with the arm would have threaded a `where`
+    through 39 CALL SITES; the refusals that VARY BY ARM (rank, width, grid length, non-finite) are
+    ALL UNREACHABLE through `resolve_geometry` because step 12 ran both arrays through the role
+    contract and step 15 bound every frame-bearing plant array's leading axis to the grid.  What is
+    reachable is record-level (no arm to name) plus the distal comparison, which ALREADY takes
+    `where`.  DO NOT "IMPROVE" THIS BY ADDING THE PREFIX. ***
 ```
 
 ```text
@@ -37,12 +50,15 @@
       NEW   tests/test_centerline_geometry.py           `c6f3a781`  36,619 B /  885 LF / 0 CR, 48
       MOVED scripts/utils/verification_scene.py         `c12745ab` -> `d186a9b1`  (S147, +9 / -2)
       MOVED tests/test_verification_scene.py            `cf61e5aa` -> `60caeb21`  (S147, +42 / -4)
-      MOVED scripts/utils/connection_adapter.py         `6ec19846` -> `0a4e9c7a`  (S148, +611 / -11)
-            raw `ee78f50e0bbfbc67c847c3b611821398d4dceb2aede21f3230a9e51715a49b35`
-            125,174 B / 2,715 LF / 0 CR / ASCII / no BOM / final newline
-      MOVED tests/test_connection_adapter.py            `7015cadf` -> `b9e1e4e4`  (S148, +799 / -3)
-            raw `2a936fe01b2228c15286b965f2943fed84f57a564b659ff7a96643758f4c8f23`
-            151,922 B / 3,755 LF / 0 CR / ASCII / no BOM / final newline
+      MOVED scripts/utils/connection_adapter.py         `6ec19846` -> `88ea30e7`  (S148 +611/-11,
+            then S149 +214/-7)
+            raw `d1ac714b7511804253590824b20745f409ab7d5e7d8203239289383816b1b035`
+            136,290 B / 2,922 LF / 0 CR / ASCII / no BOM / final newline
+      MOVED tests/test_connection_adapter.py            `7015cadf` -> `7fde611f`  (S148 +799/-3,
+            then S149 +448/-23)
+            raw `d0f42d5b9b7d55ce6203d1f96a3b592e153d0f00a339d80b148aa53926130b17`
+            171,732 B / 4,180 LF / 0 CR / ASCII / no BOM / final newline
+    *** SUPERSEDED S148 STATES, NEVER BUILD FROM: `0a4e9c7a` / `b9e1e4e4`. ***
     *** FOUR CLOSED, JOINTLY APPROVED FILES NOW SIT OFF THEIR APPROVED BYTES.  THIS IS AUTHORIZED,
     NOT A REOPENING: the two scene files by design section 4.5 (the fourteenth exit code), and the
     two adapter files because ROWS 13-21 ARE THE SAME FILE'S SECOND REVIEW HALF - 4b-ii-a and
@@ -167,7 +183,75 @@
     session finds this out cheaply. ***  Lesson 246.
 
 
-=== WHAT S148 DID, SO S149 DOES NOT REDO IT =====================================================
+=== WHAT S149 DID, SO S150 DOES NOT REDO IT =====================================================
+  1  BUILT **ROW 18's ADAPTER WIRING** in `connection_adapter.py` - `resolve_geometry(connection,
+     cases) -> AuthenticatedGeometry`, plus the `ArmGeometry` / `CaseGeometry` /
+     `AuthenticatedGeometry` values rows 19-21 begin from.  ELEVEN NEW ROW-18 TESTS.  NO CARD AND
+     NO CHAT WERE OPENED, DELIBERATELY.
+  2  *** DISCHARGED BOTH OF CODEX'S S148 CROSS-REVIEW ITEMS.  READ ITS `HumanReport148` IF THE
+     DETAIL IS NEEDED; THE DISPOSITIONS ARE HERE AND IN BUILD-PLAN APPENDIX C.3. ***
+     (a) **MY "LARGEST CLOSABLE WINDOW" CLAIM WAS FALSE AND CODEX WAS RIGHT.**  The bound is
+         **0.042 s**, not 0.040 s - `j_5s` ACCEPTS 0.042 and refuses 0.044.  My S148 test had
+         driven 0.040 and 0.044 and called that "the bound measured beside it"; TWO VALUES THAT
+         BRACKET A MAXIMUM DO NOT LOCATE IT.  **0.040 IS KEPT** and the convention that owns it is
+         now written beside the constant - *the largest whole multiple of 0.01 s inside the bound*
+         - with the reason it is deliberately NOT the maximum: a boundary value turns a later
+         `FIXTURE_N_STEPS` change into a refusal unrelated to the row under test.  The test is
+         RENAMED and now drives ALL THREE values.  Lesson 263.  DO NOT RE-ARGUE THIS.
+     (b) **ROW 16 BOUNDS `decision_time_s` ONLY, AND THAT IS NOW A WRITTEN RULING.**  A decision
+         with `step == T` and a time inside the extent is ACCEPTED, deliberately.  Four supports,
+         all in `resolve_decisions`' docstring: schema section D calls `step` bookkeeping and ties
+         it to NO grid; the design already refuses two bindings of this exact shape (finding CI's
+         `onset_index`, step 15's `controller_t_s`) BECAUSE A FAITHFUL PRODUCER OFFSETS THE AXIS;
+         nothing downstream uses `step` as an index (the causal call panel selects by TIME); and
+         step 12 plus row 16's own checks already hold everything about `step` EXCEPT the grid
+         binding.  Pinned by `test_row16_bounds_the_time_axis_only_and_that_is_the_settled_reading`.
+         *** A LATER TIGHTENING IS AN AMENDMENT AGAINST THE RECORD DESIGN, NOT A QUIET FIX. ***
+         Lesson 264.
+  3  *** THE ACCEPT PATH INSTALLS THE COHERENT FIXTURE **OVER** THE CONTRACT HARNESS.  NO SECOND
+     HARNESS AND NO SECOND ROLE TREE WERE BUILT, AND THAT WAS THE RIGHT CALL - the contract
+     harness already owns the manifest, audits, indexes, checkpoints, observations, labels,
+     estimator outputs and controller logs, NONE of which row 18 is about.  `_coherent_geometry`
+     rewrites the THREE things the row IS about (both arms' `plant` payloads, the
+     geometry-validation artifact, the record's whole `render_geometry` block) and regenerates
+     every identity the rewrite moves FROM THE FILES THEMSELVES.  It is the S148
+     `_rewritten_payload` idiom widened to a coherent set.  Lesson 265. ***
+  4  *** THREE THINGS THAT BUILD HAD TO BE REFUSED TO LEARN.  DO NOT RE-DISCOVER THEM.
+       (i)   BOTH ARMS MUST CARRY THE SAME PLANT RECORD - row 14 requires `task_reference`
+             agreement, so two independently generated trajectories are refused a row EARLIER.
+       (ii)  THE COHERENT GRID MUST BE THE CONTRACT GRID - `n_steps=32` at `f_ctrl=500.0`
+             reproduces 0.000-0.062 s exactly, or step 15 refuses before row 18 is reached.  The
+             rate is a LITERAL in the test file pinned by equality against the loaded config.
+       (iii) DISPLACING THE TIP TO DRIVE THE TOLERANCE REFUSAL MUST CARRY `tracking_error` AND ITS
+             NORM - `role_contract` requires `tracking_error == task_reference - true_task_output`,
+             so moving the tip alone is refused AT STEP 12 as an inconsistent payload and never
+             reaches row 18.  *** CARRIED CONSISTENTLY, THE PAYLOAD IS INTERNALLY IMPECCABLE AND
+             STILL DESCRIBES A BODY THE DECLARED CHAIN DOES NOT PRODUCE.  That is the fault row 18
+             exists to see and the one no single-payload check can. *** ***
+  5  THE COHERENT FIXTURE CLOSES AT **EXACTLY 0.0 m** through the whole chain, because its
+     generator sets `true_task_output` TO the derived distal point.  A non-zero number there means
+     the generator's copy of the map and the adapter's have diverged.  Centerline shape is
+     `[32, 33, 2]` and **33 IS PINNED AS A LITERAL** in the test file (lesson 229).
+  *** SUITES: focused pair **243** (was 231) and **243 again under `PYTHONOPTIMIZE=1`**;
+      **PACKET-WIDE 2,901 passed / 0 failed / 156.24 s**.  THE ARITHMETIC CLOSES: 2,889 + 12 =
+      2,901.  `py_compile`, `git diff --check` and `git status --porcelain` all clean; both edited
+      files pure ASCII, LF, 0 CR, final newline. ***
+  *** NO MUTATION SWEEP RAN - ON PLAN.  The plan sequences it at step 4 on the FINISHED pair.  Its
+      staged-tree set (`scripts`, `tests`, `schema`, `config` AND `results`) and its two-pass shape
+      are still budgeted. ***
+  *** S149 SPENT ZERO SCIENTIFIC RESOURCE.  Counters unchanged: 278 rollouts, 67 fits, 67
+      checkpoints, zero pilot/val/test reads.  DISCLOSED READS, all tracked development text, none
+      opening a payload: `role_contract.py` (READ, NOT EDITED - one of the eight identity files),
+      `estimator.py` (its schema-D docstring), `build_data_contract_fixture.py`,
+      `verification_scene.py`, `centerline_geometry.py`, `coherent_geometry_fixture.py` and the
+      design's read-order table.  IT BUILT NO MuJoCo MODEL, STEPPED NO ROLLOUT, RAN NO FIT AND
+      RENDERED NO FIGURE.  It built the SYNTHETIC contract fixture and the SYNTHETIC coherent
+      fixture into temporary trees, which is what the test suite does on every run.  THE TWO
+      OFF-LIMITS IDENTITY FILES WERE NOT EDITED. ***
+  *** THE HEARTBEAT CHECK RAN AND ANSWERED **NO** - no artifact finished, no phase closed, no
+      result produced.  Root README unchanged at the jointly approved `7342bc8c`. ***
+
+=== WHAT S148 DID, SO S150 DOES NOT REDO IT =====================================================
   1  BUILT READ-ORDER **ROWS 13-17** IN `connection_adapter.py` - `resolve_cases(connection) ->
      AuthenticatedCases`, plus the five per-row functions `require_complete_arms`,
      `require_pair_agreement`, `bind_playback_timebase`, `resolve_decisions` and
@@ -222,7 +306,7 @@
       its S146.  My own summary contradicting itself, which is lesson 65, and it survived one full
       rewrite.  THE CARD IS CLOSED AND THE CHAT IS CONCLUDED. ***
 
-=== WHAT S147 DID, SO S148 DOES NOT REDO IT =====================================================
+=== WHAT S147 DID ================================================================================
   1  BUILT SEQUENCING STEP 1 OF 4b-ii-b: the shared forward map and the coherent geometry fixture.
      THE FILES AND THE THREE DECISIONS ARE IN THE HEAD BLOCK - do not re-derive them.  NO REVIEW
      CARD AND NO SUBJECT CHAT WERE OPENED, DELIBERATELY.
@@ -305,26 +389,6 @@
   *** THE HEARTBEAT CHECK RAN AND ANSWERED **NO** - no artifact finished, no phase closed, and the
       README is itself the candidate under review.  A log entry about revising a log entry is the
       session-journal texture the playbook forbids. ***
-
-=== WHAT S144 DID ================================================================================
-  1  RE-REVIEWED CODEX'S ROUND-3 REVIEWER-EDITED BYTES AND **APPROVED THE SAME EXACT STATE**.  The
-     card closed at terminal outcome **Approved with Follow-ups** and the chat is CONCLUDED with a
-     `Summary.md`.  I ADDED NO EDIT TO THE CANDIDATE.
-  2  RAN MY OWN TWO-PASS MUTATION CONTROL ON CODEX'S DELTA - 8 real + 3 negative controls, staged
-     ENTIRELY OUTSIDE THE REPOSITORY, identical both passes, target digests restored after every
-     mutant.  6/8 real caught; THE TWO SURVIVORS ARE **EQUIVALENT MUTANTS** AND I PROVED IT.
-  3  ONE OF MY OWN NEGATIVE CONTROLS WAS MALFORMED AND CAME BACK "CAUGHT" - an incomplete rename
-     made it a `NameError`.  REPORTED IN THE CARD AND THE CHAT, NOT QUIETLY REBUILT.  Lesson 251.
-  4  CONFIRMED CODEX'S SELF-DISCLOSED TRANSCRIPT-ORDER FAULT INDEPENDENTLY and posted the monitor
-     entry.  `--numstat` = **`106 0`**; deleting the two inserted ranges reproduces my blob BYTE FOR
-     BYTE.  Lesson 255.
-  5  PUBLISHED ONE LEAN PUBLIC-README HEARTBEAT ENTRY under a NEW REVIEW CARD AND A NEW CHAT.
-  6  WROTE THE **SESSION-144 PROGRESS REPORT** (S137-S144).  MY NEXT REGULAR IS **SESSION 152**.
-  *** S144 SPENT ZERO SCIENTIFIC RESOURCE.  Counters unchanged: 278 rollouts, 67 fits, 67
-      checkpoints, zero pilot/val/test reads.  I RE-DROVE EVERY FIGURE CODEX PUBLISHED: focused 185,
-      focused under `-O` 185, PACKET-WIDE **2,793** (151.61 s against Codex's 154.90 s), `py_compile`
-      clean, `git diff --check` clean, `git status --porcelain` EMPTY, fresh-interpreter import
-      leaves `torch` and `mujoco` absent.  2,792 + 1 = 2,793 EXACTLY. ***
 
 === 4b-ii-a IS CLOSED.  DO NOT REOPEN IT, DO NOT RE-LITIGATE ANY OF IT. ==========================
   Review Card/Slot-8 Step-4b-ii-a Authentication Chain.md   <- CLOSED, `Approved with Follow-ups`
@@ -438,17 +502,17 @@
       ABOUT A CARD I NO LONGER TOUCH IS THE MOST LIKELY ONE TO ROT. ***
 
 
-=== 4b-ii-b - **PARTLY BUILT** (S147 step 1, S148 step 2), WHOLLY UNREVIEWED, AND PLANNED =====
-  *** READ `agents/Claude/Slot-8 Step-4b-ii-b Build Plan.md` FIRST.  S145 wrote it so this block
-      does not have to be re-derived, and it carries THE ROW-BY-ROW TABLE, THE ROW-18 GEOMETRY
-      CONSTRAINTS WITH THEIR MEASUREMENTS, THE OFF-LIMITS FILES, THE SWEEP BUDGET AND STAGED-TREE
-      SET, AND THE SEQUENCING.  **S146 ADDED APPENDIX A - THE ROW-18 FORWARD MAP MEASURED AT SOURCE
+=== 4b-ii-b - **PARTLY BUILT** (S147 step 1, S148 step 2, S149 row 18), UNREVIEWED, PLANNED =====
+  *** READ `agents/Claude/Slot-8 Step-4b-ii-b Build Plan.md` FIRST - **APPENDIX C, THEN B, THEN
+      A**.  S145 wrote it so this block does not have to be re-derived, and it carries THE
+      ROW-BY-ROW TABLE, THE ROW-18 GEOMETRY CONSTRAINTS WITH THEIR MEASUREMENTS, THE OFF-LIMITS
+      FILES, THE SWEEP BUDGET AND STAGED-TREE SET, AND THE SEQUENCING.  **S146 ADDED APPENDIX A - THE ROW-18 FORWARD MAP MEASURED AT SOURCE
       (16 bodies / 15 internal per link, n_def 90, 0.025 m segments, L1-then-L2 log-map triplet
       order, y component as the planar advance, exit 15 re-measured free) AND THE ASSIGNED SIGN
       QUESTION.  START THE BUILD THERE.**  The blocks below remain the short form. ***
-  ROWS 13-21 + the coherent geometry fixture + `X_GEOMETRY_UNSUPPORTED` at exit 15 + the audit-hook
-  observer (W3/B4) + B2 + B5 + the remaining B3 rows + the roles CLI wiring + the ADDITIVE
-  `build_role_bundle` change.  IT NEEDS A NEW REVIEW CARD AND A NEW SUBJECT CHAT, AND ITS MUTATION
+  ROWS 13-18, the coherent geometry fixture and `X_GEOMETRY_UNSUPPORTED` at exit 15 ARE BUILT.
+  WHAT REMAINS: **ROWS 19, 20 AND 21** + the audit-hook observer (W3/B4) + B2 + B5 + the remaining
+  B3 rows + the roles CLI wiring + the ADDITIVE `build_role_bundle` change.  IT NEEDS A NEW REVIEW CARD AND A NEW SUBJECT CHAT, AND ITS MUTATION
   SWEEP BUDGETED **BEFORE** THE HANDOFF.  *** THE CARD AND CHAT ARE WRITTEN AT THE **END** OF THE
   BUILD, NOT AT ITS START - a card names a candidate, and the protocol requires the candidate to be
   stable before the card governs.  S145 deliberately opened neither. ***
@@ -1217,7 +1281,7 @@ TWO NUMBERS THAT ARE IN THE DESIGN BECAUSE THEY ARE THE INCONVENIENT ONES.  KEEP
 ## Where the project is
 
 - **Phase 2 (Execution) is OPEN.** All Phase-1 gates in force. **Schema v1.0 + Amendment A1 in force.** Contract changes run through the **amendment protocol**.
-- I am **Claude**; last session was **Session 148**; next session I run is **Session 149**. **SESSION 148 BUILT READ-ORDER ROWS 13-17 OF THE CONNECTION ADAPTER** - `resolve_cases` and its five per-row functions, plus the `ArmSeries`/`CaseSeries`/`AuthenticatedCases` values rows 18-21 begin from - and 46 new tests. **THE RULE THAT SHAPED THE BUILD IS LESSON 260 AND IT BINDS ROWS 18-21: `utils.role_contract` already enforces every WITHIN-PAYLOAD fact at step 12, so these rows carry only the RELATIONS BETWEEN payloads; writing the rest would have been guards no input can reach.** Focused pair **231**, packet-wide **2,889 passed / 0 failed**, and 2,843 + 46 = 2,889 exactly. **NOTHING OF 4b-ii-b IS REVIEWED, NO REVIEW CARD AND NO SUBJECT CHAT EXIST FOR IT, AND THAT IS DELIBERATE.** **THE FIRST WORK OF S149 IS ROW 18'S ADAPTER WIRING**, then rows 19-21 + the audit-hook observer + the roles CLI wiring + the additive `build_role_bundle` edit, THEN the two-pass mutation sweep on the finished pair, THEN the card and the chat. Three S148 facts a later session must not re-derive are in the head block: the harness window is **0.04 s and not 5 s** (the 5 s value is now the row-17 refusal case), row 13 is a **post-condition across a module boundary** that cannot fail in production, and row 16's lower bound is **unreachable on a grid that starts at zero**. The `schema.json` EOL-pin follow-up from 4b-ii-a is still carried into the 4b-ii-b card, and **"add a test" is not available as its answer**. *(Historical, kept for one more rewrite: **SESSION 147 BUILT SEQUENCING STEP 1** - the shared planar centerline derivation, the dedicated coherent geometry fixture and the design's fourteenth exit code at status 15.)* **SESSION 148 WAS NOT A PROGRESS-REPORT SESSION; MY NEXT REGULAR IS SESSION 152** - `agents/Claude/Progress Reports/Progress Report Session 144.md` is the most recent one and it covers S137-S144.
+- I am **Claude**; last session was **Session 149**; next session I run is **Session 150**. **SESSION 149 BUILT READ-ORDER ROW 18 - the geometry derivation - AND DISCHARGED BOTH OF CODEX'S S148 CROSS-REVIEW ITEMS.** `resolve_geometry` plus the `ArmGeometry`/`CaseGeometry`/`AuthenticatedGeometry` values rows 19-21 begin from, and 12 new tests. Focused pair **243**, packet-wide **2,901 passed / 0 failed**, and 2,889 + 12 = 2,901 exactly. **ROW 18 COLLAPSED TO TWO CALLS BECAUSE ROW 5 ALREADY OWNED THE THIRD JOB - DO NOT REBUILD ROW 5** - and the geometry module's refusal is **passed through untouched** because the arm-varying refusals are unreachable through it (lesson 266). **CODEX WAS RIGHT THAT MY "LARGEST CLOSABLE WINDOW" CLAIM WAS FALSE: the bound is 0.042 s; 0.040 s is kept under a named convention and the test now drives all three values (lesson 263).** **ROW 16 BOUNDS `decision_time_s` ONLY, and that is now a written ruling with a test named for it (lesson 264); a later tightening is an amendment, not a quiet fix.** The accept path installs the coherent fixture **over** the contract harness rather than building a second role tree (lesson 265). **NOTHING OF 4b-ii-b IS REVIEWED, NO REVIEW CARD AND NO SUBJECT CHAT EXIST FOR IT, AND THAT IS DELIBERATE.** **THE FIRST WORK OF S150 IS ROWS 19-21**, then the observer + B2/B5 + the remaining B3 rows + the roles CLI wiring + the additive `build_role_bundle` edit, THEN the two-pass mutation sweep on the finished pair, THEN the card and the chat. The `schema.json` EOL-pin follow-up from 4b-ii-a is still carried into the 4b-ii-b card, and **"add a test" is not available as its answer**. *(Historical, kept for one more rewrite: **SESSION 148 BUILT ROWS 13-17** and **SESSION 147 BUILT THE COHERENT FIXTURE, THE SHARED FORWARD MAP AND EXIT 15**.)* **SESSION 149 WAS NOT A PROGRESS-REPORT SESSION; MY NEXT REGULAR IS SESSION 152** - `agents/Claude/Progress Reports/Progress Report Session 144.md` is the most recent one and it covers S137-S144.
 - **`config.json` is deliberately NOT frozen** and does not exist. All hashes are `dev-`; no `dev-` trace may enter confirmatory analysis.
 - Real data exists: `data/gate3-base-dev-pilot-val-c1-s` (3.86 GB, git-ignored, local only). 472 reservations / 944 manifest rows / C1+S / dev 152, pilot 152, val 168. **Test untouched: 0 identities, 0 payloads.** **THE "SLATED FOR FULL REGENERATION FROM ZERO AFTER A2" EXPECTATION IS RETIRED AS OF MY S75 — see A2.3.** Option C inserts no severity, so no seed ordinal shifts and A2 by itself invalidates none of this. If the set is ever superseded it is for some other reason, under its own authorization. **Still: read them, do not build on them** — nothing downstream of them is authorized either way.
 - **THE PAYLOAD-BOUNDARY EXTENSION HAS RUN — Codex's S73, 127 physical rollouts, `X_CASE_EMPTY`, and the result artifact is JOINTLY APPROVED (Codex S73 / me S74).** The measurement is spent and no further payload-extension execution is authorized. **A2 IS IN FORCE at `baa8fd53…` / `203aab77…` — both agents approved those exact bytes (me S76, Codex S76). The two-file loop is CLOSED and the amendment is not to be reopened or status-edited.**
@@ -1240,6 +1304,15 @@ TWO NUMBERS THAT ARE IN THE DESIGN BECAUSE THEY ARE THE INCONVENIENT ONES.  KEEP
       A COUNTER'S SCOPE IS PART OF THE COUNTER; two counters under one heading are read as
       sharing one scope, and if they do not, nothing in the file will say so. ***
   PILOT / VAL / TEST reads   0, every session, without exception
+  *** S149 SPENT ZERO SCIENTIFIC RESOURCE - it is the 4b-ii-b ROW-18 BUILD plus the discharge of
+      Codex's two S148 cross-review items.  It edited two packet files (the adapter and its test
+      file, 12 new tests); re-ran the focused pair (243), the focused pair under `-O` (243) and THE
+      PACKET-WIDE SUITE (**2,901 passed, 0 failed, 156.24 s**).  IT OPENED NO ROLE INDEX, ROLE
+      PAYLOAD, CHECKPOINT, ESTIMATOR OUTPUT, CONTROLLER LOG, PRODUCTION CONFIG OR PILOT/VAL/TEST
+      RESULT, **BUILT NO MuJoCo MODEL**, STEPPED NO ROLLOUT, RAN NO FIT AND RENDERED NO FIGURE.  It
+      built the SYNTHETIC contract fixture and the SYNTHETIC coherent fixture into temporary trees,
+      which is what the test suite does on every run.  `role_contract.py` and `estimator.py` were
+      READ AT SOURCE AND NOT EDITED.  Checkpoint count NOT RE-READ; it stands at 67. ***
   *** S148 SPENT ZERO SCIENTIFIC RESOURCE - it is the 4b-ii-b ROWS 13-17 BUILD.  It edited two
       packet files (the adapter and its test file, 46 new tests); re-ran the focused pair (231), the
       focused pair under `-O` (231) and THE PACKET-WIDE SUITE (**2,889 passed, 0 failed, 153.85 s**).
@@ -1618,7 +1691,7 @@ Not freeze blockers (still required before completion): **Slot-8 verification ar
 
 ## My lanes — current state
 
-- **SLOT 8 - THE DIRECTOR'S VERIFICATION ARTIFACT. OPENED S123. STEPS 1, 2 AND 3 ARE CLOSED AT BOTH APPROVALS, AND SO ARE SUB-STEP 4a, SUB-STEP 4b-i (Round-3 **Approved**, me S138 / Codex S138) AND SUB-STEP 4b-ii-a (**Approved with Follow-ups**, Codex S143 / me S144, same bytes). **SUB-STEP 4b-ii-b - ROWS 13-21 - IS THE ONE OPEN PIECE.  ITS SEQUENCING STEP 1 IS BUILT (S147: the shared forward map, the coherent geometry fixture and exit 15) AND ITS SEQUENCING STEP 2 IS BUILT (S148: read-order ROWS 13-17).  ALL OF IT IS WHOLLY UNREVIEWED; ROW 18'S ADAPTER WIRING AND ROWS 19-21 ARE NOT BUILT.  NO REVIEW CARD AND NO SUBJECT CHAT EXIST FOR IT AND THAT IS DELIBERATE.** THE NEXT WORK ON THIS LANE IS ROW 18'S WIRING.  **FOUR CLOSED FILES NOW SIT OFF THEIR APPROVED BYTES AND BELONG TO THE 4b-ii-b CANDIDATE SET, AUTHORIZED RATHER THAN REOPENED: `verification_scene.py` `c12745ab` -> `d186a9b1` and `tests/test_verification_scene.py` `cf61e5aa` -> `60caeb21` (design 4.5), and `connection_adapter.py` `6ec19846` -> `0a4e9c7a` and `tests/test_connection_adapter.py` `7015cadf` -> `b9e1e4e4` (rows 13-21 are the same file's second review half).  `authenticated_storage.py` and its test file are UNTOUCHED.** SUB-STEP 4b CLOSES ON THREE CARDS AND CODEX ACCEPTED THE SPLIT IN ITS S141.** Mine to write, Codex reviews. **The Step-1 design is `Reproducibility Packet/protocol/slot8-verification-artifact-v0.1.md`, blob `0753d4ed`, raw == canonical `98e20ae1...`, 59,495 B / 790 LF / 0 CR, LF-pinned by the packet `.gitattributes` `protocol/*.md` rule - jointly approved at those exact bytes (me S127, Codex S127); NEVER EDIT IT IN PLACE.** **READ THE FILE - this bullet is an index, not the document.** It is authoritative on: the `VerificationBundle`/`VerificationScene` field table and its **eight** load-bearing properties; the two mode-specific subcommand contracts; the section-4.1 non-finite float encoding and its `parse_constant` decode rule; the `draw_scene(scene, *, frame)` signature, the one scene-level `playback_t_s` clock, the causal at-or-before call-panel rule and the derived scripted frame; the three-state provenance machine and its **thirteen** exit-code rows; the fixture's required branches; the six acceptance tests A1-A6; **invariants V1-V19**; the four things the artifact must **say** it does not do; and the four-step sequencing. **IT AUTHORIZES NOTHING.** **Step 2 discharged it at `c12745ab`/`0ae5b19d`/`cf61e5aa`/`1833a472` (me S129, Codex S129) and step 3 closed at the ten fixture blobs + packet README `4bc07f18` + both `.gitattributes` + packet `.gitignore` + public README `3ab96e38` (me S130, Codex S130).** **STEP 4's OWN DESIGN IS `Reproducibility Packet/protocol/slot8-connection-record-v0.1.md` AT BLOB `032db166` - CLOSED AT BOTH APPROVALS (me S135, Codex S135), and it is the spec for everything the 4b build does. READ IT; the head block indexes it.** **The whole design review history - BR-BZ, CA/CB, CC/CD, CE/CF, CG/CH, CI-CL, CM, CN/CO on Step 1; CP/CQ/CR/CS + CT on the Step-2 build; and CU, CV, CW, CX, CY/CZ, DA, DB, DC, DD, DE on Step 4a - is SETTLED, and none of it is to be re-litigated.** Codex's D1-D4 rulings and Q1/Q2 are accepted without contest and are NOT to be reasked. **The current build state, the split, the three build decisions and the two forward items are in the head block.**
+- **SLOT 8 - THE DIRECTOR'S VERIFICATION ARTIFACT. OPENED S123. STEPS 1, 2 AND 3 ARE CLOSED AT BOTH APPROVALS, AND SO ARE SUB-STEP 4a, SUB-STEP 4b-i (Round-3 **Approved**, me S138 / Codex S138) AND SUB-STEP 4b-ii-a (**Approved with Follow-ups**, Codex S143 / me S144, same bytes). **SUB-STEP 4b-ii-b - ROWS 13-21 - IS THE ONE OPEN PIECE.  SEQUENCING STEP 1 IS BUILT (S147: the shared forward map, the coherent geometry fixture and exit 15), STEP 2 IS BUILT (S148: read-order ROWS 13-17) AND ROW 18'S ADAPTER WIRING IS BUILT (S149).  ALL OF IT IS WHOLLY UNREVIEWED; ROWS 19, 20 AND 21 ARE NOT BUILT.  NO REVIEW CARD AND NO SUBJECT CHAT EXIST FOR IT AND THAT IS DELIBERATE.** THE NEXT WORK ON THIS LANE IS ROWS 19-21.  **FOUR CLOSED FILES NOW SIT OFF THEIR APPROVED BYTES AND BELONG TO THE 4b-ii-b CANDIDATE SET, AUTHORIZED RATHER THAN REOPENED: `verification_scene.py` `c12745ab` -> `d186a9b1` and `tests/test_verification_scene.py` `cf61e5aa` -> `60caeb21` (design 4.5), and `connection_adapter.py` `6ec19846` -> `88ea30e7` and `tests/test_connection_adapter.py` `7015cadf` -> `7fde611f` (rows 13-21 are the same file's second review half; the S148 states `0a4e9c7a`/`b9e1e4e4` are superseded).  `authenticated_storage.py` and its test file are UNTOUCHED.** SUB-STEP 4b CLOSES ON THREE CARDS AND CODEX ACCEPTED THE SPLIT IN ITS S141.** Mine to write, Codex reviews. **The Step-1 design is `Reproducibility Packet/protocol/slot8-verification-artifact-v0.1.md`, blob `0753d4ed`, raw == canonical `98e20ae1...`, 59,495 B / 790 LF / 0 CR, LF-pinned by the packet `.gitattributes` `protocol/*.md` rule - jointly approved at those exact bytes (me S127, Codex S127); NEVER EDIT IT IN PLACE.** **READ THE FILE - this bullet is an index, not the document.** It is authoritative on: the `VerificationBundle`/`VerificationScene` field table and its **eight** load-bearing properties; the two mode-specific subcommand contracts; the section-4.1 non-finite float encoding and its `parse_constant` decode rule; the `draw_scene(scene, *, frame)` signature, the one scene-level `playback_t_s` clock, the causal at-or-before call-panel rule and the derived scripted frame; the three-state provenance machine and its **thirteen** exit-code rows; the fixture's required branches; the six acceptance tests A1-A6; **invariants V1-V19**; the four things the artifact must **say** it does not do; and the four-step sequencing. **IT AUTHORIZES NOTHING.** **Step 2 discharged it at `c12745ab`/`0ae5b19d`/`cf61e5aa`/`1833a472` (me S129, Codex S129) and step 3 closed at the ten fixture blobs + packet README `4bc07f18` + both `.gitattributes` + packet `.gitignore` + public README `3ab96e38` (me S130, Codex S130).** **STEP 4's OWN DESIGN IS `Reproducibility Packet/protocol/slot8-connection-record-v0.1.md` AT BLOB `032db166` - CLOSED AT BOTH APPROVALS (me S135, Codex S135), and it is the spec for everything the 4b build does. READ IT; the head block indexes it.** **The whole design review history - BR-BZ, CA/CB, CC/CD, CE/CF, CG/CH, CI-CL, CM, CN/CO on Step 1; CP/CQ/CR/CS + CT on the Step-2 build; and CU, CV, CW, CX, CY/CZ, DA, DB, DC, DD, DE on Step 4a - is SETTLED, and none of it is to be re-litigated.** Codex's D1-D4 rulings and Q1/Q2 are accepted without contest and are NOT to be reasked. **The current build state, the split, the three build decisions and the two forward items are in the head block.**
 
 - **GATE-4 RUNG 2 — ALL SEVEN STEPS ARE CLOSED AND SECTION 5.4 IS JOINTLY APPLIED AND SPENT. THE RUN HAPPENED (Codex S117, `X_RUNG2_OK`, 12 fits / 12 checkpoints / 0 rollouts, 1,274.6 s), THE DESCRIPTIVE READ HAPPENED (me S119, `X_ANALYSIS_OK`, 0 fits, 11.97 s), BOTH AGENTS APPROVED THE DERIVED ARTIFACT (me S119 / Codex S119), AND THE TWO PRE-REGISTERED SENTENCES WERE APPLIED BY CODEX IN ITS S119 AND BY ME IN MY S120. NOTHING FURTHER IS LICENSED AND NOTHING SCIENTIFIC ON THIS LANE IS OPEN — only the packet-runbook documentation loop.** Mine to write, Codex reviews. Design `Reproducibility Packet/protocol/rung2-escalation-v0.1.md` at blob `404c9f1f`; module `scripts/utils/attribution_net_rung2.py` at blob `ca192af0` + `tests/test_attribution_net_rung2.py` at blob `c43d33b0` (71 tests; **superseded, never build from: `52809287`**); executable `scripts/utils/rung2_escalation.py` at blob `735f8dee` + `tests/test_rung2_escalation.py` at blob `7cefcb63` (142 tests) — **JOINTLY APPROVED, DO NOT REOPEN**; plan `results/rung2_escalation/plans/rung2-run-1/rung2_escalation_plan.json` at blob `61a2bd22`, canonical == raw `b51b0009…` — **JOINTLY APPROVED, DO NOT RE-AUDIT AND DO NOT REGENERATE**. **THE TWO RAW RUN ARTIFACTS ARE TRACKED AND MUST NOT BE REGENERATED:** `results/rung2_escalation/rung2-run-1/rung2_escalation_result.json` (blob `0eb78d0f`, raw `9d94b03e…`, 33,038 B) and `…/_equivalence/rung2_escalation_equivalence.json` (blob `351f47f4`, raw `ddcb5fed…`), plus twelve git-ignored `.pt` files — fourteen files exactly. Codex audited that raw state with its own instrument, 261 checks, all passed. **MY STEP-6 BUILD IS JOINTLY APPROVED AND CLOSED (Codex S118, no edit):** `Reproducibility Packet/scripts/analyze_rung2_escalation.py` blob `7cf3cc6a`, canonical == raw `83234943…`, 48,308 B / 1,125 lines; and `Reproducibility Packet/tests/test_rung2_escalation_analysis.py` blob `a642b3d3`, canonical == raw `169a3cb2…`, 54,947 B / 1,398 lines, **103 tests** (packet suite **2,108**). **THE PROJECT'S ONE OPEN LOOP IS NOW THE DERIVED ARTIFACT IT PRODUCED:** `Reproducibility Packet/results/rung2_escalation_analysis/rung2-run-1/rung2_escalation_analysis.json`, blob `a2fa857b`, raw == canonical `604d7272…`, 40,270 B, one line, tracked. I approved those exact bytes in my S119 turn after 165 independent checks and **Codex approved the same bytes in its S119 after its own 853-check standalone audit — THAT LOOP IS CLOSED, DO NOT REOPEN OR RE-AUDIT IT.** **DO NOT REGENERATE IT — the destination is an exclusive create and it is consumed, and both authorization halves are spent.** **THE LANE HAS NO REMAINING ITEM. `Reproducibility Packet/README.md` CLOSED AT BLOB `f5e677c8` (Steps 30 and 31 written my S120; Codex's BM repair its S120; my BN/BO/BP repairs my S121; Codex approved those exact bytes UNEDITED in its S121) - DO NOT REOPEN IT. The lane's account is now PUBLIC as well: the root README's running log carries the heartbeat, published in my S122 at blob `964231a4` and CLOSED at blob `f00ea0d9` after Codex's Finding-BQ scope correction (Codex S122, me S123) — DO NOT REOPEN IT.** See the head block for the nine required arguments, the derived-field list, the three flagged decisions, invariant R7's positive reading, and the M21 mutation survivor and its closure. **THE EXECUTION ROOT NOW EXISTS AND IS CONSUMED — a retry at `rung2-run-1` is impossible by construction, which is what R2 is for; a retry needs a new label, a new plan and a fresh joint authorization.** **A closed review loop authorizes the next step only, and never a run.**
 
@@ -1655,7 +1728,7 @@ Not freeze blockers (still required before completion): **Slot-8 verification ar
 
 - **Simulation-only, one desktop:** Windows 11, Ryzen 7 8700F (8C/16T), RTX 5060 Ti **16 GB VRAM** (sm_120), 32 GB RAM, Python **3.12.10** in `./venv`. Free/OSS, commercial-use-friendly only.
 - **venv has:** numpy 2.5.1, scipy 1.18.0, scikit-learn 1.9.0, matplotlib 3.11.0, mujoco 3.10.0, pandas 3.0.3, control 0.10.2, gymnasium 1.3.0, pytest 9.1.1, **torch 2.11.0+cu128**. **S77 added the FIRST new PACKET dependency since the packet was created: `torch==2.11.0` in `Reproducibility Packet/requirements.txt`, pinned as the BASE version (not `+cu128`) so a reader without a CUDA machine can still run the whole suite.** The venv itself gained nothing — torch was already installed.
-- **Running packet tests:** from the REPO ROOT, `./venv/Scripts/python.exe -m pytest -q "Reproducibility Packet/tests"`. **Scope pytest to that path** - a root-wide invocation collides on duplicate test module names in the ignored `tmp/session6_packet_copy/`. *** THE FULL-SUITE FIGURE IS **2,889** (me S148, 153.85 s, 0 failed, 0 collection errors) - 2,843 after the S147 geometry build plus the 46 tests the S148 rows-13-17 build added, and the arithmetic closes exactly.  The focused 4b-ii pair (`test_connection_adapter.py` + `test_authenticated_storage.py`) is **231**, and 231 again under `python -O`.  Earlier: 2,843 (S147), 2,793 (S144).  The pre-4b-ii-a figure was **2,792** (Codex S138, 203.27 s, 0 failed, 0 collection errors) - it was 2,267, the S136 4b-i build added 212, the S137 Round-2 repairs added 99 and the S138 Round-3 repairs added 30. S139 DID NOT RE-RUN IT - no executable file changed.  It is CLEAN: the Smart App Control block that made S128 and S129 unmeasurable is OVER - see the head block and `director_requests.md` entry 2. **DO NOT QUOTE 1,328 OR 1,344; THEY ARE ARTIFACTS OF A BROKEN ENVIRONMENT.** *** The two Slot-8 files run **159 passed in 31.70 s**, and 159 again under `python -O`. Earlier clean history: 2,479 (S136, 192.86 s), 2,267 (S130, 221.38 s; S131, 204.35 s), 2,108 (S118, 126.88 s), 2,005 (S115-S117), 1,863 (S114), 1,861 (S113), 1,792 (S102), 1,753 (S93), 1,551 (S85-S90), 1,370 (S77), 1,306 (S72), 595 (pre-S51 baseline). *** MY S115 REPORT SAID 2,004 AND THAT WAS A TYPO IN MY OWN ARITHMETIC: 1,863 + 142 = 2,005; Codex corrected it forward and I MEASURED the correction in S116 rather than conceding it. *** `test_payload_boundary_extension.py` collects **170**; the two closed Step-2 seam files together collect 124; `test_dev_fit_analysis.py` collects 35; **`test_connection_record.py` collects 341** at the approved Round-3 state (S138, 7.42 s, and 341 again under `python -O`; it was 212 at the S136 Round-1 state and 311 at the S137 Round-2 state). **Set `PYTHONIOENCODING=utf-8` for anything that prints non-ASCII** - the console is cp1252. **Use ASCII in probe scripts and in anything a gate prints.** **Set `MPLBACKEND=Agg` for anything that renders a figure outside pytest** - the Slot-8 test files call `matplotlib.use('Agg')` at import, but a bare probe script or the fixture CLI will pick up the interactive backend, and the CLI's fixture mode ends by opening the menu.
+- **Running packet tests:** from the REPO ROOT, `./venv/Scripts/python.exe -m pytest -q "Reproducibility Packet/tests"`. **Scope pytest to that path** - a root-wide invocation collides on duplicate test module names in the ignored `tmp/session6_packet_copy/`. *** THE FULL-SUITE FIGURE IS **2,901** (me S149, 156.24 s, 0 failed, 0 collection errors) - 2,889 plus the 12 tests the S149 row-18 build added, and the arithmetic closes exactly.  The focused 4b-ii pair (`test_connection_adapter.py` + `test_authenticated_storage.py`) is **243**, and 243 again under `python -O`.  Earlier: 2,889 (S148), 2,843 (S147), 2,793 (S144).  The pre-4b-ii-a figure was **2,792** (Codex S138, 203.27 s, 0 failed, 0 collection errors) - it was 2,267, the S136 4b-i build added 212, the S137 Round-2 repairs added 99 and the S138 Round-3 repairs added 30. S139 DID NOT RE-RUN IT - no executable file changed.  It is CLEAN: the Smart App Control block that made S128 and S129 unmeasurable is OVER - see the head block and `director_requests.md` entry 2. **DO NOT QUOTE 1,328 OR 1,344; THEY ARE ARTIFACTS OF A BROKEN ENVIRONMENT.** *** The two Slot-8 files run **159 passed in 31.70 s**, and 159 again under `python -O`. Earlier clean history: 2,479 (S136, 192.86 s), 2,267 (S130, 221.38 s; S131, 204.35 s), 2,108 (S118, 126.88 s), 2,005 (S115-S117), 1,863 (S114), 1,861 (S113), 1,792 (S102), 1,753 (S93), 1,551 (S85-S90), 1,370 (S77), 1,306 (S72), 595 (pre-S51 baseline). *** MY S115 REPORT SAID 2,004 AND THAT WAS A TYPO IN MY OWN ARITHMETIC: 1,863 + 142 = 2,005; Codex corrected it forward and I MEASURED the correction in S116 rather than conceding it. *** `test_payload_boundary_extension.py` collects **170**; the two closed Step-2 seam files together collect 124; `test_dev_fit_analysis.py` collects 35; **`test_connection_record.py` collects 341** at the approved Round-3 state (S138, 7.42 s, and 341 again under `python -O`; it was 212 at the S136 Round-1 state and 311 at the S137 Round-2 state). **Set `PYTHONIOENCODING=utf-8` for anything that prints non-ASCII** - the console is cp1252. **Use ASCII in probe scripts and in anything a gate prints.** **Set `MPLBACKEND=Agg` for anything that renders a figure outside pytest** - the Slot-8 test files call `matplotlib.use('Agg')` at import, but a bare probe script or the fixture CLI will pick up the interactive backend, and the CLI's fixture mode ends by opening the menu.
 - **MUTATION SWEEPS — MANDATORY HARNESS SHAPE AFTER S60:** clear `__pycache__` before every run **and** set `PYTHONDONTWRITEBYTECODE=1` in the subprocess env; drop `-x`; translate anchors to the target file's own newline; report bad anchors separately from survivors; restore exact bytes in a `finally` and verify the blob afterwards. **Run the whole sweep twice and require identical results** — that is the cheapest detector for a harness fault.
 - **Packet scripts are invoked FROM the packet directory** (`scripts\<name>.py`, `--output-dir results\<name>`), per its README. From the packet dir the project venv is `..\venv\Scripts\python.exe`. **BUT A MODULE UNDER `scripts/utils/` IS NOT A PACKET SCRIPT AND THIS DOES NOT APPLY TO IT — MEASURED S95.** There is no `utils` package at the packet root and no `scripts/__init__.py`, so from the packet dir `-m utils.<mod>` and `-m scripts.utils.<mod>` both raise `ModuleNotFoundError` and running the file by path fails on its relative import. **Run it from `Reproducibility Packet/scripts/`: `..\..\venv\Scripts\python.exe -B -m utils.<mod> … --output-dir ..\results\<name>`.** **In my PowerShell tool the working directory is not the repo root — use `Set-Location` or absolute paths. My Bash tool's cwd PERSISTS between calls — prefer absolute paths or re-`cd` every time.**
 - **Timings (measured S35–S60):** full packet suite ~150 s; one MuJoCo rollout (3000 steps) **25.6–27.5 s**; a PARTIAL rollout is proportionally cheap — 480 steps ≈ 3.0 s; at reduced fidelity (`point_count=9`, `simulation_timestep_s=2e-4`) 501 control steps ≈ 0.37 s; a 200-realization sensor-only null at W=768 ~40 s; an offline re-observation ≈ instantaneous; the driver's `--mode plan` 0.30–0.33 s; **the payload-extension executable's `--mode plan` 0.36–0.38 s (eight MuJoCo model compilations, zero steps)**; **one driver-file mutation case ≈ 100 s** (a 17-case sweep is ~28 min and belongs in the background); **a small-analyzer mutation case ≈ 0.5–0.7 s with the fixed harness, so a 44-case sweep is under a minute.** **NO figure exists for the pinned `pairs=100` Stage-0 run — see limitation 45; do not invent one.**

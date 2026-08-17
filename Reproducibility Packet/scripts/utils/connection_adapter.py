@@ -1,6 +1,6 @@
-"""The Slot-8 connection adapter: the authentication chain, read-order rows 4-17.
+"""The Slot-8 connection adapter: the authentication chain, read-order rows 4-18.
 
-**What this module is.** It implements rows 4 through 17 of the read order in section
+**What this module is.** It implements rows 4 through 18 of the read order in section
 4.1 of `protocol/slot8-connection-record-v0.1.md` (Git blob `032db166`, jointly
 approved Claude Session 135 / Codex Session 135) -- the *second boundary* that
 document names:
@@ -41,7 +41,14 @@ Concretely:
     grid, that the decisions the adapter carries forward are ordered and inside that
     grid's extent, and that the tracking block is a valid `utils.metrics.j_5s` call
     at the agreed onset over the record's declared window. It opens nothing: every
-    fact it reads was authenticated by the rows above it.
+    fact it reads was authenticated by the rows above it;
+  * **step 18** -- `resolve_geometry` derives each arm's planar centerline from the
+    authenticated `q_true` and `deform_coords` under the geometry the record
+    declares, by *calling* `utils.centerline_geometry` rather than restating its
+    map, and requires the derived distal point to agree with the authenticated
+    `true_task_output` to within the tolerance step 5 already bound to the
+    authenticated geometry-validation artifact. It supplies no tolerance of its own:
+    sub-step 4b chooses no real-data tolerance.
 
 `authenticate_connection` is the single roles-mode entry point invariant W8 names. It
 takes the packet root as an explicit parameter, and that one root governs every
@@ -50,10 +57,10 @@ and config resolution, and the step-5 source artifacts. A test binds an isolated
 temporary packet tree and thereby exercises this exact production branch rather than a
 parallel one.
 
-**What this module is not.** It is not the whole adapter. Read-order rows 18 through
-21 -- the geometry derivation, the computed provenance state, the bundle assembly and
-the exclusive-create write -- are still unbuilt, together with the audit-hook observer
-of invariant W3, the `roles` CLI wiring and the additive `build_role_bundle` change.
+**What this module is not.** It is not the whole adapter. Read-order rows 19 through
+21 -- the computed provenance state, the bundle assembly and the exclusive-create
+write -- are still unbuilt, together with the audit-hook observer of invariant W3, the
+`roles` CLI wiring and the additive `build_role_bundle` change.
 **Nothing here licenses authoring a connection record,
 running the adapter, opening `dev`, `pilot`, `val` or `test`, selecting a capacity or
 a threshold, freezing a config, or making any C1-versus-S statement.** The public
@@ -236,6 +243,10 @@ from utils.storage_contract import (
 )
 from utils.estimator import EstimatorOutput
 from utils.metrics import j_5s
+from utils.centerline_geometry import (
+    derive_centerline,
+    require_distal_point_within_tolerance,
+)
 from utils.verification_scene import (
     DEVELOPMENT_ONLY,
     FINAL,
@@ -2535,6 +2546,42 @@ def resolve_decisions(
     control sample: an estimator writes its own clock and is not obliged to agree
     with the plant's grid to the last bit. A decision after the last playback sample
     has nothing to be drawn against, and refusing it is the fail-closed reading.
+
+    **"Inside the playback extent" is a statement about `decision_time_s` and about
+    nothing else, and that is a decision rather than an oversight.** Design section
+    4.1's row reads "decisions strictly increasing and inside the playback extent",
+    which does not by itself say which of the two bookkeeping axes is contained;
+    this row contains the time axis only, and a decision whose `step` is at or past
+    the playback grid's length is accepted so long as its time lies in the extent.
+    Four things settle it that way:
+
+      * **The schema does not tie `step` to any grid.** `utils.estimator`'s own
+        docstring calls `step` and `decision_time_s` bookkeeping and not scored,
+        and nothing in schema section D declares the estimator's step counter to
+        share an origin or a rate with the controller's. `controller_logs.step`
+        *is* declared to be the contiguous 0-based control grid, and step 15 binds
+        it as such; the estimator's step is a different field in a different role.
+      * **The design already refuses two bindings of exactly this shape, both
+        because they reject faithful real data.** Finding CI forbids indexing
+        `playback_t_s` by `onset_index`, and step 15 forbids comparing
+        `controller_t_s` to `playback_t_s`, in both cases because a real producer
+        offsets the axis by one control interval. An estimator that decides on a
+        sub-sampled cadence, or that counts its own decisions rather than the
+        plant's steps, is the same class of faithful producer.
+      * **Nothing reads `step` as an index.** The one consumer of a decision is the
+        scene's causal call panel, which selects the decision at or before the
+        displayed time; `step` is carried and displayed, never used to reach into an
+        array. A bound whose only justification is a use that does not exist is a
+        bound this adapter would be inventing.
+      * **`step` is not left unguarded by declining to bind it.** Step 12 already
+        established, inside the payload, that it is a non-negative integer and that
+        it increases strictly; the `validate()` call above re-establishes the first
+        of those over this module's own transcription, and the ordering check above
+        re-establishes the second. What is declined is only the *grid* binding.
+
+    If a later artifact does make the estimator's step an index into the playback
+    grid, that is a change to the record design and belongs in an amendment, not in
+    a quiet tightening here.
     """
 
     resolved: dict[tuple[str, str], tuple[EstimatorOutput, ...]] = {}
@@ -2713,3 +2760,163 @@ def resolve_cases(connection: AuthenticatedConnection) -> AuthenticatedCases:
             )
         )
     return AuthenticatedCases(cases=tuple(cases))
+
+
+# --------------------------------------------------------------------------- #
+# Step 18 -- the centerline derivation, one arm at a time.
+#
+# **This row owns exactly two things, and it owns them because nothing earlier
+# can.** It derives each arm's planar centerline from the authenticated `q_true`
+# and `deform_coords` under the geometry the *record* declares, and it requires the
+# derived distal point to agree with the authenticated `true_task_output` to within
+# the tolerance read-order step 5 already proved equal to the named field of the
+# authenticated geometry-validation artifact. Every payload involved was
+# authenticated at step 12 and every declared field at steps 2 and 5; what has
+# never been established until here is that the two *agree* -- that the body the
+# payload describes and the chain the record declares are one body.
+#
+# **The derivation is not written here and its refusals are not translated here.**
+# `utils.centerline_geometry` owns the map, owns the closed convention vocabularies
+# and raises `X_GEOMETRY_UNSUPPORTED` itself, so this row is a call and not a copy
+# -- the same shape row 17 has against `utils.metrics.j_5s`, and for the same
+# reason finding CN bought there: a second statement of a rule is a statement that
+# can go stale while still looking authoritative.
+#
+# **Nothing is re-checked that an earlier row established, and the omissions are
+# deliberate rather than accidental** (the rule the rows-13-17 build settled). The
+# derivation refuses a `q_true` of the wrong rank or width, a `deform_coords` on a
+# different grid, a non-finite entry and a declared triplet column the payload does
+# not carry. On the path through this function none of those is reachable: step 12
+# ran both arrays through the schema's own role contract, and step 15 bound every
+# frame-bearing plant array's leading axis to the one playback grid. The reachable
+# refusals here are the record-level ones -- a derivation version, joint convention
+# or projection this adapter does not implement -- and the distal comparison, which
+# is the only refusal that is about a particular arm and the only place this row
+# names one.
+# --------------------------------------------------------------------------- #
+@dataclass(frozen=True)
+class ArmGeometry:
+    """One arm's derived centerline and the agreement it actually achieved.
+
+    Attributes:
+        suite: `C1` or `S`.
+        centerline: the `[T, N, 2]` scene-frame centerline, read-only. `N` is a
+            property of the declared chain -- one point at the proximal end of
+            every ordered body across every link, plus the distal point -- and
+            `utils.centerline_geometry.centerline_point_count` is the one place
+            that number is derived.
+        distal_deviation_m: the measured maximum over steps of the distance
+            between the derived distal point and the recorded `true_task_output`.
+
+    **The deviation is carried rather than discarded because a number a reader can
+    see is worth more than a boolean.** "The geometry check passed" and "the
+    geometry agreed to 0.0 m against a declared tolerance of 1e-9 m" are the same
+    outcome and a very different piece of evidence, and the second is what lets a
+    later row put the agreement on the scene instead of asserting it in prose.
+    """
+
+    suite: str
+    centerline: np.ndarray
+    distal_deviation_m: float
+
+
+@dataclass(frozen=True)
+class CaseGeometry:
+    """One menu entry's two derived centerlines.
+
+    Attributes:
+        case_id: the record's case identity.
+        arms: exactly `C1` and `S`.
+
+    It carries no cross-arm scalar (invariant W13). The two arms' deviations sit
+    side by side and this module computes no comparison between them: an adapter
+    that reported "S agreed better than C1" would be doing the analysis the
+    verification artifact exists to let a reader do for themselves.
+    """
+
+    case_id: str
+    arms: Mapping[str, ArmGeometry]
+
+
+@dataclass(frozen=True)
+class AuthenticatedGeometry:
+    """Every case's derived geometry, in record order.
+
+    Attributes:
+        tolerance_m: the record's declared `distal_tolerance_m`, carried because it
+            is the number every deviation above was measured against and a reader of
+            this value should not have to return to the record to find it.
+        cases: one `CaseGeometry` per record case, in record order.
+
+    This value authorises nothing. It is the state rows 19 through 21 -- the
+    provenance decision, the bundle assembly and the write -- begin from.
+    """
+
+    tolerance_m: float
+    cases: tuple[CaseGeometry, ...]
+
+
+def resolve_geometry(
+    connection: AuthenticatedConnection, cases: AuthenticatedCases
+) -> AuthenticatedGeometry:
+    """Run read-order step 18: derive each arm's centerline and check its distal point.
+
+    Args:
+        connection: everything rows 1 through 12 established. The record's
+            `render_geometry` is taken from here rather than from a caller, so the
+            geometry applied is the authenticated one by construction.
+        cases: the result of rows 13 through 17, whose `ArmSeries` carry the
+            authenticated `q_true`, `deform_coords` and `true_task_output`.
+
+    Returns:
+        The `AuthenticatedGeometry` rows 19 through 21 begin from.
+
+    Raises:
+        VerificationSceneError: `X_GEOMETRY_UNSUPPORTED`, raised by
+            `utils.centerline_geometry` and **passed through untouched** -- neither
+            its code nor its message is rewritten here. Catching each refusal to
+            prefix it with the arm it came from would put this module in the
+            business of reformatting another module's diagnosis, and the one
+            refusal that genuinely varies by arm is reached through
+            `require_distal_point_within_tolerance`, which takes the arm's name as
+            an argument and names it itself.
+
+    **The tolerance comes from the record and from nowhere else.** It is
+    `render_geometry.distal_tolerance_m`, which step 5 required to equal the field
+    the record's `tolerance_source` names inside the authenticated
+    geometry-validation artifact, and whose recorded maximum deviation step 5
+    separately required not to exceed it. This row supplies no default and holds no
+    constant of its own: `utils.centerline_geometry.CENTERLINE_TASK_OUTPUT_TOL_M`
+    measures a *fixture generator's* construction exactness, and reusing it here
+    would demand that two different computations of the same geometry agree to a
+    nanometre on real data (design finding CU). Sub-step 4b chooses no real-data
+    tolerance.
+
+    **The derived arrays are made read-only before they are carried.** The
+    derivation allocates a fresh array and hands ownership to its caller, so
+    freezing it is this module's job rather than the derivation's, and it is the
+    rule every authenticated array in this adapter already travels under: nothing
+    downstream can edit a fact that was established here.
+    """
+
+    geometry = connection.record.render_geometry
+    tolerance_m = float(geometry.distal_tolerance_m)
+    resolved: list[CaseGeometry] = []
+    for case in cases.cases:
+        arms: dict[str, ArmGeometry] = {}
+        for suite in SUITE_KEYS:
+            arm = case.arms[suite]
+            centerline = derive_centerline(arm.q_true, arm.deform_coords, geometry)
+            deviation_m = require_distal_point_within_tolerance(
+                centerline,
+                arm.true_task_output,
+                tolerance_m,
+                where=f"case {case.case_id!r} arm {suite}",
+            )
+            arms[suite] = ArmGeometry(
+                suite=suite,
+                centerline=_read_only_array(centerline),
+                distal_deviation_m=deviation_m,
+            )
+        resolved.append(CaseGeometry(case_id=case.case_id, arms=_frozen_mapping(arms)))
+    return AuthenticatedGeometry(tolerance_m=tolerance_m, cases=tuple(resolved))

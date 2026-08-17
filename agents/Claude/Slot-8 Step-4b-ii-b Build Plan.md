@@ -373,3 +373,94 @@ per arm; a harness record whose `render_geometry` is
 `coherent_geometry_fixture.geometry_validation_document` already generates, written so it
 says in the artifact itself that a fixture tolerance authenticates fixture bytes and
 manufactures no real-data number.
+
+---
+
+## Appendix C — sequencing step 3, first half (Claude Session 149)
+
+*Appended 2026-08-17, Session 149. Row 18's adapter wiring is built and Codex's two
+Session-148 cross-review items are discharged. Rows 19-21, the observer, the CLI wiring
+and the additive `build_role_bundle` edit remain. The design at blob `032db166` is still
+the authority.*
+
+### C.1 Row 18 turned out to own exactly two facts, and the rest were already owned
+
+Section 2's row table gives row 18 three jobs: derive the centerline, require the
+declared tolerance to equal its authenticated source, and require the distal point to
+match `true_task_output`. **The middle one is row 5's and was already built** —
+`authenticate_sources` compares `distal_tolerance_m` against the artifact's named field
+*and* requires the artifact's maximum-deviation field not to exceed it
+(`_require_measured_deviation`). So `resolve_geometry` is a call to
+`utils.centerline_geometry` and a call to `require_distal_point_within_tolerance`, and
+nothing else. That is B.1's rule reaching row 18: **read the owner of the fact at source
+before writing the guard.**
+
+**The refusals are passed through untouched rather than prefixed with the arm.** The
+geometry module raises `X_GEOMETRY_UNSUPPORTED` itself, so there is nothing to
+translate. Prefixing was considered and rejected on a measurement rather than a
+preference: of the refusals `derive_centerline` can raise, the rank, width, grid-length
+and non-finite ones are **unreachable through `resolve_geometry`** — step 12 ran both
+arrays through the role contract and step 15 bound every frame-bearing plant array's
+leading axis to the playback grid — so the reachable ones are record-level (no arm to
+name) plus the distal comparison, which already takes `where` and names the arm itself.
+Threading a `where` through `derive_centerline` would have moved 39 call sites to add a
+prefix to messages no input reaches.
+
+### C.2 The accept path: the coherent fixture installed *over* the contract harness
+
+`_coherent_geometry` in the test file rewrites both arms' `plant` payloads, the
+geometry-validation artifact and the record's whole `render_geometry` block, then
+regenerates every identity the rewrite moves from the files themselves. **No second
+harness and no second role tree were built**, and that is worth keeping: the contract
+harness already owns the manifest, audits, indexes, checkpoints, observations, labels,
+estimator outputs and controller logs, none of which row 18 is about.
+
+Three things the build had to find out, all cheap to re-lose:
+
+1. **Both arms must carry the same plant record.** Row 14 requires the arms to agree
+   about `task_reference`, so two independently generated trajectories are refused a row
+   before the one under test. The contract fixture already writes one record per pair.
+2. **The coherent record's grid must be the contract fixture's grid**, or step 15
+   refuses the rewrite. `n_steps = 32` at `f_ctrl = 500.0` reproduces `0.000 … 0.062 s`
+   exactly. The control rate is a literal in the test file pinned by equality against the
+   config the harness loads.
+3. **Displacing the tip to drive the tolerance refusal must carry `tracking_error` and
+   its norm.** `utils.role_contract` requires `tracking_error == task_reference -
+   true_task_output`, so moving the tip alone is refused at step 12 as an inconsistent
+   payload and never reaches row 18. Carried consistently, the payload is internally
+   impeccable and still describes a body the declared chain does not produce — which is
+   the fault row 18 exists to see and the one no single-payload check can.
+
+The geometry is built twice: once with a placeholder tolerance digest so the generator
+can run, then `dataclasses.replace` of exactly that one field once the validation
+artifact exists. The agreement the fixture achieves is **exactly 0.0 m**, because the
+generator sets `true_task_output` to the derived distal point itself.
+
+### C.3 Codex's two Session-148 items, both discharged
+
+1. **The "largest closable window" claim was false and is corrected forward.** The bound
+   is `0.042 s`; `0.040 s` is kept, and the convention that owns the choice is now
+   written beside the constant — *the largest whole multiple of 0.01 s inside the bound*,
+   chosen so the fixture window does not sit on a boundary where a later `FIXTURE_N_STEPS`
+   change would turn a passing fixture into a refusal for a reason unrelated to the row
+   under test. The test is renamed and now **measures** the bound (0.040 and 0.042 close,
+   0.044 does not) instead of asserting maximality.
+2. **Row 16 bounds `decision_time_s` only, and that is now stated rather than inferred.**
+   The argument is in `resolve_decisions`' docstring and pinned by
+   `test_row16_bounds_the_time_axis_only_and_that_is_the_settled_reading`: schema section
+   D calls `step` bookkeeping and ties it to no grid; the design already refuses two
+   bindings of exactly this shape (finding CI's `onset_index`, step 15's `controller_t_s`)
+   because a faithful producer offsets the axis; nothing downstream uses `step` as an
+   index — the causal call panel selects by time; and step 12 plus row 16's own checks
+   still hold everything about `step` except the grid binding. A later artifact that makes
+   the estimator's step an index into the playback grid is an amendment, not a quiet
+   tightening.
+
+### C.4 What is left, in order
+
+Rows 19, 20 and 21; then the audit-hook observer (W3/B4); then B2, B5 and the remaining
+B3 rows; then the `roles` CLI wiring and the additive `build_role_bundle` edit; **then**
+the two-pass mutation sweep on the finished pair, whose staged-tree set (`scripts`,
+`tests`, `schema`, `config` **and** `results`) is unchanged; **then** the Review Card and
+the subject chat; then the handoff. Still no card and no chat for 4b-ii-b, and that is
+still deliberate.
