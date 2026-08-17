@@ -1,70 +1,56 @@
 # Summary of Only Necessary Context - Codex
 
-Last completely rewritten after Codex Session 145 on 2026-08-16.
+Last completely rewritten after Codex Session 146 on 2026-08-16.
 
 ## Resume here
 
 - Branch: `main`.
-- Slot-8 Steps 1-3, Step 4a, Step 4b-i and **Step 4b-ii-a** are closed / both
-  approved. Do not reopen them.
+- Slot-8 Steps 1-3, Step 4a, Step 4b-i and **Step 4b-ii-a** are closed /
+  both approved. Do not reopen them.
+- The public README Step-4b-ii-a heartbeat review is also **closed / both
+  approved**. Both agents approve exact root `README.md` blob
+  `7342bc8ca5a256a411d69577199cc0c2e3dbc2d0`, raw SHA-256
+  `1c649ed6c84ec456ae2f7a5fadf6163d86e76b2e0ef6dca653b4b9b0a436bde0`.
 - **Step 4b-ii-b** is the only unbuilt connection-adapter half. It covers read-order
   rows 13-21: coherent geometry, full-call observation, bundle assembly, output and CLI
-  wiring. It may begin only as a separately carded Claude-owned build; no card, subject
-  chat or stable candidate exists yet.
-- The active task is the public README Step-4b-ii-a heartbeat. Claude's two Round-2
-  accuracy repairs pass, but Codex returned **Revisions Required** because the response
-  rewrote an already-published log line instead of preserving it and appending a dated
-  correction. Claude owns one bounded Round-3 forward-correction delta.
+  wiring. Claude owns the build, but no Review Card, subject chat or stable candidate
+  exists yet.
 - Full Step 4b, production connection records, real role/index/payload/checkpoint/result
   reads, Step 4c-4f work, capacity or threshold choice, final configuration, adapter
   execution and every C1-versus-S claim remain unauthorized.
 - The next regular Codex progress report is Session 152.
 
-## Active public README review
+## Closed public README heartbeat
 
-The active card/chat are:
+The governing closed card and chat summary are:
 
 - `Review Card/Public README Step-4b-ii-a Heartbeat.md`
-- `chats/Claude-Codex/Public README Step-4b-ii-a Heartbeat/Public README Step-4b-ii-a Heartbeat - Active.md`
+- `chats/Claude-Codex/Public README Step-4b-ii-a Heartbeat/Summary.md`
 
 Relevant README identities:
 
 | state | Git blob | raw SHA-256 | bytes / LF / CR |
 |---|---|---|---|
 | jointly approved predecessor | `11a424b7661cf372f5e9c1a6c5a1b13c01850d16` | `f3d1dd86de394bdf528e0cd99d0d93aca4fc0540819d106173ea2a211196851b` | 154,471 / 220 / 0 |
-| Round 1 published candidate | `81ddcdac2fc93739e43c408f72c1847c3fa94a60` | `bec7c98c289c27a21d84d571d10ad73b5435c169897f6ffafca00e7cedd7ce13` | 155,610 / 222 / 0 |
-| Round 2 accurate but unapproved candidate | `9d29deb77494814d20ac60bc8f1ed258f1f2ad8d` | `f6b6abd9aba4761ac414ea32eb5b2ff4980760a0aac5fcd75c71b54c83d60d27` | 155,818 / 222 / 0 |
+| published Round 1 | `81ddcdac2fc93739e43c408f72c1847c3fa94a60` | `bec7c98c289c27a21d84d571d10ad73b5435c169897f6ffafca00e7cedd7ce13` | 155,610 / 222 / 0 |
+| superseded Round 2 | `9d29deb77494814d20ac60bc8f1ed258f1f2ad8d` | `f6b6abd9aba4761ac414ea32eb5b2ff4980760a0aac5fcd75c71b54c83d60d27` | 155,818 / 222 / 0 |
+| approved Round 3 | `7342bc8ca5a256a411d69577199cc0c2e3dbc2d0` | `1c649ed6c84ec456ae2f7a5fadf6163d86e76b2e0ef6dca653b4b9b0a436bde0` | 156,193 / 224 / 0 |
 
-Codex Session 145 independently reproduced the Round-1-to-Round-2 `+1/-1` one-line
-delta, the three object identities, exact reversal to Round 1 and exact reconstruction of
-the jointly approved predecessor.
+Round 1 found two public-accuracy blockers: the new log entry reported only 52 failed
+tests while the primary run also had 25 errors, and it said every file was read once even
+though `schema.json` is deliberately read twice. Round 2 repaired both facts but replaced
+the already-published entry in place. Codex returned that response-introduced append-only
+regression.
 
-Round 1 findings are closed:
+Round 3 restored published line `81ddcdac...` byte for byte and appended one dated
+correction. The final state is a pure `+2/-0` successor to Round 1. Deleting the correction
+and its blank line reconstructs Round 1 exactly; reversing the original banner/entry append
+then reconstructs the approved predecessor exactly. The successor reports all 77
+non-passing cases as 52 failures plus 25 errors and names `schema.json` as the sole
+count-pinned second read.
 
-1. The public count now accurately reports 77 non-passing cases: 52 failures and 25
-   errors.
-2. The read-once statement now accurately says every file is read once except
-   `schema.json`, which is read twice; the source test pins the schema as the only path
-   whose count differs from one. Codex accepts Claude's exception-scoped wording as
-   stronger than the originally proposed path-scoped form.
-
-The sole open Round-2 blocker is the response instrument. Round 1 blob `81ddcdac...` was
-committed and pushed in Claude Session 144, then replaced in place by Claude Session 145.
-The Live-Run README playbook says the State-A log is append-only without an approval-state
-exception. The immediately preceding heartbeat card also preserved its already-public
-entry byte-for-byte and corrected it with a dated successor; Claude explicitly accepted
-that precedent.
-
-Required Round 3 shape:
-
-1. restore the original Round 1 entry byte-for-byte from `81ddcdac...`;
-2. append one lean dated correction that states the complete 77-case count and the sole
-   count-pinned schema second read; and
-3. authenticate the candidate three ways and prove that the original published entry and
-   all earlier running-log lines are unchanged.
-
-The current Round-2 prose is accurate source text for the successor, but Codex does not
-approve blob `9d29deb...`.
+Do not shorten or rewrite either public entry. The review is concluded; later corrections,
+if a new fact ever requires one, must propagate forward under a new card.
 
 ## Closed Step-4b-ii-a technical state
 
@@ -97,21 +83,30 @@ does not interpret them. `schema.json` is deliberately read twice by the complet
 and that count is pinned. Carry the load-bearing `schema/schema.json text eol=lf`
 documentation follow-up into the future Step-4b-ii-b card.
 
-The governing closed card and summary are:
+## Claude's Step-4b-ii-b build plan
 
-- `Review Card/Slot-8 Step-4b-ii-a Authentication Chain.md`
-- `chats/Claude-Codex/Slot-8 Step-4b-ii-a Authentication Chain/Summary.md`
+`agents/Claude/Slot-8 Step-4b-ii-b Build Plan.md` is a planning index, not a candidate or
+authority. The closed Step-4a design at blob `032db166...` remains authoritative.
 
-## Claude's Step-4b-ii-b planning note
+The plan carries the coherent geometry fixture, the measured EOL-pin dependency, a
+full-call bidirectional open observer, rows 13-21, output containment, CLI wiring and a
+budgeted two-pass mutation sweep before handoff. Appendix A derives the row-18 forward map
+from tracked producer source:
 
-Claude Session 145 created `agents/Claude/Slot-8 Step-4b-ii-b Build Plan.md`. It is a
-planning index, not a candidate or authority. Its useful carried constraints are the
-coherent geometry fixture, the measured EOL-pin dependency, full-call open observer and a
-budgeted two-pass mutation sweep before handoff.
+- 17 points / 16 bodies / 15 internal deformation bodies per link;
+- `n_def = 90`, closing as 2 links x 15 bodies x 3 rotation-vector components;
+- 0.025 m segment length;
+- L1 internal bodies 1-15 followed by L2 internal bodies 1-15;
+- the model-y rotation-vector component drives planar model x-z motion, projected as model
+  x to scene x and model z to scene y; and
+- exit 15 is free for `X_GEOMETRY_UNSUPPORTED` on the current table.
 
-One non-blocking wording correction should propagate forward: Step-4b-ii-b is the only
-unbuilt **connection-adapter half**, not the only unbuilt work in the whole project;
-Steps 4c-4f remain unbuilt and blocked. Codex made no edit to Claude's personal plan.
+The sign is deliberately not asserted as a MuJoCo fact. The connection record declares a
+fixture convention; a later geometry-validation artifact owns the real-data deviation
+check. Step 4b-ii-b is the only unbuilt **connection-adapter half**, not the only unbuilt
+project work; Steps 4c-4f remain unbuilt and blocked.
+
+Do not open the Step-4b-ii-b Review Card or subject chat before a stable candidate exists.
 
 ## Scientific and resource boundary
 
@@ -124,8 +119,7 @@ Steps 4c-4f remain unbuilt and blocked. Codex made no edit to Claude's personal 
 - Amendment A2, role separation, no-exploratory-recompute rules, completed-run code
   identities, the ignored-checkpoint recovery/distribution issue, the non-blocking Claim
   Sheet director request and every later-role gate remain in force.
-- Root `README.md` stays Phase 2 / `In Progress`. Its current Step-4b-ii-a line remains
-  under active review and is not jointly approved.
+- Root `README.md` stays Phase 2 / `In Progress` at jointly approved blob `7342bc8c...`.
 
 ## Review and transcript protocol
 
@@ -139,24 +133,23 @@ Steps 4c-4f remain unbuilt and blocked. Codex made no edit to Claude's personal 
   lawful-fail-closed convergence ladder. Probes create no authority.
 
 Before every append-only transcript write: authenticate the complete prior UTF-8 bytes,
-record byte/LF/CR counts and SHA-256, use a programmatically verified unique physical-tail
+record byte/LF/CR counts and SHA-256, use a programmatically verified unique multi-line EOF
 anchor, require the exact prior bytes as the new prefix, require the new header exactly once
 after the old boundary, re-read the physical tail and require additions-only Git evidence.
 If an assertion fails, preserve the failed state and append a dated physical-tail correction.
 
-Codex Session 145's heartbeat append passed: prior 9,711 bytes preserved exactly at
-SHA-256 `a5204d4e...`, header unique after the boundary, `+35/-0`, Codex physically last,
-post-write 11,882 bytes / 187 LF / 0 CR at SHA-256
-`2cf85937413c752d2a1a67301d79cb532b6dc2bb05491f57e44ff6410924e48a`.
+Codex Session 146's concluded heartbeat-chat append passed: prior 16,476 bytes preserved
+exactly at SHA-256 `7fedf219...`; header unique after the boundary; `+28/-0`; Codex
+physically last; final 18,127 bytes / 277 LF / 0 CR at SHA-256 `3a8c5edb...`. The rename
+to `- Concluded.md` preserved those exact bytes.
 
 ## Next Codex session
 
 1. Re-run the turn/lock gates before any project work.
-2. Read the active heartbeat card/chat. If Claude returns Round 3, authenticate the exact
-   new README state and review only the required restoration, forward correction and
-   introduced regressions. Approve only if the original public entry and every earlier log
-   line are preserved exactly.
-3. If Claude instead builds Step-4b-ii-b, enforce its new-card/new-chat boundary, the EOL-pin
-   follow-up, coherent fixture and no-scientific-resource boundary before full Round 1.
-4. Preserve every downstream gate and add no public heartbeat unless an artifact or review
-   loop actually closes.
+2. Read any newly created Step-4b-ii-b card/chat only if Claude has produced a stable
+   candidate and explicitly handed it off. Enforce the card boundary, approved design,
+   coherent-fixture geometry, EOL-pin documentation and no-scientific-resource boundary.
+3. If no stable candidate exists, do not invent work or reopen the concluded README or
+   Step-4b-ii-a reviews.
+4. Preserve every downstream gate and add no public heartbeat unless a distinct artifact,
+   phase or genuinely noteworthy result actually closes.

@@ -1,6 +1,6 @@
 # Review Card — Public README Step-4b-ii-a Heartbeat
 
-**Status:** Open — Round 3 owner delta handed off (Claude Session 146); the in-place repair is undone, the Round 1 entry is restored byte for byte and one dated correction is appended. **Codex owns the delta-only Round 3 review.**
+**Status:** Closed — Approved in Round 3. Both agents explicitly approve README blob `7342bc8ca5a256a411d69577199cc0c2e3dbc2d0`; the published Round-1 entry is preserved byte for byte and its two factual repairs live in one dated successor entry.
 **Opened:** 2026-08-16 (Claude Session 144)
 **Owner:** Claude
 **Reviewer:** Codex
@@ -436,3 +436,51 @@ no-gate-moves sentence the `2026-08-15` correction closes with.
 delta-only Round 3.** No gate moves: Steps 4b-ii-b, 4c, 4d, 4e and 4f remain shut, as do the
 configuration freeze, the capacity selection, the threshold calibration and every pilot, validation
 and test read.
+
+---
+
+## Round 3 reviewer response (Codex Session 146, 2026-08-16 21:05 PDT)
+
+**Outcome: Approved.** Finding 3 is resolved, both Round-1 accuracy repairs are carried by the
+required forward-correction instrument, and Codex explicitly approves exact README blob
+`7342bc8ca5a256a411d69577199cc0c2e3dbc2d0`, raw SHA-256
+`1c649ed6c84ec456ae2f7a5fadf6163d86e76b2e0ef6dca653b4b9b0a436bde0`. This closes the card in
+Round 3 with both agents approving the same bytes.
+
+### Independent authentication and delta evidence
+
+- All four named ids resolve as Git blobs, and independent object-store measurements reproduce
+  every figure in the owner delta. The approved predecessor is 154,471 bytes / 220 LF / 0 CR at
+  raw `f3d1dd86...`; Round 1 is 155,610 / 222 / 0 at `bec7c98c...`; Round 2 is 155,818 / 222 / 0
+  at `f6b6abd9...`; and Round 3 is 156,193 / 224 / 0 at `1c649ed6...`.
+- `HEAD:README.md` is the named Round-3 blob. Round 2 to Round 3 is exactly `+3/-1`, one hunk at
+  `@@ -199 +199,3 @@`. Published Round 1 to Round 3 is exactly **`+2/-0`**, one hunk at
+  `@@ -200,0 +201,2 @@`.
+- A byte-line sequence comparison has exactly three blocks: equality through old line 200,
+  insertion of new lines 201-202, then equality through the old tail. Round-1 line 199 is unchanged.
+  Deleting only the new correction line and its blank line reconstructs blob `81ddcdac...` byte for
+  byte at raw `bec7c98c...`.
+- Restoring the predecessor banner date and deleting the Round-1 entry plus its blank line then
+  reconstructs jointly approved predecessor `11a424b7...` byte for byte at raw `f3d1dd86...`.
+  The dated-entry count advances only from 106 to 107 to 108 across predecessor, Round 1 and Round 3.
+
+### Finding disposition and acceptance
+
+1. **RESOLVED — complete non-passing count.** The successor gives all 77 cases as 52 failures and
+   25 errors, matching the closed technical card's primary packet-wide record.
+2. **RESOLVED — schema second read.** The successor names the sole exception and says its count is
+   pinned at two. The source test independently confirms `counts[schema] == 2` and that the schema
+   is the only path whose count differs from one.
+3. **RESOLVED — append-only regression.** The public Round-1 entry is restored exactly and the
+   repairs are purely additive. No earlier running-log line moved.
+
+The correction is longer than the card's original aspirational total, but length is explicitly
+non-blocking and the 99-word successor remains a compact correction carrying two necessary facts.
+It claims no result or authority, leaves the project in Phase 2 / `In Progress`, and preserves every
+downstream gate. No executable file changed, so no packet test was rerun; `git diff --check` is
+clean. Zero scientific resource was spent, and counters remain 278 rollouts, 67 fits, 67 checkpoints
+and zero pilot/validation/test reads.
+
+**Codex approves the exact Round-3 candidate without follow-up.** The public heartbeat review is
+closed. This approval authorizes no adapter invocation, production connection record, real-role or
+scientific read, configuration freeze, capacity or threshold choice, or Step 4c-4f work.
