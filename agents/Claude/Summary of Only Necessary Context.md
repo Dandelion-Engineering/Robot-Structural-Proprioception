@@ -1,6 +1,6 @@
 # Summary of Only Necessary Context - Claude
 
-*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 145, 2026-08-16.*
+*Rewritten every session. Restores my working context for the next session. Excludes anything already in `Project Details/Project Details.md` and `AgentPrompt.md` (I re-read those in full at session start). Last rewritten: end of Session 146, 2026-08-16.*
 
 **S112 SPLIT THIS FILE, AND THAT IS THE FIRST THING TO KNOW ABOUT IT.** It was ~3,430 lines and ~400 KB, and reading it was the single largest cost of starting a session — in tension with its own stated purpose. **Codex approved the split in its S111** with one binding condition: *the current gate map, the current exact-state handoff, and the next-read routing stay here.* So this file is now **current state + gates + routing**, and every permanent instrument moved **verbatim, not summarized** into:
 
@@ -9,17 +9,25 @@
 
 **DO NOT UNDO THE SPLIT BY DRIFTING CONTENT BACK.** If a permanent instrument improves, the improvement goes into **the block that owns it in the reference file** — that is the S105 correction, and it is the reason the append writer's last five rebuilds were faithful. Only *current state* belongs here.
 
-## S146 FIRST - 4b-ii-b IS THE ONLY UNBUILT WORK AND **IT NOW HAS A WRITTEN PLAN**; THE README HEARTBEAT IS AT ROUND 2 AND WAITING ON CODEX.
+## S147 FIRST - 4b-ii-b IS THE ONLY UNBUILT ADAPTER HALF, ITS PLAN NOW CARRIES **MEASURED GEOMETRY NUMBERS**, AND THE README HEARTBEAT IS AT ROUND 3 WAITING ON CODEX.
 
 ```text
 *** START HERE IF YOU DO NOTHING ELSE: `agents/Claude/Slot-8 Step-4b-ii-b Build Plan.md`, WRITTEN
-    S145.  It is the row-by-row plan for rows 13-21 + the coherent geometry fixture + the audit-hook
-    observer + B2/B3/B5 + the roles CLI wiring + the additive `build_role_bundle` edit, WITH THE
-    MUTATION SWEEP AND ITS STAGED-TREE SET BUDGETED, and with the row-18 geometry constraints and
-    the two off-limits files carried into it.  *** IT IS A PLAN, NOT A CANDIDATE, AND IT IS
-    DELIBERATELY NOT A REVIEW CARD - the card and the subject chat are written AT THE END OF THE
-    BUILD, when there is a stable candidate to name.  The design at blob `032db166` is the
-    authority and the plan loses to it wherever they differ. ***
+    S145 AND **EXTENDED S146 WITH APPENDIX A**.  Sections 1-6 are the row-by-row plan for rows 13-21
+    + the coherent geometry fixture + the audit-hook observer + B2/B3/B5 + the roles CLI wiring +
+    the additive `build_role_bundle` edit, WITH THE MUTATION SWEEP AND ITS STAGED-TREE SET
+    BUDGETED, and with the two off-limits files carried into it.  **APPENDIX A IS THE ROW-18
+    FORWARD MAP, MEASURED AT SOURCE IN S146 - DO NOT RE-DERIVE IT:** 16 bodies and 15 internal
+    deformation bodies per link, `n_def` 90 = 2 x 15 x 3, SEGMENT 0.025 m, the L1-THEN-L2 LOG-MAP
+    TRIPLET ORDER, THE **y COMPONENT (INDEX 1)** AS THE PLANAR ADVANCE, base point model (0,0,0.5),
+    projection model x -> scene x and model z -> scene y, and EXIT 15 RE-MEASURED FREE.  A.3 records
+    THE ONE THING THAT DERIVATION CANNOT SETTLE - THE SIGN - AND ASSIGNS IT TO THE
+    GEOMETRY-VALIDATION ARTIFACT, WHICH IS NOT 4b's TO BUILD.  A.6 carries Codex's correction: 4b-ii-b
+    is the only unbuilt **connection-adapter half**, NOT the only unbuilt work; 4c-4f are unbuilt and
+    blocked.  *** IT IS A PLAN, NOT A CANDIDATE, AND IT IS DELIBERATELY NOT A REVIEW CARD - the card
+    and the subject chat are written AT THE END OF THE BUILD, when there is a stable candidate to
+    name.  The design at blob `032db166` is the authority and the plan loses to it wherever they
+    differ. ***
 ```
 
 
@@ -83,7 +91,52 @@
     `test_the_closed_utilities_keep_the_identity_three_approved_artifacts_record` exists so a later
     session finds this out cheaply. ***  Lesson 246.
 
-=== WHAT S145 DID, SO S146 DOES NOT REDO IT =====================================================
+=== WHAT S146 DID, SO S147 DOES NOT REDO IT =====================================================
+  1  RETURNED THE **ROUND-3 OWNER DELTA** ON THE PUBLIC README HEARTBEAT, ACCEPTING CODEX'S RULING
+     AGAINST ME WITHOUT CONTEST.  Codex's S145 Round 2 RESOLVED both accuracy findings and returned
+     **Revisions Required** on ONE BLOCKING RESPONSE-INTRODUCED REGRESSION: I had repaired the
+     PUBLISHED log line **IN PLACE**.  *** THE RULING AND ITS REASON, AND IT IS NOW LESSON 257:
+     APPEND-ONLY PROTECTS **WHAT THE PAGE HAS SHOWN**, NOT WHAT A REVIEW HAS SETTLED.  Blob
+     `81ddcdac` was committed and pushed in MY OWN S144 and sat on a public remote; review state
+     cannot reach backwards through publication.  AND THE RULE I BROKE WAS ONE I WROTE MYSELF, IN
+     THAT CARD, TWO SCREENS ABOVE THE VIOLATION - acceptance criterion 4.  DO NOT RE-ARGUE ANY OF
+     THIS; IT IS SETTLED AND I DO NOT HOLD A CONTESTED POSITION ON THIS CARD. ***
+     THE REPAIR: the published entry is RESTORED BYTE FOR BYTE at line 199 and ONE DATED 99-WORD
+     CORRECTION is appended as line 201, in the shape of the `2026-08-15` correction two entries
+     above it.  CANDIDATE `7342bc8ca5a256a411d69577199cc0c2e3dbc2d0`, raw
+     `1c649ed6c84ec456ae2f7a5fadf6163d86e76b2e0ef6dca653b4b9b0a436bde0`, 156,193 B / 224 LF / 0 CR.
+     *** THE NUMBER THAT MATTERS IS **`2 0` AGAINST THE PUBLISHED BLOB `81ddcdac`** - ONE HUNK
+     `@@ -200,0 +201,2 @@`, ZERO DELETIONS, A PURELY ADDITIVE SUCCESSOR.  Against `HEAD` (the
+     superseded Round-2 state) it reads `3 1`, and QUOTING ONLY THAT ONE UNDERSTATES THE FIX WHILE
+     LOOKING LIKE MORE WORK.  DIFF AGAINST THE STATE THE PROPERTY IS ABOUT.  Lesson 258. ***
+     THE CANDIDATE WAS BUILT UNDER PRECONDITIONS RATHER THAN EDITED: a script that refuses to write
+     unless deleting the inserted range reproduces `81ddcdac` byte for byte, and the FULL CHAIN was
+     re-proved on the new bytes (R3 -> R1 -> the approved predecessor `11a424b7`, both exact).
+     UNCHANGED SIDE PROVED TOO: 225 LF elements vs Round 1's 223; elements 1-200 equal element for
+     element and 203-225 equal Round 1's 201-223; 108 dated entries, the 106 before line 199
+     bit-identical.
+  1b *** THE PROCESS QUESTION IS CLOSED.  DO NOT REOPEN IT AND DO NOT RE-PROPOSE THE IN-PLACE FORM
+     FOR ANY PUBLISHED ARTIFACT.  The one thing I flagged honestly against myself IN THE CARD: the
+     restored entry plus its correction now runs 189 + 99 = **288 words** where my own card said
+     "roughly 160", and I offered to take a SHORTER correction rather than argue the arithmetic.
+     IF CODEX ASKS FOR A SHORTER ONE IN ROUND 3, TAKE IT - length is non-blocking by the card's own
+     definition and I am not defending the count. ***
+  1c EXTENDED THE 4b-ii-b BUILD PLAN WITH **APPENDIX A** (see the head block) - the row-18 forward
+     map read out of `cable_mechanics.py`, `config/draft-config-v0.1.json` and the live
+     `verification_scene.EXIT_CODES`.  STILL NO REVIEW CARD AND NO SUBJECT CHAT FOR 4b-ii-b, AND
+     THAT REMAINS DELIBERATE.
+  *** S146 SPENT ZERO SCIENTIFIC RESOURCE.  Counters unchanged: 278 rollouts, 67 fits, 67
+      checkpoints, zero pilot/val/test reads.  NO SUITE WAS RE-RUN AND NONE NEEDED TO BE - NO
+      EXECUTABLE FILE CHANGED.  The last measured figures stand: 185 focused, 2,793 packet-wide.
+      DISCLOSED READS, all tracked development text, none opening a payload: `cable_mechanics.py`,
+      `synthetic_plant.py`, `verification_scene.py`, `config/draft-config-v0.1.json`
+      (`values.plant`), `schema/schema.json` (`deform_coords`), and design sections 2.4/3.5/4.5/4.6.
+      I IMPORTED `utils.verification_scene` ONLY TO PRINT ITS EXIT TABLE.  NO MuJoCo MODEL BUILT. ***
+  *** THE HEARTBEAT CHECK RAN AND ANSWERED **NO** - no artifact finished, no phase closed, and the
+      README is itself the candidate under review.  A log entry about revising a log entry is the
+      session-journal texture the playbook forbids. ***
+
+=== WHAT S145 DID ================================================================================
   1  RETURNED THE **ROUND-2 OWNER DELTA** ON THE PUBLIC README HEARTBEAT.  Codex's S144 Round 1 was
      **Revisions Required** on TWO BLOCKING PUBLIC-ACCURACY FINDINGS, no candidate edit.  I ACCEPTED
      BOTH WITHOUT CONTEST and RE-DERIVED EACH FROM A PRIMARY OBJECT BEFORE REPAIRING IT.
@@ -109,7 +162,8 @@
      **RE-PROVED ON THE NEW BYTES** rather than inherited: restoring `2026-08-15` on line 9 and
      deleting line 199 with its trailing blank line reproduces `11a424b7...` / `f3d1dd86...` BYTE FOR
      BYTE.  The write was CONDITIONED on the reverse substitution reproducing the Round-1 candidate.
-  1b *** ONE PROCESS QUESTION IS OPEN AND CODEX OWES THE RULING - DO NOT ASSUME IT EITHER WAY.  I
+  1b *** ///RULED AGAINST ME IN CODEX'S S145 AND REPAIRED IN MY S146 - KEPT ONLY AS THE RECORD OF
+     WHAT WAS ASKED.  THE ANSWER IS: CONVERT TO A DATED SUCCESSOR ENTRY.  DO NOT REOPEN.///  I
      repaired the entry **IN PLACE** rather than appending a dated correction, on the reading that
      the FORWARD-ONLY DISCIPLINE (Codex's S130 note; the S85/S86 public-log precedent) ATTACHES TO
      AN ENTRY WHOSE REVIEW HAS **CLOSED**, and this one never did.  I NAMED THE COST OF BEING WRONG:
@@ -237,16 +291,24 @@
       for their `code_identity`).  A staged tree missing any of them is a RED CONTROL AND MEASURES
       NOTHING.  CONFIRM THE GREEN ANCHOR AT 185 BEFORE ANY MUTANT RUNS. ***
 
-=== THE ONE OPEN REVIEW - THE PUBLIC README HEARTBEAT.  MINE, **ROUND 2 HANDED OFF, CODEX'S TURN**.
-  Review Card/Public README Step-4b-ii-a Heartbeat.md      <- OPEN, Round 2 owner delta handed off
-  chats/Claude-Codex/Public README Step-4b-ii-a Heartbeat/...- Active.md   <- ACTIVE, my S145 turn
+=== THE ONE OPEN REVIEW - THE PUBLIC README HEARTBEAT.  MINE, **ROUND 3 HANDED OFF, CODEX'S TURN**.
+  Review Card/Public README Step-4b-ii-a Heartbeat.md      <- OPEN, Round 3 owner delta handed off
+  chats/Claude-Codex/Public README Step-4b-ii-a Heartbeat/...- Active.md   <- ACTIVE, my S146 turn
                                                                               is physically last
-  *** THE NEXT THING THAT HAPPENS ON THIS CARD IS CODEX'S **DELTA-ONLY** ROUND 2.  DO NOT RE-HAND
-      IT OFF, DO NOT RE-AUDIT THE UNCHANGED 222 LINES, AND DO NOT REOPEN ROUND 1. ***
-  README.md  ROUND-2 candidate  blob 9d29deb77494814d20ac60bc8f1ed258f1f2ad8d
+  *** THE NEXT THING THAT HAPPENS ON THIS CARD IS CODEX'S **DELTA-ONLY** ROUND 3, AND IT IS THE
+      CARD'S ROUND LIMIT.  DO NOT RE-HAND IT OFF, DO NOT RE-AUDIT THE UNCHANGED LINES, AND DO NOT
+      REOPEN ROUNDS 1 OR 2.  IF IT APPROVES, THE CARD CLOSES AND I OWE THE `Summary.md` AND THE
+      `- Concluded.md` RENAME.  I HOLD NO CONTESTED POSITION, SO ANY RESIDUAL IS CODEX'S TO
+      CLASSIFY UNDER THE CONVERGENCE LADDER - WHICH HAS STILL NEVER FIRED. ***
+  README.md  ROUND-3 candidate  blob 7342bc8ca5a256a411d69577199cc0c2e3dbc2d0
+                        raw  1c649ed6c84ec456ae2f7a5fadf6163d86e76b2e0ef6dca653b4b9b0a436bde0
+                        156,193 B / 224 LF / 0 CR   <- THIS IS THE WORKING TREE
+  README.md  Round-2 candidate, SUPERSEDED - IT REWROTE A PUBLISHED LINE IN PLACE
+                        blob 9d29deb77494814d20ac60bc8f1ed258f1f2ad8d
                         raw  f6b6abd9aba4761ac414ea32eb5b2ff4980760a0aac5fcd75c71b54c83d60d27
-                        155,818 B / 222 LF / 0 CR   <- THIS IS HEAD AND THE WORKING TREE
-  README.md  Round-1 candidate, SUPERSEDED  blob 81ddcdac2fc93739e43c408f72c1847c3fa94a60
+                        155,818 B / 222 LF / 0 CR
+  README.md  Round-1 candidate - **RESTORED AND PUBLISHED UNCHANGED INSIDE THE ROUND-3 CANDIDATE**
+                        blob 81ddcdac2fc93739e43c408f72c1847c3fa94a60
                         raw  bec7c98c289c27a21d84d571d10ad73b5435c169897f6ffafca00e7cedd7ce13
                         155,610 B / 222 LF / 0 CR
   README.md  APPROVED predecessor blob 11a424b7661cf372f5e9c1a6c5a1b13c01850d16
@@ -257,7 +319,9 @@
       public-state boundary and every non-authorization.  BOTH ITS FINDINGS WERE ABOUT WHAT THE NEW
       SENTENCE MEANT, WHICH IS THE HALF NO BYTE-LEVEL INSTRUMENT LOOKS AT.  Lesson: append-only
       provenance and sentence accuracy are INDEPENDENT properties. ***
-  ROUND 2 IS `--numstat` **`1 1`**, hunk `@@ -199 +199 @@`, one of 223 lines differing.
+  ROUND 3 IS `--numstat` **`2 0`** AGAINST THE PUBLISHED BLOB `81ddcdac` - one hunk
+  `@@ -200,0 +201,2 @@`, ZERO DELETIONS - and `3 1` against `HEAD`.  *** QUOTE BOTH, LEAD WITH THE
+  PUBLISHED-STATE ONE.  Lesson 258. ***  (Round 2 was `1 1`, hunk `@@ -199 +199 @@`.)
   *** ONE MEASUREMENT NOTE, RECORDED BECAUSE IT LOOKS LIKE A RULE VIOLATION AND IS NOT: on THIS state
       the FILTERED and UNFILTERED ids are THE SAME OBJECT `9d29deb7`, because the working tree
       currently holds README.md at 0 CR.  THAT IS A COINCIDENCE, NOT THE IDENTITY CLAIM.  THE RULE
@@ -266,8 +330,10 @@
   *** PUBLISH THE FILTERED BLOB ON THIS FILE - `core.autocrlf=true`, no EOL pin, so the working tree
       is CRLF and `--no-filters` gives a third number that is nobody's identity.  EVERY TRACKED
       README BLOB HAS ZERO CR. ***
-  THE ENTRY IS ~160 WORDS, which is the LEAN shape I committed to after Codex's forward-only note on
-  my 495-word S130 entry.  It leads with the finished artifact and spends most of its length on the
+  THE PAIR IS NOW **189 + 99 = 288 WORDS**, against the "roughly 160" my own card names.  I REPORTED
+  THAT AGAINST MYSELF AND OFFERED A SHORTER CORRECTION; LENGTH IS NON-BLOCKING BY THE CARD'S OWN
+  DEFINITION AND I AM NOT DEFENDING THE COUNT.  The lean shape is still what I committed to after
+  Codex's forward-only note on my 495-word S130 entry.  It leads with the finished artifact and spends most of its length on the
   repair that had to be UNDONE, because that is the honest negative a stranger would care about.
   *** THE HEARTBEAT ANSWERED YES FOR THE FIRST TIME SINCE CODEX'S STEP-4b-i ENTRY.  The trigger is a
       FINISHED, JOINTLY APPROVED ARTIFACT.  I considered declining on the grounds that 4b-ii-a is
@@ -278,7 +344,10 @@
   *** READ `agents/Claude/Slot-8 Step-4b-ii-b Build Plan.md` FIRST.  S145 wrote it so this block
       does not have to be re-derived, and it carries THE ROW-BY-ROW TABLE, THE ROW-18 GEOMETRY
       CONSTRAINTS WITH THEIR MEASUREMENTS, THE OFF-LIMITS FILES, THE SWEEP BUDGET AND STAGED-TREE
-      SET, AND THE SEQUENCING.  The blocks below remain the short form. ***
+      SET, AND THE SEQUENCING.  **S146 ADDED APPENDIX A - THE ROW-18 FORWARD MAP MEASURED AT SOURCE
+      (16 bodies / 15 internal per link, n_def 90, 0.025 m segments, L1-then-L2 log-map triplet
+      order, y component as the planar advance, exit 15 re-measured free) AND THE ASSIGNED SIGN
+      QUESTION.  START THE BUILD THERE.**  The blocks below remain the short form. ***
   ROWS 13-21 + the coherent geometry fixture + `X_GEOMETRY_UNSUPPORTED` at exit 15 + the audit-hook
   observer (W3/B4) + B2 + B5 + the remaining B3 rows + the roles CLI wiring + the ADDITIVE
   `build_role_bundle` change.  IT NEEDS A NEW REVIEW CARD AND A NEW SUBJECT CHAT, AND ITS MUTATION
@@ -856,7 +925,9 @@ THE PROHIBITIONS THAT SURVIVE, AND THEY ARE PERMANENT:
 
 THE ARTIFACT SHAPES AND THE AUDIT INSTRUMENTS ARE IN `agents/Claude/Permanent Instruments.md`.
   Read it ON DEMAND, not at startup.  The routing table at the bottom of THIS file says which of
-  its sections answers which question.  *** STANDING LESSONS NOW REACH 238 AND ALL OF THEM LIVE
+  its sections answers which question.  *** STANDING LESSONS REACH **259** - THE AUTHORITATIVE COUNT
+  IS THE `S146 ADDED THREE` LINE BELOW, NOT THIS SENTENCE OR THE `NOW REACH 231` ONE FURTHER DOWN;
+  BOTH OF THOSE ARE FROZEN INSIDE THE DATED NARRATIVE THAT PRODUCED THEM.  ALL OF THEM LIVE
   THERE - S132 added 213 (A DEFECT THAT ONLY THE UNREACHABLE PATH CAN EXPOSE IS THE EXPENSIVE
   KIND: CX would have passed every test 4b writes, because 4b's accept path is synthetic and its
   output goes to a temp root - ASK WHAT THE ACCEPT PATH ACTUALLY REACHES, which is the third time
@@ -915,7 +986,18 @@ THE ARTIFACT SHAPES AND THE AUDIT INSTRUMENTS ARE IN `agents/Claude/Permanent In
   loader had validated its shape) and 245 (BEFORE PROPOSING A SCOPE EXPANSION INTO A CLOSED UTILITY,
   LOOK FOR THE ENTRY POINT IT ALREADY EXPOSES - `validate_config_document` removed three reads and a
   whole defect class with no closed-file edit).
-  S143 ADDED 246-250.  S144 ADDED SIX MORE AND **STANDING LESSONS NOW REACH 256**: 251 (A NEGATIVE
+  S146 ADDED THREE AND **STANDING LESSONS NOW REACH 259**: 257 (AN APPEND-ONLY RULE HAS NO
+  REVIEW-STATE EXCEPTION - THE PROPERTY IS WHAT THE PAGE HAS SHOWN, NOT WHAT A REVIEW HAS SETTLED,
+  and the rule I broke was one I had written myself two screens above the violation; a rule you wrote
+  for a NARROW case is the first place to look when the BROAD case arrives), 258 (ON AN APPEND-ONLY
+  ARTIFACT, DIFF AGAINST THE **PUBLISHED** STATE, NOT AGAINST `HEAD` - my candidate reads `3 1`
+  against `HEAD` and `2 0` against the blob that was public, and only the second is a statement about
+  the property under review) and 259 (A CONVENTION THE FIXTURE DECLARES IS PROVED BY THE FIXTURE ONLY
+  AS *LOGIC*, NEVER AS *TRUTH* - the geometry sign cannot be settled without MuJoCo, which V18
+  forbids the adapter, so the record DECLARES it, the fixture proves the DERIVATION under one declared
+  convention, and the geometry-validation artifact's maximum-deviation field is the instrument that
+  would catch a flip; the question is ASSIGNED, not open).
+  S143 ADDED 246-250.  S144 ADDED SIX MORE: 251 (A NEGATIVE
   CONTROL THAT FAILS TO COMPILE MEASURES NOTHING AND REPORTS AS A RESULT - my "inert rename" missed a
   reference inside an f-string, so a `NameError` came back CAUGHT and read as evidence about the SUITE
   when it was evidence about the INSTRUMENT; verify a control RUNS before believing its verdict, and
@@ -1037,7 +1119,7 @@ TWO NUMBERS THAT ARE IN THE DESIGN BECAUSE THEY ARE THE INCONVENIENT ONES.  KEEP
 ## Where the project is
 
 - **Phase 2 (Execution) is OPEN.** All Phase-1 gates in force. **Schema v1.0 + Amendment A1 in force.** Contract changes run through the **amendment protocol**.
-- I am **Claude**; last session was **Session 145**; next session I run is **Session 146**. **SESSION 145 RETURNED THE ROUND-2 OWNER DELTA ON THE PUBLIC-README HEARTBEAT** - Codex's S144 Round 1 was **Revisions Required** on two blocking public-accuracy findings (an incomplete test count, and a universal read-once claim whose counterexample sat in the same sentence); I accepted both without contest, re-derived each from a primary object before repairing it, repaired both in ONE line (`--numstat` `1 1`, hunk `@@ -199 +199 @@`), re-proved the append-only property on the new bytes, and handed candidate **`9d29deb7`** back for a delta-only Round 2. **CODEX'S TURN.** I also **wrote `agents/Claude/Slot-8 Step-4b-ii-b Build Plan.md`** and deliberately opened NO Review Card and NO subject chat for 4b-ii-b, because a card names a candidate and there is none yet. **THE FIRST WORK OF S146 IS 4b-ii-b** - the only unbuilt work in the project - starting from that plan; its card and chat are written at the END of the build, its mutation sweep is budgeted BEFORE the handoff, and the `schema.json` EOL-pin follow-up is carried into its card. **THE HEARTBEAT REVIEW IS OPEN BUT IS NOT A BLOCKER ON THAT WORK** - different artifact, different card. **ONE RULING IS OWED BY CODEX AND MUST NOT BE ASSUMED EITHER WAY:** whether repairing a candidate log entry IN PLACE is the right instrument when its review never closed, or whether it must convert to a dated successor entry. **SESSION 145 WAS NOT A PROGRESS-REPORT SESSION; MY NEXT REGULAR IS SESSION 152** - `agents/Claude/Progress Reports/Progress Report Session 144.md` is the most recent one and it covers S137-S144.
+- I am **Claude**; last session was **Session 146**; next session I run is **Session 147**. **SESSION 146 RETURNED THE ROUND-3 OWNER DELTA ON THE PUBLIC-README HEARTBEAT**, accepting Codex's Round-2 ruling against my in-place repair without contest: the published entry is restored byte for byte and one dated 99-word correction is appended beneath it, making the candidate **`7342bc8c`** a purely additive `2 0` successor to the published blob. **CODEX'S TURN, AND IT IS THE CARD'S ROUND LIMIT.** Session 146 also **extended the 4b-ii-b build plan with Appendix A** — the row-18 forward map measured at source — and added standing lessons **257, 258 and 259**. *(Historical, kept for one more rewrite: **SESSION 145 RETURNED THE ROUND-2 OWNER DELTA** - Codex's S144 Round 1 was **Revisions Required** on two blocking public-accuracy findings (an incomplete test count, and a universal read-once claim whose counterexample sat in the same sentence); I accepted both without contest, re-derived each from a primary object before repairing it, repaired both in ONE line (`--numstat` `1 1`, hunk `@@ -199 +199 @@`), re-proved the append-only property on the new bytes, and handed candidate **`9d29deb7`** back for a delta-only Round 2; it also wrote the 4b-ii-b build plan, and it asked the process question Codex then ruled against.)* **THE FIRST WORK OF S147 IS THE 4b-ii-b BUILD** - the only unbuilt connection-adapter half - starting from **Appendix A** of `agents/Claude/Slot-8 Step-4b-ii-b Build Plan.md`, whose sequencing puts the coherent geometry fixture and its fixture-scoped geometry-validation artifact first; its card and chat are written at the END of the build, its mutation sweep is budgeted BEFORE the handoff, and the `schema.json` EOL-pin follow-up is carried into its card. **THE HEARTBEAT REVIEW IS OPEN BUT IS NOT A BLOCKER ON THAT WORK** - different artifact, different card. **SESSION 146 WAS NOT A PROGRESS-REPORT SESSION; MY NEXT REGULAR IS SESSION 152** - `agents/Claude/Progress Reports/Progress Report Session 144.md` is the most recent one and it covers S137-S144.
 - **`config.json` is deliberately NOT frozen** and does not exist. All hashes are `dev-`; no `dev-` trace may enter confirmatory analysis.
 - Real data exists: `data/gate3-base-dev-pilot-val-c1-s` (3.86 GB, git-ignored, local only). 472 reservations / 944 manifest rows / C1+S / dev 152, pilot 152, val 168. **Test untouched: 0 identities, 0 payloads.** **THE "SLATED FOR FULL REGENERATION FROM ZERO AFTER A2" EXPECTATION IS RETIRED AS OF MY S75 — see A2.3.** Option C inserts no severity, so no seed ordinal shifts and A2 by itself invalidates none of this. If the set is ever superseded it is for some other reason, under its own authorization. **Still: read them, do not build on them** — nothing downstream of them is authorized either way.
 - **THE PAYLOAD-BOUNDARY EXTENSION HAS RUN — Codex's S73, 127 physical rollouts, `X_CASE_EMPTY`, and the result artifact is JOINTLY APPROVED (Codex S73 / me S74).** The measurement is spent and no further payload-extension execution is authorized. **A2 IS IN FORCE at `baa8fd53…` / `203aab77…` — both agents approved those exact bytes (me S76, Codex S76). The two-file loop is CLOSED and the amendment is not to be reopened or status-edited.**
@@ -1060,6 +1142,23 @@ TWO NUMBERS THAT ARE IN THE DESIGN BECAUSE THEY ARE THE INCONVENIENT ONES.  KEEP
       A COUNTER'S SCOPE IS PART OF THE COUNTER; two counters under one heading are read as
       sharing one scope, and if they do not, nothing in the file will say so. ***
   PILOT / VAL / TEST reads   0, every session, without exception
+  *** S146 SPENT ZERO SCIENTIFIC RESOURCE - it is the README ROUND-3 OWNER DELTA plus the row-18
+      DERIVATION.  It read `AgentPrompt.md`, `Project Details/Project Details.md`, this file, both
+      active chats, the governing Review Card including Codex's full Round-2 section,
+      `Playbooks/live-run-readme.md`'s append-only rules and Codex's HumanReport145; EXTRACTED the
+      three README blobs from the object store into a SCRATCH DIRECTORY OUTSIDE THE REPOSITORY and
+      re-measured every identity; BUILT the Round-3 candidate there under preconditions and
+      installed it only after both reverse constructions passed; read `cable_mechanics.py`,
+      `synthetic_plant.py`, `verification_scene.py`, `config/draft-config-v0.1.json` and
+      `schema/schema.json`'s `deform_coords` declaration AT SOURCE, plus design sections 2.4, 3.5,
+      4.5 and 4.6; IMPORTED `utils.verification_scene` ONLY to print its exit table; appended one
+      chat turn, one Review Card section and two build-plan appendices; and edited its own report,
+      README, Permanent Instruments (lessons 257-259) and continuity file.
+      *** IT CHANGED NO PACKET CODE, TEST, SCHEMA, PROTOCOL DOCUMENT, CONFIGURATION OR RESULT.  NO
+      SUITE WAS RE-RUN AND NONE NEEDED TO BE - the figures stand at 185 focused / 2,793
+      packet-wide.  IT OPENED NO ROLE INDEX, ROLE PAYLOAD, CHECKPOINT, ESTIMATOR OUTPUT, CONTROLLER
+      LOG, PRODUCTION CONFIG OR PILOT/VAL/TEST RESULT, **BUILT NO MuJoCo MODEL**, STEPPED NO
+      ROLLOUT, RAN NO FIT AND RENDERED NO FIGURE.  Checkpoint count NOT RE-READ; it stands at 67. ***
   *** S144 SPENT ZERO SCIENTIFIC RESOURCE - it is the 4b-ii-a ROUND-3 OWNER RE-REVIEW, THE CARD
       CLOSURE AND A REGULAR PROGRESS-REPORT SESSION.  It read `AgentPrompt.md`, `Project Details/Project
       Details.md`, this file, the governing Review Card including Codex's full Round-3 section, the
@@ -1541,7 +1640,7 @@ Run either read from the packet dir; zero rollouts, ~0.3 s each:
 - **CONCLUDED director chat:** `chats/Claude-Codex-Human/Better Suited Task/…- Concluded.md` — the withdrawn task-redesign directive. **A2 must stay clear of it.**
 - Director requests: `director_requests.md` (root) — **entry 1** (Claim Sheet review) non-blocking, **still awaiting director reply**. **ENTRY 2 (the MuJoCo / Application Control block, logged by me S128) IS RESOLVED** — a director-authorized **Repair Agent** appended the root-cause diagnosis and the standing procedure on 2026-08-13 17:19 PDT, and Codex committed that append in its S129. *** THE ENTRY IS APPEND-ONLY AND THE `*Awaiting director reply.*` line above the Repair Agent’s note IS SUPERSEDED BUT LEFT STANDING. DO NOT EDIT IT. *** **A FUTURE NATIVE-IMPORT INCIDENT GETS A NEW NUMBERED ENTRY with the diagnostic’s output — Randy is deciding Smart App Control policy from the pattern of incidents, so a silently absorbed one is invisible to him; and do NOT propose turning SAC off.** Nothing else is blocked on the director.
 - My foundation `agents/Claude/Literature Foundation.md` · ledger `agents/Claude/references.md` (**no S20–S60 entries — reproduction/construction/measurement/review sessions, no external sources read**).
-- **Live-Run README (co-maintained): root `README.md` - Phase 2 / In Progress, banner **2026-08-16**, candidate blob `81ddcdac` (155,610 B / 222 LF / 0 CR), raw `bec7c98c...`. **UNDER REVIEW - I APPENDED ONE LEAN HEARTBEAT ENTRY IN MY S144 AND OPENED `Review Card/Public README Step-4b-ii-a Heartbeat.md` PLUS A NEW CHAT; ROUND 1 IS WITH CODEX.** `git diff --numstat README.md` = `3 1` (banner line + one appended entry); **the append-only property is PROVED - substituting the old banner line back and deleting the entry reproduces `f3d1dd86...` byte for byte, and the write was conditioned on that reconstruction.** The entry is ~160 words, the lean shape, and it leads with the finished artifact then spends its length on the repair that had to be UNDONE. **THE PREDECESSOR `11a424b7` (154,471 B / 220 LF / 0 CR, raw `f3d1dd86...`) IS THE LAST JOINTLY APPROVED STATE - Codex S139, me S140, terminal outcome Approved with Follow-ups; that loop is CLOSED and is history, not a reason to reopen anything.** The Step-4b-i heartbeat Codex published in its S138 stands BYTE-IDENTICAL; my S139 blocking finding was repaired by an APPENDED dated correction (2026-08-15) plus the banner date, `+3/-1` in two hunks, and the unchanged regions were proved by reconstructing the predecessor byte for byte. *** THE SCOPE PRECEDENT: THE BANNER `Last updated` LINE IS IN SCOPE whenever an append makes it stale - the playbook requires the banner be current, so refusing it leaves the candidate in violation of its own playbook. *** *** AND THE LESSON: A DELETION FROM A PUBLISHED LOG IS A REWRITE OF HISTORY, however small. Codex's append-only repair was right and I withdrew mine. Lesson 237. *** **S140 APPENDED NO NEW ENTRY and that was the correct heartbeat outcome** - no artifact finished, no phase closed, and an internal review-process rule is not something a stranger would care about. THE HISTORICAL NOTE BELOW IS PRESERVED:** *** CORRECTED S137: this bullet said blob `3ab96e38` / banner 2026-08-13 after CODEX MOVED THE FILE IN ITS S135 - `git diff 40a212f 7818d96 -- README.md` is `3ab96e3..7a47907`, a `+4/-2` that bumps the banner date and appends ONE two-sentence dated entry saying the Step-4a design is approved by both agents and authorizes only the next synthetic build. I READ IT IN MY S137 GENERAL RECENT-WORK REVIEW: it is accurate, it IS the lean shape the playbook asks for, and I have NO correction to carry, so no cycle is open on it. Lesson 65 again - and again the stale clause was about ANOTHER AGENT'S change to a file I index. *** **The S130 loop closed at `3ab96e38` - Codex approved that exact blob unedited in its S130 - and that closure is history, not current state.** *(It had previously been CLOSED at blob `f00ea0d9`, Codex S122 reviewer and me S123 owner; I reopened it deliberately in S130 by publishing the heartbeat Step-2 closure earned, and it closed again in the same round.)* **CODEX'S FORWARD-ONLY PROCESS NOTE, ACCEPTED WITHOUT ARGUMENT: at 495 words / 12 sentences my S130 entry is NOT the lean one-or-two-sentence shape the playbook names. THE PUBLISHED ENTRY IS NOT REWRITTEN; FUTURE HEARTBEATS RETURN TO THE LEAN FORM.** **S131 RAISED THE STALE-SENTENCE QUESTION IN CHAT AND CODEX RULED IN ITS S131: NO SUCCESSOR ENTRY. The dated log is historical, the banner is current, and Step-3 review closure does not warrant duplicating the already-logged surface milestone; the stale-forward-sentence rule is outweighed here by the log's dated-history and lean-milestone rules. I ACCEPTED THAT RULING IN MY S132 AND THE QUESTION IS SETTLED - DO NOT RAISE IT AGAIN. S132 RAN THE CHECK AND APPENDED NOTHING: no artifact was finished, no phase closed, and a design inside an OPEN REVIEW ROUND is none of the three triggers.** My S130 append is `+3/-1`: ONE new log entry, and the `-1` is the banner `Last updated` line the playbook requires be kept current - **NO LOG ENTRY WAS REWRITTEN, and do not raise that `-1` as a log rewrite.** The entry leads with the verification surface existing and with it being CONNECTED TO NOTHING, names the three absent inputs, says every number on the screen was fabricated, describes the fixture's measured refusal to flatter the structural suite, and states that the figure set and runbook step are WITH CODEX FOR REVIEW rather than approved. **S123 THROUGH S129 EACH RAN THE CHECK AND CORRECTLY APPENDED NOTHING** - Codex ruled in its S127 that the lean public milestone is the **REVIEWED WORKING** Slot-8 surface, not the design closing and not an unreviewed build, and that condition was met in S129. *** THE DEFERRAL WAS AN INSTRUMENT, NOT A DELAY, AND IT WORKED: six sessions each ran the check, each declined for a stated reason, and the condition was written down - so the session that published did not have to reconstruct why it had been waiting. USE THAT SHAPE AGAIN. *** *** THE MEASUREMENT RULE ON THIS FILE BINDS BOTH AGENTS: PUBLISH THE FILTERED BLOB. `core.autocrlf=true` and no `.gitattributes` pin, so the working tree is CRLF and `git hash-object --no-filters` gives a THIRD value that is nobody's identity. EVERY TRACKED README BLOB HAS ZERO CR. *** I re-read the playbook in full before publishing, as in every session where the append answer was NO (105-108, 113, 115-118, 121, 123-129). **The standing rules on this file are unchanged: an entry earns its place only if a stranger would care; a program still inside an open review round is none of the three triggers; and an entry that leaves an earlier entry's forward-looking sentence standing after it goes stale is a defect, corrected by appending a dated successor and NEVER by editing the entry that went stale.** **The open debt is unchanged and now belongs to the Technical Report:** the entry reporting the capacity read's result never tells the reader that the reader-script as first written could not have read the finished sweep at all.
+- **Live-Run README (co-maintained): root `README.md` - Phase 2 / In Progress, banner **2026-08-16**, **ROUND-3 candidate blob `7342bc8c` (156,193 B / 224 LF / 0 CR), raw `1c649ed6...`**. **UNDER REVIEW - I APPENDED ONE LEAN HEARTBEAT ENTRY IN MY S144, CODEX BLOCKED TWICE (two accuracy findings in Round 1, then my S145 IN-PLACE REPAIR of the published line in Round 2), AND MY S146 ROUND-3 DELTA RESTORES THAT LINE BYTE FOR BYTE AND APPENDS A DATED CORRECTION - `2 0` AGAINST THE PUBLISHED BLOB, ZERO DELETIONS. ROUND 3 IS WITH CODEX AND IT IS THE CARD'S LIMIT.** *(Round-1 history: candidate `81ddcdac`, 155,610 B / 222 LF / 0 CR, raw `bec7c98c...`, `numstat` `3 1` = banner line + one appended entry.)* **the append-only property is PROVED - substituting the old banner line back and deleting the entry reproduces `f3d1dd86...` byte for byte, and the write was conditioned on that reconstruction.** The entry is ~160 words, the lean shape, and it leads with the finished artifact then spends its length on the repair that had to be UNDONE. **THE PREDECESSOR `11a424b7` (154,471 B / 220 LF / 0 CR, raw `f3d1dd86...`) IS THE LAST JOINTLY APPROVED STATE - Codex S139, me S140, terminal outcome Approved with Follow-ups; that loop is CLOSED and is history, not a reason to reopen anything.** The Step-4b-i heartbeat Codex published in its S138 stands BYTE-IDENTICAL; my S139 blocking finding was repaired by an APPENDED dated correction (2026-08-15) plus the banner date, `+3/-1` in two hunks, and the unchanged regions were proved by reconstructing the predecessor byte for byte. *** THE SCOPE PRECEDENT: THE BANNER `Last updated` LINE IS IN SCOPE whenever an append makes it stale - the playbook requires the banner be current, so refusing it leaves the candidate in violation of its own playbook. *** *** AND THE LESSON: A DELETION FROM A PUBLISHED LOG IS A REWRITE OF HISTORY, however small. Codex's append-only repair was right and I withdrew mine. Lesson 237. *** **S140 APPENDED NO NEW ENTRY and that was the correct heartbeat outcome** - no artifact finished, no phase closed, and an internal review-process rule is not something a stranger would care about. THE HISTORICAL NOTE BELOW IS PRESERVED:** *** CORRECTED S137: this bullet said blob `3ab96e38` / banner 2026-08-13 after CODEX MOVED THE FILE IN ITS S135 - `git diff 40a212f 7818d96 -- README.md` is `3ab96e3..7a47907`, a `+4/-2` that bumps the banner date and appends ONE two-sentence dated entry saying the Step-4a design is approved by both agents and authorizes only the next synthetic build. I READ IT IN MY S137 GENERAL RECENT-WORK REVIEW: it is accurate, it IS the lean shape the playbook asks for, and I have NO correction to carry, so no cycle is open on it. Lesson 65 again - and again the stale clause was about ANOTHER AGENT'S change to a file I index. *** **The S130 loop closed at `3ab96e38` - Codex approved that exact blob unedited in its S130 - and that closure is history, not current state.** *(It had previously been CLOSED at blob `f00ea0d9`, Codex S122 reviewer and me S123 owner; I reopened it deliberately in S130 by publishing the heartbeat Step-2 closure earned, and it closed again in the same round.)* **CODEX'S FORWARD-ONLY PROCESS NOTE, ACCEPTED WITHOUT ARGUMENT: at 495 words / 12 sentences my S130 entry is NOT the lean one-or-two-sentence shape the playbook names. THE PUBLISHED ENTRY IS NOT REWRITTEN; FUTURE HEARTBEATS RETURN TO THE LEAN FORM.** **S131 RAISED THE STALE-SENTENCE QUESTION IN CHAT AND CODEX RULED IN ITS S131: NO SUCCESSOR ENTRY. The dated log is historical, the banner is current, and Step-3 review closure does not warrant duplicating the already-logged surface milestone; the stale-forward-sentence rule is outweighed here by the log's dated-history and lean-milestone rules. I ACCEPTED THAT RULING IN MY S132 AND THE QUESTION IS SETTLED - DO NOT RAISE IT AGAIN. S132 RAN THE CHECK AND APPENDED NOTHING: no artifact was finished, no phase closed, and a design inside an OPEN REVIEW ROUND is none of the three triggers.** My S130 append is `+3/-1`: ONE new log entry, and the `-1` is the banner `Last updated` line the playbook requires be kept current - **NO LOG ENTRY WAS REWRITTEN, and do not raise that `-1` as a log rewrite.** The entry leads with the verification surface existing and with it being CONNECTED TO NOTHING, names the three absent inputs, says every number on the screen was fabricated, describes the fixture's measured refusal to flatter the structural suite, and states that the figure set and runbook step are WITH CODEX FOR REVIEW rather than approved. **S123 THROUGH S129 EACH RAN THE CHECK AND CORRECTLY APPENDED NOTHING** - Codex ruled in its S127 that the lean public milestone is the **REVIEWED WORKING** Slot-8 surface, not the design closing and not an unreviewed build, and that condition was met in S129. *** THE DEFERRAL WAS AN INSTRUMENT, NOT A DELAY, AND IT WORKED: six sessions each ran the check, each declined for a stated reason, and the condition was written down - so the session that published did not have to reconstruct why it had been waiting. USE THAT SHAPE AGAIN. *** *** THE MEASUREMENT RULE ON THIS FILE BINDS BOTH AGENTS: PUBLISH THE FILTERED BLOB. `core.autocrlf=true` and no `.gitattributes` pin, so the working tree is CRLF and `git hash-object --no-filters` gives a THIRD value that is nobody's identity. EVERY TRACKED README BLOB HAS ZERO CR. *** I re-read the playbook in full before publishing, as in every session where the append answer was NO (105-108, 113, 115-118, 121, 123-129). **The standing rules on this file are unchanged: an entry earns its place only if a stranger would care; a program still inside an open review round is none of the three triggers; and an entry that leaves an earlier entry's forward-looking sentence standing after it goes stale is a defect, corrected by appending a dated successor and NEVER by editing the entry that went stale.** **The open debt is unchanged and now belongs to the Technical Report:** the entry reporting the capacity read's result never tells the reader that the reader-script as first written could not have read the finished sweep at all.
 - **CHATS - WHERE REVIEW NOW HAPPENS.** *** THE `Phase 2 Integration and Config Freeze` CHAT IS CONCLUDED at the director's instruction (Codex S134): "all of Phase 2" is not a bounded subject. IT RECEIVES NO FURTHER WORK. Final state 2,296,416 physical bytes, sha256 `06508a94430ea91f59037a004cfc74773be3959a97fe131ec894d2a2742bf388`; its `Summary.md` carries the load-bearing state at conclusion. DO NOT APPEND TO IT. *** **The `Slot-8 Step-4a Connection-Record Design` chat is ALSO CONCLUDED** (Codex S135, on approval) with its own `Summary.md`. **THE `Slot-8 Step-4b-i Connection-Record Contract` CHAT IS ALSO CONCLUDED** (Round-3 **Approved**, me S138 / Codex S138 at the same bytes) with its own `Summary.md`; it receives no further work. **AND THE `Slot-8 Step-4b-ii-a Authentication Chain` CHAT IS CONCLUDED AS OF MY S144** (terminal outcome **Approved with Follow-ups**, Codex S143 reviewer / me S144 owner at the same exact bytes) with its own `Summary.md`, which is the INDEX to that whole review - read it rather than re-deriving. Final state 56,232 B / 855 LF / 0 CR, sha256 `4a0ec1fb75fbefe1f149d627aa3274aea38f3703022a218560ff8ff8de589544`. It receives no further work. **THE ONE OPEN OWNER-REVIEWER REVIEW IS THE NEW `Public README Step-4b-ii-a Heartbeat` CHAT AND CARD, MINE, ROUND 1 HANDED OFF IN MY S144.** *(The earlier `Public README Step-4b-i Heartbeat` chat and the `Review Boundary and Convergence` chat are both CONCLUDED with `Summary.md` files.)* **THE NEXT CHAT TO EXIST IS THE 4b-ii-b SUBJECT CHAT, WHICH I OPEN WHEN I HAND OFF THAT BUILD - WRITE ITS REVIEW CARD BEFORE THE HANDOFF.** READ EVERY TAIL BEFORE ANY WORK.** *** THE APPEND DISCIPLINE STILL BINDS ON EVERY CHAT, and it was bought by real failures. MY APPEND ROUTINE READS THE ENTIRE PRIOR FILE, REFUSES UNLESS ITS SHA-256 MATCHES, WRITES PREFIX-THEN-PAYLOAD, AND RE-READS TO ASSERT BOTH HALVES. USE IT. Codex's S119 proved why: its patch verified and applied the COMPLETE EOF context and STILL normalised fifteen CRLF endings, so a `+99/-0` content diff was honestly clean while the byte-prefix claim was FALSE. A PATCH IS DEFINED OVER LINES; THE CLAIM IS DEFINED OVER BYTES; ON A MIXED-EOL FILE THOSE ARE NOT THE SAME STATEMENT. And lesson 206: A PATCH ANCHOR IS A SEARCH, and a search over a repeated string returns its FIRST match - authenticating the file's digest constrains what the file IS, never where the write GOES. *** *** THE S117 RULE: a wrong number found inside my own turn may be repaired by rewriting my own payload onto a re-asserted byte-identical prefix ONLY BEFORE A COMMIT OR A HANDOVER. Afterwards the answer is A NEW APPENDED CORRECTION and nothing else. READ THE OTHER AGENT'S REPORT BEFORE ASSIGNING A FINDING LETTER, not only its chat turn (lesson 192). *** *** THE CROSS-AGENT DIGEST CONVENTION STILL STANDS and is non-blocking; an absent prior digest is not a fault and not a blocker. *** **If a judgment comes back contested and one exchange does not settle it from source, ESCALATE to the director rather than trade turns - and under the superseding method the round limit and the five terminal outcomes are the mechanism for that.** **DO NOT RE-OPEN:** the payload-boundary extension document, the five S62 edits, the unified Option-B rule, the measure-first ruling, the payload analyzer/tests, the role-coverage states, the readback ruling, `.gitattributes`, Step 25, the screen result, A2, Codex's two S77 rulings, its four S78 rulings, its S80 ruling on the forty escapes, its S81 Finding-G ruling, its S83 rulings, the closed attribution rung, the closed dev-fit contract, the closed trainer, the frozen rung-2 design, the closed rung-2 module, executable, plan, run and two raw artifacts, the closed public-entry loops, the S128 ruling that no EOL pin is added for `*.py` (S130's `*.sha256` pin does not contest it - different premise, and measured; **but see the head block's forward item 1, where step 5's runtime hashing of `cable_mechanics.py` ends that ruling's premise**), and every Slot-8 loop closed at Steps 1, 2, 3 and 4a. *(Per-session chat byte histories pruned S113 and again S136; they are in Git and in `Session Summaries/`.)*
 - **Monitoring chat:** `chats/Claude-Codex-Human/Transcript Order Monitoring/...- Active.md` - **S144 ADDED ONE ENTRY, FOR THE SAME REASON S130 DID: CODEX REPORTED A REAL APPEND-ORDER FAULT AGAINST ITSELF.** Post state 52,291 B / 900 LF / 161 CR, sha256 `cc79e6049a253663a756b2d9f2c9912f1a8b1dcfe6d84e471483b3777fd57d1a`; my append `+3,711 B` onto Codex's `3759766c...` at 48,580 B, prefix and payload both asserted. **What I posted is the monitor's INDEPENDENT confirmation against primary Git objects, and it confirmed every number Codex published:** my Round-3 state 38,317 B / 578 LF / 0 CR / `8f7b3a9b...`; `git diff --numstat` on the technical chat = **`106 0`**, two hunks at `+193` (47 lines) and `+626` (59 lines); deleting exactly those two ranges reproduces my blob BYTE FOR BYTE; the first 38,317 bytes of the current file hash to `0fb95f85...`, the number Codex published as proof the entry landed before the old boundary; both headers occur exactly once; Codex is physically last. *** THE TRANSFERABLE POINT IS ONE STEP TO THE SIDE OF LESSON 206 RATHER THAN BELOW IT: **A MIS-ANCHORED APPEND IS EXACTLY RECOVERABLE IF AND ONLY IF IT IS PURELY ADDITIVE**, so the monitor reads the DELETION count first, then placement, then header counts, then who is physically last. A `0` there means the transcript is intact and the fault is placement; anything else means published bytes moved. Codex's S119 recurrence normalised fifteen CRLF endings and had no such property. Lesson 255. *** *** AND THE HALF THAT IS NOT A FAILURE: THREE CONSECUTIVE RECURRENCES HAVE NOW BEEN CAUGHT IN-TURN BY THE CAUSING AGENT'S OWN POST-WRITE PREFIX CHECK, and Codex's append-only repair - leave the bad entry, append a dated correction at the physical tail, name which copy is operative - is what PRESERVED the evidence that the fault was additive at all. *** **THE HISTORICAL S130 ENTRY IS PRESERVED BELOW.** **S130 ADDED ONE ENTRY AND IT HAD A REASON: CODEX REPORTED A REAL APPEND-ORDER FAULT AGAINST ITSELF.** Post state 46,906 B / 811 LF / 161 CR, sha256 `28fe384d9f6753d43d5fc9fd40b87323d14cc374027fd0b2b9ccddce47e9c2ce`, my append `+65/-0`, prior `0f738373...` at 42,714 B (Codex's own disclosure, which it posted first). What I posted is the monitor's INDEPENDENT confirmation against primary Git objects: two addition-only hunks `+118/-0`; **deleting exactly the 72 inserted lines and the 46 appended lines from Codex's blob reproduces my S129 blob byte for byte**; the 2,214,481-byte intermediate prefix digest `94621642...` reproduces; both headers occur exactly once; Codex is physically last. *** THE TRANSFERABLE POINT IS ONE RUNG BELOW THE S120 ONE: this time the anchor was `-- Claude` plus a separator, a string that occurs at almost every turn boundary. A PATCH ANCHOR IS A SEARCH, AND A SEARCH OVER A REPEATED STRING RETURNS ITS FIRST MATCH. Authenticating the file's digest beforehand does not constrain where the anchor lands - a digest constrains what the file IS, an anchor constrains where the write GOES. Lesson 206. *** *** I ALSO RECORDED THE HALF THAT IS NOT A FAILURE: Codex's own post-write assertions caught it in the same turn, on three independent post-conditions, before closeout. TWO CONSECUTIVE RECURRENCES HAVE BEEN DETECTED AND DISCLOSED BY THE AGENT THAT CAUSED THEM. *** *(S121-S129 and S131 each added nothing, correctly: no fault occurred in any of them and a clean check is not a reason to post. S131's own single append was verified clean - one tail hunk, prefix and payload both asserted - and my in-turn timezone correction is not an order fault, so it belongs in the human report and not here.)* *** THE STANDARD: an entry needs a reason — a fault, or a proposal to close. A fault reported by the other agent IS a reason; a clean check is NOT, and belongs in the human report instead. *** **DO NOT EXTEND A STREAK NUMBER FROM MEMORY, AND DO NOT COMPARE A HEADER COUNT ACROSS REBUILDS** — it is a property of the recognizer, not of the transcript; this project has had a remembered count wrong five times running. *(Per-session history pruned S113; it is in Git and in `Session Summaries/`.)*
 

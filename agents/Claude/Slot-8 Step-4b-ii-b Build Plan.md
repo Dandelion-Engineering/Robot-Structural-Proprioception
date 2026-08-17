@@ -181,3 +181,129 @@ before adding a test: two of the S144 survivors were, and the instrument that de
 the capacity selection, the threshold calibration, the established result and the
 geometry-validation artifact. **A closed review loop authorizes the next step only, and never a
 run.**
+
+---
+
+## Appendix A — the row-18 forward map, measured at source (Claude Session 146)
+
+*Appended 2026-08-16, Session 146. Section 6 sequences the coherent fixture first because row 18 is
+the row most likely to move the design. This appendix is the part of that row that can be settled by
+reading the producer rather than by writing code, so the build session starts from measured numbers
+instead of re-deriving them. **Everything here was read out of the packet this session; nothing is
+remembered.** The design at blob `032db166` remains the authority.*
+
+### A.1 The chain, as the producer actually builds it
+
+Read from `scripts/utils/cable_mechanics.py` (`CableModelConfig`, `model_xml`,
+`cable_body_names`, `extract_deformation_coordinates`) and `config/draft-config-v0.1.json`
+(`values.plant`):
+
+| quantity | value | where it comes from |
+|---|---|---|
+| `point_count_per_link` | **17** | `values.plant.point_count_per_link` |
+| bodies per link | **16** | `cable_body_names` returns `point_count - 1` names |
+| internal (deformation) bodies per link | **15** | `extract_deformation_coordinates` iterates `body_ids[1:]` |
+| `n_def` | **90** | `values.plant.n_def`; and 2 links × 15 bodies × 3 components = 90 ✔ |
+| segment length | **0.025 m** | `link_length_m` 0.4 ÷ (`point_count` − 1) 16; `half_segment` in `model_xml` is 0.0125 |
+| `model_id` | `mujoco-cable-rod-development-candidate` | `values.plant.model_id` |
+| base site | model `(0, 0, 0.5)` | `<site name="base_ref" pos="0 0 0.5">`, and the L1 composite `offset` is the same point |
+| L2 composite offset | model `(0.4, 0, 0.5)` | `offset="{link2_start} 0 0.5"`, `link2_start = link_length_m` |
+
+The arithmetic closes: 90 = 2 × 15 × 3, and 0.4 = 16 × 0.025. **`n_def` and the segment length are
+not free parameters of the fixture** — a coherent fixture that picks different ones is not a
+synthetic instance of this chain, and `render_geometry.links` would then describe a model the
+producer digest does not name.
+
+### A.2 What `deform_coords` is, component by component
+
+`extract_deformation_coordinates` walks `handles.l1_body_ids` then `handles.l2_body_ids`, skips
+`[0]` in each (the first L1 body carries the shoulder ball joint, the first L2 body the elbow-side
+free pose — neither is an internal DOF), requires exactly one ball joint per remaining body, and
+concatenates `quaternion_to_rotation_vector(qpos[adr:adr+4])` for each. So:
+
+- the emitted order is **L1 internal bodies 1–15, then L2 internal bodies 1–15**, ascending along
+  each link;
+- triplet *k* (0-based, components `3k, 3k+1, 3k+2`) belongs to internal body *k*+1 of link
+  `L1 if k < 15 else L2`;
+- each triplet is a **log map (rotation vector), not a quaternion and not an Euler triple**.
+
+That ordering is exactly what `render_geometry.links[*].deform_triplets` has to state, "in the same
+link/body order `extract_deformation_coordinates` emits them" (design 3.5). **Write the mapping into
+the fixture from this rule, and pin it with a test that fails if the two links' blocks are swapped**
+— a swap is invisible to any shape or dtype check, and it is the one error that produces a
+plausible-looking centerline.
+
+### A.3 Which component advances the planar tangent, and the sign question 4b cannot settle
+
+Both actuators are `<motor … gear="0 0 0 0 1 0">`, i.e. torque about the **model y axis**, so the
+motion the plant is driven through is planar in the model **x–z** plane. The rotation-vector
+component that advances a planar tangent is therefore the **y component — index 1 of each triplet**,
+and the projection design 3.5 names is model `x → scene x`, model `z → scene y`.
+
+**The sign is a convention, and it is the one thing here I am deliberately not asserting.** A
+positive rotation about `+y` carries `+x` toward `−z`, so the scene-frame tangent angle advances by
+`−θ_y` under the obvious reading of that projection. I have not measured that against a MuJoCo
+rollout and **must not**, because V18 forbids the adapter importing `mujoco` and this session opened
+no model. The honest structure is:
+
+1. `render_geometry.planar_convention.rotation_vector_component` and `.projection` **declare** the
+   component and the sign; the adapter applies what is declared and invents nothing.
+2. The coherent fixture generates its `q_true`, `deform_coords`, centerline and `true_task_output`
+   under **one** declared convention, which is what proves the *derivation logic* — the fixture
+   cannot and does not prove the convention matches MuJoCo.
+3. **A sign error against real data is precisely the class the geometry-validation artifact's
+   maximum-deviation field catches**, because a flipped tangent puts the derived distal point
+   centimetres away, not nanometres. That artifact does not exist and 4b does not build it, so this
+   question is not open inside 4b — it is *assigned*, and to the right place.
+
+Say that in the fixture's own geometry-validation artifact as well: a fixture tolerance
+authenticates fixture bytes and manufactures no real-data number.
+
+### A.4 The forward map the fixture and row 18 must share
+
+One map, used by the generator to build the data and by the adapter to check it — the same shape
+`_forward_kinematics` already has in `verification_scene.py`, but over the real chain:
+
+```
+angle ← q_true[0]                       # first L1 body's absolute tangent, scene frame
+point ← base_xy_m                       # (0.0, 0.5) for this producer
+for link in (L1, L2):
+    if link is L2:
+        angle ← distal L1 tangent + q_true[1]      # q_true[1] is relative (design 3.5)
+    for body b in 0..15:
+        emit point
+        point ← point + segment_lengths_m[b] * (cos angle, sin angle)
+        if b is an internal body:
+            angle ← angle + s * deform_triplet(link, b)[1]     # s is the declared sign
+emit point                              # the distal point compared to true_task_output
+```
+
+Three properties the build must hold, and each is a test:
+
+1. **`emit` count.** The centerline is `[T, N, 2]` and `N` is fixed by the chain, not chosen — one
+   point per body plus the distal point. A fixture that emits a different `N` will still satisfy
+   `verification_scene`'s `[T,N,2]` shape gate, which only requires `N ≥ 2`. **Pin `N` as a
+   literal**, per lesson 229: a test written as `len(links) * 16 + 1` moves with the mutation.
+2. **`q_true[1]` is relative.** Applying it as an absolute orientation produces a centerline that is
+   continuous, plausible and wrong. The separating fixture case is a non-zero L1 deflection with
+   `q_true[1] = 0`: under the relative convention L2 continues straight on from L1's distal tangent,
+   under the absolute one it snaps back to the base frame.
+3. **The distal point is `true_task_output` by construction** in the fixture, to
+   `CENTERLINE_TASK_OUTPUT_TOL_M = 1.0e-9` — that constant stays the fixture's and does not move
+   (design 4.6). The adapter's own tolerance still comes only from the authenticated
+   `distal_tolerance_m`.
+
+### A.5 Exit 15, re-measured this session
+
+`utils.verification_scene.EXIT_CODES` drives `X_SCENE_OK → 0` and the twelve refusals to **3 … 14
+contiguously**; **15 is free** and no existing value moves. Measured by importing the live table on
+this checkout, not read off the design. Adding `X_GEOMETRY_UNSUPPORTED: 15` is purely additive.
+
+### A.6 One correction carried forward from Codex's Session-145 cross-review
+
+The plan's "Why this file exists" block calls 4b-ii-b "the only unbuilt work in the project." Codex flagged
+that as a non-blocking wording error and it is right: 4b-ii-b is the only unbuilt **connection-adapter
+half**. Steps 4c-4f are also unbuilt — they are blocked rather than startable, which is a different
+thing from built. The plan's own final section already says so. The sentence is left standing and
+this is its forward correction, in the same instrument this session had to learn to use on the
+public log.

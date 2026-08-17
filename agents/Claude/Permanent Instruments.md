@@ -3791,6 +3791,50 @@ correction applied.)*
   than naming a finding; when you are re-reviewing the reviewer, CARRYING costs a round less than
   reopening.
 
+257. **[S146] AN APPEND-ONLY RULE HAS NO REVIEW-STATE EXCEPTION - THE PROPERTY IS WHAT THE PAGE HAS
+  SHOWN, NOT WHAT A REVIEW HAS SETTLED.**  In S145 I repaired a running-log entry IN PLACE on the
+  reading that forward-only discipline attaches to an entry whose review has *closed*, and this
+  one never had.  Codex blocked it and was right on an axis I had not looked at: the Round-1 bytes
+  were committed and pushed in my own S144 and sat on a public remote, so a reader had seen a line
+  that then existed nowhere on the page.  *** REVIEW STATE CANNOT REACH BACKWARDS THROUGH
+  PUBLICATION.  Before choosing between an in-place repair and a dated successor, the question is
+  not "is this candidate approved?" but "HAS ANYONE BEEN ABLE TO SEE THESE BYTES?" ***
+  AND THE PART THAT MAKES IT A LESSON RATHER THAN A CORRECTION: THE RULE I BROKE WAS ONE I HAD
+  WRITTEN MYSELF, IN THE SAME CARD, TWO SCREENS ABOVE THE VIOLATION - acceptance criterion 4 says
+  the repair is "a dated successor entry, never an edit to the entry that went stale."  I wrote it
+  about a stale *forward-looking* sentence and did not apply it to the plainer case of an entry
+  that was simply *wrong*.  *** A RULE YOU WROTE FOR A NARROW CASE IS THE FIRST PLACE TO LOOK WHEN
+  THE BROAD CASE ARRIVES; THE AUTHOR IS THE READER LEAST LIKELY TO NOTICE THAT IT GENERALISES. ***
+  Companion to 237 (on an append-only artifact the "minimal" repair is a rewrite of history) and
+  to 209 (a ruling carries its premise).
+
+258. **[S146] ON AN APPEND-ONLY ARTIFACT, MEASURE THE DELTA AGAINST THE *PUBLISHED* STATE, NOT
+  AGAINST `HEAD`.**  My Round-3 candidate reads `3 1` against `HEAD` - which was the superseded,
+  never-approved Round-2 state - and **`2 0` against the blob that was actually published**.  The
+  second number is the one the append-only property is a claim about, and it is the one that says
+  the repair is a purely additive successor rather than another rewrite.  Quoting only the `HEAD`
+  number would have understated the fix while looking like more work.  *** ASK WHICH STATE THE
+  PROPERTY UNDER REVIEW IS ABOUT, AND DIFF AGAINST THAT ONE - `HEAD` IS A CONVENIENCE, NOT AN
+  AUTHORITY. ***  Direct extension of 255 (read the deletion count first): 255 says which number to
+  read, 258 says which pair of states to read it between.
+
+259. **[S146] A CONVENTION THE FIXTURE DECLARES IS PROVED BY THE FIXTURE ONLY AS *LOGIC*, NEVER AS
+  *TRUTH* - AND KNOWING WHICH INSTRUMENT SETTLES IT IS HALF THE DESIGN.**  Deriving the row-18
+  forward map from the producer source gave every number the build needs (16 bodies per link, 15
+  internal, 90 = 2x15x3, 0.025 m segments, the L1-then-L2 triplet order, the y component as the
+  planar advance) - and one thing it could not give: THE SIGN.  A positive rotation about `+y`
+  carries `+x` toward `-z`, so the scene-frame tangent plausibly advances by `-theta_y`, but I
+  cannot measure that without importing `mujoco`, which V18 forbids the adapter and which this
+  session had no cause to do.  *** THE CORRECT MOVE IS NOT TO GUESS AND NOT TO STALL: THE RECORD
+  *DECLARES* THE CONVENTION, THE COHERENT FIXTURE GENERATES AND CHECKS UNDER ONE DECLARED
+  CONVENTION (which proves the DERIVATION), AND THE GEOMETRY-VALIDATION ARTIFACT'S
+  MAXIMUM-DEVIATION FIELD IS WHAT WOULD CATCH A FLIPPED SIGN, BECAUSE A FLIP MISSES BY CENTIMETRES
+  RATHER THAN NANOMETRES. ***  So the question is not open inside 4b, it is ASSIGNED - which is a
+  different and much safer state than "unresolved".  Same shape as 232 (the instrument that decides
+  a class is a fresh checkout, not another test): name the instrument that can settle it, and if
+  that instrument is not available in this round, say which round owns it.
+
+
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 
 ```text

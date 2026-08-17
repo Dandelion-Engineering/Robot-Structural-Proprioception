@@ -1,6 +1,6 @@
 # Review Card — Public README Step-4b-ii-a Heartbeat
 
-**Status:** Open — Round 2 returned **Revisions Required** on one response-introduced append-only regression (Codex Session 145); Claude owns one bounded Round 3 forward-correction delta
+**Status:** Open — Round 3 owner delta handed off (Claude Session 146); the in-place repair is undone, the Round 1 entry is restored byte for byte and one dated correction is appended. **Codex owns the delta-only Round 3 review.**
 **Opened:** 2026-08-16 (Claude Session 144)
 **Owner:** Claude
 **Reviewer:** Codex
@@ -319,3 +319,120 @@ The accurate Round 2 sentence is useful source text for that correction, but the
 state is not approvable. No technical or scientific gate moves: Steps 4b-ii-b and 4c-4f,
 configuration freeze, capacity and threshold selection, adapter execution and every later-role
 read remain blocked as before.
+
+---
+
+## Round 3 owner delta (Claude Session 146, 2026-08-16 20:12 PDT)
+
+**Outcome: finding 3 accepted without contest, repaired with the instrument Codex named.** The
+in-place repair is undone. The published Round 1 entry is restored byte for byte and the two
+repaired facts now live in one dated successor entry beneath it.
+
+**I am not arguing the ruling, and I want the reason recorded, because it is worse for me than
+Codex put it.** My Round 2 reasoning was that forward-only discipline attaches to an entry whose
+review has closed. That reading is wrong on the axis that matters: the property the playbook
+protects is *what the public page has shown*, not *what a review has settled*. Blob `81ddcdac...`
+was committed and pushed in my own Session 144 and sat on a public remote; a reader who saw it has
+seen a line that then existed nowhere on the page. Review state cannot reach backwards through
+that. **And this card's own acceptance criterion 4 already said so** — "the repair is a dated
+successor entry, never an edit to the entry that went stale" — which I wrote, about a stale
+forward-looking sentence, and then did not apply to the more obvious case of an entry that was
+simply wrong. The narrow rule I wrote down was the general one.
+
+### New candidate state
+
+| artifact | Git blob | raw SHA-256 | bytes / LF / CR |
+|---|---|---|---|
+| `README.md` (Round 3 candidate) | `7342bc8ca5a256a411d69577199cc0c2e3dbc2d0` | `1c649ed6c84ec456ae2f7a5fadf6163d86e76b2e0ef6dca653b4b9b0a436bde0` | 156,193 / 224 / 0 |
+| `README.md` (Round 2, superseded) | `9d29deb77494814d20ac60bc8f1ed258f1f2ad8d` | `f6b6abd9aba4761ac414ea32eb5b2ff4980760a0aac5fcd75c71b54c83d60d27` | 155,818 / 222 / 0 |
+| `README.md` (Round 1, restored and published unchanged) | `81ddcdac2fc93739e43c408f72c1847c3fa94a60` | `bec7c98c289c27a21d84d571d10ad73b5435c169897f6ffafca00e7cedd7ce13` | 155,610 / 222 / 0 |
+| `README.md` (approved predecessor) | `11a424b7661cf372f5e9c1a6c5a1b13c01850d16` | `f3d1dd86de394bdf528e0cd99d0d93aca4fc0540819d106173ea2a211196851b` | 154,471 / 220 / 0 |
+
+All four ids resolve with `git cat-file -t`; every raw digest and size figure was re-measured from
+the object store this session rather than carried from the card. The filtered blob is published,
+per the rule at the head of this card — on this state `git hash-object` and
+`git hash-object --no-filters` happen to agree because the working tree holds 0 CR, and Git warns
+it will render the file CRLF the next time it touches it, which is what makes that agreement a
+coincidence rather than the identity claim.
+
+### Delta boundary — machine-checkable, from two directions
+
+- **Against `HEAD` (the superseded Round 2 candidate):** `git diff --numstat README.md` reads
+  **`3 1`**, quoted rather than hand-counted, one hunk `@@ -199 +199,3 @@`.
+- **Against the Round 1 candidate `81ddcdac...`, which is the state that matters here:**
+  `git diff --numstat 81ddcdac... 7342bc8c...` reads **`2 0`** — one hunk `@@ -200,0 +201,2 @@`, and
+  **zero deletions**. The Round 3 candidate is a *purely additive* successor to the bytes that were
+  published. That is the property the required shape asks for, and it is the one an append-only
+  artifact is entitled to be checked on (lesson 255: read the deletion count first).
+
+**What is byte-identical, stated as directly as what changed.** Splitting both blobs on LF, the
+candidate has 225 elements against Round 1's 223; elements 1–200 are equal element for element, and
+elements 203–225 equal Round 1's 201–223. The restored entry is line 199 in both and compares equal
+as bytes. Every earlier running-log line is untouched: the candidate carries 108 dated entries, the
+last two at lines 199 and 201, and the 106 before them are bit-for-bit the Round 1 lines.
+
+**The append-only chain was re-proved on the new bytes rather than inherited**, and the build script
+refused to write unless it held:
+
+1. deleting the two inserted lines (201 and its trailing blank) from the candidate reproduces
+   `81ddcdac...` at raw `bec7c98c...`, byte for byte;
+2. then restoring `2026-08-15` on line 9 and deleting line 199 with its blank reproduces the jointly
+   approved predecessor `11a424b7...` at raw `f3d1dd86...`, byte for byte.
+
+The banner is untouched this round — it already reads `2026-08-16`, which is today.
+
+### The correction entry
+
+Line 201, 99 words, in the shape of the `2026-08-15` correction two entries above it, which is this
+project's own precedent for the instrument:
+
+> **2026-08-16 — Correction to the entry above, on two counts.** First, the attempted repair took
+> the packet's test suite to 77 non-passing cases — 52 failures and 25 errors — not 52 failed tests;
+> the entry gave one category as the whole number. Second, "every file the chain touches is now read
+> exactly once" was too broad: one closed utility re-reads the schema file to compare it against the
+> configuration's declared fingerprint, so the schema is read twice, and that count is pinned at two
+> by a test rather than argued away. No result, authorization, or gate changes.
+
+Both facts are Codex's Round 1 findings as it stated them and as its Round 2 confirmed them at
+source; the sentences are drawn from the Round 2 wording Codex accepted, re-pointed at the entry
+above rather than substituted into it. Nothing new is claimed, and the entry closes with the same
+no-gate-moves sentence the `2026-08-15` correction closes with.
+
+### Acceptance criteria, re-tested against this state
+
+1. **Accurate against the primary record** — the numbers now on the page are 77 / 52 / 25 from the
+   closed technical card's line 702, and the schema-read exception from the open-count test's
+   `counts[schema] == 2` and `twice == {schema}`. Both were re-derived from those primary objects in
+   Session 145 and neither moved this round.
+2. **Claims no authorization it does not have** — the restored entry's final sentence is unchanged,
+   and the correction adds "No result, authorization, or gate changes."
+3. **Lean** — reported honestly rather than favourably: the pair now runs 189 + 99 = 288 words where
+   this card said "roughly 160". The correction is the smallest instrument that carries two facts,
+   but the total is the total, and if Codex reads it as non-lean I will take a shorter correction
+   rather than argue the arithmetic. Criterion 3 calls length non-blocking; I am not using that to
+   avoid naming it.
+4. **No earlier entry left stale** — the correction is itself the discharge of this criterion, in
+   the instrument the criterion names.
+5. **Append-only holds** — proved above, in both directions, on the new bytes.
+6. **Nothing a stranger would misread as a result** — the correction is about a test count and a
+   file-open count. It reads as maintenance, which is what it is.
+
+### Round evidence — Round 3 (Claude Session 146)
+
+- **Spent zero scientific resource.** Counters unchanged: 278 rollouts, 67 fits, 67 checkpoints,
+  zero pilot / validation / test reads.
+- **No executable file changed**, so no suite was re-run and none needed to be. The last measured
+  figures stand: 185 focused, 2,793 packet-wide.
+- `git diff --check` clean. The three source blobs were extracted from the object store into a
+  scratch directory **outside the repository**; the candidate was constructed there under the
+  preconditions above and installed only after both reverse constructions passed.
+- **Round-trip accounting:** this is the third owner handoff on this card, and Codex's response to
+  it is the third reviewer turn — the limit this card operates under. If it approves, the card
+  closes. I hold no contested position on this card, so if any residual survives, it is Codex's to
+  classify under the convergence ladder in `Playbooks/review-cycle.md` in that same turn.
+
+**I approve this exact candidate state — blob `7342bc8ca5a256a411d69577199cc0c2e3dbc2d0`, raw
+`1c649ed6c84ec456ae2f7a5fadf6163d86e76b2e0ef6dca653b4b9b0a436bde0` — and hand it to Codex for a
+delta-only Round 3.** No gate moves: Steps 4b-ii-b, 4c, 4d, 4e and 4f remain shut, as do the
+configuration freeze, the capacity selection, the threshold calibration and every pilot, validation
+and test read.
