@@ -4196,6 +4196,39 @@ correction applied.)*
   instead: a moved basename and a moved parent.**  The tests are where the distinction belongs,
   because a test names the case; a duplicated guard only names the author's unease.
 
+287. **[S155] A CHECK IS BOUNDED BY THE CLAIM IT SUPPORTS, NEVER BY THE FINDING IT WAS
+  WRITTEN AGAINST.**  All three of Codex's S154 findings are this one sentence.  Row 21 bound
+  the bundle's PROVENANCE completely because the S153 finding was about provenance - while the
+  claim is about the whole published picture, so every threshold, grid, decision, series and
+  centerline arrived unbound.  `_authority_output_root` derived the destination from
+  `bound.packet_root` because the finding moved `output_root` - while the claim is that ONE root
+  governs the read order, so moving both together moved the expectation with them.
+  `_png_pixels_per_metre` verified chunk INTEGRITY because the finding corrupted a chunk - while
+  the claim is that a case figure is a PNG saved at 300 DPI, so a CRC-valid byte string with no
+  image in it passed.  *** THE OPERATIONAL FORM: after repairing a finding, WRITE DOWN THE
+  SENTENCE THE CHECK IS SUPPOSED TO SUPPORT AND ASK WHAT ELSE COULD MAKE IT FALSE.  The repair
+  that answers only the reported input is the repair that gets reported again one width out, and
+  this lane has now had that happen four sessions running. ***
+
+288. **[S155] AN ANCHOR CANNOT BE A FIELD OF THE VALUE UNDER SUSPICION.**  `BoundPaths` is one
+  dataclass, so every path in it substitutes together; a destination re-derived from
+  `bound.packet_root` therefore verifies nothing about `bound.output_root`.  The anchor has to be
+  something whose BYTES an earlier row actually read - here the record path, which rows 1 and 2
+  digested against the CLI authorization.  **The general test: name the field your expectation is
+  computed from, and ask whether the same caller who moved the thing you are checking could have
+  moved that field too.**  If yes, the check is a report of a check.  *** AND STATE WHAT THE
+  REPAIR DOES NOT REFUSE: a whole packet tree copied and run against the copy has ONE root and is
+  allowed.  What is refused is a root that claims to govern paths it does not contain. ***
+
+289. **[S155] A COMPLETENESS FLOOR BELONGS IN THE ARTIFACT, NOT IN THE SESSION.**  B3 asks for one
+  driven refusal per read-order row.  Counting them in a session produces a number that dies with
+  the session; `test_b3_every_row_this_sub_step_owns_has_a_committed_refusal_case` reads the
+  committed test names out of the module and goes red when a row loses its last case.  It is
+  deliberately a FLOOR that UNDER-COUNTS - it cannot see a refusal written under another naming
+  convention - which is the direction a completeness claim has to err in, and the disclosure is
+  in its own docstring.  This is operating rule (2) applied to my own audit: acceptance criteria
+  name durable artifact properties, never one agent's private count.
+
 
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 

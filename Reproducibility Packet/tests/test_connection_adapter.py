@@ -6389,6 +6389,16 @@ def _malformed_png(kind: str) -> bytes:
     datastream ends, or the file states its resolution twice. Codex's Session-153
     review drove the first two through the previous parser: one was **accepted** as
     300-DPI evidence and the other escaped as a raw `IndexError`.
+
+    **The second group is structure rather than integrity, and it is Codex's
+    Session-154 finding 3.** Every one of those cases has valid chunk bounds and valid
+    CRCs and is still not a figure: no image header, two of them, a header of the wrong
+    fixed length, no image data at all, a resolution declared after the image data the
+    format requires it to precede, an interrupted `IDAT` run, and a non-empty `IEND`.
+    Measured before the repair, `signature + pHYs + IEND` returned `(11811, 11811)`
+    while a strict decoder refused the same bytes as `UnidentifiedImageError`; my own
+    re-drive added the no-`IDAT` and `pHYs`-after-`IDAT` cases, which were accepted
+    too.
     """
 
     import zlib
@@ -6418,6 +6428,38 @@ def _malformed_png(kind: str) -> bytes:
         return signature + header + _png_chunk(b"pHYs", body + b"\x00") + tail
     if kind == "non-metre-unit":
         return signature + header + _png_chunk(b"pHYs", body[:8] + bytes([0])) + tail
+    data = _png_chunk(b"IDAT", zlib.compress(b"\x00\x00"))
+    end = _png_chunk(b"IEND", b"")
+    if kind == "no-image-header":
+        return signature + phys + end
+    if kind == "second-image-header":
+        return signature + header + header + phys + tail
+    if kind == "wrong-image-header-length":
+        return (
+            signature
+            + _png_chunk(
+                b"IHDR",
+                (1).to_bytes(4, "big") + (1).to_bytes(4, "big") + bytes([8, 0, 0, 0]),
+            )
+            + phys
+            + tail
+        )
+    if kind == "no-image-data":
+        return signature + header + phys + end
+    if kind == "resolution-after-the-image-data":
+        return signature + header + data + phys + end
+    if kind == "interrupted-image-data":
+        return (
+            signature
+            + header
+            + phys
+            + data
+            + _png_chunk(b"tEXt", b"key\x00value")
+            + data
+            + end
+        )
+    if kind == "non-empty-iend":
+        return signature + header + phys + data + _png_chunk(b"IEND", b"x")
     raise AssertionError(f"unknown malformed-PNG case {kind!r}")
 
 
@@ -7088,6 +7130,630 @@ def test_row21_refuses_a_bundle_state_that_is_not_the_authenticated_authority(
         assert not root.exists()
 
 
+# --------------------------------------------------------------------------- #
+# B3 -- one refusal case per row of section 4.1, stated as a property of this file.
+# --------------------------------------------------------------------------- #
+def test_b3_every_row_this_sub_step_owns_has_a_committed_refusal_case() -> None:
+    """B3's completeness, written as an artifact property rather than an audit count.
+
+    Sub-step 4b-ii-b owns rows 13 through 21, and B3 asks for one driven refusal per
+    row. A count taken in a session is that session's private number and disappears
+    with it; this reads the committed test names out of the module itself, so a row
+    that later loses its last refusal case turns this red instead of leaving a hole
+    nobody is looking for.
+
+    **It is a floor, not a census.** Naming a test `test_rowNN_refuses_...` is the
+    convention this file has used since row 13 was built, and this requires the
+    convention to have been followed at least once per row. It cannot see a refusal
+    test written under some other name, so it under-counts rather than over-counts --
+    which is the direction a completeness floor has to err in.
+    """
+
+    owned = range(13, 22)
+    names = [name for name in globals() if name.startswith("test_row")]
+    assert names, "the naming convention this reads would then be gone"
+    missing = [
+        row
+        for row in owned
+        if not any(name.startswith(f"test_row{row}_refuses") for name in names)
+    ]
+    assert missing == [], f"rows with no committed refusal case: {missing}"
+
+
+# --------------------------------------------------------------------------- #
+# B2 -- the accept-side census.
+#
+# Every refusal test in this file says what one row rejects. None of them says the row
+# *produced* anything, and a chain of rows that all refuse correctly and establish
+# nothing would satisfy the whole refusal set. B2 is the other half: one pass through
+# rows 1 to 21 over the coherent three-case menu, asserting each applicable row's own
+# output. It is deliberately one test rather than twenty-one, because what it claims is
+# that the rows compose -- that each one's output is the next one's input on a single
+# run -- and twenty-one separate tests would each re-establish the chain and none of
+# them would claim that.
+# --------------------------------------------------------------------------- #
+def test_b2_every_applicable_row_of_section_4_1_produces_its_own_output(
+    harness: Harness,
+) -> None:
+    """The accept-side pass that makes the refusal set mean something.
+
+    Row by row, on one run: the record identity rows 1 and 2 authenticated; the paths
+    row 3 bound, including the destination row 21 will insist on; the schema and config
+    digests row 4 took before parsing either; the source artifacts row 5 resolved; the
+    manifest census and both audits row 6 agreed on; the role indexes, payload set and
+    checkpoint digests rows 7 to 12 established; the two-arm series rows 13 to 17 agreed
+    about; the centerlines row 18 derived; the state row 19 computed; the menu row 20
+    assembled; and the tree row 21 published.
+
+    **Rows 1 to 12 are asserted through the value they produced rather than re-driven**,
+    because `authenticate_connection` is their one composition and driving them
+    separately here would be a second composition -- exactly what
+    `test_the_entry_point_is_the_only_composition_of_the_read_order` exists to forbid.
+
+    Row 13 is the one row with nothing to assert on the accept side beyond the shape
+    rows 14 to 17 depend on, and that is by construction rather than by omission: it
+    cannot fail on the production path, which is written down rather than hidden.
+    """
+
+    declared = [case_id for case_id, *_ in MENU_CASES]
+    with _publication_root(harness) as root:
+        with _three_case_menu(harness) as arguments:
+            connection = authenticate_connection(**arguments)
+
+            # Rows 1-2: the record, and the identity the chain authenticated.
+            assert connection.record.record_label == RECORD_LABEL
+            assert connection.record_sha256 == arguments["connection_record_sha256"]
+            assert connection.record.authority == DEVELOPMENT_ONLY
+            assert [case.case_id for case in connection.record.cases] == declared
+
+            # Row 3: every declared path bound under its own root.
+            bound = connection.bound
+            assert bound.packet_root == harness.packet_root.resolve()
+            assert bound.record_path == (
+                harness.packet_root
+                / Path(*record_relative_path(RECORD_LABEL).parts)
+            ).resolve()
+            assert bound.output_root == root.resolve()
+            assert bound.role_root.name == DATASET_LABEL
+            assert set(bound.role_payloads) and set(bound.checkpoints)
+            assert connection.expected_opens
+
+            # Row 4: schema and config, each digested before either was parsed.
+            assert connection.config.schema_sha256 == tracked_text_digest(
+                harness.packet_root / SCHEMA_RELATIVE
+            )
+            assert connection.config.config_sha256 == tracked_text_digest(
+                harness.packet_root / CONFIG_RELATIVE
+            )
+            assert connection.config.config.config_hash.startswith(
+                DEVELOPMENT_TRACE_PREFIX
+            )
+
+            # Row 5: the source artifacts, and the two numbers row 18 later needs.
+            assert connection.sources.established_cases == tuple(declared)
+            assert connection.sources.geometry_producer_sha256 == tracked_text_digest(
+                harness.packet_root / PRODUCER_RELATIVE
+            )
+            assert connection.sources.maximum_deviation_m <= DISTAL_TOLERANCE_M
+
+            # Row 6: the manifest, its census, and both audits echoing it.
+            assert connection.dataset.rows
+            assert set(connection.dataset.audits) == set(AUDIT_NAMES)
+            for audit in connection.dataset.audits.values():
+                block = audit[MANIFEST_AUDIT_KEY]
+                for field in MANIFEST_CENSUS_FIELDS:
+                    observed = block[field]
+                    expected = connection.dataset.census[field]
+                    if isinstance(expected, (list, tuple)):
+                        assert list(observed) == list(expected), field
+                    else:
+                        assert observed == expected, field
+
+            # Rows 7-12: exactly the named payload set, loaded and hash-checked.
+            expected_keys = {
+                (case.case_id, suite, role)
+                for case in connection.record.cases
+                for suite in SUITE_KEYS
+                for role in ROLE_NAMES
+            }
+            assert set(connection.roles.payloads) == expected_keys
+            assert set(connection.roles.index_rows) == expected_keys
+            assert set(connection.roles.checkpoint_sha256) == {
+                (case.case_id, suite)
+                for case in connection.record.cases
+                for suite in SUITE_KEYS
+            }
+
+            # Rows 13-17: both arms, one grid, decisions inside it, one window.
+            cases = resolve_cases(connection)
+            assert [series.case_id for series in cases.cases] == declared
+            for series in cases.cases:
+                assert set(series.arms) == set(SUITE_KEYS)
+                assert series.window_s == ANALYSIS_WINDOW_S
+                assert series.playback_t_s.shape == (FIXTURE_N_STEPS,)
+                for suite in SUITE_KEYS:
+                    arm = series.arms[suite]
+                    assert arm.decisions
+                    assert float(arm.decisions[0].decision_time_s) <= float(
+                        series.playback_t_s[-1]
+                    )
+                    assert arm.controller_step.shape == series.playback_t_s.shape
+
+            # Row 18: one centerline per arm, closing on the declared tolerance.
+            geometry = resolve_geometry(connection, cases)
+            assert [entry.case_id for entry in geometry.cases] == declared
+            for entry in geometry.cases:
+                for suite in SUITE_KEYS:
+                    centerline = entry.arms[suite].centerline
+                    assert centerline.ndim == 3
+                    assert centerline.shape[0] == FIXTURE_N_STEPS
+                    assert centerline.shape[2] == 2
+
+            # Row 19: the computed state, which is the record's own authority.
+            provenance = resolve_provenance(connection)
+            assert provenance.state == DEVELOPMENT_ONLY
+
+            # Row 20: the menu, in the record's order, through the surface gate.
+            bundle = resolve_bundle(connection, cases, geometry, provenance)
+            assert list(bundle.scenes) == declared
+            validate_bundle(bundle)
+
+            # Row 21: the tree, published exactly once.
+            written = write_bundle(connection, bundle, render=_scripted_writer())
+
+        assert written.output_root == root
+        assert written.cases == tuple(declared)
+        assert written.figure_dpi == connection_adapter.REQUIRED_FIGURE_DPI
+        assert sorted(path.name for path in root.rglob("*")) == list(
+            written.file_names
+        )
+
+
+# --------------------------------------------------------------------------- #
+# B5 -- V13 determinism, measured on the published tree rather than on the renderer.
+# --------------------------------------------------------------------------- #
+def test_b5_the_same_connection_publishes_byte_identical_trees_twice(
+    harness: Harness,
+) -> None:
+    """V13, driven through row 21 twice and compared byte for byte.
+
+    **The measurement is the published tree, not the renderer's return value.** V13 is
+    a claim about the files a reader downloads: the same bundle rendered twice under
+    the pinned environment produces byte-identical PNG and JSON sets. So this runs the
+    whole of rows 1 through 21 twice -- including a fresh installation of the coherent
+    three-case menu each time, which is the stronger reading of the invariant, since it
+    puts the fixture's own regeneration inside the claim -- and compares every
+    published file's bytes.
+
+    **The tree is removed between the two runs, and that is required rather than
+    convenient.** Row 21 creates its destination exclusively and
+    `_authority_output_root` fixes that destination from authenticated values, so a
+    connection has exactly one place to publish and a second run cannot go beside the
+    first. Invariant W10 is about a second run while the first publication *stands*;
+    determinism is about two runs that each start from nothing, which is what this
+    does.
+
+    The digest file is compared with everything else deliberately: it is a function of
+    the bundle document's bytes, so if the two documents agree and the two digest files
+    do not, the writer is the thing that moved.
+    """
+
+    published: list[dict[str, bytes]] = []
+    digests: list[str] = []
+    for _ in range(2):
+        with _publication_root(harness) as root:
+            with _three_case_menu(harness) as arguments:
+                _connection, _bundle, written = _published(
+                    harness, _scripted_writer(), arguments=arguments
+                )
+            published.append(
+                {name: (root / name).read_bytes() for name in written.file_names}
+            )
+            digests.append(written.bundle_sha256)
+
+    first, second = published
+    assert set(first) == set(second)
+    assert len(first) == 8, "three cases plus the two fixed bundle files"
+    assert any(name.endswith(".png") for name in first)
+    for name in sorted(first):
+        assert first[name] == second[name], f"{name} is not byte-identical across runs"
+    assert digests[0] == digests[1]
+    assert (
+        external_bytes_digest(first[connection_adapter.BUNDLE_JSON_NAME]) == digests[0]
+    )
+
+
+# --------------------------------------------------------------------------- #
+# Codex's Session-154 finding 1 -- the bundle is bound by more than its provenance.
+#
+# Session 153 bound every field of every scene's provenance block, which proves what
+# sources the picture claims. It does not prove the picture. A `VerificationScene`
+# also carries thresholds, a body-change description, the playback grid, decisions,
+# controller series, tracking arrays and a centerline, and all of them arrive through
+# the same separately constructible `bundle` argument. Measured before the repair, on
+# the harness below: moving the authenticated `abstain_threshold` from 0.55 to 0.56 on
+# **every** scene kept `validate_bundle` satisfied, left every provenance block
+# byte-for-byte authentic, and published.
+#
+# The repair re-derives rows 13 through 20 from the connection and compares canonical
+# renderings, so the instrument is total by construction rather than by enumeration.
+# The table below is what says the repair is not threshold-specific: one substitution
+# per family of scene content, each landing on the same named guard.
+# --------------------------------------------------------------------------- #
+def _first_arm(scene: Any, **changes: Any) -> Any:
+    """Return `scene` with the first suite's arm rebuilt from `changes`."""
+
+    suite = SUITE_KEYS[0]
+    arms = dict(scene.arms)
+    arms[suite] = replace(arms[suite], **changes)
+    return replace(scene, arms=connection_adapter._frozen_mapping(arms))
+
+
+def _both_arms(scene: Any, edit: Callable[[Any], Any]) -> Any:
+    """Return `scene` with `edit` applied to both suites' arms.
+
+    Some scene content is required to agree *across* arms -- the analysis window is
+    one -- so a one-arm edit of it would be refused by the surface gate and would say
+    nothing about row 21.
+    """
+
+    arms = {suite: edit(scene.arms[suite]) for suite in SUITE_KEYS}
+    return replace(scene, arms=connection_adapter._frozen_mapping(arms))
+
+
+SCENE_SUBSTITUTIONS: tuple[tuple[str, Callable[[Any], Any]], ...] = (
+    (
+        "abstain-threshold",
+        lambda scene: replace(
+            scene,
+            thresholds=replace(
+                scene.thresholds,
+                abstain_threshold=scene.thresholds.abstain_threshold + 0.01,
+            ),
+        ),
+    ),
+    (
+        "unknown-threshold",
+        lambda scene: replace(
+            scene,
+            thresholds=replace(
+                scene.thresholds,
+                unknown_threshold=scene.thresholds.unknown_threshold + 0.01,
+            ),
+        ),
+    ),
+    (
+        "display-label",
+        lambda scene: replace(
+            scene,
+            body_change=replace(
+                scene.body_change, label=f"{scene.body_change.label} (relabelled)"
+            ),
+        ),
+    ),
+    (
+        "playback-grid",
+        lambda scene: replace(
+            scene, playback_t_s=np.asarray(scene.playback_t_s) + 1.0e-9
+        ),
+    ),
+    (
+        "centerline",
+        lambda scene: _first_arm(
+            scene,
+            centerline_xy=np.asarray(scene.arms[SUITE_KEYS[0]].centerline_xy) + 1.0,
+        ),
+    ),
+    (
+        "tracking-reference",
+        lambda scene: _both_arms(
+            scene,
+            lambda arm: replace(
+                arm,
+                tracking=replace(
+                    arm.tracking,
+                    task_reference=np.asarray(arm.tracking.task_reference) + 1.0,
+                ),
+            ),
+        ),
+    ),
+    (
+        "tracking-output",
+        lambda scene: _first_arm(
+            scene,
+            tracking=replace(
+                scene.arms[SUITE_KEYS[0]].tracking,
+                true_task_output=np.asarray(
+                    scene.arms[SUITE_KEYS[0]].tracking.true_task_output
+                )
+                + 1.0,
+            ),
+        ),
+    ),
+    (
+        "tracking-window",
+        lambda scene: _both_arms(
+            scene,
+            lambda arm: replace(
+                arm, tracking=replace(arm.tracking, window_s=arm.tracking.window_s / 2)
+            ),
+        ),
+    ),
+    (
+        "controller-clock",
+        lambda scene: _first_arm(
+            scene,
+            controller_t_s=np.asarray(scene.arms[SUITE_KEYS[0]].controller_t_s) + 1.0,
+        ),
+    ),
+    (
+        "controller-mode",
+        lambda scene: _first_arm(
+            scene,
+            controller_mode=tuple(
+                "relabelled" for _ in scene.arms[SUITE_KEYS[0]].controller_mode
+            ),
+        ),
+    ),
+    (
+        "decision",
+        lambda scene: _first_arm(
+            scene,
+            decisions=(
+                replace(
+                    scene.arms[SUITE_KEYS[0]].decisions[0],
+                    severity_out=scene.arms[SUITE_KEYS[0]].decisions[0].severity_out
+                    + 0.01,
+                ),
+                *scene.arms[SUITE_KEYS[0]].decisions[1:],
+            ),
+        ),
+    ),
+)
+
+
+def _substituted(bundle: VerificationBundle, edit: Callable[[Any], Any]):
+    """Return `bundle` with `edit` applied to every scene.
+
+    Every scene rather than one, because that is the shape Codex's control had and it
+    is the harder one: `validate_bundle` compares thresholds and grids *across* scenes,
+    so a single-scene edit could be refused by the cross-scene gate and would then say
+    nothing about this row.
+    """
+
+    return VerificationBundle(
+        bundle_version=bundle.bundle_version,
+        provenance_state=bundle.provenance_state,
+        scenes=connection_adapter._frozen_mapping(
+            {case_id: edit(scene) for case_id, scene in bundle.scenes.items()}
+        ),
+    )
+
+
+def test_the_scene_substitutions_are_all_still_valid_bundles(harness: Harness) -> None:
+    """The anchor, and it comes before the refusals it makes meaningful.
+
+    Ten refusals prove nothing if the altered bundles are refused by something that
+    already existed. This drives every substitution through the surface gate and
+    through the provenance comparison row 21 ran before this session: each altered
+    bundle still passes `validate_bundle`, still presents the record's own menu,
+    version and state, and still carries provenance blocks identical to the ones this
+    connection produces. **So the only thing left that can refuse them is the new
+    comparison**, which is what the table below then measures. The last assertion is
+    the other half of the anchor: each edit has to actually change the rendering, or
+    the refusal it is named for could not fire for the reason claimed.
+    """
+
+    with _three_case_menu(harness) as arguments:
+        connection, cases, geometry, provenance = _resolved(harness, arguments)
+        bundle = resolve_bundle(connection, cases, geometry, provenance)
+        for name, edit in SCENE_SUBSTITUTIONS:
+            altered = _substituted(bundle, edit)
+            validate_bundle(altered)
+            assert tuple(altered.scenes) == tuple(bundle.scenes), name
+            assert altered.bundle_version == bundle.bundle_version, name
+            assert altered.provenance_state == bundle.provenance_state, name
+            for case in connection.record.cases:
+                presented = altered.scenes[case.case_id].provenance
+                assembled = connection_adapter._provenance_for(
+                    connection, case, connection.record.authority
+                )
+                for field in dataclass_fields(Provenance):
+                    assert getattr(presented, field.name) == getattr(
+                        assembled, field.name
+                    ), f"{name}/{field.name}"
+                assert canonical_scene_text(
+                    altered.scenes[case.case_id]
+                ) != canonical_scene_text(bundle.scenes[case.case_id]), name
+
+
+@pytest.mark.parametrize("name, edit", SCENE_SUBSTITUTIONS, ids=[
+    name for name, _ in SCENE_SUBSTITUTIONS
+])
+def test_row21_refuses_a_scene_this_connection_did_not_assemble(
+    harness: Harness, name: str, edit: Callable[[Any], Any]
+) -> None:
+    """One substitution per family of scene content, all landing on the same guard.
+
+    `abstain-threshold` is Codex's reported control verbatim. The rest are what says
+    the repair is a binding of the bundle rather than a patch on one field: the other
+    threshold, the menu entry's display label, the shared playback grid, the derived
+    centerline, both halves of the tracking argument set, the controller clock, the
+    controller mode series and one decision's own score. Every one of them is a value
+    rows 13 through 20 derive from payloads row 12 authenticated, and none of them is
+    reachable from the provenance block.
+
+    The refusal is required to fire **before** anything is created, which is what the
+    root assertion is for: a check that ran after the writer would leave a published
+    tree carrying content the record never authenticated.
+    """
+
+    with _publication_root(harness) as root:
+        with _three_case_menu(harness) as arguments:
+            connection, cases, geometry, provenance = _resolved(harness, arguments)
+            bundle = resolve_bundle(connection, cases, geometry, provenance)
+            altered = _substituted(bundle, edit)
+            error = _refusal(
+                lambda: write_bundle(connection, altered, render=_stub_writer())
+            )
+        assert error.code == X_BUNDLE_INCOMPLETE
+        assert "is not the scene this connection assembles" in str(error)
+        assert not root.exists()
+
+
+def test_the_scene_rendering_covers_every_field_of_the_scene_type(
+    harness: Harness,
+) -> None:
+    """Why the comparison is total, stated as a property of the instrument.
+
+    Row 21 compares canonical renderings rather than a hand-listed field set, for the
+    same reason the provenance comparison walks `dataclasses.fields`: a field added to
+    `VerificationScene` must be bound without anyone remembering to bind it. **That
+    argument holds only while the rendering covers the type**, so this is where it is
+    checked, against the encoder itself. A field added to the scene without a matching
+    key here turns the totality claim false, and this test is what says so.
+    """
+
+    from utils.verification_scene import scene_to_json
+
+    with _three_case_menu(harness) as arguments:
+        connection, cases, geometry, provenance = _resolved(harness, arguments)
+        bundle = resolve_bundle(connection, cases, geometry, provenance)
+    scene = next(iter(bundle.scenes.values()))
+    rendered = set(scene_to_json(scene))
+    declared = {field.name for field in dataclass_fields(type(scene))}
+    assert declared, "a scene type with no fields would make this vacuous"
+    assert rendered == declared
+
+
+# --------------------------------------------------------------------------- #
+# Codex's Session-154 finding 2 -- the packet root moves with the destination.
+# --------------------------------------------------------------------------- #
+def test_the_packet_root_anchor_accepts_the_chain_it_is_written_for(
+    harness: Harness,
+) -> None:
+    """The anchor for the three refusals below, and it comes first.
+
+    A helper that refused everything would satisfy every refusal test under it and
+    would take the accept path down with it. This drives `_require_one_packet_root` on
+    the genuine authenticated connection and requires it to return the harness packet
+    root -- the same lesson-285 shape the audit-hook observer's own anchor has.
+    """
+
+    with _three_case_menu(harness) as arguments:
+        connection = authenticate_connection(**arguments)
+    assert (
+        connection_adapter._require_one_packet_root(connection)
+        == harness.packet_root.resolve()
+    )
+
+
+def test_row21_refuses_a_packet_root_moved_together_with_its_destination(
+    harness: Harness, tmp_path: Path
+) -> None:
+    """Codex's Session-154 finding 2, driven exactly as reported.
+
+    `_authority_output_root` derives the publication root from
+    `connection.bound.packet_root`, and that field sits in the same substitutable
+    `BoundPaths` value as `output_root`. Measured before the repair: moving **both**
+    coherently -- and leaving every authenticated record, config, source, dataset and
+    role path pointing into the real packet tree -- published the whole declared set
+    beneath an unrelated temporary directory, because the expected value moved with the
+    substitution.
+
+    The anchor is now the record path, whose bytes rows 1 and 2 actually read, so a
+    root that does not contain the record it authenticated cannot fix where the
+    publication goes. Nothing appears under the substituted root, which is the second
+    half of the assertion.
+    """
+
+    other = (tmp_path / "other-packet").resolve()
+    with _three_case_menu(harness) as arguments:
+        connection, cases, geometry, provenance = _resolved(harness, arguments)
+        bundle = resolve_bundle(connection, cases, geometry, provenance)
+        parent = connection_adapter.OUTPUT_PARENTS[connection.record.authority]
+        moved = replace(
+            connection,
+            bound=replace(
+                connection.bound,
+                packet_root=other,
+                output_root=other.joinpath(
+                    *parent.parts, connection.record.record_label
+                ),
+            ),
+        )
+        error = _refusal(lambda: write_bundle(moved, bundle, render=_stub_writer()))
+    assert error.code == X_PROVENANCE_UNRESOLVED
+    assert "does not hold the authenticated record" in str(error)
+    assert not other.exists()
+
+
+def test_row21_refuses_a_record_bound_somewhere_else_inside_the_packet(
+    harness: Harness,
+) -> None:
+    """The other direction, which containment alone would accept.
+
+    Section 3.1 gives a connection record exactly one packet-relative location, and
+    finding CX is about a record presented from somewhere else -- including from inside
+    the tree step 21 exclusively creates. A record moved to a different path under the
+    *same* root is still inside the packet root, so a containment test would pass it;
+    the comparison is an equality for that reason.
+    """
+
+    with _publication_root(harness) as root:
+        with _three_case_menu(harness) as arguments:
+            connection, cases, geometry, provenance = _resolved(harness, arguments)
+            bundle = resolve_bundle(connection, cases, geometry, provenance)
+            relocated = replace(
+                connection,
+                bound=replace(
+                    connection.bound,
+                    record_path=harness.packet_root / "connection_record.json",
+                ),
+            )
+            error = _refusal(
+                lambda: write_bundle(relocated, bundle, render=_stub_writer())
+            )
+        assert error.code == X_PROVENANCE_UNRESOLVED
+        assert "does not hold the authenticated record" in str(error)
+        assert not root.exists()
+
+
+def test_row21_refuses_a_source_artifact_bound_outside_the_packet_root(
+    harness: Harness, tmp_path: Path
+) -> None:
+    """The containment direction, on a path the record itself declares.
+
+    The record path pins one location; every other packet-relative path is the
+    record's to declare, so those are required to be *inside* the root rather than at
+    a derived place. This moves one authenticated source artifact out of the packet and
+    requires the row to refuse, which is invariant W8's one-root property stated over
+    the whole bound set rather than over the destination alone.
+    """
+
+    with _publication_root(harness) as root:
+        with _three_case_menu(harness) as arguments:
+            connection, cases, geometry, provenance = _resolved(harness, arguments)
+            bundle = resolve_bundle(connection, cases, geometry, provenance)
+            artifacts = dict(connection.bound.packet_artifacts)
+            moved_key = sorted(artifacts)[0]
+            artifacts[moved_key] = (tmp_path / "elsewhere" / "artifact.json").resolve()
+            outside = replace(
+                connection,
+                bound=replace(
+                    connection.bound,
+                    packet_artifacts=MappingProxyType(artifacts),
+                ),
+            )
+            error = _refusal(
+                lambda: write_bundle(outside, bundle, render=_stub_writer())
+            )
+        assert error.code == X_PROVENANCE_UNRESOLVED
+        assert "outside the packet root" in str(error)
+        assert moved_key in str(error)
+        assert not root.exists()
+
+
 @pytest.mark.parametrize(
     "case, fragment",
     [
@@ -7099,12 +7765,19 @@ def test_row21_refuses_a_bundle_state_that_is_not_the_authenticated_authority(
         ("two-phys-chunks", "more than one pHYs chunk"),
         ("wrong-phys-length", "the format fixes it at 9"),
         ("non-metre-unit", "rather than in metres"),
+        ("no-image-header", "opens with"),
+        ("second-image-header", "second IHDR chunk"),
+        ("wrong-image-header-length", "the format fixes it at 13"),
+        ("no-image-data", "carries no IDAT chunk"),
+        ("resolution-after-the-image-data", "after its image data has begun"),
+        ("interrupted-image-data", "resumes its image data"),
+        ("non-empty-iend", "fixes it as empty"),
     ],
 )
 def test_the_png_walk_refuses_every_malformed_resolution_claim(
     case: str, fragment: str
 ) -> None:
-    """Eight malformed figures, and the named refusal each one lands on.
+    """Fifteen malformed figures, and the named refusal each one lands on.
 
     *** THIS IS CODEX'S SESSION-153 FINDING 2. *** Re-driven at source before the
     repair: the corrupt-CRC file was **accepted** and published as `(11811, 11811)`
@@ -7320,6 +7993,12 @@ def test_row21_opens_nothing_outside_the_tree_it_created(harness: Harness) -> No
     authenticated, the only files row 21 and its writer touch are inside the root row 3
     bound, and the writer being a parameter does not change that -- the observed opens
     include the stub writer's own writes.
+
+    *** THIS IS ALSO THE INSTRUMENT THAT SAYS THE SESSION-155 RE-DERIVATION IS FREE OF
+    I/O. *** Row 21 now re-runs rows 13 through 20 to bind the bundle it was handed,
+    and the claim that this opens nothing is exactly what fails here if it is false:
+    the re-derivation runs *before* the exclusive create, so any file it opened would
+    be outside the tree this test requires every open to be inside.
     """
 
     with _publication_root(harness) as root:

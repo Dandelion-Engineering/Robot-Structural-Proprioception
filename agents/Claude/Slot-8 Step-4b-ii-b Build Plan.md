@@ -1264,3 +1264,171 @@ that line.
 field. Session 154 added no fourth — `_provenance_for` is an extraction inside 4b-ii-b's
 own half, `_authority_output_root` and the strict PNG walk are new code in it, and no
 public surface of the closed 4b-ii-a approval moved. ***
+
+---
+
+## Appendix I - Codex's three Session-154 findings discharged, and B2/B3/B5 closed (Claude Session 155)
+
+*Appended 2026-08-18, Session 155. All three of Codex's Session-154 cross-review
+findings are discharged, none contested, each re-driven at source by me before a line
+was changed, and each reproduced exactly as reported. **B2, B3 and B5 are closed in the
+same session.** What is left is the `roles` CLI wiring, the additive `build_role_bundle`
+change, the two-pass mutation sweep, and only then the Review Card and the chat. The
+design at blob `032db166` is still the authority and this plan loses to it wherever they
+differ.*
+
+### I.1 Codex was right a seventh time, and the three findings are one sentence
+
+Session 152's pair was a value reaching a checked object from beside it. Session 153's
+was a helper claiming more than it checked. Session 154's pair was the first one at two
+new sites. **Session 155's three are all the same sentence, and it is the sharpest form
+the lane has reached: a check bounded by the object it was written against rather than
+by the claim it is supposed to support.**
+
+- Row 21 bound the bundle's *provenance block* completely, because the finding it was
+  written against was about provenance. The claim it supports is about the whole
+  published picture.
+- `_authority_output_root` derived the destination from `bound.packet_root`, because the
+  finding it was written against moved `output_root`. The claim it supports is that one
+  root governs the read order.
+- `_png_pixels_per_metre` verified *chunk integrity*, because the finding it was written
+  against corrupted a chunk. The claim it supports is that a case figure is a PNG saved
+  at 300 DPI.
+
+Each repair replaced the object-bounded check with a claim-bounded one, which is why
+each is total rather than one case wider than the report.
+
+**Finding 1, driven at source before repair.** Rows 13-20 resolved normally over the
+three-case coherent menu; every scene's `Thresholds.abstain_threshold` replaced from the
+authenticated `0.55` to `0.56`; `validate_bundle` still satisfied; every provenance
+block still byte-for-byte authentic:
+
+```text
+authenticated abstain_threshold  0.55
+published abstain_threshold      0.56
+outcome                          ACCEPTED
+```
+
+**Finding 2, driven at source before repair.** `packet_root` and `output_root` replaced
+together in one `BoundPaths`, with every authenticated record, config, source, dataset
+and role path left pointing into the real packet tree:
+
+```text
+substituted packet_root  <tmp>/other-packet
+substituted output_root  <tmp>/other-packet/results/verification_connection_development/adapter-fixture
+record path (unmoved)    <harness>/packet/results/verification_connection/records/adapter-fixture/...
+outcome                  ACCEPTED, all eight files published under the substituted root
+```
+
+**Finding 3, driven at source before repair, and my re-drive widened it by two.** A byte
+string of validly CRC'd chunks:
+
+```text
+signature + pHYs(11811,11811,metres) + IEND     -> (11811, 11811)   Pillow: UnidentifiedImageError
+signature + IHDR + pHYs + IEND   (no IDAT)      -> (11811, 11811)   [found by the re-drive]
+signature + IHDR + IDAT + pHYs + IEND           -> (11811, 11811)   [found by the re-drive]
+```
+
+The third is the one worth keeping: the format requires `pHYs` to *precede* the image
+data, precisely because a decoder that has already begun rendering is entitled to ignore
+it. A resolution a decoder may lawfully discard is not the resolution the figure was
+saved at.
+
+### I.2 The repairs
+
+**Finding 1 - the bundle is bound, not only its provenance.** Row 21 now re-derives rows
+13 through 20 from the connection (`resolve_cases`, `resolve_geometry`,
+`resolve_provenance`, `resolve_bundle`) and requires each presented scene's
+`canonical_scene_text` to equal the derived one. *** THE INSTRUMENT IS THE CANONICAL
+RENDERING AND THAT IS THE POINT: it is total by construction, so a field added to
+`VerificationScene` is bound without anyone remembering to bind it *** - the same
+property the `dataclasses.fields` walk gave the provenance block, one level up.
+`test_the_scene_rendering_covers_every_field_of_the_scene_type` is what keeps that
+argument true, because it holds only while the encoder covers the type.
+
+*** THE RE-DERIVATION OPENS NOTHING, AND THAT IS MEASURED RATHER THAN ASSERTED. *** Rows
+13 through 18 are pure functions of payloads row 12 already loaded, and the re-derivation
+runs *before* the exclusive create, so
+`test_row21_opens_nothing_outside_the_tree_it_created` - which requires every observed
+open to be inside the created root - is exactly the instrument that would go red if it
+were false. Its docstring now says so.
+
+*** THE PROVENANCE WALK IS KEPT ABOVE THE NEW COMPARISON, NOT FOLDED INTO IT. *** The two
+answer different questions and say so with different codes: a bundle assembled under
+another connection is `X_IDENTITY_MISMATCH` and names the field; a bundle whose content
+is not what these sources produce is `X_BUNDLE_INCOMPLETE`. Deleting either changes what
+a caller is told, which is the test lesson 286 sets for overlapping guards. **No
+fifteenth exit code.**
+
+**Finding 2 - the packet root is anchored to what it contains.** New
+`_require_one_packet_root(connection)` requires `bound.record_path` to *equal*
+`packet_root / record_relative_path(record_label)`, and `schema_path`, `config_path` and
+every `packet_artifacts` value to be *inside* that root. `_authority_output_root` calls
+it before deriving anything. Equality for the record because section 3.1 gives it one
+location and finding CX is about a record presented from elsewhere; containment for the
+rest because their positions are the record's own to declare.
+
+*** WHAT IT DOES NOT REFUSE, STATED SO NOBODY "FIXES" IT: a whole packet tree copied and
+run against the copy leaves every one of these paths under the copy's root. That is one
+root, and W8 allows it. What is refused is a root that claims to govern paths it does not
+contain. ***
+
+**Finding 3 - the walk asserts image structure as well as chunk integrity.** A single
+`IHDR` first at exactly 13 bytes; at least one `IDAT`; the `IDAT` run unbroken; `pHYs`
+before it; `IEND` empty. Enforced in the walk rather than delegated to a decoder, because
+a decoder is a dependency this packet does not declare and the walk was already visiting
+every chunk - the structure was the part it was not asserting. The ten tracked Step-3
+figures still pass, which is the accept side of a parser made stricter.
+
+### I.3 B2, B3 and B5
+
+**B5 - determinism (V13).** `test_b5_the_same_connection_publishes_byte_identical_trees_twice`
+runs the whole of rows 1 through 21 twice through the *real* scripted writer, with a
+fresh installation of the coherent three-case menu each time, and compares all eight
+published files byte for byte. **They are identical, and so is the bundle digest.** The
+tree is removed between runs because row 21 creates its destination exclusively and
+`_authority_output_root` fixes that destination from authenticated values - a connection
+has exactly one place to publish, so determinism is two runs that each start from
+nothing, while W10 is about a second run while the first still stands.
+
+**B2 - the accept-side census.** `test_b2_every_applicable_row_of_section_4_1_produces_its_own_output`
+is one test rather than twenty-one, deliberately: what it claims is that the rows
+*compose* - each row's output is the next row's input on a single run - and twenty-one
+separate tests would each re-establish the chain and none of them would claim that. Rows
+1-12 are asserted through the value `authenticate_connection` produced rather than
+re-driven, because re-driving them here would be a second composition of the read order,
+which `test_the_entry_point_is_the_only_composition_of_the_read_order` exists to forbid.
+
+**B3 - one refusal per row.** Measured and then written down as an artifact property
+rather than as a session's private count:
+`test_b3_every_row_this_sub_step_owns_has_a_committed_refusal_case` reads the committed
+test names out of the module and requires every row 13-21 to carry at least one
+`test_rowNN_refuses_...`. **It is a floor and it under-counts** - it cannot see a refusal
+written under another name - which is the direction a completeness floor has to err in.
+The counts at this state are 5, 3, 4, 4, 1, 5, 1, 8, 12 for rows 13 through 21.
+
+### I.4 Numbers
+
+`test_connection_adapter.py` **336** (was 309), the focused pair **356** (was 329) and
+**356 again under `python -O`**; packet-wide **3,014 passed / 0 failed / 176.35 s**. The
+arithmetic closes: 2,987 + 27 = 3,014, and the 27 are 13 on finding 1 (eleven
+substitutions, their anchor, and the rendering-coverage property), 4 on finding 2 (its
+anchor and three refusals), 7 on finding 3, and one each for B2, B3 and B5.
+`git diff --numstat` reads `218 7` on the module and `680 1` on the test file.
+`py_compile`, `git diff --check` and `git status --porcelain` all clean; both files pure
+ASCII, LF, 0 CR, no BOM, final newline, **checked on the final bytes**.
+
+### I.5 What is left, in order
+
+The `roles` CLI wiring and the additive `build_role_bundle` change - including the
+docstring fix finding DA corrected, since under branch B the `--config` gloss is
+`FINAL`-only; **then** the two-pass mutation sweep on the finished pair, whose staged-tree
+set (`scripts`, `tests`, `schema`, `config` **and** `results`) is unchanged; **then** the
+Review Card and the subject chat; then the handoff. Still no card and no chat for
+4b-ii-b, and that is still deliberate - eleven consecutive sessions have held that line.
+
+*** THE CARD STILL CARRIES THREE DISCLOSURES: the `schema.json` EOL-pin dependency, the
+`authenticate_sources` third parameter, and the `AuthenticatedConnection.record_sha256`
+field. Session 155 added no fourth - `_require_one_packet_root` is new code in 4b-ii-b's
+own half, the row-21 binding and the PNG structure checks are edits to code this half
+wrote, and no public surface of the closed 4b-ii-a approval moved. ***

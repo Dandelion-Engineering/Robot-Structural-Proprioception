@@ -232,6 +232,7 @@ from utils.connection_record import (
     bind_root_domains,
     expected_open_set,
     load_connection_record,
+    record_relative_path,
 )
 from utils.protocol_p import canonical_text_sha256
 from utils.authenticated_storage import (
@@ -3409,6 +3410,14 @@ _PNG_IEND_CHUNK = b"IEND"
 _PNG_PHYS_BODY_BYTES = 9
 _PNG_CHUNK_OVERHEAD_BYTES = 12
 
+#: The two chunks that make a datastream an *image* rather than a container carrying a
+#: resolution: the header the format requires first, and the image data itself. A
+#: `pHYs` chunk inside a byte string with neither is a resolution nobody rendered
+#: anything at, which is Codex's Session-154 finding 3.
+_PNG_IHDR_CHUNK = b"IHDR"
+_PNG_IDAT_CHUNK = b"IDAT"
+_PNG_IHDR_BODY_BYTES = 13
+
 #: Metres per inch. The `pHYs` chunk counts pixels per metre, so this is what turns a
 #: declared DPI into the integer the file must carry.
 _METRES_PER_INCH = 0.0254
@@ -3450,10 +3459,13 @@ def _png_pixels_per_metre(raw: bytes, *, where: str) -> tuple[int, int]:
         VerificationSceneError: `X_BUNDLE_INCOMPLETE` when the bytes do not begin with
             the PNG signature; when the file ends inside a chunk header or inside a
             chunk body a header declared; when any chunk's CRC-32 does not cover the
-            bytes it is written beside; when the sequence does not end at an `IEND`
-            chunk with nothing after it; when there is no `pHYs` chunk or more than
-            one; when that chunk is not the nine bytes the format fixes; or when its
-            unit is not metres.
+            bytes it is written beside; when the datastream does not begin with a
+            single `IHDR` chunk of the fixed length the format gives it; when it
+            carries no `IDAT` chunk, or carries them non-consecutively; when the
+            `pHYs` chunk does not precede the image data; when the sequence does not
+            end at a zero-length `IEND` chunk with nothing after it; when there is no
+            `pHYs` chunk or more than one; when that chunk is not the nine bytes the
+            format fixes; or when its unit is not metres.
 
     **The walk is total, and it is total because the alternative is a raw exception.**
     Codex's Session-153 review drove two inputs through the previous version: a figure
@@ -3476,6 +3488,22 @@ def _png_pixels_per_metre(raw: bytes, *, where: str) -> tuple[int, int]:
     figure's declared DPI a function of which one a reader's decoder happened to keep,
     and returning the first would be this row making that choice on the reader's
     behalf.
+
+    *** AND CHUNK INTEGRITY IS NOT IMAGE STRUCTURE, WHICH IS THE OTHER HALF OF THE
+    CLAIM. *** Codex's Session-154 review built a byte string of validly CRC'd chunks
+    carrying the signature, one `pHYs` and `IEND` -- no `IHDR`, no `IDAT`, no image at
+    all -- and the previous version of this walk returned `(11811, 11811)` for it while
+    a strict decoder refused the same bytes outright. My own re-drive found two more of
+    the same family: a header with no image data behind it, and a `pHYs` chunk written
+    *after* the image data, which the format forbids precisely because a decoder that
+    has already begun rendering cannot honour it. **The row's claim is not that a byte
+    string contains a resolution chunk; it is that a case figure is a PNG saved at 300
+    DPI**, so the walk now also requires the mandatory structure that claim rests on: a
+    single `IHDR` first at its fixed length, at least one `IDAT`, the `IDAT` run
+    unbroken, `pHYs` before it, and a zero-length `IEND` last. That is enforced here
+    rather than delegated to a decoder because a decoder is a dependency this packet
+    does not declare, and because the walk was already visiting every chunk -- the
+    structure was the part it was not asserting.
     """
 
     if not raw.startswith(_PNG_SIGNATURE):
@@ -3486,6 +3514,9 @@ def _png_pixels_per_metre(raw: bytes, *, where: str) -> tuple[int, int]:
         )
     offset = len(_PNG_SIGNATURE)
     resolution: tuple[int, int] | None = None
+    chunk_index = 0
+    image_data_seen = False
+    image_data_closed = False
     while True:
         if offset + _PNG_CHUNK_OVERHEAD_BYTES > len(raw):
             raise _refuse(
@@ -3512,6 +3543,43 @@ def _png_pixels_per_metre(raw: bytes, *, where: str) -> tuple[int, int]:
                 "not cover its own bytes, so the chunk is corrupt and a decoder is "
                 "entitled to discard it",
             )
+        if chunk_index == 0:
+            if kind != _PNG_IHDR_CHUNK:
+                raise _refuse(
+                    X_BUNDLE_INCOMPLETE,
+                    f"{where} opens with a {kind!r} chunk; every PNG datastream opens "
+                    "with IHDR, and a resolution declared inside something that is not "
+                    "an image is not evidence a figure was saved at that resolution",
+                )
+            if length != _PNG_IHDR_BODY_BYTES:
+                raise _refuse(
+                    X_BUNDLE_INCOMPLETE,
+                    f"{where} carries an IHDR chunk of {length} bytes; the format "
+                    f"fixes it at {_PNG_IHDR_BODY_BYTES}",
+                )
+        elif kind == _PNG_IHDR_CHUNK:
+            raise _refuse(
+                X_BUNDLE_INCOMPLETE,
+                f"{where} carries a second IHDR chunk at byte {offset}; a PNG "
+                "datastream describes one image once",
+            )
+        if kind == _PNG_IDAT_CHUNK:
+            if image_data_closed:
+                raise _refuse(
+                    X_BUNDLE_INCOMPLETE,
+                    f"{where} resumes its image data at byte {offset} after another "
+                    "chunk interrupted it; the format requires the IDAT run to be "
+                    "consecutive, and a decoder is entitled to stop at the break",
+                )
+            image_data_seen = True
+        elif image_data_seen:
+            image_data_closed = True
+        if kind == _PNG_IEND_CHUNK and length != 0:
+            raise _refuse(
+                X_BUNDLE_INCOMPLETE,
+                f"{where} ends with an IEND chunk carrying {length} bytes; the format "
+                "fixes it as empty",
+            )
         if kind == _PNG_PHYS_CHUNK:
             if resolution is not None:
                 raise _refuse(
@@ -3519,6 +3587,14 @@ def _png_pixels_per_metre(raw: bytes, *, where: str) -> tuple[int, int]:
                     f"{where} carries more than one pHYs chunk; which resolution the "
                     "figure declares would then depend on which one a reader's decoder "
                     "kept",
+                )
+            if image_data_seen:
+                raise _refuse(
+                    X_BUNDLE_INCOMPLETE,
+                    f"{where} declares its resolution at byte {offset}, after its "
+                    "image data has begun; the format requires pHYs to precede IDAT, "
+                    "and a decoder that has already started rendering is entitled to "
+                    "ignore it",
                 )
             if length != _PNG_PHYS_BODY_BYTES:
                 raise _refuse(
@@ -3538,6 +3614,7 @@ def _png_pixels_per_metre(raw: bytes, *, where: str) -> tuple[int, int]:
                 int.from_bytes(body[4:8], "big"),
             )
         offset = end
+        chunk_index += 1
         if kind == _PNG_IEND_CHUNK:
             break
     if offset != len(raw):
@@ -3547,6 +3624,12 @@ def _png_pixels_per_metre(raw: bytes, *, where: str) -> tuple[int, int]:
             "figure is the datastream itself and not a container something else was "
             "appended to",
         )
+    if not image_data_seen:
+        raise _refuse(
+            X_BUNDLE_INCOMPLETE,
+            f"{where} carries no IDAT chunk, so it holds no image; a resolution "
+            "declared over nothing is not evidence of a rendered figure",
+        )
     if resolution is None:
         raise _refuse(
             X_BUNDLE_INCOMPLETE,
@@ -3554,6 +3637,84 @@ def _png_pixels_per_metre(raw: bytes, *, where: str) -> tuple[int, int]:
             f"section 4.7 requires it to have been saved at",
         )
     return resolution
+
+
+def _require_one_packet_root(connection: AuthenticatedConnection) -> Path:
+    """Return the one packet root every packet-relative path in this chain sits under.
+
+    Args:
+        connection: everything rows 1 through 12 established.
+
+    Returns:
+        `connection.bound.packet_root`, resolved, once it has been shown to be the root
+        the authenticated packet-relative paths were actually resolved against.
+
+    Raises:
+        VerificationSceneError: `X_PROVENANCE_UNRESOLVED` when the bound record path is
+            not the one packet-relative location section 3.1 gives a record under that
+            root, or when the schema, the configuration or any named source artifact
+            resolves outside it.
+
+    **This exists because `BoundPaths` is one value and therefore moves as one.**
+    Row 21's destination check re-derives the publication root from
+    `connection.bound.packet_root`, and Codex's Session-154 review pointed out that the
+    root and the destination are two fields of the same substitutable object: replacing
+    *both* coherently moves the derived expectation with the substitution, and the
+    check that catches a moved parent catches nothing at all. Measured before this was
+    written: with every authenticated record, config, source, dataset and role path
+    left pointing into the real packet tree, a substituted `packet_root` and a matching
+    `output_root` published the whole set beneath an unrelated temporary directory.
+
+    **So the anchor cannot be a field of the value under suspicion, and this is the one
+    invariant W8 already names.** W8 says one root governs every packet-relative
+    resolution in the read order -- the step-3 domain binding, the step-4 schema and
+    config, the step-5 source artifacts and the section-4.7 output parent. A
+    substitution that moves the root without moving what the root resolved is a chain
+    with *two* roots, which is exactly what W8 forbids, and it is decidable here from
+    values whose bytes rows 1 through 5 actually read. The record path is compared by
+    equality rather than by containment because section 3.1 gives a record one location
+    and finding CX is about a record presented from somewhere else inside the same
+    tree; the remaining paths are compared by containment because their positions are
+    the record's to declare.
+
+    **A whole tree moved together is not what this refuses.** Copying a complete packet
+    and running the chain against the copy leaves every one of these paths under the
+    copy's root, and that is one root and therefore allowed. What is refused is a root
+    that claims to govern paths it does not contain.
+    """
+
+    packet_root = Path(connection.bound.packet_root).resolve()
+    expected_record = packet_root.joinpath(
+        *record_relative_path(connection.record.record_label).parts
+    ).resolve()
+    observed_record = Path(connection.bound.record_path).resolve()
+    if observed_record != expected_record:
+        raise _refuse(
+            X_PROVENANCE_UNRESOLVED,
+            f"the packet root {packet_root} does not hold the authenticated record, "
+            f"which is bound at {observed_record} while that root would place it at "
+            f"{expected_record}; one connection is resolved against one packet root, "
+            "and a root that does not contain the record it authenticated cannot fix "
+            "where the publication goes",
+        )
+    named: list[tuple[str, Path]] = [
+        ("the schema", Path(connection.bound.schema_path)),
+        ("the configuration", Path(connection.bound.config_path)),
+    ]
+    named.extend(
+        (f"the source artifact {key}", Path(value))
+        for key, value in connection.bound.packet_artifacts.items()
+    )
+    for where, path in named:
+        resolved = path.resolve()
+        if packet_root not in resolved.parents:
+            raise _refuse(
+                X_PROVENANCE_UNRESOLVED,
+                f"{where} is bound at {resolved}, which is outside the packet root "
+                f"{packet_root} this chain claims to have run under; the read order "
+                "resolves every packet-relative path against one root",
+            )
+    return packet_root
 
 
 def _authority_output_root(connection: AuthenticatedConnection) -> Path:
@@ -3581,9 +3742,17 @@ def _authority_output_root(connection: AuthenticatedConnection) -> Path:
     the *value that arrives here*, and the two separate exactly when a caller
     substitutes. The derivation uses only the authenticated authority, the
     authenticated record label and the one packet root invariant W8 names.
+
+    *** AND THE PACKET ROOT IS ITSELF A FIELD OF THAT SAME SUBSTITUTABLE VALUE, WHICH
+    IS CODEX'S SESSION-154 FINDING 2. *** Deriving the destination from
+    `bound.packet_root` catches a moved destination only while the root stays put;
+    moving both together moves the expectation with them. `_require_one_packet_root`
+    is what makes the derivation mean something -- it establishes, from the paths whose
+    bytes rows 1 through 5 read, that this root is the root those paths were resolved
+    against.
     """
 
-    packet_root = Path(connection.bound.packet_root).resolve()
+    packet_root = _require_one_packet_root(connection)
     parent = OUTPUT_PARENTS[connection.record.authority]
     candidate = packet_root.joinpath(
         *parent.parts, connection.record.record_label
@@ -3624,8 +3793,9 @@ def write_bundle(
             authenticated authority; `X_IDENTITY_MISMATCH` when a scene's provenance
             block is not the one this connection produces for that case;
             `X_BUNDLE_INCOMPLETE` when the bundle's menu is not the record's, when its
-            declared version is not this module's, when what the writer left on disk
-            is not exactly the declared set, when a published document is not the
+            declared version is not this module's, when a presented scene is not the
+            scene this connection assembles from its own authenticated payloads, when
+            what the writer left on disk is not exactly the declared set, when a published document is not the
             canonical rendering of the object this chain assembled, when the digest a
             reader is told to check is not the digest of the file beside it, or when a
             figure does not declare the required resolution; and
@@ -3676,6 +3846,28 @@ def write_bundle(
     `_provenance_for`, the same function row 20 assembles with, and the comparison
     walks `Provenance`'s own fields rather than a hand-listed set, so a field added to
     that dataclass is bound here without anyone remembering to bind it.
+
+    *** AND BINDING THE PROVENANCE BLOCK IS NOT BINDING THE BUNDLE. *** Codex's
+    Session-154 review took the same seam one width deeper: a scene carries
+    thresholds, a body-change description, a playback grid, decisions, controller
+    series, tracking arrays and a centerline, and every one of them arrives through the
+    same separately constructible `bundle`. Replacing the authenticated
+    `abstain_threshold` on *every* scene keeps `validate_bundle`'s cross-scene
+    agreement true and leaves every provenance block byte-for-byte authentic, and the
+    altered bundle published. **The provenance block states what the picture was drawn
+    from; it does not make the picture be that.** So this row now re-derives rows 13
+    through 20 from the connection and requires each presented scene's canonical
+    rendering to equal the derived one, which binds every field of every scene at once
+    and stays total as the scene type grows. The re-derivation opens nothing -- rows 13
+    through 18 are pure functions of payloads row 12 already loaded -- and the
+    audit-hook observer over this row is what says so.
+
+    **The provenance walk is kept above it rather than folded into it**, because the
+    two answer different questions and say so with different codes: a bundle assembled
+    under another connection is an identity disagreement and names the field, while a
+    bundle whose content is not what these sources produce is an incomplete bundle.
+    Deleting either changes what a caller is told, which is the test lesson 286 sets
+    for a guard that overlaps another.
 
     **The exclusive create runs before anything is written and nothing is cleaned up
     after a refusal.** A second invocation at the same `record_label` therefore refuses
@@ -3730,6 +3922,25 @@ def write_bundle(
                     f"connection authenticated {getattr(assembled, field.name)!r}; a "
                     "bundle is published only under the connection that assembled it",
                 )
+
+    derived_cases = resolve_cases(connection)
+    derived = resolve_bundle(
+        connection,
+        derived_cases,
+        resolve_geometry(connection, derived_cases),
+        resolve_provenance(connection),
+    )
+    for case_id in declared_cases:
+        if canonical_scene_text(bundle.scenes[case_id]) != canonical_scene_text(
+            derived.scenes[case_id]
+        ):
+            raise _refuse(
+                X_BUNDLE_INCOMPLETE,
+                f"the scene presented for case {case_id!r} is not the scene this "
+                "connection assembles from the payloads it authenticated; the "
+                "provenance block a reader is shown states what the picture was drawn "
+                "from, and the picture must be the one those sources produce",
+            )
 
     try:
         output_root.mkdir(parents=True, exist_ok=False)
