@@ -206,6 +206,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import zlib
 from dataclasses import dataclass, fields as dataclass_fields, replace
 from pathlib import Path
 from types import MappingProxyType
@@ -226,6 +227,7 @@ from utils.connection_record import (
     Case,
     ConnectionRecord,
     MANIFEST_ROW_FIELDS,
+    OUTPUT_PARENTS,
     ROLE_NAMES,
     bind_root_domains,
     expected_open_set,
@@ -3170,6 +3172,45 @@ def _arm_identity(case: Case, suite: str) -> ArmIdentity:
     )
 
 
+def _provenance_for(
+    connection: AuthenticatedConnection, case: Case, state: str
+) -> Provenance:
+    """Return the provenance block this connection produces for one case.
+
+    Args:
+        connection: everything rows 1 through 12 established.
+        case: the record's own entry for the case being described.
+        state: row 19's resolved provenance state.
+
+    Returns:
+        The `Provenance` every scene of this case must carry.
+
+    **This is one function because two rows need the same object, and the second one
+    needs it as a comparand.** Row 20 puts it on every scene it assembles; row 21
+    receives the assembled bundle as a *separately constructible value* and requires
+    the scene it is about to publish to carry exactly this. Building the comparand
+    from the code that builds the original is what makes that comparison total: a
+    field added here is compared there without anyone remembering to add it, which is
+    the failure mode a hand-listed field set has and this does not.
+
+    Nothing is measured here. Every value is an identity rows 1 through 12 already
+    bound to the bytes on disk, and `state` is row 19's own result.
+    """
+
+    return Provenance(
+        state=state,
+        connection_record_id=connection.record.record_label,
+        connection_record_sha256=connection.record_sha256,
+        config_identity=connection.config.config.config_hash,
+        config_sha256=connection.config.config_sha256,
+        split=connection.record.split,
+        roles_read=tuple(ROLE_NAMES),
+        arms=_frozen_mapping(
+            {suite: _arm_identity(case, suite) for suite in SUITE_KEYS}
+        ),
+    )
+
+
 def _scene_for(
     connection: AuthenticatedConnection,
     case: Case,
@@ -3204,18 +3245,7 @@ def _scene_for(
     }
     return VerificationScene(
         bundle_version=BUNDLE_VERSION,
-        provenance=Provenance(
-            state=state,
-            connection_record_id=connection.record.record_label,
-            connection_record_sha256=connection.record_sha256,
-            config_identity=connection.config.config.config_hash,
-            config_sha256=connection.config.config_sha256,
-            split=connection.record.split,
-            roles_read=tuple(ROLE_NAMES),
-            arms=_frozen_mapping(
-                {suite: _arm_identity(case, suite) for suite in SUITE_KEYS}
-            ),
-        ),
+        provenance=_provenance_for(connection, case, state),
         body_change=BodyChange(
             case_id=series.case_id,
             label=series.display_label,
@@ -3373,6 +3403,12 @@ _PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 _PNG_PHYS_CHUNK = b"pHYs"
 _PNG_PHYS_METRE_UNIT = 1
 
+#: The chunk that ends a PNG datastream, the fixed body length the format gives
+#: `pHYs`, and the twelve bytes every chunk spends on its own length, type and CRC.
+_PNG_IEND_CHUNK = b"IEND"
+_PNG_PHYS_BODY_BYTES = 9
+_PNG_CHUNK_OVERHEAD_BYTES = 12
+
 #: Metres per inch. The `pHYs` chunk counts pixels per metre, so this is what turns a
 #: declared DPI into the integer the file must carry.
 _METRES_PER_INCH = 0.0254
@@ -3411,12 +3447,35 @@ def _png_pixels_per_metre(raw: bytes, *, where: str) -> tuple[int, int]:
         The `pHYs` chunk's two axis resolutions.
 
     Raises:
-        VerificationSceneError: `X_BUNDLE_INCOMPLETE` when the bytes are not a PNG,
-            when no `pHYs` chunk is present, or when its unit is not metres.
+        VerificationSceneError: `X_BUNDLE_INCOMPLETE` when the bytes do not begin with
+            the PNG signature; when the file ends inside a chunk header or inside a
+            chunk body a header declared; when any chunk's CRC-32 does not cover the
+            bytes it is written beside; when the sequence does not end at an `IEND`
+            chunk with nothing after it; when there is no `pHYs` chunk or more than
+            one; when that chunk is not the nine bytes the format fixes; or when its
+            unit is not metres.
 
-    The chunk is located by walking the length-prefixed chunk sequence rather than by
-    searching for the tag, because the four bytes `pHYs` may legitimately occur inside
-    a compressed image stream and a search would find that first.
+    **The walk is total, and it is total because the alternative is a raw exception.**
+    Codex's Session-153 review drove two inputs through the previous version: a figure
+    whose `pHYs` CRC had been corrupted was *accepted* as 300-DPI evidence, and a
+    `pHYs` header declaring nine bytes over a one-byte body escaped as an `IndexError`
+    rather than this row's named refusal. Both are the same fault -- a parser that
+    indexes into bytes it has not proved are there, and believes a chunk it has not
+    proved is intact. So every chunk is now bounded before it is read and checked
+    before it is believed, and the structure is walked to its end rather than
+    abandoned at the first tag that matches.
+
+    **The chunk is still located by walking rather than by searching**, because the
+    four bytes `pHYs` may legitimately occur inside a compressed image stream and a
+    search would find that first. What is new is that the walk cannot be steered off
+    the end of the file by a length nobody bounded, and that a chunk whose CRC does
+    not cover its own bytes is not evidence of the resolution it states -- a decoder
+    is entitled to discard such a chunk, so this row must not accept it.
+
+    **Exactly one `pHYs` chunk is permitted.** Two of them disagreeing would make the
+    figure's declared DPI a function of which one a reader's decoder happened to keep,
+    and returning the first would be this row making that choice on the reader's
+    behalf.
     """
 
     if not raw.startswith(_PNG_SIGNATURE):
@@ -3426,16 +3485,46 @@ def _png_pixels_per_metre(raw: bytes, *, where: str) -> tuple[int, int]:
             "300-DPI figure is not a PNG at all",
         )
     offset = len(_PNG_SIGNATURE)
-    while offset + 8 <= len(raw):
+    resolution: tuple[int, int] | None = None
+    while True:
+        if offset + _PNG_CHUNK_OVERHEAD_BYTES > len(raw):
+            raise _refuse(
+                X_BUNDLE_INCOMPLETE,
+                f"{where} ends {len(raw) - offset} bytes into a chunk header at byte "
+                f"{offset}; a chunk is at least {_PNG_CHUNK_OVERHEAD_BYTES} bytes, and "
+                "a truncated figure is not evidence of the resolution it was saved at",
+            )
         length = int.from_bytes(raw[offset : offset + 4], "big")
         kind = raw[offset + 4 : offset + 8]
+        end = offset + _PNG_CHUNK_OVERHEAD_BYTES + length
+        if end > len(raw):
+            raise _refuse(
+                X_BUNDLE_INCOMPLETE,
+                f"{where} declares a {length}-byte {kind!r} chunk at byte {offset} but "
+                f"only {len(raw) - offset - _PNG_CHUNK_OVERHEAD_BYTES} bytes of body "
+                "remain; the file is truncated",
+            )
+        body = raw[offset + 8 : offset + 8 + length]
+        if zlib.crc32(kind + body) != int.from_bytes(raw[end - 4 : end], "big"):
+            raise _refuse(
+                X_BUNDLE_INCOMPLETE,
+                f"{where} carries a {kind!r} chunk at byte {offset} whose CRC-32 does "
+                "not cover its own bytes, so the chunk is corrupt and a decoder is "
+                "entitled to discard it",
+            )
         if kind == _PNG_PHYS_CHUNK:
-            body = raw[offset + 8 : offset + 8 + length]
-            if length != 9:
+            if resolution is not None:
+                raise _refuse(
+                    X_BUNDLE_INCOMPLETE,
+                    f"{where} carries more than one pHYs chunk; which resolution the "
+                    "figure declares would then depend on which one a reader's decoder "
+                    "kept",
+                )
+            if length != _PNG_PHYS_BODY_BYTES:
                 raise _refuse(
                     X_BUNDLE_INCOMPLETE,
                     f"{where} carries a pHYs chunk of {length} bytes; the format "
-                    "fixes it at 9",
+                    f"fixes it at {_PNG_PHYS_BODY_BYTES}",
                 )
             unit = body[8]
             if unit != _PNG_PHYS_METRE_UNIT:
@@ -3444,16 +3533,69 @@ def _png_pixels_per_metre(raw: bytes, *, where: str) -> tuple[int, int]:
                     f"{where} declares its resolution in unit {unit} rather than in "
                     "metres, so no DPI can be read from it",
                 )
-            return (
+            resolution = (
                 int.from_bytes(body[0:4], "big"),
                 int.from_bytes(body[4:8], "big"),
             )
-        offset += 12 + length
-    raise _refuse(
-        X_BUNDLE_INCOMPLETE,
-        f"{where} carries no pHYs chunk, so it does not state the resolution "
-        f"section 4.7 requires it to have been saved at",
-    )
+        offset = end
+        if kind == _PNG_IEND_CHUNK:
+            break
+    if offset != len(raw):
+        raise _refuse(
+            X_BUNDLE_INCOMPLETE,
+            f"{where} carries {len(raw) - offset} bytes after its IEND chunk; the "
+            "figure is the datastream itself and not a container something else was "
+            "appended to",
+        )
+    if resolution is None:
+        raise _refuse(
+            X_BUNDLE_INCOMPLETE,
+            f"{where} carries no pHYs chunk, so it does not state the resolution "
+            f"section 4.7 requires it to have been saved at",
+        )
+    return resolution
+
+
+def _authority_output_root(connection: AuthenticatedConnection) -> Path:
+    """Return the one destination this connection's authenticated identities fix.
+
+    Args:
+        connection: everything rows 1 through 12 established.
+
+    Returns:
+        `<packet-root>/<authority output parent>/<record_label>/`, resolved.
+
+    Raises:
+        VerificationSceneError: `X_PROVENANCE_UNRESOLVED` when that path does not
+            resolve to somewhere inside the packet root the chain ran under -- a
+            junction or symlink at any component of the output parent would otherwise
+            put the publication physically outside the packet while every string in
+            the comparison still looked right.
+
+    **This re-derives what row 3 already bound, and that is not a second copy of row
+    3's rule.** `BoundPaths` reaches this row as a *separately constructible value*:
+    a caller can hand row 21 a connection whose `output_root` no row bound, and the
+    previous version of this check compared only that path's basename, so a correct
+    label under a wrong parent was accepted and populated (Codex's Session-153
+    review). Row 3 states a rule about an *argument*; this states the same rule about
+    the *value that arrives here*, and the two separate exactly when a caller
+    substitutes. The derivation uses only the authenticated authority, the
+    authenticated record label and the one packet root invariant W8 names.
+    """
+
+    packet_root = Path(connection.bound.packet_root).resolve()
+    parent = OUTPUT_PARENTS[connection.record.authority]
+    candidate = packet_root.joinpath(
+        *parent.parts, connection.record.record_label
+    ).resolve()
+    if packet_root not in candidate.parents:
+        raise _refuse(
+            X_PROVENANCE_UNRESOLVED,
+            f"the {connection.record.authority} publication root resolves to "
+            f"{candidate}, which is outside the packet root {packet_root} the chain "
+            "ran under",
+        )
+    return candidate
 
 
 def write_bundle(
@@ -3465,19 +3607,24 @@ def write_bundle(
     """Run read-order step 21: create the output root exclusively and publish the set.
 
     Args:
-        connection: everything rows 1 through 12 established. The destination comes
-            from `connection.bound.output_root`, which row 3 already bound to the
-            authority's own parent and to `record_label`; this row resolves nothing.
-        bundle: the validated menu row 20 returned.
+        connection: everything rows 1 through 12 established. It supplies the
+            destination, the menu, and every identity the published scenes must carry.
+        bundle: the validated menu row 20 returned. It arrives as a separately
+            constructible value, so it is bound back to `connection` before anything
+            is created.
         render: the scripted figure writer, injected rather than imported. See below.
 
     Returns:
         A `WrittenBundle` describing exactly what is now on disk.
 
     Raises:
-        VerificationSceneError: `X_PROVENANCE_UNRESOLVED` when the output root is not
-            the exclusive child of the authority's parent that `record_label` names,
-            or already exists; `X_BUNDLE_INCOMPLETE` when what the writer left on disk
+        VerificationSceneError: `X_PROVENANCE_UNRESOLVED` when the bound output root
+            is not the destination this connection's own authority and record label
+            fix, when it already exists, or when the bundle's own state is not the
+            authenticated authority; `X_IDENTITY_MISMATCH` when a scene's provenance
+            block is not the one this connection produces for that case;
+            `X_BUNDLE_INCOMPLETE` when the bundle's menu is not the record's, when its
+            declared version is not this module's, when what the writer left on disk
             is not exactly the declared set, when a published document is not the
             canonical rendering of the object this chain assembled, when the digest a
             reader is told to check is not the digest of the file beside it, or when a
@@ -3516,6 +3663,20 @@ def write_bundle(
         report claims it was saved at, and that resolution must be
         `REQUIRED_FIGURE_DPI`. A report of a DPI is not a DPI.
 
+    *** AND THE BUNDLE IS THE SECOND SEPARATELY CONSTRUCTIBLE VALUE ON THIS ROW. ***
+    `bundle` and `connection` are two arguments, and nothing in the signature makes
+    them come from one chain. Codex's Session-153 review built two genuinely
+    authenticated connections over one tree -- same authority, same menu, different
+    labels and different record digests -- resolved rows 13 through 20 under the first
+    and published the result under the second; every scene still identified the first
+    connection while the tree it was published into was named for the second. So
+    before anything is created, the menu, the declared version, the bundle's own
+    provenance state and **every field of every scene's provenance block** are
+    required to be what this connection produces. The comparand is built by
+    `_provenance_for`, the same function row 20 assembles with, and the comparison
+    walks `Provenance`'s own fields rather than a hand-listed set, so a field added to
+    that dataclass is bound here without anyone remembering to bind it.
+
     **The exclusive create runs before anything is written and nothing is cleaned up
     after a refusal.** A second invocation at the same `record_label` therefore refuses
     without touching the first publication, which is invariant W10; and a post-condition
@@ -3525,14 +3686,51 @@ def write_bundle(
     is kept, not swept.
     """
 
-    output_root = Path(connection.bound.output_root)
-    if output_root.name != connection.record.record_label:
+    output_root = Path(connection.bound.output_root).resolve()
+    expected_root = _authority_output_root(connection)
+    if output_root != expected_root:
         raise _refuse(
             X_PROVENANCE_UNRESOLVED,
-            f"the bound output root {output_root} is not named for record label "
-            f"{connection.record.record_label!r}; the publication tree is bound to "
-            "the label and to nothing else",
+            f"the bound output root {output_root} is not the destination this "
+            f"connection fixes, which is {expected_root}; the publication tree is "
+            "the record label's own child of the authority's own parent, and both "
+            "halves of that are authenticated values rather than arguments",
         )
+
+    declared_cases = tuple(case.case_id for case in connection.record.cases)
+    if tuple(bundle.scenes) != declared_cases:
+        raise _refuse(
+            X_BUNDLE_INCOMPLETE,
+            f"the bundle presents cases {list(bundle.scenes)} but this connection's "
+            f"record declares {list(declared_cases)}, in that order; the menu that is "
+            "published is the menu that was authenticated",
+        )
+    if bundle.bundle_version != BUNDLE_VERSION:
+        raise _refuse(
+            X_BUNDLE_INCOMPLETE,
+            f"the bundle declares version {bundle.bundle_version!r} but this module "
+            f"assembles {BUNDLE_VERSION!r}",
+        )
+    if bundle.provenance_state != connection.record.authority:
+        raise _refuse(
+            X_PROVENANCE_UNRESOLVED,
+            f"the bundle carries provenance state {bundle.provenance_state!r} but "
+            f"this connection's authenticated authority is "
+            f"{connection.record.authority!r}",
+        )
+    for case in connection.record.cases:
+        presented = bundle.scenes[case.case_id].provenance
+        assembled = _provenance_for(connection, case, connection.record.authority)
+        for field in dataclass_fields(Provenance):
+            if getattr(presented, field.name) != getattr(assembled, field.name):
+                raise _refuse(
+                    X_IDENTITY_MISMATCH,
+                    f"case {case.case_id!r} is presented with provenance "
+                    f"{field.name} {getattr(presented, field.name)!r}, but this "
+                    f"connection authenticated {getattr(assembled, field.name)!r}; a "
+                    "bundle is published only under the connection that assembled it",
+                )
+
     try:
         output_root.mkdir(parents=True, exist_ok=False)
     except FileExistsError as exc:
@@ -3548,7 +3746,6 @@ def write_bundle(
             f"the output root {output_root} could not be created: {exc}",
         ) from exc
 
-    declared_cases = tuple(case.case_id for case in connection.record.cases)
     expected_names = set(BUNDLE_FILE_NAMES)
     for case_id in declared_cases:
         for suffix in CASE_FILE_SUFFIXES:

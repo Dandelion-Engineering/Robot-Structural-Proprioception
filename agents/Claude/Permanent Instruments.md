@@ -4147,6 +4147,55 @@ correction applied.)*
   (`write_bytes`, or `open(..., newline="\n")`) for anything tracked, and measure CR after every
   scripted edit.
 
+283. **[S154] TWO PARAMETERS DO NOT COME FROM ONE CHAIN JUST BECAUSE ONE FUNCTION PRODUCED
+  THEM.  A ROW THAT TAKES AN ALREADY-ASSEMBLED VALUE MUST BIND IT TO THE THING IT WAS
+  SUPPOSED TO BE ASSEMBLED FROM.**  `write_bundle(connection, bundle, ...)` checked its
+  injected *writer* exhaustively and never checked its *bundle*.  MEASURED before repair, on
+  two genuinely authenticated connections over one harness differing only in record label:
+  the bundle assembled under `adapter-fixture` (`56a6d1b1...`) published under
+  `adapter-fixture-b` (`af93ccea...`), and every scene inside the published tree identified
+  the other connection.  **THE REPAIR SHAPE IS THE REUSABLE PART: build the comparand with
+  THE SAME FUNCTION that built the original, and compare by walking the dataclass's own
+  fields.**  `_provenance_for` is called by row 20 to assemble and by row 21 to compare, and
+  the comparison iterates `dataclasses.fields(Provenance)`, so a field added later is bound
+  without anyone remembering to bind it.  A hand-listed field set cannot have that property,
+  and it is the property that makes the binding TOTAL rather than current.
+
+284. **[S154] A PARSER THAT INDEXES BEFORE IT BOUNDS IS ONE DEFECT, AND WHETHER IT ACCEPTS OR
+  RAISES IS AN ACCIDENT OF THE INPUT.**  `_png_pixels_per_metre` accepted a `pHYs` chunk whose
+  CRC had been corrupted - returning `(11811, 11811)` as 300-DPI evidence - and raised a bare
+  `IndexError` on a `pHYs` header declaring nine bytes over a one-byte body.  Those two look
+  opposite; they are the same missing check biting in two places.  **AN INTEGRITY FIELD THAT IS
+  PRESENT BUT NEVER VERIFIED IS NOT EVIDENCE - a decoder is entitled to discard the chunk, so a
+  row that treats it as proof is claiming something the file does not support.**  The fix is
+  not to patch the two reported inputs: bound every chunk before reading it, verify every CRC,
+  require the sequence to END where the format says it ends, and refuse a duplicate rather than
+  returning the first.  Making the walk TOTAL also closed a third hole nobody reported - a
+  bundle whose menu was not the record's produced a raw `KeyError` from the same class of
+  unproved index.
+
+285. **[S154] AN OBSERVER OWES ITS OWN ANCHOR BEFORE IT OWES A MEASUREMENT.**  The W3/B4
+  audit-hook observer compares the paths one adapter call opens against
+  `expected_open_set`.  **A hook that recorded NOTHING would satisfy set equality against an
+  empty expected set, and would satisfy containment in EITHER direction against any set at
+  all.**  So the anchor test comes first and drives a builtin `open` AND an `os.open` on a file
+  no allowlist names, requires both to be recorded, and requires an inactive recorder to stay
+  empty.  MEASURED with the anchor in place: 48 `open` events over 47 distinct paths, both
+  set differences empty with NOTHING FILTERED ON EITHER SIDE, and the single path opened twice
+  is `schema/schema.json` - the pinned second read, now pinned at the interpreter instead of at
+  one patched door.  **AND STATE THE INSTRUMENT'S COST AS A MEASUREMENT: a process-wide audit
+  hook cannot be removed, and the packet-wide suite ran 180.46 s without it and 185.03 s with
+  it.**
+
+286. **[S154] WHEN A WEAK GUARD IS REPLACED BY A TOTAL ONE, DELETE THE WEAK ONE.**  Row 21's
+  destination check compared `output_root.name` against the record label; the repair re-derives
+  the whole path from the authenticated authority, the authenticated label and the packet root.
+  Keeping the basename check beside it would leave a branch whose REFUSAL is reachable but whose
+  DELETION changes no outcome - indistinguishable from its own absence, which is finding 5's
+  shape and lesson 242's rule.  **The two directions the equality separates on get two TESTS
+  instead: a moved basename and a moved parent.**  The tests are where the distinction belongs,
+  because a test names the case; a duplicated guard only names the author's unease.
+
 
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 

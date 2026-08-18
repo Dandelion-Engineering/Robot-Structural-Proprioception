@@ -1095,3 +1095,172 @@ consecutive sessions have held that line.
 `authenticate_sources` third parameter, and the `AuthenticatedConnection.record_sha256`
 field. Session 153 added no fourth — `write_bundle` is 4b-ii-b's own new code and moves no
 byte that was part of the closed 4b-ii-a approval. ***
+
+---
+
+## Appendix H — Codex's two Session-153 findings discharged, and the audit-hook observer built (Claude Session 154)
+
+*Appended 2026-08-17, Session 154. Both of Codex's Session-153 cross-review findings
+are discharged, neither contested, both re-driven at source by me before a line was
+changed, and both of my measurements reproduce Codex's published digests exactly. The
+**audit-hook observer (W3 / B4)** is built, which is the first item of section 4's
+remaining scope. What is left is B2, B5, the remaining B3 rows, the `roles` CLI wiring,
+the additive `build_role_bundle` change, the two-pass mutation sweep, and only then the
+Review Card and the chat. The design at blob `032db166` is still the authority and this
+plan loses to it wherever they differ.*
+
+### H.1 Codex was right a sixth time, and both findings are the same fault as each other
+
+Session 152's pair was one fault at two sites — a value reaching a checked object from
+beside it. Session 153's pair was a different one — a helper claiming more than it
+checked. **Session 154's pair is the first one, returned at two new sites, and it has a
+sharper statement: a row that takes an *already assembled* value and the thing that
+value is supposed to have been assembled from must bind the two to each other, because
+nothing in a signature makes two parameters come from one chain.**
+
+`write_bundle(connection, bundle, render=...)` takes three. Session 153 checked the
+third one exhaustively — the writer is a seam and its report is compared field by field
+against the bytes it leaves behind — and did not notice that the *second* one is the
+same kind of seam.
+
+**Finding 1, driven at source before repair, and it reproduces to the digit.** Two
+genuinely authenticated connections over one fresh harness, same `DEVELOPMENT_ONLY`
+authority and same three-case menu, differing only in record label and therefore in
+record digest:
+
+```text
+connection A label   adapter-fixture
+connection A sha256  56a6d1b19548defcb5bcf1698166b809352de03418f2e1282db2f233d36d64b4
+connection B label   adapter-fixture-b
+connection B sha256  af93cceab0196ec4d8cf6d7a2fa0a10660ffa83dd6af46451c878ea00d645647
+```
+
+Rows 13–20 resolved under A; row 21 handed the resulting bundle together with
+connection B. **It published.** The tree was named for B and every scene inside it —
+including the copy of the bundle document a reader is told to check the digest of —
+identified A. Both of my numbers are Codex's numbers.
+
+**And the destination half, which is the same finding one layer down.** The docstring
+said row 21 refuses a root that is not the named child of the authority's parent; the
+code compared `output_root.name` against `record_label` and nothing else. Substituting
+`<harness-root>/wrong-parent/adapter-fixture` — *correct basename, wrong place* — was
+accepted and populated. The existing refusal test moves the basename, so it could not
+see this direction at all. That is Session 153's own lesson 279 landing on Session
+153's own code.
+
+**Finding 2, also driven at source.** `_png_pixels_per_metre` walked the chunk sequence
+but bounded nothing and verified nothing:
+
+```text
+corrupted pHYs CRC        accepted, returned (11811, 11811) pixels per metre
+pHYs header of 9 over a
+one-byte body             IndexError("index out of range"), no refusal code
+```
+
+**Those two outcomes look opposite and are one defect**: a parser that indexes into
+bytes it has not proved are present, and believes a chunk it has not proved is intact.
+Which of the two a given malformed file produces is an accident of where the missing
+bound happened to bite.
+
+### H.2 The repairs
+
+**One owner for the provenance block.** `_provenance_for(connection, case, state)` is
+new, and `_scene_for` now calls it instead of building a `Provenance` inline. Row 21
+builds its comparand with **the same function row 20 assembles with**, and compares by
+walking `dataclasses.fields(Provenance)` rather than a hand-listed field set. *A field
+added to that dataclass is therefore bound at row 21 without anyone remembering to bind
+it* — which is the property a hand-listed set cannot have, and the reason the extraction
+was worth doing rather than restating nine comparisons.
+
+Before anything is created, row 21 now requires: the bundle's menu to be the record's
+menu in the record's order; the bundle's declared version to be this module's; the
+bundle's own `provenance_state` to be the authenticated authority; and every field of
+every scene's provenance block to equal `_provenance_for`'s. Codes: `X_IDENTITY_MISMATCH`
+for a presented identity that disagrees with an authenticated one (Session 153's own
+rule), `X_PROVENANCE_UNRESOLVED` for the state, `X_BUNDLE_INCOMPLETE` for the menu and
+the version. **No fifteenth exit code; design 4.5's table is still not reopened.**
+
+**One derivation for the destination.** `_authority_output_root(connection)` re-derives
+`<packet-root>/<authority output parent>/<record_label>/` from the authenticated
+authority, the authenticated record label and the one packet root W8 names, and requires
+the *bound* value to equal it, after proving the derived path resolves inside the packet
+root — the same junction/symlink argument row 3 makes about `--output-dir`.
+
+*** THE BASENAME CHECK WAS REPLACED, NOT KEPT BESIDE THE NEW ONE. *** A guard whose
+refusal is reachable but whose deletion changes no outcome is a branch nothing can
+distinguish from its absence, which is finding 5's shape and lesson 242's rule. The
+equality catches both directions; the two tests that drive it — a moved basename and a
+moved parent — are what make each direction visible.
+
+**A total PNG walk.** Every chunk is now bounded before it is read (the header must fit,
+then the declared body must fit) and checked before it is believed
+(`zlib.crc32(kind + body)` against the chunk's own CRC field). The sequence must end at
+an `IEND` chunk with nothing after it, and exactly one `pHYs` chunk is permitted — two of
+them disagreeing would make the declared DPI a function of which one a reader's decoder
+kept, and returning the first would be this row making that choice for the reader.
+
+*** A THIRD HOLE THE FINDING EXPOSED, AND IT IS THE SAME SHAPE. *** The scene loop
+indexes `bundle.scenes[case_id]` with case ids taken from the *record*. A bundle whose
+menu is not the record's therefore produced a raw `KeyError` rather than a named
+refusal. The menu check above closes it, and a test drives it with a case dropped.
+
+### H.3 The audit-hook observer (W3 / B4)
+
+`sys.addaudithook` sees the interpreter's own `open` event, so an open through `numpy`,
+through `csv`, through a closed utility or through a bare builtin arrives identically.
+That is what the Step-4b-ii-a review's `_open_counts` instrument — which patches
+`Path.read_bytes` — structurally cannot do.
+
+**Measured, and the equality closes with nothing filtered on either side:**
+
+```text
+one authenticate_connection call over the three-case menu
+  48 raw `open` events over 47 distinct paths
+  observed - expected  = {}      expected - observed = {}
+  the one path opened twice is `schema/schema.json`, and the count is 2
+```
+
+The pinned second read is therefore now pinned *at the interpreter* rather than at one
+door: a future second read of any file taken through any other route fails the
+multiplicity test instead of joining an allowance.
+
+*** THE OBSERVER OWES ITS OWN ANCHOR AND IT IS WRITTEN FIRST. *** A hook that recorded
+nothing would satisfy set equality against an empty expected set and would satisfy
+containment in either direction. So
+`test_the_open_observer_records_an_open_the_allowlist_does_not_name` drives a builtin
+`open` **and** an `os.open` on a file no allowlist names and requires both to be
+recorded, and requires an inactive recorder to stay empty.
+
+**The hook is process-wide and cannot be removed**, so it is written to cost nothing
+when inert: one truth test on a list, and a return. Measured cost on the packet-wide
+suite: **180.46 s without it and 185.03 s with it**, against 190.80 s in Session 153 —
+inside run-to-run variation, and stated as a measurement rather than as an absence.
+
+A fourth test uses the same instrument on row 21: during `write_bundle`, every path the
+row **or its injected writer** opens is a child of the root row 3 bound, and the set of
+their names is exactly the published file set.
+
+### H.4 Numbers
+
+`test_connection_adapter.py` **309** (was 279), the focused pair **329** (was 299) and
+**329 again under `python -O`**; packet-wide **2,987 passed / 0 failed / 185.03 s**. The
+arithmetic closes: 2,957 + 30 = 2,987, and the 30 are 26 on the two findings and 4 on
+the observer. `git diff --numstat` reads `239 42` on the module and `561 1` on the test
+file. `py_compile`, `git diff --check` and `git status --porcelain` all clean; both files
+pure ASCII, LF, 0 CR, no BOM, final newline, **checked on the final bytes** — lesson 282's
+instrument, run again because this session also edited by script.
+
+### H.5 What is left, in order
+
+B2 and B5; the remaining B3 rows; the `roles` CLI wiring and the additive
+`build_role_bundle` change; **then** the two-pass mutation sweep on the finished pair,
+whose staged-tree set (`scripts`, `tests`, `schema`, `config` **and** `results`) is
+unchanged; **then** the Review Card and the subject chat; then the handoff. Still no card
+and no chat for 4b-ii-b, and that is still deliberate — ten consecutive sessions have held
+that line.
+
+*** THE CARD STILL CARRIES THREE DISCLOSURES: the `schema.json` EOL-pin dependency, the
+`authenticate_sources` third parameter, and the `AuthenticatedConnection.record_sha256`
+field. Session 154 added no fourth — `_provenance_for` is an extraction inside 4b-ii-b's
+own half, `_authority_output_root` and the strict PNG walk are new code in it, and no
+public surface of the closed 4b-ii-a approval moved. ***
