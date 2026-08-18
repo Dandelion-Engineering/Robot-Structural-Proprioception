@@ -1621,21 +1621,47 @@ def build_role_bundle(
     config: str,
     checkpoint_root: str,
     role_root: str,
+    output_dir: str,
 ) -> VerificationBundle:
     """Refuse, before opening anything, because no connection record exists.
 
     Args:
         connection_record: path to the separately reviewed connection record.
         connection_record_sha256: the exact record identity the joint approval named.
-        config: path to the exact frozen config file.
+        config: path to the **authority-appropriate** config file -- the frozen
+            `config.json` under `FINAL`, the exact approved versioned draft under
+            `DEVELOPMENT_ONLY`.
         checkpoint_root: root for the record's relative C1/S checkpoint paths.
         role_root: root containing the schema-E role layout.
+        output_dir: the publication parent, constrained by the record's authenticated
+            authority as design section 4.7 specifies.
 
     Raises:
         VerificationSceneError: always, with `X_CONNECTION_UNAUTHORIZED`. No argument
             is read, no path is opened and no default can re-enable this path; the
             later jointly approved connection record is what makes the already
             specified adapter reachable (design 4.2, section 9 step 4).
+
+    **The `--config` gloss above is corrected forward, and the correction is finding
+    DA's.** This docstring said "path to the exact frozen config file" -- the frozen
+    design's own section-4.2 wording, which its section 4.3 contradicts by giving
+    `DEVELOPMENT_ONLY` the entry condition "the config is `dev-` and split is `dev`". A
+    `dev-` config is a *draft* by the machine contract's own rules, so the two cannot
+    both govern one invocation. DA rules that 4.3 governs and that the 4.2 gloss is
+    `FINAL`-only; `require_frozen` is a function of the record's authenticated
+    authority, never a constant. The sentence is corrected here rather than left to be
+    read by the next builder, because a builder following it writes an unconditional
+    `require_frozen=True` and silently un-reaches the development branch.
+
+    **`output_dir` is added and the refusal is not touched, which is the whole of this
+    change.** The `roles` CLI has required `--output-dir` since the argument set closed,
+    and this entry point took the other five -- so the one argument that decides *where*
+    a real invocation would publish was the one the entry point could not see. The
+    parameter is added now, while the path is still unreachable, so that closing 4b is
+    a change to this function's body and not to its signature. **There is deliberately
+    no `packet_root` parameter**: invariant W8 gives the roles path the live packet root
+    derived from the module's own location, and no CLI argument, environment variable or
+    record field may override it.
     """
 
     raise VerificationSceneError(

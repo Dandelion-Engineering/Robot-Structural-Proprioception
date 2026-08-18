@@ -199,6 +199,26 @@ can now only confirm the same raw digest or refuse a later replacement; it canno
 a configuration naming schema B validate under the rules from schema A. The count is
 pinned at two by a test over the whole chain, so any new second read anywhere fails
 rather than joining an allowance.
+
+*** AND THAT COMPARISON MAKES THIS MODULE A SECOND CONSUMER OF THE `schema.json` EOL
+PIN, WHICH IS THE FOLLOW-UP THE STEP-4b-ii-a CARD CARRIED FORWARD AND THIS IS ITS WHOLE
+REPAIR. *** `utils.storage_contract.file_sha256` is the owner of the raw domain the
+comparison above matches, and `schema/schema.json text eol=lf` in both `.gitattributes`
+files is the reason raw is safe *for that one file*: the pin makes the canonical and raw
+domains agree on it, so a fresh Windows checkout cannot materialise a schema whose raw
+digest differs from the one the configuration declares. Before Session 143's guard, that
+pin had exactly one consumer -- `config_contract` -- and its removal would have broken
+only that closed contract. It now has two, and **the second one is silent**: nothing in
+this module's behaviour changes when the pin is removed until a fresh clone on a CRLF
+platform refuses a schema that is byte-correct in the object store.
+
+**"Add a test" is not available as the answer, and that is the reason this is a
+paragraph rather than an assertion.** A test that caught the pin's removal cannot exist
+while the pin holds -- it would have to observe a checkout the pin prevents. So the
+dependency is documented in the three places a reader could look: here, at the site that
+depends on it; in **both** `.gitattributes` files, which now name this module as the
+pin's second consumer beside `config_contract` and say that no test can catch the line's
+removal; and on the Step-4b-ii-b Review Card as a standing disclosure.
 """
 
 from __future__ import annotations
@@ -3418,6 +3438,41 @@ _PNG_IHDR_CHUNK = b"IHDR"
 _PNG_IDAT_CHUNK = b"IDAT"
 _PNG_IHDR_BODY_BYTES = 13
 
+#: The format's own colour-type table: how many samples each pixel carries, and which
+#: bit depths that colour type is defined for. A pair outside this table is not an
+#: under-specified image, it is not an image -- which is why the table is the check
+#: rather than a decoder's willingness to guess (Codex's Session-155 finding 2).
+_PNG_COLOUR_TYPES: Mapping[int, tuple[int, tuple[int, ...]]] = MappingProxyType(
+    {
+        0: (1, (1, 2, 4, 8, 16)),
+        2: (3, (8, 16)),
+        3: (1, (1, 2, 4, 8)),
+        4: (2, (8, 16)),
+        6: (4, (8, 16)),
+    }
+)
+
+#: The one compression method and the one filter method the format defines, the two
+#: interlace methods it defines, and the largest dimension it permits.
+_PNG_COMPRESSION_METHOD = 0
+_PNG_FILTER_METHOD = 0
+_PNG_INTERLACE_METHODS = (0, 1)
+_PNG_MAX_DIMENSION = 2**31 - 1
+
+#: Adam7, as the format states it: seven passes, each `(x_start, y_start, x_step,
+#: y_step)`. It is here so the expected raw size of an interlaced image can be derived
+#: rather than excused; matplotlib writes non-interlaced files, and a check that simply
+#: skipped the interlaced case would be a hole shaped like a legal PNG.
+_PNG_ADAM7_PASSES = (
+    (0, 0, 8, 8),
+    (4, 0, 8, 8),
+    (0, 4, 4, 8),
+    (2, 0, 4, 4),
+    (0, 2, 2, 4),
+    (1, 0, 2, 2),
+    (0, 1, 1, 2),
+)
+
 #: Metres per inch. The `pHYs` chunk counts pixels per metre, so this is what turns a
 #: declared DPI into the integer the file must carry.
 _METRES_PER_INCH = 0.0254
@@ -3445,6 +3500,132 @@ class WrittenBundle:
     figure_dpi: int
 
 
+def _png_header_fields(body: bytes, *, where: str) -> dict[str, int]:
+    """Return one PNG header's fields, refusing every value the format does not define.
+
+    Args:
+        body: the thirteen bytes of the `IHDR` chunk, already bounded and CRC-checked
+            by the walk that calls this.
+        where: the file's name, for the refusal message.
+
+    Returns:
+        `width`, `height`, `bit_depth`, `colour_type` and `interlace`.
+
+    Raises:
+        VerificationSceneError: `X_BUNDLE_INCOMPLETE` when either dimension is zero or
+            larger than the format permits; when the colour type is not one of the five
+            the format defines; when the bit depth is not one that colour type is
+            defined for; or when the compression, filter or interlace method is not one
+            the format defines.
+
+    **A header is not a formality here, because the resolution is read out of a file
+    this row calls a figure.** Codex's Session-155 review drove a zero-width `IHDR`
+    through the previous walk and it returned `(11811, 11811)` while a strict decoder
+    refused the same bytes; my own re-drive widened that to a zero *height*, to a
+    colour type the format does not define, and to a compression method it does not
+    define -- and that last one is the case worth keeping, because a lenient decoder
+    *accepted* it. **So the standard applied here is the format, not a decoder's
+    willingness to guess**: a decoder that renders something is not evidence that what
+    it rendered is what the file declared.
+
+    The dimensions are also what makes the image-data length check downstream possible
+    at all, which is why they are validated before that check rather than beside it.
+    """
+
+    width = int.from_bytes(body[0:4], "big")
+    height = int.from_bytes(body[4:8], "big")
+    bit_depth = body[8]
+    colour_type = body[9]
+    compression = body[10]
+    filter_method = body[11]
+    interlace = body[12]
+    for name, value in (("width", width), ("height", height)):
+        if value < 1 or value > _PNG_MAX_DIMENSION:
+            raise _refuse(
+                X_BUNDLE_INCOMPLETE,
+                f"{where} declares an image {name} of {value}; the format requires "
+                f"1 to {_PNG_MAX_DIMENSION}, and a figure with no pixels in it is not "
+                "a figure saved at any resolution",
+            )
+    if colour_type not in _PNG_COLOUR_TYPES:
+        raise _refuse(
+            X_BUNDLE_INCOMPLETE,
+            f"{where} declares colour type {colour_type}; the format defines only "
+            f"{sorted(_PNG_COLOUR_TYPES)}",
+        )
+    if bit_depth not in _PNG_COLOUR_TYPES[colour_type][1]:
+        raise _refuse(
+            X_BUNDLE_INCOMPLETE,
+            f"{where} declares bit depth {bit_depth} for colour type {colour_type}, "
+            f"which the format defines only for {list(_PNG_COLOUR_TYPES[colour_type][1])}",
+        )
+    if compression != _PNG_COMPRESSION_METHOD:
+        raise _refuse(
+            X_BUNDLE_INCOMPLETE,
+            f"{where} declares compression method {compression}; the format defines "
+            f"only {_PNG_COMPRESSION_METHOD}",
+        )
+    if filter_method != _PNG_FILTER_METHOD:
+        raise _refuse(
+            X_BUNDLE_INCOMPLETE,
+            f"{where} declares filter method {filter_method}; the format defines only "
+            f"{_PNG_FILTER_METHOD}",
+        )
+    if interlace not in _PNG_INTERLACE_METHODS:
+        raise _refuse(
+            X_BUNDLE_INCOMPLETE,
+            f"{where} declares interlace method {interlace}; the format defines only "
+            f"{list(_PNG_INTERLACE_METHODS)}",
+        )
+    return {
+        "width": width,
+        "height": height,
+        "bit_depth": bit_depth,
+        "colour_type": colour_type,
+        "interlace": interlace,
+    }
+
+
+def _png_expected_raw_bytes(
+    *, width: int, height: int, bit_depth: int, colour_type: int, interlace: int
+) -> int:
+    """Return the exact size of one PNG's decompressed image data, in bytes.
+
+    Args:
+        width: the header's declared image width, in pixels.
+        height: the header's declared image height, in pixels.
+        bit_depth: the header's declared bits per sample.
+        colour_type: the header's declared colour type, already known to the table.
+        interlace: 0 for no interlacing, 1 for Adam7.
+
+    Returns:
+        The number of bytes a conforming encoder produces before compression: for each
+        scanline of each pass, one filter-type byte plus the packed samples of that
+        scanline. Passes with no pixels contribute nothing, which is the reason each
+        pass is summed rather than the total being divided.
+
+    **This is a derivation, not a bound, and that is what makes it an instrument.** A
+    length check that only required "some" decompressed data would accept a zlib stream
+    carrying three bytes for a 4x4 image; requiring the exact figure means the
+    compressed stream has to describe an image of the size the header declares. The
+    arithmetic is the format's own, so nothing here is pinned to a magic number.
+    """
+
+    samples = _PNG_COLOUR_TYPES[colour_type][0]
+    passes = (
+        ((0, 0, 1, 1),) if interlace == 0 else _PNG_ADAM7_PASSES
+    )
+    total = 0
+    for x_start, y_start, x_step, y_step in passes:
+        pass_width = (width - x_start + x_step - 1) // x_step
+        pass_height = (height - y_start + y_step - 1) // y_step
+        if pass_width <= 0 or pass_height <= 0:
+            continue
+        stride = (pass_width * samples * bit_depth + 7) // 8
+        total += pass_height * (1 + stride)
+    return total
+
+
 def _png_pixels_per_metre(raw: bytes, *, where: str) -> tuple[int, int]:
     """Return one PNG's declared `(x, y)` resolution in pixels per metre.
 
@@ -3465,7 +3646,12 @@ def _png_pixels_per_metre(raw: bytes, *, where: str) -> tuple[int, int]:
             `pHYs` chunk does not precede the image data; when the sequence does not
             end at a zero-length `IEND` chunk with nothing after it; when there is no
             `pHYs` chunk or more than one; when that chunk is not the nine bytes the
-            format fixes; or when its unit is not metres.
+            format fixes; when its unit is not metres; when the header declares a
+            dimension, colour type, bit depth, compression method, filter method or
+            interlace method the format does not define; when the `IDAT` run is not a
+            zlib stream, does not end inside the run, or carries bytes after the
+            stream ends; or when that stream does not decompress to exactly the number
+            of bytes the declared image is.
 
     **The walk is total, and it is total because the alternative is a raw exception.**
     Codex's Session-153 review drove two inputs through the previous version: a figure
@@ -3504,6 +3690,30 @@ def _png_pixels_per_metre(raw: bytes, *, where: str) -> tuple[int, int]:
     rather than delegated to a decoder because a decoder is a dependency this packet
     does not declare, and because the walk was already visiting every chunk -- the
     structure was the part it was not asserting.
+
+    *** AND PRESENT, ORDERED CHUNKS ARE STILL NOT A DECODABLE IMAGE, WHICH IS CODEX'S
+    SESSION-155 FINDING 2 AND THE LAST STEP OF THE SAME ARGUMENT. *** A zero-width
+    `IHDR` and an `IDAT` body reading `not-a-zlib-stream` both crossed the Session-154
+    walk at `(11811, 11811)` while a strict decoder refused both; my re-drive widened
+    that to a zero *height*, an undefined colour type, an undefined compression method
+    and a zlib-valid stream carrying three bytes for a sixteen-pixel image. **The claim
+    is that the published file is a figure saved at 300 DPI, so the walk now settles
+    the whole of it**: `_png_header_fields` refuses every header value the format does
+    not define, and the `IDAT` run must decompress to *exactly* the byte count
+    `_png_expected_raw_bytes` derives from that header. The one case worth carrying is
+    the undefined compression method, because a lenient decoder **accepted** it: the
+    standard here is the format, and a decoder that renders something is not evidence
+    that what it rendered is what the file declared.
+
+    *** THE DECOMPRESSION GOES THROUGH A `decompressobj` RATHER THAN THROUGH
+    `zlib.decompress`, AND THAT IS FORCED RATHER THAN STYLISTIC. *** Measured while
+    writing this repair: `zlib.decompress(zlib.compress(body) + b"GARBAGE")` returns
+    `body` and raises nothing, so the one-call form cannot tell a compressed image from
+    a compressed image with something appended to it. The object form exposes `eof` and
+    `unused_data`, which is how this row requires the image data to be **the whole of
+    the IDAT run rather than a prefix of it**. Nobody reported this one; it came out of
+    asking what else could make the claim false, which is lesson 287's own procedure
+    applied by the owner before a reviewer applies it.
     """
 
     if not raw.startswith(_PNG_SIGNATURE):
@@ -3517,6 +3727,8 @@ def _png_pixels_per_metre(raw: bytes, *, where: str) -> tuple[int, int]:
     chunk_index = 0
     image_data_seen = False
     image_data_closed = False
+    image_data: list[bytes] = []
+    header: dict[str, int] = {}
     while True:
         if offset + _PNG_CHUNK_OVERHEAD_BYTES > len(raw):
             raise _refuse(
@@ -3557,6 +3769,7 @@ def _png_pixels_per_metre(raw: bytes, *, where: str) -> tuple[int, int]:
                     f"{where} carries an IHDR chunk of {length} bytes; the format "
                     f"fixes it at {_PNG_IHDR_BODY_BYTES}",
                 )
+            header = _png_header_fields(body, where=where)
         elif kind == _PNG_IHDR_CHUNK:
             raise _refuse(
                 X_BUNDLE_INCOMPLETE,
@@ -3572,6 +3785,7 @@ def _png_pixels_per_metre(raw: bytes, *, where: str) -> tuple[int, int]:
                     "consecutive, and a decoder is entitled to stop at the break",
                 )
             image_data_seen = True
+            image_data.append(body)
         elif image_data_seen:
             image_data_closed = True
         if kind == _PNG_IEND_CHUNK and length != 0:
@@ -3630,6 +3844,45 @@ def _png_pixels_per_metre(raw: bytes, *, where: str) -> tuple[int, int]:
             f"{where} carries no IDAT chunk, so it holds no image; a resolution "
             "declared over nothing is not evidence of a rendered figure",
         )
+    stream = zlib.decompressobj()
+    try:
+        decompressed = stream.decompress(b"".join(image_data)) + stream.flush()
+    except zlib.error as exc:
+        raise _refuse(
+            X_BUNDLE_INCOMPLETE,
+            f"{where} carries an IDAT run that is not a zlib stream ({exc}); the "
+            "format compresses image data with zlib, so bytes that do not decompress "
+            "are not the image the resolution is claimed for",
+        ) from exc
+    if not stream.eof:
+        raise _refuse(
+            X_BUNDLE_INCOMPLETE,
+            f"{where} carries an IDAT run whose zlib stream never ends; the image data "
+            "is the whole of the run rather than a prefix of it",
+        )
+    if stream.unused_data:
+        raise _refuse(
+            X_BUNDLE_INCOMPLETE,
+            f"{where} carries {len(stream.unused_data)} bytes in its IDAT run after "
+            "the zlib stream ends; a decoder stops at the end of the stream, so those "
+            "bytes are not image data and this file is not the figure it claims to be",
+        )
+    expected_raw = _png_expected_raw_bytes(
+        width=header["width"],
+        height=header["height"],
+        bit_depth=header["bit_depth"],
+        colour_type=header["colour_type"],
+        interlace=header["interlace"],
+    )
+    if len(decompressed) != expected_raw:
+        raise _refuse(
+            X_BUNDLE_INCOMPLETE,
+            f"{where} decompresses to {len(decompressed)} bytes of image data, but "
+            f"the {header['width']}x{header['height']} image its header declares at "
+            f"bit depth {header['bit_depth']} and colour type {header['colour_type']} "
+            f"is {expected_raw} bytes; the compressed stream does not describe the "
+            "image the header describes",
+        )
     if resolution is None:
         raise _refuse(
             X_BUNDLE_INCOMPLETE,
@@ -3652,8 +3905,11 @@ def _require_one_packet_root(connection: AuthenticatedConnection) -> Path:
     Raises:
         VerificationSceneError: `X_PROVENANCE_UNRESOLVED` when the bound record path is
             not the one packet-relative location section 3.1 gives a record under that
-            root, or when the schema, the configuration or any named source artifact
-            resolves outside it.
+            root; when the schema, the configuration or any named source artifact
+            resolves outside it; when any of those paths is one the section-4.2
+            allowlist row 3 derived does not name; when the allowlist itself names a
+            path outside the root; or when the file at the bound record path is not,
+            on disk, the record whose digest rows 1 and 2 authenticated.
 
     **This exists because `BoundPaths` is one value and therefore moves as one.**
     Row 21's destination check re-derives the publication root from
@@ -3677,10 +3933,47 @@ def _require_one_packet_root(connection: AuthenticatedConnection) -> Path:
     tree; the remaining paths are compared by containment because their positions are
     the record's to declare.
 
+    *** AND EVERY ANCHOR INSIDE THE VALUE IS EXACTLY ONE SUBSTITUTION WIDER, WHICH IS
+    CODEX'S SESSION-155 FINDING 1 AND THE END OF A THREE-SESSION PATTERN. *** The
+    Session-153 repair anchored the provenance block to the connection; Session 154
+    moved `output_root` and defeated it. The Session-154 repair anchored `output_root`
+    to `packet_root`; Session 155 moved both and defeated it. This helper's first
+    version anchored `packet_root` to `record_path` -- and `record_path` is a field of
+    the same `BoundPaths`, so moving the whole packet-relative set together defeated it
+    in turn. **Measured before this was written**: with `packet_root`, `output_root`,
+    `record_path`, `schema_path`, `config_path` and every `packet_artifacts` value
+    moved coherently to a temporary tree that *did not exist*, all eight files
+    published beneath it.
+
+    **The regress terminates at bytes that were actually read, and nowhere before
+    that.** Any field of a separately constructible value can be replaced coherently
+    with its neighbours, so a check that consults only such fields can always be
+    widened by one more substitution; that is the shape of all three findings. The
+    claim this helper supports -- that one root holds the packet this chain
+    authenticated -- is a claim about the filesystem, and it is settled by looking:
+    `external_digest(record_path)` must equal `connection.record_sha256`, the digest
+    the CLI authorization named and `load_connection_record` checked. There is no
+    in-memory field that closes this, and the two earlier repairs failing the same way
+    is the evidence for that rather than an assumption about it.
+
+    **The allowlist is checked first because it costs no I/O and it is the sharper
+    message.** `expected_opens` is derived at row 3 from the bound record, so it is a
+    second witness to the paths this chain resolved, and a substitution that moves
+    `bound` alone leaves it naming the authenticated tree. It does not *terminate* the
+    regress -- it can be substituted too -- which is precisely why the digest check
+    below it is not optional.
+
+    **This helper therefore opens exactly one file, and that is disclosed rather than
+    hidden.** It is the record, which section 4.2's allowlist already names and rows 1
+    and 2 already read; it is opened before row 21 creates anything;
+    `test_row21_opens_nothing_outside_the_tree_it_created` states the widened property
+    and bounds it to this one path.
+
     **A whole tree moved together is not what this refuses.** Copying a complete packet
     and running the chain against the copy leaves every one of these paths under the
-    copy's root, and that is one root and therefore allowed. What is refused is a root
-    that claims to govern paths it does not contain.
+    copy's root, *and the record's bytes are there too* -- so the digest check passes,
+    which is the accept side landing exactly where W8 says it should. What is refused
+    is a root that claims to govern paths it does not contain.
     """
 
     packet_root = Path(connection.bound.packet_root).resolve()
@@ -3714,7 +4007,66 @@ def _require_one_packet_root(connection: AuthenticatedConnection) -> Path:
                 f"{packet_root} this chain claims to have run under; the read order "
                 "resolves every packet-relative path against one root",
             )
+    allowed = {Path(path).resolve() for path in connection.expected_opens}
+    for where, path in [("the connection record", observed_record), *named]:
+        resolved = Path(path).resolve()
+        if resolved not in allowed:
+            raise _refuse(
+                X_PROVENANCE_UNRESOLVED,
+                f"{where} is bound at {resolved}, which the allowlist row 3 derived "
+                "from this record does not name; the paths this chain resolved and the "
+                "paths it was permitted to open are the same paths",
+            )
+    for path in sorted(allowed):
+        if packet_root not in path.parents and not _is_under(path, connection.bound):
+            raise _refuse(
+                X_PROVENANCE_UNRESOLVED,
+                f"the allowlist row 3 derived names {path}, which is neither inside "
+                f"the packet root {packet_root} nor under the role or checkpoint root "
+                "this chain was given; one connection resolves against one packet",
+            )
+    try:
+        measured = external_digest(observed_record)
+    except OSError as exc:
+        raise _refuse(
+            X_PROVENANCE_UNRESOLVED,
+            f"the record bound at {observed_record} could not be read ({exc}); a "
+            "packet root that does not hold the record this chain authenticated is "
+            "not the root it ran under",
+        ) from exc
+    if measured != connection.record_sha256:
+        raise _refuse(
+            X_PROVENANCE_UNRESOLVED,
+            f"the record bound at {observed_record} hashes to {measured}, not the "
+            f"authenticated {connection.record_sha256}; the packet root this chain "
+            "publishes under is the root that holds the record it authenticated, and "
+            "that is decided by the bytes on disk rather than by the paths beside them",
+        )
     return packet_root
+
+
+def _is_under(path: Path, bound: BoundPaths) -> bool:
+    """Say whether one allowlisted path sits under the role or checkpoint root.
+
+    Args:
+        path: a resolved member of the section-4.2 allowlist.
+        bound: the bound paths, for the two machine-selected roots.
+
+    Returns:
+        True when the path is inside `role_root` or `checkpoint_root`.
+
+    **The role and checkpoint roots are machine-selected and deliberately not
+    packet-relative** -- the dataset is git-ignored and lives wherever the director put
+    it, which is why `--role-root` and `--checkpoint-root` are CLI arguments at all. So
+    the allowlist legitimately reaches outside the packet for exactly those two trees,
+    and the containment sweep above has to say so rather than refuse every real
+    connection. W8 governs *packet-relative* resolution; it has never governed these.
+    """
+
+    for root in (Path(bound.role_root).resolve(), Path(bound.checkpoint_root).resolve()):
+        if root == path or root in path.parents:
+            return True
+    return False
 
 
 def _authority_output_root(connection: AuthenticatedConnection) -> Path:

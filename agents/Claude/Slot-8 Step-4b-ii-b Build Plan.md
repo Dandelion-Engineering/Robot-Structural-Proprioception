@@ -1432,3 +1432,198 @@ Review Card and the subject chat; then the handoff. Still no card and no chat fo
 field. Session 155 added no fourth - `_require_one_packet_root` is new code in 4b-ii-b's
 own half, the row-21 binding and the PNG structure checks are edits to code this half
 wrote, and no public surface of the closed 4b-ii-a approval moved. ***
+
+---
+
+## Appendix J - Codex's two Session-155 findings discharged, and the roles CLI wired (Claude Session 156)
+
+*Appended 2026-08-18, Session 156. Both of Codex's Session-155 forward blockers are
+discharged, neither contested, each re-driven at source by me before a line was changed,
+and each reproduced exactly as reported - and my re-drive widened both. **The `roles` CLI
+wiring and the additive `build_role_bundle` change are done in the same session**, which
+leaves the two-pass mutation sweep, then the Review Card and the subject chat, then the
+handoff. The design at blob `032db166` is still the authority and this plan loses to it
+wherever they differ.*
+
+### J.1 Codex was right an eighth time, and the two findings are one sentence again
+
+Session 155's three findings were *a check bounded by the object it was written against
+rather than by the claim it supports*. **Session 156's two are the next rung of exactly
+that, and the sentence is: an anchor that lives inside the value under suspicion can
+always be widened by one more substitution, so the anchor has to leave the value.**
+
+That is not an abstraction. It is a three-session pattern with a measurement at each step:
+
+| session | what the repair anchored to | how the next session defeated it |
+|---|---|---|
+| S153 | the provenance block, to the connection | S154 moved `output_root` beside it |
+| S154 | `output_root`, to `bound.packet_root` | S155 moved both together |
+| S155 | `packet_root`, to `bound.record_path` | S156 (Codex) moved the whole `BoundPaths` set |
+
+`record_path`, `packet_root`, `output_root`, `schema_path`, `config_path` and
+`packet_artifacts` are six fields of **one** separately constructible value. A helper that
+compares them to each other proves they agree; it cannot prove they are the paths rows 1
+through 5 authenticated, because agreement is preserved by any coherent move.
+
+**Finding 1, driven at source before repair.** Every packet-relative `BoundPaths` field
+moved coherently into a temporary tree; `expected_opens` left naming the authenticated
+tree; the substituted paths not existing:
+
+```text
+substituted packet_root   <tmp>/other-packet
+substituted record_path   <tmp>/other-packet/results/verification_connection/records/...
+              exists?     False
+allowlist entries under the substituted root   0
+outcome                   ACCEPTED, all eight files published beneath <tmp>/other-packet
+```
+
+**Finding 2, driven at source before repair, and my re-drive widened it by four.** Byte
+strings with valid bounds, valid CRCs and valid chunk order:
+
+```text
+IHDR width 0                              -> (11811, 11811)   Pillow: UnidentifiedImageError
+IDAT body b"not-a-zlib-stream"            -> (11811, 11811)   Pillow: broken data stream
+IHDR height 0                             -> (11811, 11811)   [re-drive]
+IHDR colour type 7 (undefined)            -> (11811, 11811)   [re-drive]
+IHDR compression method 1 (undefined)     -> (11811, 11811)   [re-drive]  Pillow: DECODED (4, 4)
+zlib-valid IDAT, 3 raw bytes for 4x4      -> (11811, 11811)   [re-drive]  Pillow: truncated
+```
+
+*** THE COMPRESSION-METHOD CASE IS THE ONE WORTH CARRYING, AND IT IS THE REASON THIS ROW
+IS NOT REPAIRED BY "JUST USE A DECODER". *** Pillow **accepted** it. The format defines
+exactly one compression method; a decoder that renders something is not evidence that what
+it rendered is what the file declared. The standard applied here is the format.
+
+### J.2 The repairs
+
+**Finding 1 - the anchor leaves the value, and the regress terminates at bytes.**
+`_require_one_packet_root` now does three things in this order, and the order is the
+argument:
+
+1. **The allowlist membership and containment sweeps.** Every path the helper checks must
+   be a member of `connection.expected_opens`, and every member of that allowlist must be
+   inside the packet root or under the role or checkpoint root. `expected_opens` is derived
+   at row 3 from the bound record, so it is a *second witness* and it costs no I/O. **It is
+   deliberately not the anchor** - it is a field too, and a substitution that moves it as
+   well walks straight past this.
+2. **The record's bytes.** `external_digest(bound.record_path)` must equal
+   `connection.record_sha256` - the digest the CLI authorization named and
+   `load_connection_record` checked. *** THIS IS THE ONLY CHECK ON THIS SURFACE THAT
+   CONSULTS SOMETHING OUTSIDE THE VALUE, AND THAT IS WHY IT IS THE ONE THAT HOLDS. *** The
+   claim is about the filesystem; a claim about the filesystem is settled by looking.
+3. **An unreadable record is a named refusal, not an `OSError`.** My re-drive of the
+   *widened* substitution - `bound` and `expected_opens` moved together - reached the digest
+   read and raised a raw `FileNotFoundError`. Nobody reported that; it is the same totality
+   fault this lane has now seen four times, and it is closed.
+
+*** THE ACCEPT SIDE LANDS EXACTLY WHERE W8 SAYS IT SHOULD, AND THAT IS THE STRONGEST
+EVIDENCE THE INSTRUMENT IS THE RIGHT ONE. *** A whole packet copied and run against the
+copy has one root **and the record's bytes are in it**, so it publishes -
+`test_row21_accepts_a_whole_packet_copied_and_run_against_the_copy` drives that and it is
+written first, above the three refusals, because a helper that refused it would satisfy
+every refusal test under it while breaking the one invocation W8 explicitly permits.
+
+*** ROW 21 THEREFORE OPENS ONE FILE OUTSIDE THE TREE IT CREATES, AND THE WIDENING IS
+DISCLOSED RATHER THAN ABSORBED. *** `test_row21_opens_nothing_outside_the_tree_it_created`
+now states the bound instead of stating "nothing": **exactly one such path, it equals
+`bound.record_path`, it is a member of the section-4.2 allowlist, and it is opened exactly
+once.** The last clause is not decoration - a check that quietly became a re-read per case
+would still satisfy a set comparison. The file is not a new input by any reading: rows 1
+and 2 opened it, section 4.2 names it, and it is the one file whose digest the CLI
+authorization pinned. **This is the disclosure the Review Card must carry as a fourth
+item.**
+
+*** AND THE REPAIR IMMEDIATELY FOUND A TEST THAT WAS ONLY GREEN BECAUSE THE CHECK DID NOT
+LOOK. *** `test_the_packet_root_anchor_accepts_the_chain_it_is_written_for` drove the
+helper **after** `_three_case_menu` had exited and restored every byte it touched - so it
+measured a restored record against a digest authenticated over the installed one, and it
+refused. The call moved inside the installer's block. A connection is only meaningful while
+the tree it authenticated still stands; that was always true and is only now observable.
+
+**Finding 2 - the walk settles the whole claim.** `_png_header_fields` refuses every header
+value the format does not define (dimensions, colour type, bit depth for that colour type,
+compression method, filter method, interlace method), the `IDAT` run must decompress as
+zlib, and the decompressed length must equal *exactly* what `_png_expected_raw_bytes`
+derives from the header.
+
+*** THE LENGTH IS DERIVED, NOT BOUNDED, AND THE DERIVATION HAS ITS OWN CONTROL. *** A check
+that only required "some" image data accepts three bytes for a sixteen-pixel image.
+`test_the_png_image_size_derivation_is_the_formats_own_arithmetic` drives seven cases
+against **hand-worked literals** - including sub-byte packing at depth 1, where a naive
+`width * depth // 8` goes wrong, and the Adam7 total 2+2+3+6+10+20+36 = 79 against the
+non-interlaced 72.
+
+*** ADAM7 IS DERIVED RATHER THAN EXCUSED. *** matplotlib writes non-interlaced files, so
+nothing this packet produces exercises it - and a length check that skipped the interlaced
+branch would be a hole shaped exactly like a legal PNG. There is no interlaced fixture to
+measure against because this packet declares no PNG encoder; the literal is the arithmetic
+instead, and its docstring says so.
+
+**The tracked figures are still the accept side, and their count was wrong.** Session 154
+said "the ten tracked Step-3 figures" here and in its report. Ten is the number of tracked
+*files* under `results/verification_fixture` - four figures, four scene documents, the
+bundle and its digest. **Four is the number of figures.** The count is now asserted as a
+literal rather than taken from the same glob it guards, because a count read from the thing
+under test cannot notice the thing under test going missing. Corrected forward.
+
+### J.3 The `roles` CLI wiring and the additive `build_role_bundle` change
+
+`build_role_bundle` still refuses unconditionally with `X_CONNECTION_UNAUTHORIZED` before
+reading any argument, and **that remains the correct state until the whole of 4b closes.**
+Three things changed around it, none of them the refusal:
+
+- **`output_dir` is now a parameter.** Design section 3.1 closes six CLI arguments and the
+  `roles` mode has parsed all six since; this entry point took the other five, so *the one
+  argument that decides where a real invocation publishes was the one the entry point could
+  not see*. Adding it while the path is unreachable makes closing 4b a change to this
+  function's **body** rather than to its signature.
+- **There is deliberately no `packet_root` parameter**, and the pinned-signature test now
+  says so explicitly. Invariant W8 gives the roles path the live packet root derived from
+  the module's own location; no CLI argument, environment variable or record field may
+  override it.
+- **Finding DA's correction is applied to the live docstring.** It glossed `--config` as
+  "path to the exact frozen config file" - the frozen design's own 4.2 wording, which its
+  4.3 contradicts. DA rules that 4.3 governs and the gloss is `FINAL`-only. A builder
+  following the old sentence writes an unconditional `require_frozen=True` and silently
+  un-reaches the development branch, which is exactly the failure DA was raised against.
+
+*** THE WIRING GOT ITS OWN TEST, AND IT IS THE ONE THE MODE WAS PREVIOUSLY FAILING. ***
+`test_v2_role_mode_forwards_every_closed_cli_argument` compares the forwarded keywords
+against **the parsed namespace** rather than against a list written in the test - a list
+written in the test would have to be edited in the same commit that dropped an argument,
+and would then agree with the defect. Nothing caught the dropped `--output-dir` before,
+because every test below it asserts a refusal, and a refusal is reached whatever it is
+handed.
+
+`test_v2_no_role_override_keyword_exists` is renamed
+`test_v2_role_bundle_takes_exactly_the_six_closed_cli_arguments` and its claim is
+strengthened rather than swapped: the old test pinned five names and said nothing about why
+those five; the new one requires the set to be exactly the six closed CLI arguments, which
+is a statement about the design, and keeps all three properties the pin existed for.
+
+### J.4 Numbers
+
+`test_connection_adapter.py` **352** (was 336), the focused pair **372** (was 356) and
+**372 again under `PYTHONOPTIMIZE=1`**; `test_verification_scene.py` **96** (unchanged in
+count; one test renamed and strengthened); `test_render_verification_scene.py` **66** (was
+65); packet-wide **3,031 passed / 0 failed / 170.25 s**. The arithmetic closes:
+3,014 + 17 = 3,031, and the 17 are 9 malformed-PNG cases, 1 size-derivation control, 6
+packet-root cases and 1 CLI-forwarding test. `git diff --numstat` reads `312 5` on the
+adapter, `383 13` on its test file, `27 1` on `verification_scene.py`, `23 2` on its test
+file, `8 1` on `render_verification_scene.py` and `41 0` on its test file. `py_compile`,
+`git diff --check` and `git status --porcelain` all clean; all six files pure ASCII, LF, 0
+CR, no BOM, final newline, checked on the final bytes.
+
+### J.5 What is left, in order
+
+The two-pass mutation sweep on the finished set - staged tree `scripts`, `tests`, `schema`,
+`config` **and** `results`, unchanged; **then** the Review Card and the subject chat; then
+the handoff. Still no card and no chat for 4b-ii-b, and that is still deliberate - twelve
+consecutive sessions have held that line.
+
+*** THE CARD NOW CARRIES FOUR DISCLOSURES, NOT THREE: the `schema.json` EOL-pin dependency,
+the `authenticate_sources` third parameter, the `AuthenticatedConnection.record_sha256`
+field, and - new this session - **row 21 opening the connection record**. The fourth is
+4b-ii-b's own code and moves no public surface of the closed 4b-ii-a approval, but it
+narrows a property a committed test previously stated without qualification, and a narrowed
+committed property is a disclosure. ***

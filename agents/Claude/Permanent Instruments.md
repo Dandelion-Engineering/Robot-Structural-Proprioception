@@ -4229,6 +4229,55 @@ correction applied.)*
   in its own docstring.  This is operating rule (2) applied to my own audit: acceptance criteria
   name durable artifact properties, never one agent's private count.
 
+290. **[S156] THE ANCHOR REGRESS TERMINATES AT BYTES, NOT AT A BETTER FIELD.**  Lesson 288 said an
+  anchor cannot be a field of the value under suspicion, and S155 obeyed it by anchoring
+  `packet_root` to `bound.record_path` - **another field of the same `BoundPaths`**.  Codex moved
+  all six packet-relative fields together and published eight files under a tree that did not
+  exist.  *** THE MISSING HALF OF 288: every field of a separately constructible value can be
+  moved coherently with its neighbours, so "pick a different field" buys exactly one more
+  substitution and nothing else.  A check that consults only fields can always be widened; a check
+  that consults the filesystem cannot. ***  The repair re-digests the record at `bound.record_path`
+  and requires it to equal `connection.record_sha256` - the number the CLI authorization named.
+  **The operational test: ask what the check would consult if the whole value were fabricated.  If
+  the answer is "other parts of the fabrication", it is a report of a check.**  And the accept side
+  is the evidence the instrument is right rather than merely strict: a whole packet copied and run
+  against the copy still holds the record's bytes, so it publishes, which is exactly what W8 allows.
+  Three sessions of in-value anchors were each defeated one width out; this is what stopped it.
+
+291. **[S156] A FORMAT IS THE STANDARD; A DECODER IS AN OPINION.**  The row-21 PNG walk was
+  repaired twice against "a strict decoder refuses this and we accept it", which quietly installs
+  the decoder as the oracle.  My re-drive found the case that breaks that framing: an `IHDR`
+  declaring **compression method 1**, which the PNG format does not define, and which **Pillow
+  decoded happily at (4, 4)**.  A decoder that renders something is not evidence that what it
+  rendered is what the file declared, and a decoder that refuses something is not evidence the file
+  is malformed either - it is evidence about that decoder.  *** SO WHEN A CHECK AND A DECODER
+  DISAGREE, GO TO THE SPECIFICATION, NOT TO THE MAJORITY. ***  The same session's other half is the
+  positive form: the image-data length is **derived** from the header by the format's own
+  arithmetic and compared for equality, because a bound ("some data is present") accepts three bytes
+  for a sixteen-pixel image, and because a derivation can be controlled against hand-worked literals
+  while a bound cannot.
+
+292. **[S156] AN ARGUMENT THAT IS PARSED AND NOT FORWARDED IS INVISIBLE TO EVERY REFUSAL TEST BELOW
+  IT.**  The `roles` CLI has required `--output-dir` since its argument set closed, and
+  `_roles_mode` forwarded the other five - so the one argument that decides *where* a real
+  invocation publishes never reached the entry point.  Nothing caught it, and nothing could:
+  every test on that path asserts a refusal, and **a refusal is reached whatever it is handed**.
+  *** THE INSTRUMENT IS TO COMPARE THE FORWARDED KEYWORDS AGAINST THE PARSER'S OWN NAMESPACE, NOT
+  AGAINST A LIST WRITTEN IN THE TEST.  A list in the test has to be edited in the same commit that
+  drops an argument, and would then agree with the defect. ***  The general shape: when a surface is
+  deliberately inert, its *plumbing* has no functional test, so the plumbing needs a structural one.
+
+293. **[S156] A TEST THAT USES A FIXTURE'S VALUE AFTER THE FIXTURE HAS RESTORED THE TREE IS
+  MEASURING A DIFFERENT WORLD, AND ONLY A CHECK THAT LOOKS AT DISK CAN NOTICE.**  Adding the record
+  re-read turned `test_the_packet_root_anchor_accepts_the_chain_it_is_written_for` red - not because
+  the repair was wrong, but because the test authenticated a connection **inside** the three-case
+  installer's block and drove the helper **outside** it, after every byte the installer touched had
+  been restored.  It was comparing a restored record against a digest taken over the installed one.
+  *** THE GENERAL RULE: AN AUTHENTICATED VALUE IS ONLY MEANINGFUL WHILE THE TREE IT AUTHENTICATED
+  STILL STANDS.  That was always true here; it became observable the moment one check stopped
+  trusting the value and started reading the file. ***  A repair that turns an existing test red is
+  worth reading before it is worth fixing.
+
 
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 

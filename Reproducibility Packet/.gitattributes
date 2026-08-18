@@ -18,6 +18,14 @@
 # refuses on a fresh Windows clone with "configuration schema_sha256 does not match
 # schema.json bytes". Measured, not assumed: the unpinned checkout is 15,882 bytes
 # with 670 CRLF pairs against the tracked 15,212 bytes with 670 LF.
+#
+# SECOND CONSUMER, ADDED 2026-08-18. scripts/utils/connection_adapter.py also
+# compares the connection record's authenticated schema declaration against the
+# RAW digest of schema.json (Codex's Step-4b-ii-a Round-3 guard). That comparison
+# is silent when this pin is removed: nothing refuses until a fresh clone on a
+# CRLF platform rejects a schema that is byte-correct in the object store. A test
+# cannot catch the removal, because it would have to observe a checkout this pin
+# prevents -- so DO NOT REMOVE THIS LINE ON THE GROUND THAT THE SUITE STAYS GREEN.
 schema/schema.json text eol=lf
 
 # Defence in depth. scripts/protocol_p_replay_gate.py pins these two in the

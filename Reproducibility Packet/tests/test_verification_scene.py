@@ -203,6 +203,7 @@ def test_v2_role_bundle_refuses_before_opening_anything(tmp_path):
             config=str(PACKET_ROOT / "config"),
             checkpoint_root=str(PACKET_ROOT / "results"),
             role_root=str(tmp_path),
+            output_dir=str(tmp_path / "out"),
         )
     assert refusal.value.code == vs.X_CONNECTION_UNAUTHORIZED
 
@@ -217,6 +218,7 @@ def test_v2_role_bundle_refuses_even_with_real_packet_paths():
             config=str(PACKET_ROOT / "schema" / "schema.json"),
             checkpoint_root=str(PACKET_ROOT / "results"),
             role_root=str(PACKET_ROOT / "results"),
+            output_dir=str(PACKET_ROOT / "results"),
         )
     assert refusal.value.code == vs.X_CONNECTION_UNAUTHORIZED
 
@@ -238,11 +240,27 @@ def test_v2_role_bundle_opens_no_file(monkeypatch, tmp_path):
             config=str(tmp_path / "c.json"),
             checkpoint_root=str(tmp_path),
             role_root=str(tmp_path),
+            output_dir=str(tmp_path / "out"),
         )
 
 
-def test_v2_no_role_override_keyword_exists():
-    """No caller-supplied allowlist, split flag or environment escape hatch."""
+def test_v2_role_bundle_takes_exactly_the_six_closed_cli_arguments():
+    """No caller-supplied allowlist, split flag, packet root or environment escape.
+
+    *** THE PINNED SET GAINS `output_dir` THIS SESSION, AND THAT IS A WIDENING, SO IT IS
+    STATED RATHER THAN SWAPPED IN. *** Design section 3.1 closes six CLI arguments and
+    the `roles` mode has parsed all six since; this entry point took five, so the mode
+    parsed a destination and dropped it. Adding it while the path is still unreachable
+    is what makes closing 4b a change to this function's *body*.
+
+    **The claim is stronger than the old one, not weaker.** The old test pinned five
+    names and said nothing about why those five. This requires the parameter set to be
+    exactly the six closed CLI arguments -- which is a statement about the design -- and
+    keeps the three properties the pin existed for: **no `packet_root` parameter**
+    (invariant W8 derives it from the module's own location, and no argument, variable
+    or record field may override it), no allowlist or split keyword, and no environment
+    read anywhere in the module.
+    """
 
     parameters = set(inspect.signature(vs.build_role_bundle).parameters)
     assert parameters == {
@@ -251,7 +269,9 @@ def test_v2_no_role_override_keyword_exists():
         "config",
         "checkpoint_root",
         "role_root",
+        "output_dir",
     }
+    assert "packet_root" not in parameters
     source = (SCRIPTS_DIR / "utils" / "verification_scene.py").read_text(encoding="utf-8")
     assert "os.environ" not in source and "getenv" not in source
 
@@ -578,6 +598,7 @@ def test_v8_no_input_in_this_packet_yields_a_real_provenance_state(bundle):
             config="",
             checkpoint_root="",
             role_root="",
+            output_dir="",
         )
 
 

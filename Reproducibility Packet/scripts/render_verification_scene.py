@@ -866,7 +866,13 @@ def _fixture_mode(args: argparse.Namespace) -> int:
 
 
 def _roles_mode(args: argparse.Namespace) -> int:
-    """Refuse before opening anything: no connection record exists in this packet."""
+    """Refuse before opening anything: no connection record exists in this packet.
+
+    All six closed CLI arguments are forwarded, `--output-dir` included. It was the one
+    the entry point could not previously see, so the mode parsed a destination and then
+    dropped it; forwarding it now means closing sub-step 4b changes what
+    `build_role_bundle` *does* rather than what this function *passes*.
+    """
 
     build_role_bundle(
         connection_record=str(args.connection_record),
@@ -874,6 +880,7 @@ def _roles_mode(args: argparse.Namespace) -> int:
         config=str(args.config),
         checkpoint_root=str(args.checkpoint_root),
         role_root=str(args.role_root),
+        output_dir=str(args.output_dir),
     )
     raise AssertionError("unreachable: build_role_bundle always refuses in this round")
 

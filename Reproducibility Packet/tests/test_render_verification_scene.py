@@ -296,6 +296,47 @@ def test_v5_role_mode_produces_no_scene_no_figure_and_no_output_directory(tmp_pa
     assert list(tmp_path.iterdir()) == []
 
 
+def test_v2_role_mode_forwards_every_closed_cli_argument(tmp_path, monkeypatch):
+    """The wiring's own claim, and it is the one the mode was previously failing.
+
+    `roles` has parsed six arguments since the argument set closed, and `_roles_mode`
+    forwarded five: `--output-dir` was parsed and then dropped, so the one argument that
+    decides *where* a real invocation publishes never reached the entry point. Nothing
+    caught that, because every test below it asserts a refusal and a refusal is reached
+    whatever it is handed.
+
+    *** SO THIS COMPARES THE FORWARDED KEYWORDS AGAINST THE PARSED NAMESPACE RATHER THAN
+    AGAINST A LIST WRITTEN HERE. *** A list written here would have to be edited in the
+    same commit that dropped an argument, and would then agree with the defect. The
+    parser is the authority: every `roles` argument it defines must arrive, converted to
+    `str`, under its own name.
+    """
+
+    forwarded: dict = {}
+
+    def _capture(**kwargs):
+        forwarded.update(kwargs)
+        raise vs.VerificationSceneError(vs.X_CONNECTION_UNAUTHORIZED, "captured")
+
+    monkeypatch.setattr(rv, "build_role_bundle", _capture)
+    monkeypatch.chdir(tmp_path)
+    argv = [
+        "roles",
+        "--connection-record", str(tmp_path / "record.json"),
+        "--connection-record-sha256", "0" * 64,
+        "--config", str(tmp_path / "config.json"),
+        "--checkpoint-root", str(tmp_path / "ckpt"),
+        "--role-root", str(tmp_path / "roles"),
+        "--output-dir", "out",
+    ]
+    assert rv.main(argv) == vs.EXIT_CODES[vs.X_CONNECTION_UNAUTHORIZED]
+
+    parsed = vars(rv.parse_args(argv))
+    parsed.pop("mode")
+    assert len(parsed) == 6, f"the roles parser defines {len(parsed)} arguments"
+    assert forwarded == {name: str(value) for name, value in parsed.items()}
+
+
 # --------------------------------------------------------------------------- #
 # V9 - every non-FINAL scene renders its banner, in the figure.
 # --------------------------------------------------------------------------- #

@@ -6399,6 +6399,16 @@ def _malformed_png(kind: str) -> bytes:
     while a strict decoder refused the same bytes as `UnidentifiedImageError`; my own
     re-drive added the no-`IDAT` and `pHYs`-after-`IDAT` cases, which were accepted
     too.
+
+    **The third group is the image itself, and it is Codex's Session-155 finding 2.**
+    Ordered, CRC-valid chunks still are not a decodable image. Measured before the
+    repair: a zero-width `IHDR` and an `IDAT` body reading `not-a-zlib-stream` were
+    both **accepted** at `(11811, 11811)` while a strict decoder refused both, and my
+    re-drive widened that to a zero *height*, a colour type the format does not define,
+    a compression method it does not define, and a zlib-valid stream carrying three
+    bytes for a sixteen-pixel image. *** THE COMPRESSION-METHOD CASE IS THE ONE TO KEEP:
+    a lenient decoder ACCEPTED it, so the standard applied here is the format and not a
+    decoder's willingness to guess. ***
     """
 
     import zlib
@@ -6460,6 +6470,66 @@ def _malformed_png(kind: str) -> bytes:
         )
     if kind == "non-empty-iend":
         return signature + header + phys + data + _png_chunk(b"IEND", b"x")
+
+    def headed(width: int, height: int, *, fields: bytes) -> bytes:
+        return signature + _png_chunk(
+            b"IHDR", width.to_bytes(4, "big") + height.to_bytes(4, "big") + fields
+        ) + phys + tail
+
+    if kind == "zero-width-image":
+        return headed(0, 1, fields=bytes([8, 0, 0, 0, 0]))
+    if kind == "zero-height-image":
+        return headed(1, 0, fields=bytes([8, 0, 0, 0, 0]))
+    if kind == "undefined-colour-type":
+        return headed(1, 1, fields=bytes([8, 7, 0, 0, 0]))
+    if kind == "undefined-bit-depth-for-the-colour-type":
+        return headed(1, 1, fields=bytes([2, 2, 0, 0, 0]))
+    if kind == "undefined-compression-method":
+        return headed(1, 1, fields=bytes([8, 0, 1, 0, 0]))
+    if kind == "undefined-filter-method":
+        return headed(1, 1, fields=bytes([8, 0, 0, 1, 0]))
+    if kind == "undefined-interlace-method":
+        return headed(1, 1, fields=bytes([8, 0, 0, 0, 2]))
+    if kind == "image-data-that-is-not-a-zlib-stream":
+        return (
+            signature
+            + header
+            + phys
+            + _png_chunk(b"IDAT", b"not-a-zlib-stream")
+            + end
+        )
+    if kind == "image-data-of-the-wrong-length":
+        return (
+            signature
+            + header
+            + phys
+            + _png_chunk(b"IDAT", zlib.compress(b"\x00\x00\x00"))
+            + end
+        )
+    if kind == "image-data-shorter-than-the-declared-image":
+        return (
+            signature
+            + header
+            + phys
+            + _png_chunk(b"IDAT", zlib.compress(b"\x00"))
+            + end
+        )
+    if kind == "bytes-appended-after-the-image-stream":
+        return (
+            signature
+            + header
+            + phys
+            + _png_chunk(b"IDAT", zlib.compress(b"\x00\x00") + b"GARBAGE")
+            + end
+        )
+    if kind == "image-stream-that-never-ends":
+        return (
+            signature
+            + header
+            + phys
+            + _png_chunk(b"IDAT", zlib.compress(b"\x00\x00")[:-2])
+            + end
+        )
     raise AssertionError(f"unknown malformed-PNG case {kind!r}")
 
 
@@ -7638,14 +7708,22 @@ def test_the_packet_root_anchor_accepts_the_chain_it_is_written_for(
     would take the accept path down with it. This drives `_require_one_packet_root` on
     the genuine authenticated connection and requires it to return the harness packet
     root -- the same lesson-285 shape the audit-hook observer's own anchor has.
+
+    *** THE CALL IS INSIDE THE INSTALLER'S BLOCK NOW, AND THAT MOVE IS THE SESSION-155
+    REPAIR SHOWING ITS TEETH ON THE ACCEPT SIDE. *** The helper reads the record's bytes
+    off disk, and `_three_case_menu` restores every byte it touched -- the record
+    included -- when its block exits. Driving the helper afterwards therefore measured a
+    *restored* record against a digest authenticated over the *installed* one, and it
+    refused, correctly. A connection is only meaningful while the tree it authenticated
+    still stands; that was always true and is only now observable.
     """
 
     with _three_case_menu(harness) as arguments:
         connection = authenticate_connection(**arguments)
-    assert (
-        connection_adapter._require_one_packet_root(connection)
-        == harness.packet_root.resolve()
-    )
+        assert (
+            connection_adapter._require_one_packet_root(connection)
+            == harness.packet_root.resolve()
+        )
 
 
 def test_row21_refuses_a_packet_root_moved_together_with_its_destination(
@@ -7754,6 +7832,239 @@ def test_row21_refuses_a_source_artifact_bound_outside_the_packet_root(
         assert not root.exists()
 
 
+# --------------------------------------------------------------------------- #
+# Codex's Session-155 finding 1 -- the whole packet-relative bound set moves at once.
+#
+# Three sessions running, the repair anchored one field of `BoundPaths` to another
+# field of `BoundPaths`, and each time the next substitution simply moved both. The
+# tests below are written around the one boundary that is not a field: the record's
+# bytes on disk. The accept-side case comes **first**, because a helper that refused a
+# copied packet would satisfy every refusal here and would break the one invocation
+# invariant W8 explicitly permits.
+# --------------------------------------------------------------------------- #
+def _coherently_moved(connection, new_root: Path, *, move_allowlist: bool):
+    """Return the connection with every packet-relative bound path under `new_root`.
+
+    Args:
+        connection: the genuinely authenticated connection.
+        new_root: the tree to move the whole packet-relative set into.
+        move_allowlist: whether `expected_opens` moves with it. False is Codex's
+            reported substitution; True is the strictly wider one my re-drive ran, and
+            it is the case that says the allowlist check is not the anchor.
+
+    **Nothing here moves the role root or the checkpoint root**, because those are
+    machine-selected and W8 has never governed them. Moving them would make the control
+    refuse for a reason that has nothing to do with the finding.
+    """
+
+    old = Path(connection.bound.packet_root).resolve()
+
+    def moved(path: Path) -> Path:
+        resolved = Path(path).resolve()
+        if old != resolved and old not in resolved.parents:
+            return resolved
+        return new_root.joinpath(*resolved.relative_to(old).parts)
+
+    bound = connection.bound
+    substituted = replace(
+        connection,
+        bound=replace(
+            bound,
+            packet_root=new_root,
+            record_path=moved(bound.record_path),
+            output_root=moved(bound.output_root),
+            schema_path=moved(bound.schema_path),
+            config_path=moved(bound.config_path),
+            packet_artifacts=MappingProxyType(
+                {key: moved(value) for key, value in bound.packet_artifacts.items()}
+            ),
+        ),
+    )
+    if move_allowlist:
+        substituted = replace(
+            substituted,
+            expected_opens=frozenset(moved(path) for path in connection.expected_opens),
+        )
+    return substituted
+
+
+def test_row21_accepts_a_whole_packet_copied_and_run_against_the_copy(
+    harness: Harness, tmp_path: Path
+) -> None:
+    """The accept side W8 permits, and it is the anchor for the three refusals below.
+
+    A packet copied whole and run against the copy has **one** root: every
+    packet-relative path is under it, the allowlist names those paths, and the record's
+    own bytes are there too. That is the invocation invariant W8 allows, and it is
+    exactly what a check anchored to "the paths agree with one another" cannot tell
+    apart from a substitution -- and what a check anchored to the record's bytes can.
+
+    So this publishes, from a root no row bound, purely because the bytes are there.
+    """
+
+    destination = (tmp_path / "copied-packet").resolve()
+    with _three_case_menu(harness) as arguments:
+        connection, cases, geometry, provenance = _resolved(harness, arguments)
+        bundle = resolve_bundle(connection, cases, geometry, provenance)
+        shutil.copytree(harness.packet_root, destination)
+        shutil.rmtree(
+            destination / "results" / "verification_connection_development",
+            ignore_errors=True,
+        )
+        written = write_bundle(
+            _coherently_moved(connection, destination, move_allowlist=True),
+            bundle,
+            render=_stub_writer(),
+        )
+    assert written.output_root.is_relative_to(destination)
+    assert len(written.file_names) == 8
+    assert not (harness.output_dir / RECORD_LABEL).exists()
+
+
+def test_row21_refuses_a_packet_root_moved_with_its_whole_bound_path_set(
+    harness: Harness, tmp_path: Path
+) -> None:
+    """Codex's Session-155 finding 1, driven exactly as reported.
+
+    Measured before the repair, with `packet_root`, `output_root`, `record_path`,
+    `schema_path`, `config_path` and every `packet_artifacts` value moved coherently
+    into a temporary tree **that did not exist**: all eight files published beneath it.
+    The Session-154 helper proved only that the fields of one `BoundPaths` agreed with
+    each other, and a substitution that moves them all together keeps them agreeing.
+
+    Here the allowlist is deliberately left alone, which is the substitution as
+    reported; the wider one is the test below.
+    """
+
+    destination = (tmp_path / "other-packet").resolve()
+    with _publication_root(harness) as root:
+        with _three_case_menu(harness) as arguments:
+            connection, cases, geometry, provenance = _resolved(harness, arguments)
+            bundle = resolve_bundle(connection, cases, geometry, provenance)
+            moved = _coherently_moved(connection, destination, move_allowlist=False)
+            error = _refusal(lambda: write_bundle(moved, bundle, render=_stub_writer()))
+        assert error.code == X_PROVENANCE_UNRESOLVED
+        assert "the allowlist row 3 derived from this record does not name" in str(error)
+        assert not destination.exists()
+        assert not root.exists()
+
+
+def test_row21_refuses_a_packet_root_whose_allowlist_moved_with_it(
+    harness: Harness, tmp_path: Path
+) -> None:
+    """The strictly wider substitution, which is what says where the anchor really is.
+
+    `expected_opens` is derived at row 3 and is a second witness to the paths this
+    chain resolved -- but it is still a field of a value a caller can rebuild, so
+    moving it too is one more substitution and a check that stopped there would be one
+    more object-bounded check. **This moves it, and the refusal comes from the record's
+    bytes**: there is no record at the substituted path to read.
+
+    *** THIS IS THE TEST THAT WOULD GO GREEN FOR THE WRONG REASON IF THE DIGEST CHECK
+    WERE DELETED AND ONLY THE ALLOWLIST CHECK KEPT. *** Its message fragment names the
+    read, not the allowlist, for that reason.
+    """
+
+    destination = (tmp_path / "other-packet").resolve()
+    with _publication_root(harness) as root:
+        with _three_case_menu(harness) as arguments:
+            connection, cases, geometry, provenance = _resolved(harness, arguments)
+            bundle = resolve_bundle(connection, cases, geometry, provenance)
+            moved = _coherently_moved(connection, destination, move_allowlist=True)
+            error = _refusal(lambda: write_bundle(moved, bundle, render=_stub_writer()))
+        assert error.code == X_PROVENANCE_UNRESOLVED
+        assert "could not be read" in str(error)
+        assert not destination.exists()
+        assert not root.exists()
+
+
+def test_row21_refuses_a_packet_root_holding_a_different_record(
+    harness: Harness, tmp_path: Path
+) -> None:
+    """A complete, coherent, existing packet copy -- carrying one other record.
+
+    This is the case that separates "the bytes are there" from "some bytes are there",
+    and it is why the check is a digest comparison rather than an existence test. The
+    copy is real, every path resolves, the allowlist names all of them, and one byte of
+    the record differs from the record rows 1 and 2 authenticated.
+    """
+
+    destination = (tmp_path / "copied-packet").resolve()
+    with _publication_root(harness) as root:
+        with _three_case_menu(harness) as arguments:
+            connection, cases, geometry, provenance = _resolved(harness, arguments)
+            bundle = resolve_bundle(connection, cases, geometry, provenance)
+            shutil.copytree(harness.packet_root, destination)
+            shutil.rmtree(
+                destination / "results" / "verification_connection_development",
+                ignore_errors=True,
+            )
+            moved = _coherently_moved(connection, destination, move_allowlist=True)
+            record = Path(moved.bound.record_path)
+            record.write_bytes(record.read_bytes().replace(b"schema", b"schemA", 1))
+            error = _refusal(lambda: write_bundle(moved, bundle, render=_stub_writer()))
+        assert error.code == X_PROVENANCE_UNRESOLVED
+        assert "not the authenticated" in str(error)
+        assert not root.exists()
+
+
+def test_the_packet_root_anchor_permits_the_role_and_checkpoint_roots_outside_it(
+    harness: Harness,
+) -> None:
+    """The one place the allowlist legitimately reaches outside the packet.
+
+    `--role-root` and `--checkpoint-root` are CLI arguments precisely because the
+    dataset is git-ignored and lives wherever the director put it, so the section-4.2
+    allowlist names paths under two trees W8 has never governed. This states that as a
+    measurement rather than as a comment: the harness really does put both roots
+    outside the packet, so the containment sweep really is exercising `_is_under`
+    rather than passing vacuously.
+    """
+
+    assert not harness.role_root.resolve().is_relative_to(harness.packet_root.resolve())
+    assert not harness.checkpoint_root.resolve().is_relative_to(
+        harness.packet_root.resolve()
+    )
+    with _three_case_menu(harness) as arguments:
+        connection = authenticate_connection(**arguments)
+        outside = [
+            path
+            for path in connection.expected_opens
+            if not Path(path).resolve().is_relative_to(harness.packet_root.resolve())
+        ]
+        assert outside, "the allowlist must reach the role and checkpoint trees"
+        assert (
+            connection_adapter._require_one_packet_root(connection)
+            == harness.packet_root.resolve()
+        )
+
+
+def test_the_packet_root_anchor_refuses_an_allowlist_entry_under_no_bound_root(
+    harness: Harness, tmp_path: Path
+) -> None:
+    """The refusal side of that permission, so the sweep is not a formality.
+
+    `_is_under` exists to let the role and checkpoint trees through. A test that only
+    drove the accept side could not tell it apart from a sweep that let *everything*
+    through, so this adds one allowlist entry under neither root and requires the
+    refusal.
+    """
+
+    with _three_case_menu(harness) as arguments:
+        connection = authenticate_connection(**arguments)
+        stranger = (tmp_path / "stranger" / "payload.npz").resolve()
+        widened = replace(
+            connection,
+            expected_opens=frozenset({*connection.expected_opens, stranger}),
+        )
+        error = _refusal(
+            lambda: connection_adapter._require_one_packet_root(widened)
+        )
+    assert error.code == X_PROVENANCE_UNRESOLVED
+    assert "neither inside the packet root" in str(error)
+    assert str(stranger) in str(error)
+
+
 @pytest.mark.parametrize(
     "case, fragment",
     [
@@ -7772,12 +8083,24 @@ def test_row21_refuses_a_source_artifact_bound_outside_the_packet_root(
         ("resolution-after-the-image-data", "after its image data has begun"),
         ("interrupted-image-data", "resumes its image data"),
         ("non-empty-iend", "fixes it as empty"),
+        ("zero-width-image", "declares an image width of 0"),
+        ("zero-height-image", "declares an image height of 0"),
+        ("undefined-colour-type", "declares colour type 7"),
+        ("undefined-bit-depth-for-the-colour-type", "declares bit depth 2 for colour type 2"),
+        ("undefined-compression-method", "declares compression method 1"),
+        ("undefined-filter-method", "declares filter method 1"),
+        ("undefined-interlace-method", "declares interlace method 2"),
+        ("image-data-that-is-not-a-zlib-stream", "is not a zlib stream"),
+        ("image-data-of-the-wrong-length", "does not describe the image the header describes"),
+        ("image-data-shorter-than-the-declared-image", "decompresses to 1 bytes"),
+        ("bytes-appended-after-the-image-stream", "after the zlib stream ends"),
+        ("image-stream-that-never-ends", "zlib stream never ends"),
     ],
 )
 def test_the_png_walk_refuses_every_malformed_resolution_claim(
     case: str, fragment: str
 ) -> None:
-    """Fifteen malformed figures, and the named refusal each one lands on.
+    """Twenty-seven malformed figures, and the named refusal each one lands on.
 
     *** THIS IS CODEX'S SESSION-153 FINDING 2. *** Re-driven at source before the
     repair: the corrupt-CRC file was **accepted** and published as `(11811, 11811)`
@@ -7793,6 +8116,31 @@ def test_the_png_walk_refuses_every_malformed_resolution_claim(
     because a `pHYs` body was short; the parser never gets far enough to know which
     chunk it was about to read. Keeping that exact input beside the bare truncation
     case is what pins the reported defect rather than a neighbour of it.
+
+    **The last eleven rows are Codex's Session-155 finding 2, my re-drive of it, and one more
+    the owner found afterwards by asking the same question of the repair.**
+    Each has correct chunk bounds, correct CRCs and correct chunk order, and each still
+    fails to be an image: two with no pixels in them, four declaring a header value the
+    format does not define, one whose image data is not a compressed stream at all, and
+    one whose stream decompresses to a length no image of the declared size has.
+
+    *** THE LAST TWO WERE NOT REPORTED BY ANYONE AND ARE THE REASON THE DECOMPRESSION
+    GOES THROUGH A `decompressobj`. *** `zlib.decompress` returns the payload and raises
+    nothing when bytes are appended after a complete stream, so the one-call form cannot
+    tell a compressed image from a compressed image with something stuck on the end; and
+    a truncated stream has to be refused as *unfinished* rather than accepted for the
+    prefix it did produce. `eof` and `unused_data` are what say which.
+
+    *** AND `image-data-shorter-than-the-declared-image` IS HERE BECAUSE THE MUTATION
+    SWEEP FOUND IT MISSING, WHICH IS THE ONLY SURVIVOR THE SWEEP PRODUCED. *** The
+    mutant turned `len(decompressed) != expected_raw` into `len(decompressed) >
+    expected_raw` and **survived**, because the wrong-length fixture above compresses
+    three bytes for a two-byte image -- it is *longer* than expected, so a
+    greater-than test refuses it too and the row's equality was never the reason that
+    case was green. A fixture *shorter* than the declared image is what separates the
+    two, and it is the direction that matters more: a decoder handed too little data
+    produces a partial image, not an error. **The pair is the instrument; either one
+    alone measures half of it.**
     """
 
     error = _refusal(
@@ -7804,22 +8152,68 @@ def test_the_png_walk_refuses_every_malformed_resolution_claim(
     assert fragment in str(error)
 
 
+def test_the_png_image_size_derivation_is_the_formats_own_arithmetic() -> None:
+    """The length check's own instrument, driven against hand-derived literals.
+
+    The image-data length check is only as good as the size it compares against, and
+    that size is computed rather than read out of the file -- so it needs its own
+    control, and the control has to be a literal. Every figure below is worked out from
+    the format's rules by hand, not from the function under test:
+
+      * 1x1 grey at depth 8: one scanline of one byte, plus its filter byte -> **2**.
+        That is the size the malformed-PNG fixtures above are built to, which is why
+        their header cases refuse for a header reason and not for a length one.
+      * 4x4 RGBA at depth 8: four scanlines of 4x4=16 bytes, plus one filter byte
+        each -> 4 * 17 = **68**.
+      * 8x1 grey at depth 1: one scanline of ceil(8/8)=1 byte plus a filter byte
+        -> **2**. Sub-byte packing is where a naive `width * depth // 8` goes wrong.
+      * 9x1 grey at depth 1: ceil(9/8)=2 bytes plus a filter byte -> **3**.
+      * 8x8 grey at depth 8, Adam7: the seven passes carry 1x1, 1x1, 2x1, 2x2, 4x2,
+        4x4 and 8x4 pixels, so 2+2+3+6+10+20+36 -> **79**, which is larger than the
+        non-interlaced 8*(1+8)=**72** because each pass pays its own filter bytes.
+
+    *** THE INTERLACED CASE IS DERIVED RATHER THAN EXCUSED. *** matplotlib writes
+    non-interlaced files, so nothing this packet produces exercises Adam7 -- and a
+    length check that quietly skipped the interlaced branch would be a hole shaped
+    exactly like a legal PNG. There is no interlaced fixture to measure against because
+    this packet declares no PNG encoder; the literal above is the arithmetic instead.
+    """
+
+    derive = connection_adapter._png_expected_raw_bytes
+    assert derive(width=1, height=1, bit_depth=8, colour_type=0, interlace=0) == 2
+    assert derive(width=4, height=4, bit_depth=8, colour_type=6, interlace=0) == 68
+    assert derive(width=8, height=1, bit_depth=1, colour_type=0, interlace=0) == 2
+    assert derive(width=9, height=1, bit_depth=1, colour_type=0, interlace=0) == 3
+    assert derive(width=8, height=8, bit_depth=8, colour_type=0, interlace=0) == 72
+    assert derive(width=8, height=8, bit_depth=8, colour_type=0, interlace=1) == 79
+    assert derive(width=1, height=1, bit_depth=8, colour_type=0, interlace=1) == 2
+
+
 def test_the_png_walk_accepts_the_tracked_step_3_figure_set() -> None:
     """The strict walk is measured against real matplotlib output, not only stubs.
 
     A parser made stricter is only correct if it still accepts the files the packet
-    actually produces, and the ten tracked Step-3 fixture figures are the only PNGs in
-    the repository that were written by the renderer this row calls. Every one of them
-    must now pass a full CRC-checked walk and declare the resolution
-    `REQUIRED_FIGURE_DPI` derives -- which is also where that integer came from
-    (Session 153), rather than from a pinned constant.
+    actually produces, and the tracked Step-3 fixture figures are the only PNGs in the
+    repository that were written by the renderer this row calls. Every one of them must
+    pass a full CRC-checked walk, satisfy every header and image-data check the walk
+    now makes, and declare the resolution `REQUIRED_FIGURE_DPI` derives -- which is
+    also where that integer came from (Session 153), rather than from a pinned
+    constant.
+
+    *** THE COUNT IS FOUR, AND THIS CORRECTS A NUMBER I PUBLISHED. *** Session 154 said
+    "the ten tracked Step-3 figures" here and in its report; ten is the number of
+    tracked *files* under `results/verification_fixture` -- four figures, four scene
+    documents, the bundle and its digest -- and four is the number of figures. The
+    count is asserted as a literal below rather than measured from the same glob it
+    guards, because a count taken from the thing under test cannot notice the thing
+    under test going missing.
 
     This reads tracked development artifacts for their bytes. It opens no role
     payload, no checkpoint and no result.
     """
 
     figures = sorted((PACKET_ROOT / "results" / "verification_fixture").glob("*.png"))
-    assert figures, "the tracked Step-3 fixture figure set is missing"
+    assert len(figures) == 4, f"the tracked Step-3 figure set is {len(figures)} files"
     expected = round(
         connection_adapter.REQUIRED_FIGURE_DPI / connection_adapter._METRES_PER_INCH
     )
@@ -7999,6 +8393,20 @@ def test_row21_opens_nothing_outside_the_tree_it_created(harness: Harness) -> No
     and the claim that this opens nothing is exactly what fails here if it is false:
     the re-derivation runs *before* the exclusive create, so any file it opened would
     be outside the tree this test requires every open to be inside.
+
+    *** AND THE PROPERTY IS WIDENED BY EXACTLY ONE FILE THIS SESSION, WHICH IS DISCLOSED
+    HERE RATHER THAN ABSORBED. *** `_require_one_packet_root` re-reads the connection
+    record to settle, from bytes rather than from paths, that the packet root holds the
+    record this chain authenticated -- the anchor Codex's Session-155 finding 1 showed
+    could not live inside `BoundPaths`. So row 21 now opens one file outside the tree it
+    creates, and the widening is bounded here rather than stated loosely: **exactly one
+    such path, it is `bound.record_path`, it is a member of the section-4.2 allowlist,
+    and it is opened exactly once.** The last clause matters on its own -- a check that
+    quietly became a re-read per case would still satisfy a set comparison, and would
+    not satisfy this.
+
+    The file is not a new input by any reading: rows 1 and 2 opened it, section 4.2
+    names it, and it is the one file whose digest the CLI authorization pinned.
     """
 
     with _publication_root(harness) as root:
@@ -8008,6 +8416,14 @@ def test_row21_opens_nothing_outside_the_tree_it_created(harness: Harness) -> No
             with _observed_opens() as recorder:
                 written = write_bundle(connection, bundle, render=_stub_writer())
             observed = _resolved_opens(recorder)
+            record_path = Path(connection.bound.record_path).resolve()
+            assert record_path in {Path(p).resolve() for p in connection.expected_opens}
         assert observed, "row 21 both writes and reads back, so it must open something"
-        assert {path.parent for path in observed} == {root.resolve()}
-        assert {path.name for path in observed} == set(written.file_names)
+        outside = [path for path in observed if path.parent != root.resolve()]
+        assert outside == [record_path], (
+            "row 21 may open exactly one file outside the tree it creates, and it is "
+            f"the record it was authenticated by; observed {outside}"
+        )
+        assert _resolved_opens(recorder).count(record_path) == 1
+        inside = [path for path in observed if path.parent == root.resolve()]
+        assert {path.name for path in inside} == set(written.file_names)

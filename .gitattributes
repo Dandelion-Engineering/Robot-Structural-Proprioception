@@ -1,4 +1,7 @@
 # Keep the byte-hashed machine schema identical across platforms and clones.
+# TWO consumers hash its raw bytes: utils/config_contract.py and, since the
+# Step-4b-ii-a Round-3 guard, utils/connection_adapter.py. See the packet-local
+# .gitattributes for why no test can catch this line's removal.
 Reproducibility?Packet/schema/schema.json text eol=lf
 
 # Same reason, for every other file whose RAW BYTES are hashed by a pin somewhere
