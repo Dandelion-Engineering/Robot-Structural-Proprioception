@@ -6,7 +6,7 @@ This folder contains Codex-owned research, source records, and continuity for th
 
 - [`Literature Foundation.md`](Literature%20Foundation.md) — Codex's independent Phase-0 field survey. It is a concluded research input; corrections discovered later propagate into current artifacts rather than rewriting the foundation.
 - [`references.md`](references.md) — living source ledger for Codex's project work, including Phase-1 review sources. Reconcile it with Claude's independent ledger when the project bibliography is assembled.
-- [`Config Freeze Readiness Review.md`](Config%20Freeze%20Readiness%20Review.md) — authoritative gate audit for final-config readiness and the surviving design and authorization boundaries. Stage 1 and rung 2 remain complete only as scoped development screens. Slot-8 Steps 1–3, Step 4a, Step 4b-i and Step 4b-ii-a are closed / both approved; Step 4b-ii-b is in progress under Claude through row 20 but has no stable candidate or approval. Before handoff, the row-19 W6 seam must preserve the complete earlier authenticated state, and row 20 must bind provenance to the authenticated connection. Every production record, real-role read, capacity or threshold choice, final configuration, and later gate remains blocked.
+- [`Config Freeze Readiness Review.md`](Config%20Freeze%20Readiness%20Review.md) — authoritative gate audit for final-config readiness and the surviving design and authorization boundaries. Stage 1 and rung 2 remain complete only as scoped development screens. Slot-8 Steps 1–3, Step 4a, Step 4b-i and Step 4b-ii-a are closed / both approved; Step 4b-ii-b is in progress under Claude through row 20 but has no stable candidate or approval. Row 20 now binds provenance correctly. Before handoff, the row-19 W6 seam must stop claiming a post-row-12 state that the production config validator rejects, and the three-case menu context must restore its rewritten connection record on exit. Every production record, real-role read, capacity or threshold choice, final configuration, and later gate remains blocked.
 
 ## Continuity and session record
 
@@ -162,6 +162,7 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`Session Summaries/HumanReport149.md`](Session%20Summaries/HumanReport149.md) — detailed record of Codex Session 149 (general review of Claude's row-18 partial build, exact two-file authentication, 243 focused and 2,901 packet-wide passing tests, an end-to-end unbound geometry `model_id` proof, a live producer/row-16 chronology contradiction, no code takeover or formal approval, and preservation of every downstream gate).
 - [`Session Summaries/HumanReport150.md`](Session%20Summaries/HumanReport150.md) — detailed record of Codex Session 150 (general review of Claude's repaired row-5/row-16 state and new row 19, exact two-file authentication, 255 focused and 2,913 packet-wide passing tests, a reproduced incoherent W6 seam with only 1/8 prior-row joins surviving, no code takeover or formal approval, and preservation of every downstream gate).
 - [`Session Summaries/HumanReport151.md`](Session%20Summaries/HumanReport151.md) — detailed record of Codex Session 151 (general review of Claude's repaired row-19 seam and new row 20, exact two-file authentication, 265 focused/optimized and 2,923 packet-wide passing tests, reproduced stale census/manifest/index state, reproduced unbound FINAL/SYNTHETIC provenance acceptance, no code takeover or formal approval, and preservation of every downstream gate).
+- [`Session Summaries/HumanReport152.md`](Session%20Summaries/HumanReport152.md) — detailed record of Codex Session 152 (general review of Claude's expanded row-19 seam and repaired row-20 provenance guard, 277 focused/optimized and 2,935 packet-wide passing tests, reproduced invalid frozen-config witness and incomplete three-case context cleanup, no packet takeover or formal approval, the regular Session-152 progress report, and preservation of every downstream gate).
 - [`Progress Reports/Progress Report Session 8.md`](Progress%20Reports/Progress%20Report%20Session%208.md) — first regular every-eighth-session director update at the Accessible-Piece bar.
 - [`Progress Reports/Progress Report Session 16.md`](Progress%20Reports/Progress%20Report%20Session%2016.md) — second regular director update, covering the synchronous-probe correction, noisy pilot, real contact integration, and matched-contact BLOCK.
 - [`Progress Reports/Progress Report Session 24.md`](Progress%20Reports/Progress%20Report%20Session%2024.md) — third regular director update, covering the bounded-task redesign, information/control split, structural-action block, actuator headroom, and corrected probability-channel boundary; next regular Codex report is Session 32.
@@ -180,6 +181,7 @@ This folder contains Codex-owned research, source records, and continuity for th
 - [`Progress Reports/Progress Report Session 128.md`](Progress%20Reports/Progress%20Report%20Session%20128.md) — sixteenth regular director update, covering public rung-2 closure, seven-round Slot-8 design convergence, the first verification-artifact implementation, Codex's four reviewer repairs, the exact remaining owner-review gate, and the local MuJoCo import blocker.
 - [`Progress Reports/Progress Report Session 136.md`](Progress%20Reports/Progress%20Report%20Session%20136.md) — seventeenth regular director update, covering synthetic fixture closure, Step-4a and Review Card convergence, the first Step-4b-i candidate, the green-suite/blocked-contract distinction, and the preserved scientific gates.
 - [`Progress Reports/Progress Report Session 144.md`](Progress%20Reports/Progress%20Report%20Session%20144.md) — eighteenth regular director update, covering Step-4b-i closure, bounded review convergence, the six authentication-chain findings, the completed-run identity constraint, the separately housed one-read repair, and the still-unbuilt Step-4b-ii-b boundary.
+- [`Progress Reports/Progress Report Session 152.md`](Progress%20Reports/Progress%20Report%20Session%20152.md) — nineteenth regular director update, covering the public-heartbeat closure, Step-4b-ii-b rows 13–20, five repaired forward defects, the two surviving test-evidence blockers, the green-suite boundary and the still-closed scientific gates.
 - [`Progress Reports/Progress Report Amendment Payload-Bounded Non-Transfer.md`](Progress%20Reports/Progress%20Report%20Amendment%20Payload-Bounded%20Non-Transfer.md) — event-triggered director update explaining why Option C became the in-force contract, why every numerical bar stayed fixed, and which downstream gates remain closed.
 
 ## Shared files outside this folder
@@ -316,7 +318,8 @@ agents/Codex/
 │   ├── Progress Report Session 120.md
 │   ├── Progress Report Session 128.md
 │   ├── Progress Report Session 136.md
-│   └── Progress Report Session 144.md
+│   ├── Progress Report Session 144.md
+│   └── Progress Report Session 152.md
 ├── references.md
 ├── README.md
 ├── Summary of Only Necessary Context.md
@@ -471,5 +474,6 @@ agents/Codex/
     ├── HumanReport148.md
     ├── HumanReport149.md
     ├── HumanReport150.md
-    └── HumanReport151.md
+    ├── HumanReport151.md
+    └── HumanReport152.md
 ```
