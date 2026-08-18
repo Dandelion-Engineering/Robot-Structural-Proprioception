@@ -46,7 +46,7 @@ import shutil
 import sys
 from contextlib import contextmanager
 from dataclasses import asdict, fields as dataclass_fields, replace
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from types import MappingProxyType
 from typing import Any, Callable, Mapping, Sequence
 
@@ -56,7 +56,12 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from build_data_contract_fixture import build_fixture  # noqa: E402
-from utils.config_contract import expected_config_hash, load_config  # noqa: E402
+from utils.config_contract import (  # noqa: E402
+    ConfigContractError,
+    expected_config_hash,
+    load_config,
+    validate_config_document,
+)
 from utils import connection_adapter  # noqa: E402
 from utils.connection_adapter import (  # noqa: E402
     AUDIT_NAMES,
@@ -100,6 +105,7 @@ from utils.connection_adapter import (  # noqa: E402
     strict_json_document,
     tracked_text_digest,
     value_at_field_path,
+    write_bundle,
 )
 from utils.coherent_geometry_fixture import (  # noqa: E402
     coherent_privileged_record,
@@ -141,7 +147,10 @@ from utils.verification_scene import (  # noqa: E402
     SUITE_KEYS,
     SYNTHETIC_FIXTURE,
     LabelFields,
+    VerificationBundle,
     VerificationSceneError,
+    canonical_bundle_text,
+    canonical_scene_text,
     validate_bundle,
     validate_scene,
     X_ARMS_INCOMPLETE,
@@ -3234,6 +3243,7 @@ def _rewritten_payload(
     index_path = directory / ROLE_INDEX_NAME
     saved_payload = payload_path.read_bytes()
     saved_index = index_path.read_bytes()
+    saved_record = harness.record_path.read_bytes()
     try:
         buffer = io.BytesIO()
         np.savez(buffer, **{name: np.asarray(value) for name, value in payload.items()})
@@ -3243,6 +3253,7 @@ def _rewritten_payload(
     finally:
         payload_path.write_bytes(saved_payload)
         index_path.write_bytes(saved_index)
+        harness.record_path.write_bytes(saved_record)
 
 
 # -- the accept side, which is what makes every refusal below mean something --- #
@@ -4135,7 +4146,13 @@ def _coherent_geometry(
         payloads = edit_plant(payloads)
 
     validation_path = harness.packet_root / GEOMETRY_RELATIVE
-    saved: list[tuple[Path, bytes]] = [(validation_path, validation_path.read_bytes())]
+    # The record is restored here for the same reason `_three_case_menu` restores it:
+    # this installer rewrites it, and a context that exits leaving a record the read
+    # order refuses has not restored the tree it says it restores.
+    saved: list[tuple[Path, bytes]] = [
+        (validation_path, validation_path.read_bytes()),
+        (harness.record_path, harness.record_path.read_bytes()),
+    ]
     for suite in SUITE_KEYS:
         directory = role_root_for(harness.role_root, "plant", suite)
         run_id = f"{PAIR_ID}_{suite}"
@@ -4435,9 +4452,12 @@ def _provenance_joins(connection: AuthenticatedConnection) -> dict[str, bool]:
 
     **This is the one statement of the post-row-12 identity coherence the seam has to
     preserve**, and it is written once so the helper below and the tests that assert
-    it cannot drift apart. The eighteen entries are the joins the earlier rows put in
+    it cannot drift apart. The nineteen entries are the joins the earlier rows put in
     place, each one an equality between *separately authenticated* facts:
 
+      * row 3 binds the record's `config.relative_path` to the path row 4 then opens,
+        so the validated config's `source_path` is that packet-relative path resolved
+        under the injected packet root and never some other file;
       * row 4 binds the record's `config.config_hash` echo to the config it
         validated, and binds the validated config's `config_hash` to the canonical
         digest of the document it was taken over (`expected_config_hash`);
@@ -4477,6 +4497,12 @@ def _provenance_joins(connection: AuthenticatedConnection) -> dict[str, bool]:
     audits = connection.dataset.audits
     census = manifest_census(list(connection.dataset.rows.values()))
     joins = {
+        "the validated config's source_path resolves record config.relative_path": (
+            Path(connection.config.config.source_path).parts[
+                -len(record.config.relative_path.parts):
+            ]
+            == record.config.relative_path.parts
+        ),
         "record config.config_hash == the validated config": (
             record.config.config_hash == validated
         ),
@@ -4540,16 +4566,25 @@ def _require_post_row12_state(
 ) -> AuthenticatedConnection:
     """Return `connection` when it is a state rows 3 through 12 would have produced.
 
-    Three separate things are required, and naming them separately is the point --
-    Codex's Session-151 finding was that a post-condition covering only the first of
-    them said in its message that it covered all of a post-row-12 state:
+    Four separate things are required, and naming them separately is the point --
+    each cross-review so far has found the one this helper's message claimed and did
+    not run:
 
       1. every identity join `_provenance_joins` lists;
-      2. row 4's authority/config *policy*, run by calling
+      2. row 4's *validator*, run by calling `validate_config_document` at the
+         authority-appropriate `require_frozen` -- the same call `authenticate_config`
+         makes, over the same document, source path and schema. This is Codex's
+         Session-152 finding: the Session-152 seam ran row 4's policy and skipped row
+         4's validation, and the `frozen` state it built was refused by that validator
+         on the filename, the decision, the confirmatory flag, the open gates and all
+         eight freeze-required paths;
+      3. row 4's authority/config *policy*, run by calling
          `require_authority_config_policy` rather than restating it -- a `FINAL`
          record naming a draft config is a state row 4 refuses, and the Session-151
-         seam produced exactly that one;
-      3. row 3's authority/split *policy*, run by calling
+         seam produced exactly that one. It is kept beside the validator rather than
+         folded into it because the policy is the adapter's own rule and is total over
+         the 2x2 the validator does not see (finding CY's branch B);
+      4. row 3's authority/split *policy*, run by calling
          `connection_record._require_authority_split_policy`, the function that owns
          the rule.
 
@@ -4560,16 +4595,25 @@ def _require_post_row12_state(
             check: it *inverts* it, so a caller that sets it on a state row 3 would
             accept fails here. A declared exception nothing verifies is a bypass.
 
-    **What this post-condition deliberately does not claim**, stated here rather than
-    left to be rediscovered: it does not require the config document to be one
-    `utils.config_contract.validate_config_document` would accept under the frozen
-    lifecycle. That document is a complete frozen `config.json` with every
-    freeze-required path resolved, and invariant W7's whole content is that this
-    packet does not contain one and is not to manufacture one. The seam therefore
-    moves the document's `status` and re-derives its canonical digest -- so row 4's
-    *identity* and row 4's *policy* both hold -- and stops there. The failure is
-    raised rather than asserted so it survives `python -O`, which this file's suite is
-    deliberately re-run under.
+    **What this post-condition still does not claim, and it is now exactly one echo.**
+    It does not require `record.config.sha256` -- the digest of the config file's
+    *bytes* -- to be the digest of the document the state carries. An in-memory
+    document has no byte rendering row 4 would have hashed, and computing one here
+    would put an identity into the state that no read produced, which is the precise
+    defect shape both Session-152 findings had. So the seam leaves that one echo
+    where the harness put it, and a test pins that it is unmoved rather than
+    silently re-derived.
+
+    *** THIS REPLACES A WIDER NON-CLAIM AND THE REPLACEMENT IS THE POINT. *** Session
+    152 declined the whole of row 4's validation on the ground that invariant W7
+    forbids manufacturing a frozen `config.json`. Measured: `validate_config_document`
+    uses `source_path` **only for its name**, so a validator-accepted frozen state
+    needs no file at all, and this file has built a complete frozen fixture document
+    since acceptance test B8. W7 is about what the packet contains; it was never a
+    reason to skip a check that opens nothing.
+
+    The failure is raised rather than asserted so it survives `python -O`, which this
+    file's suite is deliberately re-run under.
     """
 
     failures = sorted(
@@ -4577,6 +4621,29 @@ def _require_post_row12_state(
         for name, holds in _provenance_joins(connection).items()
         if not holds
     )
+    validated_config = connection.config.config
+    try:
+        revalidated = validate_config_document(
+            _plain(validated_config.document),
+            source_path=validated_config.source_path,
+            schema=_plain(connection.config.schema),
+            schema_path=validated_config.schema_path,
+            require_frozen=connection.record.authority == FINAL,
+        )
+    except (ConfigContractError, ValueError, OSError) as exc:
+        failures.append(f"row 4's own validator refuses the config document: {exc}")
+    else:
+        if revalidated.config_hash != validated_config.config_hash:
+            failures.append(
+                f"row 4's validator derives config_hash "
+                f"{revalidated.config_hash!r} but the state carries "
+                f"{validated_config.config_hash!r}"
+            )
+        if revalidated.status != validated_config.status:
+            failures.append(
+                f"row 4's validator reads status {revalidated.status!r} but the "
+                f"state carries {validated_config.status!r}"
+            )
     try:
         require_authority_config_policy(
             connection.record.authority, connection.config.config
@@ -4610,6 +4677,7 @@ def _reprovenanced(
     config_status: str,
     assignment_hash: str,
     split_policy_violated: bool = False,
+    config_document: Callable[[AuthenticatedConnection], Mapping[str, Any]] | None = None,
 ) -> AuthenticatedConnection:
     """Return the same connection re-provenanced, with every earlier-row copy moved with it.
 
@@ -4625,13 +4693,29 @@ def _reprovenanced(
     own policy refuses. Both findings are the same finding at different widths, and
     both were re-driven at source in Session 152 before being accepted.
 
+    Session 152's version moved all eighteen of those and still built a `frozen`
+    configuration by flipping one field on the *draft* document; Codex measured that
+    row 4's own validator refuses it, and re-driving that here found the refusal is
+    not one clause but five -- the filename, the decision, the confirmatory flag, the
+    open gates and **all eight** freeze-required paths. Each generation of this seam
+    has been partial in a way the previous post-condition could not see, which is why
+    the post-condition now runs row 4's validator rather than approximating it.
+
     So every copy moves together here:
 
-      * the config **document**, whose `status` becomes `config_status` and whose
-        `config_hash` is then *re-derived* by `expected_config_hash` rather than
-        supplied. That is the structural half of the repair: an identity a caller
-        hands in is an identity no document produced, which is the same shape as the
-        row-20 defect Codex found in the same review;
+      * the config **document**. For `draft` it is the harness's own document with its
+        `status` restated; for `frozen` it is `_synthetic_frozen_document`, the
+        complete validator-accepted fixture this file has built since acceptance test
+        B8, together with the `config.json` source path the frozen lifecycle requires.
+        **No file is written for it** -- `validate_config_document` uses `source_path`
+        only for its name -- so invariant W7's rule that this packet contains no
+        frozen configuration is untouched;
+      * the config `config_hash`, which is *re-derived* by `expected_config_hash`
+        rather than supplied. That is the structural half of the repair: an identity a
+        caller hands in is an identity no document produced, which is the same shape as
+        the row-20 defect Codex found in the same review;
+      * the record's `config.relative_path`, which follows the source path so that
+        rows 3 and 4 still name one file;
       * the record's authority, split, `config.config_hash` echo, both audit
         `assignment_hash` and `config_hash` echoes, and every arm's 20-field
         `manifest_row`, rebuilt from the edited manifest row it names;
@@ -4652,9 +4736,31 @@ def _reprovenanced(
             and a `draft` one the `dev-` prefixed form, exactly as
             `utils.config_contract` derives them.
         split_policy_violated: passed through to the post-condition; see its Args.
+        config_document: **the negative controls' entry point, and it exists for
+            nothing else.** It replaces the document this helper would have built,
+            while every dependent copy below still moves coherently -- which is what
+            lets a control reproduce a superseded generation's *document* without
+            also reproducing that generation's broken joins, so the check the control
+            is aimed at is the only one left standing. The post-condition still runs,
+            and catching the substitution is its job.
     """
 
-    document = _plain(connection.config.config.document)
+    validated_config = connection.config.config
+    relative = connection.record.config.relative_path
+    packet_root = Path(validated_config.source_path).parents[len(relative.parts) - 1]
+    if config_status == "frozen":
+        # The frozen lifecycle requires the name `config.json`; nothing is written
+        # there, because `validate_config_document` reads `source_path` for its name
+        # and never opens it.
+        config_relative = PurePosixPath("config.json")
+        document = _synthetic_frozen_document(
+            _plain(connection.config.schema), Path(validated_config.schema_path)
+        )
+    else:
+        config_relative = relative
+        document = _plain(validated_config.document)
+    if config_document is not None:
+        document = _plain(config_document(connection))
     document["status"] = config_status
     document.pop("config_hash", None)
     config_hash = expected_config_hash(document)
@@ -4662,7 +4768,8 @@ def _reprovenanced(
     config = replace(
         connection.config,
         config=replace(
-            connection.config.config,
+            validated_config,
+            source_path=packet_root / Path(str(config_relative)),
             document=connection_adapter._frozen(document),
             config_hash=config_hash,
             status=config_status,
@@ -4705,7 +4812,11 @@ def _reprovenanced(
         connection.record,
         authority=authority,
         split=split,
-        config=replace(connection.record.config, config_hash=config_hash),
+        config=replace(
+            connection.record.config,
+            config_hash=config_hash,
+            relative_path=config_relative,
+        ),
         data_root=replace(
             data_root,
             generation_audit=replace(
@@ -4925,7 +5036,7 @@ def test_row19_the_authenticated_harness_satisfies_every_earlier_row_join(
     """
 
     joins = _provenance_joins(harness.authenticate())
-    assert len(joins) == 18
+    assert len(joins) == 19
     assert [name for name, holds in joins.items() if not holds] == []
 
 
@@ -5133,6 +5244,180 @@ def test_row19_the_seam_post_condition_refuses_a_partial_re_provenancing(
     assert "row 4 authority/config policy refuses" in message
     for name in broken:
         assert name in message
+
+
+def _session_152_config_document(
+    connection: AuthenticatedConnection,
+) -> Mapping[str, Any]:
+    """Reconstruct Session 152's config document exactly, as an input to be caught.
+
+    Session 152 built a `frozen` configuration by taking the harness's own **draft**
+    document and setting one field. Everything else it moved coherently, which is why
+    every join and both policies still hold over it: the only thing wrong with that
+    state is that row 4's validator would never have produced it.
+    """
+
+    return {**_plain(connection.config.config.document), "status": "frozen"}
+
+
+def test_row19_the_seam_post_condition_runs_row_4s_own_validator(
+    harness: Harness,
+) -> None:
+    """The third negative control, and the first one no join and no policy can catch.
+
+    Lesson 272 said a widened post-condition must be shown to see the *current*
+    generation's defect, and this is that check applied to the widening itself. Both
+    controls below leave **all nineteen joins standing and both policies accepting**,
+    so a post-condition that had merely gained joins would pass them. Only the call
+    into `validate_config_document` refuses, and the two controls separate its two
+    halves: what the document *says*, and what the file it is read from is *named*.
+    """
+
+    connection = harness.authenticate()
+
+    # Control A -- Session 152's own document, under the correct frozen filename.
+    with pytest.raises(AssertionError) as content:
+        _reprovenanced(
+            connection,
+            authority=FINAL,
+            split="val",
+            config_status="frozen",
+            assignment_hash="c" * 64,
+            config_document=_session_152_config_document,
+        )
+    message = str(content.value)
+    assert "row 4's own validator refuses the config document" in message
+    assert "join broken" not in message
+    assert "policy refuses" not in message
+
+    # Control B -- a genuinely frozen document under the draft filename.
+    accepted = _reprovenanced(
+        connection,
+        authority=FINAL,
+        split="val",
+        config_status="frozen",
+        assignment_hash="c" * 64,
+    )
+    misnamed = replace(
+        accepted,
+        config=replace(
+            accepted.config,
+            config=replace(
+                accepted.config.config,
+                source_path=Path(connection.config.config.source_path),
+            ),
+        ),
+        record=replace(
+            accepted.record,
+            config=replace(
+                accepted.record.config,
+                relative_path=connection.record.config.relative_path,
+            ),
+        ),
+    )
+    assert [
+        name for name, holds in _provenance_joins(misnamed).items() if not holds
+    ] == []
+    with pytest.raises(AssertionError) as named:
+        _require_post_row12_state(misnamed, where="the filename control")
+    assert "must be named exactly config.json" in str(named.value)
+    assert "join broken" not in str(named.value)
+
+
+def test_row19_the_seam_builds_a_configuration_row_4s_validator_accepts(
+    harness: Harness,
+) -> None:
+    """The accept side of the same call, measured clause by clause rather than assumed.
+
+    A post-condition that ran the validator and could only ever refuse would be the
+    same defect as one that never ran it. So the frozen state the seam now builds is
+    driven through `validate_config_document` at `require_frozen=True` here, and every
+    clause the frozen lifecycle names is checked against the document independently --
+    because a single accept could come from a validator that had stopped checking.
+
+    **And nothing is written for it.** `source_path` is read for its name and never
+    opened, so the frozen state exists only in memory: neither the live packet nor the
+    harness's own temporary packet gains a `config.json`, which is invariant W7's rule
+    and finding DD's boundary.
+    """
+
+    connection = harness.authenticate()
+    edited = _reprovenanced(
+        connection,
+        authority=FINAL,
+        split="val",
+        config_status="frozen",
+        assignment_hash="c" * 64,
+    )
+    config = edited.config.config
+    document = _plain(config.document)
+    schema = _plain(edited.config.schema)
+    contract = schema["config_contract"]
+
+    assert Path(config.source_path).name == "config.json"
+    validated = validate_config_document(
+        document,
+        source_path=config.source_path,
+        schema=schema,
+        schema_path=config.schema_path,
+        require_frozen=True,
+    )
+    assert validated.config_hash == config.config_hash
+    assert validated.is_frozen
+    assert document["decision"] == contract["frozen_decision"]
+    assert document["confirmatory_payloads_allowed"] is True
+    assert document["open_gates"] == []
+    assert document["schema_sha256"] == _raw_digest(Path(config.schema_path))
+    unresolved = [
+        dotted
+        for dotted in contract["freeze_required_paths"]
+        if _contains_null_value(_value_at_dotted_path(document, dotted))
+    ]
+    assert unresolved == []
+    assert len(contract["freeze_required_paths"]) == 8
+
+    assert not (PACKET_ROOT / "config.json").exists()
+    assert not (harness.packet_root / "config.json").exists()
+
+
+def _value_at_dotted_path(document: Mapping[str, Any], dotted: str) -> Any:
+    """Return the value one dotted config path names, or `None` when it is absent."""
+
+    cursor: Any = document
+    for segment in dotted.split("."):
+        if not isinstance(cursor, Mapping) or segment not in cursor:
+            return None
+        cursor = cursor[segment]
+    return cursor
+
+
+def test_row19_the_seam_leaves_the_config_byte_digest_where_the_harness_put_it(
+    harness: Harness,
+) -> None:
+    """The one echo the post-condition still does not establish, pinned as unmoved.
+
+    `record.config.sha256` is the digest of the config file's *bytes*. The seam writes
+    no file, so there is no byte rendering row 4 would have hashed, and computing one
+    would put an identity into the state that no read produced -- the exact defect
+    shape both of the Session-152 findings had. Leaving it is therefore the correct
+    behaviour rather than an omission, and pinning it here is what stops a later
+    session from "completing" the seam by deriving it.
+    """
+
+    connection = harness.authenticate()
+    for authority, split, status, assignment in (
+        (FINAL, "val", "frozen", "c" * 64),
+        (DEVELOPMENT_ONLY, "dev", "draft", harness.assignment_hash),
+    ):
+        edited = _reprovenanced(
+            connection,
+            authority=authority,
+            split=split,
+            config_status=status,
+            assignment_hash=assignment,
+        )
+        assert edited.record.config.sha256 == connection.record.config.sha256
+        assert edited.record.config.config_hash != edited.record.config.sha256
 
 
 def test_row19_the_seam_post_condition_checks_the_declared_split_violation(
@@ -5389,6 +5674,17 @@ def _three_case_menu(
 ):
     """Install a complete structure/actuator/sensor menu, then restore every byte.
 
+    *** THE CONNECTION RECORD IS PART OF "EVERY BYTE", AND IT WAS NOT UNTIL SESSION
+    153. *** Codex's Session-152 review measured that this installer rewrote the
+    record and restored everything the record *names*, so the state it left behind
+    declared the temporary established-result digest against the restored artifact.
+    Re-driven at source: the post-exit record does not merely go stale, it is
+    **refused** -- `authenticate_connection` raises `X_IDENTITY_MISMATCH` on
+    `established_result.sha256`. The autouse `_restored_record` fixture repaired that
+    only at the end of the whole test, so a context manager whose docstring promised a
+    restored tree handed back a tree no read order accepts. The record is in `saved`
+    now, and the same repair is applied to this file's two other installers.
+
     Args:
         edit_document: given the assembled record document, returns the one to write.
             Used to drive row 20's identity refusals, which need a record whose menu
@@ -5423,7 +5719,13 @@ def _three_case_menu(
 
     saved = [
         (path, path.read_bytes())
-        for path in [manifest_path, validation_path, result_path, *touched]
+        for path in [
+            manifest_path,
+            validation_path,
+            result_path,
+            harness.record_path,
+            *touched,
+        ]
     ]
     created: list[Path] = []
 
@@ -5811,6 +6113,13 @@ def test_the_three_case_menu_restores_every_byte_it_touched(harness: Harness) ->
     twelve payloads and six checkpoints. A leak there would not fail here -- it would
     quietly change what every later test in this file is measuring. So the whole of
     both trees is digested before and after, path by path, and required to be equal.
+
+    *** THE CONNECTION RECORD IS IN THE COMPARISON AND NOTHING IS REPAIRED BY HAND. ***
+    Until Session 153 this snapshot excluded `harness.record_path` and then called
+    `harness.restore_record()` before checking it, which proved that the *manual*
+    restoration method works and said nothing about the property the context manager's
+    own docstring claims. That is Codex's Session-152 finding, and the exclusion was
+    the reason no test could see it.
     """
 
     def snapshot() -> dict[str, str]:
@@ -5818,12 +6127,7 @@ def test_the_three_case_menu_restores_every_byte_it_touched(harness: Harness) ->
             str(path.relative_to(harness.root)): external_digest(path)
             for root in (harness.packet_root, harness.role_root, harness.checkpoint_root)
             for path in sorted(root.rglob("*"))
-            # The record itself is the one file the installer deliberately leaves
-            # rewritten: `harness.rewrite_record` is how a test receives its
-            # arguments, and the autouse `_restored_record` fixture puts the accepted
-            # record back after every test in this file. That boundary is asserted
-            # below rather than folded into the comparison.
-            if path.is_file() and path != harness.record_path
+            if path.is_file()
         }
 
     before = snapshot()
@@ -5833,9 +6137,49 @@ def test_the_three_case_menu_restores_every_byte_it_touched(harness: Harness) ->
     after = snapshot()
     assert during != before
     assert set(during) - set(before)
+    assert during[str(harness.record_path.relative_to(harness.root))] != before[
+        str(harness.record_path.relative_to(harness.root))
+    ]
     assert after == before
-    harness.restore_record()
     assert external_digest(harness.record_path) == harness.record_sha256
+
+
+def test_every_installer_leaves_a_record_the_read_order_still_accepts(
+    harness: Harness,
+) -> None:
+    """The sharp form of Codex's Session-152 finding, driven over all three installers.
+
+    Each of this file's context managers rewrites the connection record and then
+    restores the files that record *names*. Before Session 153 none of them restored
+    the record itself, so what each one handed back was not a stale record but a
+    **refused** one: the record still declared the digests of the temporary artifacts
+    while those artifacts had been put back. Measured against the Session-152 bytes,
+    the exit was `X_IDENTITY_MISMATCH` on `established_result.sha256`.
+
+    The autouse `_restored_record` fixture repaired that only after the whole test
+    finished, which is why a leak was invisible inside one. This drives the property
+    the installers now carry -- exit leaves a tree the read order accepts -- rather
+    than comparing a digest, because accepting is the thing the tree is for.
+    """
+
+    accepted = harness.record_sha256
+    connection = harness.authenticate()
+    key = _payload_key(CASE_ID, "S", "labels")
+    payload = dict(connection.roles.payloads[key])
+    payload["severity"] = np.asarray(0.25, dtype=np.float64)
+
+    installers = (
+        ("_rewritten_payload", lambda: _rewritten_payload(
+            harness, "labels", "S", f"{PAIR_ID}_S", payload
+        )),
+        ("_coherent_geometry", lambda: _coherent_geometry(harness)),
+        ("_three_case_menu", lambda: _three_case_menu(harness)),
+    )
+    for name, open_installer in installers:
+        with open_installer() as arguments:
+            assert arguments["connection_record_sha256"] != accepted, name
+        assert external_digest(harness.record_path) == accepted, name
+        assert authenticate_connection(**harness.arguments()) is not None, name
 
 
 def test_row20_accepts_the_three_case_menu_and_returns_one_bundle(
@@ -5967,3 +6311,464 @@ def test_row20_carries_the_authenticated_record_digest_rather_than_a_second_read
     assert "record_sha256" in {
         field.name for field in dataclass_fields(AuthenticatedConnection)
     }
+
+
+# -- row 21 ------------------------------------------------------------------ #
+#
+# **Row 21 is the first row that writes anything, and it is the last row of the read
+# order.** Everything above it authenticates, resolves or assembles; this one creates
+# `<output-dir>/<record_label>/` exclusively and publishes the declared set into it.
+# The scripted figure writer is injected rather than imported, because
+# `render_verification_scene` is the entry point that calls *into* the adapter and
+# because it is the only module on this surface that imports matplotlib -- so the
+# tests below drive both the real writer and a stub, and one test pins the stub
+# against the real one so the refusal tests are not measuring a fiction.
+
+
+def _scripted_writer():
+    """Return the packet's own scripted figure writer, under a headless backend."""
+
+    import matplotlib
+
+    matplotlib.use("Agg")
+    from render_verification_scene import render_bundle
+
+    return render_bundle
+
+
+def _png_chunk(kind: bytes, body: bytes) -> bytes:
+    """Return one length-prefixed, CRC-suffixed PNG chunk."""
+
+    import zlib
+
+    return (
+        len(body).to_bytes(4, "big")
+        + kind
+        + body
+        + zlib.crc32(kind + body).to_bytes(4, "big")
+    )
+
+
+def _stub_png(pixels_per_metre: int | None) -> bytes:
+    """Return a real one-pixel PNG, optionally without its `pHYs` chunk."""
+
+    import zlib
+
+    chunks = [
+        _png_chunk(
+            b"IHDR",
+            (1).to_bytes(4, "big") + (1).to_bytes(4, "big") + bytes([8, 0, 0, 0, 0]),
+        )
+    ]
+    if pixels_per_metre is not None:
+        chunks.append(
+            _png_chunk(
+                b"pHYs",
+                pixels_per_metre.to_bytes(4, "big") * 2 + bytes([1]),
+            )
+        )
+    chunks.append(_png_chunk(b"IDAT", zlib.compress(b"\x00\x00")))
+    chunks.append(_png_chunk(b"IEND", b""))
+    return connection_adapter._PNG_SIGNATURE + b"".join(chunks)
+
+
+_STUB_PIXELS_PER_METRE = round(
+    connection_adapter.REQUIRED_FIGURE_DPI / connection_adapter._METRES_PER_INCH
+)
+
+
+def _stub_writer(
+    *,
+    extra_file: str | None = None,
+    omit_case: str | None = None,
+    bundle_bytes: Callable[[bytes], bytes] | None = None,
+    digest_text: Callable[[str], str] | None = None,
+    scene_bytes: Callable[[bytes], bytes] | None = None,
+    png: bytes | None = None,
+    report_edit: Callable[[dict], dict] | None = None,
+    subdirectory: str | None = None,
+):
+    """Return a writer that publishes the declared set, with one property perturbed.
+
+    Every keyword breaks exactly one of the things row 21 checks, so each refusal test
+    below names the single property it is about. With no keyword the writer is the
+    faithful one, and `test_row21_the_stub_writer_publishes_what_the_real_writer_does`
+    is what says so.
+    """
+
+    def write(bundle: VerificationBundle, destination: Path) -> dict[str, Any]:
+        text = canonical_bundle_text(bundle)
+        raw = text.encode("utf-8")
+        if bundle_bytes is not None:
+            raw = bundle_bytes(raw)
+        (destination / connection_adapter.BUNDLE_JSON_NAME).write_bytes(raw)
+        digest = external_bytes_digest(raw)
+        rendered_digest = digest if digest_text is None else digest_text(digest)
+        (destination / connection_adapter.BUNDLE_DIGEST_NAME).write_bytes(
+            f"{rendered_digest}\n".encode("utf-8")
+        )
+        cases: list[dict[str, Any]] = []
+        for case_id, scene in bundle.scenes.items():
+            if case_id == omit_case:
+                continue
+            scene_raw = canonical_scene_text(scene).encode("utf-8")
+            if scene_bytes is not None:
+                scene_raw = scene_bytes(scene_raw)
+            (destination / f"{case_id}.json").write_bytes(scene_raw)
+            (destination / f"{case_id}.png").write_bytes(
+                _stub_png(_STUB_PIXELS_PER_METRE) if png is None else png
+            )
+            cases.append(
+                {
+                    "case_id": case_id,
+                    "frame": 0,
+                    "png": f"{case_id}.png",
+                    "scene_json": f"{case_id}.json",
+                }
+            )
+        if extra_file is not None:
+            (destination / extra_file).write_bytes(b"unnamed\n")
+        if subdirectory is not None:
+            (destination / subdirectory).mkdir()
+        report = {
+            "bundle_version": bundle.bundle_version,
+            "provenance_state": bundle.provenance_state,
+            "bundle_json": connection_adapter.BUNDLE_JSON_NAME,
+            "bundle_sha256": external_bytes_digest(raw),
+            "save_dpi": connection_adapter.REQUIRED_FIGURE_DPI,
+            "cases": cases,
+        }
+        return report if report_edit is None else report_edit(report)
+
+    return write
+
+
+@contextmanager
+def _publication_root(harness: Harness):
+    """Yield the exclusive-create destination, and remove the tree afterwards.
+
+    The harness is session-scoped, so a publication left behind would make every later
+    row-21 test refuse at the exclusive create rather than exercise what it is named
+    for. The entry assertion is what turns a leak into a failure at its own site.
+    """
+
+    root = harness.output_dir / RECORD_LABEL
+    assert not root.exists(), f"a previous test left {root} behind"
+    try:
+        yield root
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
+
+def _published(harness: Harness, writer, *, arguments: Mapping[str, Any]):
+    """Drive rows 1 through 20 and hand row 21 the assembled bundle."""
+
+    connection, cases, geometry, provenance = _resolved(harness, arguments)
+    bundle = resolve_bundle(connection, cases, geometry, provenance)
+    return connection, bundle, write_bundle(connection, bundle, render=writer)
+
+
+def test_row21_publishes_exactly_the_declared_set_with_the_packets_own_writer(
+    harness: Harness,
+) -> None:
+    """The accept path, driven end to end through the real scripted writer.
+
+    This is the only row that puts anything on disk, so what is asserted here is the
+    published tree itself rather than a return value: the two fixed bundle files and
+    one scene document plus one figure per declared case, in the record's order, with
+    the digest file naming the bundle document beside it and every figure carrying the
+    resolution section 4.7 requires.
+    """
+
+    declared = [case_id for case_id, *_ in MENU_CASES]
+    with _publication_root(harness) as root:
+        with _three_case_menu(harness) as arguments:
+            connection, bundle, written = _published(
+                harness, _scripted_writer(), arguments=arguments
+            )
+        assert written.output_root == root
+        assert written.cases == tuple(declared)
+        assert written.figure_dpi == connection_adapter.REQUIRED_FIGURE_DPI
+        assert written.file_names == tuple(
+            sorted(
+                [*connection_adapter.BUNDLE_FILE_NAMES]
+                + [f"{case_id}{suffix}" for case_id in declared for suffix in (".json", ".png")]
+            )
+        )
+        assert len(written.file_names) == 8
+        published = sorted(path.name for path in root.rglob("*"))
+        assert published == list(written.file_names)
+
+        bundle_path = root / connection_adapter.BUNDLE_JSON_NAME
+        assert bundle_path.read_bytes() == canonical_bundle_text(bundle).encode("utf-8")
+        assert external_digest(bundle_path) == written.bundle_sha256
+        assert (root / connection_adapter.BUNDLE_DIGEST_NAME).read_text(
+            encoding="utf-8"
+        ) == f"{written.bundle_sha256}\n"
+        for case_id in declared:
+            assert (root / f"{case_id}.json").read_bytes() == canonical_scene_text(
+                bundle.scenes[case_id]
+            ).encode("utf-8")
+            horizontal, vertical = connection_adapter._png_pixels_per_metre(
+                (root / f"{case_id}.png").read_bytes(), where=f"{case_id}.png"
+            )
+            assert horizontal == vertical == _STUB_PIXELS_PER_METRE
+        assert connection.record.authority == DEVELOPMENT_ONLY
+
+
+def test_row21_the_stub_writer_publishes_what_the_real_writer_does(
+    harness: Harness,
+) -> None:
+    """The stub the refusal tests use is bound to the real writer, not trusted beside it.
+
+    A refusal test whose writer differs from the shipped one in some *other* way than
+    the property under test measures nothing about the shipped path. So the two are
+    driven over the same bundle here and compared where they are supposed to agree:
+    the file set, the report's identity fields, the published bundle and scene bytes,
+    and the resolution each figure declares. The figure *content* is not compared --
+    the stub draws nothing, and drawing is the renderer's own tested property.
+    """
+
+    with _three_case_menu(harness) as arguments:
+        connection, cases, geometry, provenance = _resolved(harness, arguments)
+        bundle = resolve_bundle(connection, cases, geometry, provenance)
+
+    with _publication_root(harness) as root:
+        root.mkdir(parents=True)
+        real_report = _scripted_writer()(bundle, root)
+        real_names = sorted(path.name for path in root.rglob("*"))
+        real_bundle = (root / connection_adapter.BUNDLE_JSON_NAME).read_bytes()
+        real_scenes = {
+            case_id: (root / f"{case_id}.json").read_bytes() for case_id in bundle.scenes
+        }
+        real_resolution = {
+            case_id: connection_adapter._png_pixels_per_metre(
+                (root / f"{case_id}.png").read_bytes(), where=f"{case_id}.png"
+            )
+            for case_id in bundle.scenes
+        }
+
+    with _publication_root(harness) as root:
+        root.mkdir(parents=True)
+        stub_report = _stub_writer()(bundle, root)
+        assert sorted(path.name for path in root.rglob("*")) == real_names
+        assert (root / connection_adapter.BUNDLE_JSON_NAME).read_bytes() == real_bundle
+        assert {
+            case_id: (root / f"{case_id}.json").read_bytes() for case_id in bundle.scenes
+        } == real_scenes
+        assert {
+            case_id: connection_adapter._png_pixels_per_metre(
+                (root / f"{case_id}.png").read_bytes(), where=f"{case_id}.png"
+            )
+            for case_id in bundle.scenes
+        } == real_resolution
+
+    for field in ("bundle_version", "provenance_state", "bundle_json", "bundle_sha256", "save_dpi"):
+        assert stub_report[field] == real_report[field], field
+    assert [case["case_id"] for case in stub_report["cases"]] == [
+        case["case_id"] for case in real_report["cases"]
+    ]
+
+
+def test_row21_refuses_a_second_run_at_the_same_record_label(
+    harness: Harness,
+) -> None:
+    """Invariant W10, and the half of it that matters is what survives the refusal.
+
+    An exclusive create that refused *after* touching the destination would make a
+    second run destroy the first publication, which is the state the invariant exists
+    to forbid. So the first tree is digested file by file, the second run is driven,
+    and the tree is required to be byte-identical afterwards -- and the writer is a
+    counting stub, so the refusal is also shown to happen before the writer is reached
+    at all.
+    """
+
+    calls: list[Path] = []
+
+    def counting(bundle: VerificationBundle, destination: Path) -> dict[str, Any]:
+        calls.append(destination)
+        return _stub_writer()(bundle, destination)
+
+    with _publication_root(harness) as root:
+        with _three_case_menu(harness) as arguments:
+            _published(harness, counting, arguments=arguments)
+            assert len(calls) == 1
+            before = {
+                path.name: external_digest(path) for path in sorted(root.rglob("*"))
+            }
+            connection, cases, geometry, provenance = _resolved(harness, arguments)
+            bundle = resolve_bundle(connection, cases, geometry, provenance)
+            error = _refusal(
+                lambda: write_bundle(connection, bundle, render=counting)
+            )
+        assert error.code == X_PROVENANCE_UNRESOLVED
+        assert "already exists" in str(error)
+        assert len(calls) == 1
+        assert {
+            path.name: external_digest(path) for path in sorted(root.rglob("*"))
+        } == before
+
+
+@pytest.mark.parametrize(
+    "writer_kwargs, code, fragment",
+    [
+        (
+            {"extra_file": "notes.txt"},
+            X_BUNDLE_INCOMPLETE,
+            "writes exactly the declared",
+        ),
+        (
+            {"omit_case": MENU_CASES[1][0]},
+            X_BUNDLE_INCOMPLETE,
+            "writes exactly the declared",
+        ),
+        (
+            {"subdirectory": "figures"},
+            X_BUNDLE_INCOMPLETE,
+            "the declared output set is flat",
+        ),
+        (
+            {"bundle_bytes": lambda raw: raw + b"\n"},
+            X_BUNDLE_INCOMPLETE,
+            "not the canonical rendering of the menu",
+        ),
+        (
+            {"digest_text": lambda digest: "0" * 64},
+            X_BUNDLE_INCOMPLETE,
+            "does not hold the digest of the bundle document",
+        ),
+        (
+            {"scene_bytes": lambda raw: raw.replace(b"structure", b"actuator", 1)},
+            X_BUNDLE_INCOMPLETE,
+            "not the canonical rendering of the scene",
+        ),
+        (
+            {"png": b"not a png at all\n"},
+            X_BUNDLE_INCOMPLETE,
+            "does not begin with the PNG signature",
+        ),
+        ({"png": _stub_png(None)}, X_BUNDLE_INCOMPLETE, "carries no pHYs chunk"),
+        ({"png": _stub_png(2000)}, X_BUNDLE_INCOMPLETE, "pixels per metre"),
+        (
+            {"report_edit": lambda report: {**report, "save_dpi": 150}},
+            X_BUNDLE_INCOMPLETE,
+            "section 4.7 requires",
+        ),
+        (
+            {"report_edit": lambda report: {**report, "bundle_sha256": "e" * 64}},
+            X_IDENTITY_MISMATCH,
+            "the writer's reported bundle_sha256",
+        ),
+        (
+            {"report_edit": lambda report: {**report, "provenance_state": FINAL}},
+            X_IDENTITY_MISMATCH,
+            "the writer's reported provenance_state",
+        ),
+        (
+            {"report_edit": lambda report: {**report, "cases": report["cases"][::-1]}},
+            X_BUNDLE_INCOMPLETE,
+            "in that order",
+        ),
+    ],
+    ids=[
+        "extra-file",
+        "missing-case",
+        "subdirectory",
+        "bundle-bytes",
+        "digest-file",
+        "scene-bytes",
+        "not-a-png",
+        "no-phys-chunk",
+        "wrong-resolution",
+        "reported-dpi",
+        "reported-digest",
+        "reported-state",
+        "reported-order",
+    ],
+)
+def test_row21_refuses_every_way_an_injected_writer_can_disagree_with_it(
+    harness: Harness,
+    writer_kwargs: dict,
+    code: str,
+    fragment: str,
+) -> None:
+    """The injected writer is checked, never trusted -- one case per thing row 21 knows.
+
+    Codex's Session-151 and Session-152 findings were one fault at two sites: a value
+    reaching a checked object from beside it rather than from inside it. An injected
+    writer is that same seam by construction, so every field of its report and every
+    byte it leaves behind is compared against something this row derived itself, and
+    each row of this table breaks exactly one of those comparisons.
+    """
+
+    with _publication_root(harness):
+        with _three_case_menu(harness) as arguments:
+            connection, cases, geometry, provenance = _resolved(harness, arguments)
+            bundle = resolve_bundle(connection, cases, geometry, provenance)
+            error = _refusal(
+                lambda: write_bundle(
+                    connection, bundle, render=_stub_writer(**writer_kwargs)
+                )
+            )
+    assert error.code == code
+    assert fragment in str(error)
+
+
+def test_row21_writes_nothing_outside_the_root_row_3_bound(harness: Harness) -> None:
+    """The destination is row 3's, and row 21 resolves nothing of its own.
+
+    The output root is `<output-dir>/<record_label>/` under the authority's own parent,
+    and the packet ignore rule covers the development parent (W9). This asserts the
+    root row 21 created is that bound path, that it sits under the development parent,
+    and that the whole packet tree gained nothing but the eight declared files.
+    """
+
+    def snapshot() -> set[str]:
+        return {
+            str(path.relative_to(harness.packet_root))
+            for path in harness.packet_root.rglob("*")
+            if path.is_file()
+        }
+
+    with _publication_root(harness) as root:
+        with _three_case_menu(harness) as arguments:
+            connection, cases, geometry, provenance = _resolved(harness, arguments)
+            bundle = resolve_bundle(connection, cases, geometry, provenance)
+            before = snapshot()
+            written = write_bundle(connection, bundle, render=_stub_writer())
+        assert written.output_root == Path(connection.bound.output_root)
+        assert written.output_root.parent == harness.output_dir
+        assert written.output_root.name == connection.record.record_label
+        gained = snapshot() - before
+        assert gained == {
+            str((root / name).relative_to(harness.packet_root))
+            for name in written.file_names
+        }
+
+
+def test_row21_refuses_a_bound_root_that_is_not_named_for_the_record_label(
+    harness: Harness,
+) -> None:
+    """A post-condition over row 3's own binding, driven by breaking that binding.
+
+    Row 3 binds the output root to `record_label`; row 21 is the row that would create
+    it. Restating the check here is not duplication -- it is the last point at which a
+    destination that stopped being the label's own can be refused before a directory
+    exists, and the guard is driven by substituting the bound value rather than by
+    trusting that row 3 always agrees with it.
+    """
+
+    with _three_case_menu(harness) as arguments:
+        connection, cases, geometry, provenance = _resolved(harness, arguments)
+        bundle = resolve_bundle(connection, cases, geometry, provenance)
+        moved = replace(
+            connection,
+            bound=replace(
+                connection.bound,
+                output_root=harness.output_dir / "some-other-label",
+            ),
+        )
+        error = _refusal(lambda: write_bundle(moved, bundle, render=_stub_writer()))
+    assert error.code == X_PROVENANCE_UNRESOLVED
+    assert "is not named for record label" in str(error)
+    assert not (harness.output_dir / "some-other-label").exists()

@@ -909,3 +909,189 @@ have held that line.
 `authenticate_sources` third parameter, and the `AuthenticatedConnection.record_sha256`
 field. Session 152 added no fourth — `resolve_bundle` is 4b-ii-b's own code and its new
 guard moves no byte that was part of the closed 4b-ii-a approval. ***
+
+---
+
+## Appendix G — Codex's two Session-152 findings discharged, and row 21 built (Claude Session 153)
+
+*Appended 2026-08-17, Session 153. Both of Codex's Session-152 cross-review findings
+are discharged, neither contested, both re-driven at source first and both found to
+have a sharper form than reported. **Read-order row 21 is built, so all twenty-one
+rows now exist.** What remains of section 4 is the audit-hook observer, B2/B5, the
+remaining B3 rows, the `roles` CLI wiring, the additive `build_role_bundle` change,
+the two-pass mutation sweep, and only then the Review Card and the chat. The design at
+blob `032db166` is still the authority.*
+
+### G.1 Codex was right a fifth time, and both findings were about a claim, not a value
+
+Session 152's two findings were one fault at two sites — a value reaching a checked
+object from beside it. Session 153's two are also one fault at two sites, and it is a
+different one: **a helper whose name and docstring claimed more than the code checked,
+where the missing check was cheap and available all along.**
+
+**Finding 1, measured against my own Session-152 bytes.** `_require_post_row12_state`
+ran row 4's *policy* and never row 4's *validator*. Applying the Session-152
+`_reprovenanced` with `authority=FINAL`, `config_status='frozen'` and then handing the
+result to `validate_config_document(..., require_frozen=True)`:
+
+```text
+row-4 validator REFUSES: the frozen configuration must be named exactly config.json
+```
+
+That is the first clause only. Driving the rest against the same document:
+
+| frozen clause | required | the Session-152 seam produced |
+|---|---|---|
+| source path name | `config.json` | `config/draft-config-v0.1.json` |
+| `decision` | `APPROVE_CONFIG_FREEZE` | `BLOCK_CONFIG_FREEZE_PENDING_…` |
+| `confirmatory_payloads_allowed` | `True` | `False` |
+| `open_gates` | `[]` | five gates |
+| freeze-required paths resolved | 8 of 8 | **0 of 8** |
+
+So the state was not a near-miss on one clause; it failed every clause the frozen
+lifecycle names.
+
+**Finding 2, measured, and it is worse than stale.** `_three_case_menu` rewrote the
+connection record and restored every file that record *names*, so the record left
+behind declared the temporary established result against the restored artifact:
+
+```text
+before context: 25c94f41…daacc27c
+during context: 56a6d1b1…f233d36d64b4
+after  context: 56a6d1b1…f233d36d64b4      restored: False
+post-exit authenticate_connection -> X_IDENTITY_MISMATCH on established_result.sha256
+```
+
+Codex's two digests and mine agree exactly. **The record is not merely stale on exit —
+it is refused**, and the same hole was in this file's other two installers,
+`_coherent_geometry` and `_rewritten_payload`.
+
+### G.2 The repairs, and the non-claim that turned out not to be one
+
+**Finding 1.** `_require_post_row12_state` now checks four things rather than three:
+every identity join, **row 4's own `validate_config_document` at the
+authority-appropriate `require_frozen`**, row 4's authority/config policy, and row 3's
+authority/split policy. `_reprovenanced` builds the frozen lifecycle out of
+`_synthetic_frozen_document` — the complete validator-accepted fixture this file has
+carried since acceptance test B8 — under a `config.json` source path, and moves
+`record.config.relative_path` with it. `_provenance_joins` gains a nineteenth join
+binding the validated config's `source_path` to that relative path.
+
+*** THE PART TO CARRY IS WHY THE SESSION-152 NON-CLAIM WAS WRONG. *** Session 152 wrote
+down, deliberately, that the post-condition does not require the config document to be
+one the validator would accept, on the ground that invariant W7 forbids this packet
+manufacturing a frozen `config.json`. Measured this session: **`validate_config_document`
+reads `source_path` only for its name and never opens it**, so a validator-accepted
+frozen state needs no file at all — the probe confirms neither the live packet nor the
+harness's temporary packet gains a `config.json`. W7 is a rule about what the packet
+*contains*; it was never a reason to skip a check that opens nothing. A stated
+non-claim is a load-bearing claim, and it has to be re-derived at source like any other.
+
+**What is still not claimed is now exactly one echo**, and it is named: the seam does
+not move `record.config.sha256`, because that is a digest of file *bytes*, the seam
+writes no file, and computing a byte rendering here would put an identity into the
+state that no read produced — which is precisely the Session-152 defect shape. A test
+pins that the field is unmoved, so a later session cannot "complete" the seam by
+deriving it.
+
+**Finding 2.** All three installers now save and restore the connection record in
+their own `finally`. The restoration test compares the whole tree **with no exclusion
+and no manual repair**, and a new test drives the property over all three installers by
+re-authenticating after each context exits.
+
+### G.3 The third negative control, built so only the new check can fire
+
+Lesson 272 said a widened post-condition must be shown to see the *current*
+generation's defect. Applying that to the widening itself, the two existing controls
+are not enough: both break joins *and* fail row 4's policy, so the old post-condition
+would have caught them too. Measured:
+
+| control | broken joins | row 4 policy | row 4 validator |
+|---|---|---|---|
+| Session-150 partial | 11 of 19 | refuses | refuses |
+| Session-151 partial | 7 of 19 | refuses | refuses |
+| **Session-152 document** | **0 of 19** | **accepts** | **refuses** |
+
+The third control is the only one the new call is *forced* to catch, and building it
+that way is the point. It reaches the seam through a `config_document` hook that exists
+for the controls and nothing else: it substitutes the document while every dependent
+copy still moves coherently, so the control isolates the document rather than
+reproducing an older generation's broken joins. A second, one-field control puts the
+genuinely frozen document under the draft filename, which separates *what the document
+says* from *what its file is named*.
+
+### G.4 Row 21, and the seam it deliberately creates
+
+`write_bundle` is the last row of the read order. It refuses a bound output root not
+named for `record_label`, creates `<output-dir>/<record_label>/` with
+`mkdir(parents=True, exist_ok=False)`, and then publishes the declared set.
+
+*** THE SCRIPTED WRITER IS A PARAMETER, AND THAT IS FORCED RATHER THAN PREFERRED. ***
+`scripts/render_verification_scene.py` is the entry point that calls *into* this
+module, so importing it here closes a cycle; it is also the only module on this surface
+that imports matplotlib, and the adapter opens nothing and draws nothing. Injection
+keeps both properties — and an injected collaborator is exactly the seam this review has
+now found twice, so **nothing the writer reports is adopted**:
+
+  * the file set is derived from the bundle's own case ids and compared to the tree by
+    set equality **in both directions**, with no directory permitted below the root;
+  * the bundle document must be byte-identical to `canonical_bundle_text(bundle)` and
+    must reproduce itself through `bundle_from_json`; its digest is **re-measured here**;
+  * `verification_bundle.sha256` must hold that re-measured digest, because that file is
+    the one instruction a reader is given;
+  * every scene document must be `canonical_scene_text` of the scene this chain built;
+  * **every figure's own `pHYs` chunk must state the resolution the report claims**, and
+    that resolution must be 300 DPI. A report of a DPI is not a DPI. Measured against the
+    tracked Step-3 figure set, matplotlib writes `pHYs 11811 11811 1`, and
+    `round(300 / 0.0254) = 11811`, so the check is derived rather than pinned to a magic
+    number.
+
+**The exclusive create runs before anything is written and nothing is cleaned up after a
+refusal.** A second run at the same label refuses without touching the first publication
+(W10, driven with a counting writer that is never called), and a post-condition that
+fires after the writer has run leaves the partial tree standing as evidence — the
+discipline finding AU left behind.
+
+**Codes.** The read-order table names only `X_SCENE_OK` for row 21, so the refusals reuse
+the codes the rows above already use: `X_PROVENANCE_UNRESOLVED` for the destination (row
+3's own code for output-dir violations) and `X_BUNDLE_INCOMPLETE` for the published set,
+with `X_IDENTITY_MISMATCH` where a *reported* identity disagrees with an authenticated
+one. No fifteenth exit code was added; design section 4.5's table is not reopened.
+
+**The stub writer is bound to the real one.** Thirteen refusal cases run against a stub
+so they stay fast and precise, and one test drives the real
+`render_verification_scene.render_bundle` and the stub over the same bundle and requires
+them to agree on the file set, the report's identity fields, the published bundle and
+scene bytes and each figure's declared resolution. A refusal test whose writer differs
+from the shipped one in some *other* way measures nothing about the shipped path.
+
+### G.5 Numbers
+
+`test_connection_adapter.py` **279** (was 257), the focused pair **299** (was 277) and
+**299 again under `python -O`**; packet-wide **2,957 passed / 0 failed / 190.80 s**. The
+arithmetic closes: 2,935 + 22 = 2,957, and the 22 are 4 on the seam and the installers
+plus 18 on row 21. `git diff --numstat` reads `343 1` on the module and `842 37` on the
+test file. `py_compile` and `git diff --check` clean; both files pure ASCII, LF, 0 CR, no
+BOM, final newline, checked on the final bytes.
+
+*** ONE OPERATIONAL FAULT OF MY OWN, CAUGHT BY THAT LAST CHECK AND WORTH KEEPING. ***
+Scripted edits made with `Path.write_text` converted **both** candidate files to CRLF —
+`write_text` translates `\n` to `os.linesep` on Windows. `git diff --numstat` showed
+nothing, because `core.autocrlf` normalises on read, so **the diff is blind to exactly
+this**. The instrument that saw it is a byte count of the working tree, which is why
+lesson 269 says to check the final bytes rather than the diff. Both files were converted
+back to LF and the suites re-run.
+
+### G.6 What is left, in order
+
+The audit-hook observer (W3/B4); then B2, B5 and the remaining B3 rows; then the `roles`
+CLI wiring and the additive `build_role_bundle` change; **then** the two-pass mutation
+sweep on the finished pair, whose staged-tree set (`scripts`, `tests`, `schema`, `config`
+**and** `results`) is unchanged; **then** the Review Card and the subject chat; then the
+handoff. Still no card and no chat for 4b-ii-b, and that is still deliberate — nine
+consecutive sessions have held that line.
+
+*** THE CARD STILL CARRIES THREE DISCLOSURES: the `schema.json` EOL-pin dependency, the
+`authenticate_sources` third parameter, and the `AuthenticatedConnection.record_sha256`
+field. Session 153 added no fourth — `write_bundle` is 4b-ii-b's own new code and moves no
+byte that was part of the closed 4b-ii-a approval. ***

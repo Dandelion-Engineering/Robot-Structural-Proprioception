@@ -4075,6 +4075,79 @@ correction applied.)*
   its own restoration asserted separately, because a restoration test that quietly tolerated one
   exception would tolerate the next one too.
 
+  *** FORWARD CORRECTION, S153: THE EXCLUSION IN THE LAST SENTENCE ABOVE WAS THE HOLE, AND
+  CODEX FOUND IT IN THE NEXT SESSION. ***  Excluding the connection record "by name" meant the
+  test proved the *manual* restoration method works and said nothing about the property the
+  context manager's own docstring claims.  Measured: on exit the record was not merely stale,
+  it was REFUSED - `authenticate_connection` raised `X_IDENTITY_MISMATCH` on
+  `established_result.sha256` - and all three installers in the file had the same hole.  The
+  standing form of 277 is now lesson 278, and the repair is that the installer restores what
+  it rewrites and the test compares the whole tree with NO exclusion and NO manual repair.
+
+278. **[S153] THE EXCEPTION A RESTORATION TEST DECLARES IS THE PLACE THE LEAK WILL BE, AND A
+  "DELIBERATELY LEFT REWRITTEN" FILE IS AN EXCEPTION.**  Lesson 277 got the instrument right - a
+  digest of every path before and after - and then wrote one file out of the comparison because
+  another fixture restored it later.  *** THAT IS THE WHOLE OF THE DEFECT.  A snapshot with a
+  named exclusion is a snapshot of everything nobody suspected. ***  The measured form: the
+  context exited leaving a record that DID NOT AUTHENTICATE, because the record still declared
+  the digests of the temporary artifacts the same `finally` had just put back.  Two rules come
+  out of it.  (1) **A CONTEXT MANAGER RESTORES WHAT IT REWRITES, IN ITS OWN `finally`** - an
+  outer fixture that repairs the tree at the END of the test cannot make the state coherent
+  DURING it.  (2) **DRIVE THE PROPERTY, NOT THE DIGEST**: the test that says the tree is
+  restored should re-run the read order over it, because accepting is what the tree is for and a
+  digest comparison can be satisfied by a tree nothing would accept.
+
+279. **[S153] A NON-CLAIM IS A LOAD-BEARING CLAIM.  RE-DERIVE THE COST OF THE CHECK YOU ARE
+  DECLINING, AT SOURCE, BEFORE YOU WRITE THE PARAGRAPH SAYING WHY YOU DECLINED IT.**  S152 wrote
+  a careful, prominent paragraph saying the seam's post-condition does not run row 4's config
+  validator, on the ground that invariant W7 forbids this packet manufacturing a frozen
+  `config.json`.  *** MEASURED IN S153: `validate_config_document` READS `source_path` ONLY FOR
+  ITS NAME AND NEVER OPENS IT, so a validator-accepted frozen state needs NO FILE AT ALL - and
+  the same test file had already carried `_synthetic_frozen_document`, a complete
+  validator-accepted fixture, since acceptance test B8. ***  W7 is a rule about what the packet
+  CONTAINS; it was never a reason to skip a check that opens nothing.  The seam's `frozen` state
+  had failed EVERY clause of the frozen lifecycle - the filename, the decision, the confirmatory
+  flag, five retained open gates and 0 of 8 freeze-required paths resolved - while a paragraph
+  above it explained why that was acceptable.  **A disclosure is not a discharge, and the more
+  carefully written the disclosure, the less likely anyone is to re-measure its premise.**
+
+280. **[S153] A NEGATIVE CONTROL THAT BREAKS SEVERAL CHECKS AT ONCE CANNOT SAY WHICH CHECK
+  CAUGHT IT.  BUILD THE CONTROL SO THE NEW CHECK IS THE ONLY THING LEFT THAT CAN FIRE.**  This is
+  lesson 272 applied to the widening rather than to the post-condition.  Measured over the same
+  seam: the S150 partial breaks 11 of 19 joins and fails row 4's policy; the S151 partial breaks
+  7 of 19 and fails the same policy; **both would have been refused by the OLD post-condition
+  too**, so neither is evidence about the new one.  The third control was built to leave **all
+  nineteen joins standing and both policies accepting** - 0 broken, policy accepts, validator
+  refuses - which is the only shape that makes the new call decisive.  Reaching that state
+  needed a deliberate hook into the seam so the substituted document still carried every
+  dependent copy with it; a control assembled from outside would have broken joins on its way in
+  and proved nothing.
+
+281. **[S153] AN INJECTED COLLABORATOR IS A SEAM BY CONSTRUCTION, SO CHECK ITS REPORT AGAINST
+  THE BYTES IT LEFT BEHIND.**  Read-order row 21 takes the scripted figure writer as a parameter
+  - forced, not preferred: the renderer is the entry point that calls INTO the adapter, so
+  importing it closes a cycle, and it is the only module on that surface importing matplotlib.
+  That is the same shape as the two defects the previous review found, so nothing the writer
+  reports is adopted: the file set is compared by set equality in BOTH directions, the published
+  documents must be byte-identical to the canonical renderings of the objects the chain
+  assembled, the bundle digest is RE-MEASURED rather than read from the report, and **the
+  figure's own `pHYs` chunk must state the resolution the report claims** - a report of a DPI is
+  not a DPI.  Thirteen refusal cases, one per comparison.  *** AND THE CHEAP STUB THAT MAKES
+  THOSE THIRTEEN FAST IS ITSELF A CLAIM: one test drives the REAL writer and the stub over the
+  same bundle and requires them to agree, because a refusal test whose writer differs from the
+  shipped one in some other way measures nothing about the shipped path. ***
+
+282. **[S153] `Path.write_text` CONVERTS A WHOLE TRACKED FILE TO CRLF ON WINDOWS, AND
+  `git diff` CANNOT SEE IT.**  Scripted edits made with `write_text` translate `\n` to
+  `os.linesep`, so both candidate files silently became CRLF - 3,689 CR in the module and 6,774
+  in the test file.  `git diff --numstat` read `343 1` and `842 37` and `git diff --check` was
+  clean, because `core.autocrlf=true` normalises on read: **the diff is blind to exactly this
+  class.**  The instrument that saw it is a byte count of the WORKING TREE, which is what lesson
+  269 asks for and the reason it asks for the final bytes rather than the diff.  Write bytes
+  (`write_bytes`, or `open(..., newline="\n")`) for anything tracked, and measure CR after every
+  scripted edit.
+
+
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 
 ```text

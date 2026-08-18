@@ -209,7 +209,7 @@ import math
 from dataclasses import dataclass, fields as dataclass_fields, replace
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any, Mapping, Sequence
+from typing import Any, Callable, Mapping, Sequence
 
 import numpy as np
 
@@ -220,7 +220,9 @@ from utils.config_contract import (
 )
 from utils.connection_record import (
     Arm,
+    BUNDLE_FILE_NAMES,
     BoundPaths,
+    CASE_FILE_SUFFIXES,
     Case,
     ConnectionRecord,
     MANIFEST_ROW_FIELDS,
@@ -262,6 +264,9 @@ from utils.verification_scene import (
     VerificationBundle,
     VerificationScene,
     VerificationSceneError,
+    bundle_from_json,
+    canonical_bundle_text,
+    canonical_scene_text,
     validate_bundle,
     X_ARMS_INCOMPLETE,
     X_BUNDLE_INCOMPLETE,
@@ -3345,3 +3350,340 @@ def resolve_bundle(
                     f"{case.pair_id!r}",
                 )
     return bundle
+
+
+# --------------------------------------------------------------------------- #
+# Step 21 -- the exclusive create, the declared write set, and nothing else.
+# --------------------------------------------------------------------------- #
+
+#: The two fixed bundle filenames, selected from the contract module's pinned tuple
+#: **by suffix rather than by position**, so a later reordering of that tuple cannot
+#: silently swap the document for its digest file. The tuple itself is pinned against
+#: the tracked Step-3 figure set by equality in `utils.connection_record`.
+BUNDLE_JSON_NAME = next(name for name in BUNDLE_FILE_NAMES if name.endswith(".json"))
+BUNDLE_DIGEST_NAME = next(
+    name for name in BUNDLE_FILE_NAMES if name.endswith(".sha256")
+)
+
+#: The resolution design section 4.7 requires of every case figure.
+REQUIRED_FIGURE_DPI = 300
+
+#: The eight bytes every PNG begins with, and the `pHYs` unit byte that means metres.
+_PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+_PNG_PHYS_CHUNK = b"pHYs"
+_PNG_PHYS_METRE_UNIT = 1
+
+#: Metres per inch. The `pHYs` chunk counts pixels per metre, so this is what turns a
+#: declared DPI into the integer the file must carry.
+_METRES_PER_INCH = 0.0254
+
+
+@dataclass(frozen=True)
+class WrittenBundle:
+    """Exactly what read-order step 21 published, and where.
+
+    Attributes:
+        output_root: the exclusively created `<output-dir>/<record_label>/`.
+        file_names: every file written, sorted, relative to that root.
+        bundle_sha256: the digest of the bundle document's bytes **as they are on
+            disk**, re-measured here rather than taken from the renderer's report.
+        cases: the case ids the published menu presents, in published order.
+        figure_dpi: the resolution every case figure declares in its own `pHYs`
+            chunk, which this row required to equal the renderer's declaration and
+            `REQUIRED_FIGURE_DPI`.
+    """
+
+    output_root: Path
+    file_names: tuple[str, ...]
+    bundle_sha256: str
+    cases: tuple[str, ...]
+    figure_dpi: int
+
+
+def _png_pixels_per_metre(raw: bytes, *, where: str) -> tuple[int, int]:
+    """Return one PNG's declared `(x, y)` resolution in pixels per metre.
+
+    Args:
+        raw: the complete file bytes.
+        where: the file's name, for the refusal message.
+
+    Returns:
+        The `pHYs` chunk's two axis resolutions.
+
+    Raises:
+        VerificationSceneError: `X_BUNDLE_INCOMPLETE` when the bytes are not a PNG,
+            when no `pHYs` chunk is present, or when its unit is not metres.
+
+    The chunk is located by walking the length-prefixed chunk sequence rather than by
+    searching for the tag, because the four bytes `pHYs` may legitimately occur inside
+    a compressed image stream and a search would find that first.
+    """
+
+    if not raw.startswith(_PNG_SIGNATURE):
+        raise _refuse(
+            X_BUNDLE_INCOMPLETE,
+            f"{where} does not begin with the PNG signature, so the declared "
+            "300-DPI figure is not a PNG at all",
+        )
+    offset = len(_PNG_SIGNATURE)
+    while offset + 8 <= len(raw):
+        length = int.from_bytes(raw[offset : offset + 4], "big")
+        kind = raw[offset + 4 : offset + 8]
+        if kind == _PNG_PHYS_CHUNK:
+            body = raw[offset + 8 : offset + 8 + length]
+            if length != 9:
+                raise _refuse(
+                    X_BUNDLE_INCOMPLETE,
+                    f"{where} carries a pHYs chunk of {length} bytes; the format "
+                    "fixes it at 9",
+                )
+            unit = body[8]
+            if unit != _PNG_PHYS_METRE_UNIT:
+                raise _refuse(
+                    X_BUNDLE_INCOMPLETE,
+                    f"{where} declares its resolution in unit {unit} rather than in "
+                    "metres, so no DPI can be read from it",
+                )
+            return (
+                int.from_bytes(body[0:4], "big"),
+                int.from_bytes(body[4:8], "big"),
+            )
+        offset += 12 + length
+    raise _refuse(
+        X_BUNDLE_INCOMPLETE,
+        f"{where} carries no pHYs chunk, so it does not state the resolution "
+        f"section 4.7 requires it to have been saved at",
+    )
+
+
+def write_bundle(
+    connection: AuthenticatedConnection,
+    bundle: VerificationBundle,
+    *,
+    render: Callable[[VerificationBundle, Path], Mapping[str, Any]],
+) -> WrittenBundle:
+    """Run read-order step 21: create the output root exclusively and publish the set.
+
+    Args:
+        connection: everything rows 1 through 12 established. The destination comes
+            from `connection.bound.output_root`, which row 3 already bound to the
+            authority's own parent and to `record_label`; this row resolves nothing.
+        bundle: the validated menu row 20 returned.
+        render: the scripted figure writer, injected rather than imported. See below.
+
+    Returns:
+        A `WrittenBundle` describing exactly what is now on disk.
+
+    Raises:
+        VerificationSceneError: `X_PROVENANCE_UNRESOLVED` when the output root is not
+            the exclusive child of the authority's parent that `record_label` names,
+            or already exists; `X_BUNDLE_INCOMPLETE` when what the writer left on disk
+            is not exactly the declared set, when a published document is not the
+            canonical rendering of the object this chain assembled, when the digest a
+            reader is told to check is not the digest of the file beside it, or when a
+            figure does not declare the required resolution; and
+            `X_IDENTITY_MISMATCH` when an identity the writer *reports* disagrees with
+            the one this chain authenticated. The read-order table names only the
+            success code for this row, so the refusals reuse the codes the rows above
+            already use for the same kinds of disagreement rather than adding a
+            fifteenth exit that design section 4.5 has not opened.
+
+    **The writer is a parameter, and the reason is a cycle rather than a preference.**
+    `scripts/render_verification_scene.py` is the entry point that will call into this
+    module, so importing it here would close a loop; it is also the only module on this
+    surface that imports matplotlib, and this one opens nothing and draws nothing.
+    Injecting it keeps both properties.
+
+    *** AND AN INJECTED WRITER IS A SEAM, WHICH IS THE FAULT THIS REVIEW HAS FOUND
+    TWICE. *** A value reaching a checked object from beside it rather than from inside
+    it is exactly what row 19's test seam and row 20's provenance argument each got
+    wrong. So nothing the writer *reports* is adopted. Its report is compared, field by
+    field, against what this row already knows and against the bytes it finds on disk:
+
+      * the file set is derived from the bundle's own case ids and compared to the tree
+        by **set equality in both directions**, so an extra file is as fatal as a
+        missing one, and no directory may appear below the root at all;
+      * the bundle document on disk must be byte-identical to
+        `canonical_bundle_text(bundle)`, must parse back through `bundle_from_json`
+        into the same canonical text, and its digest is **re-measured here** rather
+        than read from the report;
+      * `verification_bundle.sha256` must hold that re-measured digest, because that
+        file is the one instruction a reader is given and a digest that names some
+        other bytes is worse than none;
+      * every scene document must be byte-identical to `canonical_scene_text` of the
+        scene this chain assembled for that case;
+      * every figure must be a PNG whose own `pHYs` chunk states the resolution the
+        report claims it was saved at, and that resolution must be
+        `REQUIRED_FIGURE_DPI`. A report of a DPI is not a DPI.
+
+    **The exclusive create runs before anything is written and nothing is cleaned up
+    after a refusal.** A second invocation at the same `record_label` therefore refuses
+    without touching the first publication, which is invariant W10; and a post-condition
+    that fires after the writer has run leaves the partial tree standing as evidence,
+    where the same exclusive create makes a later run at that label refuse rather than
+    silently overwrite it. That is the discipline finding AU left behind: a failed root
+    is kept, not swept.
+    """
+
+    output_root = Path(connection.bound.output_root)
+    if output_root.name != connection.record.record_label:
+        raise _refuse(
+            X_PROVENANCE_UNRESOLVED,
+            f"the bound output root {output_root} is not named for record label "
+            f"{connection.record.record_label!r}; the publication tree is bound to "
+            "the label and to nothing else",
+        )
+    try:
+        output_root.mkdir(parents=True, exist_ok=False)
+    except FileExistsError as exc:
+        raise _refuse(
+            X_PROVENANCE_UNRESOLVED,
+            f"the output root {output_root} already exists; step 21 creates it "
+            "exclusively so a second run at one record label refuses and the first "
+            "publication survives the refusal",
+        ) from exc
+    except OSError as exc:
+        raise _refuse(
+            X_PROVENANCE_UNRESOLVED,
+            f"the output root {output_root} could not be created: {exc}",
+        ) from exc
+
+    declared_cases = tuple(case.case_id for case in connection.record.cases)
+    expected_names = set(BUNDLE_FILE_NAMES)
+    for case_id in declared_cases:
+        for suffix in CASE_FILE_SUFFIXES:
+            expected_names.add(f"{case_id}{suffix}")
+
+    report = render(bundle, output_root)
+
+    entries = sorted(output_root.rglob("*"))
+    directories = [entry for entry in entries if entry.is_dir()]
+    if directories:
+        raise _refuse(
+            X_BUNDLE_INCOMPLETE,
+            f"step 21 wrote {len(directories)} directory entries below "
+            f"{output_root}; the declared output set is flat",
+        )
+    observed_names = {entry.name for entry in entries}
+    if observed_names != expected_names:
+        raise _refuse(
+            X_BUNDLE_INCOMPLETE,
+            f"the published set is {sorted(observed_names)} but the record's menu "
+            f"declares {sorted(expected_names)}; step 21 writes exactly the declared "
+            "set and nothing else",
+        )
+
+    bundle_bytes = _read_bytes(
+        output_root / BUNDLE_JSON_NAME,
+        where="the published bundle document",
+        code=X_BUNDLE_INCOMPLETE,
+    )
+    canonical = canonical_bundle_text(bundle).encode("utf-8")
+    if bundle_bytes != canonical:
+        raise _refuse(
+            X_BUNDLE_INCOMPLETE,
+            "the published bundle document is not the canonical rendering of the "
+            "menu this chain assembled",
+        )
+    reparsed = canonical_bundle_text(
+        bundle_from_json(
+            strict_json_document(
+                bundle_bytes, "the published bundle document", X_BUNDLE_INCOMPLETE
+            )
+        )
+    ).encode("utf-8")
+    if reparsed != bundle_bytes:
+        raise _refuse(
+            X_BUNDLE_INCOMPLETE,
+            "the published bundle document does not reproduce itself when it is read "
+            "back, so what a reader parses is not what was assembled",
+        )
+    digest = external_bytes_digest(bundle_bytes)
+    declared_digest = _read_bytes(
+        output_root / BUNDLE_DIGEST_NAME,
+        where="the published bundle digest",
+        code=X_BUNDLE_INCOMPLETE,
+    )
+    if declared_digest != f"{digest}\n".encode("utf-8"):
+        raise _refuse(
+            X_BUNDLE_INCOMPLETE,
+            f"{BUNDLE_DIGEST_NAME} does not hold the digest of the bundle document "
+            "beside it; the one instruction a reader is given must name the bytes it "
+            "is written next to",
+        )
+    _require_strings_equal(
+        report.get("bundle_sha256"),
+        digest,
+        where="the writer's reported bundle_sha256",
+        source="the digest of the published bytes",
+    )
+    _require_strings_equal(
+        report.get("provenance_state"),
+        connection.record.authority,
+        where="the writer's reported provenance_state",
+        source="the authenticated record's authority",
+    )
+    _require_strings_equal(
+        report.get("bundle_version"),
+        bundle.bundle_version,
+        where="the writer's reported bundle_version",
+        source="the assembled bundle",
+    )
+    reported_cases = tuple(
+        str(entry.get("case_id")) for entry in report.get("cases", ())
+    )
+    if reported_cases != declared_cases:
+        raise _refuse(
+            X_BUNDLE_INCOMPLETE,
+            f"the writer reports cases {list(reported_cases)} but the record's menu "
+            f"declares {list(declared_cases)}, in that order",
+        )
+
+    reported_dpi = report.get("save_dpi")
+    if reported_dpi != REQUIRED_FIGURE_DPI:
+        raise _refuse(
+            X_BUNDLE_INCOMPLETE,
+            f"the writer reports {reported_dpi!r} DPI but section 4.7 requires "
+            f"{REQUIRED_FIGURE_DPI}",
+        )
+    expected_pixels_per_metre = round(REQUIRED_FIGURE_DPI / _METRES_PER_INCH)
+    for case_id in declared_cases:
+        scene_name = f"{case_id}.json"
+        scene_bytes = _read_bytes(
+            output_root / scene_name,
+            where=f"the published scene document {scene_name}",
+            code=X_BUNDLE_INCOMPLETE,
+        )
+        expected_scene = canonical_scene_text(bundle.scenes[case_id]).encode("utf-8")
+        if scene_bytes != expected_scene:
+            raise _refuse(
+                X_BUNDLE_INCOMPLETE,
+                f"{scene_name} is not the canonical rendering of the scene this "
+                f"chain assembled for case {case_id!r}",
+            )
+        figure_name = f"{case_id}.png"
+        horizontal, vertical = _png_pixels_per_metre(
+            _read_bytes(
+                output_root / figure_name,
+                where=f"the published figure {figure_name}",
+                code=X_BUNDLE_INCOMPLETE,
+            ),
+            where=figure_name,
+        )
+        if (horizontal, vertical) != (
+            expected_pixels_per_metre,
+            expected_pixels_per_metre,
+        ):
+            raise _refuse(
+                X_BUNDLE_INCOMPLETE,
+                f"{figure_name} declares {horizontal}x{vertical} pixels per metre "
+                f"but {REQUIRED_FIGURE_DPI} DPI is {expected_pixels_per_metre}",
+            )
+
+    return WrittenBundle(
+        output_root=output_root,
+        file_names=tuple(sorted(observed_names)),
+        bundle_sha256=digest,
+        cases=declared_cases,
+        figure_dpi=REQUIRED_FIGURE_DPI,
+    )
