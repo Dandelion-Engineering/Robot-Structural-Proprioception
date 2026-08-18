@@ -39,6 +39,7 @@ Every path it binds is inside a `tmp_path` tree.
 from __future__ import annotations
 
 import copy
+import inspect
 import io
 import json
 import shutil
@@ -75,6 +76,7 @@ from utils.connection_adapter import (  # noqa: E402
     AuthenticatedConnection,
     AuthenticatedGeometry,
     CaseGeometry,
+    ResolvedProvenance,
     authenticate_config,
     authenticate_connection,
     authenticate_dataset,
@@ -112,18 +114,35 @@ from utils.connection_record import (  # noqa: E402
     bind_root_domains,
     load_connection_record,
     record_relative_path,
+    # The row-19 seam's post-condition calls the function that OWNS read-order row
+    # 3's authority/split policy rather than restating the rule, for the same reason
+    # the module points at owners instead of copying them: a restated rule is a
+    # second rule, and two rules disagree on the inputs nobody enumerated. It is
+    # private to that module and imported here deliberately and only for that.
+    _require_authority_split_policy,
 )
+from utils.metrics import SOURCE_CLASS_ORDER  # noqa: E402
 from utils.protocol_p import canonical_json  # noqa: E402
-from utils.storage_contract import read_identity_manifest  # noqa: E402
+from utils.role_contract import validate_role_payload  # noqa: E402
+from utils.storage_contract import (  # noqa: E402
+    IdentityManifestRow,
+    RoleIndexRow,
+    read_identity_manifest,
+    read_role_index,
+    write_identity_manifest,
+    write_role_index,
+)
 from utils.verification_scene import (  # noqa: E402
     CENTERLINE_TASK_OUTPUT_TOL_M,
     DEVELOPMENT_ONLY,
     FINAL,
     PROVENANCE_STATES,
+    REQUIRED_SOURCE_CLASSES,
     SUITE_KEYS,
     SYNTHETIC_FIXTURE,
     LabelFields,
     VerificationSceneError,
+    validate_bundle,
     validate_scene,
     X_ARMS_INCOMPLETE,
     X_BUNDLE_INCOMPLETE,
@@ -4412,16 +4431,34 @@ def _with_field_path_value(
 
 
 def _provenance_joins(connection: AuthenticatedConnection) -> dict[str, bool]:
-    """Return every equality rows 4, 5 and 6 establish, as `name -> it holds`.
+    """Return every identity equality rows 4 through 12 establish, as `name -> it holds`.
 
-    **This is the one statement of the post-row-12 coherence the seam has to
+    **This is the one statement of the post-row-12 identity coherence the seam has to
     preserve**, and it is written once so the helper below and the tests that assert
-    it cannot drift apart. The eleven entries are exactly the joins the earlier rows
-    put in place: row 4 binds the record's `config.config_hash` echo to the config it
-    validated; row 5 binds the established result's split and config identity to the
-    record's; row 6 binds both audit documents to the record's echoes of them, both
-    audits' `config_hash` and every manifest row's to the validated config, and every
-    named run's split to the record's.
+    it cannot drift apart. The eighteen entries are the joins the earlier rows put in
+    place, each one an equality between *separately authenticated* facts:
+
+      * row 4 binds the record's `config.config_hash` echo to the config it
+        validated, and binds the validated config's `config_hash` to the canonical
+        digest of the document it was taken over (`expected_config_hash`);
+      * row 5 binds the established result's split and config identity to the
+        record's;
+      * row 6 binds both audit documents to the record's echoes of them, both audits'
+        `config_hash` and every manifest row's to the validated config, every named
+        run's split to the record's, and both audits' `manifest_audit` census to the
+        census recomputed from the manifest rows -- which the adapter also keeps on
+        `AuthenticatedDataset.census`;
+      * row 10 binds every one of the record's 20-field `manifest_row` echoes to the
+        authenticated manifest row it names, and that echo's own `split` to the
+        record's split;
+      * row 12 binds every authenticated role-index row's `config_hash` to the
+        validated config, through `utils.role_contract`'s own index check.
+
+    **The last three groups are Codex's Session-151 finding**, measured before it was
+    accepted: the Session-151 seam left the recomputed census, both audit census
+    blocks, both record manifest echoes and all eight role-index config hashes behind
+    when it moved the split and the config identity, while the post-condition's
+    message said it recognised every state a post-row-12 connection can occupy.
     """
 
     record = connection.record
@@ -4438,9 +4475,13 @@ def _provenance_joins(connection: AuthenticatedConnection) -> dict[str, bool]:
         where="established_result.config_hash_field_path",
     )
     audits = connection.dataset.audits
+    census = manifest_census(list(connection.dataset.rows.values()))
     joins = {
         "record config.config_hash == the validated config": (
             record.config.config_hash == validated
+        ),
+        "the validated config_hash == its own document's canonical digest": (
+            validated == expected_config_hash(_plain(connection.config.config.document))
         ),
         "established_result split == the record's split": result_split == record.split,
         "established_result config_hash == the record's config.config_hash": (
@@ -4454,6 +4495,24 @@ def _provenance_joins(connection: AuthenticatedConnection) -> dict[str, bool]:
             for case in record.cases
             for arm in case.arms.values()
         ),
+        "the carried census == the census recomputed from the manifest rows": (
+            _plain(connection.dataset.census) == census
+        ),
+        "every echoed manifest_row == the authenticated manifest row": all(
+            arm.manifest_row[field] == getattr(connection.dataset.rows[arm.run_id], field)
+            for case in record.cases
+            for arm in case.arms.values()
+            for field in MANIFEST_ROW_FIELDS
+        ),
+        "every echoed manifest_row split == the record's split": all(
+            arm.manifest_row.get("split") == record.split
+            for case in record.cases
+            for arm in case.arms.values()
+        ),
+        "every authenticated role index row's config_hash == the validated config": all(
+            row.config_hash == validated
+            for row in connection.roles.index_rows.values()
+        ),
     }
     for name in AUDIT_NAMES:
         declared = getattr(record.data_root, name)
@@ -4466,26 +4525,79 @@ def _provenance_joins(connection: AuthenticatedConnection) -> dict[str, bool]:
         joins[f"{name}.json config_hash == the validated config"] = (
             audits[name]["config_hash"] == validated
         )
+        joins[f"{name}.json {MANIFEST_AUDIT_KEY} == the recomputed census"] = all(
+            _plain(audits[name][MANIFEST_AUDIT_KEY])[field] == census[field]
+            for field in MANIFEST_CENSUS_FIELDS
+        )
     return joins
 
 
-def _require_provenance_joins(
-    connection: AuthenticatedConnection, *, where: str
+def _require_post_row12_state(
+    connection: AuthenticatedConnection,
+    *,
+    where: str,
+    split_policy_violated: bool = False,
 ) -> AuthenticatedConnection:
-    """Return `connection` when every earlier-row join holds, or fail naming those that do not.
+    """Return `connection` when it is a state rows 3 through 12 would have produced.
 
-    The failure is raised rather than asserted so it survives `python -O`, which this
-    file's suite is deliberately re-run under. A post-condition that disappears under
-    optimisation is a post-condition that is absent exactly when nobody is watching.
+    Three separate things are required, and naming them separately is the point --
+    Codex's Session-151 finding was that a post-condition covering only the first of
+    them said in its message that it covered all of a post-row-12 state:
+
+      1. every identity join `_provenance_joins` lists;
+      2. row 4's authority/config *policy*, run by calling
+         `require_authority_config_policy` rather than restating it -- a `FINAL`
+         record naming a draft config is a state row 4 refuses, and the Session-151
+         seam produced exactly that one;
+      3. row 3's authority/split *policy*, run by calling
+         `connection_record._require_authority_split_policy`, the function that owns
+         the rule.
+
+    Args:
+        split_policy_violated: declares that this caller is deliberately building the
+            one state row 3 forbids -- a `FINAL` record naming the `dev` split, which
+            is the only way to reach row 19's split input. The flag does not skip the
+            check: it *inverts* it, so a caller that sets it on a state row 3 would
+            accept fails here. A declared exception nothing verifies is a bypass.
+
+    **What this post-condition deliberately does not claim**, stated here rather than
+    left to be rediscovered: it does not require the config document to be one
+    `utils.config_contract.validate_config_document` would accept under the frozen
+    lifecycle. That document is a complete frozen `config.json` with every
+    freeze-required path resolved, and invariant W7's whole content is that this
+    packet does not contain one and is not to manufacture one. The seam therefore
+    moves the document's `status` and re-derives its canonical digest -- so row 4's
+    *identity* and row 4's *policy* both hold -- and stops there. The failure is
+    raised rather than asserted so it survives `python -O`, which this file's suite is
+    deliberately re-run under.
     """
 
-    broken = sorted(
-        name for name, holds in _provenance_joins(connection).items() if not holds
+    failures = sorted(
+        f"join broken: {name}"
+        for name, holds in _provenance_joins(connection).items()
+        if not holds
     )
-    if broken:
+    try:
+        require_authority_config_policy(
+            connection.record.authority, connection.config.config
+        )
+    except VerificationSceneError as exc:
+        failures.append(f"row 4 authority/config policy refuses: {exc}")
+    try:
+        _require_authority_split_policy(connection.record)
+    except VerificationSceneError as exc:
+        if not split_policy_violated:
+            failures.append(f"row 3 authority/split policy refuses: {exc}")
+    else:
+        if split_policy_violated:
+            failures.append(
+                "row 3 authority/split policy accepts, but this caller declared it "
+                "deliberately violated"
+            )
+    if failures:
         raise AssertionError(
-            f"{where} produced a state no post-row-12 connection can be in; these "
-            f"joins rows 4-6 establish are broken: {'; '.join(broken)}"
+            f"{where} produced a state rows 3 through 12 would not have produced: "
+            f"{'; '.join(failures)}"
         )
     return connection
 
@@ -4495,29 +4607,98 @@ def _reprovenanced(
     *,
     authority: str,
     split: str,
-    config_hash: str,
+    config_status: str,
     assignment_hash: str,
+    split_policy_violated: bool = False,
 ) -> AuthenticatedConnection:
     """Return the same connection re-provenanced, with every earlier-row copy moved with it.
 
-    **The four provenance identities are not four fields, and that is the correction
-    this helper carries.** Session 150's version edited only the record's authority
-    and split, both audit `assignment_hash` echoes and the validated config's hash,
-    and Codex's Session-150 cross-review measured what that leaves behind: eight of
-    the eleven joins rows 4 through 6 establish were false in the object the row-19
-    tests then handed to `resolve_provenance`, while their comments said every digest
-    and echo still agreed. The row-19 verdicts were still the right verdicts -- the
-    production path establishes those equalities before row 19 is reached -- but the
-    evidence for invariant W6 was being taken over a state the read order refuses two
-    rows earlier, which is no evidence at all.
+    **The provenance identities are not a handful of fields, and each cross-review
+    has found the copy the last version left behind.** Session 150's version edited
+    the record's authority and split, both audit `assignment_hash` echoes and the
+    validated config's hash; Codex measured that eight of the eleven joins rows 4
+    through 6 establish were false in the object the row-19 tests then handed to
+    `resolve_provenance`. Session 151 moved those eleven; Codex measured that the
+    recomputed census, both audit census blocks, both record `manifest_row` echoes
+    and all eight role-index `config_hash` values were still left behind, and that a
+    `FINAL` authority over an unchanged *draft* config document is a state row 4's
+    own policy refuses. Both findings are the same finding at different widths, and
+    both were re-driven at source in Session 152 before being accepted.
 
-    So every copy moves together here: the record's own `config.config_hash` echo,
-    both audit `config_hash` echoes, the established result's split and config
-    identity at their declared field paths, both audit documents' echoed hashes, and
-    every manifest row's `config_hash` and split. The result is required to satisfy
-    `_provenance_joins` before it is returned, so a later edit that reintroduces the
-    same partial shape fails here rather than passing quietly.
+    So every copy moves together here:
+
+      * the config **document**, whose `status` becomes `config_status` and whose
+        `config_hash` is then *re-derived* by `expected_config_hash` rather than
+        supplied. That is the structural half of the repair: an identity a caller
+        hands in is an identity no document produced, which is the same shape as the
+        row-20 defect Codex found in the same review;
+      * the record's authority, split, `config.config_hash` echo, both audit
+        `assignment_hash` and `config_hash` echoes, and every arm's 20-field
+        `manifest_row`, rebuilt from the edited manifest row it names;
+      * the established result's split and config identity at their declared field
+        paths;
+      * every manifest row's `config_hash` and `split`, the census recomputed from
+        them, and both audits' `manifest_audit` blocks;
+      * every authenticated role-index row's `config_hash`.
+
+    The result is required to satisfy `_require_post_row12_state` before it is
+    returned, so a later edit that reintroduces a partial shape fails here rather
+    than passing quietly.
+
+    Args:
+        config_status: `'draft'` or `'frozen'`. It is the *document's* lifecycle
+            field, and the config identity follows from it, which is why there is no
+            `config_hash` parameter: a `frozen` document yields a bare 64-hex digest
+            and a `draft` one the `dev-` prefixed form, exactly as
+            `utils.config_contract` derives them.
+        split_policy_violated: passed through to the post-condition; see its Args.
     """
+
+    document = _plain(connection.config.config.document)
+    document["status"] = config_status
+    document.pop("config_hash", None)
+    config_hash = expected_config_hash(document)
+    document["config_hash"] = config_hash
+    config = replace(
+        connection.config,
+        config=replace(
+            connection.config.config,
+            document=connection_adapter._frozen(document),
+            config_hash=config_hash,
+            status=config_status,
+        ),
+    )
+
+    rows = {
+        run_id: replace(row, config_hash=config_hash, split=split)
+        for run_id, row in connection.dataset.rows.items()
+    }
+    census = manifest_census(list(rows.values()))
+    dataset = replace(
+        connection.dataset,
+        rows=MappingProxyType(rows),
+        census=connection_adapter._frozen(census),
+        audits=MappingProxyType(
+            {
+                name: _with_field_path_value(
+                    _with_field_path_value(
+                        _with_field_path_value(
+                            document_,
+                            MANIFEST_AUDIT_KEY,
+                            connection_adapter._frozen(
+                                {**_plain(document_[MANIFEST_AUDIT_KEY]), **census}
+                            ),
+                        ),
+                        "assignment_hash",
+                        assignment_hash,
+                    ),
+                    "config_hash",
+                    config_hash,
+                )
+                for name, document_ in connection.dataset.audits.items()
+            }
+        ),
+    )
 
     data_root = connection.record.data_root
     record = replace(
@@ -4538,11 +4719,28 @@ def _reprovenanced(
                 config_hash=config_hash,
             ),
         ),
+        cases=tuple(
+            replace(
+                case,
+                arms=MappingProxyType(
+                    {
+                        suite: replace(
+                            arm,
+                            manifest_row=MappingProxyType(
+                                {
+                                    field: getattr(rows[arm.run_id], field)
+                                    for field in MANIFEST_ROW_FIELDS
+                                }
+                            ),
+                        )
+                        for suite, arm in case.arms.items()
+                    }
+                ),
+            )
+            for case in connection.record.cases
+        ),
     )
-    config = replace(
-        connection.config,
-        config=replace(connection.config.config, config_hash=config_hash),
-    )
+
     established = connection.sources.documents["established_result"]
     established = _with_field_path_value(
         established, record.established_result.split_field_path, split
@@ -4556,36 +4754,28 @@ def _reprovenanced(
             {**connection.sources.documents, "established_result": established}
         ),
     )
-    dataset = replace(
-        connection.dataset,
-        rows=MappingProxyType(
+
+    roles = replace(
+        connection.roles,
+        index_rows=MappingProxyType(
             {
-                run_id: replace(row, config_hash=config_hash, split=split)
-                for run_id, row in connection.dataset.rows.items()
-            }
-        ),
-        audits=MappingProxyType(
-            {
-                name: _with_field_path_value(
-                    _with_field_path_value(
-                        document, "assignment_hash", assignment_hash
-                    ),
-                    "config_hash",
-                    config_hash,
-                )
-                for name, document in connection.dataset.audits.items()
+                key: replace(row, config_hash=config_hash)
+                for key, row in connection.roles.index_rows.items()
             }
         ),
     )
-    return _require_provenance_joins(
+
+    return _require_post_row12_state(
         replace(
             connection,
             record=record,
             config=config,
             sources=sources,
             dataset=dataset,
+            roles=roles,
         ),
         where="_reprovenanced",
+        split_policy_violated=split_policy_violated,
     )
 
 
@@ -4627,7 +4817,7 @@ def test_row19_refuses_a_final_claim_over_a_development_assignment(
         connection,
         authority=FINAL,
         split="val",
-        config_hash="f" * 64,
+        config_status="frozen",
         assignment_hash=f"{DEVELOPMENT_TRACE_PREFIX}{'a' * 64}",
     )
     error = _refusal(lambda: resolve_provenance(edited))
@@ -4653,7 +4843,7 @@ def test_row19_resolves_final_when_no_authenticated_identity_carries_a_trace(
         connection,
         authority=FINAL,
         split="val",
-        config_hash="f" * 64,
+        config_status="frozen",
         assignment_hash="c" * 64,
     )
     resolved = resolve_provenance(edited)
@@ -4678,8 +4868,9 @@ def test_row19_names_the_split_when_no_identity_carries_a_trace(
         connection,
         authority=FINAL,
         split="dev",
-        config_hash="f" * 64,
+        config_status="frozen",
         assignment_hash="c" * 64,
+        split_policy_violated=True,
     )
     error = _refusal(lambda: resolve_provenance(edited))
     assert error.code == X_PROVENANCE_UNRESOLVED
@@ -4703,7 +4894,7 @@ def test_row19_never_computes_the_synthetic_state(harness: Harness) -> None:
                 connection,
                 authority=FINAL,
                 split="val",
-                config_hash="f" * 64,
+                config_status="frozen",
                 assignment_hash="c" * 64,
             )
         ).state,
@@ -4734,7 +4925,7 @@ def test_row19_the_authenticated_harness_satisfies_every_earlier_row_join(
     """
 
     joins = _provenance_joins(harness.authenticate())
-    assert len(joins) == 11
+    assert len(joins) == 18
     assert [name for name, holds in joins.items() if not holds] == []
 
 
@@ -4745,31 +4936,63 @@ def test_row19_the_seam_preserves_every_earlier_row_join(harness: Harness) -> No
         harness.authenticate(),
         authority=FINAL,
         split="val",
-        config_hash="f" * 64,
+        config_status="frozen",
         assignment_hash="c" * 64,
     )
     assert [name for name, holds in _provenance_joins(edited).items() if not holds] == []
     assert edited.record.authority == FINAL
     assert edited.record.split == "val"
-    assert edited.config.config.config_hash == "f" * 64
+    assert edited.config.config.status == "frozen"
+    assert DEVELOPMENT_TRACE_PREFIX not in edited.config.config.config_hash
+    assert edited.config.config.config_hash == expected_config_hash(
+        _plain(edited.config.config.document)
+    )
+    assert edited.config.config.config_hash != harness.config_hash
 
 
-def test_row19_the_seam_post_condition_refuses_a_partial_re_provenancing(
+def test_row19_the_seam_derives_the_config_identity_rather_than_adopting_one(
     harness: Harness,
 ) -> None:
-    """The negative control, and it is the Session-150 defect written as an input.
+    """The seam has no `config_hash` parameter, and that is the structural half of the repair.
 
-    Session 150's seam moved the record's authority and split, both audit
-    `assignment_hash` echoes and the validated config hash, and nothing else. That is
-    reconstructed exactly here and required to be caught, because a post-condition no
-    input can make fail is the same defect as no post-condition at all -- lesson 242,
-    on the seam that carries invariant W6's only evidence. Eight of the eleven joins
-    break under that edit and the failure has to name them.
+    An identity a caller hands in is an identity no document produced -- the same
+    shape as the row-20 defect the same cross-review found. Driving both lifecycle
+    values here is what says the derivation is the contract's own: the draft form
+    carries the `dev-` prefix and the frozen form does not, and `expected_config_hash`
+    reproduces each from the document the seam actually left behind.
     """
 
+    assert "config_hash" not in _seam_parameter_names()
+    assert "config_status" in _seam_parameter_names()
     connection = harness.authenticate()
+    for status, prefixed in (("frozen", False), ("draft", True)):
+        edited = _reprovenanced(
+            connection,
+            authority=DEVELOPMENT_ONLY if prefixed else FINAL,
+            split="dev" if prefixed else "val",
+            config_status=status,
+            assignment_hash="c" * 64,
+        )
+        document = _plain(edited.config.config.document)
+        assert document["status"] == status
+        assert edited.config.config.config_hash == expected_config_hash(document)
+        assert (
+            edited.config.config.config_hash.startswith(DEVELOPMENT_TRACE_PREFIX)
+            is prefixed
+        )
+
+
+def _seam_parameter_names() -> frozenset[str]:
+    """Return the keyword names `_reprovenanced` accepts."""
+
+    return frozenset(inspect.signature(_reprovenanced).parameters)
+
+
+def _session_150_partial(connection: AuthenticatedConnection) -> AuthenticatedConnection:
+    """Reconstruct Session 150's re-provenancing exactly, as an input to be caught."""
+
     data_root = connection.record.data_root
-    partial = replace(
+    return replace(
         connection,
         record=replace(
             connection.record,
@@ -4790,14 +5013,159 @@ def test_row19_the_seam_post_condition_refuses_a_partial_re_provenancing(
             config=replace(connection.config.config, config_hash="f" * 64),
         ),
     )
+
+
+def _session_151_partial(connection: AuthenticatedConnection) -> AuthenticatedConnection:
+    """Reconstruct Session 151's re-provenancing exactly, as an input to be caught.
+
+    This is the Session-150 edit plus the eleven joins that version *did* move: the
+    record's own config echo, both audit `config_hash` echoes, the established
+    result's two field paths, both audit documents and every manifest row's
+    `config_hash` and split. What it does not touch is what Codex's Session-151
+    cross-review measured as left behind -- the recomputed census, both audit census
+    blocks, the record's 20-field manifest echoes, every role-index `config_hash`,
+    and the config *document*, whose canonical digest still derives the original
+    `dev-` identity while the scalar beside it says otherwise.
+    """
+
+    config_hash = "f" * 64
+    assignment_hash = "c" * 64
+    split = "val"
+    data_root = connection.record.data_root
+    record = replace(
+        connection.record,
+        authority=FINAL,
+        split=split,
+        config=replace(connection.record.config, config_hash=config_hash),
+        data_root=replace(
+            data_root,
+            generation_audit=replace(
+                data_root.generation_audit,
+                assignment_hash=assignment_hash,
+                config_hash=config_hash,
+            ),
+            independent_audit=replace(
+                data_root.independent_audit,
+                assignment_hash=assignment_hash,
+                config_hash=config_hash,
+            ),
+        ),
+    )
+    established = connection.sources.documents["established_result"]
+    established = _with_field_path_value(
+        established, record.established_result.split_field_path, split
+    )
+    established = _with_field_path_value(
+        established, record.established_result.config_hash_field_path, config_hash
+    )
+    return replace(
+        connection,
+        record=record,
+        config=replace(
+            connection.config,
+            config=replace(connection.config.config, config_hash=config_hash),
+        ),
+        sources=replace(
+            connection.sources,
+            documents=MappingProxyType(
+                {**connection.sources.documents, "established_result": established}
+            ),
+        ),
+        dataset=replace(
+            connection.dataset,
+            rows=MappingProxyType(
+                {
+                    run_id: replace(row, config_hash=config_hash, split=split)
+                    for run_id, row in connection.dataset.rows.items()
+                }
+            ),
+            audits=MappingProxyType(
+                {
+                    name: _with_field_path_value(
+                        _with_field_path_value(
+                            document, "assignment_hash", assignment_hash
+                        ),
+                        "config_hash",
+                        config_hash,
+                    )
+                    for name, document in connection.dataset.audits.items()
+                }
+            ),
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    "build, expected_broken_joins",
+    [
+        (_session_150_partial, 11),
+        (_session_151_partial, 7),
+    ],
+    ids=["session-150", "session-151"],
+)
+def test_row19_the_seam_post_condition_refuses_a_partial_re_provenancing(
+    harness: Harness,
+    build: Callable[[AuthenticatedConnection], AuthenticatedConnection],
+    expected_broken_joins: int,
+) -> None:
+    """The negative controls, and each one is a shipped defect written back as an input.
+
+    A post-condition no input can make fail is the same defect as no post-condition at
+    all -- lesson 242, on the seam that carries invariant W6's only evidence, which is
+    the last place it should be allowed to happen twice. Session 150's partial edit is
+    the first control and has been one since Session 151. **Session 151's own partial
+    edit is the second, added here** because the joins this session added are exactly
+    the ones that version left standing, and a new post-condition whose only witness
+    is the *previous* generation's defect has never been shown to see the current one.
+
+    Both are also required to fail row 4's authority/config policy, which is the half
+    of a post-row-12 state the join list does not express: a `FINAL` record over an
+    unedited draft config document is a state row 4 refuses outright.
+    """
+
+    partial = build(harness.authenticate())
     broken = [name for name, holds in _provenance_joins(partial).items() if not holds]
-    assert len(broken) == 8
+    assert len(broken) == expected_broken_joins
     with pytest.raises(AssertionError) as raised:
-        _require_provenance_joins(partial, where="the negative control")
+        _require_post_row12_state(partial, where="the negative control")
     message = str(raised.value)
     assert "the negative control" in message
+    assert "row 4 authority/config policy refuses" in message
     for name in broken:
         assert name in message
+
+
+def test_row19_the_seam_post_condition_checks_the_declared_split_violation(
+    harness: Harness,
+) -> None:
+    """A declared exception nothing verifies is a bypass, so the flag is inverted rather than skipped.
+
+    One row-19 test needs the one state row 3 forbids -- `FINAL` over the `dev` split
+    -- because that is the only way to reach the split input of row 19's computation.
+    It declares the violation, and the post-condition then *requires* the violation to
+    be real. Setting the flag on a state row 3 would accept fails here.
+    """
+
+    connection = harness.authenticate()
+    with pytest.raises(AssertionError) as raised:
+        _reprovenanced(
+            connection,
+            authority=FINAL,
+            split="val",
+            config_status="frozen",
+            assignment_hash="c" * 64,
+            split_policy_violated=True,
+        )
+    assert "row 3 authority/split policy accepts" in str(raised.value)
+    with pytest.raises(AssertionError) as undeclared:
+        _reprovenanced(
+            connection,
+            authority=FINAL,
+            split="dev",
+            config_status="frozen",
+            assignment_hash="c" * 64,
+        )
+    assert "row 3 authority/split policy refuses" in str(undeclared.value)
 
 
 def test_row19_the_seam_field_path_setter_refuses_a_path_it_cannot_write(
@@ -4813,24 +5181,23 @@ def test_row19_the_seam_field_path_setter_refuses_a_path_it_cannot_write(
 
 # -- row 20 ------------------------------------------------------------------ #
 #
-# **The reachability boundary of this row is stated here rather than discovered
-# later, and it is measured.** `utils.verification_scene.validate_bundle` requires a
+# **The reachability boundary Session 151 measured here is closed, and how it was
+# closed is the part to keep.** `utils.verification_scene.validate_bundle` requires a
 # menu to carry at least one `structure`, one `actuator` and one `sensor` case. The
 # contract fixture writes exactly two C1/S pairs -- one `dev` pair whose labels are
 # `healthy` and one `val` pair whose labels are `structure` -- and read-order row 6
 # refuses a run whose split is not the record's, so the `val` pair cannot enter a
-# `dev` record's menu at all. **No menu this packet can currently build satisfies
-# the surface gate**, which is why the tests below drive this row's three ordering
-# refusals and the surface gate's own refusal, and why the accept path, the run-id
-# refusal and the pair-id refusal have no test yet: they sit behind a gate no input
-# available today can pass.
+# `dev` record's menu at all. No menu that tree can build satisfies the surface gate,
+# which is why Session 151 shipped this row with its accept path and its two identity
+# refusals untested and the boundary written down here.
 #
-# The repair is a dedicated three-case coherent harness -- three `dev` pairs whose
-# `labels` and `estimator_outputs` payloads carry `structure`, `actuator` and
-# `sensor` coherently -- and it is the next build's first work. It is **not** an
-# argument for relaxing the surface gate: a menu that cannot show a reader all three
-# source classes side by side is a menu that cannot support the comparison the whole
-# artifact exists to let a reader make.
+# **The repair was a fixture, never a rule change**, and `_three_case_menu` below is
+# it: three additional `dev` pairs whose `labels` and `estimator_outputs` payloads
+# carry `structure`, `actuator` and `sensor` coherently, installed over the harness
+# tree and removed byte for byte on exit. A menu that cannot show a reader all three
+# source classes side by side cannot support the comparison the whole artifact exists
+# to let a reader make, so relaxing the gate to reach green would have been a repair
+# to the wrong object.
 def _resolved(harness: Harness, arguments: Mapping[str, Any]):
     """Drive rows 1 through 19 and return everything row 20 takes."""
 
@@ -4842,6 +5209,351 @@ def _resolved(harness: Harness, arguments: Mapping[str, Any]):
         resolve_geometry(connection, cases),
         resolve_provenance(connection),
     )
+
+
+# -- the three-case coherent menu, which is what makes row 20's accept path reachable #
+#
+# **This is a fixture, not a rule change, and the distinction is the whole reason it
+# exists.** The surface gate refuses a menu that cannot show a reader a structure, an
+# actuator and a sensor change side by side, and that refusal is correct: such a menu
+# cannot support the comparison the artifact exists to let a reader make. The contract
+# fixture cannot build one -- its only `dev` pair is `healthy` -- so the repair is a
+# menu that satisfies the gate, built here rather than in
+# `scripts/build_data_contract_fixture.py`, whose two-pair / four-run census is pinned
+# by closed tests.
+#
+# **What it installs, and what it deliberately reuses.** Three additional `dev` pairs,
+# each carrying the *same* coherent plant record row 18 needs, its own `labels` payload
+# naming one required source class, and an `estimator_outputs` payload whose `p_class`
+# names that same class. `controller_logs` is copied byte for byte from the pair the
+# contract fixture already wrote, because nothing in it is per-case and rows 15 to 17
+# already accept it. `observations` is not written at all: `ROLE_NAMES` is
+# `controller_logs`, `estimator_outputs`, `labels`, `plant`, so no connection record
+# names an observation payload and none is opened.
+#
+# **Every byte it writes is restored on exit** -- the manifest, both audits, the six
+# affected role indexes and the established-result artifact are saved and rewritten,
+# and every created payload, checkpoint and directory is removed.
+
+#: The three menu entries: case id, pair id, source class, label subtype, location,
+#: severity, seed and display label. The display labels must stay distinct, because
+#: `validate_bundle` refuses duplicates and the interactive surface keys on them.
+MENU_CASES: tuple[tuple[str, str, str, str, int, float, int, str], ...] = (
+    (
+        "menu-structure",
+        "menu_structure",
+        "structure",
+        "link_stiffness_loss",
+        2,
+        0.50,
+        301,
+        "Soften link 2 by 50%",
+    ),
+    (
+        "menu-actuator",
+        "menu_actuator",
+        "actuator",
+        "actuator_torque_loss",
+        1,
+        0.40,
+        401,
+        "Weaken actuator 1 by 40%",
+    ),
+    (
+        "menu-sensor",
+        "menu_sensor",
+        "sensor",
+        "encoder_bias",
+        0,
+        0.30,
+        501,
+        "Bias encoder 1",
+    ),
+)
+
+#: The four roles a connection record names, split by whether the schema-E layout
+#: qualifies their directory by suite. Taken from the module that owns each fact.
+_MENU_FLAT_ROLES = tuple(role for role in ROLE_NAMES if role not in SUITE_QUALIFIED_ROLES)
+_MENU_SUITE_ROLES = tuple(role for role in ROLE_NAMES if role in SUITE_QUALIFIED_ROLES)
+
+
+def _menu_manifest_row(
+    pair_id: str, suite: str, source_class: str, seed: int, config_hash: str
+) -> IdentityManifestRow:
+    """Return one schema-A manifest row for a menu pair, on the `dev` split."""
+
+    return IdentityManifestRow(
+        schema_version="1.0",
+        config_hash=config_hash,
+        scenario_spec_id="scenario_dev",
+        pair_id=pair_id,
+        run_id=f"{pair_id}_{suite}",
+        trajectory_spec_id="trajectory_dev",
+        fault_setting_id=f"{source_class}_menu",
+        split_group_id="group_dev",
+        split=SPLIT,
+        suite=suite,
+        estimator_id="fixture_estimator_v1",
+        controller_id="fixture_controller_v1",
+        payload_id=f"payload_{pair_id}",
+        env_profile_id="fixture_env",
+        contact_profile_id="no_contact",
+        sim_seed=seed,
+        fault_seed=seed + 1,
+        sensor_seed=seed + 2,
+        controller_seed=seed + 3,
+        train_seed=0,
+    )
+
+
+def _menu_label_payload(
+    source_class: str, subtype: str, location: int, severity: float
+) -> dict[str, np.ndarray]:
+    """Return one schema-D label payload naming the case's source class."""
+
+    onset_index = FIXTURE_N_STEPS // 3
+    return {
+        "source_class": np.asarray(source_class),
+        "subtype": np.asarray(subtype),
+        "location": np.asarray(location, dtype=np.int64),
+        "severity": np.asarray(severity, dtype=np.float64),
+        "onset_index": np.asarray(onset_index, dtype=np.int64),
+        "onset_time_s": np.asarray(
+            onset_index / FIXTURE_F_CTRL_HZ, dtype=np.float64
+        ),
+        "compound_flag": np.asarray(False, dtype=np.bool_),
+        "ood_flag": np.asarray(False, dtype=np.bool_),
+    }
+
+
+def _menu_estimator_payload(
+    source_class: str, step: int, decision_time_s: float
+) -> dict[str, np.ndarray]:
+    """Return one decision whose `p_class` names the same class the labels do.
+
+    The coherence is the point: a menu whose estimator payloads all named one class
+    while the labels named three would satisfy the surface gate and show a reader
+    three identical panels.
+    """
+
+    probabilities = np.zeros((1, len(SOURCE_CLASS_ORDER)), dtype=np.float64)
+    probabilities[0, SOURCE_CLASS_ORDER.index(source_class)] = 1.0
+    return {
+        "step": np.asarray([step], dtype=np.int64),
+        "decision_time_s": np.asarray([decision_time_s], dtype=np.float64),
+        "p_class": probabilities,
+        "unknown_score": np.asarray([0.0], dtype=np.float64),
+        "abstain_decision": np.asarray([False], dtype=np.bool_),
+        "location_out": np.asarray([-1], dtype=np.int64),
+        "severity_out": np.asarray([0.0], dtype=np.float64),
+        "severity_uncertainty": np.asarray([np.inf], dtype=np.float64),
+        "detection_time_s": np.asarray([decision_time_s], dtype=np.float64),
+    }
+
+
+def _menu_arm(harness: Harness, row: Any, suite: str) -> dict[str, Any]:
+    """Return one record arm for a menu pair, digesting what is on disk now."""
+
+    roles: dict[str, Any] = {}
+    for role in ROLE_NAMES:
+        directory = role_root_for(harness.role_root, role, suite)
+        relative = (
+            f"{role}/{suite}/{row.run_id}.npz"
+            if role in SUITE_QUALIFIED_ROLES
+            else f"{role}/{row.run_id}.npz"
+        )
+        roles[role] = {
+            "index_sha256": external_digest(directory / ROLE_INDEX_NAME),
+            "payload_relative_path": relative,
+            "payload_sha256": external_digest(harness.role_root / relative),
+        }
+    checkpoint = harness.checkpoint_root / row.pair_id / f"{suite}.pt"
+    return {
+        "checkpoint": {
+            "relative_path": f"{row.pair_id}/{suite}.pt",
+            "sha256": external_digest(checkpoint),
+        },
+        "manifest_row": {name: getattr(row, name) for name in MANIFEST_ROW_FIELDS},
+        "roles": roles,
+        "run_id": row.run_id,
+    }
+
+
+@contextmanager
+def _three_case_menu(
+    harness: Harness,
+    *,
+    seed: int = 0,
+    tolerance_m: float = CENTERLINE_TASK_OUTPUT_TOL_M,
+    edit_document: Callable[[dict], dict] | None = None,
+):
+    """Install a complete structure/actuator/sensor menu, then restore every byte.
+
+    Args:
+        edit_document: given the assembled record document, returns the one to write.
+            Used to drive row 20's identity refusals, which need a record whose menu
+            the surface gate accepts before the identity check is reached at all.
+    """
+
+    config = load_config(
+        harness.packet_root / CONFIG_RELATIVE, harness.packet_root / SCHEMA_RELATIVE
+    )
+    schema = json.loads(
+        (harness.packet_root / SCHEMA_RELATIVE).read_text(encoding="utf-8")
+    )
+    geometry, coherent, validation = _coherent_geometry_and_record(
+        harness, seed, tolerance_m
+    )
+    plant_payload = dict(coherent.__dict__)
+    decision_step = FIXTURE_N_STEPS - 1
+    decision_time_s = float(np.asarray(coherent.t_s)[-1])
+
+    manifest_path = harness.role_root / MANIFEST_NAME
+    validation_path = harness.packet_root / GEOMETRY_RELATIVE
+    result_path = harness.packet_root / RESULT_RELATIVE
+    touched = [
+        harness.role_root / role / ROLE_INDEX_NAME for role in _MENU_FLAT_ROLES
+    ]
+    touched += [
+        harness.role_root / role / suite / ROLE_INDEX_NAME
+        for role in _MENU_SUITE_ROLES
+        for suite in SUITE_KEYS
+    ]
+    touched += [harness.role_root / f"{name}.json" for name in AUDIT_NAMES]
+
+    saved = [
+        (path, path.read_bytes())
+        for path in [manifest_path, validation_path, result_path, *touched]
+    ]
+    created: list[Path] = []
+
+    try:
+        _write_json(validation_path, validation)
+        geometry = replace(
+            geometry,
+            tolerance_source=replace(
+                geometry.tolerance_source, sha256=tracked_text_digest(validation_path)
+            ),
+        )
+
+        rows = read_identity_manifest(manifest_path)
+        menu_rows: dict[str, Any] = {}
+        for case_id, pair_id, source_class, subtype, location, severity, seed_, _ in (
+            MENU_CASES
+        ):
+            for suite in SUITE_KEYS:
+                row = _menu_manifest_row(
+                    pair_id, suite, source_class, seed_, config.config_hash
+                )
+                menu_rows[row.run_id] = row
+                rows.append(row)
+        write_identity_manifest(manifest_path, rows)
+
+        census = manifest_census(rows)
+        for name in AUDIT_NAMES:
+            _write_json(
+                harness.role_root / f"{name}.json",
+                _audit_document(
+                    status=harness.audit_status[name],
+                    assignment_hash=harness.assignment_hash,
+                    config_hash=harness.config_hash,
+                    census=census,
+                ),
+            )
+
+        new_index_rows: dict[Path, list[Any]] = {}
+        for case_id, pair_id, source_class, subtype, location, severity, _, _ in (
+            MENU_CASES
+        ):
+            for suite in SUITE_KEYS:
+                row = menu_rows[f"{pair_id}_{suite}"]
+                payloads = {
+                    "plant": plant_payload,
+                    "labels": _menu_label_payload(
+                        source_class, subtype, location, severity
+                    ),
+                    "estimator_outputs": _menu_estimator_payload(
+                        source_class, decision_step, decision_time_s
+                    ),
+                }
+                for role in ROLE_NAMES:
+                    directory = role_root_for(harness.role_root, role, suite)
+                    path = directory / f"{row.run_id}.npz"
+                    if role == "controller_logs":
+                        source = directory / f"{PAIR_ID}_{suite}.npz"
+                        path.write_bytes(source.read_bytes())
+                    else:
+                        normalized = validate_role_payload(
+                            role, payloads[role], schema, config
+                        )
+                        buffer = io.BytesIO()
+                        np.savez(buffer, **normalized)
+                        path.write_bytes(buffer.getvalue())
+                    created.append(path)
+                    new_index_rows.setdefault(
+                        directory / ROLE_INDEX_NAME, []
+                    ).append(
+                        RoleIndexRow(
+                            run_id=row.run_id,
+                            schema_version="1.0",
+                            config_hash=config.config_hash,
+                            npz_path=f"{row.run_id}.npz",
+                            sha256=external_digest(path),
+                        )
+                    )
+                checkpoint = harness.checkpoint_root / pair_id / f"{suite}.pt"
+                checkpoint.parent.mkdir(parents=True, exist_ok=True)
+                checkpoint.write_bytes(
+                    f"inert-menu-checkpoint-{pair_id}-{suite}".encode("utf-8")
+                )
+                created.append(checkpoint)
+
+        for index_path, extra in new_index_rows.items():
+            existing = read_role_index(index_path, observation=False)
+            write_role_index(index_path, [*existing, *extra], observation=False)
+
+        case_ids = [case_id for case_id, *_ in MENU_CASES]
+        _write_json(
+            result_path,
+            {
+                "read": {
+                    "cases": case_ids,
+                    "config_hash": harness.config_hash,
+                    "split": SPLIT,
+                },
+                "status": "synthetic_fixture_established_result",
+            },
+        )
+
+        # `_record_document` re-digests the manifest, both audits and every source
+        # artifact from what is on disk at the moment it is called, so the rewritten
+        # files above are picked up rather than restated here.
+        document = harness._record_document()
+        document["render_geometry"] = render_geometry_document(geometry)
+        document["cases"] = [
+            {
+                "arms": {
+                    suite: _menu_arm(harness, menu_rows[f"{pair_id}_{suite}"], suite)
+                    for suite in SUITE_KEYS
+                },
+                "case_id": case_id,
+                "display_label": display_label,
+                "pair_id": pair_id,
+            }
+            for case_id, pair_id, _, _, _, _, _, display_label in MENU_CASES
+        ]
+        if edit_document is not None:
+            document = edit_document(document)
+        yield harness.rewrite_record(document)
+    finally:
+        for path in created:
+            path.unlink(missing_ok=True)
+        for _, pair_id, *_ in MENU_CASES:
+            directory = harness.checkpoint_root / pair_id
+            if directory.exists() and not any(directory.iterdir()):
+                directory.rmdir()
+        for path, raw in saved:
+            path.write_bytes(raw)
 
 
 def test_row20_refuses_a_series_sequence_that_is_not_the_record_s_menu(
@@ -4911,6 +5623,89 @@ def test_row20_refuses_a_menu_the_established_result_does_not_declare(
     assert "the prior read established" in str(error)
 
 
+@pytest.mark.parametrize("forged", [FINAL, SYNTHETIC_FIXTURE])
+def test_row20_refuses_a_provenance_state_the_connection_did_not_resolve(
+    harness: Harness, forged: str
+) -> None:
+    """Codex's Session-151 finding, and the measurement that says the check belongs here.
+
+    `provenance` is a separately constructible value and `_scene_for` puts its state
+    on every scene as the banner the surface draws. This drives the whole shape: the
+    harness record's authenticated authority is `DEVELOPMENT_ONLY`, a forged
+    `ResolvedProvenance` is built beside it, and the scene that forgery produces is
+    shown to be one `validate_scene` **accepts** -- so nothing downstream of the
+    assembly can see the disagreement, because by then the label is the only statement
+    of the fact. `resolve_bundle` refuses it, with row 19's own code and before the
+    surface gate the one-case harness would otherwise stop at.
+
+    `SYNTHETIC_FIXTURE` is in the parametrization because it is the state invariant V7
+    says a public connection-record invocation must never resolve to, and it is
+    refused here as a consequence of the same equality rather than as a special case:
+    `utils.connection_record` admits only the two public authorities, so no
+    authenticated record can make it hold.
+    """
+
+    with _coherent_geometry(harness) as arguments:
+        connection, cases, geometry, provenance = _resolved(harness, arguments)
+    assert connection.record.authority == DEVELOPMENT_ONLY
+    assert provenance.state == DEVELOPMENT_ONLY
+    lie = ResolvedProvenance(state=forged, development_traces={})
+
+    forged_scene = connection_adapter._scene_for(
+        connection,
+        connection.record.cases[0],
+        cases.cases[0],
+        geometry.cases[0],
+        lie.state,
+    )
+    validate_scene(forged_scene)
+    assert forged_scene.provenance.state == forged
+
+    error = _refusal(lambda: resolve_bundle(connection, cases, geometry, lie))
+    assert error.code == X_PROVENANCE_UNRESOLVED
+    assert forged in str(error)
+    assert DEVELOPMENT_ONLY in str(error)
+    assert "never a value supplied beside it" in str(error)
+    assert "structure/actuator/sensor" not in str(error)
+
+
+def test_row20_binds_the_provenance_state_before_it_builds_any_scene(
+    harness: Harness,
+) -> None:
+    """The banner is checked before the assembly runs, not after it.
+
+    A scene carrying a state the record did not resolve must not exist even
+    transiently inside this module, because the next row writes what this one built.
+    The observer counts `_scene_for` calls: the accept path builds one per case and
+    the forged path builds none.
+    """
+
+    with _coherent_geometry(harness) as arguments:
+        connection, cases, geometry, provenance = _resolved(harness, arguments)
+    calls: list[str] = []
+    original = connection_adapter._scene_for
+
+    def counted(*args: Any, **kwargs: Any):
+        calls.append(args[1].case_id)
+        return original(*args, **kwargs)
+
+    connection_adapter._scene_for = counted  # type: ignore[assignment]
+    try:
+        _refusal(
+            lambda: resolve_bundle(
+                connection,
+                cases,
+                geometry,
+                ResolvedProvenance(state=FINAL, development_traces={}),
+            )
+        )
+        assert calls == []
+        _refusal(lambda: resolve_bundle(connection, cases, geometry, provenance))
+        assert calls == [CASE_ID]
+    finally:
+        connection_adapter._scene_for = original  # type: ignore[assignment]
+
+
 def test_row20_refuses_a_menu_the_surface_gate_will_not_draw(harness: Harness) -> None:
     """The surface gate is called here, and today it is what the harness's menu meets.
 
@@ -4976,6 +5771,185 @@ def test_row20_assembles_a_scene_the_scene_gate_accepts(harness: Harness) -> Non
         assert np.array_equal(
             scene.arms[suite].centerline_xy, geometry.cases[0].arms[suite].centerline
         )
+
+
+def test_the_three_case_menu_is_the_menu_the_surface_gate_asks_for(
+    harness: Harness,
+) -> None:
+    """The fixture's own accept side, driven before anything is claimed about row 20.
+
+    A fixture that quietly failed to satisfy the gate would make every test below it
+    pass for the wrong reason, so what the gate actually requires -- one case per
+    required source class, distinct display labels -- is measured here against the
+    authenticated record rather than assumed from how the tree was written.
+    """
+
+    with _three_case_menu(harness) as arguments:
+        connection = authenticate_connection(**arguments)
+        cases = resolve_cases(connection)
+    assert [case.case_id for case in connection.record.cases] == [
+        case_id for case_id, *_ in MENU_CASES
+    ]
+    assert {series.truth.source_class for series in cases.cases} == set(
+        REQUIRED_SOURCE_CLASSES
+    )
+    labels = [series.display_label for series in cases.cases]
+    assert len(set(labels)) == len(labels)
+    for series in cases.cases:
+        for suite in SUITE_KEYS:
+            decisions = series.arms[suite].decisions
+            assert len(decisions) == 1
+            index = SOURCE_CLASS_ORDER.index(series.truth.source_class)
+            assert float(np.asarray(decisions[0].p_class)[index]) == 1.0
+
+
+def test_the_three_case_menu_restores_every_byte_it_touched(harness: Harness) -> None:
+    """The fixture writes into a session-scoped tree, so its restoration is a property.
+
+    `_coherent_geometry` restores four files; this installer rewrites the manifest,
+    both audits, six role indexes and the established-result artifact, and creates
+    twelve payloads and six checkpoints. A leak there would not fail here -- it would
+    quietly change what every later test in this file is measuring. So the whole of
+    both trees is digested before and after, path by path, and required to be equal.
+    """
+
+    def snapshot() -> dict[str, str]:
+        return {
+            str(path.relative_to(harness.root)): external_digest(path)
+            for root in (harness.packet_root, harness.role_root, harness.checkpoint_root)
+            for path in sorted(root.rglob("*"))
+            # The record itself is the one file the installer deliberately leaves
+            # rewritten: `harness.rewrite_record` is how a test receives its
+            # arguments, and the autouse `_restored_record` fixture puts the accepted
+            # record back after every test in this file. That boundary is asserted
+            # below rather than folded into the comparison.
+            if path.is_file() and path != harness.record_path
+        }
+
+    before = snapshot()
+    with _three_case_menu(harness) as arguments:
+        during = snapshot()
+        assert authenticate_connection(**arguments) is not None
+    after = snapshot()
+    assert during != before
+    assert set(during) - set(before)
+    assert after == before
+    harness.restore_record()
+    assert external_digest(harness.record_path) == harness.record_sha256
+
+
+def test_row20_accepts_the_three_case_menu_and_returns_one_bundle(
+    harness: Harness,
+) -> None:
+    """Row 20's accept path, reachable for the first time.
+
+    Everything this row exists to assemble is measured here: one scene per declared
+    case, filed under the case id the record names, every scene carrying the state row
+    19 resolved and the record digest rows 1 and 2 authenticated, and the whole bundle
+    passing the gate both surfaces run before they draw anything.
+    """
+
+    with _three_case_menu(harness) as arguments:
+        connection, cases, geometry, provenance = _resolved(harness, arguments)
+        bundle = resolve_bundle(connection, cases, geometry, provenance)
+
+    declared = [case_id for case_id, *_ in MENU_CASES]
+    assert list(bundle.scenes) == declared
+    assert bundle.provenance_state == DEVELOPMENT_ONLY
+    assert bundle.bundle_version == connection_adapter.BUNDLE_VERSION
+    validate_bundle(bundle)
+    for case_id, scene in bundle.scenes.items():
+        assert scene.body_change.case_id == case_id
+        assert scene.provenance.state == DEVELOPMENT_ONLY
+        assert scene.provenance.connection_record_sha256 == arguments[
+            "connection_record_sha256"
+        ]
+        assert scene.provenance.split == SPLIT
+    assert {
+        scene.body_change.change.source_class for scene in bundle.scenes.values()
+    } == set(REQUIRED_SOURCE_CLASSES)
+
+
+def test_row20_refuses_an_arm_run_id_the_record_does_not_name(
+    harness: Harness,
+) -> None:
+    """The first identity refusal, reachable now that a menu can pass the surface gate.
+
+    `_arm_identity` reads the record, so the only way the presented run can differ
+    from the declared one is a defect in this row's own assembly. The check is driven
+    by patching that one function, which is the same shape the delegation tests in
+    `utils.verification_scene` use: the guard is a post-condition over this module's
+    construction, and a post-condition is tested by breaking the construction.
+    """
+
+    with _three_case_menu(harness) as arguments:
+        connection, cases, geometry, provenance = _resolved(harness, arguments)
+        original = connection_adapter._arm_identity
+
+        def relabelled(case: Any, suite: str):
+            identity = original(case, suite)
+            return replace(identity, run_id="not-the-declared-run")
+
+        connection_adapter._arm_identity = relabelled  # type: ignore[assignment]
+        try:
+            error = _refusal(
+                lambda: resolve_bundle(connection, cases, geometry, provenance)
+            )
+        finally:
+            connection_adapter._arm_identity = original  # type: ignore[assignment]
+    assert error.code == X_BUNDLE_INCOMPLETE
+    assert "not-the-declared-run" in str(error)
+    assert "but the record names" in str(error)
+
+
+def test_row20_refuses_an_arm_pair_id_the_record_does_not_name(
+    harness: Harness,
+) -> None:
+    """The second identity refusal, on the other field of the same block."""
+
+    with _three_case_menu(harness) as arguments:
+        connection, cases, geometry, provenance = _resolved(harness, arguments)
+        original = connection_adapter._arm_identity
+
+        def relabelled(case: Any, suite: str):
+            identity = original(case, suite)
+            return replace(identity, pair_id="not-the-declared-pair")
+
+        connection_adapter._arm_identity = relabelled  # type: ignore[assignment]
+        try:
+            error = _refusal(
+                lambda: resolve_bundle(connection, cases, geometry, provenance)
+            )
+        finally:
+            connection_adapter._arm_identity = original  # type: ignore[assignment]
+    assert error.code == X_BUNDLE_INCOMPLETE
+    assert "not-the-declared-pair" in str(error)
+    assert "is presented under pair" in str(error)
+
+
+def test_row20_refuses_a_menu_the_established_result_orders_differently(
+    harness: Harness,
+) -> None:
+    """The ordered comparison, which only a menu with more than one case can separate.
+
+    With one case the established-result check could not tell an ordered comparison
+    from an unordered one. Three cases can: the same set in a different order is the
+    input that separates them, and menu order is what a reader is shown.
+    """
+
+    with _three_case_menu(harness) as arguments:
+        connection, cases, geometry, provenance = _resolved(harness, arguments)
+    declared = tuple(case.case_id for case in connection.record.cases)
+    reordered = replace(
+        connection,
+        sources=replace(
+            connection.sources,
+            established_cases=(declared[1], declared[0], declared[2]),
+        ),
+    )
+    error = _refusal(lambda: resolve_bundle(reordered, cases, geometry, provenance))
+    assert error.code == X_BUNDLE_INCOMPLETE
+    assert "in that order" in str(error)
 
 
 def test_row20_carries_the_authenticated_record_digest_rather_than_a_second_read(

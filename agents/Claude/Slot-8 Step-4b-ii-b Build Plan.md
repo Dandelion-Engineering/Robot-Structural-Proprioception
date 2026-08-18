@@ -739,3 +739,173 @@ deliberate — seven consecutive sessions have held that line.
 *** THE CARD NOW CARRIES THREE DISCLOSURES: the `schema.json` EOL-pin dependency, the
 `authenticate_sources` third parameter, and the `AuthenticatedConnection.record_sha256`
 field. All three move bytes that were part of the closed 4b-ii-a approval. ***
+
+---
+
+## Appendix F — Codex's two Session-151 findings discharged, and row 20's accept path opened (Claude Session 152)
+
+*Appended 2026-08-17, Session 152. Both of Codex's Session-151 cross-review findings
+are discharged, neither contested, both re-driven at source first and one of them
+found wider than reported. The three-case coherent menu exists, so row 20's accept
+path and its two identity refusals are reachable and driven. Row 21 and the rest of
+section 4 remain. The design at blob `032db166` is still the authority.*
+
+### F.1 Codex was right a fourth time, and its second finding is the same shape as its first
+
+Codex's two findings are, at the level that matters, **one finding at two sites**: a
+value that reaches a checked object from beside it rather than from inside it.
+
+  * **Finding 1** — the row-19 test seam's post-condition named eleven joins and said
+    in its message that it recognised every state a post-row-12 connection can be in.
+  * **Finding 2** — `resolve_bundle` took `provenance` as a separately constructible
+    argument and put its `state` on every scene without ever comparing it to the
+    authenticated record.
+
+Both were driven at source in a scratch probe before either was accepted, against the
+exact Session-151 bytes.
+
+**Finding 2, measured.** On the coherent fixture, whose authenticated authority is
+`DEVELOPMENT_ONLY` and whose `resolve_provenance` returns `DEVELOPMENT_ONLY`:
+
+```text
+forged FINAL              -> validate_scene ACCEPTED
+forged SYNTHETIC_FIXTURE  -> validate_scene ACCEPTED
+```
+
+`validate_scene` accepting the forged scene is the part that makes the finding
+blocking rather than cosmetic: **nothing downstream of the assembly can see the
+disagreement, because by then the label is the only statement of the fact.** The
+one-case harness then stopped both at `validate_bundle`'s incomplete-menu rule, an
+unrelated refusal that would have disappeared the moment the three-case menu landed.
+
+**Finding 1, measured, and wider than reported.** Applying the Session-151
+`_reprovenanced` to an authenticated connection and then measuring the relations the
+earlier rows establish:
+
+| relation | owner | before | after the S151 seam |
+|---|---|---|---|
+| the eleven declared joins | rows 4-6 | hold | hold |
+| recomputed census == carried census | row 6 | holds | **broken** (`{'val': 4}` vs `{'dev': 2, 'val': 2}`) |
+| each audit `manifest_audit` == recomputed census | row 6 | holds | **broken** (x2) |
+| record 20-field `manifest_row` echoes | row 10 | 2/2 | **0/2** |
+| role-index `config_hash` == validated config | row 12 | 8/8 | **0/8** |
+| validated `config_hash` == its document's canonical digest | row 4 | holds | **broken** |
+| row 4's authority/config **policy** | row 4 | accepts | **refuses** — a FINAL record names a 'draft' configuration |
+
+The last row is mine rather than Codex's, and it is the one that shows the seam was
+not only missing identity copies but had produced a state a *policy* refuses outright.
+
+### F.2 The repair, and the line it draws
+
+`_provenance_joins` now states **eighteen** joins rather than eleven — the seven new
+ones are the rows above — and the post-condition is renamed
+`_require_post_row12_state`, because it now checks three separable things and the old
+name described only the first:
+
+  1. every identity join;
+  2. row 4's authority/config **policy**, by *calling* `require_authority_config_policy`;
+  3. row 3's authority/split **policy**, by *calling*
+     `connection_record._require_authority_split_policy` — the function that owns the
+     rule, imported deliberately rather than restated.
+
+**`_reprovenanced` has no `config_hash` parameter any more, and that is the structural
+half of the repair.** It takes `config_status`, edits the config *document*'s `status`,
+and re-derives the identity with `expected_config_hash`. An identity a caller hands in
+is an identity no document produced — which is finding 2's defect, in the test seam.
+
+*** ONE STATE ROW 3 FORBIDS IS STILL NEEDED, AND THE EXCEPTION IS CHECKED RATHER THAN
+GRANTED. *** One row-19 test needs `FINAL` over the `dev` split, because that is the
+only way to reach the split input of row 19's computation. It passes
+`split_policy_violated=True`, and the post-condition **inverts** the check rather than
+skipping it: a caller that declares the violation on a state row 3 would accept fails
+there. A declared exception nothing verifies is a bypass.
+
+*** AND THE POST-CONDITION NAMES WHAT IT DOES NOT CLAIM. *** It does not require the
+config document to be one `validate_config_document` would accept under the frozen
+lifecycle. That document is a complete frozen `config.json` with every freeze-required
+path resolved, and invariant W7's whole content is that this packet does not contain
+one and is not to manufacture one. The seam moves `status` and re-derives the digest —
+so row 4's *identity* and row 4's *policy* both hold — and stops there, saying so.
+
+**Two negative controls now, not one.** The Session-150 partial edit is the first and
+breaks **11 of 18**; the Session-151 partial edit is the second, added this session,
+and breaks **7 of 18**. Both are additionally required to fail row 4's policy. A new
+post-condition whose only witness is the *previous* generation's defect has never been
+shown to see the current one — that is lesson 272.
+
+**Row 20's repair is three lines and one paragraph.** `resolve_bundle` requires
+`provenance.state == connection.record.authority` **before the first scene is built**,
+with `X_PROVENANCE_UNRESOLVED`. It is not a second copy of row 19's rule: row 19
+requires *its own computed result* to equal the authority, this row requires *the value
+it was handed* to be that authority, and the two separate exactly when a caller
+substitutes. `SYNTHETIC_FIXTURE` is refused as a consequence rather than as a special
+case — `utils.connection_record` admits only the two public authorities, so no
+authenticated record can make the equality hold (V7).
+
+### F.3 The three-case coherent menu, and why it is a fixture
+
+`_three_case_menu` installs three additional `dev` pairs over the harness tree:
+`menu-structure`, `menu-actuator` and `menu-sensor`, each carrying the **same coherent
+plant record** row 18 needs, its own `labels` payload naming one required source class,
+and an `estimator_outputs` payload whose `p_class` names that same class. It rewrites
+`manifest.csv`, recomputes the census, rewrites both audits, appends to six role
+indexes, rewrites the established-result artifact, declares the three cases in the
+record — and restores every byte on exit.
+
+*** THREE THINGS ABOUT IT A LATER SESSION SHOULD NOT REDISCOVER. ***
+
+  1. **`observations` is not written at all.** `ROLE_NAMES` is `controller_logs`,
+     `estimator_outputs`, `labels`, `plant` — no connection record names an
+     observation payload, so none is opened and none had to be synthesised. That fact
+     removed most of the expected work; read the owner of the fact first.
+  2. **`controller_logs` is copied byte for byte** from the pair the contract fixture
+     already wrote. Nothing in it is per-case, and rows 15 to 17 already accept it —
+     the same reason `_coherent_geometry` leaves it alone while replacing the plant.
+  3. **The restoration is a tested property, not a promise.** The installer touches
+     twenty-odd files in a *session-scoped* tree, and a leak would not fail anywhere —
+     it would quietly change what every later test in the file measures. So both trees
+     are digested path by path before and after and required to be equal, with the
+     connection record excluded and its own restoration asserted separately, because
+     that one file is the autouse fixture's job.
+
+**It is a fixture, never a rule change.** A menu that cannot show a reader a structure,
+an actuator and a sensor change side by side cannot support the comparison the artifact
+exists to let a reader make.
+
+### F.4 What row 20 now has that it did not
+
+  * the **accept path**: one scene per declared case, filed under the record's own case
+    ids, in the record's order, every scene carrying the row-19 state and the record
+    digest rows 1 and 2 authenticated, and the whole bundle passing `validate_bundle`;
+  * the **run-id and pair-id identity refusals**, driven by patching `_arm_identity` —
+    the guard is a post-condition over this row's own construction, so breaking the
+    construction is how it is tested;
+  * the **ordered** established-result comparison, which one case could not separate
+    from an unordered one and three cases can;
+  * both **forged-provenance refusals**, driven end to end, plus an observer test
+    proving **no scene is built at all** on the forged path.
+
+### F.5 Numbers
+
+`test_connection_adapter.py` **257** (was 245), the focused pair **277** (was 265) and
+**277 again under `PYTHONOPTIMIZE=1`**; packet-wide **2,935 passed / 0 failed /
+178.15 s**. The arithmetic closes: 2,923 + 12 = 2,935. `git diff --numstat` reads
+`49 13` on the module and `1066 92` on the test file. `py_compile` and
+`git diff --check` clean; both files pure ASCII, LF, 0 CR, no BOM, final newline,
+checked on the final bytes.
+
+### F.6 What is left, in order
+
+**Row 21**, which is now unblocked for the first time — its accept path needs a bundle
+the surface gate accepts, and there is one. Then the audit-hook observer (W3/B4); then
+B2, B5 and the remaining B3 rows; then the `roles` CLI wiring and the additive
+`build_role_bundle` change; **then** the two-pass mutation sweep on the finished pair,
+whose staged-tree set (`scripts`, `tests`, `schema`, `config` **and** `results`) is
+unchanged; **then** the Review Card and the subject chat; then the handoff. Still no
+card and no chat for 4b-ii-b, and that is still deliberate — eight consecutive sessions
+have held that line.
+
+*** THE CARD STILL CARRIES THREE DISCLOSURES: the `schema.json` EOL-pin dependency, the
+`authenticate_sources` third parameter, and the `AuthenticatedConnection.record_sha256`
+field. Session 152 added no fourth — `resolve_bundle` is 4b-ii-b's own code and its new
+guard moves no byte that was part of the closed 4b-ii-a approval. ***

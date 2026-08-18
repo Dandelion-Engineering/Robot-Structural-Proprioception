@@ -4015,6 +4015,65 @@ correction applied.)*
   for, so relaxing the gate to reach green would be deleting the requirement rather than meeting
   it.
 
+272. **[S152] A NEW POST-CONDITION WHOSE ONLY NEGATIVE CONTROL IS THE *PREVIOUS* GENERATION'S
+  DEFECT HAS NEVER BEEN SHOWN TO SEE THE CURRENT ONE.**  S151 widened the row-19 seam's
+  post-condition and gave it a negative control - the S150 partial edit, reconstructed as an
+  input and required to be caught.  That control was already caught by the eleven joins S151
+  wrote; it said nothing about the seven relations S151 itself left behind, which is exactly what
+  Codex's S152-reported review found.  *** WHEN A CROSS-REVIEW WIDENS A POST-CONDITION, THE STATE
+  THAT WAS SHIPPED *THIS* TIME BECOMES A SECOND CONTROL, KEPT FOREVER BESIDE THE FIRST. ***
+  Measured here: the S150 partial breaks 11 of 18 joins and the S151 partial breaks 7 of 18, and
+  only the second is a witness for the joins this session added.  The controls accumulate; they
+  do not replace each other.
+
+273. **[S152] A VALUE THAT REACHES A CHECKED OBJECT FROM *BESIDE* IT RATHER THAN FROM *INSIDE*
+  IT IS ONE DEFECT, AND IT USUALLY HAS MORE THAN ONE SITE.**  Codex reported two findings in one
+  review and they are the same fault: `resolve_bundle` took a `ResolvedProvenance` as a separately
+  constructible argument and stamped its `state` onto every scene, and the row-19 test seam took a
+  `config_hash` as a string and wrote it beside a document that derives a different one.  *** THE
+  TEST THAT FINDS THE FAMILY: for every argument a function CARRIES ONTO its output rather than
+  DERIVES FROM an authenticated input, ask what compares the two.  If nothing does, the argument
+  is a claim, and a claim a caller supplies is a claim that can lie (V7). ***  Both repairs have
+  the same shape - bind it to the authenticated fact, or derive it and delete the parameter - and
+  deleting the parameter is the stronger of the two because it removes the seam instead of
+  guarding it.
+
+274. **[S152] WHETHER A MISSING BIND IS COSMETIC IS DECIDED BY THE *NEXT* GATE, AND THAT IS A
+  MEASUREMENT.**  A forged provenance state looked like it might be caught downstream - the scene
+  contract validates, the bundle contract validates, one of them surely compares it.  Driven:
+  `validate_scene` **ACCEPTED** the scene carrying a `FINAL` banner over a `DEVELOPMENT_ONLY`
+  connection, and accepted a `SYNTHETIC_FIXTURE` one too.  *** NOTHING AFTER THE ASSEMBLY CAN SEE
+  THE DISAGREEMENT, BECAUSE BY THEN THE LABEL IS THE ONLY STATEMENT OF THE FACT. ***  The
+  one-case harness did refuse both - on the unrelated incomplete-menu rule, which would have
+  disappeared the moment the three-case menu landed.  A refusal that fires for a different reason
+  is not coverage; it is a coincidence with an expiry date.
+
+275. **[S152] READ THE OWNER OF THE FACT BEFORE ESTIMATING THE WORK, NOT ONLY BEFORE WRITING THE
+  GUARD.**  The three-case menu looked like it needed six role payloads per run, one of them the
+  observation record, whose contract embeds run_id, pair_id, split and config_hash and whose
+  per-channel timing and masking rules are the longest validator in the packet.  *** `ROLE_NAMES`
+  IS `controller_logs`, `estimator_outputs`, `labels`, `plant` - FOUR ROLES, AND `observations` IS
+  NOT ONE OF THEM. ***  No connection record names an observation payload, so none is opened and
+  none had to be synthesised.  That one line removed most of the estimated build.  Lesson 260 says
+  read the owner before writing the guard; this is the same instrument pointed at the plan.
+
+276. **[S152] A DECLARED EXCEPTION MUST BE INVERTED, NOT SKIPPED.**  One row-19 test needs the one
+  state row 3 forbids - `FINAL` over the `dev` split - because that is the only way to reach the
+  split input of row 19's computation.  A flag that turns the check off is a bypass with a
+  comment; a flag that requires the violation TO BE REAL is a check.  `split_policy_violated=True`
+  makes the post-condition fail if row 3 would have ACCEPTED the state, so the exception cannot be
+  set spuriously and cannot rot into a permanent hole.  *** THE GENERAL FORM: WHEN A HELPER MUST
+  BE ALLOWED TO BREAK ONE RULE, MAKE THE PERMISSION ASSERT THE BREAKAGE. ***
+
+277. **[S152] A FIXTURE THAT WRITES INTO A SESSION-SCOPED TREE OWES A MEASURED RESTORATION, AND
+  THE MEASUREMENT IS A DIGEST OF EVERY PATH.**  `_three_case_menu` rewrites the manifest, both
+  audits, six role indexes and the established-result artifact, and creates twelve payloads and
+  six checkpoints, in a tree every other test in the file shares.  *** A LEAK DOES NOT FAIL WHERE
+  IT HAPPENS.  It quietly changes what every later test is measuring, and the suite stays
+  green. ***  So both trees are digested path by path before and after and required to be equal -
+  and the one file deliberately left rewritten, the connection record, is excluded by name with
+  its own restoration asserted separately, because a restoration test that quietly tolerated one
+  exception would tolerate the next one too.
 
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 

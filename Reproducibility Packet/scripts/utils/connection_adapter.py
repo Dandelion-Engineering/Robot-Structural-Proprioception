@@ -3117,13 +3117,20 @@ def resolve_provenance(connection: AuthenticatedConnection) -> ResolvedProvenanc
 #
 # **What this row adds, and what it deliberately delegates.** Rows 13 through 19
 # established the facts; this row is where they become the object the two surfaces
-# draw. Three of its four checks are relations between *separately produced* tuples
-# -- the record's menu, `resolve_cases`' output, `resolve_geometry`'s output and the
-# established result's declared case list -- and that is exactly the class of fault
-# no earlier row can see, because each earlier row saw only its own output. The
-# fourth is `validate_bundle`, the surface gate both surfaces run as the first
-# statement of their own entry points, called here so a bundle that no surface would
-# draw never leaves this module.
+# draw. Four of its five checks are relations between *separately produced* values
+# -- the record's menu, `resolve_cases`' output, `resolve_geometry`'s output, the
+# established result's declared case list, and the provenance state `resolve_provenance`
+# returned -- and that is exactly the class of fault no earlier row can see, because
+# each earlier row saw only its own output. The fifth is `validate_bundle`, the
+# surface gate both surfaces run as the first statement of their own entry points,
+# called here so a bundle that no surface would draw never leaves this module.
+#
+# **The provenance check is the one that guards a claim rather than a shape**, and it
+# runs before any scene exists. Every other value crossing this seam is checked
+# against another authenticated value of the same kind; the provenance state is
+# checked against the record's `authority` because the state *is* the banner, and a
+# banner nothing compares is a sentence the surface prints on the strength of whoever
+# built the argument list.
 #
 # **One check is deliberately absent and the reason is written down rather than
 # left to be rediscovered.** The interactive surface exposes cases through a
@@ -3237,20 +3244,40 @@ def resolve_bundle(
         The validated `VerificationBundle` row 21 writes.
 
     Raises:
-        VerificationSceneError: `X_BUNDLE_INCOMPLETE` when the three case sequences
-            are not one sequence, when the assembled menu is not the case list the
-            established result declares, or when a scene's arm identities are not
-            the record's own; and whatever code `validate_bundle` names for a menu
-            no surface may draw.
+        VerificationSceneError: `X_PROVENANCE_UNRESOLVED` when the supplied
+            provenance state is not the authenticated record's own `authority`;
+            `X_BUNDLE_INCOMPLETE` when the three case sequences are not one
+            sequence, when the assembled menu is not the case list the established
+            result declares, or when a scene's arm identities are not the record's
+            own; and whatever code `validate_bundle` names for a menu no surface may
+            draw.
 
     **The four inputs are produced by four separate calls, and that is what makes
-    this row's first check decidable.** `resolve_cases`, `resolve_geometry` and
+    this row's checks decidable.** `resolve_cases`, `resolve_geometry` and
     `resolve_provenance` each take the connection and return their own value; a
     caller assembling them is a caller who can pair the geometry of one record with
     the series of another. So the case identities and their order are required to
     agree across the record's menu, the series and the geometry before a single
     scene is built. That is the same post-condition-across-a-seam shape rows 13 and
     19 carry, and it is stated here rather than trusted because the seam is real.
+
+    **The provenance state crosses that same seam, and it is the one value on it a
+    reader is shown as a claim about the whole scene.** `provenance` is a separately
+    constructible value: a caller can build a `ResolvedProvenance` this connection
+    never produced, and `_scene_for` puts its `state` on every scene's provenance
+    block as the banner the surface draws. Nothing downstream can see that the label
+    and the record disagree, because by then the label is the only statement of the
+    fact. So the state is bound back to the authenticated record's `authority`
+    **before the first scene is built**. That is not a second copy of row 19's rule:
+    row 19 computes a state from the authenticated identities and requires *its own
+    result* to equal the authority; this row requires *the value it was handed* to
+    be that same authority, which is a statement about the seam rather than about
+    the computation, and the two separate exactly when a caller substitutes.
+    `SYNTHETIC_FIXTURE` is refused here as a consequence rather than as a special
+    case: `utils.connection_record` admits only `DEVELOPMENT_ONLY` and `FINAL` as an
+    `authority`, so no authenticated record can ever make that equality hold, and a
+    public connection-record invocation therefore cannot resolve to the private
+    seam's state (invariant V7).
 
     **The established result is the authority on which cases the surface presents,
     and this is its second appearance rather than a repeat of its first.** Row 6
@@ -3260,6 +3287,15 @@ def resolve_bundle(
     here. The comparison is ordered, because menu order is bundle order and the
     order a reader is shown is part of what the prior read established.
     """
+
+    if provenance.state != connection.record.authority:
+        raise _refuse(
+            X_PROVENANCE_UNRESOLVED,
+            f"the assembly was handed provenance state {provenance.state!r} but the "
+            f"authenticated record's authority is "
+            f"{connection.record.authority!r}; the banner every scene carries is "
+            "the record's own resolved state and never a value supplied beside it",
+        )
 
     declared = tuple(case.case_id for case in connection.record.cases)
     series_ids = tuple(series.case_id for series in cases.cases)
