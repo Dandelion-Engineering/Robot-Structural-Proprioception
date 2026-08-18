@@ -1,6 +1,6 @@
 # Summary of Only Necessary Context — Codex
 
-Last completely rewritten after Codex Session 154 on 2026-08-18.
+Last completely rewritten after Codex Session 155 on 2026-08-18.
 
 ## Resume here
 
@@ -10,137 +10,112 @@ Last completely rewritten after Codex Session 154 on 2026-08-18.
 - The root public README heartbeat is closed / both approved at blob
   `7342bc8ca5a256a411d69577199cc0c2e3dbc2d0`, raw SHA-256
   `1c649ed6c84ec456ae2f7a5fadf6163d86e76b2e0ef6dca653b4b9b0a436bde0`.
-- **Step 4b-ii-b remains Claude-owned work in progress.** Claude Sessions 147–154 built all
-  read-order rows 13–21 and the W3/B4 audit-hook observer, but no stable candidate, Review Card,
-  subject chat or handoff exists.
-- Claude Session 154 correctly discharged the exact Session-153 findings: two independently
-  authenticated connections no longer cross at row 21; a same-basename wrong-parent destination
-  refuses when the authenticated packet root stays fixed; corrupt/truncated `pHYs` inputs now
-  reach `X_BUNDLE_INCOMPLETE` rather than acceptance or a raw exception.
-- Three new forward blockers remain:
-  1. row 21 binds only provenance/menu/version/state, not the rest of the separately constructible
-     bundle; changing every scene's authenticated `abstain_threshold` from `0.55` to `0.56`
-     publishes successfully;
-  2. `_authority_output_root` trusts `connection.bound.packet_root`, so replacing packet root and
-     output root coherently publishes beneath an unrelated packet tree; and
-  3. `_png_pixels_per_metre` accepts a CRC-valid non-image containing only signature + `pHYs` +
-     `IEND` as `(11811,11811)` despite missing mandatory `IHDR`/image data.
-- Do not create a card or formal review until Claude explicitly hands off one complete stable
-  candidate.
+- **Step 4b-ii-b remains Claude-owned work in progress.** Claude Sessions 147–155 built all
+  read-order rows 13–21, W3/B4, B2, B3 and B5, but no stable candidate, Review Card, subject
+  chat or handoff exists.
+- Claude Session 155 correctly closed Session-154's complete-bundle-content gap by re-deriving
+  rows 13–20 and comparing complete canonical scenes. The new B2 accept composition, B3 refusal
+  floor and B5 byte-for-byte real-writer determinism test are materially present.
+- Two new forward blockers remain:
+  1. `_require_one_packet_root` compares replaceable fields only to other fields of the same
+     `BoundPaths`; moving the complete packet-relative path set coherently still publishes under
+     an unrelated root, even when the substituted input paths do not exist and `expected_opens`
+     still identifies the original authenticated tree; and
+  2. `_png_pixels_per_metre` checks chunk order but not `IHDR` semantics or `IDAT` decodability;
+     zero-width and non-zlib-IDAT streams return `(11811,11811)` while Pillow refuses them.
+- Do not create a card or perform formal review until Claude explicitly hands off one complete
+  stable candidate.
 - Full Step 4b, production connection records, real role/index/payload/checkpoint/result reads,
   Steps 4c–4f, capacity or threshold choice, final configuration, adapter execution and every
   C1-versus-S claim remain unauthorized.
 - The next regular Codex progress report is Session 160.
 
-## Exact owner state reviewed in Session 154
+## Exact owner state reviewed in Session 155
 
-Claude Session 154 is commit `123a38a06d23825b605d625b68d67c2a7322118a`.
+Claude Session 155 is commit `3bd7423cc61de484c3c7c53f6b99b8cc4bd356af`.
 
 - `Reproducibility Packet/scripts/utils/connection_adapter.py`
-  - blob `3baa01781b03d71ace9f9b99eb69f676c16ca4ed`
-  - raw SHA-256 `438b3059cb6de99069dfe4f9828f9ef1cd00b9fd22a4412ab3e0b03851ef99fa`
-  - 182,777 bytes / 3,886 LF / 0 CR
+  - blob `2e7d9fa02786723cfaf068ca5018860e3c46dfaf`
+  - raw SHA-256 `261b6548294272e4f5698e638fc8188fb577d03da6097c61f649d449a0d1660b`
 - `Reproducibility Packet/tests/test_connection_adapter.py`
-  - blob `fd841d520a5a9cf4301f23e2609b0a1c7c67e046`
-  - raw SHA-256 `ba08534123f3adeea0df31f38449c9c8714adfb26488f64196136690d5f75ca5`
-  - 307,187 bytes / 7,334 LF / 0 CR
+  - blob `a783fa6ceb47dd91ef1b70229d5ec986b0a0c0a4`
+  - raw SHA-256 `1dfa35a4b4df7a1af39339c9635a569a0383e2aaf6f0fabf8b528f341646ce36`
 
 This was a general recent-work review, not formal approval. Codex changed no packet byte.
 
-Independent verification reproduced 329 focused tests, 329 under optimized Python and all 2,987
-packet tests. The green suite does not cover the three blockers below.
+Independent verification reproduced 356 focused tests, 356 under optimized Python and all 3,014
+packet tests. The green suite does not cover the two blockers below.
 
-## What Claude Session 154 repaired correctly
+## What Claude Session 155 repaired correctly
 
-### Cross-connection provenance and the fixed-root destination are now bound
+### Complete bundle content is bound
 
-`_provenance_for` is the one provenance assembler/comparand. Row 21 walks every current field of
-`Provenance` and also requires the record-ordered menu, current bundle version and authenticated
-authority before creating the destination. The new two-authenticated-connection negative control
-closes the exact Session-153 seam.
+Row 21 now re-runs the pure rows 13–20 from the already authenticated in-memory connection and
+compares each presented scene's `canonical_scene_text` to the derived scene. Eleven substitution
+families span thresholds, label, playback, centerline, tracking, controller and decision content.
+Their anchor proves the altered bundles still cross the older surface/provenance checks, and the
+audit hook proves the re-derivation adds no input read. Do not reopen this exact gap unless later
+bytes change it.
 
-`_authority_output_root` now derives the authority-specific parent and record-label child from the
-packet root. A changed output root under a wrong parent refuses when the original packet root is
-retained. Do not reopen either exact case unless later bytes change it.
+### B2, B3 and B5 exist
 
-### The reported PNG integrity/refusal cases are closed
+- B2 makes one coherent rows-1–21 accept composition explicit.
+- B3 commits a minimum one-refusal-test floor for each owned row 13–21.
+- B5 runs the real scripted writer twice from fresh roots and compares all eight files and the
+  bundle digest byte for byte.
 
-The walk bounds chunks before indexing, verifies each CRC, rejects duplicate `pHYs`, requires the
-metre unit, checks the final `IEND` boundary and refuses trailing bytes. The corrupt-CRC and
-one-byte-body probes from Session 153 now reach `X_BUNDLE_INCOMPLETE`, and all ten tracked Step-3
-figures pass. The new blocker is mandatory image structure, not either closed input.
+These are internal build-plan items, not approval of the unfinished sub-step.
 
-### W3/B4 observer exists
+## Required forward correction 1 — bind the path set to the authenticated path identity
 
-The tests use an interpreter-level audit hook, prove it sees builtin and `os.open`, compare the
-unfiltered observed authentication open set with the record-derived allowlist in both directions,
-pin `schema.json` as the only twice-opened path, and require row-21/writer opens to stay inside the
-created tree. Codex found no forward defect in this observer work.
+`_require_one_packet_root` at `connection_adapter.py:3642` uses `bound.record_path` as the
+anchor while `record_path` is a field of the same separately constructible `BoundPaths` as
+`packet_root`, `output_root`, `schema_path`, `config_path` and `packet_artifacts`.
 
-## Required forward correction 1 — bind complete bundle content
+A fresh probe replaced every packet-relative field coherently beneath `<tmp>/other-packet` and
+left `AuthenticatedConnection.expected_opens` unchanged, still naming the original authenticated
+tree. None of the substituted record/schema/config/source input paths existed. `write_bundle`
+nevertheless accepted and published all eight files beneath the unrelated root.
 
-`write_bundle(connection, bundle, render=...)` still receives a separately constructible bundle.
-Its new preflight authenticates the bundle's provenance block, menu, version and state but does not
-compare non-provenance scene facts against rows 13–20.
+The repair must distinguish a connection actually authenticated against a copied packet from a
+post-authentication substitution of the complete path bundle. Use an identity carried outside the
+replaceable bound set, compare the current bound-derived set against the authenticated path
+identity already carried, or establish an equivalent decisive relation. Add the whole-field
+coherent substitution as a refusal before root creation; retain a genuine copied-tree invocation
+as an allowed case.
 
-A fresh probe changed `abstain_threshold` on every scene from the record's `0.55` to `0.56` while
-leaving all provenance unchanged. The bundle remained internally valid because every scene agreed,
-and row 21 published it successfully. This proves a public display/audit fact can differ from the
-authenticated record without changing the provenance readers are shown.
+## Required forward correction 2 — prove a decodable PNG, not a chunk skeleton
 
-Claude should bind every record-derived display fact and use the remaining B3 rows to substitute
-each row-13–20 output class. The repair should be complete-bundle or complete-row-state binding,
-not a threshold-only guard.
+`_png_pixels_per_metre` at `connection_adapter.py:3448` now requires one 13-byte `IHDR` first,
+consecutive `IDAT`, `pHYs` before image data and empty terminal `IEND`. This correctly closes the
+exact missing-IHDR/no-IDAT/late-pHYs cases.
 
-## Required forward correction 2 — packet root must not move with destination
-
-`_authority_output_root` derives the expected destination from
-`connection.bound.packet_root`. That value belongs to the same replaceable `BoundPaths` object as
-`output_root`.
-
-A fresh probe replaced both fields coherently:
+A fresh in-memory probe constructed two CRC-valid, correctly ordered streams:
 
 ```text
-packet_root -> <temp>/other-packet
-output_root -> <temp>/other-packet/results/verification_connection_development/adapter-fixture
+zero-width IHDR                         -> ACCEPTED (11811, 11811)
+IDAT body b"not-a-zlib-stream"         -> ACCEPTED (11811, 11811)
+Pillow                                  -> refused both
 ```
 
-Every authenticated record/config/source/dataset/role value still belonged to the original packet,
-but row 21 accepted and populated the unrelated packet tree. Claude should anchor the row-21 packet
-root independently against the previously authenticated path set and add the coherent two-field
-substitution control. W8 is not preserved by deriving one replaceable field from another.
-
-## Required forward correction 3 — CRC-valid non-images are not figures
-
-`_png_pixels_per_metre` now checks chunk integrity but not mandatory PNG image structure. A fresh
-byte stream with valid CRCs and only:
-
-```text
-PNG signature
-pHYs(11811,11811,metres)
-IEND
-```
-
-returned `(11811,11811)`. It has no `IHDR` and no image data; Pillow refused it as
-`UnidentifiedImageError`.
-
-Claude should require the mandatory datastream structure relevant to the row-21 claim (`IHDR`
-first with fixed length, valid image-data ordering, zero-length `IEND` last, legal `pHYs`
-placement), or use a strict decoder while keeping the exact resolution check. Add a missing-IHDR
-negative control that reaches `X_BUNDLE_INCOMPLETE`.
+The helper still does not validate `IHDR` field semantics or the compressed image stream, so it
+does not yet establish its own claim that the case figure is a PNG saved at 300 DPI. Validate the
+relevant header semantics and complete image data, or use a strict declared decoder. Add both
+controls as `X_BUNDLE_INCOMPLETE` refusals and retain the ten tracked Step-3 figures as the accept
+side.
 
 ## Current Claude-owned Step-4b-ii-b build
 
 - Rows 13–17 authenticate paired C1/S cases, timing, decision sequence and tracking window.
 - Row 18 derives coherent centerlines and checks the distal point against the task output.
 - Row 19 computes and binds development/final provenance.
-- Row 20 assembles and validates the complete three-case bundle and binds the supplied provenance
-  banner to the authenticated record.
-- Row 21 exclusively creates the output root and verifies the declared set, canonical JSON,
-  digest file and reported resolution; its current preflight is subject to the three blockers.
-- W3/B4 audit-hook observer is built.
-- Still unbuilt/incomplete: B2/B5, remaining B3 rows, roles CLI wiring, additive
-  `build_role_bundle` edit, two-pass mutation sweep, Review Card and subject chat.
+- Row 20 assembles and validates the complete three-case bundle.
+- Row 21 exclusively creates the output root, binds complete scene content and verifies the
+  declared set, canonical JSON, digest file and reported resolution; its packet-root and PNG
+  guards remain subject to the two blockers above.
+- W3/B4, B2, B3 and B5 are built.
+- Still unbuilt/incomplete: roles CLI wiring, additive `build_role_bundle` edit, two-pass mutation
+  sweep, Review Card and subject chat.
 - The eventual card must disclose three closed-half changes: the `schema.json` EOL-pin dependency,
   `authenticate_sources`' third parameter and `AuthenticatedConnection.record_sha256`.
 
@@ -190,8 +165,8 @@ read twice and count-pinned; carry its `text eol=lf` dependency into the future 
 2. Read a Step-4b-ii-b card/chat only if Claude explicitly produced and handed off one complete
    stable candidate.
 3. If no handoff exists, review Claude's newest partial owner work without taking over ownership.
-4. Require complete bundle-content binding, an independently anchored packet root and mandatory PNG
-   image structure before formal approval.
+4. Require a path identity independent of the replaceable `BoundPaths` set and a PNG check that
+   refuses invalid header/data semantics before formal approval.
 5. If handed off, read `Playbooks/review-cycle.md`, authenticate the full candidate and perform
    Round 1 against rows 13–21, geometry, EOL documentation, open/write boundaries, CLI wiring,
    additive `build_role_bundle` edit, mutation evidence and the zero-scientific-resource rule.
