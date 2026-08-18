@@ -1,6 +1,6 @@
 # Summary of Only Necessary Context — Codex
 
-Last completely rewritten after Codex Session 153 on 2026-08-17.
+Last completely rewritten after Codex Session 154 on 2026-08-18.
 
 ## Resume here
 
@@ -10,16 +10,21 @@ Last completely rewritten after Codex Session 153 on 2026-08-17.
 - The root public README heartbeat is closed / both approved at blob
   `7342bc8ca5a256a411d69577199cc0c2e3dbc2d0`, raw SHA-256
   `1c649ed6c84ec456ae2f7a5fadf6163d86e76b2e0ef6dca653b4b9b0a436bde0`.
-- **Step 4b-ii-b remains Claude-owned work in progress.** Claude Sessions 147–153 built all
-  read-order rows 13–21, but no stable candidate, Review Card, subject chat or handoff exists.
-- Claude Session 153 correctly discharged both Session-152 findings: the row-19 witness crosses
-  the production config validator, and all three installers restore their rewritten record.
-- Two new row-21 blockers remain:
-  1. `write_bundle` accepts a bundle produced under authenticated connection A while publishing
-     it under authenticated connection B, and its destination post-condition checks only the
-     child basename rather than the authority-scoped parent; and
-  2. `_png_pixels_per_metre` accepts a corrupt-CRC `pHYs` chunk and throws raw `IndexError` on a
-     truncated declared body rather than refusing fail-closed.
+- **Step 4b-ii-b remains Claude-owned work in progress.** Claude Sessions 147–154 built all
+  read-order rows 13–21 and the W3/B4 audit-hook observer, but no stable candidate, Review Card,
+  subject chat or handoff exists.
+- Claude Session 154 correctly discharged the exact Session-153 findings: two independently
+  authenticated connections no longer cross at row 21; a same-basename wrong-parent destination
+  refuses when the authenticated packet root stays fixed; corrupt/truncated `pHYs` inputs now
+  reach `X_BUNDLE_INCOMPLETE` rather than acceptance or a raw exception.
+- Three new forward blockers remain:
+  1. row 21 binds only provenance/menu/version/state, not the rest of the separately constructible
+     bundle; changing every scene's authenticated `abstain_threshold` from `0.55` to `0.56`
+     publishes successfully;
+  2. `_authority_output_root` trusts `connection.bound.packet_root`, so replacing packet root and
+     output root coherently publishes beneath an unrelated packet tree; and
+  3. `_png_pixels_per_metre` accepts a CRC-valid non-image containing only signature + `pHYs` +
+     `IEND` as `(11811,11811)` despite missing mandatory `IHDR`/image data.
 - Do not create a card or formal review until Claude explicitly hands off one complete stable
   candidate.
 - Full Step 4b, production connection records, real role/index/payload/checkpoint/result reads,
@@ -27,87 +32,102 @@ Last completely rewritten after Codex Session 153 on 2026-08-17.
   C1-versus-S claim remain unauthorized.
 - The next regular Codex progress report is Session 160.
 
-## Exact owner state reviewed in Session 153
+## Exact owner state reviewed in Session 154
 
-Claude Session 153 is commit `86ef6d204b96cd53faa5eef9f551ca0ec218eeab`.
+Claude Session 154 is commit `123a38a06d23825b605d625b68d67c2a7322118a`.
 
 - `Reproducibility Packet/scripts/utils/connection_adapter.py`
-  - blob `db176408be9a9f449f75cd7ab2a0b72e7352e413`
-  - raw SHA-256 `80a2bd1ad56b66f3bbeb8e430fbe0db03684c441ab58ac497c654fd8632323b7`
-  - 172,465 bytes / 3,689 LF / 0 CR
+  - blob `3baa01781b03d71ace9f9b99eb69f676c16ca4ed`
+  - raw SHA-256 `438b3059cb6de99069dfe4f9828f9ef1cd00b9fd22a4412ab3e0b03851ef99fa`
+  - 182,777 bytes / 3,886 LF / 0 CR
 - `Reproducibility Packet/tests/test_connection_adapter.py`
-  - blob `31836c51d254d915111f39e0aae68023d91c7905`
-  - raw SHA-256 `1262c1164af1dc23fa2ab8d31c22b72fc62bd0b46cc473c886ac20261b20ae6d`
-  - 281,654 bytes / 6,774 LF / 0 CR
+  - blob `fd841d520a5a9cf4301f23e2609b0a1c7c67e046`
+  - raw SHA-256 `ba08534123f3adeea0df31f38449c9c8714adfb26488f64196136690d5f75ca5`
+  - 307,187 bytes / 7,334 LF / 0 CR
 
 This was a general recent-work review, not formal approval. Codex changed no packet byte.
 
-Independent verification reproduced 299 focused tests, 299 under optimized Python and all 2,957
-packet tests. The green suite does not cover the two blockers below.
+Independent verification reproduced 329 focused tests, 329 under optimized Python and all 2,987
+packet tests. The green suite does not cover the three blockers below.
 
-## What Claude Session 153 repaired correctly
+## What Claude Session 154 repaired correctly
 
-### Row 19 now uses a validator-accepted synthetic state
+### Cross-connection provenance and the fixed-root destination are now bound
 
-`_require_post_row12_state` calls the production `validate_config_document` contract, then the
-row-4 authority/config policy and row-3 authority/split policy. `_reprovenanced` builds the frozen
-lifecycle from the existing complete synthetic frozen document under a `config.json` source path,
-moves the record's relative path and checks nineteen joins. It writes no config file and does not
-invent `record.config.sha256`. The Session-152-document negative control holds every join and
-passes policy while failing only the newly added validator check. Do not reopen this defect unless
-later bytes change it.
+`_provenance_for` is the one provenance assembler/comparand. Row 21 walks every current field of
+`Provenance` and also requires the record-ordered menu, current bundle version and authenticated
+authority before creating the destination. The new two-authenticated-connection negative control
+closes the exact Session-153 seam.
 
-### All three installers restore their record
+`_authority_output_root` now derives the authority-specific parent and record-label child from the
+packet root. A changed output root under a wrong parent refuses when the original packet root is
+retained. Do not reopen either exact case unless later bytes change it.
 
-`_coherent_geometry`, `_rewritten_payload` and `_three_case_menu` save and restore the connection
-record in their own `finally` blocks. The restoration test compares the complete tree with no
-exclusion/manual repair, and another test re-authenticates after each installer exits. Do not
-reopen this defect unless later bytes change it.
+### The reported PNG integrity/refusal cases are closed
 
-## Required forward correction 1 — row 21 does not bind its two inputs
+The walk bounds chunks before indexing, verifies each CRC, rejects duplicate `pHYs`, requires the
+metre unit, checks the final `IEND` boundary and refuses trailing bytes. The corrupt-CRC and
+one-byte-body probes from Session 153 now reach `X_BUNDLE_INCOMPLETE`, and all ten tracked Step-3
+figures pass. The new blocker is mandatory image structure, not either closed input.
 
-`write_bundle` receives `connection` and `bundle` separately. The bundle already embeds its
-connection-record label/digest, config identity/raw digest, split and arm identities, but row 21
-never compares those values to the `AuthenticatedConnection` that supplies the destination.
+### W3/B4 observer exists
 
-A fresh probe created two independently authenticated records over one temporary three-case
-harness:
+The tests use an interpreter-level audit hook, prove it sees builtin and `os.open`, compare the
+unfiltered observed authentication open set with the record-derived allowlist in both directions,
+pin `schema.json` as the only twice-opened path, and require row-21/writer opens to stay inside the
+created tree. Codex found no forward defect in this observer work.
 
-```text
-connection B: adapter-fixture-b
-connection B sha256: af93cceab0196ec4d8cf6d7a2fa0a10660ffa83dd6af46451c878ea00d645647
-bundle A scene record: adapter-fixture
-bundle A scene sha256: 56a6d1b19548defcb5bcf1698166b809352de03418f2e1282db2f233d36d64b4
-```
+## Required forward correction 1 — bind complete bundle content
 
-Passing bundle A with connection B succeeded and wrote beneath B's label while every scene named
-A. Both inputs were authentic; the defect is at the seam between them.
+`write_bundle(connection, bundle, render=...)` still receives a separately constructible bundle.
+Its new preflight authenticates the bundle's provenance block, menu, version and state but does not
+compare non-provenance scene facts against rows 13–20.
 
-The stated destination post-condition is incomplete too. A substituted
-`<wrong-parent>/<correct-record-label>` root was accepted because the implementation tests only
-`output_root.name`. The existing negative test changes the label and cannot see a wrong parent
-under the right label.
+A fresh probe changed `abstain_threshold` on every scene from the record's `0.55` to `0.56` while
+leaving all provenance unchanged. The bundle remained internally valid because every scene agreed,
+and row 21 published it successfully. This proves a public display/audit fact can differ from the
+authenticated record without changing the provenance readers are shown.
 
-Claude should bind the bundle's complete provenance/arm state and the exact authority-scoped
-output parent to the same authenticated connection before the exclusive create. The negative
-controls should use two independently authenticated same-menu connections and a same-basename,
-wrong-parent destination.
+Claude should bind every record-derived display fact and use the remaining B3 rows to substitute
+each row-13–20 output class. The repair should be complete-bundle or complete-row-state binding,
+not a threshold-only guard.
 
-## Required forward correction 2 — PNG resolution evidence is not structurally total
+## Required forward correction 2 — packet root must not move with destination
 
-`_png_pixels_per_metre` trusts a chunk's declared length enough to index `body[8]`, ignores the
-chunk CRC and returns at the first `pHYs` tag.
+`_authority_output_root` derives the expected destination from
+`connection.bound.packet_root`. That value belongs to the same replaceable `BoundPaths` object as
+`output_root`.
 
-Fresh probes measured:
+A fresh probe replaced both fields coherently:
 
 ```text
-corrupt pHYs CRC -> accepted/published as 11811 x 11811 pixels per metre
-length 9 with one body byte -> raw IndexError, no VerificationSceneError code
+packet_root -> <temp>/other-packet
+output_root -> <temp>/other-packet/results/verification_connection_development/adapter-fixture
 ```
 
-The first is not valid integrity-checked 300-DPI PNG evidence; the second leaves the named refusal
-surface. Claude should bound the complete chunk before indexing, verify integrity/validity (and
-reject conflicting/duplicate resolution state), and drive both cases to `X_BUNDLE_INCOMPLETE`.
+Every authenticated record/config/source/dataset/role value still belonged to the original packet,
+but row 21 accepted and populated the unrelated packet tree. Claude should anchor the row-21 packet
+root independently against the previously authenticated path set and add the coherent two-field
+substitution control. W8 is not preserved by deriving one replaceable field from another.
+
+## Required forward correction 3 — CRC-valid non-images are not figures
+
+`_png_pixels_per_metre` now checks chunk integrity but not mandatory PNG image structure. A fresh
+byte stream with valid CRCs and only:
+
+```text
+PNG signature
+pHYs(11811,11811,metres)
+IEND
+```
+
+returned `(11811,11811)`. It has no `IHDR` and no image data; Pillow refused it as
+`UnidentifiedImageError`.
+
+Claude should require the mandatory datastream structure relevant to the row-21 claim (`IHDR`
+first with fixed length, valid image-data ordering, zero-length `IEND` last, legal `pHYs`
+placement), or use a strict decoder while keeping the exact resolution check. Add a missing-IHDR
+negative control that reaches `X_BUNDLE_INCOMPLETE`.
 
 ## Current Claude-owned Step-4b-ii-b build
 
@@ -117,9 +137,10 @@ reject conflicting/duplicate resolution state), and drive both cases to `X_BUNDL
 - Row 20 assembles and validates the complete three-case bundle and binds the supplied provenance
   banner to the authenticated record.
 - Row 21 exclusively creates the output root and verifies the declared set, canonical JSON,
-  digest file and reported 300-DPI resolution, subject to the two blockers above.
-- Still unbuilt/incomplete: audit-hook observer W3/B4; B2/B5 and remaining B3 rows; roles CLI
-  wiring; additive `build_role_bundle` edit; two-pass mutation sweep; Review Card and subject chat.
+  digest file and reported resolution; its current preflight is subject to the three blockers.
+- W3/B4 audit-hook observer is built.
+- Still unbuilt/incomplete: B2/B5, remaining B3 rows, roles CLI wiring, additive
+  `build_role_bundle` edit, two-pass mutation sweep, Review Card and subject chat.
 - The eventual card must disclose three closed-half changes: the `schema.json` EOL-pin dependency,
   `authenticate_sources`' third parameter and `AuthenticatedConnection.record_sha256`.
 
@@ -169,8 +190,8 @@ read twice and count-pinned; carry its `text eol=lf` dependency into the future 
 2. Read a Step-4b-ii-b card/chat only if Claude explicitly produced and handed off one complete
    stable candidate.
 3. If no handoff exists, review Claude's newest partial owner work without taking over ownership.
-4. Require the row-21 cross-connection/destination binding and PNG-integrity/refusal blockers to be
-   discharged before formal approval.
+4. Require complete bundle-content binding, an independently anchored packet root and mandatory PNG
+   image structure before formal approval.
 5. If handed off, read `Playbooks/review-cycle.md`, authenticate the full candidate and perform
    Round 1 against rows 13–21, geometry, EOL documentation, open/write boundaries, CLI wiring,
    additive `build_role_bundle` edit, mutation evidence and the zero-scientific-resource rule.
