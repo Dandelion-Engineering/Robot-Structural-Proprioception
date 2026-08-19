@@ -1,31 +1,26 @@
-# Summary of Only Necessary Context — Codex
+# Summary of Only Necessary Context - Codex
 
-Last completely rewritten after Codex Session 156 on 2026-08-18.
+Last completely rewritten after Codex Session 157 on 2026-08-19.
 
 ## Resume here
 
 - Branch: `main`.
-- Slot-8 Steps 1–3, Step 4a, Step 4b-i and **Step 4b-ii-a** are closed / both
+- Slot-8 Steps 1-3, Step 4a, Step 4b-i and **Step 4b-ii-a** are closed / both
   approved at their recorded historical bytes. Do not reopen them.
 - The public README heartbeat remains closed / both approved at blob
   `7342bc8ca5a256a411d69577199cc0c2e3dbc2d0`, raw SHA-256
   `1c649ed6c84ec456ae2f7a5fadf6163d86e76b2e0ef6dca653b4b9b0a436bde0`.
-- **Step 4b-ii-b now has a stable eight-file candidate and a formal Review Card, but Round 1 is
-  Revisions Required. No candidate blob is approved.** Claude owns one complete integration or
-  contest response for delta-only Round 2.
-- The two Round-1 blockers are:
-  1. `_require_one_packet_root` accepts a substitute packet root containing only the record and
-     seven missing packet-relative allowlist members; changing the record bytes and the
-     replaceable `connection.record_sha256` field together also publishes a digest state rows 1–2
-     never parsed or authenticated.
-  2. `_png_pixels_per_metre` accepts format-invalid image streams: a reserved scanline filter,
-     indexed colour without the required `PLTE` and an unknown critical chunk all return
-     `(11811, 11811)`.
-- Both `.gitattributes` files are accepted in scope. One row-21 record re-read is admissible in
-  principle, and a genuinely copied and re-authenticated packet must remain usable. Those are not
-  separate findings; the implementation and its copied-packet control do not establish them.
+- **Step 4b-ii-b remains open after Codex Session 157 returned Round 2 as Revisions Required. No
+  candidate blob is approved.** Claude owns the next complete owner response.
+- Round-1 Finding 2 is closed: the PNG repair now refuses the reported invalid streams and the
+  widened palette/index/Adam7 cases.
+- Round-1 Finding 1 remains blocking through a response-introduced witness defect: the new issued
+  witness stores `packet_root`, `record_path`, `record_sha256`, `record_label` and `authority` in
+  public slot fields. Public `object.__setattr__` can rewrite an already-issued witness while the
+  same object remains in `_ISSUED_WITNESSES`, and `_require_one_packet_root` then reads the mutated
+  fields as authority.
 - Full Step 4b, production connection records, real role/index/payload/checkpoint/result reads,
-  Steps 4c–4f, capacity or threshold choice, final configuration, adapter execution and every
+  Steps 4c-4f, adapter execution, capacity or threshold choice, final configuration and every
   C1-versus-S claim remain unauthorized.
 - The next regular Codex progress report is Session 160.
 
@@ -36,136 +31,97 @@ Last completely rewritten after Codex Session 156 on 2026-08-18.
 - Subject chat:
   `chats/Claude-Codex/Slot-8 Step-4b-ii-b Coherence Geometry and Output/Slot-8 Step-4b-ii-b
   Coherence Geometry and Output - Active.md`
-- Status: `OPEN — Round 1 Revisions Required`.
-- Claude's Session-156 owner handoff explicitly approved the eight candidate blobs below.
-- Codex's Session-156 response explicitly approves none of them and records one complete
-  two-finding ledger. Round 2 must answer both in one redundantly authenticated delta and provide
-  machine-checkable changed/unchanged-region evidence.
+- Status: `OPEN - Round 2 Revisions Required`.
+- Claude's Session-157 owner handoff explicitly approved the exact Round-2 eight-file state.
+- Codex's Session-157 response explicitly approves none of it, closes only the PNG finding, and
+  records one blocking response-introduced witness-authority gap.
 
-## Exact owner candidate reviewed in Round 1
+## Exact owner candidate reviewed in Round 2
 
-Claude Session 156 is commit `2fb5a7e3cbb176fbfa03dd0322df05dbbf0cc206`.
+Claude Session 157 is commit `e5c0925` (`Claude Session 157`).
 
-| artifact | Git blob | raw SHA-256 |
-|---|---|---|
-| `Reproducibility Packet/scripts/utils/connection_adapter.py` | `c50b0a47b0023e1d49732808a0c75dceb5f0050c` | `dd7ff7de8dfdf26d33a9d88ca35c62b24f862dd88098fb94c2d1a9f071038915` |
-| `Reproducibility Packet/tests/test_connection_adapter.py` | `b992982a0ecb6d712e30e53f47bf489fe76bdcfd` | `7c019f81e0c740a466377e98a3531798e08218ac943ecd86c3d26f6ac0e7b572` |
-| `Reproducibility Packet/scripts/utils/verification_scene.py` | `1a614d07d4cb48cf4a40ab7936ddd405c3fb3ac4` | `f3c988ac2e5e5fb32af7be9f23d66d43cfc097d91ed252185e3a331aac9ece6e` |
-| `Reproducibility Packet/tests/test_verification_scene.py` | `ea7ef4f649f88f2b4b2bf6c1ada8b13c8619295f` | `e5b187682378c66b475cb59c074c382c172c3e2ccd00610cb0a4d5a9c899faa2` |
-| `Reproducibility Packet/scripts/render_verification_scene.py` | `dc82864f4e121f0c94440f5d7ec26bbb021be5af` | `4dacfc4062ec27a7553b0f52cf42466d61fccbe62272f06d03fe7684f40c457b` |
-| `Reproducibility Packet/tests/test_render_verification_scene.py` | `9dd4119bb5c31b0dfaa71237e2230bb874664e42` | `39fb153d896ff14fdae0f5790509b3664d992fe6dcab18330016a079f4993dcc` |
-| `.gitattributes` | `d6f0fa9a2269afe7b88b34dffd3b1a8702754cf4` | `abe4d2164145c68ec76c85533076c8044543ea1618440af632cc55d6e7d33927` |
-| `Reproducibility Packet/.gitattributes` | `26e32dff725bc866591ad9f52e05b873ab14f7b6` | `d3d8b888b97a69c8edda22186a1a6957c36d07f77b7767c3ffac7bef920359da` |
+| artifact | Git blob | raw SHA-256 | Round-2 state |
+|---|---|---|---|
+| `Reproducibility Packet/scripts/utils/connection_adapter.py` | `a531011027d29a476c802ec540d1b719bbe921a2` | `be501eb531d38bf02e07a20d8fb2b0c8275544baf9c3fd8bd74ca4300eee8e79` | changed from Round 1; `+583/-70`; 238,496 bytes; 4,962 LF; 0 CR; no BOM; final LF |
+| `Reproducibility Packet/tests/test_connection_adapter.py` | `894feea7c92b6cb652e7dfbbdd38646690c3ddde` | `c523d2a09c4608e86762257ed979ed3755db4582c7e9f929234ce6112f1dff4c` | changed from Round 1; `+726/-33`; 392,157 bytes; 9,122 LF; 0 CR; no BOM; final LF |
+| `Reproducibility Packet/scripts/utils/verification_scene.py` | `1a614d07d4cb48cf4a40ab7936ddd405c3fb3ac4` | `f3c988ac2e5e5fb32af7be9f23d66d43cfc097d91ed252185e3a331aac9ece6e` | unchanged from Round 1 |
+| `Reproducibility Packet/tests/test_verification_scene.py` | `ea7ef4f649f88f2b4b2bf6c1ada8b13c8619295f` | `e5b187682378c66b475cb59c074c382c172c3e2ccd00610cb0a4d5a9c899faa2` | unchanged from Round 1 |
+| `Reproducibility Packet/scripts/render_verification_scene.py` | `dc82864f4e121f0c94440f5d7ec26bbb021be5af` | `4dacfc4062ec27a7553b0f52cf42466d61fccbe62272f06d03fe7684f40c457b` | unchanged from Round 1 |
+| `Reproducibility Packet/tests/test_render_verification_scene.py` | `9dd4119bb5c31b0dfaa71237e2230bb874664e42` | `39fb153d896ff14fdae0f5790509b3664d992fe6dcab18330016a079f4993dcc` | unchanged from Round 1 |
+| `.gitattributes` | `d6f0fa9a2269afe7b88b34dffd3b1a8702754cf4` | `abe4d2164145c68ec76c85533076c8044543ea1618440af632cc55d6e7d33927` | unchanged from Round 1 |
+| `Reproducibility Packet/.gitattributes` | `26e32dff725bc866591ad9f52e05b873ab14f7b6` | `d3d8b888b97a69c8edda22186a1a6957c36d07f77b7767c3ffac7bef920359da` | unchanged from Round 1 |
 
-All eight identities, physical figures, BOM/final-newline claims and declared Git numstats
-reproduced independently. No candidate file was edited by Codex.
+Note: the subject chat's `+674/-33` test-file delta is a transcript-summary typo; Git, the Review
+Card and Claude's HumanReport157 agree on `+726/-33`.
 
-## Round-1 Finding 1 — the root anchor has not left the substitutable connection
+## Round-2 blocking finding - issued witness authority is mutable
 
-The candidate's stated termination point is:
+Claude's repair introduced `_AuthenticationWitness`, issued by `authenticate_connection` and checked
+by identity in `_ISSUED_WITNESSES`. The intended property is that row 21 uses the root, record path,
+record digest, label and authority that the authentication chain resolved, not fields supplied by a
+later `dataclasses.replace`.
 
-```text
-external_digest(connection.bound.record_path) == connection.record_sha256
-```
+The implementation still stores those authority values in public slot fields. Normal
+`setattr(witness, "packet_root", ...)` and `delattr(witness, "packet_root")` refuse, but
+`object.__setattr__(witness, "packet_root", substitute_root)` and
+`object.__setattr__(witness, "record_path", substitute_record)` succeed. Because table membership is
+by object identity, the same mutated witness remains issued. `_require_one_packet_root` then reads
+the mutated fields back as authority.
 
-The left side reads the filesystem, but the right side is a field of the same separately
-constructible `AuthenticatedConnection` whose `bound` and `expected_opens` the candidate's tests
-replace. The authority used to interpret the disk read therefore remains substitutable.
+Direct probe reproduced by Codex Session 157:
 
-### Probe A — original record, otherwise empty packet
+1. Authenticate the ordinary three-case fixture.
+2. Copy only the original connection record into a fresh temporary root.
+3. Coherently move every packet-relative `BoundPaths` field and every packet-relative
+   `expected_opens` member to that root.
+4. Mutate the issued witness's `packet_root` and `record_path` with public `object.__setattr__`.
+5. Call `write_bundle` with the original authenticated bundle.
 
-Starting from a genuinely authenticated three-case connection:
+Observed result: **accepted**. The substitute root held the copied record plus all eight publication
+outputs, while schema, config and packet artifacts were still absent. This is response-introduced;
+Round 1 had no witness.
 
-1. Move every packet-relative `BoundPaths` field to a fresh temporary root.
-2. Move every packet-relative member of `expected_opens` with it.
-3. Copy only the original record file to its expected relative path.
-4. Leave the copied schema, config and seven packet-relative allowlist members absent.
-5. Call `write_bundle` with the coherent bundle derived from the original authenticated state.
+Required Round-3 repair: row 21 must read immutable issued authority state, not rewritable witness
+attributes. A private registry keyed by issued witness identity is one acceptable mechanism, but
+Claude may choose another. The exact `object.__setattr__` attack must become a committed refusal
+test, and after the mutation the publication authority must remain the state originally issued by
+`authenticate_connection`.
 
-Observed exact-candidate result: **accepted; all eight files published** beneath the record-only
-root. Seven expected packet files were absent.
+## Closed Round-2 PNG ruling
 
-### Probe B — record bytes and expected digest moved together
+Round-1 Finding 2 is closed. The PNG code now:
 
-Starting from the same connection:
+- refuses unknown critical chunks;
+- enforces PLTE presence, order, length and count for the admitted colour type;
+- reconstructs indexed scanlines before checking palette index bounds;
+- walks every non-empty scanline of the declared non-interlaced or Adam7 layout;
+- retains positive controls for valid indexed images and the four tracked Step-3 matplotlib
+  figures.
 
-1. Move the full packet-relative path set and allowlist.
-2. Write a changed record at the moved path (`schema` -> `schemA`).
-3. Replace `connection.record_sha256` with that changed file's digest.
-4. Re-run rows 13–20 from the substituted connection and call `write_bundle`.
+Codex's requested rulings:
 
-Observed exact-candidate result: **accepted; all eight files published**, and the substituted digest
-appeared in every scene. Rows 1–2 never parsed or authenticated the changed record state.
+1. The four coherence checks below the witness are acceptable diagnostics once authority is no
+   longer read from mutable witness fields.
+2. The witness mechanism is not itself a W8 protocol amendment; it implements W8's existing one-root
+   authority unless the next repair changes the protocol surface.
+3. Indexed-image reconstruction is in scope because row 21 claims PNG-format validity.
 
-### Why the committed accept control does not close this
+## Round-2 verification
 
-`test_row21_accepts_a_whole_packet_copied_and_run_against_the_copy` performs `copytree`, but it does
-not call `authenticate_connection` against the copy. It mutates an already-authenticated in-memory
-connection with `_coherently_moved`. Because row 21 checks only the record, removing the copied
-schema/config/sources does not change the verdict.
-
-Round 2 must make the accept side a packet actually authenticated under the copied root and refuse
-both post-authentication substitutions. Another field-to-field anchor is not decisive. The owner
-may eliminate the post-authentication seam, carry a non-substitutable authenticated snapshot or
-propose another bounded mechanism.
-
-## Round-1 Finding 2 — decompressed length is not format validity
-
-The PNG walk correctly checks signature, chunk bounds, CRCs, `IHDR` header fields, zlib completion,
-trailing data and exact decompressed length. It does not interpret the decompressed scanline filter
-bytes or the critical chunks needed by the admitted colour type.
-
-Three exact-candidate probes were accepted as `(11811, 11811)`:
-
-1. a 1x1 greyscale image whose only scanline begins with reserved filter byte `5`;
-2. a 1x1 indexed-colour image with no required `PLTE` chunk; and
-3. a 1x1 greyscale image carrying an unknown critical `ABCD` chunk.
-
-The W3C PNG Third Edition is the authority the candidate itself selected:
-
-- filter method 0 defines exactly scanline filter types 0–4:
-  <https://www.w3.org/TR/png-3/#9Filter-types>;
-- indexed colour requires `PLTE`:
-  <https://www.w3.org/TR/png-3/#11PLTE>;
-- an unknown critical chunk cannot be safely ignored:
-  <https://www.w3.org/TR/png-3/#5Chunk-naming-conventions>.
-
-Round 2 must walk every non-empty scanline of the non-interlaced or Adam7 layout and validate its
-filter byte, enforce the palette shape/order/count/index rules for indexed colour, and refuse
-unknown critical chunks. Retain the four tracked matplotlib figures as the positive control.
-
-## Round-1 verification
-
-- Focused pair: **375 passed** in **33.00 s**.
-- Focused pair under `PYTHONOPTIMIZE=1`: **375 passed** in **32.96 s**, plus only pytest's expected
+- Direct witness-mutation probe: **accepted invalid record-only root** (blocking).
+- Targeted Round-2 tests: **53 passed, 336 deselected** in **1.45 s**.
+- Focused pair: **409 passed** in **31.08 s**.
+- Focused pair under `PYTHONOPTIMIZE=1`: **409 passed** in **31.35 s**, plus only pytest's expected
   assertion-disabled warning.
-- Packet-wide: **3,034 passed** in **175.99 s**.
-- All six Python files parsed under `ast`.
-- Fresh import of `utils.connection_adapter` left `torch` and `mujoco` absent.
-- All eight declared Git numstats reproduced.
-- `git diff --check` and pre-response status were clean.
-- Five independent adversarial probes reproduced the accepted invalid states above.
-
-Green aggregate suites do not prove approval; none covers these five states.
-
-## What the candidate otherwise establishes
-
-- Rows 13–17 authenticate the complete C1/S pair, label agreement, one playback grid, decision
-  containment and the delegated tracking window.
-- Row 18 derives coherent centerlines and binds the distal check to the authenticated geometry
-  tolerance.
-- Row 19 computes development/final provenance and requires it to equal authority.
-- Row 20 assembles one complete three-case bundle.
-- Row 21 binds complete scene content, exclusively creates the authority-specific output root,
-  checks the declared flat set and canonical documents, verifies the bundle digest and re-reads PNG
-  resolution evidence. Its root and PNG checks remain blocked by the findings above.
-- W3/B4, B2, the rows-13–21 B3 floor and B5 are materially built.
-- `roles` CLI wiring now forwards all six closed arguments, including `output_dir`.
-- `build_role_bundle` deliberately remains an unconditional `X_CONNECTION_UNAUTHORIZED` refusal.
-- Both `.gitattributes` files and the adapter documentation name the second raw-schema-digest
-  dependency.
-
-These are candidate properties, not approved state, until the eight-file loop closes.
+- Packet-wide: **3,068 passed** in **180.97 s**.
+- Packet-wide under `PYTHONOPTIMIZE=1`: **3,068 passed** in **183.43 s**, plus only pytest's
+  expected warning.
+- `git diff --check 0983130 e5c0925` was clean before Codex documentation edits.
+- Subject-chat append passed its byte protocol: prior 22,476 bytes at SHA-256
+  `8d1de0a3ba0b1435f829b2d55758f2d858a2daa083b0f75aff055891c580d84e` remain exact prefix;
+  post-write 25,607 bytes, 394 LF, 0 CR, SHA-256
+  `f50d6040420e6cf5cf083f22255fbd623cba2c5a5df650927a8ed9d520131760`; new Codex Session 157
+  header appears exactly once in the appended region.
 
 ## Closed Step-4b-ii-a technical state
 
@@ -178,8 +134,7 @@ Both agents explicitly approve these historical bytes:
 
 Do not edit `storage_contract.py` or `role_contract.py`; both are recorded by completed,
 unrepeatable run identities. Use `authenticated_storage.py`. `schema.json` remains deliberately
-read twice and count-pinned. The adapter's second raw-schema comparison makes the EOL pin a second
-load-bearing consumer; that documentation follow-up is inside the open 4b-ii-b candidate.
+read twice and count-pinned.
 
 ## Scientific and resource boundary
 
@@ -191,34 +146,32 @@ load-bearing consumer; that documentation follow-up is inside the open 4b-ii-b c
 - Amendment A2, role separation, no-exploratory-recompute rules, completed-run identities, the
   ignored-checkpoint recovery/distribution issue, the non-blocking Claim Sheet director request and
   every later-role gate remain in force.
-- Root `README.md` stays Phase 2 / `In Progress` at jointly approved blob `7342bc8c...`.
+- Root `README.md` stays Phase 2 / `In Progress` at jointly approved blob `7342bc8c...`; no public
+  heartbeat update is due until a terminal review outcome or other real milestone.
 
 ## Review and transcript protocol
 
-- Round 1 is the only full review. Round 2 is delta-only and verifies the two recorded findings plus
-  regressions introduced by the response.
-- Same-state approval is explicit. Tests, general review, edits, handoffs, downstream use and
-  silence are never approval.
+- Round 1 was the only full review. Round 2 and later are delta-only: verify recorded findings plus
+  response-introduced regressions.
+- Same-state approval is explicit. Tests, review, edits, handoffs, downstream use and silence are
+  never approval.
 - At the round limit, use the factual-probe / one-narrow-judgment-split / lawful fail-closed ladder.
   Probes create no authority.
 - Before any transcript append, record the complete prior UTF-8 bytes, byte/LF/CR counts and
   SHA-256; require the whole prior state to remain the exact prefix; require the new header exactly
   once after the boundary; re-read the physical tail; and require additions-only Git evidence.
-- Session-156 subject-chat append passed: prior 10,128 bytes at SHA-256
-  `399a1895...d0eb` remain the exact prefix, delta `+65/-0`, Codex physically last, post-write
-  SHA-256 `2e9fa1fd...f3c2`.
 - The Transcript Order Monitoring chat needs no reply; a clean check is not a reason to post.
 
 ## Next Codex session
 
-1. Re-run the turn/lock gates before project work.
-2. Read Claude's Round-2 response only if it explicitly hands off one complete, redundantly
-   authenticated eight-file delta.
-3. Verify the declared changed and unchanged regions mechanically before content review.
-4. Re-drive the record-only root and the changed-record-plus-digest root. The copied-packet accept
-   control must authenticate against the copy rather than mutate a prior connection.
-5. Re-drive reserved filter type 5, indexed colour without `PLTE` and an unknown critical chunk;
-   inspect Adam7 filter positioning and palette-index bounds in the repair.
+1. Re-run the `.agent-turn` and `.agent-session.lock` gates before project work.
+2. Read Claude's next response only if it explicitly hands off one complete, redundantly
+   authenticated eight-file delta or contest.
+3. Authenticate all changed and unchanged blobs mechanically before content review.
+4. Re-drive the issued-witness `object.__setattr__` attack. The mutated witness must not move row-21
+   authority, and the record-only substitute root must be refused without writing outputs.
+5. Confirm Round-1 PNG Finding 2 stays closed; do not reopen it unless the next delta changes the
+   PNG code or tests.
 6. Run focused, optimized and packet-wide suites on the exact candidate in proportion to the delta.
 7. Preserve every downstream gate and add no public heartbeat until a terminal review outcome or
    other genuine milestone occurs.
