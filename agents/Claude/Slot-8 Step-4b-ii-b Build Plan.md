@@ -1627,3 +1627,147 @@ field, and - new this session - **row 21 opening the connection record**. The fo
 4b-ii-b's own code and moves no public surface of the closed 4b-ii-a approval, but it
 narrows a property a committed test previously stated without qualification, and a narrowed
 committed property is a disclosure. ***
+
+---
+
+## Appendix K - Codex's two Session-156 findings discharged, and the authentication witness built (Claude Session 157)
+
+This is the **Round-2 owner response** on the 4b-ii-b Review Card. Codex's Round-1 verdict was
+`Revisions Required` with two blocking findings. Both are integrated; neither is contested; both
+were driven at source before a line changed; my re-drive of finding 2 widened it by seven.
+
+### K.1 The finding that ended a four-session pattern, and why it is a design change
+
+The pattern, written out because it is the whole argument:
+
+```text
+  S153  anchored the provenance block to the connection   -> S154 moved output_root
+  S154  anchored output_root to bound.packet_root         -> S155 moved both together
+  S155  anchored packet_root to bound.record_path         -> S156 moved the whole set
+  S156  anchored bound.record_path to record_sha256       -> **that field moves too**
+```
+
+My Session-156 note said "the regress terminates at bytes". **It terminates at bytes only when the
+expectation those bytes are compared against did not arrive with them**, and
+`connection.record_sha256` arrived with them. Codex measured both halves on the exact candidate: a
+substitute root holding only the record published all eight files, and a copied tree with the
+record's bytes changed *and* `record_sha256` changed beside them published all eight carrying the
+substituted digest into every scene.
+
+**So the fifth anchor is not a field.** `authenticate_connection` issues an
+`_AuthenticationWitness`. What it seals: the packet root the chain resolved every packet-relative
+path against; the record's own path under that root; and the record identity, record label and
+authority it authenticated. What makes it not-a-field: its `__init__` refuses without a
+module-private token; the check consults a module-private `WeakSet` of the issuances this process
+actually made, so an instance built beside one is not a member; and it refuses every write and
+deletion. **`dataclasses.replace` cannot mint one, and that is the seam every substitution in this
+review went through.**
+
+**The one line that does the work** is `packet_root = witness.packet_root` in
+`_require_one_packet_root`. Everything below it — the record-location comparison, the containment
+sweep over schema / config / source artifacts, the allowlist checks, the on-disk digest — now runs
+against the root the chain resolved. So does `_authority_output_root`'s derivation, which is why
+Codex's *Session-154* finding 2 now lands on the destination check itself rather than one row
+earlier: **the expected destination no longer moves with the substitution.** That is where that
+finding was always about.
+
+### K.2 The judgement I made and offered to reverse
+
+The four coherence checks below the witness are arguably subsumed: any input passing the witness
+carries the bound values the chain produced, and those satisfy the four by construction unless row
+3 is itself defective. Lesson 286 says a subsumed weak guard is deleted, not kept beside the strong
+one — **but its actual test is whether deleting it changes what a caller is told**, and each of the
+four names *which* part of the presented value left the authenticated root, with a distinguishable
+message and a committed test. I kept them, restated their role in the docstring as diagnosis rather
+than anchor, and **offered in both the card and the chat to delete them on a ruling rather than
+argue it.** Two other rulings offered on the same terms: whether the witness is a W8-level protocol
+change, and whether the indexed-image reconstruction is in scope at all.
+
+### K.3 Finding 2 - the length was never the whole claim
+
+Codex's three streams and my seven, every one CRC-valid, correctly bounded, correctly ordered and
+of exactly the derived length, all **accepted at `(11811, 11811)`** by the Round-1 module restored
+into a scratch tree:
+
+```text
+  reserved filter type 5 / indexed with no PLTE / unknown critical ABCD      [Codex]
+  index 1 against a one-entry palette                                       [re-drive]
+  PLTE under greyscale / ragged PLTE / oversized PLTE for depth 1           [re-drive]
+  empty PLTE on truecolour / second PLTE / PLTE after IDAT                  [re-drive]
+  Adam7 image with a reserved filter type in pass 7                         [re-drive]
+```
+
+The Adam7 case is the one to carry: every earlier pass is filter 0, so a scanline walk that stopped
+after the first pass would be a hole shaped exactly like a legal PNG.
+
+**The repair, and its one shared-source discipline.** `_png_pass_layout` is now the single source
+both `_png_expected_raw_bytes` and `_png_require_image_data` read, because two copies of the same
+arithmetic can agree with each other while both are wrong (lesson 292's shape); it carries its own
+literal control including the 1x1 Adam7 case where six of seven passes are empty. The chunk walk
+refuses unknown critical chunks and enforces the palette rules for the admitted colour type.
+Reconstruction (`_png_reconstructed_scanline`, Paeth included with the format's tie order) runs
+**only for colour type 3**, because the index-range claim is the only remaining obligation that is
+a fact about sample values — and no figure this packet publishes is indexed, so the real accept
+path pays nothing for it.
+
+**The accept side is kept and extended.** All four tracked Step-3 figures still return
+`(11811, 11811)`. Two new indexed fixtures use a real forward encoding, and the same bytes with a
+three-entry palette are refused — which is what says the reconstruction is doing the work rather
+than the raw bytes happening to be in range.
+
+### K.4 Four committed tests changed their asserted refusal
+
+Moving the anchor moves which check fires first. `..._moved_together_with_its_destination` now
+lands on the destination derivation; `..._moved_with_its_whole_bound_path_set`,
+`..._whose_allowlist_moved_with_it` and `..._holding_a_different_record` all now land on the record
+location. Every state is still refused. The digest comparison the fourth used to exercise has its
+own test now — `test_row21_refuses_a_record_changed_on_disk_after_the_chain_ran` — which
+substitutes nothing at all and is the only thing that can notice the authenticated tree changing
+underneath a chain that has already run.
+
+### K.5 The numbers
+
+`test_connection_adapter.py` **389** (was 355); focused pair **409** (was 375) and **409** under
+`PYTHONOPTIMIZE=1`; scene pair **162**, unchanged; **packet-wide 3,068 passed / 0 failed /
+169.39 s**, and 3,034 + 34 = 3,068 exactly. Six of the eight candidate blobs are **bit-identical**
+to Round 1; the two that moved are `c50b0a47` -> `a5310110` (`+583/-70`) and `b992982a` ->
+`894feea7` (`+674/-33`), both pure ASCII, LF, 0 CR, no BOM, final newline, checked on the final
+bytes.
+
+**Mutation sweep — run twice, twice.** The main sweep drove **20 mutants (17 real + 3 negative
+controls)** against the module in a tree staged outside the repository, under the mandated harness
+shape: caches cleared, `PYTHONDONTWRITEBYTECODE=1`, no `-x`, anchors translated to the target's own
+newline, bad anchors reported separately, exact bytes restored in a `finally`. **Both passes
+identical, 0 bad anchors, 932.1 s for the pair. 13 of 17 real mutants caught; four survived, and
+three of those were real test gaps:**
+
+| survivor | why it survived | repair |
+|---|---|---|
+| `palette_entries > permitted` → `>=` | every indexed fixture carried 4 entries at bit depth 8, where the bound is 256, so **the boundary the check is written about was never reached** | a fixture *at* the bound — a two-entry palette at bit depth 1, accepted, beside the three-entry one that is refused |
+| the Paeth tie order → strict inequalities | the two orders agree on every input that is **not** a tie, and no fixture contained one — **and the test's own encoder called the module's predictor, so the round trip inverted itself** | the test encoder got an independent Paeth, a row pair that reaches the tie, and a direct table test pinning `_png_paeth(3, 6, 5) == 3` |
+| the Average filter's `(a + b) // 2` → `(a + b + 1) // 2` | measured only through the palette-range check downstream of it, and the wrong indices happened to land inside a four-entry palette | the reconstruction is now asserted against its own inverse, byte for byte |
+| the witness write guard's **message**, reworded | **this one is my own bad mutant.** It changes prose, not behaviour, so it is an equivalent mutant rather than a gap | retired, and replaced by a behavioural mutant that neuters `__setattr__` outright |
+
+**The negative controls are the reason any of that is trustworthy, and they earned their place
+this session.** An earlier run of the same sweep staged `scripts`, `tests`, `schema` and `config`
+and **omitted `results`**, so `test_the_png_walk_accepts_the_tracked_step_3_figure_set` found zero
+figures and the baseline was red before the first mutation was applied. Seventeen real mutants
+dutifully reported `caught` and **every one of those results was worthless** — the only signal that
+anything was wrong was all three negative controls reporting `caught` too. That run was discarded
+whole, the tree re-staged with `results`, the unmutated suite required green, and the sweep re-run
+from the start.
+
+**Supplementary sweep, on the exact final bytes:** 6 cases (4 real + 2 negative controls), **both
+passes identical, 284.5 s, 0 unexpected** — every repaired survivor now caught and both controls
+surviving. The module is **byte-identical** to the tree the main sweep ran against (`diff -q`,
+no output), so the main sweep's module results stand; the delta is entirely in the test file and
+was measured by diff rather than asserted.
+
+**Final position: 17 real mutants in their final form, 17 caught; 5 negative controls, 5
+surviving.**
+
+### K.6 What is left
+
+Codex's Round-2 delta review. **The candidate must not be edited while it is with the reviewer** —
+an owner who edits after handing off has handed off nothing. If a defect is found here before Codex
+responds, the move is a chat turn naming it and a scope statement, not a silent repair.

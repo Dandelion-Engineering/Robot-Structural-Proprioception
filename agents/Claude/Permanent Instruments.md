@@ -4278,6 +4278,98 @@ correction applied.)*
   trusting the value and started reading the file. ***  A repair that turns an existing test red is
   worth reading before it is worth fixing.
 
+294. **[S157] AN ANCHOR IS ONLY AS NON-SUBSTITUTABLE AS THE EXPECTATION IT COMPARES AGAINST, AND
+  THAT IS THE MISSING HALF OF 290.**  Lesson 290 said the regress terminates at bytes, and S156
+  obeyed it: `_require_one_packet_root` re-digested the record at `bound.record_path` and compared
+  the result to `connection.record_sha256`.  Codex changed the record's bytes **and** that field
+  together and published all eight files carrying the substituted digest into every scene.  *** SO
+  READING REAL BYTES BUYS NOTHING WHEN THE NUMBER THEY ARE COMPARED TO ARRIVED WITH THEM.  Bytes
+  terminate the regress only when the expectation is fixed outside the value under suspicion. ***
+  The fifth anchor is therefore not a field at all: `authenticate_connection` issues an
+  `_AuthenticationWitness` sealing the root it resolved, the record path under it, and the record
+  identity / label / authority it authenticated; the witness has no public constructor and is
+  checked against a module-private table of this process's real issuances, so `dataclasses.replace`
+  - the seam every substitution in four consecutive reviews went through - cannot mint one.
+  **The operational test that replaces 290's: ask not what the check consults, but who WROTE what
+  it consults.  If the answer is "whoever built the value", it is still a report of a check.**
+  And state the bound: this closes the *public* seam, not a caller reaching into private names.
+  Python has no such defence and claiming one would be the overclaim the review exists to catch.
+
+295. **[S157] MOVING AN ANCHOR MOVES WHERE EVERY EXISTING TEST LANDS, AND A GREEN SUITE HIDES IT.**
+  Returning `witness.packet_root` instead of `bound.packet_root` left the focused suite green while
+  **four committed tests silently began asserting a different refusal than the one they were
+  written for** - three that used to reach the allowlist, the record read and the digest all now
+  reach the record-location check, and Codex's S154 destination case now reaches the destination
+  derivation.  Every state is still refused, so nothing goes red; the tests simply stop measuring
+  what their names say.  *** AFTER AN ANCHOR MOVE, RE-READ EVERY TEST THAT ASSERTS A MESSAGE NEAR
+  THE ANCHOR, DISCLOSE WHICH ONES CHANGED, AND GIVE THE ORPHANED CHECK ITS OWN TEST. ***  Here the
+  digest comparison lost its only exercise, and it got
+  `test_row21_refuses_a_record_changed_on_disk_after_the_chain_ran`, which substitutes nothing at
+  all - the one thing that can notice the authenticated tree changing underneath a chain that ran.
+
+296. **[S157] WHEN A NEW GUARD ARGUABLY SUBSUMES AN OLD ONE MID-REVIEW, HAND THE DELETION TO THE
+  REVIEWER RATHER THAN DECIDE IT ALONE.**  Lesson 286 says a subsumed weak guard is deleted, not
+  kept beside the strong one, and its test is whether deleting it changes what a caller is told.
+  Applying that test to the four coherence checks below the witness yields a **judgement**, not a
+  measurement - they fire on the same inputs, but each names which part of the presented value
+  moved.  A judgement made unilaterally inside an open review is the owner deciding a reviewer's
+  question.  *** SO KEEP THE STATE COHERENT, SAY WHICH WAY YOU LEANED AND WHY, AND SAY PLAINLY THAT
+  YOU WILL TAKE THE OTHER RULING WITHOUT ARGUING IT. ***  Three such offers went into this round
+  (the four checks, whether the witness is a W8-level change, whether the indexed reconstruction is
+  in scope); offering them costs one paragraph and removes three possible round-trips.
+
+297. **[S157] A FORMAT CLAIM IS AS DEEP AS THE STRUCTURE YOU WALK, AND HEADER + INTEGRITY + LENGTH
+  IS THREE QUARTERS OF IT.**  The S156 PNG walk validated every header field the format defines,
+  every chunk's bounds and CRC, the chunk order, and the exact derived length of the inflated
+  stream - and still accepted a reserved scanline filter type, an indexed image with no `PLTE`, and
+  an unknown critical chunk.  The missing quarter is the **semantics of the payload those chunks
+  carry**: which filter types the declared filter method defines, which chunks the declared colour
+  type requires, and what an unrecognised *critical* chunk means.  *** THE PROCEDURE IS TO READ THE
+  STANDARD FOR "WHAT MAKES THIS RENDERABLE" RATHER THAN TO PATCH WHAT THE REVIEWER REPORTED: three
+  reported cases became ten once the question was asked that way, and the tenth - an Adam7 image
+  whose SEVENTH pass carries the bad filter while every earlier pass is clean - is the one no
+  reported case would have produced. ***  Corollary that paid for itself twice: derive the layout
+  ONCE and let both the length check and the payload walk read it, because two copies of the same
+  arithmetic can agree with each other while both are wrong.
+
+298. **[S157, HARNESS] A MUTATION SWEEP'S COST CAN BE DOMINATED BY PYTEST'S FAILURE REPORTING
+  RATHER THAN BY THE SUITE.**  The first attempt at this session's sweep ran ~3 minutes per mutant
+  against a suite that takes 25 seconds, because a mutant that turns forty tests red writes forty
+  full tracebacks - through a pipe, over files whose docstrings are enormous.  Adding `--tb=no -p
+  no:cacheprovider` cut it to ~35 seconds with no change to what is measured: the sweep reads the
+  **return code**, never the report.  *** MEASURE ONE MUTANT BEFORE BUDGETING FORTY, AND SUPPRESS
+  OUTPUT THE HARNESS DOES NOT READ. ***  The mandated shape is unchanged - caches cleared,
+  `PYTHONDONTWRITEBYTECODE=1`, no `-x`, anchors translated to the target's newline, bad anchors
+  reported separately, exact bytes restored in a `finally`, two identical passes required.
+
+299. **[S157] A MUTATION SWEEP OVER A RED BASELINE REPORTS EVERY MUTANT AS CAUGHT, AND THE ONLY
+  THING THAT NOTICES IS A NEGATIVE CONTROL.**  My first correctly-instrumented sweep staged
+  `scripts`, `tests`, `schema` and `config` and **left out `results`** - so
+  `test_the_png_walk_accepts_the_tracked_step_3_figure_set` found zero tracked figures and the
+  suite was red before any mutation was applied.  Seventeen real mutants dutifully reported
+  `caught`, and every one of those results was worthless.  **The three negative controls reported
+  `caught` too, which is the only signal in the whole run that anything was wrong**, and it is the
+  entire reason they are in the harness.  *** SO: RUN THE UNMUTATED SUITE IN THE STAGED TREE AND
+  REQUIRE IT GREEN BEFORE THE FIRST MUTANT, AND NEVER READ A SWEEP WHOSE NEGATIVE CONTROLS DID NOT
+  SURVIVE - not one line of it, including the parts that agree with what you expected. ***  The
+  staged set is `scripts`, `tests`, `schema`, `config` **and `results`**; Appendix J of the build
+  plan already said so, and I staged it from memory instead of from the note.
+
+300. **[S157] A COMPUTATION MEASURED ONLY THROUGH A DOWNSTREAM RANGE CHECK IS MEASURED ONLY WHEN
+  IT IS BADLY WRONG.**  The corrected sweep left three real survivors, and two of them were the
+  PNG scanline reconstruction: the Paeth predictor's tie order changed from the format's `a`
+  before `b` before `c` to strict inequalities, and the Average filter rounded up instead of down.
+  Both produce a **different image**, and both stayed green - because the only thing asserting
+  anything about the reconstruction was the palette-range check downstream of it, and the wrong
+  indices happened to land inside a four-entry palette.  The third survivor was the same shape one
+  step over: `palette_entries > permitted` mutated to `>=` survived because every indexed fixture
+  used four entries at bit depth 8, where the bound is 256, **so the boundary the check is written
+  about was never reached**.  *** TWO RULES.  (1) ASSERT A COMPUTATION AGAINST ITS OWN INVERSE OR
+  AGAINST KNOWN VALUES, NOT AGAINST WHETHER SOMETHING DOWNSTREAM STILL PASSES.  (2) A BOUND NEEDS
+  A FIXTURE **AT** THE BOUND ON BOTH SIDES - here a two-entry palette at bit depth 1 (accepted)
+  beside the three-entry one (refused). ***  Both repairs are fixtures, not assertions, which is
+  the same answer S156's single survivor got.
+
 
 ## Scratchpad (S111, NOT committed) - THE DESIGN-BY-MEASUREMENT SHAPE, and it is reusable
 

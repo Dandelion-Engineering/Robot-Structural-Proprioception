@@ -226,6 +226,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import weakref
 import zlib
 from dataclasses import dataclass, fields as dataclass_fields, replace
 from pathlib import Path
@@ -2137,6 +2138,148 @@ def authenticate_roles(
 
 
 # --------------------------------------------------------------------------- #
+# The authentication witness (Codex's Session-156 finding 1).
+#
+# **The regress this ends, stated once.** Four consecutive reviews found the same
+# fault at four widths: row 21 anchored its packet root to a field, and every field
+# of `AuthenticatedConnection` is one a caller can replace, so each anchor bought
+# exactly one more substitution.
+#
+#   S153 anchored the provenance block to the connection -> S154 moved `output_root`
+#   S154 anchored `output_root` to `bound.packet_root`   -> S155 moved both together
+#   S155 anchored `packet_root` to `bound.record_path`   -> S156 moved the whole set
+#   S156 anchored `bound.record_path` to `record_sha256` -> **that field moves too**
+#
+# The last step is Codex's Session-156 finding 1 and it is the one that says the
+# pattern has no fixed point: `record_sha256` is a field of the same separately
+# constructible value as `bound`, so a substituted tree presented alongside a
+# substituted expected digest satisfies a check that reads bytes and compares them to
+# it. My Session-156 note said "the regress terminates at bytes"; it terminates at
+# bytes **only when the expectation those bytes are compared against did not arrive
+# with them**.
+#
+# **So the repair is not another comparison, it is a different authority.**
+# `authenticate_connection` -- the one entry point invariant W8 names, the function
+# that actually opened the record, the schema, the config, the sources, the audits,
+# the indexes and the payloads -- issues a witness to the state *it* resolved. The
+# witness is not reachable through this module's public surface: its constructor
+# refuses without a module-private token, and the check consults a module-private
+# table of the witnesses this process actually issued, so an instance built any other
+# way is not in it. `dataclasses.replace` cannot mint one, which is exactly the seam
+# every one of the four substitutions above went through.
+#
+# **The bound this claim has, stated rather than implied.** This is not a defence
+# against code that reaches into this module's private names; Python has no such
+# defence and pretending otherwise would be the kind of overclaim this review exists
+# to catch. It is the elimination of the *public* post-authentication seam: no caller
+# using only the module's public API can present row 21 a packet root, a record path
+# or a record identity that `authenticate_connection` did not resolve.
+# --------------------------------------------------------------------------- #
+_WITNESS_ISSUE = object()
+
+#: Every witness this process issued, held weakly so a finished connection is still
+#: collectable. Membership is by identity: `_AuthenticationWitness` defines no
+#: `__eq__`, so a look-alike carrying the same values is not this table's member.
+_ISSUED_WITNESSES: "weakref.WeakSet[_AuthenticationWitness]" = weakref.WeakSet()
+
+
+class _AuthenticationWitness:
+    """What `authenticate_connection` resolved, in a value a caller cannot construct.
+
+    Attributes:
+        packet_root: the one root the chain actually resolved every packet-relative
+            path against, resolved.
+        record_path: the connection record's own path under that root, resolved.
+        record_sha256: the record identity the CLI authorization named and row 1
+            checked against the bytes it read.
+        record_label: the authenticated record label, which fixes the publication
+            tree's own name.
+        authority: the authenticated authority, which fixes the publication parent.
+
+    Instances are immutable and are issued only by `_issue_authentication_witness`.
+    """
+
+    __slots__ = (
+        "packet_root",
+        "record_path",
+        "record_sha256",
+        "record_label",
+        "authority",
+        "__weakref__",
+    )
+
+    def __init__(self, issue: object, **fields: Any) -> None:
+        """Build one witness, refusing any construction that is not an issuance.
+
+        Args:
+            issue: the module-private issuance token.
+            **fields: the five sealed values named in the class docstring.
+
+        Raises:
+            VerificationSceneError: `X_PROVENANCE_UNRESOLVED` when the token is not
+                this module's own.
+        """
+
+        if issue is not _WITNESS_ISSUE:
+            raise _refuse(
+                X_PROVENANCE_UNRESOLVED,
+                "an authentication witness is issued by the authentication chain and "
+                "constructed nowhere else; a witness assembled beside it would be the "
+                "same substitutable value the chain already refuses",
+            )
+        for name, value in fields.items():
+            object.__setattr__(self, name, value)
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        """Refuse every write, so a witness cannot be edited into agreement."""
+
+        raise _refuse(
+            X_PROVENANCE_UNRESOLVED,
+            f"an authentication witness is not writable, and {name} was assigned; the "
+            "state the chain resolved is not a state a later row negotiates",
+        )
+
+    def __delattr__(self, name: str) -> None:
+        """Refuse every deletion, for the same reason `__setattr__` refuses writes."""
+
+        raise _refuse(
+            X_PROVENANCE_UNRESOLVED,
+            f"an authentication witness is not writable, and {name} was deleted",
+        )
+
+
+def _issue_authentication_witness(
+    record: ConnectionRecord, bound: BoundPaths, record_sha256: str
+) -> _AuthenticationWitness:
+    """Issue one witness for a chain that has just run, and record the issuance.
+
+    Args:
+        record: the authenticated record.
+        bound: the paths row 3 bound under the packet root the chain ran under.
+        record_sha256: the identity row 1 authenticated.
+
+    Returns:
+        The witness, already a member of `_ISSUED_WITNESSES`.
+
+    **The table membership is added here rather than in the constructor**, so that
+    "was constructed through the issuing path" and "is a witness this process issued"
+    are two facts rather than one. A witness the constructor accepted but this
+    function did not issue is still not the table's member.
+    """
+
+    witness = _AuthenticationWitness(
+        _WITNESS_ISSUE,
+        packet_root=Path(bound.packet_root).resolve(),
+        record_path=Path(bound.record_path).resolve(),
+        record_sha256=record_sha256,
+        record_label=record.record_label,
+        authority=record.authority,
+    )
+    _ISSUED_WITNESSES.add(witness)
+    return witness
+
+
+# --------------------------------------------------------------------------- #
 # The roles-mode entry point (invariant W8).
 # --------------------------------------------------------------------------- #
 @dataclass(frozen=True)
@@ -2159,6 +2302,12 @@ class AuthenticatedConnection:
         sources: every declared scientific source artifact.
         dataset: the manifest, the census and both audits.
         roles: exactly the authenticated payload set.
+        witness: the `_AuthenticationWitness` `authenticate_connection` issued for
+            this chain, or None on a value assembled some other way. It defaults to
+            None **because a default of None is the fail-closed default**: row 21
+            refuses a connection carrying no issued witness, so a hand-built
+            `AuthenticatedConnection` cannot publish, and nothing has to remember to
+            supply one. It is last because a defaulted field must be.
 
     This value does **not** authorise rendering, writing or publishing anything. It is
     the state rows 13 through 21 begin from.
@@ -2172,6 +2321,7 @@ class AuthenticatedConnection:
     sources: AuthenticatedSources
     dataset: AuthenticatedDataset
     roles: AuthenticatedRoles
+    witness: _AuthenticationWitness | None = None
 
 
 def authenticate_connection(
@@ -2237,6 +2387,7 @@ def authenticate_connection(
         sources=sources,
         dataset=dataset,
         roles=roles,
+        witness=_issue_authentication_witness(record, bound, connection_record_sha256),
     )
 
 
@@ -3473,6 +3624,22 @@ _PNG_ADAM7_PASSES = (
     (0, 1, 1, 2),
 )
 
+#: The palette chunk, the four chunks the format defines as *critical*, the five
+#: filter types filter method 0 defines, the colour type that cannot be rendered
+#: without a palette, and the two the format forbids one for. **These are the rules
+#: that make decompressed bytes an image rather than a length**, which is Codex's
+#: Session-156 finding 2: a reserved filter type, a missing `PLTE` under colour type 3
+#: and an unknown critical chunk all crossed the Session-155 walk at `(11811, 11811)`.
+_PNG_PLTE_CHUNK = b"PLTE"
+_PNG_CRITICAL_CHUNKS = frozenset(
+    {_PNG_IHDR_CHUNK, _PNG_PLTE_CHUNK, _PNG_IDAT_CHUNK, _PNG_IEND_CHUNK}
+)
+_PNG_FILTER_TYPES = frozenset({0, 1, 2, 3, 4})
+_PNG_INDEXED_COLOUR_TYPE = 3
+_PNG_PALETTE_FORBIDDEN_COLOUR_TYPES = frozenset({0, 4})
+_PNG_PALETTE_ENTRY_BYTES = 3
+_PNG_MAX_PALETTE_ENTRIES = 256
+
 #: Metres per inch. The `pHYs` chunk counts pixels per metre, so this is what turns a
 #: declared DPI into the integer the file must carry.
 _METRES_PER_INCH = 0.0254
@@ -3586,6 +3753,46 @@ def _png_header_fields(body: bytes, *, where: str) -> dict[str, int]:
     }
 
 
+def _png_pass_layout(
+    *, width: int, height: int, bit_depth: int, colour_type: int, interlace: int
+) -> tuple[tuple[int, int, int], ...]:
+    """Return one PNG's non-empty passes as `(pass_width, pass_height, stride)`.
+
+    Args:
+        width: the header's declared image width, in pixels.
+        height: the header's declared image height, in pixels.
+        bit_depth: the header's declared bits per sample.
+        colour_type: the header's declared colour type, already known to the table.
+        interlace: 0 for no interlacing, 1 for Adam7.
+
+    Returns:
+        One triple per pass that contains at least one pixel, in the order the format
+        writes them: the pass's width and height in pixels, and the number of bytes its
+        packed samples occupy per scanline. A non-interlaced image is the single pass
+        `(0, 0, 1, 1)`, which is what makes it the same walk rather than a special case.
+
+    **This is the layout both the length derivation and the scanline walk read, and it
+    is one function for that reason.** `_png_expected_raw_bytes` sums `1 + stride` over
+    it; `_png_require_image_data` steps through it. Two copies of the same arithmetic
+    would let a defect in one be masked by the agreement of the other, which is the
+    shape lesson 292 names: a check whose expectation is derived from a second copy of
+    the thing under test cannot notice the thing under test moving.
+    """
+
+    samples = _PNG_COLOUR_TYPES[colour_type][0]
+    passes = ((0, 0, 1, 1),) if interlace == 0 else _PNG_ADAM7_PASSES
+    layout: list[tuple[int, int, int]] = []
+    for x_start, y_start, x_step, y_step in passes:
+        pass_width = (width - x_start + x_step - 1) // x_step
+        pass_height = (height - y_start + y_step - 1) // y_step
+        if pass_width <= 0 or pass_height <= 0:
+            continue
+        layout.append(
+            (pass_width, pass_height, (pass_width * samples * bit_depth + 7) // 8)
+        )
+    return tuple(layout)
+
+
 def _png_expected_raw_bytes(
     *, width: int, height: int, bit_depth: int, colour_type: int, interlace: int
 ) -> int:
@@ -3611,19 +3818,200 @@ def _png_expected_raw_bytes(
     arithmetic is the format's own, so nothing here is pinned to a magic number.
     """
 
-    samples = _PNG_COLOUR_TYPES[colour_type][0]
-    passes = (
-        ((0, 0, 1, 1),) if interlace == 0 else _PNG_ADAM7_PASSES
+    return sum(
+        pass_height * (1 + stride)
+        for _, pass_height, stride in _png_pass_layout(
+            width=width,
+            height=height,
+            bit_depth=bit_depth,
+            colour_type=colour_type,
+            interlace=interlace,
+        )
     )
-    total = 0
-    for x_start, y_start, x_step, y_step in passes:
-        pass_width = (width - x_start + x_step - 1) // x_step
-        pass_height = (height - y_start + y_step - 1) // y_step
-        if pass_width <= 0 or pass_height <= 0:
-            continue
-        stride = (pass_width * samples * bit_depth + 7) // 8
-        total += pass_height * (1 + stride)
-    return total
+
+
+def _png_paeth(a: int, b: int, c: int) -> int:
+    """Return the PNG Paeth predictor of the left, above and upper-left bytes.
+
+    Args:
+        a: the byte to the left of the one being reconstructed.
+        b: the byte above it.
+        c: the byte above and to the left of it.
+
+    Returns:
+        Whichever of `a`, `b` and `c` the format's own predictor selects.
+
+    The tie-breaking order is the format's, not an implementation detail: `a` before
+    `b` before `c`. Reordering it produces a reconstruction that differs from a
+    conforming decoder's on exactly the ties, which is a class of defect a test over
+    one hand-built image would not reach on its own.
+    """
+
+    prediction = a + b - c
+    distance_a = abs(prediction - a)
+    distance_b = abs(prediction - b)
+    distance_c = abs(prediction - c)
+    if distance_a <= distance_b and distance_a <= distance_c:
+        return a
+    if distance_b <= distance_c:
+        return b
+    return c
+
+
+def _png_reconstructed_scanline(
+    filter_type: int, row: bytes, previous: bytes | None, bytes_per_pixel: int
+) -> bytes:
+    """Return one filtered PNG scanline reconstructed to its sample bytes.
+
+    Args:
+        filter_type: the scanline's filter type, already known to be one of 0 to 4.
+        row: the scanline's filtered bytes, without its filter-type byte.
+        previous: the reconstructed scanline above it, or None on the first scanline of
+            a pass -- the format defines the row above the first as all zeroes.
+        bytes_per_pixel: how many bytes one pixel occupies, floored at one, which is
+            the left-neighbour offset the format uses for sub-byte depths.
+
+    Returns:
+        The reconstructed bytes of that scanline.
+
+    **This is driven only for indexed-colour images**, because the claim that needs it
+    -- that every index names a palette entry that is actually present -- cannot be
+    settled without it. Every other colour type's remaining format obligation is
+    settled by the filter type, the header table and the derived length, none of which
+    require the sample values. That boundary is deliberate: the four tracked figures
+    are truecolour, so nothing on the real accept path pays for this walk.
+    """
+
+    out = bytearray(row)
+    for index in range(len(out)):
+        left = out[index - bytes_per_pixel] if index >= bytes_per_pixel else 0
+        above = previous[index] if previous is not None else 0
+        if previous is not None and index >= bytes_per_pixel:
+            upper_left = previous[index - bytes_per_pixel]
+        else:
+            upper_left = 0
+        if filter_type == 0:
+            value = out[index]
+        elif filter_type == 1:
+            value = out[index] + left
+        elif filter_type == 2:
+            value = out[index] + above
+        elif filter_type == 3:
+            value = out[index] + (left + above) // 2
+        else:
+            value = out[index] + _png_paeth(left, above, upper_left)
+        out[index] = value & 0xFF
+    return bytes(out)
+
+
+def _png_palette_indices(row: bytes, *, pass_width: int, bit_depth: int) -> list[int]:
+    """Return one reconstructed indexed scanline's palette indices.
+
+    Args:
+        row: the reconstructed scanline's bytes.
+        pass_width: how many pixels that scanline carries.
+        bit_depth: 1, 2, 4 or 8 -- the depths colour type 3 is defined for.
+
+    Returns:
+        One index per pixel, unpacked most-significant bits first, ignoring the padding
+        bits a sub-byte depth leaves at the end of a scanline.
+    """
+
+    if bit_depth == 8:
+        return list(row[:pass_width])
+    per_byte = 8 // bit_depth
+    mask = (1 << bit_depth) - 1
+    indices: list[int] = []
+    for pixel in range(pass_width):
+        byte = row[pixel // per_byte]
+        shift = 8 - bit_depth * (pixel % per_byte + 1)
+        indices.append((byte >> shift) & mask)
+    return indices
+
+
+def _png_require_image_data(
+    decompressed: bytes,
+    *,
+    header: Mapping[str, int],
+    palette_entries: int | None,
+    where: str,
+) -> None:
+    """Require one PNG's decompressed bytes to be the image its header declares.
+
+    Args:
+        decompressed: the whole of the inflated `IDAT` run, already known to be exactly
+            the length `_png_expected_raw_bytes` derives from the header.
+        header: the fields `_png_header_fields` returned.
+        palette_entries: how many entries the `PLTE` chunk carried, or None when the
+            datastream carried no palette.
+        where: the file's name, for the refusal message.
+
+    Raises:
+        VerificationSceneError: `X_BUNDLE_INCOMPLETE` when any scanline of any non-empty
+            pass carries a filter type filter method 0 does not define, or when an
+            indexed-colour image names a palette entry the palette does not hold.
+
+    *** THE LENGTH WAS NEVER THE WHOLE CLAIM, AND THAT IS CODEX'S SESSION-156 FINDING
+    2. *** The Session-155 repair required the `IDAT` run to inflate to exactly the
+    derived byte count, and three CRC-valid, correctly bounded, correctly ordered
+    streams still crossed it at `(11811, 11811)`: a 1x1 greyscale scanline carrying
+    reserved filter type `5`, a 1x1 indexed-colour image with no `PLTE`, and a stream
+    carrying an unknown critical `ABCD` chunk. The right number of bytes is not an
+    image. The palette and critical-chunk halves of the repair are enforced in the walk
+    that reads the chunks; this is the half that reads the bytes those chunks carried.
+
+    **The scanline walk is over the same layout the length was derived from**, so every
+    pass the derivation counted is a pass this steps through -- including every
+    non-empty Adam7 pass, which is where a check written only for the non-interlaced
+    case would leave a hole shaped exactly like a legal PNG.
+
+    **The authority is the format, not a decoder**, which is the same authority the
+    Session-155 repair chose and the same reason: filter method 0 defines exactly filter
+    types 0 to 4, and an indexed image's samples are palette indices.
+    """
+
+    colour_type = header["colour_type"]
+    bit_depth = header["bit_depth"]
+    samples = _PNG_COLOUR_TYPES[colour_type][0]
+    bytes_per_pixel = max(1, (samples * bit_depth + 7) // 8)
+    indexed = colour_type == _PNG_INDEXED_COLOUR_TYPE
+    offset = 0
+    for pass_width, pass_height, stride in _png_pass_layout(
+        width=header["width"],
+        height=header["height"],
+        bit_depth=bit_depth,
+        colour_type=colour_type,
+        interlace=header["interlace"],
+    ):
+        previous: bytes | None = None
+        for _ in range(pass_height):
+            filter_type = decompressed[offset]
+            if filter_type not in _PNG_FILTER_TYPES:
+                raise _refuse(
+                    X_BUNDLE_INCOMPLETE,
+                    f"{where} carries a scanline filtered with type {filter_type} at "
+                    f"byte {offset} of its image data; filter method "
+                    f"{_PNG_FILTER_METHOD} defines only {sorted(_PNG_FILTER_TYPES)}, "
+                    "so those bytes are not a scanline any decoder is defined to "
+                    "reconstruct",
+                )
+            row = decompressed[offset + 1 : offset + 1 + stride]
+            if indexed:
+                previous = _png_reconstructed_scanline(
+                    filter_type, row, previous, bytes_per_pixel
+                )
+                for index in _png_palette_indices(
+                    previous, pass_width=pass_width, bit_depth=bit_depth
+                ):
+                    if index >= (palette_entries or 0):
+                        raise _refuse(
+                            X_BUNDLE_INCOMPLETE,
+                            f"{where} names palette entry {index} in an indexed image "
+                            f"whose PLTE chunk carries {palette_entries} entries; an "
+                            "index with no entry behind it has no colour, so the file "
+                            "does not describe the figure it is published as",
+                        )
+            offset += 1 + stride
 
 
 def _png_pixels_per_metre(raw: bytes, *, where: str) -> tuple[int, int]:
@@ -3650,8 +4038,16 @@ def _png_pixels_per_metre(raw: bytes, *, where: str) -> tuple[int, int]:
             dimension, colour type, bit depth, compression method, filter method or
             interlace method the format does not define; when the `IDAT` run is not a
             zlib stream, does not end inside the run, or carries bytes after the
-            stream ends; or when that stream does not decompress to exactly the number
-            of bytes the declared image is.
+            stream ends; when that stream does not decompress to exactly the number
+            of bytes the declared image is; when the datastream carries an unknown
+            critical chunk; when it carries a second `PLTE` chunk, a `PLTE` after the
+            image data has begun, a `PLTE` under a greyscale colour type, a `PLTE`
+            whose length is not a non-empty whole number of three-byte entries, or
+            more palette entries than the declared colour type and bit depth can
+            name; when an indexed-colour image carries no `PLTE` at all; when any
+            scanline of any non-empty pass carries a filter type filter method 0 does
+            not define; or when an indexed image names a palette entry the palette
+            does not hold.
 
     **The walk is total, and it is total because the alternative is a raw exception.**
     Codex's Session-153 review drove two inputs through the previous version: a figure
@@ -3714,6 +4110,27 @@ def _png_pixels_per_metre(raw: bytes, *, where: str) -> tuple[int, int]:
     the IDAT run rather than a prefix of it**. Nobody reported this one; it came out of
     asking what else could make the claim false, which is lesson 287's own procedure
     applied by the owner before a reviewer applies it.
+
+    *** AND A CORRECT LENGTH IS STILL NOT AN IMAGE, WHICH IS CODEX'S SESSION-156
+    FINDING 2 AND THE ROW'S LAST FORMAT OBLIGATION. *** Three CRC-valid, correctly
+    bounded, correctly ordered streams crossed the Session-155 walk at `(11811,
+    11811)`: a 1x1 greyscale scanline carrying reserved filter type `5`, a 1x1
+    indexed-colour image with no `PLTE`, and a stream carrying an unknown critical
+    `ABCD` chunk. Each is a *different* half of the same gap -- the walk read the
+    chunks it recognised and the length of what they held, and never the rules that
+    make those bytes renderable. So the walk now also refuses an unknown critical
+    chunk, enforces the palette rules for the colour type the header admits, and hands
+    the decompressed bytes to `_png_require_image_data`, which requires every
+    scanline's filter type to be one filter method 0 defines and every index of an
+    indexed image to name a palette entry that is present.
+
+    **The authority is again the format rather than a decoder**, and here that matters
+    in both directions: Pillow *refuses* the reserved-filter stream and *accepts* the
+    undefined compression method the Session-155 repair refused. A decoder's verdict is
+    evidence about that decoder. The W3C PNG Third Edition states that filter method 0
+    has exactly filter types 0 to 4 (section 9.2), that an indexed-colour image
+    requires `PLTE` (section 11.2.2), and that an unrecognised critical chunk cannot be
+    safely ignored (section 5.4).
     """
 
     if not raw.startswith(_PNG_SIGNATURE):
@@ -3729,6 +4146,7 @@ def _png_pixels_per_metre(raw: bytes, *, where: str) -> tuple[int, int]:
     image_data_closed = False
     image_data: list[bytes] = []
     header: dict[str, int] = {}
+    palette_entries: int | None = None
     while True:
         if offset + _PNG_CHUNK_OVERHEAD_BYTES > len(raw):
             raise _refuse(
@@ -3776,6 +4194,54 @@ def _png_pixels_per_metre(raw: bytes, *, where: str) -> tuple[int, int]:
                 f"{where} carries a second IHDR chunk at byte {offset}; a PNG "
                 "datastream describes one image once",
             )
+        if kind not in _PNG_CRITICAL_CHUNKS and not kind[0] & 0x20:
+            raise _refuse(
+                X_BUNDLE_INCOMPLETE,
+                f"{where} carries an unknown critical {kind!r} chunk at byte {offset}; "
+                "the format's chunk-naming rules say a critical chunk a decoder does "
+                "not recognise cannot be safely ignored, so this file is not one a "
+                "reader is defined to render",
+            )
+        if kind == _PNG_PLTE_CHUNK:
+            if palette_entries is not None:
+                raise _refuse(
+                    X_BUNDLE_INCOMPLETE,
+                    f"{where} carries more than one PLTE chunk; which colours the "
+                    "image has would then depend on which one a reader's decoder kept",
+                )
+            if image_data_seen:
+                raise _refuse(
+                    X_BUNDLE_INCOMPLETE,
+                    f"{where} declares its palette at byte {offset}, after its image "
+                    "data has begun; the format requires PLTE to precede IDAT",
+                )
+            if header["colour_type"] in _PNG_PALETTE_FORBIDDEN_COLOUR_TYPES:
+                raise _refuse(
+                    X_BUNDLE_INCOMPLETE,
+                    f"{where} carries a PLTE chunk under colour type "
+                    f"{header['colour_type']}; the format forbids a palette for the "
+                    "greyscale colour types, and a chunk the format forbids is not "
+                    "evidence about the image beside it",
+                )
+            if length == 0 or length % _PNG_PALETTE_ENTRY_BYTES:
+                raise _refuse(
+                    X_BUNDLE_INCOMPLETE,
+                    f"{where} carries a PLTE chunk of {length} bytes; the format makes "
+                    f"a palette a non-empty whole number of "
+                    f"{_PNG_PALETTE_ENTRY_BYTES}-byte entries",
+                )
+            palette_entries = length // _PNG_PALETTE_ENTRY_BYTES
+            permitted = _PNG_MAX_PALETTE_ENTRIES
+            if header["colour_type"] == _PNG_INDEXED_COLOUR_TYPE:
+                permitted = min(permitted, 1 << header["bit_depth"])
+            if palette_entries > permitted:
+                raise _refuse(
+                    X_BUNDLE_INCOMPLETE,
+                    f"{where} carries a PLTE chunk of {palette_entries} entries, but "
+                    f"an image of colour type {header['colour_type']} at bit depth "
+                    f"{header['bit_depth']} can name at most {permitted}; entries no "
+                    "sample can reach are not a palette this image is drawn from",
+                )
         if kind == _PNG_IDAT_CHUNK:
             if image_data_closed:
                 raise _refuse(
@@ -3883,6 +4349,16 @@ def _png_pixels_per_metre(raw: bytes, *, where: str) -> tuple[int, int]:
             f"is {expected_raw} bytes; the compressed stream does not describe the "
             "image the header describes",
         )
+    if header["colour_type"] == _PNG_INDEXED_COLOUR_TYPE and palette_entries is None:
+        raise _refuse(
+            X_BUNDLE_INCOMPLETE,
+            f"{where} declares indexed colour and carries no PLTE chunk; the format "
+            "requires one, and an image whose samples name entries of a palette that "
+            "is not there has no colours at all",
+        )
+    _png_require_image_data(
+        decompressed, header=header, palette_entries=palette_entries, where=where
+    )
     if resolution is None:
         raise _refuse(
             X_BUNDLE_INCOMPLETE,
@@ -3899,17 +4375,21 @@ def _require_one_packet_root(connection: AuthenticatedConnection) -> Path:
         connection: everything rows 1 through 12 established.
 
     Returns:
-        `connection.bound.packet_root`, resolved, once it has been shown to be the root
-        the authenticated packet-relative paths were actually resolved against.
+        `connection.witness.packet_root` -- the root `authenticate_connection` itself
+        resolved every packet-relative path against, once the presented value has been
+        shown to still agree with it.
 
     Raises:
-        VerificationSceneError: `X_PROVENANCE_UNRESOLVED` when the bound record path is
-            not the one packet-relative location section 3.1 gives a record under that
-            root; when the schema, the configuration or any named source artifact
-            resolves outside it; when any of those paths is one the section-4.2
-            allowlist row 3 derived does not name; when the allowlist itself names a
-            path outside the root; or when the file at the bound record path is not,
-            on disk, the record whose digest rows 1 and 2 authenticated.
+        VerificationSceneError: `X_PROVENANCE_UNRESOLVED` when the connection carries
+            no witness this module issued; when the record identity, record label or
+            authority it presents is not the one the issuing chain authenticated; when
+            the bound record path is not the one packet-relative location section 3.1
+            gives a record under the authenticated root; when the schema, the
+            configuration or any named source artifact resolves outside that root;
+            when any of those paths is one the section-4.2 allowlist row 3 derived does
+            not name; when the allowlist itself names a path outside the root; or when
+            the file at the authenticated record path is not, on disk, the record whose
+            digest rows 1 and 2 authenticated.
 
     **This exists because `BoundPaths` is one value and therefore moves as one.**
     Row 21's destination check re-derives the publication root from
@@ -3933,50 +4413,83 @@ def _require_one_packet_root(connection: AuthenticatedConnection) -> Path:
     tree; the remaining paths are compared by containment because their positions are
     the record's to declare.
 
-    *** AND EVERY ANCHOR INSIDE THE VALUE IS EXACTLY ONE SUBSTITUTION WIDER, WHICH IS
-    CODEX'S SESSION-155 FINDING 1 AND THE END OF A THREE-SESSION PATTERN. *** The
-    Session-153 repair anchored the provenance block to the connection; Session 154
-    moved `output_root` and defeated it. The Session-154 repair anchored `output_root`
-    to `packet_root`; Session 155 moved both and defeated it. This helper's first
-    version anchored `packet_root` to `record_path` -- and `record_path` is a field of
-    the same `BoundPaths`, so moving the whole packet-relative set together defeated it
-    in turn. **Measured before this was written**: with `packet_root`, `output_root`,
-    `record_path`, `schema_path`, `config_path` and every `packet_artifacts` value
-    moved coherently to a temporary tree that *did not exist*, all eight files
-    published beneath it.
+    *** AND EVERY ANCHOR INSIDE THE VALUE IS EXACTLY ONE SUBSTITUTION WIDER. THAT WAS
+    CODEX'S SESSION-155 FINDING 1; SESSION 156 ADDED THE STEP THAT SHOWS THE PATTERN
+    HAS NO FIXED POINT. *** Session 153 anchored the provenance block to the
+    connection and Session 154 moved `output_root`; Session 154 anchored `output_root`
+    to `packet_root` and Session 155 moved both; Session 155 anchored `packet_root` to
+    `record_path` and Session 156 moved the whole packet-relative set. Session 156's
+    own repair then anchored `record_path` to `connection.record_sha256` and read the
+    bytes at that path -- **and `record_sha256` is a field of the same value.** Codex
+    measured both halves of that on the exact candidate: a substitute root holding
+    *only* the record published all eight files, and a substitute root whose record
+    bytes were changed with `record_sha256` changed beside them published all eight
+    carrying the substituted digest. Reading bytes is not enough when the expectation
+    those bytes are compared against arrived with them.
 
-    **The regress terminates at bytes that were actually read, and nowhere before
-    that.** Any field of a separately constructible value can be replaced coherently
-    with its neighbours, so a check that consults only such fields can always be
-    widened by one more substitution; that is the shape of all three findings. The
-    claim this helper supports -- that one root holds the packet this chain
-    authenticated -- is a claim about the filesystem, and it is settled by looking:
-    `external_digest(record_path)` must equal `connection.record_sha256`, the digest
-    the CLI authorization named and `load_connection_record` checked. There is no
-    in-memory field that closes this, and the two earlier repairs failing the same way
-    is the evidence for that rather than an assumption about it.
+    **So the authority here is not a field at all; it is the witness the authentication
+    chain issued.** `authenticate_connection` is the function that actually opened the
+    record, the schema, the config, the sources, the audits, the indexes and the
+    payloads, and it issues an `_AuthenticationWitness` sealing the root it resolved
+    them against, the record's own path under it, and the identity, label and authority
+    it authenticated. That value has no public constructor and is checked against a
+    module-private table of the issuances this process made, so `dataclasses.replace`
+    -- the seam every substitution above went through -- cannot produce one. **The root
+    returned here is the witness's, so a caller substituting `bound.packet_root` no
+    longer moves what the destination is derived from; it only makes the presented
+    value disagree with the chain, which is a refusal.**
 
-    **The allowlist is checked first because it costs no I/O and it is the sharper
-    message.** `expected_opens` is derived at row 3 from the bound record, so it is a
-    second witness to the paths this chain resolved, and a substitution that moves
-    `bound` alone leaves it naming the authenticated tree. It does not *terminate* the
-    regress -- it can be substituted too -- which is precisely why the digest check
-    below it is not optional.
+    **What that turns the four checks below into.** They were the anchor and they are
+    now the diagnosis: each one names *which* part of the presented value has left the
+    authenticated root, and each still fires on the substitution it was written for,
+    because the root they compare against is now the one the chain resolved rather than
+    the one the caller supplied. They are kept for that reason rather than deleted as a
+    subsumed guard (lesson 286's test: deleting one changes what a caller is told).
 
-    **This helper therefore opens exactly one file, and that is disclosed rather than
-    hidden.** It is the record, which section 4.2's allowlist already names and rows 1
-    and 2 already read; it is opened before row 21 creates anything;
-    `test_row21_opens_nothing_outside_the_tree_it_created` states the widened property
-    and bounds it to this one path.
+    **The record is still read, and reading it is still the only I/O on this surface.**
+    Its purpose has narrowed: it no longer terminates a regress -- the witness does --
+    but it is the one check that can notice the authenticated tree changing *underneath*
+    a chain that has already run, which no in-memory value can. It opens exactly one
+    path, `bound.record_path`, already required above to equal the authenticated
+    location, already a member of the section-4.2 allowlist, and already read by rows 1
+    and 2; `test_row21_opens_nothing_outside_the_tree_it_created` states that bound.
 
-    **A whole tree moved together is not what this refuses.** Copying a complete packet
-    and running the chain against the copy leaves every one of these paths under the
-    copy's root, *and the record's bytes are there too* -- so the digest check passes,
-    which is the accept side landing exactly where W8 says it should. What is refused
-    is a root that claims to govern paths it does not contain.
+    **The bound on the claim, stated rather than implied.** This is not a defence
+    against code that reaches into this module's private names. It is the elimination
+    of the *public* post-authentication seam: no caller using this module's public API
+    can present row 21 a packet root, a record identity, a record label or an authority
+    that `authenticate_connection` did not resolve.
+
+    **A whole tree copied and authenticated under the copy is not what this refuses.**
+    Running `authenticate_connection` against a copied packet issues a witness whose
+    root *is* the copy, so the publication goes into the copy and every check here
+    passes -- the accept side landing exactly where W8 says it should. What is refused
+    is a connection presenting a packet the chain that authenticated it never ran under.
     """
 
-    packet_root = Path(connection.bound.packet_root).resolve()
+    witness = connection.witness
+    if not isinstance(witness, _AuthenticationWitness) or witness not in _ISSUED_WITNESSES:
+        raise _refuse(
+            X_PROVENANCE_UNRESOLVED,
+            "this connection carries no witness issued by the authentication chain, "
+            "so nothing here says which packet it ran under; the root a publication "
+            "goes to is the root the chain resolved, and that is a fact about the "
+            "chain rather than a field of the value presenting it",
+        )
+    for where, authenticated, presented in (
+        ("record identity", witness.record_sha256, connection.record_sha256),
+        ("record label", witness.record_label, connection.record.record_label),
+        ("authority", witness.authority, connection.record.authority),
+    ):
+        if authenticated != presented:
+            raise _refuse(
+                X_PROVENANCE_UNRESOLVED,
+                f"this connection presents {where} {presented!r} while the chain that "
+                f"issued its witness authenticated {authenticated!r}; the identities "
+                "that fix the publication are the ones the chain read, not the ones "
+                "the value carrying them declares",
+            )
+    packet_root = witness.packet_root
     expected_record = packet_root.joinpath(
         *record_relative_path(connection.record.record_label).parts
     ).resolve()
@@ -4034,13 +4547,13 @@ def _require_one_packet_root(connection: AuthenticatedConnection) -> Path:
             "packet root that does not hold the record this chain authenticated is "
             "not the root it ran under",
         ) from exc
-    if measured != connection.record_sha256:
+    if measured != witness.record_sha256:
         raise _refuse(
             X_PROVENANCE_UNRESOLVED,
-            f"the record bound at {observed_record} hashes to {measured}, not the "
-            f"authenticated {connection.record_sha256}; the packet root this chain "
-            "publishes under is the root that holds the record it authenticated, and "
-            "that is decided by the bytes on disk rather than by the paths beside them",
+            f"the record at {observed_record} hashes to {measured}, not the "
+            f"authenticated {witness.record_sha256}; the packet this chain publishes "
+            "into is the packet it authenticated, and a tree whose record has changed "
+            "underneath the chain is no longer that packet",
         )
     return packet_root
 

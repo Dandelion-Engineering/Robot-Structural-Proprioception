@@ -6380,6 +6380,111 @@ _STUB_PIXELS_PER_METRE = round(
 )
 
 
+def _independent_paeth(a: int, b: int, c: int) -> int:
+    """Return the PNG Paeth predictor, written here from the format independently.
+
+    *** THIS EXISTS BECAUSE THE MUTATION SWEEP CAUGHT THE TEST ENCODER CHEATING. ***
+    `_png_forward_filtered` originally called `connection_adapter._png_paeth`, so a mutation
+    to the module's predictor mutated **both sides** of the round trip and the reconstruction
+    test inverted itself perfectly. A test whose oracle is the thing under test measures
+    nothing. This is a second implementation, written from the format's own statement of the
+    predictor, and the tie order -- `a` before `b` before `c` -- is part of that statement.
+    """
+
+    prediction = a + b - c
+    to_a, to_b, to_c = abs(prediction - a), abs(prediction - b), abs(prediction - c)
+    if to_a <= to_b and to_a <= to_c:
+        return a
+    if to_b <= to_c:
+        return b
+    return c
+
+
+def _png_forward_filtered(rows: Sequence[Sequence[int]], filters: Sequence[int]) -> bytes:
+    """Return one image's scanlines encoded with the filter type each row is given.
+
+    Args:
+        rows: the raw sample bytes of each scanline, before filtering.
+        filters: one filter type per row, each 0 to 4.
+
+    Returns:
+        The bytes a conforming encoder writes before compression.
+
+    **This is the forward direction of `_png_reconstructed_scanline`, written here so
+    the accept side is a real encoding rather than an all-zero image.** An all-zero
+    image filters to zeroes under every filter type, so a fixture built from one would
+    be green whatever the reconstruction did; these fixtures carry indices that differ
+    from their filtered bytes, so the palette-range refusal below is only reachable if
+    the reconstruction is right. Bytes per pixel is 1 throughout: every fixture here is
+    colour type 3 at depth 8.
+    """
+
+    out = bytearray()
+    previous = [0] * len(rows[0])
+    for row, filter_type in zip(rows, filters):
+        out.append(filter_type)
+        encoded: list[int] = []
+        for index, value in enumerate(row):
+            left = row[index - 1] if index >= 1 else 0
+            above = previous[index]
+            upper_left = previous[index - 1] if index >= 1 else 0
+            if filter_type == 0:
+                predictor = 0
+            elif filter_type == 1:
+                predictor = left
+            elif filter_type == 2:
+                predictor = above
+            elif filter_type == 3:
+                predictor = (left + above) // 2
+            else:
+                predictor = _independent_paeth(left, above, upper_left)
+            encoded.append((value - predictor) & 0xFF)
+        out.extend(encoded)
+        previous = list(row)
+    return bytes(out)
+
+
+_INDEXED_ROWS: tuple[tuple[int, ...], ...] = (
+    (0, 1, 2, 3),
+    (3, 2, 1, 0),
+    (1, 1, 3, 2),
+    (2, 0, 0, 1),
+)
+#: Two scanlines whose second pixel reaches a Paeth **tie**: left 3, above 6, upper-left 5
+#: predicts 4, which is one away from both `a` and `c` and two away from `b`. The format
+#: breaks that tie toward `a`; strict inequalities break it toward `c`. `_INDEXED_ROWS`
+#: contains no such tie, which is why a mutant that changed the tie order survived the sweep
+#: against it -- the two orders agree on every input that is not a tie.
+_PAETH_TIE_ROWS: tuple[tuple[int, ...], ...] = ((5, 6, 5, 6), (3, 4, 2, 7))
+
+_INDEXED_FILTERS: tuple[int, ...] = (0, 1, 2, 3)
+_PAETH_FILTERS: tuple[int, ...] = (0, 4, 4, 4)
+
+
+def _indexed_png(*, entries: int, filters: Sequence[int] = _INDEXED_FILTERS) -> bytes:
+    """Return a 4x4 indexed PNG at depth 8, with `entries` palette entries."""
+
+    import zlib
+
+    signature = connection_adapter._PNG_SIGNATURE
+    header = _png_chunk(
+        b"IHDR",
+        (4).to_bytes(4, "big") + (4).to_bytes(4, "big") + bytes([8, 3, 0, 0, 0]),
+    )
+    palette = _png_chunk(b"PLTE", bytes(range(3 * entries)))
+    body = _STUB_PIXELS_PER_METRE.to_bytes(4, "big") * 2 + bytes([1])
+    return (
+        signature
+        + header
+        + palette
+        + _png_chunk(b"pHYs", body)
+        + _png_chunk(
+            b"IDAT", zlib.compress(_png_forward_filtered(_INDEXED_ROWS, filters))
+        )
+        + _png_chunk(b"IEND", b"")
+    )
+
+
 def _malformed_png(kind: str) -> bytes:
     """Return a figure that is malformed in exactly one way.
 
@@ -6528,6 +6633,93 @@ def _malformed_png(kind: str) -> bytes:
             + header
             + phys
             + _png_chunk(b"IDAT", zlib.compress(b"\x00\x00")[:-2])
+            + end
+        )
+
+    def indexed_header(depth: int = 8) -> bytes:
+        return _png_chunk(
+            b"IHDR",
+            (1).to_bytes(4, "big") + (1).to_bytes(4, "big") + bytes([depth, 3, 0, 0, 0]),
+        )
+
+    palette = _png_chunk(b"PLTE", bytes([1, 2, 3]))
+    if kind == "reserved-filter-type":
+        return (
+            signature
+            + header
+            + phys
+            + _png_chunk(b"IDAT", zlib.compress(bytes([5, 0])))
+            + end
+        )
+    if kind == "indexed-image-with-no-palette":
+        return signature + indexed_header() + phys + data + end
+    if kind == "unknown-critical-chunk":
+        return signature + header + _png_chunk(b"ABCD", b"") + phys + tail
+    if kind == "index-outside-the-palette":
+        return (
+            signature
+            + indexed_header()
+            + palette
+            + phys
+            + _png_chunk(b"IDAT", zlib.compress(bytes([0, 1])))
+            + end
+        )
+    if kind == "palette-under-a-greyscale-image":
+        return signature + header + palette + phys + tail
+    if kind == "ragged-palette-length":
+        return (
+            signature
+            + indexed_header()
+            + _png_chunk(b"PLTE", bytes([1, 2, 3, 4]))
+            + phys
+            + data
+            + end
+        )
+    if kind == "palette-larger-than-the-bit-depth-can-name":
+        return (
+            signature
+            + indexed_header(depth=1)
+            + _png_chunk(b"PLTE", bytes(range(12)))
+            + phys
+            + data
+            + end
+        )
+    if kind == "empty-palette":
+        return (
+            signature
+            + _png_chunk(
+                b"IHDR",
+                (1).to_bytes(4, "big") + (1).to_bytes(4, "big") + bytes([8, 2, 0, 0, 0]),
+            )
+            + _png_chunk(b"PLTE", b"")
+            + phys
+            + _png_chunk(b"IDAT", zlib.compress(bytes(4)))
+            + end
+        )
+    if kind == "second-palette":
+        return signature + indexed_header() + palette + palette + phys + data + end
+    if kind == "palette-after-the-image-data":
+        return signature + indexed_header() + phys + data + palette + end
+    if kind == "interlaced-pass-with-a-reserved-filter-type":
+        raw = bytearray()
+        for index, (x_start, y_start, x_step, y_step) in enumerate(
+            connection_adapter._PNG_ADAM7_PASSES
+        ):
+            pass_width = (8 - x_start + x_step - 1) // x_step
+            pass_height = (8 - y_start + y_step - 1) // y_step
+            if pass_width <= 0 or pass_height <= 0:
+                continue
+            for _ in range(pass_height):
+                raw.append(6 if index == 6 else 0)
+                raw.extend(bytes(pass_width))
+        return (
+            signature
+            + _png_chunk(
+                b"IHDR",
+                (8).to_bytes(4, "big") + (8).to_bytes(4, "big") + bytes([8, 0, 0, 0, 1]),
+            )
+            + phys
+            + _png_chunk(b"IDAT", zlib.compress(bytes(raw)))
             + end
         )
     raise AssertionError(f"unknown malformed-PNG case {kind!r}")
@@ -7739,9 +7931,14 @@ def test_row21_refuses_a_packet_root_moved_together_with_its_destination(
     beneath an unrelated temporary directory, because the expected value moved with the
     substitution.
 
-    The anchor is now the record path, whose bytes rows 1 and 2 actually read, so a
-    root that does not contain the record it authenticated cannot fix where the
-    publication goes. Nothing appears under the substituted root, which is the second
+    *** SESSION 157 MADE THIS THE CLEANEST STATEMENT OF WHAT THE WITNESS BUYS. *** The
+    substitution moves `packet_root` and `output_root` and nothing else, so every
+    packet-relative path here still points into the real tree and every check inside
+    `_require_one_packet_root` passes. What refuses is the derivation itself: the root
+    it derives from is the witness's, so the expected destination **does not move with
+    the substitution**, and the presented `output_root` is simply not it. That is the
+    exact failure mode Codex's Session-154 finding 2 named, now closed at the place it
+    was actually about. Nothing appears under the substituted root, which is the second
     half of the assertion.
     """
 
@@ -7762,7 +7959,7 @@ def test_row21_refuses_a_packet_root_moved_together_with_its_destination(
         )
         error = _refusal(lambda: write_bundle(moved, bundle, render=_stub_writer()))
     assert error.code == X_PROVENANCE_UNRESOLVED
-    assert "does not hold the authenticated record" in str(error)
+    assert "is not the destination this connection fixes" in str(error)
     assert not other.exists()
 
 
@@ -7888,37 +8085,321 @@ def _coherently_moved(connection, new_root: Path, *, move_allowlist: bool):
     return substituted
 
 
-def test_row21_accepts_a_whole_packet_copied_and_run_against_the_copy(
+def _arguments_under(
+    harness: Harness, root: Path, arguments: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Return the same CLI-shaped arguments, aimed at a copy of the packet tree.
+
+    Args:
+        harness: the built harness, for the root the copy was taken from.
+        root: the copied packet root.
+        arguments: the arguments `_three_case_menu` yielded.
+
+    Returns:
+        The same seven arguments with every packet-relative one re-rooted at `root`.
+        `--role-root` and `--checkpoint-root` are left alone: they are machine-selected
+        and W8 has never governed them, so moving them would make the copy refuse for a
+        reason that has nothing to do with the packet root.
+
+    **This is what `_coherently_moved` is not.** That helper rewrites an
+    already-authenticated value; this one runs the chain again, from the copy, so the
+    witness the chain issues is the copy's. Codex's Session-156 finding 1 is exactly
+    that distinction: the committed accept control copied the tree and then substituted
+    the connection, which is the refusal case wearing the accept case's name.
+    """
+
+    old_root = harness.packet_root.resolve()
+
+    def moved(path: Any) -> Path:
+        resolved = Path(path).resolve()
+        return root.joinpath(*resolved.relative_to(old_root).parts)
+
+    return {
+        **arguments,
+        "packet_root": root,
+        "connection_record_path": moved(arguments["connection_record_path"]),
+        "config_path": moved(arguments["config_path"]),
+        "output_dir": moved(arguments["output_dir"]),
+    }
+
+
+def test_row21_accepts_a_whole_packet_copied_and_authenticated_under_the_copy(
     harness: Harness, tmp_path: Path
 ) -> None:
-    """The accept side W8 permits, and it is the anchor for the three refusals below.
+    """The accept side W8 permits, driven the only way that establishes it.
 
-    A packet copied whole and run against the copy has **one** root: every
-    packet-relative path is under it, the allowlist names those paths, and the record's
-    own bytes are there too. That is the invocation invariant W8 allows, and it is
-    exactly what a check anchored to "the paths agree with one another" cannot tell
-    apart from a substitution -- and what a check anchored to the record's bytes can.
+    A packet copied whole and **authenticated under the copy** has one root: the chain
+    resolved every packet-relative path against it, and the witness it issued names it.
+    That is the invocation W8 allows, and the publication lands inside the copy.
 
-    So this publishes, from a root no row bound, purely because the bytes are there.
+    *** THIS TEST IS CODEX'S SESSION-156 FINDING 1, ON THE ACCEPT SIDE. *** The version
+    it replaces copied the tree and then handed row 21 a `_coherently_moved`
+    connection, which never re-ran the chain -- so it stayed green with the copied
+    schema, config and seven packet-relative allowlist members deleted, and it could
+    not tell a copied packet from a substituted one. The distinction is not a detail:
+    the whole of the finding is that a value rewritten after authentication is not a
+    packet that was authenticated.
     """
 
     destination = (tmp_path / "copied-packet").resolve()
     with _three_case_menu(harness) as arguments:
-        connection, cases, geometry, provenance = _resolved(harness, arguments)
-        bundle = resolve_bundle(connection, cases, geometry, provenance)
         shutil.copytree(harness.packet_root, destination)
-        shutil.rmtree(
-            destination / "results" / "verification_connection_development",
-            ignore_errors=True,
-        )
-        written = write_bundle(
-            _coherently_moved(connection, destination, move_allowlist=True),
-            bundle,
-            render=_stub_writer(),
-        )
+        copied = _arguments_under(harness, destination, arguments)
+        shutil.rmtree(copied["output_dir"], ignore_errors=True)
+        Path(copied["output_dir"]).mkdir(parents=True, exist_ok=True)
+        connection, cases, geometry, provenance = _resolved(harness, copied)
+        assert connection.witness is not None
+        assert connection.witness.packet_root == destination
+        bundle = resolve_bundle(connection, cases, geometry, provenance)
+        written = write_bundle(connection, bundle, render=_stub_writer())
     assert written.output_root.is_relative_to(destination)
     assert len(written.file_names) == 8
     assert not (harness.output_dir / RECORD_LABEL).exists()
+
+
+def test_row21_refuses_a_substitute_root_presenting_only_the_record(
+    harness: Harness, tmp_path: Path
+) -> None:
+    """Codex's Session-156 finding 1, probe 1, driven exactly as reported.
+
+    Measured before the repair: with every packet-relative `BoundPaths` field and the
+    whole allowlist moved coherently to a root holding **only a copy of the connection
+    record** -- schema, config and seven allowlist members absent -- all eight files
+    published beneath it. The Session-156 anchor read the record's bytes and compared
+    them to `connection.record_sha256`, and both the path read and the digest compared
+    against were fields of the substituted value.
+
+    The refusal now comes from the witness: the root every check runs against is the
+    one the chain resolved, so the moved record path is not where that root places it.
+    """
+
+    destination = (tmp_path / "record-only").resolve()
+    with _publication_root(harness) as root:
+        with _three_case_menu(harness) as arguments:
+            connection, cases, geometry, provenance = _resolved(harness, arguments)
+            bundle = resolve_bundle(connection, cases, geometry, provenance)
+            record = destination.joinpath(*record_relative_path(RECORD_LABEL).parts)
+            record.parent.mkdir(parents=True, exist_ok=True)
+            record.write_bytes(Path(connection.bound.record_path).read_bytes())
+            moved = _coherently_moved(connection, destination, move_allowlist=True)
+            assert external_digest(record) == moved.record_sha256
+            error = _refusal(lambda: write_bundle(moved, bundle, render=_stub_writer()))
+        assert error.code == X_PROVENANCE_UNRESOLVED
+        assert "does not hold the authenticated record" in str(error)
+        assert [path for path in destination.rglob("*") if path.is_file()] == [record]
+        assert not root.exists()
+
+
+def test_row21_refuses_a_record_identity_substituted_beside_its_own_bytes(
+    harness: Harness, tmp_path: Path
+) -> None:
+    """Codex's Session-156 finding 1, probe 2, driven exactly as reported.
+
+    A complete packet copy, one byte of its record changed, `record_sha256` changed
+    beside it to the new file's digest, and rows 13 through 20 re-run from that
+    substituted connection. Measured before the repair: all eight files published, and
+    **the substituted digest reached every scene** -- because the check read bytes and
+    compared them to a field that had moved with the bytes.
+
+    *** THIS IS THE STEP THAT SHOWS THE REGRESS HAS NO FIXED POINT, AND IT IS WHY THE
+    REPAIR IS A WITNESS RATHER THAN ANOTHER COMPARISON. *** My Session-156 note said
+    the regress terminates at bytes; it terminates at bytes only when the expectation
+    they are compared against did not arrive with them.
+    """
+
+    destination = (tmp_path / "copied-packet").resolve()
+    with _publication_root(harness) as root:
+        with _three_case_menu(harness) as arguments:
+            connection = authenticate_connection(**arguments)
+            shutil.copytree(harness.packet_root, destination)
+            shutil.rmtree(
+                destination / "results" / "verification_connection_development",
+                ignore_errors=True,
+            )
+            moved = _coherently_moved(connection, destination, move_allowlist=True)
+            record = Path(moved.bound.record_path)
+            record.write_bytes(record.read_bytes().replace(b"schema", b"schemA", 1))
+            substituted = replace(moved, record_sha256=external_digest(record))
+            assert substituted.record_sha256 != connection.record_sha256
+            cases = resolve_cases(substituted)
+            bundle = resolve_bundle(
+                substituted,
+                cases,
+                resolve_geometry(substituted, cases),
+                resolve_provenance(substituted),
+            )
+            assert all(
+                scene.provenance.connection_record_sha256 == substituted.record_sha256
+                for scene in bundle.scenes.values()
+            )
+            error = _refusal(
+                lambda: write_bundle(substituted, bundle, render=_stub_writer())
+            )
+        assert error.code == X_PROVENANCE_UNRESOLVED
+        assert "presents record identity" in str(error)
+        assert not root.exists()
+
+
+def test_row21_refuses_a_record_changed_on_disk_after_the_chain_ran(
+    harness: Harness,
+) -> None:
+    """The digest anchor's own test, now that it is no longer the anchor for the root.
+
+    The witness settles which packet this chain ran under, and it settles it from
+    values a caller cannot move. What it cannot settle is whether that packet is still
+    the packet: an authenticated tree can change underneath a chain that has already
+    run, and no in-memory value knows. So the record is still read, and this is the
+    only state that reaches the read -- nothing is substituted here at all.
+    """
+
+    with _publication_root(harness) as root:
+        with _three_case_menu(harness) as arguments:
+            connection, cases, geometry, provenance = _resolved(harness, arguments)
+            bundle = resolve_bundle(connection, cases, geometry, provenance)
+            record = Path(connection.bound.record_path)
+            saved = record.read_bytes()
+            try:
+                record.write_bytes(saved.replace(b"schema", b"schemA", 1))
+                error = _refusal(
+                    lambda: write_bundle(connection, bundle, render=_stub_writer())
+                )
+            finally:
+                record.write_bytes(saved)
+        assert error.code == X_PROVENANCE_UNRESOLVED
+        assert "hashes to" in str(error)
+        assert not root.exists()
+
+
+def test_row21_refuses_a_connection_carrying_no_issued_witness(
+    harness: Harness,
+) -> None:
+    """The fail-closed default, and the look-alike that is not the table's member.
+
+    `witness` defaults to None so that a hand-assembled `AuthenticatedConnection`
+    refuses rather than publishes -- nothing has to remember to supply one. The second
+    half is the part that matters: a witness carrying **exactly the authenticated
+    values**, constructed with this module's own issuance token, is still refused,
+    because `_ISSUED_WITNESSES` records the issuances this process actually made and a
+    value built beside one is not among them.
+    """
+
+    with _publication_root(harness) as root:
+        with _three_case_menu(harness) as arguments:
+            connection, cases, geometry, provenance = _resolved(harness, arguments)
+            bundle = resolve_bundle(connection, cases, geometry, provenance)
+            issued = connection.witness
+            look_alike = connection_adapter._AuthenticationWitness(
+                connection_adapter._WITNESS_ISSUE,
+                packet_root=issued.packet_root,
+                record_path=issued.record_path,
+                record_sha256=issued.record_sha256,
+                record_label=issued.record_label,
+                authority=issued.authority,
+            )
+            assert look_alike not in connection_adapter._ISSUED_WITNESSES
+            errors = [
+                _refusal(
+                    lambda candidate=candidate: write_bundle(
+                        replace(connection, witness=candidate),
+                        bundle,
+                        render=_stub_writer(),
+                    )
+                )
+                for candidate in (None, look_alike)
+            ]
+        for error in errors:
+            assert error.code == X_PROVENANCE_UNRESOLVED
+            assert "carries no witness issued by the authentication chain" in str(error)
+        assert not root.exists()
+
+
+@pytest.mark.parametrize(
+    "field, substitute",
+    [
+        ("record identity", "record_sha256"),
+        ("record label", "record_label"),
+        ("authority", "authority"),
+    ],
+)
+def test_row21_refuses_an_identity_the_issuing_chain_did_not_authenticate(
+    harness: Harness, field: str, substitute: str
+) -> None:
+    """The three identities the witness seals, each substituted on its own.
+
+    The record identity is the one every scene's provenance block carries; the label
+    and the authority are the two halves of the destination `_authority_output_root`
+    derives. All three arrive at row 21 on a value a caller can rebuild, so all three
+    are compared against the chain that issued the witness rather than trusted.
+    """
+
+    with _publication_root(harness) as root:
+        with _three_case_menu(harness) as arguments:
+            connection, cases, geometry, provenance = _resolved(harness, arguments)
+            bundle = resolve_bundle(connection, cases, geometry, provenance)
+            if substitute == "record_sha256":
+                substituted = replace(connection, record_sha256="0" * 64)
+            else:
+                substituted = replace(
+                    connection,
+                    record=replace(
+                        connection.record,
+                        **{substitute: "confirmatory"
+                           if substitute == "authority"
+                           else "another-label"},
+                    ),
+                )
+            error = _refusal(
+                lambda: write_bundle(substituted, bundle, render=_stub_writer())
+            )
+        assert error.code == X_PROVENANCE_UNRESOLVED
+        assert f"presents {field}" in str(error)
+        assert not root.exists()
+
+
+def test_the_authentication_witness_is_issued_immutable_and_unforgeable(
+    harness: Harness,
+) -> None:
+    """What the witness is, measured rather than asserted in a comment.
+
+    Four properties, and each one is load-bearing for finding 1's repair: the chain
+    issues one and records the issuance; it seals the root the chain actually ran
+    under; it refuses construction without this module's own token; and it refuses
+    every write and every deletion, so it cannot be edited into agreement with a
+    substituted value.
+
+    **The bound is stated here too, because a test that implied more would be the
+    overclaim this review exists to catch.** None of this defends against code that
+    reaches into this module's private names -- Python has no such defence. It closes
+    the *public* seam: `dataclasses.replace` and a hand-built
+    `AuthenticatedConnection` are the two routes every substitution in this review
+    took, and neither can produce a member of `_ISSUED_WITNESSES`.
+    """
+
+    connection = harness.authenticate()
+    witness = connection.witness
+    assert witness in connection_adapter._ISSUED_WITNESSES
+    assert witness.packet_root == harness.packet_root.resolve()
+    assert witness.record_path == harness.record_path.resolve()
+    assert witness.record_sha256 == harness.record_sha256
+    untokened = _refusal(
+        lambda: connection_adapter._AuthenticationWitness(
+            object(),
+            packet_root=witness.packet_root,
+            record_path=witness.record_path,
+            record_sha256=witness.record_sha256,
+            record_label=witness.record_label,
+            authority=witness.authority,
+        )
+    )
+    assert untokened.code == X_PROVENANCE_UNRESOLVED
+    assert "issued by the authentication chain" in str(untokened)
+    written = _refusal(lambda: setattr(witness, "packet_root", Path("elsewhere")))
+    assert written.code == X_PROVENANCE_UNRESOLVED
+    assert "not writable" in str(written)
+    deleted = _refusal(lambda: delattr(witness, "packet_root"))
+    assert deleted.code == X_PROVENANCE_UNRESOLVED
+    assert "not writable" in str(deleted)
+    assert witness.packet_root == harness.packet_root.resolve()
 
 
 def test_row21_refuses_a_packet_root_moved_with_its_whole_bound_path_set(
@@ -7934,6 +8415,13 @@ def test_row21_refuses_a_packet_root_moved_with_its_whole_bound_path_set(
 
     Here the allowlist is deliberately left alone, which is the substitution as
     reported; the wider one is the test below.
+
+    *** THE REFUSAL MOVED IN SESSION 157 AND THAT MOVE IS THE POINT. *** It used to
+    come from the allowlist, which was one substitution short of decisive -- the test
+    below moved the allowlist too and reached the record read instead, and Codex's
+    Session-156 finding 1 then moved the record and its digest together. Every check
+    below now runs against the root the witness names rather than the root the caller
+    supplies, so the first thing that disagrees is where that root places the record.
     """
 
     destination = (tmp_path / "other-packet").resolve()
@@ -7944,7 +8432,7 @@ def test_row21_refuses_a_packet_root_moved_with_its_whole_bound_path_set(
             moved = _coherently_moved(connection, destination, move_allowlist=False)
             error = _refusal(lambda: write_bundle(moved, bundle, render=_stub_writer()))
         assert error.code == X_PROVENANCE_UNRESOLVED
-        assert "the allowlist row 3 derived from this record does not name" in str(error)
+        assert "does not hold the authenticated record" in str(error)
         assert not destination.exists()
         assert not root.exists()
 
@@ -7960,9 +8448,12 @@ def test_row21_refuses_a_packet_root_whose_allowlist_moved_with_it(
     more object-bounded check. **This moves it, and the refusal comes from the record's
     bytes**: there is no record at the substituted path to read.
 
-    *** THIS IS THE TEST THAT WOULD GO GREEN FOR THE WRONG REASON IF THE DIGEST CHECK
-    WERE DELETED AND ONLY THE ALLOWLIST CHECK KEPT. *** Its message fragment names the
-    read, not the allowlist, for that reason.
+    *** AND SESSION 157 MOVED WHERE IT LANDS, WHICH IS WHAT SAYS THE ANCHOR MOVED. ***
+    It used to reach the record read, because there was no record at the substituted
+    path. Now the root every check runs against is the witness's, so the substitution
+    is refused before any read happens at all -- the widened `expected_opens` never
+    gets to be the thing under test, because the value it belongs to is no longer the
+    authority for anything here.
     """
 
     destination = (tmp_path / "other-packet").resolve()
@@ -7973,7 +8464,7 @@ def test_row21_refuses_a_packet_root_whose_allowlist_moved_with_it(
             moved = _coherently_moved(connection, destination, move_allowlist=True)
             error = _refusal(lambda: write_bundle(moved, bundle, render=_stub_writer()))
         assert error.code == X_PROVENANCE_UNRESOLVED
-        assert "could not be read" in str(error)
+        assert "does not hold the authenticated record" in str(error)
         assert not destination.exists()
         assert not root.exists()
 
@@ -7983,10 +8474,19 @@ def test_row21_refuses_a_packet_root_holding_a_different_record(
 ) -> None:
     """A complete, coherent, existing packet copy -- carrying one other record.
 
-    This is the case that separates "the bytes are there" from "some bytes are there",
-    and it is why the check is a digest comparison rather than an existence test. The
-    copy is real, every path resolves, the allowlist names all of them, and one byte of
-    the record differs from the record rows 1 and 2 authenticated.
+    The copy is real, every path resolves, the allowlist names all of them, and one
+    byte of the record differs from the record rows 1 and 2 authenticated. Under the
+    Session-156 anchor this was the case that separated "the bytes are there" from
+    "some bytes are there"; Codex's Session-156 finding 1 then showed that separation
+    was buyable with one more substitution, by changing `record_sha256` beside the
+    bytes -- which is `test_row21_refuses_a_record_identity_substituted_beside_its_own_
+    bytes`.
+
+    **It is kept because it is still a substitution that must be refused**, and the
+    refusal it lands on now names the root: a copy is not the packet this chain ran
+    under, whatever its record says.
+    `test_row21_refuses_a_record_changed_on_disk_after_the_chain_ran` is where the
+    digest comparison is exercised on its own.
     """
 
     destination = (tmp_path / "copied-packet").resolve()
@@ -8004,7 +8504,7 @@ def test_row21_refuses_a_packet_root_holding_a_different_record(
             record.write_bytes(record.read_bytes().replace(b"schema", b"schemA", 1))
             error = _refusal(lambda: write_bundle(moved, bundle, render=_stub_writer()))
         assert error.code == X_PROVENANCE_UNRESOLVED
-        assert "not the authenticated" in str(error)
+        assert "does not hold the authenticated record" in str(error)
         assert not root.exists()
 
 
@@ -8095,6 +8595,17 @@ def test_the_packet_root_anchor_refuses_an_allowlist_entry_under_no_bound_root(
         ("image-data-shorter-than-the-declared-image", "decompresses to 1 bytes"),
         ("bytes-appended-after-the-image-stream", "after the zlib stream ends"),
         ("image-stream-that-never-ends", "zlib stream never ends"),
+        ("reserved-filter-type", "filtered with type 5"),
+        ("indexed-image-with-no-palette", "carries no PLTE chunk"),
+        ("unknown-critical-chunk", "unknown critical b'ABCD' chunk"),
+        ("index-outside-the-palette", "names palette entry 1"),
+        ("palette-under-a-greyscale-image", "forbids a palette for the greyscale"),
+        ("ragged-palette-length", "a PLTE chunk of 4 bytes"),
+        ("empty-palette", "a PLTE chunk of 0 bytes"),
+        ("palette-larger-than-the-bit-depth-can-name", "can name at most 2"),
+        ("second-palette", "more than one PLTE chunk"),
+        ("palette-after-the-image-data", "after its image data has begun"),
+        ("interlaced-pass-with-a-reserved-filter-type", "filtered with type 6"),
     ],
 )
 def test_the_png_walk_refuses_every_malformed_resolution_claim(
@@ -8141,6 +8652,22 @@ def test_the_png_walk_refuses_every_malformed_resolution_claim(
     two, and it is the direction that matters more: a decoder handed too little data
     produces a partial image, not an error. **The pair is the instrument; either one
     alone measures half of it.**
+
+    *** THE LAST TEN ROWS ARE CODEX'S SESSION-156 FINDING 2 AND MY RE-DRIVE OF IT. ***
+    Codex reported three streams -- a reserved filter type, an indexed image with no
+    `PLTE` and an unknown critical `ABCD` chunk -- all CRC-valid, correctly bounded,
+    correctly ordered, *and the right length*, and all three **accepted** at `(11811,
+    11811)` by the exact candidate. I drove all three at source before repairing
+    anything and they reproduced exactly. My re-drive widened them by seven more the
+    same walk accepted: an index naming an entry the palette does not hold, a palette
+    under a greyscale image the format forbids one for, a palette whose length is not
+    a whole number of entries, an empty palette on a truecolour image -- the one case
+    where nothing downstream would notice, because no index is checked against it --
+    a palette larger than the declared bit depth can name,
+    a second palette, a palette written after the image data, and an **Adam7 image
+    whose seventh pass** carries a reserved filter type while every earlier pass is
+    filter 0 -- the case that says the scanline walk really does cross every pass
+    rather than stopping at the first.
     """
 
     error = _refusal(
@@ -8150,6 +8677,172 @@ def test_the_png_walk_refuses_every_malformed_resolution_claim(
     )
     assert error.code == X_BUNDLE_INCOMPLETE
     assert fragment in str(error)
+
+
+@pytest.mark.parametrize("filters", [_INDEXED_FILTERS, _PAETH_FILTERS])
+def test_the_png_walk_accepts_a_conforming_indexed_image(
+    filters: Sequence[int],
+) -> None:
+    """The accept side of the palette path, over every filter type the format defines.
+
+    The refusals above only mean something beside an image that is *not* refused, and
+    an all-zero image would not test the reconstruction at all -- it filters to zeroes
+    under every filter type, so a broken reconstruction would still land on index 0.
+    These fixtures carry indices 0 to 3 in a pattern whose filtered bytes differ from
+    its raw ones, encoded once with filter types 0, 1, 2 and 3 and once with Paeth on
+    every row after the first, and both are accepted with a four-entry palette.
+
+    **The same bytes with a three-entry palette are refused**, and that is what says
+    the reconstruction is the thing doing the work: the filtered bytes alone do not
+    carry index 3 anywhere a naive reader would find it.
+    """
+
+    assert connection_adapter._png_pixels_per_metre(
+        _indexed_png(entries=4, filters=filters), where="indexed.png"
+    ) == (_STUB_PIXELS_PER_METRE, _STUB_PIXELS_PER_METRE)
+    error = _refusal(
+        lambda: connection_adapter._png_pixels_per_metre(
+            _indexed_png(entries=3, filters=filters), where="indexed.png"
+        )
+    )
+    assert error.code == X_BUNDLE_INCOMPLETE
+    assert "names palette entry 3" in str(error)
+
+
+def test_the_png_walk_accepts_a_palette_that_exactly_fills_the_bit_depth() -> None:
+    """The accept side of the palette-size bound, at the boundary itself.
+
+    *** THIS FIXTURE EXISTS BECAUSE THE MUTATION SWEEP FOUND IT MISSING, AND IT IS THE
+    ONLY REAL SURVIVOR THE SWEEP PRODUCED. *** The mutant turned
+    `palette_entries > permitted` into `>=` and **survived**: every other indexed fixture
+    in this file carries four entries at bit depth 8, where `permitted` is 256, so the
+    boundary the check is written about was never reached and the comparison's strictness
+    was never the reason any case was green.
+
+    A 1-bit indexed image can name exactly two entries, so a two-entry palette is the
+    largest legal one and must be accepted. Together with
+    `palette-larger-than-the-bit-depth-can-name` -- three entries at the same depth, which
+    is refused -- this pins the bound at the right place. **The pair is the instrument;
+    either one alone measures half of it.**
+    """
+
+    import zlib
+
+    signature = connection_adapter._PNG_SIGNATURE
+    body = _STUB_PIXELS_PER_METRE.to_bytes(4, "big") * 2 + bytes([1])
+    stream = (
+        signature
+        + _png_chunk(
+            b"IHDR",
+            (1).to_bytes(4, "big") + (1).to_bytes(4, "big") + bytes([1, 3, 0, 0, 0]),
+        )
+        + _png_chunk(b"PLTE", bytes(range(6)))
+        + _png_chunk(b"pHYs", body)
+        + _png_chunk(b"IDAT", zlib.compress(bytes([0, 0b10000000])))
+        + _png_chunk(b"IEND", b"")
+    )
+    assert connection_adapter._png_pixels_per_metre(stream, where="one-bit.png") == (
+        _STUB_PIXELS_PER_METRE,
+        _STUB_PIXELS_PER_METRE,
+    )
+
+
+def test_the_png_paeth_predictor_breaks_its_ties_the_way_the_format_does() -> None:
+    """The predictor's own table, including the case the two plausible orders disagree on.
+
+    *** THE TIE IS THE WHOLE TEST, AND THE SWEEP IS WHY IT IS HERE. *** A mutant that
+    replaced the format's `a`-then-`b`-then-`c` tie order with strict inequalities survived
+    every end-to-end fixture, because the two orders return the *same* byte on every input
+    that is not a tie -- and none of those fixtures contained one.
+
+    `(a, b, c) = (3, 6, 5)` predicts `3 + 6 - 5 = 4`, which is one away from `a`, two away
+    from `b` and one away from `c`. The format's order returns **a**; strict inequalities
+    return **c**. The remaining rows are the three unambiguous directions, so the test is a
+    table rather than a single case.
+    """
+
+    assert connection_adapter._png_paeth(3, 6, 5) == 3
+    assert connection_adapter._png_paeth(10, 0, 0) == 10
+    assert connection_adapter._png_paeth(0, 10, 0) == 10
+    assert connection_adapter._png_paeth(0, 0, 10) == 0
+    assert connection_adapter._png_paeth(7, 7, 7) == 7
+
+
+@pytest.mark.parametrize("rows", [_INDEXED_ROWS, _PAETH_TIE_ROWS], ids=["plain", "paeth-tie"])
+@pytest.mark.parametrize("filter_type", sorted(connection_adapter._PNG_FILTER_TYPES))
+def test_the_png_scanline_reconstruction_inverts_every_filter_the_format_defines(
+    filter_type: int, rows: Sequence[Sequence[int]]
+) -> None:
+    """Reconstruction is asserted directly, because in-range indices hide a wrong one.
+
+    *** THIS TEST EXISTS BECAUSE THE MUTATION SWEEP EXPOSED THE WEAKNESS OF MEASURING A
+    RECONSTRUCTION THROUGH THE PALETTE-RANGE CHECK. *** Two mutants survived the
+    end-to-end indexed fixtures: the Paeth predictor's tie order changed from the
+    format's `a` before `b` before `c` to strict inequalities, and the Average filter
+    rounded up instead of down. Both produce a **different image** -- and both were
+    invisible, because the wrong indices happened to land inside a four-entry palette,
+    so the only assertion downstream of them stayed true.
+
+    **A check that can only see an error when the error is large is not measuring the
+    thing it names.** So this drives the reconstruction against its own inverse: the four
+    scanlines are forward-filtered by the test's own encoder -- **which carries its own
+    independent Paeth**, so the module's predictor is not both sides of the round trip --
+    and each is required to reconstruct **byte for byte** to the row it came from. An
+    off-by-one in the Average rounding fails immediately, whatever a palette would have
+    permitted, and the `paeth-tie` parameter drives rows that reach the tie the two
+    plausible orders disagree on.
+    """
+
+    encoded = _png_forward_filtered(rows, [filter_type] * len(rows))
+    stride = len(rows[0])
+    previous: bytes | None = None
+    offset = 0
+    for row in rows:
+        assert encoded[offset] == filter_type
+        reconstructed = connection_adapter._png_reconstructed_scanline(
+            filter_type, encoded[offset + 1 : offset + 1 + stride], previous, 1
+        )
+        assert reconstructed == bytes(row)
+        previous = reconstructed
+        offset += 1 + stride
+    assert offset == len(encoded)
+
+
+def test_the_png_pass_layout_is_the_one_source_the_length_and_the_walk_share() -> None:
+    """The layout helper's own control, against the format's arithmetic by hand.
+
+    `_png_expected_raw_bytes` and `_png_require_image_data` read one layout because two
+    copies of the same arithmetic can agree with each other while both are wrong. That
+    makes the layout itself the thing needing a literal control:
+
+      * 4x4 RGBA at depth 8, non-interlaced: one pass of 4 rows, stride 4x4=**16**.
+      * 9x1 grey at depth 1: one pass of 1 row, stride ceil(9/8)=**2**.
+      * 8x8 grey at depth 8 under Adam7: seven passes carrying 1x1, 1x1, 2x1, 2x2,
+        4x2, 4x4 and 8x4 pixels, with strides equal to their widths.
+      * 1x1 under Adam7: **one** non-empty pass, because six of the seven contain no
+        pixels at all -- the case a `for` loop over all seven would walk off the end of.
+    """
+
+    assert connection_adapter._png_pass_layout(
+        width=4, height=4, bit_depth=8, colour_type=6, interlace=0
+    ) == ((4, 4, 16),)
+    assert connection_adapter._png_pass_layout(
+        width=9, height=1, bit_depth=1, colour_type=0, interlace=0
+    ) == ((9, 1, 2),)
+    assert connection_adapter._png_pass_layout(
+        width=8, height=8, bit_depth=8, colour_type=0, interlace=1
+    ) == (
+        (1, 1, 1),
+        (1, 1, 1),
+        (2, 1, 2),
+        (2, 2, 2),
+        (4, 2, 4),
+        (4, 4, 4),
+        (8, 4, 8),
+    )
+    assert connection_adapter._png_pass_layout(
+        width=1, height=1, bit_depth=8, colour_type=0, interlace=1
+    ) == ((1, 1, 1),)
 
 
 def test_the_png_image_size_derivation_is_the_formats_own_arithmetic() -> None:
