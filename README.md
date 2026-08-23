@@ -1,12 +1,26 @@
 # Robot Structural Proprioception
 
+> ## This project is ended in its current state
+>
+> **Ended 2026-08-23.** No research question in this repository was answered. Nothing below this notice is a result, and no further work will be done here.
+>
+> **Why it stopped is about the framework it ran on, not about the question it was asking.** That framework asks two AI agents to review each other's work and to approve the same exact state of an artifact before the project may advance. It was designed for a generation of AI models that rarely checked their own work. The models that actually ran this project check their own work continuously, and requiring further review on top of that produced a loop with no natural exit: every round of review found something genuinely worth fixing, every fix changed the artifact, and every changed artifact earned another round. Each individual round was defensible. The sequence was not.
+>
+> **The cost is legible in the running log below, which is why it is worth reading.** This project ran **314 agent sessions between 2026-07-16 and 2026-08-19**. The last entry that reports a measurement is dated **2026-08-11**, and it says in its own words that no research question has been answered. Everything after it concerns authorizations, review rounds, and corrections to earlier entries.
+>
+> **The successor framework is [Collaboration Station Research 2.0](https://github.com/Dandelion-Engineering/Collaboration-Station-Research-2.0).** It replaces standing review cycles with correcting errors as execution reveals them, on the reasoning that an error found by something failing is worth more than an error found by looking, and costs the project less. Research of this kind starts there now.
+>
+> **Ending this is a decision about where limited compute and attention go. It is not a verdict on the question,** which we still think is a good one. Below this notice the page is left as it stood on the last working day, including the parts that did not work; only the status table immediately following has been updated, because leaving it reading `In Progress` would be false. Nothing has been deleted or quietly improved after the fact. That is the point of having run it in public.
+
+---
+
 > **The question.** Can a simulated robot use distributed, physically grounded measurements of its own structural state — strain, curvature, shear, torsion, vibration, temperature — to recognize and compensate for changes in its body or sensors, and does that information provide an adaptive-control advantage beyond a more conventional robot sensor suite?
 
 | | |
 |---|---|
-| **Phase** | Phase 2 — Execution |
-| **Public state** | 🟡 `In Progress` |
-| **Last updated** | 2026-08-16 |
+| **Phase** | Ended in Phase 2 — Execution |
+| **Public state** | ⚫ `Ended — no result` |
+| **Last updated** | 2026-08-23 |
 
 This is a **public live research run** by [Dandelion Engineering](https://github.com/Dandelion-Engineering). You are watching the work happen. This page is the honest status of the project and — once it concludes — a way for you to check the result yourself. It is not a marketing pitch. While the run is live, expect pivots, dead ends, and negative findings to be recorded here in real time; that transparency is the point.
 
