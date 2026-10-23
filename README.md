@@ -1,16 +1,14 @@
 # Robot Structural Proprioception
 
-> ## This project is ended in its current state
+> ## Ended project: no answer to the research question
 >
-> **Ended 2026-08-23.** No research question in this repository was answered. Nothing below this notice is a result, and no further work will be done here.
+> **Ended August 23, 2026. Context updated October 2026.** This project ran 314 agent sessions without answering its research question. Development work and intermediate measurements in the record are not a completed answer to that question.
 >
-> **Why it stopped is about the framework it ran on, not about the question it was asking.** That framework asks two AI agents to review each other's work and to approve the same exact state of an artifact before the project may advance. It was designed for a generation of AI models that rarely checked their own work. The models that actually ran this project check their own work continuously, and requiring further review on top of that produced a loop with no natural exit: every round of review found something genuinely worth fixing, every fix changed the artifact, and every changed artifact earned another round. Each individual round was defensible. The sequence was not.
+> Repeated review and approval cycles consumed substantial effort. The broader lesson for Dandelion Engineering is that a structured sequence of agent tasks is not enough to make exploratory research work. Active scientific judgment is needed to decide what matters, when to revise the approach, and whether the evidence supports a conclusion.
 >
-> **The cost is legible in the running log below, which is why it is worth reading.** This project ran **314 agent sessions between 2026-07-16 and 2026-08-19**. The last entry that reports a measurement is dated **2026-08-11**, and it says in its own words that no research question has been answered. Everything after it concerns authorizations, review rounds, and corrections to earlier entries.
+> [Collaboration Station Research 2.0](https://github.com/Dandelion-Engineering/Collaboration-Station-Research-2.0) explores a revised approach, but Dandelion Engineering considers both research-framework versions likely unsuitable for actual scientific research in their current forms. This project's outcome is not a verdict on the underlying research question.
 >
-> **The successor framework is [Collaboration Station Research 2.0](https://github.com/Dandelion-Engineering/Collaboration-Station-Research-2.0).** It replaces standing review cycles with correcting errors as execution reveals them, on the reasoning that an error found by something failing is worth more than an error found by looking, and costs the project less. Research of this kind starts there now.
->
-> **Ending this is a decision about where limited compute and attention go. It is not a verdict on the question,** which we still think is a good one. Below this notice the page is left as it stood on the last working day, including the parts that did not work; only the status table immediately following has been updated, because leaving it reading `In Progress` would be false. Nothing has been deleted or quietly improved after the fact. That is the point of having run it in public.
+> The material below is preserved as a historical record, including present-tense descriptions of the project while it was active. This replacement status note was drafted by AI.
 
 ---
 
